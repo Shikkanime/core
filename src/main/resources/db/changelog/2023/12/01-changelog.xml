@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <property global="false" name="id" value="1701440511172"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="metric"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="metric">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_metric"/>
+            </column>
+            <column name="cpu_load"
+                    type="DOUBLE"/>
+            <column name="memory_usage"
+                    type="BIGINT"/>
+            <column name="database_size"
+                    type="BIGINT"/>
+            <column name="date"
+                    type="timestamp"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_metric_date"
+                             tableName="metric"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_metric_date"
+                     tableName="metric">
+            <column name="date"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="platform"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="platform">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_platform"/>
+            </column>
+            <column name="name"
+                    type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="url"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions>
+            <not>
+                <tableExists tableName="country"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="country">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_country"/>
+            </column>
+            <column name="name"
+                    type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="country_code"
+                    type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_country_country_code"
+                             tableName="country"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_country_country_code"
+                     tableName="country">
+            <column name="country_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM country WHERE country_code = 'FR'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="country">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="name">France</column>
+            <column name="country_code">FR</column>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
