@@ -40,4 +40,8 @@ class MetricService : AbstractService<Metric, MetricRepository>() {
     fun getAverageMemoryUsage(from: ZonedDateTime, to: ZonedDateTime): Double? {
         return averageMemoryUsageCache[FromToZonedDateTimeKeyCache(from, to)]
     }
+
+    fun getSize(): Long {
+        return metricRepository.getSize()
+    }
 }

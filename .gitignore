@@ -36,3 +36,4 @@ out/
 .vscode/
 /metrics.json
 /.jpb/
+/config/

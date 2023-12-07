@@ -3,7 +3,6 @@ package fr.shikkanime.jobs
 import com.google.inject.Inject
 import fr.shikkanime.entities.Metric
 import fr.shikkanime.services.MetricService
-import fr.shikkanime.utils.Database
 import java.lang.management.ManagementFactory
 import javax.management.Attribute
 import javax.management.ObjectName
@@ -12,15 +11,12 @@ class MetricJob : AbstractJob() {
     @Inject
     private lateinit var metricService: MetricService
 
-    @Inject
-    private lateinit var database: Database
-
     override fun run() {
         metricService.save(
             Metric(
                 cpuLoad = getProcessCPULoad(),
                 memoryUsage = getProcessMemoryUsage(),
-                databaseSize = database.getSize()
+                databaseSize = metricService.getSize()
             )
         )
     }

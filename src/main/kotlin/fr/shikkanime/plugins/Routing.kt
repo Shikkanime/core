@@ -36,7 +36,7 @@ fun Application.configureRouting() {
 
 private fun Routing.createRoutes() {
     Constant.reflections.getTypesAnnotatedWith(Controller::class.java).forEach { controllerClass ->
-        val controller = Constant.guice.getInstance(controllerClass)
+        val controller = Constant.injector.getInstance(controllerClass)
         createControllerRoutes(controller)
     }
 }
@@ -171,6 +171,7 @@ private suspend fun callMethodWithParameters(
                 when (kParameter.type.javaType) {
                     Array<UUID>::class.java -> call.receive<Array<UUID>>()
                     PlatformDto::class.java -> call.receive<PlatformDto>()
+                    Parameters::class.java -> call.receiveParameters()
                     else -> call.receive<String>()
                 }
             }

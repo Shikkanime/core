@@ -14,7 +14,7 @@ abstract class AbstractConverter<F, T> {
 
             converters.forEach {
                 val (from, to) = (it.genericSuperclass as ParameterizedType).actualTypeArguments.map { argument -> argument as Class<*> }
-                this.converters[Pair(from, to)] = Constant.guice.getInstance(it)
+                this.converters[Pair(from, to)] = Constant.injector.getInstance(it)
             }
         }
 

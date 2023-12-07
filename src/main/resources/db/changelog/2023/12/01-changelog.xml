@@ -117,7 +117,9 @@
 
     <changeSet id="${id}-6" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM country WHERE country_code = 'FR'</sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM country
+                                         WHERE country_code = 'FR'</sqlCheck>
         </preConditions>
 
         <insert tableName="country">

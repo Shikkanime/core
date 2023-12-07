@@ -4,9 +4,11 @@ import fr.shikkanime.entities.Platform
 
 class PlatformRepository : AbstractRepository<Platform>() {
     fun findByName(name: String): Platform? {
-        return getEntityManager().createQuery("FROM Platform WHERE name = :name", getEntityClass())
-            .setParameter("name", name)
-            .resultList
-            .firstOrNull()
+        return inTransaction {
+            it.createQuery("FROM Platform WHERE name = :name", getEntityClass())
+                .setParameter("name", name)
+                .resultList
+                .firstOrNull()
+        }
     }
 }

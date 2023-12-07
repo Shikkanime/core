@@ -8,12 +8,13 @@ import liquibase.Liquibase
 import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
+import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import java.io.File
 import kotlin.system.exitProcess
 
 class Database {
-    val entityManager: EntityManager
+    private val sessionFactory: SessionFactory
 
     constructor(file: File) {
         if (!file.exists()) {
@@ -25,7 +26,7 @@ class Database {
         entities.forEach { configuration.addAnnotatedClass(it) }
         configuration.configure(file)
         val buildSessionFactory = configuration.buildSessionFactory()
-        entityManager = buildSessionFactory.createEntityManager()
+        sessionFactory = buildSessionFactory
 
         buildSessionFactory.openSession().doWork {
             val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(it))
@@ -49,7 +50,7 @@ class Database {
 
     constructor() : this(File("hibernate.cfg.xml"))
 
-    fun getSize(): Long {
-        return entityManager.createNativeQuery("SELECT pg_database_size('shikkanime')").singleResult as Long
+    fun getEntityManager(): EntityManager {
+        return sessionFactory.createEntityManager()
     }
 }

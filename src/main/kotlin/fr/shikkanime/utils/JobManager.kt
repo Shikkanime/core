@@ -28,7 +28,7 @@ object JobManager {
         override fun execute(context: JobExecutionContext?) {
             val jobName = context?.jobDetail?.key?.name ?: return
             val `class` = Class.forName(jobName) ?: return
-            val job = Constant.guice.getInstance(`class`) as? AbstractJob ?: return
+            val job = Constant.injector.getInstance(`class`) as? AbstractJob ?: return
             job.run()
         }
     }

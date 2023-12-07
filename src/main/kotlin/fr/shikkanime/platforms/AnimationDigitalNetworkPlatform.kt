@@ -1,15 +1,16 @@
 package fr.shikkanime.platforms
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
-import fr.shikkanime.entities.Country
 import fr.shikkanime.entities.Platform
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.HttpRequest
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
-class AnimationDigitalNetworkPlatform : AbstractPlatform() {
+class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration>() {
+    override fun getConfigurationClass(): Class<PlatformConfiguration> = PlatformConfiguration::class.java
+
     override fun getPlatform(): Platform {
         val name = "Animation Digital Network"
 
@@ -20,10 +21,8 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform() {
         )
     }
 
-    override fun getCountries() = countryService.findAllByCode(listOf("FR"))
-
     override suspend fun fetchApiContent(zonedDateTime: ZonedDateTime): Api {
-        val map = mutableMapOf<Country, String>()
+        val map = mutableMapOf<String, String>()
         val countries = getCountries()
         val toDateString = zonedDateTime.toLocalDate().toString()
 
@@ -35,18 +34,18 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform() {
                 return@forEach
             }
 
-            map[country] = response.bodyAsText()
+            map[country.countryCode] = response.bodyAsText()
         }
 
         return Api(zonedDateTime, map)
     }
 
-    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime): List<String> {
+    override fun fetchEpisodes(zonedDateTime: ZonedDateTime): List<String> {
         val countries = getCountries()
 
         countries.forEach { country ->
-            val api = getApiContent(country, zonedDateTime, 1)
-            val array = Gson().fromJson(api, JsonObject::class.java).getAsJsonArray("videos")
+            val api = getApiContent(country, zonedDateTime)
+            val array = Constant.gson.fromJson(api, JsonObject::class.java).getAsJsonArray("videos")
 
             array.forEach {
                 convertEpisode(it.asJsonObject, zonedDateTime)

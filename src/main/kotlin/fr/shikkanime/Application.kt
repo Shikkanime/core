@@ -14,7 +14,7 @@ import io.ktor.server.netty.*
 fun main() {
     JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
     JobManager.scheduleJob("0 */5 * * * ?", GCJob::class.java)
-    JobManager.scheduleJob("0 */2 * * * ?", FetchEpisodesJob::class.java)
+    JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
     JobManager.start()
 
     embeddedServer(

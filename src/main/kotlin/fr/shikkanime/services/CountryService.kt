@@ -9,8 +9,8 @@ class CountryService : AbstractService<Country, CountryRepository>() {
     @Inject
     private lateinit var countryRepository: CountryRepository
 
-    private val codesCache: MapCache<List<String>, List<Country>> = MapCache {
-        countryRepository.findAllByCode(it)
+    private val codesCache: MapCache<String, List<Country>> = MapCache {
+        countryRepository.findAllByCode(it.split(","))
     }
 
     override fun getRepository(): CountryRepository {
@@ -25,7 +25,7 @@ class CountryService : AbstractService<Country, CountryRepository>() {
         return countryRepository.findByCode(code)
     }
 
-    fun findAllByCode(codes: List<String>): List<Country> {
-        return codesCache[codes]
+    fun findAllByCode(codes: Collection<String>): List<Country> {
+        return codesCache[codes.joinToString(",")]
     }
 }
