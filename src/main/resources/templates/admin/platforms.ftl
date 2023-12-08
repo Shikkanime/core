@@ -24,8 +24,35 @@
                                         <#assign fieldNameForm = "${platformName}${configurationField.name}">
 
                                         <label class="form-label" for="${fieldNameForm}">${configurationField.label}</label>
-                                        <input id="${fieldNameForm}" name="${configurationField.name}" type="${configurationField.type}" class="form-control"
-                                               value="${configurationField.value}">
+
+                                        <#if configurationField.type == "list">
+                                            <div class="form">
+                                                <div class="list-values">
+                                                    <#list configurationField.value as value>
+                                                        <div class="input-group mb-3">
+                                                            <input id="${fieldNameForm}" name="${configurationField.name}" type="text" class="form-control"
+                                                                   value="${value}">
+                                                            <button class="btn btn-outline-danger" type="button" onclick="deleteElement(this)">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </#list>
+                                                </div>
+
+                                                <div class="input-group mb-3">
+                                                    <input type="text" class="form-control" placeholder="Add new" value="" data-id="${fieldNameForm}"
+                                                           data-name="${configurationField.name}">
+                                                    <button class="btn btn-outline-success" type="button" onclick="addElement(this)">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        <#else>
+                                            <input id="${fieldNameForm}" name="${configurationField.name}" type="${configurationField.type}"
+                                                   class="form-control"
+                                                   value="${configurationField.value}">
+                                        </#if>
                                     </div>
                                 </#list>
                             </div>
@@ -41,4 +68,34 @@
             </div>
         </#list>
     </div>
+
+    <script>
+        function deleteElement(deleteButton) {
+            const closestInputGroup = deleteButton.closest('.input-group');
+            const closestInput = closestInputGroup.querySelector('input');
+
+            if (confirm('Are you sure you want to delete ' + closestInput.value + '?')) {
+                closestInputGroup.remove();
+            }
+        }
+
+        function addElement(addButton) {
+            const closestInputGroup = addButton.closest('.input-group');
+            const closestInput = closestInputGroup.querySelector('input');
+            const list = closestInputGroup.closest('form').querySelector('.list-values');
+
+            const newInputGroup = document.createElement('div');
+            newInputGroup.classList.add('input-group', 'mb-3');
+            newInputGroup.innerHTML = `
+                <input id="` + closestInput.dataset['id'] + `" name="` + closestInput.dataset['name'] + `" type="text" class="form-control" value="` + closestInput.value + `">
+                <button class="btn btn-outline-danger" type="button" onclick="deleteElement(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+
+            list.appendChild(newInputGroup);
+            closestInput.value = '';
+            closestInput.focus();
+        }
+    </script>
 </@layout.main>

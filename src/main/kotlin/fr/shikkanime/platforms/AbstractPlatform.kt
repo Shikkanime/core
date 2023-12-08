@@ -1,9 +1,9 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.Country
+import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.Platform
 import fr.shikkanime.services.CountryService
-import fr.shikkanime.services.PlatformService
 import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
 import kotlinx.coroutines.runBlocking
@@ -17,9 +17,6 @@ abstract class AbstractPlatform<C : PlatformConfiguration> {
     )
 
     @Inject
-    protected lateinit var platformService: PlatformService
-
-    @Inject
     protected lateinit var countryService: CountryService
 
     var configuration: C? = null
@@ -28,7 +25,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration> {
     protected abstract fun getConfigurationClass(): Class<C>
     abstract fun getPlatform(): Platform
     abstract suspend fun fetchApiContent(zonedDateTime: ZonedDateTime): Api
-    abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime): List<String>
+    abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime): List<Episode>
     abstract fun reset()
 
     protected fun getCountries() = countryService.findAllByCode(configuration!!.availableCountries)

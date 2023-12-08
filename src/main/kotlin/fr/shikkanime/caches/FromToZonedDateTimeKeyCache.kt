@@ -21,8 +21,4 @@ data class FromToZonedDateTimeKeyCache(
         result = 31 * result + to.hashCode()
         return result
     }
-
-    override fun toString(): String {
-        return "FromToZonedDateTimeKeyCache(from=$from, to=$to)"
-    }
 }

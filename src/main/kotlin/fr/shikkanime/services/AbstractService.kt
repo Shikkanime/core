@@ -9,11 +9,13 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     fun findAll() = getRepository().findAll()
 
-    fun find(uuid: UUID) = getRepository().find(uuid)
+    fun find(uuid: UUID?) = if (uuid != null) getRepository().find(uuid) else null
 
     open fun save(entity: E) = getRepository().save(entity)
 
-    fun update(entity: E) = getRepository().update(entity)
+    protected fun update(entity: E) = getRepository().update(entity)
+
+    open fun saveOrUpdate(entity: E) = entity
 
     fun delete(entity: E) = getRepository().delete(entity)
 }

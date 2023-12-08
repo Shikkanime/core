@@ -29,7 +29,12 @@ object JobManager {
             val jobName = context?.jobDetail?.key?.name ?: return
             val `class` = Class.forName(jobName) ?: return
             val job = Constant.injector.getInstance(`class`) as? AbstractJob ?: return
-            job.run()
+
+            try {
+                job.run()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

@@ -30,6 +30,7 @@ class AdminController {
     @Path("/platforms")
     @Post
     private fun postPlatform(@BodyParam parameters: Parameters): Response {
+        println(parameters)
         val redirectResponse = RedirectResponse("/admin/platforms")
 
         val platformName = parameters["platform"] ?: return redirectResponse

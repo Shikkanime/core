@@ -12,7 +12,25 @@ class PlatformService : AbstractService<Platform, PlatformRepository>() {
         return platformRepository
     }
 
-    fun findByName(name: String): Platform? {
+    fun findByName(name: String?): Platform? {
+        if (name.isNullOrBlank()) {
+            return null
+        }
+
         return platformRepository.findByName(name)
+    }
+
+    override fun saveOrUpdate(entity: Platform): Platform {
+        val entityFromDb = findByName(entity.name) ?: return save(entity)
+
+        if (entityFromDb.url != entity.url) {
+            entityFromDb.url = entity.url
+        }
+
+        if (entityFromDb.image != entity.image) {
+            entityFromDb.image = entity.image
+        }
+
+        return super.update(entityFromDb)
     }
 }
