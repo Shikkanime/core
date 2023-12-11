@@ -36,7 +36,10 @@ abstract class AbstractConverter<F, T> {
             return try {
                 method.invoke(abstractConverter, `object`) as T
             } catch (e: Exception) {
-                throw IllegalStateException("Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"", e)
+                throw IllegalStateException(
+                    "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"",
+                    e
+                )
             }
         }
 

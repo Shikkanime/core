@@ -2,15 +2,35 @@ package fr.shikkanime.jobs
 
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
 import java.time.ZonedDateTime
 
 class FetchEpisodesJob : AbstractJob() {
+    private var isInitialized = false
+    private var isRunning = false
+    private val set = mutableSetOf<String>()
+
     @Inject
     private lateinit var episodeService: EpisodeService
 
     override fun run() {
+        if (isRunning) {
+            println("Job is already running")
+            return
+        }
+
+        isRunning = true
+
+        if (!isInitialized) {
+            val hashes = episodeService.findAllHashes()
+
+            set.addAll(hashes)
+            Constant.abstractPlatforms.forEach { it.hashCache.addAll(hashes) }
+            isInitialized = true
+        }
+
         val zonedDateTime = ZonedDateTime.now().withNano(0)
         val episodes = mutableListOf<Episode>()
 
@@ -25,6 +45,18 @@ class FetchEpisodesJob : AbstractJob() {
             }
         }
 
-        episodes.forEach { episodeService.saveOrUpdate(it) }
+        episodes
+            .filter {
+                (zonedDateTime.isEqual(it.releaseDate) || zonedDateTime.isAfter(it.releaseDate)) && !set.contains(
+                    it.hash
+                )
+            }
+            .forEach {
+                val savedEpisode = episodeService.save(it)
+                savedEpisode.hash?.let { hash -> set.add(hash) }
+                ImageService.add(savedEpisode.uuid!!, savedEpisode.image!!)
+            }
+
+        isRunning = false
     }
 }

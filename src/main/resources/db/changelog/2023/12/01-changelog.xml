@@ -3,7 +3,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
     <property global="false" name="id" value="1701440511172"/>
     <property global="false" name="author" value="Ziedelth"/>
@@ -40,74 +41,6 @@
     <changeSet id="${id}-2" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
-                <tableExists tableName="platform"/>
-            </not>
-        </preConditions>
-
-        <createTable tableName="platform">
-            <column name="uuid"
-                    type="UUID">
-                <constraints nullable="false"
-                             primaryKey="true"
-                             primaryKeyName="pk_platform"/>
-            </column>
-            <column name="name"
-                    type="VARCHAR(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-            <column name="url"
-                    type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="image"
-                    type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="${id}-3" author="${author}">
-        <preConditions>
-            <not>
-                <tableExists tableName="country"/>
-            </not>
-        </preConditions>
-
-        <createTable tableName="country">
-            <column name="uuid"
-                    type="UUID">
-                <constraints nullable="false"
-                             primaryKey="true"
-                             primaryKeyName="pk_country"/>
-            </column>
-            <column name="name"
-                    type="VARCHAR(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-            <column name="country_code"
-                    type="VARCHAR(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="${id}-4" author="${author}">
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">SELECT COUNT(*)
-                                         FROM country
-                                         WHERE country_code = 'FR'</sqlCheck>
-        </preConditions>
-
-        <insert tableName="country">
-            <column name="uuid" valueComputed="gen_random_uuid()"/>
-            <column name="name">France</column>
-            <column name="country_code">FR</column>
-        </insert>
-    </changeSet>
-
-    <changeSet id="${id}-5" author="${author}">
-        <preConditions onFail="MARK_RAN">
-            <not>
                 <tableExists tableName="anime"/>
             </not>
         </preConditions>
@@ -119,8 +52,8 @@
                              primaryKey="true"
                              primaryKeyName="pk_anime"/>
             </column>
-            <column name="country_uuid"
-                    type="UUID">
+            <column name="country_code"
+                    type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="name"
@@ -132,29 +65,15 @@
                 <constraints nullable="false"/>
             </column>
             <column name="image"
-                    type="VARCHAR(255)">
+                    type="VARCHAR(1000)">
                 <constraints nullable="false"/>
             </column>
             <column name="description"
-                    type="TEXT"/>
+                    type="VARCHAR(1000)"/>
         </createTable>
     </changeSet>
 
-    <changeSet id="${id}-6" author="${author}">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <foreignKeyConstraintExists foreignKeyName="FK_ANIME_ON_COUNTRY_UUID" foreignKeyTableName="anime"/>
-            </not>
-        </preConditions>
-
-        <addForeignKeyConstraint baseColumnNames="country_uuid"
-                                 baseTableName="anime"
-                                 constraintName="FK_ANIME_ON_COUNTRY_UUID"
-                                 referencedColumnNames="uuid"
-                                 referencedTableName="country"/>
-    </changeSet>
-
-    <changeSet id="${id}-7" author="${author}">
+    <changeSet id="${id}-3" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="episode"/>
@@ -168,8 +87,8 @@
                              primaryKey="true"
                              primaryKeyName="pk_episode"/>
             </column>
-            <column name="platform_uuid"
-                    type="UUID">
+            <column name="platform"
+                    type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="anime_uuid"
@@ -186,7 +105,7 @@
             </column>
             <column name="hash"
                     type="VARCHAR(255)">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="release_date"
                     type="timestamp">
@@ -201,13 +120,13 @@
                 <constraints nullable="false"/>
             </column>
             <column name="title"
-                    type="TEXT"/>
+                    type="VARCHAR(1000)"/>
             <column name="url"
-                    type="TEXT">
+                    type="VARCHAR(1000)">
                 <constraints nullable="false"/>
             </column>
             <column name="image"
-                    type="TEXT">
+                    type="VARCHAR(1000)">
                 <constraints nullable="false"/>
             </column>
             <column name="duration"
@@ -217,7 +136,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="${id}-8" author="${author}">
+    <changeSet id="${id}-4" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
                 <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_ON_ANIME_UUID" foreignKeyTableName="episode"/>
@@ -229,19 +148,5 @@
                                  constraintName="FK_EPISODE_ON_ANIME_UUID"
                                  referencedColumnNames="uuid"
                                  referencedTableName="anime"/>
-    </changeSet>
-
-    <changeSet id="${id}-9" author="${author}">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_ON_PLATFORM_UUID" foreignKeyTableName="episode"/>
-            </not>
-        </preConditions>
-
-        <addForeignKeyConstraint baseColumnNames="platform_uuid"
-                                 baseTableName="episode"
-                                 constraintName="FK_EPISODE_ON_PLATFORM_UUID"
-                                 referencedColumnNames="uuid"
-                                 referencedTableName="platform"/>
     </changeSet>
 </databaseChangeLog>

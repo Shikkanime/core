@@ -1,61 +1,55 @@
 package fr.shikkanime.platforms
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Country
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.Platform
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.utils.Constant
+import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.exceptions.AnimeException
+import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.ObjectParser.getAsBoolean
+import fr.shikkanime.utils.ObjectParser.getAsInt
+import fr.shikkanime.utils.ObjectParser.getAsLong
+import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.io.File
 import java.time.ZonedDateTime
 
-class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration>() {
+class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration, CountryCode, JsonArray>() {
     override fun getConfigurationClass(): Class<PlatformConfiguration> = PlatformConfiguration::class.java
 
-    override fun getPlatform(): Platform {
-        return Platform(
-            name = "Animation Digital Network",
-            url = "https://animationdigitalnetwork.fr/",
-            image = "animation_digital_network.png",
-        )
-    }
+    override fun getPlatform(): Platform = Platform.ANIM
 
-    override suspend fun fetchApiContent(zonedDateTime: ZonedDateTime): Api {
-        val map = mutableMapOf<String, String>()
-        val countries = getCountries()
+    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): JsonArray {
         val toDateString = zonedDateTime.toLocalDate().toString()
+        val url = "https://gw.api.animationdigitalnetwork.${key.name.lowercase()}/video/calendar?date=$toDateString"
+        val response = HttpRequest().get(url)
 
-        countries.forEach { country ->
-            val url = "https://gw.api.animationdigitalnetwork.${country.countryCode!!.lowercase()}/video/calendar?date=$toDateString"
-            val response = HttpRequest().get(url)
-
-            if (response.status != HttpStatusCode.OK) {
-                return@forEach
-            }
-
-            map[country.countryCode] = response.bodyAsText()
+        if (response.status != HttpStatusCode.OK) {
+            return JsonArray()
         }
 
-        return Api(zonedDateTime, map)
+        return ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java).getAsJsonArray("videos")!!
     }
 
-    override fun fetchEpisodes(zonedDateTime: ZonedDateTime): List<Episode> {
+    override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
-        val countries = getCountries()
 
-        countries.forEach { country ->
-            val api = getApiContent(country, zonedDateTime)
-            val array = Constant.gson.fromJson(api, JsonObject::class.java).getAsJsonArray("videos")
+        configuration!!.availableCountries.forEach { countryCode ->
+            val api = getApiContent(countryCode, zonedDateTime)
 
-            array.forEach {
+            api.forEach {
                 try {
-                    list.add(convertEpisode(country, it.asJsonObject, zonedDateTime))
-                } catch (e: Exception) {
+                    list.add(convertEpisode(countryCode, it.getAsJsonObject(), zonedDateTime))
+                } catch (_: AnimeException) {
                     // Ignore
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
@@ -68,22 +62,27 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration>(
         TODO("Not yet implemented")
     }
 
-    private fun convertEpisode(country: Country, jsonObject: JsonObject, zonedDateTime: ZonedDateTime): Episode {
+    private fun convertEpisode(
+        countryCode: CountryCode,
+        jsonObject: JsonObject,
+        zonedDateTime: ZonedDateTime
+    ): Episode {
         val show = jsonObject.getAsJsonObject("show") ?: throw Exception("Show is null")
 
-        var animeName = show["shortTitle"]?.asString ?: show["title"]?.asString ?: throw Exception("Anime name is null")
+        var animeName =
+            show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
         animeName = animeName.replace(Regex("Saison \\d"), "").trim('-').trim()
 
-        val animeImage = show["image2x"]?.asString ?: throw Exception("Anime image is null")
-        val animeDescription = show["summary"]?.asString ?: ""
-        val genres = show.getAsJsonArray("genres")?.toList() ?: emptyList()
+        val animeImage = show.getAsString("image2x") ?: throw Exception("Anime image is null")
+        val animeDescription = show.getAsString("summary")?.replace('\n', ' ') ?: ""
+        val genres = show.getAsJsonArray("genres") ?: JsonArray()
 
-        if (genres.isEmpty() || !genres.any { it.asString.startsWith("Animation ", true) }) {
+        if (genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) {
             throw Exception("Anime is not an animation")
         }
 
-        var isSimulcasted = show["simulcast"]?.asBoolean == true ||
-                show["firstReleaseYear"]?.asString == zonedDateTime.toLocalDate().year.toString() ||
+        var isSimulcasted = show.getAsBoolean("simulcast") == true ||
+                show.getAsString("firstReleaseYear") == zonedDateTime.toLocalDate().year.toString() ||
                 configuration?.simulcasts?.contains(animeName) == true
 
         val descriptionLowercase = animeDescription.lowercase()
@@ -94,16 +93,15 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration>(
                 descriptionLowercase.startsWith("(diffusion de l'épisode 1 le")
 
         if (!isSimulcasted) {
-            throw Exception("Anime is not simulcasted")
+            throw AnimeNotSimulcastedException("Anime is not simulcasted")
         }
 
-        val releaseDateString = jsonObject["releaseDate"]?.asString ?: throw Exception("Release date is null")
-        // Example : 2023-12-08T13:30:00Z
+        val releaseDateString = jsonObject.getAsString("releaseDate") ?: throw Exception("Release date is null")
         val releaseDate = ZonedDateTime.parse(releaseDateString)
 
-        val season = show["season"]?.asString?.toIntOrNull() ?: 1
+        val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
 
-        val numberAsString = jsonObject["shortNumber"]?.asString
+        val numberAsString = jsonObject.getAsString("shortNumber")
 
         if (numberAsString?.startsWith("Bande-annonce") == true) {
             throw Exception("Anime is a trailer")
@@ -117,26 +115,26 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration>(
             else -> EpisodeType.EPISODE
         }
 
-        val langType = when (jsonObject.getAsJsonArray("languages").lastOrNull()?.asString) {
+        val langType = when (jsonObject.getAsJsonArray("languages")?.lastOrNull()?.asString) {
             "vostf" -> LangType.SUBTITLES
             "vf" -> LangType.VOICE
             else -> throw Exception("Language is null")
         }
 
-        val id = jsonObject["id"]?.asLong ?: throw Exception("Id is null")
+        val id = jsonObject.getAsInt("id")
 
-        val title = jsonObject["name"]?.asString?.ifBlank { null }
+        val title = jsonObject.getAsString("name")?.ifBlank { null }
 
-        val url = jsonObject["url"]?.asString ?: throw Exception("Url is null")
+        val url = jsonObject.getAsString("url") ?: throw Exception("Url is null")
 
-        val image = jsonObject["image2x"]?.asString ?: throw Exception("Image is null")
+        val image = jsonObject.getAsString("image2x") ?: throw Exception("Image is null")
 
-        val duration = jsonObject["duration"]?.asLong ?: -1
+        val duration = jsonObject.getAsLong("duration", -1)
 
         return Episode(
             platform = getPlatform(),
             anime = Anime(
-                country = country,
+                countryCode = countryCode,
                 name = animeName,
                 releaseDate = releaseDate,
                 image = animeImage,
@@ -144,7 +142,7 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration>(
             ),
             episodeType = episodeType,
             langType = langType,
-            hash = id.toString(),
+            hash = "${countryCode}-${getPlatform()}-$id-$langType",
             releaseDate = releaseDate,
             season = season,
             number = number,

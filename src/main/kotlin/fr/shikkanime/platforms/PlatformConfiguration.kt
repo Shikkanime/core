@@ -1,5 +1,6 @@
 package fr.shikkanime.platforms
 
+import fr.shikkanime.entities.enums.CountryCode
 import io.ktor.http.*
 
 data class ConfigurationField(
@@ -10,7 +11,7 @@ data class ConfigurationField(
 )
 
 open class PlatformConfiguration(
-    var availableCountries: MutableSet<String> = mutableSetOf(),
+    var availableCountries: MutableSet<CountryCode> = mutableSetOf(),
     var apiCheckDelayInMinutes: Long = 0,
     var simulcasts: MutableSet<String> = mutableSetOf(),
 ) {
@@ -21,10 +22,12 @@ open class PlatformConfiguration(
                 return@let
             }
 
-            availableCountries = it.split(",").toMutableSet()
+            availableCountries = CountryCode.from(it.split(",")) as MutableSet<CountryCode>
         }
 
-        parameters["apiCheckDelayInMinutes"]?.let { apiCheckDelayInMinutes = it.toLong() }
+        parameters["apiCheckDelayInMinutes"]?.let {
+            apiCheckDelayInMinutes = it.toLong()
+        }
 
         (parameters.getAll("simulcasts") ?: emptyList()).let {
             val toMutableSet = it.toMutableSet()

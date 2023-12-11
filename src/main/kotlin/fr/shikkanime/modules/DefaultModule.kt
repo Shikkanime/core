@@ -1,6 +1,7 @@
 package fr.shikkanime.modules
 
 import com.google.inject.AbstractModule
+import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
@@ -21,6 +22,10 @@ class DefaultModule : AbstractModule() {
         }
 
         Constant.reflections.getSubTypesOf(AbstractPlatform::class.java).forEach {
+            bind(it).asEagerSingleton()
+        }
+
+        Constant.reflections.getSubTypesOf(AbstractJob::class.java).forEach {
             bind(it).asEagerSingleton()
         }
 

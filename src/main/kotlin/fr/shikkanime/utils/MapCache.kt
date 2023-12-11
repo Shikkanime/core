@@ -6,17 +6,22 @@ import com.google.common.cache.LoadingCache
 import java.time.Duration
 
 class MapCache<K : Any, V>(
-    duration: Duration? = null,
+    private var duration: Duration? = null,
     private val classes: List<Class<*>> = listOf(),
     private val block: (K) -> V,
 ) {
-    private val cache: LoadingCache<K, V>
+    private lateinit var cache: LoadingCache<K, V>
 
     init {
+        setCache()
+        globalCaches.add(this)
+    }
+
+    private fun MapCache<K, V>.setCache() {
         val builder = CacheBuilder.newBuilder()
 
         if (duration != null) {
-            builder.expireAfterWrite(duration)
+            builder.expireAfterWrite(duration!!)
         }
 
         cache = builder
@@ -25,20 +30,31 @@ class MapCache<K : Any, V>(
                     return block(key)
                 }
             })
+    }
 
-        caches.add(this)
+    fun has(key: K): Boolean {
+        return cache.getIfPresent(key) != null
     }
 
     operator fun get(key: K): V {
         return cache.getUnchecked(key)
     }
 
+    operator fun set(key: K, value: V & Any) {
+        cache.put(key, value)
+    }
+
+    fun resetWithNewDuration(duration: Duration) {
+        this.duration = duration
+        setCache()
+    }
+
     companion object {
-        private val caches: MutableList<MapCache<*, *>> = mutableListOf()
+        private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun invalidate(vararg classes: Class<*>) {
             classes.forEach { clazz ->
-                caches.filter { it.classes.contains(clazz) }.forEach { it.cache.invalidateAll() }
+                globalCaches.filter { it.classes.contains(clazz) }.forEach { it.cache.invalidateAll() }
             }
         }
     }

@@ -1,50 +1,37 @@
 package fr.shikkanime.platforms
 
-import fr.shikkanime.entities.Country
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.Platform
-import fr.shikkanime.services.CountryService
-import fr.shikkanime.utils.Constant
-import jakarta.inject.Inject
+import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.ObjectParser
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
 
-abstract class AbstractPlatform<C : PlatformConfiguration> {
-    data class Api(
-        val lastCheck: ZonedDateTime,
-        val content: Map<String, String> = emptyMap(),
-    )
-
-    @Inject
-    protected lateinit var countryService: CountryService
-
+abstract class AbstractPlatform<C : PlatformConfiguration, K : Any, V> {
+    val hashCache = mutableListOf<String>()
     var configuration: C? = null
-    private var apiCache: Api? = null
+    private var apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
 
     protected abstract fun getConfigurationClass(): Class<C>
     abstract fun getPlatform(): Platform
-    abstract suspend fun fetchApiContent(zonedDateTime: ZonedDateTime): Api
-    abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime): List<Episode>
+    abstract suspend fun fetchApiContent(key: K, zonedDateTime: ZonedDateTime): V
+    abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File? = null): List<Episode>
     abstract fun reset()
 
-    protected fun getCountries() = countryService.findAllByCode(configuration!!.availableCountries)
-
-    fun getApiContent(country: Country, zonedDateTime: ZonedDateTime): String {
-        var hasFetch = false
-
-        if (apiCache == null) {
-            apiCache = runBlocking { fetchApiContent(zonedDateTime) }
-            hasFetch = true
+    fun getApiContent(key: K, zonedDateTime: ZonedDateTime): V {
+        if (apiCache.none { it.key.first == key }) {
+            apiCache[Pair(key, zonedDateTime)] = runBlocking { fetchApiContent(key, zonedDateTime) }
         }
 
-        val plusHours = apiCache!!.lastCheck.plusMinutes(configuration!!.apiCheckDelayInMinutes)
+        val entry = apiCache.entries.firstOrNull { it.key.first == key }!!
+        val plusMinutes = entry.key.second.plusMinutes(configuration!!.apiCheckDelayInMinutes)
 
-        if (!hasFetch && zonedDateTime.isEqual(plusHours) || zonedDateTime.isAfter(plusHours)) {
-            apiCache = runBlocking { fetchApiContent(zonedDateTime) }
+        if (zonedDateTime.isEqual(plusMinutes) || zonedDateTime.isAfter(plusMinutes)) {
+            apiCache.remove(entry.key)
+            apiCache[Pair(key, zonedDateTime)] = runBlocking { fetchApiContent(key, zonedDateTime) }
         }
 
-        return apiCache!!.content[country.countryCode]!!
+        return apiCache.entries.firstOrNull { it.key.first == key }!!.value
     }
 
     fun loadConfiguration(): C {
@@ -62,7 +49,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration> {
 
         try {
             println("Reading config file for ${getPlatform().name} platform")
-            val fromJson = Constant.gson.fromJson(file.readText(), getConfigurationClass())
+            val fromJson = ObjectParser.fromJson(file.readText(), getConfigurationClass())
             configuration = fromJson
             return fromJson
         } catch (e: Exception) {
@@ -71,7 +58,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration> {
         }
     }
 
-    fun saveConfiguration() {
+    open fun saveConfiguration() {
         val file = getConfigurationFile()
 
         if (!file.exists()) {
@@ -79,11 +66,10 @@ abstract class AbstractPlatform<C : PlatformConfiguration> {
             file.createNewFile()
         }
 
-        file.writeText(Constant.gson.toJson(configuration))
-        apiCache = null
+        file.writeText(ObjectParser.toJson(configuration))
     }
 
     private fun getConfigurationFile(): File {
-        return File("config/${getPlatform().name!!.lowercase().replace(" ", "-")}.json")
+        return File("config/${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
     }
 }

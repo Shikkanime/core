@@ -23,7 +23,8 @@ class AdminController {
         return TemplateResponse(
             "admin/platforms.ftl",
             "Platforms",
-            mutableMapOf("platforms" to Constant.abstractPlatforms)
+            mutableMapOf(
+                "platforms" to Constant.abstractPlatforms.toList().sortedBy { it.getPlatform().name.lowercase() })
         )
     }
 
@@ -34,7 +35,8 @@ class AdminController {
         val redirectResponse = RedirectResponse("/admin/platforms")
 
         val platformName = parameters["platform"] ?: return redirectResponse
-        val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platformName } ?: return redirectResponse
+        val abstractPlatform =
+            Constant.abstractPlatforms.find { it.getPlatform().name == platformName } ?: return redirectResponse
         abstractPlatform.configuration?.of(parameters)
         abstractPlatform.saveConfiguration()
         return redirectResponse

@@ -1,19 +1,98 @@
 package fr.shikkanime.utils
 
+import com.microsoft.playwright.Browser
+import com.microsoft.playwright.BrowserType
+import com.microsoft.playwright.Page
+import com.microsoft.playwright.Playwright
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import kotlin.system.measureTimeMillis
 
 
 class HttpRequest {
-    suspend fun get(url: String): HttpResponse {
+    private var isBrowserInitialized = false
+    private var playwright: Playwright? = null
+    private var browser: Browser? = null
+    private var page: Page? = null
+
+    suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
         val httpClient = HttpClient(CIO)
         println("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
-        val response = httpClient.get(url)
+        val response = httpClient.get(url) {
+            headers.forEach { (key, value) ->
+                header(key, value)
+            }
+        }
         httpClient.close()
         println("Request to $url done in ${System.currentTimeMillis() - start}ms (GET)")
         return response
+    }
+
+    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: String): HttpResponse {
+        val httpClient = HttpClient(CIO)
+        println("Making request to $url... (POST)")
+        val start = System.currentTimeMillis()
+        val response = httpClient.post(url) {
+            headers.forEach { (key, value) ->
+                header(key, value)
+            }
+
+            setBody(body)
+        }
+        httpClient.close()
+        println("Request to $url done in ${System.currentTimeMillis() - start}ms (POST)")
+        return response
+    }
+
+    private fun initBrowser() {
+        if (isBrowserInitialized) {
+            return
+        }
+
+        playwright = Playwright.create()
+        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true))
+        page = browser?.newPage()
+        page?.setDefaultTimeout(15_000.0)
+        page?.setDefaultNavigationTimeout(15_000.0)
+        isBrowserInitialized = true
+    }
+
+    fun getBrowser(url: String, selector: String? = null, retry: Int = 3): Document {
+        initBrowser()
+        println("Making request to $url... (BROWSER)")
+
+        val takeMs = measureTimeMillis {
+            try {
+                page?.navigate(url)
+
+                if (selector != null) {
+                    page?.waitForSelector(selector)
+                } else {
+                    page?.waitForLoadState()
+                }
+            } catch (e: Exception) {
+                if (retry > 0) {
+                    println("Retrying...")
+                    return getBrowser(url, selector, retry - 1)
+                }
+
+                throw e
+            }
+        }
+
+        val content = page?.content()
+        println("Request to $url done in ${takeMs}ms (BROWSER)")
+        return Jsoup.parse(content ?: throw Exception("Content is null"))
+    }
+
+    fun closeBrowser() {
+        page?.close()
+        browser?.close()
+        playwright?.close()
     }
 }
