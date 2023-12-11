@@ -11,6 +11,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/assets/js/admin/home_chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+    <script src="/assets/js/admin/home_chart.js" crossorigin="anonymous"></script>
 </@layout.main>

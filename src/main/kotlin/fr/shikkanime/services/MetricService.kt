@@ -7,21 +7,16 @@ import fr.shikkanime.repositories.MetricRepository
 import fr.shikkanime.utils.MapCache
 import java.time.Duration
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 
 class MetricService : AbstractService<Metric, MetricRepository>() {
     @Inject
     private lateinit var metricRepository: MetricRepository
 
-    private val averageCpuLoadCache = MapCache<FromToZonedDateTimeKeyCache, Double?>(
-        Duration.of(1, ChronoUnit.HOURS)
-    ) {
+    private val averageCpuLoadCache = MapCache<FromToZonedDateTimeKeyCache, Double?>(Duration.ofHours(1)) {
         metricRepository.getAverageCpuLoad(it.from, it.to)
     }
 
-    private val averageMemoryUsageCache = MapCache<FromToZonedDateTimeKeyCache, Double?>(
-        Duration.of(1, ChronoUnit.HOURS)
-    ) {
+    private val averageMemoryUsageCache = MapCache<FromToZonedDateTimeKeyCache, Double?>(Duration.ofHours(1)) {
         metricRepository.getAverageMemoryUsage(it.from, it.to)
     }
 

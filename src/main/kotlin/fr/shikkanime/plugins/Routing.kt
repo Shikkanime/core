@@ -1,6 +1,5 @@
 package fr.shikkanime.plugins
 
-import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.entities.Link
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.*
@@ -42,7 +41,8 @@ private fun Routing.createRoutes() {
 }
 
 fun Routing.createControllerRoutes(controller: Any) {
-    val prefix = if (controller::class.hasAnnotation<Controller>()) controller::class.findAnnotation<Controller>()!!.value else ""
+    val prefix =
+        if (controller::class.hasAnnotation<Controller>()) controller::class.findAnnotation<Controller>()!!.value else ""
     val kMethods = controller::class.declaredFunctions.filter { it.hasAnnotation<Path>() }.toMutableSet()
 
     route(prefix) {
@@ -170,7 +170,6 @@ private suspend fun callMethodWithParameters(
             kParameter.hasAnnotation<BodyParam>() -> {
                 when (kParameter.type.javaType) {
                     Array<UUID>::class.java -> call.receive<Array<UUID>>()
-                    PlatformDto::class.java -> call.receive<PlatformDto>()
                     Parameters::class.java -> call.receiveParameters()
                     else -> call.receive<String>()
                 }

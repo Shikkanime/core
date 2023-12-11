@@ -2,6 +2,7 @@ package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.*
 import java.time.ZonedDateTime
 import java.util.*
@@ -10,7 +11,8 @@ import java.util.*
 @Table(name = "episode")
 data class Episode(
     override val uuid: UUID? = null,
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     var platform: Platform? = null,
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     var anime: Anime? = null,
@@ -20,7 +22,7 @@ data class Episode(
     @Column(nullable = false, name = "lang_type")
     @Enumerated(EnumType.STRING)
     val langType: LangType? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     val hash: String? = null,
     @Column(nullable = false, name = "release_date")
     val releaseDate: ZonedDateTime = ZonedDateTime.now(),
@@ -28,11 +30,11 @@ data class Episode(
     var season: Int? = null,
     @Column(nullable = false)
     var number: Int? = null,
-    @Column(nullable = true, columnDefinition = "TEXT")
+    @Column(nullable = true, columnDefinition = "VARCHAR(1000)")
     var title: String? = null,
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var url: String? = null,
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
     @Column(nullable = false)
     var duration: Long = -1

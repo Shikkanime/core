@@ -15,7 +15,5 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     protected fun update(entity: E) = getRepository().update(entity)
 
-    open fun saveOrUpdate(entity: E) = entity
-
     fun delete(entity: E) = getRepository().delete(entity)
 }

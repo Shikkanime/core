@@ -23,9 +23,11 @@ class MetricToMetricDtoConverter : AbstractConverter<Metric, MetricDto>() {
         return MetricDto(
             uuid = from.uuid,
             cpuLoad = (from.cpuLoad * 100).toString().replace(',', '.'),
-            averageCpuLoad = metricService.getAverageCpuLoad(minusHours, from.date)?.times(100)?.toString()?.replace(',', '.') ?: "0",
+            averageCpuLoad = metricService.getAverageCpuLoad(minusHours, from.date)?.times(100)?.toString()
+                ?.replace(',', '.') ?: "0",
             memoryUsage = (from.memoryUsage / 1024.0 / 1024.0).toString().replace(',', '.'),
-            averageMemoryUsage = metricService.getAverageMemoryUsage(minusHours, from.date)?.div(1024)?.div(1024)?.toString()?.replace(',', '.') ?: "0",
+            averageMemoryUsage = metricService.getAverageMemoryUsage(minusHours, from.date)?.div(1024)?.div(1024)
+                ?.toString()?.replace(',', '.') ?: "0",
             databaseSize = (from.databaseSize / 1024.0 / 1024.0).toDoublePoint(),
             date = from.date.withZoneSameInstant(europeParisZone).format(dateFormatter)
         )

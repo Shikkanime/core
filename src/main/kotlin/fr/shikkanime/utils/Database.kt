@@ -48,7 +48,11 @@ class Database {
         }
     }
 
-    constructor() : this(File("hibernate.cfg.xml"))
+    constructor() : this(
+        File(
+            ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
+        )
+    )
 
     fun getEntityManager(): EntityManager {
         return sessionFactory.createEntityManager()
