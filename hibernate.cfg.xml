@@ -10,5 +10,8 @@
         <property name="connection.password">mysecretpassword</property>
         <property name="show_sql">false</property>
         <property name="hibernate.current_session_context_class">org.hibernate.context.internal.ThreadLocalSessionContext</property>
+        <property name="hibernate.search.backend.type">lucene</property>
+        <property name="hibernate.search.backend.directory.type">local-filesystem</property>
+        <property name="hibernate.search.backend.analysis.configurer">fr.shikkanime.modules.CustomLuceneAnalysisDefinitionProvider</property>
     </session-factory>
 </hibernate-configuration>

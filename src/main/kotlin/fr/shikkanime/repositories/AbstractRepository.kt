@@ -34,7 +34,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
         return result
     }
 
-    fun findAll(): List<E> {
+    open fun findAll(): List<E> {
         return inTransaction {
             it.createQuery("FROM ${getEntityClass().simpleName}", getEntityClass()).resultList
         }

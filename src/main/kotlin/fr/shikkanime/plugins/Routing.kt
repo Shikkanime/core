@@ -1,6 +1,8 @@
 package fr.shikkanime.plugins
 
-import fr.shikkanime.entities.Link
+import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.entities.LinkObject
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.*
 import fr.ziedelth.utils.routes.method.Delete
@@ -17,6 +19,7 @@ import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import io.ktor.util.*
 import java.util.*
 import kotlin.reflect.KFunction
@@ -57,8 +60,12 @@ fun Routing.createControllerRoutes(controller: Any) {
                 }
             }
 
-            if (method.hasAnnotation<Authenticated>()) {
+            if (method.hasAnnotation<JWTAuthenticated>()) {
                 authenticate("auth-jwt") {
+                    handleMethods(method, prefix, controller, path)
+                }
+            } else if (method.hasAnnotation<AdminSessionAuthenticated>()) {
+                authenticate("auth-admin-session") {
                     handleMethods(method, prefix, controller, path)
                 }
             } else {
@@ -113,26 +120,39 @@ private suspend fun handleRequest(
     println("$httpMethod $replacedPath")
 
     try {
-        when (val response = callMethodWithParameters(method, controller, call, parameters)) {
-            is MultipartResponse -> {
-                call.respondBytes(response.image, response.contentType)
+        val response = callMethodWithParameters(method, controller, call, parameters)
+
+        if (response.session != null) {
+            call.sessions.set(response.session)
+        }
+
+        when (response.type) {
+            ResponseType.MULTIPART -> {
+                val map = response.data as Map<String, Any>
+
+                call.respondBytes(
+                    map["image"] as ByteArray,
+                    map["contentType"] as ContentType,
+                )
             }
 
-            is TemplateResponse -> {
-                val map = response.model.toMutableMap()
+            ResponseType.TEMPLATE -> {
+                val map = response.data as Map<String, Any>
+                val modelMap = map["model"] as MutableMap<String, Any>
 
-                map["links"] = Link.list().map { link ->
+                modelMap["links"] = LinkObject.list().map { link ->
                     link.active = replacedPath.startsWith(link.href)
                     link
                 }
 
-                map["title"] = (if (!response.title.isNullOrBlank()) "${response.title} - " else "") + "Shikkanime"
+                val title = map["title"] as String?
+                modelMap["title"] = (if (!title.isNullOrBlank()) "$title - " else "") + "Shikkanime"
 
-                call.respond(FreeMarkerContent(response.template, map, ""))
+                call.respond(FreeMarkerContent(map["template"] as String, modelMap, ""))
             }
 
-            is RedirectResponse -> {
-                call.respondRedirect(response.path)
+            ResponseType.REDIRECT -> {
+                call.respondRedirect(response.data as String)
             }
 
             else -> {
@@ -140,6 +160,7 @@ private suspend fun handleRequest(
             }
         }
     } catch (e: Exception) {
+        println("Error while calling method $method")
         e.printStackTrace()
         call.respond(HttpStatusCode.BadRequest)
     }
@@ -162,9 +183,13 @@ private suspend fun callMethodWithParameters(
                 controller
             }
 
-            method.hasAnnotation<Authenticated>() && kParameter.hasAnnotation<JWTUser>() -> {
+            method.hasAnnotation<JWTAuthenticated>() && kParameter.hasAnnotation<JWTUser>() -> {
                 val jwtPrincipal = call.principal<JWTPrincipal>()
                 UUID.fromString(jwtPrincipal!!.payload.getClaim("uuid").asString())
+            }
+
+            method.hasAnnotation<AdminSessionAuthenticated>() && kParameter.hasAnnotation<AdminSessionUser>() -> {
+                call.principal<MemberDto>()
             }
 
             kParameter.hasAnnotation<BodyParam>() -> {
@@ -182,9 +207,15 @@ private suspend fun callMethodWithParameters(
             else -> {
                 val value = parameters[kParameter.name]!!.first()
 
-                val parsedValue: Any = when (kParameter.type.javaType) {
+                val parsedValue: Any? = when (kParameter.type.javaType) {
                     UUID::class.java -> UUID.fromString(value)
-                    Int::class.java -> value.toInt()
+                    Int::class.java -> value.toIntOrNull()
+                    CountryCode::class.java -> try {
+                        CountryCode.valueOf(value)
+                    } catch (e: IllegalArgumentException) {
+                        null
+                    }
+
                     else -> value
                 }
 

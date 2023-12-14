@@ -9,5 +9,9 @@ enum class CountryCode(val locale: String? = null, val voice: String? = null) {
         fun from(collection: Collection<String>): Set<CountryCode> {
             return collection.map { valueOf(it.uppercase()) }.toSet()
         }
+
+        fun from(string: String): CountryCode {
+            return valueOf(string.uppercase())
+        }
     }
 }

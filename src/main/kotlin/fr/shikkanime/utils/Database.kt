@@ -25,6 +25,26 @@ class Database {
         val entities = Constant.reflections.getSubTypesOf(ShikkEntity::class.java)
         entities.forEach { configuration.addAnnotatedClass(it) }
         configuration.configure(file)
+
+        val databaseUrl: String? = System.getenv("DATABASE_URL")
+        val databaseUsername: String? = System.getenv("DATABASE_USERNAME")
+        val databasePassword: String? = System.getenv("DATABASE_PASSWORD")
+
+        if (databaseUrl?.isNotBlank() == true) {
+            configuration.setProperty("hibernate.connection.url", databaseUrl)
+            println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_URL")
+        }
+
+        if (databaseUsername?.isNotBlank() == true) {
+            configuration.setProperty("hibernate.connection.username", databaseUsername)
+            println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_USERNAME")
+        }
+
+        if (databasePassword?.isNotBlank() == true) {
+            configuration.setProperty("hibernate.connection.password", databasePassword)
+            println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
+        }
+
         val buildSessionFactory = configuration.buildSessionFactory()
         sessionFactory = buildSessionFactory
 

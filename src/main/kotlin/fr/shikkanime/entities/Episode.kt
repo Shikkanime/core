@@ -24,8 +24,8 @@ data class Episode(
     val langType: LangType? = null,
     @Column(nullable = false, unique = true)
     val hash: String? = null,
-    @Column(nullable = false, name = "release_date")
-    val releaseDate: ZonedDateTime = ZonedDateTime.now(),
+    @Column(nullable = false, name = "release_date_time")
+    val releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = false)
     var season: Int? = null,
     @Column(nullable = false)

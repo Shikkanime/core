@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.MetricDto
 import fr.shikkanime.services.MetricService
+import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
@@ -17,7 +18,8 @@ class MetricController {
 
     @Path
     @Get
-    private fun getPlatforms(): Response {
+    @AdminSessionAuthenticated
+    private fun getMetrics(): Response {
         val oneHourAgo = ZonedDateTime.now().minusHours(1)
         return Response.ok(AbstractConverter.convert(metricService.findAllAfter(oneHourAgo), MetricDto::class.java))
     }

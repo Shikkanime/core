@@ -6,10 +6,13 @@ import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
-object CompressionManager {
+object FileManager {
     init {
         OpenCV.loadLocally()
     }
@@ -39,5 +42,18 @@ object CompressionManager {
         } else {
             throw Exception("Failed to encode image to WebP")
         }
+    }
+
+    fun zipFiles(zipFile: File, list: List<Pair<String, ByteArray>>) {
+        val zipOutputStream = ZipOutputStream(zipFile.outputStream())
+
+        list.forEach { file ->
+            val zipEntry = ZipEntry(file.first)
+            zipOutputStream.putNextEntry(zipEntry)
+            zipOutputStream.write(file.second)
+            zipOutputStream.closeEntry()
+        }
+
+        zipOutputStream.close()
     }
 }

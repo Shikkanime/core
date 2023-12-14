@@ -1,5 +1,6 @@
-<#import "_layout.ftl" as layout />
-<@layout.main>
+<#import "_navigation.ftl" as navigation />
+
+<@navigation.display>
     <div class="accordion" id="accordionPlatforms">
         <#list platforms as abstractPlatform>
             <#assign platformName = abstractPlatform.platform.name()>
@@ -105,4 +106,4 @@
             closestInput.focus();
         }
     </script>
-</@layout.main>
+</@navigation.display>

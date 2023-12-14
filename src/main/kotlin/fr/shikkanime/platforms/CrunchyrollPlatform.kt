@@ -275,14 +275,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
             anime = Anime(
                 countryCode = countryCode,
                 name = animeName,
-                releaseDate = releaseDate,
+                releaseDateTime = releaseDate,
                 image = animeImage,
                 description = animeDescription
             ),
             episodeType = episodeType,
             langType = langType,
             hash = hash,
-            releaseDate = releaseDate,
+            releaseDateTime = releaseDate,
             season = season,
             number = number,
             title = title,

@@ -9,7 +9,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class MetricToMetricDtoConverter : AbstractConverter<Metric, MetricDto>() {
-    private val europeParisZone = ZoneId.of("UTC")
+    private val utcZone = ZoneId.of("UTC")
     private val dateFormatter = DateTimeFormatter.ofPattern("HH:mm:ssZ")
 
     @Inject
@@ -23,13 +23,11 @@ class MetricToMetricDtoConverter : AbstractConverter<Metric, MetricDto>() {
         return MetricDto(
             uuid = from.uuid,
             cpuLoad = (from.cpuLoad * 100).toString().replace(',', '.'),
-            averageCpuLoad = metricService.getAverageCpuLoad(minusHours, from.date)?.times(100)?.toString()
-                ?.replace(',', '.') ?: "0",
+            averageCpuLoad = metricService.getAverageCpuLoad(minusHours, from.date).times(100).toString().replace(',', '.'),
             memoryUsage = (from.memoryUsage / 1024.0 / 1024.0).toString().replace(',', '.'),
-            averageMemoryUsage = metricService.getAverageMemoryUsage(minusHours, from.date)?.div(1024)?.div(1024)
-                ?.toString()?.replace(',', '.') ?: "0",
+            averageMemoryUsage = metricService.getAverageMemoryUsage(minusHours, from.date).div(1024).div(1024).toString().replace(',', '.'),
             databaseSize = (from.databaseSize / 1024.0 / 1024.0).toDoublePoint(),
-            date = from.date.withZoneSameInstant(europeParisZone).format(dateFormatter)
+            date = from.date.withZoneSameInstant(utcZone).format(dateFormatter)
         )
     }
 }

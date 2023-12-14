@@ -2,7 +2,7 @@ package fr.shikkanime.plugins
 
 import freemarker.cache.ClassTemplateLoader
 import io.ktor.http.*
-import io.ktor.serialization.jackson.*
+import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.freemarker.*
 import io.ktor.server.plugins.compression.*
@@ -36,7 +36,7 @@ fun Application.configureHTTP() {
         }
     }
     install(ContentNegotiation) {
-        jackson {
+        gson {
         }
     }
     install(FreeMarker) {

@@ -13,7 +13,7 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     open fun save(entity: E) = getRepository().save(entity)
 
-    protected fun update(entity: E) = getRepository().update(entity)
+    fun update(entity: E) = getRepository().update(entity)
 
     fun delete(entity: E) = getRepository().delete(entity)
 }

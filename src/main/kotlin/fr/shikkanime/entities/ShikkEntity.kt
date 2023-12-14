@@ -10,5 +10,5 @@ import java.util.*
 open class ShikkEntity(
     @Id
     @UuidGenerator
-    open val uuid: UUID? = null,
+    open val uuid: UUID?,
 ) : Serializable

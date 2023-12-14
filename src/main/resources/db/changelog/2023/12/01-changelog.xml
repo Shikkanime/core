@@ -60,7 +60,7 @@
                     type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="release_date"
+            <column name="release_date_time"
                     type="timestamp">
                 <constraints nullable="false"/>
             </column>
@@ -107,7 +107,7 @@
                     type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="release_date"
+            <column name="release_date_time"
                     type="timestamp">
                 <constraints nullable="false"/>
             </column>
@@ -139,13 +139,13 @@
     <changeSet id="${id}-4" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
-                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_ON_ANIME_UUID" foreignKeyTableName="episode"/>
+                <foreignKeyConstraintExists foreignKeyName="fk_episode_on_anime_uuid" foreignKeyTableName="episode"/>
             </not>
         </preConditions>
 
         <addForeignKeyConstraint baseColumnNames="anime_uuid"
                                  baseTableName="episode"
-                                 constraintName="FK_EPISODE_ON_ANIME_UUID"
+                                 constraintName="fk_episode_on_anime_uuid"
                                  referencedColumnNames="uuid"
                                  referencedTableName="anime"/>
     </changeSet>

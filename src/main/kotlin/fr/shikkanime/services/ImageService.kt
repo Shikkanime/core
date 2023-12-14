@@ -1,46 +1,69 @@
 package fr.shikkanime.services
 
-import fr.shikkanime.utils.CompressionManager
+import com.mortennobel.imagescaling.ResampleOp
+import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
 import java.util.concurrent.Executors
+import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
 object ImageService {
     data class Image(
+        val uuid: String,
         val url: String,
         var bytes: ByteArray = byteArrayOf(),
-        var ratio: Double = 0.0,
+        var originalSize: Long = 0,
+        var size: Long = 0,
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (javaClass != other?.javaClass) return false
+            if (other !is Image) return false
 
-            other as Image
-
+            if (uuid != other.uuid) return false
             if (url != other.url) return false
             if (!bytes.contentEquals(other.bytes)) return false
-            if (ratio != other.ratio) return false
+            if (originalSize != other.originalSize) return false
+            if (size != other.size) return false
 
             return true
         }
 
         override fun hashCode(): Int {
-            var result = url.hashCode()
+            var result = uuid.hashCode()
+            result = 31 * result + url.hashCode()
             result = 31 * result + bytes.contentHashCode()
-            result = 31 * result + ratio.hashCode()
+            result = 31 * result + originalSize.hashCode()
+            result = 31 * result + size.hashCode()
             return result
         }
     }
 
     private val threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
     private val file = File("images-cache.shikk")
-    private var cache = mutableMapOf<UUID, Image>()
+    private var cache = mutableListOf<Image>()
+
+    private fun toHumanReadable(bytes: Long): String {
+        val kiloByte = 1024L
+        val megaByte = kiloByte * 1024L
+        val gigaByte = megaByte * 1024L
+        val teraByte = gigaByte * 1024L
+
+        return when {
+            bytes < kiloByte -> "$bytes B"
+            bytes < megaByte -> String.format("%.2f KiB", bytes.toDouble() / kiloByte)
+            bytes < gigaByte -> String.format("%.2f MiB", bytes.toDouble() / megaByte)
+            bytes < teraByte -> String.format("%.2f GiB", bytes.toDouble() / gigaByte)
+            else -> String.format("%.2f TiB", bytes.toDouble() / teraByte)
+        }
+    }
 
     fun loadCache() {
         if (!file.exists()) {
@@ -51,12 +74,12 @@ object ImageService {
         println("Loading images cache...")
 
         val take = measureTimeMillis {
-            val json = String(CompressionManager.fromGzip(file.readBytes()))
-            val map = ObjectParser.fromJson(json, mutableMapOf<UUID, Image>().javaClass)
+            val json = String(FileManager.fromGzip(file.readBytes()))
+            val map = ObjectParser.fromJson(json, Array<Image>::class.java).toMutableList()
             cache = map
         }
 
-        println("Loaded images cache in $take ms")
+        println("Loaded images cache in $take ms (${cache.size} images)")
     }
 
     fun saveCache() {
@@ -67,17 +90,19 @@ object ImageService {
         println("Saving images cache...")
 
         val take = measureTimeMillis {
-            file.writeBytes(CompressionManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
+            file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        println("Saved images cache in $take ms")
+        println("Saved images cache in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${toHumanReadable(cache.sumOf { it.size })})")
     }
 
-    fun contains(uuid: UUID) = cache.containsKey(uuid)
+    fun add(uuid: UUID, url: String, width: Int, height: Int) {
+        if (get(uuid) != null) {
+            return
+        }
 
-    fun add(uuid: UUID, url: String) {
-        val image = Image(url)
-        cache[uuid] = image
+        val image = Image(uuid.toString(), url)
+        cache.add(image)
 
         threadPool.submit {
             val take = measureTimeMillis {
@@ -89,7 +114,7 @@ object ImageService {
 
                     if (httpResponse.status != HttpStatusCode.OK) {
                         println("Failed to load image $url")
-                        cache.remove(uuid)
+                        remove(uuid)
                         return@measureTimeMillis
                     }
 
@@ -99,23 +124,42 @@ object ImageService {
 
                     if (bytes.isEmpty()) {
                         println("Failed to load image $url")
-                        cache.remove(uuid)
+                        remove(uuid)
                         return@measureTimeMillis
                     }
 
                     println("Encoding image to WebP...")
-                    val webp = CompressionManager.encodeToWebP(bytes)
+                    val resized = ResampleOp(width, height).filter(ImageIO.read(ByteArrayInputStream(bytes)), null)
+                    val tmpFile = File.createTempFile("shikk", ".png")
+                        .apply { writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray()) }
+                    val readBytesResized = tmpFile.readBytes()
+                    val webp = FileManager.encodeToWebP(readBytesResized)
+                    tmpFile.delete()
+
+                    if (webp.isEmpty()) {
+                        println("Failed to encode image to WebP")
+                        remove(uuid)
+                        return@measureTimeMillis
+                    }
+
                     image.bytes = webp
-                    image.ratio = bytes.size.toDouble() / webp.size.toDouble()
-                    cache[uuid] = image
+                    image.originalSize = bytes.size.toLong()
+                    image.size = webp.size.toLong()
+                    cache[cache.indexOf(image)] = image
                 } catch (e: Exception) {
                     println("Failed to load image $url: ${e.message}")
-                    cache.remove(uuid)
+                    e.printStackTrace()
+                    remove(uuid)
                 }
             }
 
-            println("Ratio for $url: ${String.format("%.2f", image.ratio * 100)}%, took $take ms")
-            println("Encoded image to WebP in ${take}ms")
+            println("Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${toHumanReadable(image.size)})")
         }
     }
+
+    private fun remove(uuid: UUID) {
+        cache.removeIf { it.uuid == uuid.toString() }
+    }
+
+    operator fun get(uuid: UUID): Image? = cache.find { it.uuid == uuid.toString() }
 }
