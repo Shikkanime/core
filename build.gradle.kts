@@ -46,7 +46,7 @@ dependencies {
     implementation("com.microsoft.playwright:playwright:1.40.0")
     implementation("org.jsoup:jsoup:1.17.1")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.openpnp:opencv:4.7.0-0")
+    implementation("org.openpnp:opencv:4.8.1-0")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("com.h2database:h2:2.2.224")
