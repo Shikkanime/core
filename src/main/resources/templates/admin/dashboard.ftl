@@ -1,5 +1,6 @@
-<#import "_layout.ftl" as layout />
-<@layout.main>
+<#import "_navigation.ftl" as navigation />
+
+<@navigation.display>
     <h5>Database current size: <span id="dbSize"></span></h5>
 
     <div class="row g-3">
@@ -13,4 +14,4 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
     <script src="/assets/js/admin/home_chart.js" crossorigin="anonymous"></script>
-</@layout.main>
+</@navigation.display>

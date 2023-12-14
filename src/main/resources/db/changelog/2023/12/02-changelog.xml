@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <property global="false" name="id" value="1702551088486"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="member">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_member"/>
+            </column>
+            <column name="creation_date_time"
+                    type="timestamp"/>
+            <column name="username"
+                    type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password"
+                    type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <createTable tableName="anime_simulcast">
+            <column name="anime_uuid"
+                    type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="simulcast_uuid"
+                    type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <createTable tableName="simulcast">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_simulcast"/>
+            </column>
+            <column name="season"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="year"
+                    type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <addForeignKeyConstraint baseColumnNames="anime_uuid"
+                                 baseTableName="anime_simulcast"
+                                 constraintName="fk_anisim_on_anime"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <addForeignKeyConstraint baseColumnNames="simulcast_uuid"
+                                 baseTableName="anime_simulcast"
+                                 constraintName="fk_anisim_on_simulcast"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="simulcast"/>
+    </changeSet>
+</databaseChangeLog>

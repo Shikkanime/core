@@ -2,7 +2,6 @@ package fr.shikkanime.jobs
 
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.services.EpisodeService
-import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
 import java.time.ZonedDateTime
@@ -47,14 +46,13 @@ class FetchEpisodesJob : AbstractJob() {
 
         episodes
             .filter {
-                (zonedDateTime.isEqual(it.releaseDate) || zonedDateTime.isAfter(it.releaseDate)) && !set.contains(
+                (zonedDateTime.isEqual(it.releaseDateTime) || zonedDateTime.isAfter(it.releaseDateTime)) && !set.contains(
                     it.hash
                 )
             }
             .forEach {
                 val savedEpisode = episodeService.save(it)
                 savedEpisode.hash?.let { hash -> set.add(hash) }
-                ImageService.add(savedEpisode.uuid!!, savedEpisode.image!!)
             }
 
         isRunning = false

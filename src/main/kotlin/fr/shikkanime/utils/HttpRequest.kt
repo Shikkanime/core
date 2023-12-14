@@ -5,7 +5,7 @@ import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import org.jsoup.Jsoup
@@ -19,8 +19,19 @@ class HttpRequest {
     private var browser: Browser? = null
     private var page: Page? = null
 
+    private fun httpClient(): HttpClient {
+        val httpClient = HttpClient(OkHttp) {
+            engine {
+                config {
+                    followRedirects(true)
+                }
+            }
+        }
+        return httpClient
+    }
+
     suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
-        val httpClient = HttpClient(CIO)
+        val httpClient = httpClient()
         println("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
         val response = httpClient.get(url) {
@@ -28,13 +39,14 @@ class HttpRequest {
                 header(key, value)
             }
         }
+
         httpClient.close()
         println("Request to $url done in ${System.currentTimeMillis() - start}ms (GET)")
         return response
     }
 
     suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: String): HttpResponse {
-        val httpClient = HttpClient(CIO)
+        val httpClient = httpClient()
         println("Making request to $url... (POST)")
         val start = System.currentTimeMillis()
         val response = httpClient.post(url) {

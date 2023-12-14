@@ -43,7 +43,7 @@ abstract class AbstractConverter<F, T> {
             }
         }
 
-        fun <T> convert(list: List<Any>, to: Class<T>): List<T> {
+        fun <T> convert(list: Collection<Any>, to: Class<T>): List<T> {
             return list.map { convert(it, to) }
         }
     }

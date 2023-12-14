@@ -12,12 +12,12 @@ class MetricService : AbstractService<Metric, MetricRepository>() {
     @Inject
     private lateinit var metricRepository: MetricRepository
 
-    private val averageCpuLoadCache = MapCache<FromToZonedDateTimeKeyCache, Double?>(Duration.ofHours(1)) {
-        metricRepository.getAverageCpuLoad(it.from, it.to)
+    private val averageCpuLoadCache = MapCache<FromToZonedDateTimeKeyCache, Double>(Duration.ofHours(1)) {
+        metricRepository.getAverageCpuLoad(it.from, it.to)!!
     }
 
-    private val averageMemoryUsageCache = MapCache<FromToZonedDateTimeKeyCache, Double?>(Duration.ofHours(1)) {
-        metricRepository.getAverageMemoryUsage(it.from, it.to)
+    private val averageMemoryUsageCache = MapCache<FromToZonedDateTimeKeyCache, Double>(Duration.ofHours(1)) {
+        metricRepository.getAverageMemoryUsage(it.from, it.to)!!
     }
 
     override fun getRepository(): MetricRepository {
@@ -28,11 +28,11 @@ class MetricService : AbstractService<Metric, MetricRepository>() {
         return metricRepository.findAllAfter(date)
     }
 
-    fun getAverageCpuLoad(from: ZonedDateTime, to: ZonedDateTime): Double? {
+    fun getAverageCpuLoad(from: ZonedDateTime, to: ZonedDateTime): Double {
         return averageCpuLoadCache[FromToZonedDateTimeKeyCache(from, to)]
     }
 
-    fun getAverageMemoryUsage(from: ZonedDateTime, to: ZonedDateTime): Double? {
+    fun getAverageMemoryUsage(from: ZonedDateTime, to: ZonedDateTime): Double {
         return averageMemoryUsageCache[FromToZonedDateTimeKeyCache(from, to)]
     }
 
