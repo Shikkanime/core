@@ -35,7 +35,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
-    implementation("org.hibernate.orm:hibernate-core:6.4.0.Final")
+    implementation("org.hibernate.orm:hibernate-core:6.4.1.Final")
     implementation("org.postgresql:postgresql:42.7.0")
     implementation("org.reflections:reflections:0.10.2")
     implementation("com.google.inject:guice:7.0.0")
