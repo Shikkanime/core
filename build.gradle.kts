@@ -46,7 +46,7 @@ dependencies {
     implementation("com.google.inject:guice:7.0.0")
     implementation("org.liquibase:liquibase-core:4.25.0")
     implementation("org.quartz-scheduler:quartz:2.5.0-rc1")
-    implementation("com.google.guava:guava:32.1.3-jre")
+    implementation("com.google.guava:guava:33.0.0-jre")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
     implementation("com.microsoft.playwright:playwright:1.40.0")
     implementation("org.jsoup:jsoup:1.17.1")
