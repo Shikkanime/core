@@ -105,7 +105,4 @@ async function setChartData() {
     memoryChart.data.datasets[0].data = data.map(metric => metric.memoryUsage);
     memoryChart.data.datasets[1].data = data.filter(metric => metric.averageMemoryUsage !== "0").map(metric => metric.averageMemoryUsage);
     memoryChart.update();
-
-    const lastMetric = data[data.length - 1];
-    document.getElementById('dbSize').innerText = lastMetric.databaseSize + ' MB';
 }

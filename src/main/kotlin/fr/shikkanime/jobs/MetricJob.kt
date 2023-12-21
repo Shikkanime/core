@@ -16,7 +16,6 @@ class MetricJob : AbstractJob() {
             Metric(
                 cpuLoad = getProcessCPULoad(),
                 memoryUsage = getProcessMemoryUsage(),
-                databaseSize = metricService.getSize()
             )
         )
     }

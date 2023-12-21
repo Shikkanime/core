@@ -9,6 +9,5 @@ data class MetricDto(
     val averageCpuLoad: String,
     val memoryUsage: String,
     val averageMemoryUsage: String,
-    val databaseSize: String,
     val date: String,
 ) : Serializable

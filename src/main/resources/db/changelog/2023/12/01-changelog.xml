@@ -28,8 +28,6 @@
                     type="DOUBLE"/>
             <column name="memory_usage"
                     type="BIGINT"/>
-            <column name="database_size"
-                    type="BIGINT"/>
 
             <column name="date"
                     type="timestamp">
@@ -69,7 +67,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="description"
-                    type="VARCHAR(1000)"/>
+                    type="VARCHAR(2000)"/>
         </createTable>
     </changeSet>
 

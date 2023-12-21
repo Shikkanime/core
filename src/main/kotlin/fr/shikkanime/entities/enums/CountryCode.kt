@@ -13,5 +13,13 @@ enum class CountryCode(val locale: String? = null, val voice: String? = null) {
         fun from(string: String): CountryCode {
             return valueOf(string.uppercase())
         }
+
+        fun fromNullable(string: String?): CountryCode? {
+            return if (string == null) null else try {
+                valueOf(string.uppercase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
     }
 }

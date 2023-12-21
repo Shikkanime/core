@@ -3,6 +3,7 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.repositories.SimulcastRepository
+import fr.shikkanime.utils.Constant
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     @Inject
@@ -10,6 +11,10 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun getRepository(): SimulcastRepository {
         return simulcastRepository
+    }
+
+    override fun findAll(): List<Simulcast> {
+        return super.findAll().sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
     }
 
     fun findBySeasonAndYear(season: String, year: Int): Simulcast? {

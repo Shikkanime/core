@@ -11,7 +11,7 @@ class MemberToUnsecuredMemberDtoConverter : AbstractConverter<Member, UnsecuredM
             uuid = from.uuid,
             creationDateTime = from.creationDateTime.format(DateTimeFormatter.ISO_DATE_TIME),
             username = from.username!!,
-            password = from.password!!,
+            encryptedPassword = from.encryptedPassword!!,
             role = from.role,
         )
     }

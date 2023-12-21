@@ -2,8 +2,10 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
+import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
@@ -16,6 +18,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository
     }
 
+    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): List<Anime> {
+        return animeRepository.findAll(sort, page, limit)
+    }
+
     fun preIndex() {
         animeRepository.preIndex()
     }
@@ -24,8 +30,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository.findByLikeName(countryCode, name)
     }
 
-    fun findByName(countryCode: CountryCode, name: String?): List<Anime> {
-        return animeRepository.findByName(countryCode, name)
+    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): List<Anime> {
+        return animeRepository.findByName(name, countryCode, page, limit)
+    }
+
+    fun findBySimulcast(uuid: UUID, countryCode: CountryCode, sort: List<SortParameter>, page: Int, limit: Int): List<Anime> {
+        return animeRepository.findBySimulcast(uuid, countryCode, sort, page, limit)
     }
 
     override fun save(entity: Anime): Anime {

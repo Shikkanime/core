@@ -9,6 +9,6 @@ data class UnsecuredMemberDto(
     val uuid: UUID?,
     val creationDateTime: String,
     val username: String,
-    val password: ByteArray,
+    val encryptedPassword: ByteArray,
     val role: Role,
 ) : Principal, Serializable

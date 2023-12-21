@@ -1,8 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 
 <@navigation.display>
-    <h5>Database current size: <span id="dbSize"></span></h5>
-
     <div class="row g-3">
         <div class="col-md-6" style="height: 50vh">
             <canvas id="cpuLoadChart"></canvas>

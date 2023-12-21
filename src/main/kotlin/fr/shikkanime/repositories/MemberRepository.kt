@@ -14,7 +14,7 @@ class MemberRepository : AbstractRepository<Member>() {
 
     fun findByUsernameAndPassword(username: String, password: ByteArray): Member? {
         return inTransaction {
-            it.createQuery("FROM Member WHERE username = :username AND password = :password", getEntityClass())
+            it.createQuery("FROM Member WHERE username = :username AND encryptedPassword = :password", getEntityClass())
                 .setParameter("username", username)
                 .setParameter("password", password)
                 .resultList

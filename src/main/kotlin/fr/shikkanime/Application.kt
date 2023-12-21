@@ -35,22 +35,33 @@ fun main() {
 
     Constant.injector.getInstance(MemberService::class.java).initDefaultAdminUser()
 
-    runBlocking {
-        val httpResponse = HttpRequest().get("https://beta-api.ziedelth.fr/episodes/country/fr/page/1/limit/30")
+    // Sync episodes from Jais
+    if (false) {
+        val episodes = mutableListOf<Episode>()
 
-        if (httpResponse.status.isSuccess()) {
-            val episodes =
-                AbstractConverter.convert(ObjectParser.fromJson(httpResponse.bodyAsText(), Array<EpisodeDto>::class.java).toList(), Episode::class.java)
-            episodes.filter { it.uuid == null }.forEach { episodeService.save(it) }
+        (141 downTo 1).forEach {
+            runBlocking {
+                val httpResponse = HttpRequest().get("https://beta-api.ziedelth.fr/episodes/country/fr/page/$it/limit/30")
+
+                if (httpResponse.status.isSuccess()) {
+                    episodes.addAll(
+                        AbstractConverter.convert(
+                            ObjectParser.fromJson(httpResponse.bodyAsText(), Array<EpisodeDto>::class.java).toList(),
+                            Episode::class.java
+                        )
+                    )
+                }
+            }
         }
+
+        episodes.filter { it.uuid == null || it.platform?.name != "Disney+" }.forEach { episodeService.save(it) }
     }
 
     println("Starting jobs...")
     JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
-    JobManager.scheduleJob("0 */5 * * * ?", GCJob::class.java)
     JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
-    JobManager.scheduleJob("0 */5 * * * ?", SavingImageCacheJob::class.java)
-    JobManager.scheduleJob("0 */15 * * * ?", BackupJob::class.java)
+    JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
+    JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
     JobManager.start()
 
     println("Starting server...")

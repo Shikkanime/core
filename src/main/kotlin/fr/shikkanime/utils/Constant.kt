@@ -9,10 +9,8 @@ import org.reflections.Reflections
 object Constant {
     val reflections = Reflections("fr.shikkanime")
     val injector: Injector = Guice.createInjector(DefaultModule())
-
-    val abstractPlatforms = reflections.getSubTypesOf(AbstractPlatform::class.java).map {
-        injector.getInstance(it)
-    }
+    val abstractPlatforms = reflections.getSubTypesOf(AbstractPlatform::class.java).map { injector.getInstance(it) }
+    val seasons = listOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
 
     init {
         abstractPlatforms.forEach {

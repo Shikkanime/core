@@ -1,4 +1,4 @@
-package fr.ziedelth.utils.routes.method
+package fr.shikkanime.utils.routes.method
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)

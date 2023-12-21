@@ -14,8 +14,6 @@ data class Metric(
     val cpuLoad: Double = 0.0,
     @Column(name = "memory_usage")
     val memoryUsage: Long = 0,
-    @Column(name = "database_size")
-    val databaseSize: Long = 0,
     @Column(nullable = false)
     val date: ZonedDateTime = ZonedDateTime.now(),
 ) : ShikkEntity(uuid)
