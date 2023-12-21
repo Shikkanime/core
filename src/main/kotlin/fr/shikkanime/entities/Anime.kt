@@ -23,7 +23,7 @@ data class Anime(
     val releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
-    @Column(nullable = true, columnDefinition = "VARCHAR(1000)")
+    @Column(nullable = true, columnDefinition = "VARCHAR(2000)")
     var description: String? = null,
     @ManyToMany
     @JoinTable(

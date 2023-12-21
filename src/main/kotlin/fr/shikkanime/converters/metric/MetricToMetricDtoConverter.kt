@@ -15,8 +15,6 @@ class MetricToMetricDtoConverter : AbstractConverter<Metric, MetricDto>() {
     @Inject
     private lateinit var metricService: MetricService
 
-    private fun Double.toDoublePoint() = String.format("%.2f", this)
-
     override fun convert(from: Metric): MetricDto {
         val minusHours = from.date.minusHours(1)
 
@@ -26,7 +24,6 @@ class MetricToMetricDtoConverter : AbstractConverter<Metric, MetricDto>() {
             averageCpuLoad = metricService.getAverageCpuLoad(minusHours, from.date).times(100).toString().replace(',', '.'),
             memoryUsage = (from.memoryUsage / 1024.0 / 1024.0).toString().replace(',', '.'),
             averageMemoryUsage = metricService.getAverageMemoryUsage(minusHours, from.date).div(1024).div(1024).toString().replace(',', '.'),
-            databaseSize = (from.databaseSize / 1024.0 / 1024.0).toDoublePoint(),
             date = from.date.withZoneSameInstant(utcZone).format(dateFormatter)
         )
     }

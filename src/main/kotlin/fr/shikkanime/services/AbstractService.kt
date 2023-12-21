@@ -7,7 +7,7 @@ import java.util.*
 abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
     protected abstract fun getRepository(): R
 
-    fun findAll() = getRepository().findAll()
+    open fun findAll() = getRepository().findAll()
 
     fun find(uuid: UUID?) = if (uuid != null) getRepository().find(uuid) else null
 

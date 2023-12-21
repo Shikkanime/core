@@ -3,9 +3,11 @@ package fr.shikkanime.plugins
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -44,7 +46,7 @@ fun Application.configureSecurity() {
                 return@validate session
             }
             challenge {
-                call.respondRedirect("/admin")
+                call.respond(HttpStatusCode.Unauthorized, MessageDto(MessageDto.Type.ERROR, "You are not authorized to access this page"))
             }
         }
     }

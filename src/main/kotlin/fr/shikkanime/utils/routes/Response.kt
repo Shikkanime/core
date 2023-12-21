@@ -58,5 +58,6 @@ open class Response(
         fun badRequest(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.BadRequest, data = data, session = session)
 
         fun notFound(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.NotFound, data = data, session = session)
+        fun conflict(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.Conflict, data = data, session = session)
     }
 }

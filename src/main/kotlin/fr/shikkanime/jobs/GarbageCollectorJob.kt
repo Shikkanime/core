@@ -1,7 +1,6 @@
 package fr.shikkanime.jobs
 
-class GCJob : AbstractJob() {
-
+class GarbageCollectorJob : AbstractJob() {
     override fun run() {
         System.gc()
     }

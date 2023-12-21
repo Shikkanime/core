@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
@@ -46,9 +47,10 @@ object ImageService {
         }
     }
 
-    private val threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1)
+    private val threadPool = Executors.newFixedThreadPool(2)
     private val file = File("images-cache.shikk")
     private var cache = mutableListOf<Image>()
+    private val change = AtomicBoolean(false)
 
     private fun toHumanReadable(bytes: Long): String {
         val kiloByte = 1024L
@@ -67,6 +69,7 @@ object ImageService {
 
     fun loadCache() {
         if (!file.exists()) {
+            change.set(true)
             saveCache()
             return
         }
@@ -83,6 +86,11 @@ object ImageService {
     }
 
     fun saveCache() {
+        if (!change.get()) {
+            println("No changes detected in images cache")
+            return
+        }
+
         if (!file.exists()) {
             file.createNewFile()
         }
@@ -94,6 +102,7 @@ object ImageService {
         }
 
         println("Saved images cache in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${toHumanReadable(cache.sumOf { it.size })})")
+        change.set(false)
     }
 
     fun add(uuid: UUID, url: String, width: Int, height: Int) {
@@ -146,6 +155,7 @@ object ImageService {
                     image.originalSize = bytes.size.toLong()
                     image.size = webp.size.toLong()
                     cache[cache.indexOf(image)] = image
+                    change.set(true)
                 } catch (e: Exception) {
                     println("Failed to load image $url: ${e.message}")
                     e.printStackTrace()

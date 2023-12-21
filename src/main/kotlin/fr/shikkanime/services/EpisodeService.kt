@@ -5,11 +5,11 @@ import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.EpisodeRepository
+import fr.shikkanime.utils.Constant
 import org.hibernate.Hibernate
 
 class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     private val simulcastRange = 10
-    private val seasons = listOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
 
     @Inject
     private lateinit var episodeRepository: EpisodeRepository
@@ -41,7 +41,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             }
 
             val simulcasts = adjustedDates.map {
-                Simulcast(season = seasons[(it.monthValue - 1) / 3], year = it.year)
+                Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year)
             }
 
             val previousSimulcast = simulcasts[0]

@@ -29,10 +29,4 @@ class MetricRepository : AbstractRepository<Metric>() {
                 .singleResult
         }
     }
-
-    fun getSize(): Long {
-        return inTransaction {
-            it.createNativeQuery("SELECT pg_database_size('shikkanime')").singleResult as Long
-        }
-    }
 }

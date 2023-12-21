@@ -38,6 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-okhttp:$ktor_version")
+    implementation("io.github.smiley4:ktor-swagger-ui:2.7.2")
     implementation("org.hibernate.orm:hibernate-core:6.4.1.Final")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:7.1.0.Alpha1")
     implementation("org.hibernate.search:hibernate-search-backend-lucene:7.1.0.Alpha1")
@@ -56,6 +57,7 @@ dependencies {
     implementation("com.mortennobel:java-image-scaling:0.8.6")
     implementation("io.ktor:ktor-client-okhttp-jvm:2.3.7")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
+    testImplementation("io.ktor:ktor-client-mock:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("com.h2database:h2:2.2.224")
 }

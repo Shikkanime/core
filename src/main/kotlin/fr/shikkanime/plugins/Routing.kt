@@ -5,16 +5,24 @@ import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.*
-import fr.ziedelth.utils.routes.method.Delete
-import fr.ziedelth.utils.routes.method.Get
-import fr.ziedelth.utils.routes.method.Post
-import fr.ziedelth.utils.routes.method.Put
+import fr.shikkanime.utils.routes.method.Delete
+import fr.shikkanime.utils.routes.method.Get
+import fr.shikkanime.utils.routes.method.Post
+import fr.shikkanime.utils.routes.method.Put
+import fr.shikkanime.utils.routes.openapi.OpenAPI
+import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.PathParam
+import fr.shikkanime.utils.routes.param.QueryParam
+import io.github.smiley4.ktorswaggerui.dsl.*
+import io.github.smiley4.ktorswaggerui.dsl.get
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.freemarker.*
 import io.ktor.server.http.content.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -22,12 +30,12 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.util.*
 import java.util.*
+import kotlin.collections.set
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.declaredFunctions
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 fun Application.configureRouting() {
     routing {
@@ -48,6 +56,14 @@ fun Routing.createControllerRoutes(controller: Any) {
         if (controller::class.hasAnnotation<Controller>()) controller::class.findAnnotation<Controller>()!!.value else ""
     val kMethods = controller::class.declaredFunctions.filter { it.hasAnnotation<Path>() }.toMutableSet()
 
+    route("$prefix/", {
+        hidden = true
+    }) {
+        get {
+            call.respondRedirect(prefix)
+        }
+    }
+
     route(prefix) {
         kMethods.forEach { method ->
             val path = method.findAnnotation<Path>()!!.value
@@ -56,7 +72,9 @@ fun Routing.createControllerRoutes(controller: Any) {
                 val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
 
                 install(CachingHeaders) {
-                    options { _, _ -> io.ktor.http.content.CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached)) }
+                    options { _, _ ->
+                        CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
+                    }
                 }
             }
 
@@ -75,32 +93,93 @@ fun Routing.createControllerRoutes(controller: Any) {
     }
 }
 
+private fun swagger(
+    method: KFunction<*>,
+    routeTags: List<String>,
+    hiddenRoute: Boolean
+): OpenApiRoute.() -> Unit {
+    val openApi = method.findAnnotation<OpenAPI>() ?: return {
+        tags = routeTags
+        hidden = hiddenRoute
+    }
+
+    return {
+        tags = routeTags
+        hidden = hiddenRoute
+        description = openApi.description
+        request {
+            method.parameters.filter { it.hasAnnotation<QueryParam>() }.forEach { parameter ->
+                val qp = parameter.findAnnotation<QueryParam>()!!
+                val name = qp.name.ifBlank { parameter.name!! }
+                val type = if (qp.type == Unit::class) parameter.type.jvmErasure else qp.type
+
+                queryParameter(name, type) {
+                    description = qp.description
+                    required = qp.required
+                }
+            }
+
+            method.parameters.filter { it.hasAnnotation<PathParam>() }.forEach { parameter ->
+                val pp = parameter.findAnnotation<PathParam>()!!
+                val name = pp.name.ifBlank { parameter.name!! }
+                val type = if (pp.type == Unit::class) parameter.type.jvmErasure else pp.type
+
+                pathParameter(name, type) {
+                    description = pp.description
+                    required = true
+                }
+            }
+        }
+        response {
+            openApi.responses.forEach { response ->
+                HttpStatusCode.fromValue(response.status) to {
+                    description = response.description
+
+                    if (response.type.java.isArray) {
+                        body(BodyTypeDescriptor.multipleOf(response.type.java.componentType.kotlin)) {
+                            mediaType(ContentType(response.contentType.split("/")[0], response.contentType.split("/")[1]))
+                        }
+                    } else {
+                        body(response.type) {
+                            mediaType(ContentType(response.contentType.split("/")[0], response.contentType.split("/")[1]))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 private fun Route.handleMethods(
     method: KFunction<*>,
     prefix: String,
     controller: Any,
     path: String,
 ) {
+    val routeTags = listOf(controller.javaClass.simpleName.replace("Controller", ""))
+    val hiddenRoute = !"$prefix$path".startsWith("/api")
+    val swaggerBuilder = swagger(method, routeTags, hiddenRoute)
+
     if (method.hasAnnotation<Get>()) {
-        get(path) {
+        get(path, swaggerBuilder) {
             handleRequest("GET", call, method, prefix, controller, path)
         }
     }
 
     if (method.hasAnnotation<Post>()) {
-        post(path) {
+        post(path, swaggerBuilder) {
             handleRequest("POST", call, method, prefix, controller, path)
         }
     }
 
     if (method.hasAnnotation<Put>()) {
-        put(path) {
+        put(path, swaggerBuilder) {
             handleRequest("PUT", call, method, prefix, controller, path)
         }
     }
 
     if (method.hasAnnotation<Delete>()) {
-        delete(path) {
+        delete(path, swaggerBuilder) {
             handleRequest("DELETE", call, method, prefix, controller, path)
         }
     }
@@ -117,7 +196,7 @@ private suspend fun handleRequest(
     val parameters = call.parameters.toMap()
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
-    println("$httpMethod $replacedPath")
+    println("$httpMethod ${call.request.origin.uri} -> $replacedPath")
 
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)
@@ -201,25 +280,30 @@ private suspend fun callMethodWithParameters(
             }
 
             kParameter.hasAnnotation<QueryParam>() -> {
-                call.request.queryParameters[kParameter.name!!]
+                val name = kParameter.findAnnotation<QueryParam>()!!.name.ifBlank { kParameter.name!! }
+                val queryParamValue = call.request.queryParameters[name]
+
+                when (kParameter.type) {
+                    Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
+                    String::class.starProjectedType.withNullability(true) -> queryParamValue
+                    CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(queryParamValue)
+                    UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(queryParamValue)
+                    else -> throw Exception("Unknown type ${kParameter.type}")
+                }
+            }
+
+            kParameter.hasAnnotation<PathParam>() -> {
+                val name = kParameter.findAnnotation<PathParam>()!!.name.ifBlank { kParameter.name!! }
+                val pathParamValue = parameters[name]?.firstOrNull()
+
+                when (kParameter.type.javaType) {
+                    UUID::class.java -> UUID.fromString(pathParamValue)
+                    else -> throw Exception("Unknown type ${kParameter.type}")
+                }
             }
 
             else -> {
-                val value = parameters[kParameter.name]!!.first()
-
-                val parsedValue: Any? = when (kParameter.type.javaType) {
-                    UUID::class.java -> UUID.fromString(value)
-                    Int::class.java -> value.toIntOrNull()
-                    CountryCode::class.java -> try {
-                        CountryCode.valueOf(value)
-                    } catch (e: IllegalArgumentException) {
-                        null
-                    }
-
-                    else -> value
-                }
-
-                parsedValue
+                throw Exception("Unknown parameter ${kParameter.name}")
             }
         }
     }

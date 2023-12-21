@@ -6,9 +6,14 @@ import fr.shikkanime.dtos.MemberDto
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.routes.*
-import fr.ziedelth.utils.routes.method.Get
-import fr.ziedelth.utils.routes.method.Post
+import fr.shikkanime.utils.routes.AdminSessionAuthenticated
+import fr.shikkanime.utils.routes.Controller
+import fr.shikkanime.utils.routes.Path
+import fr.shikkanime.utils.routes.Response
+import fr.shikkanime.utils.routes.method.Get
+import fr.shikkanime.utils.routes.method.Post
+import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 
 @Controller("/admin")
@@ -18,7 +23,7 @@ class AdminController {
 
     @Path
     @Get
-    private fun home(@QueryParam error: String?): Response {
+    private fun home(@QueryParam("error") error: String?): Response {
         return Response.template(
             "admin/login.ftl",
             "Login",

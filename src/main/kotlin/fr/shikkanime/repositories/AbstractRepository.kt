@@ -40,7 +40,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
         }
     }
 
-    fun find(uuid: UUID): E? {
+    open fun find(uuid: UUID): E? {
         return inTransaction {
             it.find(getEntityClass(), uuid)
         }

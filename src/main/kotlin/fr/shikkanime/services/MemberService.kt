@@ -33,6 +33,6 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
         val password = RandomManager.generateRandomString(32)
         println("Default admin password: $password")
-        save(Member(username = "admin", password = EncryptionManager.generate(password), role = Role.ADMIN))
+        save(Member(username = "admin", encryptedPassword = EncryptionManager.generate(password), role = Role.ADMIN))
     }
 }

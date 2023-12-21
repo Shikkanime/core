@@ -29,7 +29,7 @@
                     type="VARCHAR(255)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="password"
+            <column name="encrypted_password"
                     type="bytea">
                 <constraints nullable="false"/>
             </column>

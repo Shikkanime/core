@@ -1,4 +1,4 @@
-package fr.shikkanime.utils.routes
+package fr.shikkanime.utils.routes.param
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.VALUE_PARAMETER)

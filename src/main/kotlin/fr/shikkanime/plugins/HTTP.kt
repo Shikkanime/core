@@ -1,6 +1,7 @@
 package fr.shikkanime.plugins
 
 import freemarker.cache.ClassTemplateLoader
+import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
@@ -27,8 +28,6 @@ fun Application.configureHTTP() {
         allowMethod(HttpMethod.Delete)
         allowMethod(HttpMethod.Patch)
         allowHeader(HttpHeaders.Authorization)
-        allowHeader("MyCustomHeader")
-        anyHost() // @TODO: Don't do this in production if possible. Try to limit it.
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -41,5 +40,16 @@ fun Application.configureHTTP() {
     }
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
+    }
+    install(SwaggerUI) {
+        swagger {
+            swaggerUrl = "api/swagger"
+            forwardRoot = false
+        }
+        info {
+            title = "Shikkanime API"
+            version = "1.0"
+            description = "API for testing and demonstration purposes"
+        }
     }
 }

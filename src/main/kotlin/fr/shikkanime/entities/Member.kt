@@ -13,8 +13,8 @@ class Member(
     val creationDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = false, unique = true)
     val username: String? = null,
-    @Column(nullable = false, name = "\"password\"")
-    val password: ByteArray? = null,
+    @Column(nullable = false, name = "encrypted_password")
+    val encryptedPassword: ByteArray? = null,
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     val role: Role = Role.GUEST,
