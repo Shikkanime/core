@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  shikkanime-db:
+    image: postgres:16-alpine
+    restart: always
+    container_name: shikkanime-db
+    environment:
+      POSTGRES_PASSWORD: "mysecretpassword"
+      POSTGRES_USER: postgres
+      POSTGRES_DB: shikkanime
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+  shikkanime-core:
+    image: shikkanime-core:latest
+    ports:
+      - "37100:37100"
+    restart: on-failure
+    container_name: shikkanime-core
+    depends_on:
+      shikkanime-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://shikkanime-db:5432/shikkanime
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: "mysecretpassword"

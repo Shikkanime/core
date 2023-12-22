@@ -1,7 +1,7 @@
 FROM gradle:8.5.0-jdk21-jammy AS build
 COPY --chown=gradle:gradle . /app
 WORKDIR /app
-RUN gradle build --no-daemon -x test
+RUN gradle clean installDist
 
 FROM mcr.microsoft.com/playwright:v1.40.1-jammy
 ARG version=21.0.1.12-1
@@ -21,7 +21,7 @@ RUN set -eux; apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Copy app from build stage
-COPY --from=build /app/build/libs/core-all.jar /app/core.jar
+COPY --from=build /app/build/install/core /app
 COPY --from=build /app/hibernate.cfg.xml /app/hibernate.cfg.xml
 
 # Configure timezone and install necessary packages
@@ -33,4 +33,4 @@ RUN apt-get update && \
 
 WORKDIR /app
 EXPOSE 37100
-CMD ["java", "-jar", "core.jar"]
+CMD ["./bin/core"]
