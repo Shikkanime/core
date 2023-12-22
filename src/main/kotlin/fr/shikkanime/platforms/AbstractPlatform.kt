@@ -2,6 +2,7 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -62,7 +63,6 @@ abstract class AbstractPlatform<C : PlatformConfiguration, K : Any, V> {
         val file = getConfigurationFile()
 
         if (!file.exists()) {
-            file.parentFile.mkdirs()
             file.createNewFile()
         }
 
@@ -70,6 +70,12 @@ abstract class AbstractPlatform<C : PlatformConfiguration, K : Any, V> {
     }
 
     private fun getConfigurationFile(): File {
-        return File("config/${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
+        val folder = File(Constant.dataFolder, "config")
+
+        if (!folder.exists()) {
+            folder.mkdirs()
+        }
+
+        return File(folder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
     }
 }

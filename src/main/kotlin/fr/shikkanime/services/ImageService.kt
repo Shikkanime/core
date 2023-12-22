@@ -1,6 +1,7 @@
 package fr.shikkanime.services
 
 import com.mortennobel.imagescaling.ResampleOp
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
@@ -48,7 +49,7 @@ object ImageService {
     }
 
     private val threadPool = Executors.newFixedThreadPool(2)
-    private val file = File("images-cache.shikk")
+    private val file = File(Constant.dataFolder, "images-cache.shikk")
     private var cache = mutableListOf<Image>()
     private val change = AtomicBoolean(false)
 
@@ -101,7 +102,12 @@ object ImageService {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        println("Saved images cache in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${toHumanReadable(cache.sumOf { it.size })})")
+        println(
+            "Saved images cache in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${
+                toHumanReadable(
+                    cache.sumOf { it.size })
+            })"
+        )
         change.set(false)
     }
 
@@ -140,7 +146,10 @@ object ImageService {
                     println("Encoding image to WebP...")
                     val resized = ResampleOp(width, height).filter(ImageIO.read(ByteArrayInputStream(bytes)), null)
                     val tmpFile = File.createTempFile("shikk", ".png")
-                        .apply { writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray()) }
+                        .apply {
+                            writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }
+                                .toByteArray())
+                        }
                     val readBytesResized = tmpFile.readBytes()
                     val webp = FileManager.encodeToWebP(readBytesResized)
                     tmpFile.delete()
@@ -163,7 +172,13 @@ object ImageService {
                 }
             }
 
-            println("Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${toHumanReadable(image.size)})")
+            println(
+                "Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${
+                    toHumanReadable(
+                        image.size
+                    )
+                })"
+            )
         }
     }
 

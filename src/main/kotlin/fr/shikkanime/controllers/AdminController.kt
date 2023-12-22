@@ -36,7 +36,8 @@ class AdminController {
     private fun login(@BodyParam parameters: Parameters): Response {
         val username = parameters["username"] ?: return Response.redirect("/admin")
         val password = parameters["password"] ?: return Response.redirect("/admin")
-        val user = memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("/admin?error=1")
+        val user =
+            memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("/admin?error=1")
 
         return Response.redirect("/admin/dashboard", AbstractConverter.convert(user, MemberDto::class.java))
     }
@@ -52,10 +53,7 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun getDashboard(): Response {
-        return Response.template(
-            "admin/dashboard.ftl",
-            Link.DASHBOARD.label,
-        )
+        return Response.template(Link.DASHBOARD)
     }
 
     @Path("/platforms")
@@ -63,8 +61,7 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getPlatforms(): Response {
         return Response.template(
-            "admin/platforms.ftl",
-            Link.PLATFORMS.label,
+            Link.PLATFORMS,
             mutableMapOf(
                 "platforms" to Constant.abstractPlatforms.toList().sortedBy { it.getPlatform().name.lowercase() })
         )
@@ -88,9 +85,6 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun getAnimes(): Response {
-        return Response.template(
-            "admin/animes.ftl",
-            Link.PLATFORMS.label,
-        )
+        return Response.template(Link.ANIMES)
     }
 }

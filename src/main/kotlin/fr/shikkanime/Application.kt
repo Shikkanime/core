@@ -39,9 +39,10 @@ fun main() {
     if (false) {
         val episodes = mutableListOf<Episode>()
 
-        (141 downTo 1).forEach {
+        (150 downTo 1).forEach {
             runBlocking {
-                val httpResponse = HttpRequest().get("https://beta-api.ziedelth.fr/episodes/country/fr/page/$it/limit/30")
+                val httpResponse =
+                    HttpRequest().get("https://beta-api.ziedelth.fr/episodes/country/fr/page/$it/limit/30")
 
                 if (httpResponse.status.isSuccess()) {
                     episodes.addAll(

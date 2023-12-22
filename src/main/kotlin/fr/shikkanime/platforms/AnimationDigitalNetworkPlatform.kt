@@ -62,7 +62,7 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration, 
         TODO("Not yet implemented")
     }
 
-    private fun convertEpisode(
+    fun convertEpisode(
         countryCode: CountryCode,
         jsonObject: JsonObject,
         zonedDateTime: ZonedDateTime
@@ -71,7 +71,9 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration, 
 
         var animeName =
             show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
-        animeName = animeName.replace(Regex("Saison \\d"), "").trim('-').trim()
+        animeName = animeName.replace(Regex("Saison \\d"), "").trim()
+        // Replace "Edens Zero -" to get "Edens Zero"
+        animeName = animeName.replace(Regex(" -.*"), "").trim()
 
         val animeImage = show.getAsString("image2x") ?: throw Exception("Anime image is null")
         val animeDescription = show.getAsString("summary")?.replace('\n', ' ') ?: ""

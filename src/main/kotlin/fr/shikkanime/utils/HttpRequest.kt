@@ -6,12 +6,14 @@ import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
 
+private const val TIMEOUT = 60_000L
 
 class HttpRequest {
     private var isBrowserInitialized = false
@@ -21,6 +23,9 @@ class HttpRequest {
 
     private fun httpClient(): HttpClient {
         val httpClient = HttpClient(OkHttp) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = 1000
+            }
             engine {
                 config {
                     followRedirects(true)
@@ -32,12 +37,19 @@ class HttpRequest {
 
     suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
         val httpClient = httpClient()
+
         println("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
         val response = httpClient.get(url) {
+            timeout {
+                requestTimeoutMillis = TIMEOUT
+                connectTimeoutMillis = TIMEOUT
+                socketTimeoutMillis = TIMEOUT
+            }
             headers.forEach { (key, value) ->
                 header(key, value)
             }
+
         }
 
         httpClient.close()
@@ -69,8 +81,8 @@ class HttpRequest {
         playwright = Playwright.create()
         browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true))
         page = browser?.newPage()
-        page?.setDefaultTimeout(15_000.0)
-        page?.setDefaultNavigationTimeout(15_000.0)
+        page?.setDefaultTimeout(TIMEOUT.toDouble())
+        page?.setDefaultNavigationTimeout(TIMEOUT.toDouble())
         isBrowserInitialized = true
     }
 

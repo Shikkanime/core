@@ -9,7 +9,7 @@ import java.util.*
 data class EpisodeDto(
     val uuid: UUID?,
     val platform: Platform,
-    val anime: AnimeDto,
+    var anime: AnimeDto,
     val episodeType: EpisodeType,
     val langType: LangType,
     val hash: String,

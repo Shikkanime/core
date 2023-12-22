@@ -34,13 +34,21 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository.findByName(name, countryCode, page, limit)
     }
 
-    fun findBySimulcast(uuid: UUID, countryCode: CountryCode, sort: List<SortParameter>, page: Int, limit: Int): List<Anime> {
+    fun findBySimulcast(
+        uuid: UUID,
+        countryCode: CountryCode,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): List<Anime> {
         return animeRepository.findBySimulcast(uuid, countryCode, sort, page, limit)
     }
 
     override fun save(entity: Anime): Anime {
         entity.simulcasts = entity.simulcasts.map { simulcast ->
-            simulcastService.findBySeasonAndYear(simulcast.season!!, simulcast.year!!) ?: simulcastService.save(simulcast)
+            simulcastService.findBySeasonAndYear(simulcast.season!!, simulcast.year!!) ?: simulcastService.save(
+                simulcast
+            )
         }.toMutableSet()
 
         val savedEntity = super.save(entity)

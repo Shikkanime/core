@@ -33,7 +33,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     }
 
     override fun save(entity: Episode): Episode {
-        entity.anime = animeService.findByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull() ?: animeService.save(entity.anime!!)
+        entity.anime = animeService.findByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
+            ?: animeService.save(entity.anime!!)
 
         if (entity.langType == LangType.SUBTITLES) {
             val adjustedDates = listOf(-simulcastRange, 0, simulcastRange).map { days ->
@@ -56,7 +57,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
                 else -> currentSimulcast
             }
 
-            val simulcast = simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!) ?: choosenSimulcast
+            val simulcast = simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!)
+                ?: choosenSimulcast
 
             Hibernate.initialize(entity.anime!!.simulcasts)
             val animeSimulcasts = entity.anime!!.simulcasts
