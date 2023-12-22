@@ -62,6 +62,10 @@ dependencies {
     testImplementation("com.h2database:h2:2.2.224")
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 tasks.jacocoTestReport {
     reports {
         xml.required = true
