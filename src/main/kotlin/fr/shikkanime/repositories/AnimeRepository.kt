@@ -107,9 +107,16 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return bool
     }
 
-    fun findBySimulcast(uuid: UUID, countryCode: CountryCode, sort: List<SortParameter>, page: Int, limit: Int): List<Anime> {
+    fun findBySimulcast(
+        uuid: UUID,
+        countryCode: CountryCode,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): List<Anime> {
         return inTransaction {
-            val query = StringBuilder("SELECT a FROM Anime a JOIN a.simulcasts s WHERE a.countryCode = :countryCode AND s.uuid = :uuid")
+            val query =
+                StringBuilder("SELECT a FROM Anime a JOIN a.simulcasts s WHERE a.countryCode = :countryCode AND s.uuid = :uuid")
             buildSortQuery(sort, query)
 
             it.createQuery(query.toString(), getEntityClass())

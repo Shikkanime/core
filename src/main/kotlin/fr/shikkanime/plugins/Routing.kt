@@ -39,7 +39,7 @@ import kotlin.reflect.jvm.jvmErasure
 
 fun Application.configureRouting() {
     routing {
-        staticResources("/assets", "assets")
+        staticResources("/admin/assets", "assets/admin")
         createRoutes()
     }
 }
@@ -137,11 +137,21 @@ private fun swagger(
 
                     if (response.type.java.isArray) {
                         body(BodyTypeDescriptor.multipleOf(response.type.java.componentType.kotlin)) {
-                            mediaType(ContentType(response.contentType.split("/")[0], response.contentType.split("/")[1]))
+                            mediaType(
+                                ContentType(
+                                    response.contentType.split("/")[0],
+                                    response.contentType.split("/")[1]
+                                )
+                            )
                         }
                     } else {
                         body(response.type) {
-                            mediaType(ContentType(response.contentType.split("/")[0], response.contentType.split("/")[1]))
+                            mediaType(
+                                ContentType(
+                                    response.contentType.split("/")[0],
+                                    response.contentType.split("/")[1]
+                                )
+                            )
                         }
                     }
                 }
@@ -286,8 +296,14 @@ private suspend fun callMethodWithParameters(
                 when (kParameter.type) {
                     Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
                     String::class.starProjectedType.withNullability(true) -> queryParamValue
-                    CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(queryParamValue)
-                    UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(queryParamValue)
+                    CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(
+                        queryParamValue
+                    )
+
+                    UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(
+                        queryParamValue
+                    )
+
                     else -> throw Exception("Unknown type ${kParameter.type}")
                 }
             }

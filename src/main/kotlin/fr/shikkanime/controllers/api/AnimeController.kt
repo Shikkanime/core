@@ -113,7 +113,8 @@ class AnimeController {
         ]
     )
     private fun getAnime(@PathParam("uuid") uuid: UUID): Response {
-        val anime = animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
+        val anime =
+            animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
         return Response.ok(AbstractConverter.convert(anime, AnimeDto::class.java))
     }
 
@@ -137,8 +138,14 @@ class AnimeController {
         ]
     )
     private fun getAnimeImage(@PathParam("uuid") uuid: UUID): Response {
-        val anime = animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
-        val image = ImageService[anime.uuid!!] ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime image not found"))
+        val anime =
+            animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
+        val image = ImageService[anime.uuid!!] ?: return Response.notFound(
+            MessageDto(
+                MessageDto.Type.ERROR,
+                "Anime image not found"
+            )
+        )
         return Response.multipart(image.bytes, ContentType.parse("image/webp"))
     }
 }

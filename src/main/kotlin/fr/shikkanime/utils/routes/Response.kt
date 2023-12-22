@@ -1,6 +1,7 @@
 package fr.shikkanime.utils.routes
 
 import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.entities.enums.Link
 import io.ktor.http.*
 
 enum class ResponseType {
@@ -39,25 +40,51 @@ open class Response(
     }
 
     companion object {
-        fun ok(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.OK, data = data, session = session)
-        fun created(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.Created, data = data, session = session)
-        fun noContent(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.NoContent, data = data, session = session)
-        fun multipart(image: ByteArray, contentType: ContentType, session: MemberDto? = null): Response =
-            Response(HttpStatusCode.OK, type = ResponseType.MULTIPART, data = mapOf("image" to image, "contentType" to contentType), session = session)
+        fun ok(data: Any? = null, session: MemberDto? = null): Response =
+            Response(HttpStatusCode.OK, data = data, session = session)
 
-        fun template(template: String, title: String? = null, model: MutableMap<String, Any> = mutableMapOf(), session: MemberDto? = null): Response = Response(
+        fun created(data: Any? = null, session: MemberDto? = null): Response =
+            Response(HttpStatusCode.Created, data = data, session = session)
+
+        fun noContent(data: Any? = null, session: MemberDto? = null): Response =
+            Response(HttpStatusCode.NoContent, data = data, session = session)
+
+        fun multipart(image: ByteArray, contentType: ContentType, session: MemberDto? = null): Response =
+            Response(
+                HttpStatusCode.OK,
+                type = ResponseType.MULTIPART,
+                data = mapOf("image" to image, "contentType" to contentType),
+                session = session
+            )
+
+        fun template(
+            template: String,
+            title: String? = null,
+            model: MutableMap<String, Any> = mutableMapOf(),
+            session: MemberDto? = null
+        ): Response = Response(
             HttpStatusCode.OK,
             type = ResponseType.TEMPLATE,
             data = mapOf("template" to template, "title" to title, "model" to model),
             session = session
         )
 
+        fun template(
+            link: Link,
+            model: MutableMap<String, Any> = mutableMapOf(),
+            session: MemberDto? = null
+        ): Response = template(link.href.replaceFirst("/", "").plus(".ftl"), link.label, model, session)
+
         fun redirect(path: String, session: MemberDto? = null): Response =
             Response(HttpStatusCode.Found, type = ResponseType.REDIRECT, data = path, session = session)
 
-        fun badRequest(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.BadRequest, data = data, session = session)
+        fun badRequest(data: Any? = null, session: MemberDto? = null): Response =
+            Response(HttpStatusCode.BadRequest, data = data, session = session)
 
-        fun notFound(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.NotFound, data = data, session = session)
-        fun conflict(data: Any? = null, session: MemberDto? = null): Response = Response(HttpStatusCode.Conflict, data = data, session = session)
+        fun notFound(data: Any? = null, session: MemberDto? = null): Response =
+            Response(HttpStatusCode.NotFound, data = data, session = session)
+
+        fun conflict(data: Any? = null, session: MemberDto? = null): Response =
+            Response(HttpStatusCode.Conflict, data = data, session = session)
     }
 }

@@ -46,7 +46,10 @@ fun Application.configureSecurity() {
                 return@validate session
             }
             challenge {
-                call.respond(HttpStatusCode.Unauthorized, MessageDto(MessageDto.Type.ERROR, "You are not authorized to access this page"))
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    MessageDto(MessageDto.Type.ERROR, "You are not authorized to access this page")
+                )
             }
         }
     }

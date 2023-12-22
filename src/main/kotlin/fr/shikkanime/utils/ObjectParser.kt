@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import fr.shikkanime.utils.ObjectParser.getAsString
 
 object ObjectParser {
     private val gson = Gson()
@@ -27,7 +28,11 @@ object ObjectParser {
     }
 
     fun JsonObject.getAsString(key: String): String? {
-        return this[key]?.asString
+        return if (this[key] != null && !this[key].isJsonNull) this[key]?.asString else null
+    }
+
+    fun JsonObject.getNullableJsonObject(key: String): JsonObject? {
+        return if (this[key] != null && !this[key].isJsonNull) this[key]?.asJsonObject else null
     }
 
     fun JsonObject.getAsBoolean(key: String): Boolean? {
@@ -36,6 +41,10 @@ object ObjectParser {
 
     fun JsonObject.getAsInt(key: String): Int? {
         return this[key]?.asInt
+    }
+
+    fun JsonObject.getAsInt(key: String, default: Int): Int {
+        return this[key]?.asString?.toIntOrNull() ?: default
     }
 
     fun JsonObject.getAsLong(key: String, default: Long): Long {

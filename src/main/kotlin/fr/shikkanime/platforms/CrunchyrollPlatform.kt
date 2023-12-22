@@ -47,6 +47,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
         }
     }
 
+    data class CrunchyrollAnimeContent(
+        val image: String,
+        val description: String? = null,
+    )
+
     val simulcasts = MapCache<CountryCode, Set<String>>(Duration.ofHours(1)) {
         fun getSimulcastCode(name: String): String {
             val simulcastCodeTmp = name.lowercase().replace(" ", "-")
@@ -117,7 +122,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
         return@MapCache simulcasts
     }
 
-    val animeInfoCache = MapCache<CountryCodeAnimeIdKeyCache, Pair<String, String?>>(Duration.ofDays(1)) {
+    val animeInfoCache = MapCache<CountryCodeAnimeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
         val httpRequest = HttpRequest()
         var image: String? = null
         var description: String? = null
@@ -143,7 +148,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
             throw Exception("Image is null or empty")
         }
 
-        return@MapCache image to description
+        return@MapCache CrunchyrollAnimeContent(image, description)
     }
 
     override fun getConfigurationClass() = CrunchyrollConfiguration::class.java
@@ -249,7 +254,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
             images.maxByOrNull { it.asJsonObject.getAsInt("width")!! } ?: throw Exception(IMAGE_NULL_ERROR)
         val image = biggestImage.asJsonObject.getAsString("url")?.ifBlank { null } ?: throw Exception(IMAGE_NULL_ERROR)
 
-        val duration = jsonObject.getAsLong("crunchyroll:duration", -1)
+        var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
 
         var isSimulcasted =
             simulcasts[countryCode].contains(animeName.lowercase()) || configuration!!.simulcasts.contains(animeName)
@@ -266,8 +271,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
         }
 
         val animeId = splitted[splitted.size - 2]
-        val (animeImage, animeDescription) = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]
-
+        val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]
+        duration = getWebsiteEpisodeDuration(duration, url)
         hashCache.add(hash)
 
         return Episode(
@@ -276,8 +281,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
                 countryCode = countryCode,
                 name = animeName,
                 releaseDateTime = releaseDate,
-                image = animeImage,
-                description = animeDescription
+                image = crunchyrollAnimeContent.image,
+                description = crunchyrollAnimeContent.description
             ),
             episodeType = episodeType,
             langType = langType,
@@ -290,5 +295,36 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
             image = image,
             duration = duration
         )
+    }
+
+    private fun getWebsiteEpisodeDuration(defaultDuration: Long, url: String): Long {
+        var duration = defaultDuration
+
+        if (duration == -1L) {
+            val httpRequest = HttpRequest()
+
+            try {
+                val content = httpRequest.getBrowser(
+                    url,
+                    "#content > div > div.app-body-wrapper > div > div > div.video-player-wrapper > div.erc-watch-premium-upsell"
+                )
+                val jsonElement = content.select("script[type=\"application/ld+json\"]").first()?.html()
+
+                if (jsonElement.isNullOrBlank()) {
+                    return duration
+                }
+
+                val durationString =
+                    ObjectParser.fromJson(jsonElement, JsonObject::class.java).getAsString("duration")!!
+                // Convert duration (ex: PT23M39.96199999999999S) to long seconds
+                duration = kotlin.time.Duration.parse(durationString).inWholeSeconds
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                httpRequest.closeBrowser()
+            }
+        }
+
+        return duration
     }
 }

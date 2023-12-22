@@ -7,8 +7,8 @@ import java.util.*
 data class AnimeDto(
     val uuid: UUID?,
     val countryCode: CountryCode,
-    val name: String,
-    val releaseDateTime: String,
+    var name: String,
+    var releaseDateTime: String,
     val image: String? = null,
     val description: String?,
     val simulcasts: List<SimulcastDto>?,

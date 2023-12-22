@@ -16,7 +16,10 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             countryCode = from.countryCode!!,
             name = from.name!!,
             description = from.description,
-            simulcasts = if (Hibernate.isInitialized(from.simulcasts)) convert(from.simulcasts, SimulcastDto::class.java) else null,
+            simulcasts = if (Hibernate.isInitialized(from.simulcasts)) convert(
+                from.simulcasts,
+                SimulcastDto::class.java
+            ) else null,
         )
     }
 }

@@ -5,7 +5,7 @@
         <div class="d-flex flex-column flex-shrink-0 p-3 bg-light shadow">
             <a href="/admin/dashboard"
                class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
-                <img src="/assets/icon.jpg" class="me-2 rounded-circle" width="32" height="32" alt="Icon" crossorigin="anonymous">
+                <img src="/admin/assets/img/icon.jpg" class="me-2 rounded-circle" width="32" height="32" alt="Icon" crossorigin="anonymous">
                 <span class="fs-4">Shikkanime</span>
             </a>
             <hr>

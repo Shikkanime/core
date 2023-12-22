@@ -12,6 +12,7 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
+import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.ZonedDateTime
 
 @Controller("/api/metrics")
@@ -37,8 +38,10 @@ class MetricController {
             ),
         ]
     )
-    private fun getMetrics(): Response {
-        val oneHourAgo = ZonedDateTime.now().minusHours(1)
+    private fun getMetrics(
+        @QueryParam("hours") hours: Int?,
+    ): Response {
+        val oneHourAgo = ZonedDateTime.now().minusHours(hours?.toLong() ?: 1)
         return Response.ok(AbstractConverter.convert(metricService.findAllAfter(oneHourAgo), MetricDto::class.java))
     }
 }
