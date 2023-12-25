@@ -48,7 +48,7 @@ dependencies {
     implementation("org.liquibase:liquibase-core:4.25.1")
     implementation("org.quartz-scheduler:quartz:2.5.0-rc1")
     implementation("com.google.guava:guava:33.0.0-jre")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.1")
     implementation("com.microsoft.playwright:playwright:1.40.0")
     implementation("org.jsoup:jsoup:1.17.1")
     implementation("com.google.code.gson:gson:2.10.1")
