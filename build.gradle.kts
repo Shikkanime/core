@@ -52,7 +52,7 @@ dependencies {
     implementation("com.microsoft.playwright:playwright:1.40.0")
     implementation("org.jsoup:jsoup:1.17.1")
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.openpnp:opencv:4.8.1-0")
+    implementation("org.openpnp:opencv:4.9.0-0")
     implementation("org.bouncycastle:bcprov-jdk18on:1.77")
     implementation("com.mortennobel:java-image-scaling:0.8.6")
     implementation("io.ktor:ktor-client-okhttp-jvm:2.3.7")
