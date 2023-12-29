@@ -50,7 +50,7 @@ dependencies {
     implementation("com.google.guava:guava:33.0.0-jre")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
     implementation("com.microsoft.playwright:playwright:1.40.0")
-    implementation("org.jsoup:jsoup:1.17.1")
+    implementation("org.jsoup:jsoup:1.17.2")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.openpnp:opencv:4.8.1-0")
     implementation("org.bouncycastle:bcprov-jdk18on:1.77")
