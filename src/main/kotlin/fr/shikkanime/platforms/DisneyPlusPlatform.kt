@@ -10,6 +10,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
+import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -17,46 +18,10 @@ import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
-import io.ktor.http.*
 import java.io.File
 import java.time.ZonedDateTime
 
-class DisneyPlusPlatform :
-    AbstractPlatform<DisneyPlusPlatform.DisneyPlusConfiguration, CountryCodeAnimeIdKeyCache, JsonArray>() {
-    data class DisneyPlusConfiguration(
-        var authorization: String = "",
-        var refreshToken: String = "",
-    ) : PlatformConfiguration() {
-        override fun of(parameters: Parameters) {
-            super.of(parameters)
-            parameters["authorization"]?.let { authorization = it }
-            parameters["refreshToken"]?.let { refreshToken = it }
-        }
-
-        override fun toConfigurationFields(): MutableSet<ConfigurationField> {
-            return super.toConfigurationFields().apply {
-                add(
-                    ConfigurationField(
-                        label = "Authorization",
-                        name = "authorization",
-                        type = "text",
-                        value = authorization
-                    )
-                )
-                add(
-                    ConfigurationField(
-                        label = "Refresh token",
-                        name = "refreshToken",
-                        type = "text",
-                        value = refreshToken
-                    )
-                )
-            }
-        }
-    }
-
-    override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
-
+class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeAnimeIdKeyCache, JsonArray>() {
     override fun getPlatform(): Platform = Platform.DISN
 
     override suspend fun fetchApiContent(key: CountryCodeAnimeIdKeyCache, zonedDateTime: ZonedDateTime): JsonArray {
@@ -121,7 +86,7 @@ class DisneyPlusPlatform :
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.forEach { simulcast ->
+            configuration!!.simulcasts.map { it.name.lowercase() }.forEach { simulcast ->
                 val api = getApiContent(CountryCodeAnimeIdKeyCache(countryCode, simulcast), zonedDateTime)
 
                 api.forEach {

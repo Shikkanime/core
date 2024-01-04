@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.EpisodeRepository
 import fr.shikkanime.utils.Constant
 import org.hibernate.Hibernate
+import java.util.*
 
 class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     private val simulcastRange = 10
@@ -30,6 +31,10 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     fun findByHash(hash: String?): Episode? {
         return episodeRepository.findByHash(hash)
+    }
+
+    fun findByAnime(uuid: UUID): List<Episode> {
+        return episodeRepository.findByAnime(uuid)
     }
 
     override fun save(entity: Episode): Episode {

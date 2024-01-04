@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
+import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
@@ -24,29 +25,7 @@ import java.time.format.DateTimeFormatter
 
 private const val IMAGE_NULL_ERROR = "Image is null"
 
-class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConfiguration, CountryCode, String>() {
-    data class CrunchyrollConfiguration(
-        var simulcastCheckDelayInMinutes: Long = 60,
-    ) : PlatformConfiguration() {
-        override fun of(parameters: Parameters) {
-            super.of(parameters)
-            parameters["simulcastCheckDelayInMinutes"]?.let { simulcastCheckDelayInMinutes = it.toLong() }
-        }
-
-        override fun toConfigurationFields(): MutableSet<ConfigurationField> {
-            return super.toConfigurationFields().apply {
-                add(
-                    ConfigurationField(
-                        label = "Simulcast check delay in minutes",
-                        name = "simulcastCheckDelayInMinutes",
-                        type = "number",
-                        value = simulcastCheckDelayInMinutes.toString()
-                    )
-                )
-            }
-        }
-    }
-
+class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, String>() {
     data class CrunchyrollAnimeContent(
         val image: String,
         val description: String? = null,
@@ -151,8 +130,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
         return@MapCache CrunchyrollAnimeContent(image, description)
     }
 
-    override fun getConfigurationClass() = CrunchyrollConfiguration::class.java
-
     override fun getPlatform(): Platform = Platform.CRUN
 
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): String {
@@ -206,6 +183,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
 
     private fun convertEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
         val animeName = jsonObject.getAsString("crunchyroll:seriesTitle") ?: throw Exception("Anime name is null")
+
+        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) {
+            throw AnimeException("\"$animeName\" is blacklisted")
+        }
+
         val restrictions = jsonObject.getAsJsonObject("media:restriction")?.getAsString("")?.split(" ") ?: emptyList()
 
         if (restrictions.isEmpty() || !restrictions.contains(countryCode.name.lowercase())) {
@@ -257,7 +239,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollPlatform.CrunchyrollConf
         var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
 
         var isSimulcasted =
-            simulcasts[countryCode].contains(animeName.lowercase()) || configuration!!.simulcasts.contains(animeName)
+            simulcasts[countryCode].contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
+                .contains(animeName.lowercase())
         isSimulcasted = isSimulcasted || isMovie
 
         if (!isSimulcasted) {

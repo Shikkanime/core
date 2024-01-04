@@ -60,7 +60,7 @@ open class Response(
         fun template(
             template: String,
             title: String? = null,
-            model: MutableMap<String, Any> = mutableMapOf(),
+            model: MutableMap<String, Any?> = mutableMapOf(),
             session: MemberDto? = null
         ): Response = Response(
             HttpStatusCode.OK,
@@ -71,7 +71,7 @@ open class Response(
 
         fun template(
             link: Link,
-            model: MutableMap<String, Any> = mutableMapOf(),
+            model: MutableMap<String, Any?> = mutableMapOf(),
             session: MemberDto? = null
         ): Response = template(link.href.replaceFirst("/", "").plus(".ftl"), link.label, model, session)
 

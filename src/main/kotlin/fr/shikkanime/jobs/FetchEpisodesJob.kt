@@ -4,6 +4,7 @@ import fr.shikkanime.entities.Episode
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 class FetchEpisodesJob : AbstractJob() {
@@ -30,7 +31,7 @@ class FetchEpisodesJob : AbstractJob() {
             isInitialized = true
         }
 
-        val zonedDateTime = ZonedDateTime.now().withNano(0)
+        val zonedDateTime = ZonedDateTime.now().withNano(0).withZoneSameInstant(ZoneId.of("UTC"))
         val episodes = mutableListOf<Episode>()
 
         Constant.abstractPlatforms.forEach { abstractPlatform ->

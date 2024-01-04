@@ -4,7 +4,8 @@
     <form action="/admin/animes/${anime.uuid}" method="POST">
         <div class="d-flex mb-3">
             <a href="/admin/animes" class="btn btn-secondary ms-0 me-auto">Back</a>
-            <button type="submit" class="btn btn-success ms-auto me-0">Save</button>
+            <a href="/admin/animes/${anime.uuid}/delete" class="btn btn-danger ms-auto me-0">Delete</a>
+            <button type="submit" class="btn btn-success ms-2 me-0">Update</button>
         </div>
 
         <div class="card">
@@ -12,7 +13,13 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="uuid" class="form-label">UUID</label>
-                        <input type="text" class="form-control disabled" id="uuid" name="uuid" value="${anime.uuid.toString()}">
+
+                        <div class="input-group">
+                            <input type="text" class="form-control disabled" id="uuid" name="uuid" value="${anime.uuid.toString()}" aria-label="UUID"
+                                   aria-describedby="basic-addon" disabled>
+                            <span class="input-group-text" id="basic-addon" onclick="copyToClipboard('${anime.uuid.toString()}')" style="cursor: pointer"><i
+                                        class="bi bi-clipboard-fill"></i></span>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label for="name" class="form-label">Name</label>
@@ -35,4 +42,16 @@
             </div>
         </div>
     </form>
+
+    <script>
+        function copyToClipboard(content) {
+            const textarea = document.createElement("textarea");
+            textarea.style.height = 0;
+            document.body.appendChild(textarea);
+            textarea.value = content;
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+        }
+    </script>
 </@navigation.display>

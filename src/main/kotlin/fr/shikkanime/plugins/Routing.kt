@@ -3,6 +3,7 @@ package fr.shikkanime.plugins
 import fr.shikkanime.dtos.MemberDto
 import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -67,16 +68,6 @@ fun Routing.createControllerRoutes(controller: Any) {
     route(prefix) {
         kMethods.forEach { method ->
             val path = method.findAnnotation<Path>()!!.value
-
-            if (method.hasAnnotation<Cached>()) {
-                val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
-
-                install(CachingHeaders) {
-                    options { _, _ ->
-                        CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
-                    }
-                }
-            }
 
             if (method.hasAnnotation<JWTAuthenticated>()) {
                 authenticate("auth-jwt") {
@@ -211,6 +202,11 @@ private suspend fun handleRequest(
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)
 
+        if (method.hasAnnotation<Cached>()) {
+            val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
+            call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
+        }
+
         if (response.session != null) {
             call.sessions.set(response.session)
         }
@@ -314,6 +310,7 @@ private suspend fun callMethodWithParameters(
 
                 when (kParameter.type.javaType) {
                     UUID::class.java -> UUID.fromString(pathParamValue)
+                    Platform::class.java -> Platform.valueOf(pathParamValue!!)
                     else -> throw Exception("Unknown type ${kParameter.type}")
                 }
             }
