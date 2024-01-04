@@ -23,11 +23,10 @@ fun Application.configureHTTP() {
         }
     }
     install(CORS) {
-        allowMethod(HttpMethod.Options)
-        allowMethod(HttpMethod.Put)
-        allowMethod(HttpMethod.Delete)
-        allowMethod(HttpMethod.Patch)
+        HttpMethod.DefaultMethods.forEach { allowMethod(it) }
+        allowCredentials = true
         allowHeader(HttpHeaders.Authorization)
+        anyHost()
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
