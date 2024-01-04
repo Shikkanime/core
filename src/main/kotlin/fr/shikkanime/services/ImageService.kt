@@ -182,7 +182,7 @@ object ImageService {
         }
     }
 
-    private fun remove(uuid: UUID) {
+    fun remove(uuid: UUID) {
         cache.removeIf { it.uuid == uuid.toString() }
     }
 

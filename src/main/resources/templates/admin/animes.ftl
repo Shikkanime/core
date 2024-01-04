@@ -15,6 +15,7 @@
         <tr>
             <th scope="col">Name</th>
             <th scope="col">Description</th>
+            <th scope="col">Status</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -25,11 +26,16 @@
 
     <script>
         function buildTableElement(uuid, name, description) {
+            const isInvalid = description == null || description === '' || description?.startsWith('(');
+
             return `<tr>
                 <th scope="row">` + name + `</th>
                 <td>` + description + `</td>
                 <td>
-                    <a href="/admin/animes/` + uuid + `/edit" class="btn btn-warning">
+                    <span class="badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>
+                </td>
+                <td>
+                    <a href="/admin/animes/` + uuid + `" class="btn btn-warning">
                         <i class="bi bi-pencil-square"></i>
                         Edit
                     </a>

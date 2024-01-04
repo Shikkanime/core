@@ -5,6 +5,8 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
+import io.ktor.http.*
+import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
@@ -54,5 +56,22 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val savedEntity = super.save(entity)
         ImageService.add(savedEntity.uuid!!, savedEntity.image!!, 480, 720)
         return savedEntity
+    }
+
+    fun update(parameters: Parameters): Anime? {
+        val anime = find(UUID.fromString(parameters["uuid"])) ?: return null
+
+        parameters["name"]?.takeIf { it.isNotBlank() }?.let { anime.name = it }
+        parameters["releaseDateTime"]?.takeIf { it.isNotBlank() }?.let { anime.releaseDateTime = ZonedDateTime.parse("$it:00Z") }
+
+        parameters["image"]?.takeIf { it.isNotBlank() }?.let {
+            anime.image = it
+            ImageService.remove(anime.uuid!!)
+            ImageService.add(anime.uuid, it, 480, 720)
+        }
+
+        parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
+
+        return super.update(anime)
     }
 }
