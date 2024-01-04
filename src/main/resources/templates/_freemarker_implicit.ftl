@@ -5,3 +5,4 @@
 [#-- @ftlvariable name="links" type="kotlin.collections.AbstractList<fr.shikkanime.entities.LinkObject>" --]
 [#-- @ftlvariable name="platforms" type="kotlin.collections.AbstractList<fr.shikkanime.platforms.AbstractPlatform>" --]
 [#-- @ftlvariable name="error" type="kotlin.NumbersKt" --]
+[#-- @ftlvariable name="anime" type="fr.shikkanime.dtos.AnimeDto" --]

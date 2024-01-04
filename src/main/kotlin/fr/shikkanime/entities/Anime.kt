@@ -18,9 +18,9 @@ data class Anime(
     val countryCode: CountryCode? = null,
     @Column(nullable = false)
     @FullTextField(analyzer = "shikkanime_analyzer")
-    val name: String? = null,
+    var name: String? = null,
     @Column(nullable = false, name = "release_date_time")
-    val releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
+    var releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(2000)")

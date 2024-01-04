@@ -2,8 +2,10 @@ package fr.shikkanime.controllers
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MemberDto
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -13,13 +15,18 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
+import java.util.*
 
 @Controller("/admin")
 class AdminController {
     @Inject
     private lateinit var memberService: MemberService
+
+    @Inject
+    private lateinit var animeService: AnimeService
 
     @Path
     @Get
@@ -39,7 +46,7 @@ class AdminController {
         val user =
             memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("/admin?error=1")
 
-        return Response.redirect("/admin/dashboard", AbstractConverter.convert(user, MemberDto::class.java))
+        return Response.redirect(Link.DASHBOARD.href, AbstractConverter.convert(user, MemberDto::class.java))
     }
 
     @Path("/logout")
@@ -71,7 +78,7 @@ class AdminController {
     @Post
     @AdminSessionAuthenticated
     private fun postPlatform(@BodyParam parameters: Parameters): Response {
-        val redirectResponse = Response.redirect("/admin/platforms")
+        val redirectResponse = Response.redirect(Link.PLATFORMS.href)
 
         val platformName = parameters["platform"] ?: return redirectResponse
         val abstractPlatform =
@@ -86,5 +93,26 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getAnimes(): Response {
         return Response.template(Link.ANIMES)
+    }
+
+    @Path("/animes/{uuid}")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getAnimeView(@PathParam("uuid") uuid: UUID): Response {
+        val anime = animeService.find(uuid) ?: return Response.redirect(Link.ANIMES.href)
+
+        return Response.template(
+            "admin/anime_view.ftl",
+            anime.name,
+            mutableMapOf("anime" to AbstractConverter.convert(anime, AnimeDto::class.java))
+        )
+    }
+
+    @Path("/animes/{uuid}")
+    @Post
+    @AdminSessionAuthenticated
+    private fun postAnime(@BodyParam parameters: Parameters): Response {
+        animeService.update(parameters)
+        return Response.redirect(Link.ANIMES.href)
     }
 }
