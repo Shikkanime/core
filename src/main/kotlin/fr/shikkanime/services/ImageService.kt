@@ -116,6 +116,10 @@ object ImageService {
             return
         }
 
+        if (url.isBlank()) {
+            return
+        }
+
         val image = Image(uuid.toString(), url)
         cache.add(image)
 

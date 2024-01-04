@@ -10,6 +10,7 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
+import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -21,9 +22,8 @@ import io.ktor.http.*
 import java.io.File
 import java.time.ZonedDateTime
 
-class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration, CountryCode, JsonArray>() {
-    override fun getConfigurationClass(): Class<PlatformConfiguration> = PlatformConfiguration::class.java
-
+class AnimationDigitalNetworkPlatform :
+    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, JsonArray>() {
     override fun getPlatform(): Platform = Platform.ANIM
 
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): JsonArray {
@@ -85,7 +85,7 @@ class AnimationDigitalNetworkPlatform : AbstractPlatform<PlatformConfiguration, 
 
         var isSimulcasted = show.getAsBoolean("simulcast") == true ||
                 show.getAsString("firstReleaseYear") == zonedDateTime.toLocalDate().year.toString() ||
-                configuration?.simulcasts?.contains(animeName) == true
+                configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
 
         val descriptionLowercase = animeDescription.lowercase()
 

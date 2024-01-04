@@ -25,8 +25,8 @@
     </table>
 
     <script>
-        function buildTableElement(uuid, name, description) {
-            const isInvalid = description == null || description === '' || description?.startsWith('(');
+        function buildTableElement(uuid, name, image, description) {
+            const isInvalid = (image == null || image === '') || (description == null || description === '' || description?.startsWith('('));
 
             return `<tr>
                 <th scope="row">` + name + `</th>
@@ -61,7 +61,7 @@
             table.innerHTML = '';
 
             animes.forEach(anime => {
-                table.innerHTML += buildTableElement(anime.uuid, anime.name, anime.description);
+                table.innerHTML += buildTableElement(anime.uuid, anime.name, anime.image, anime.description);
             });
         }
 

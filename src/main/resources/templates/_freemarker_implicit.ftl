@@ -4,5 +4,7 @@
 [#-- @ftlvariable name="metrics" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.MetricDto>" --]
 [#-- @ftlvariable name="links" type="kotlin.collections.AbstractList<fr.shikkanime.entities.LinkObject>" --]
 [#-- @ftlvariable name="platforms" type="kotlin.collections.AbstractList<fr.shikkanime.platforms.AbstractPlatform>" --]
+[#-- @ftlvariable name="platform" type="fr.shikkanime.entities.enums.Platform" --]
 [#-- @ftlvariable name="error" type="kotlin.NumbersKt" --]
 [#-- @ftlvariable name="anime" type="fr.shikkanime.dtos.AnimeDto" --]
+[#-- @ftlvariable name="simulcast_config" type="fr.shikkanime.platforms.configuration.PlatformSimulcast" --]

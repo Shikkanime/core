@@ -16,6 +16,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var simulcastService: SimulcastService
 
+    @Inject
+    private lateinit var episodeService: EpisodeService
+
     override fun getRepository(): AnimeRepository {
         return animeRepository
     }
@@ -58,8 +61,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return savedEntity
     }
 
-    fun update(parameters: Parameters): Anime? {
-        val anime = find(UUID.fromString(parameters["uuid"])) ?: return null
+    fun update(uuid: UUID, parameters: Parameters): Anime? {
+        val anime = find(uuid) ?: return null
 
         parameters["name"]?.takeIf { it.isNotBlank() }?.let { anime.name = it }
         parameters["releaseDateTime"]?.takeIf { it.isNotBlank() }?.let { anime.releaseDateTime = ZonedDateTime.parse("$it:00Z") }
@@ -73,5 +76,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
 
         return super.update(anime)
+    }
+
+    override fun delete(entity: Anime) {
+        episodeService.findByAnime(entity.uuid!!).forEach { episodeService.delete(it) }
+        super.delete(entity)
     }
 }

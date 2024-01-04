@@ -2,6 +2,7 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Episode
 import org.hibernate.Hibernate
+import java.util.*
 
 class EpisodeRepository : AbstractRepository<Episode>() {
     private fun Episode.initialize(): Episode {
@@ -35,6 +36,14 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .setParameter("hash", "%${hash?.lowercase()}%")
                 .resultList
                 .firstOrNull()
+        }
+    }
+
+    fun findByAnime(uuid: UUID): List<Episode> {
+        return inTransaction {
+            it.createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .resultList
         }
     }
 }

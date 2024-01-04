@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import fr.shikkanime.utils.ObjectParser.getAsString
 
 object ObjectParser {
     private val gson = Gson()

@@ -11,6 +11,8 @@
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                             data-bs-target="#${collapseId}" aria-expanded="false"
                             aria-controls="${collapseId}">
+                        <img src="/admin/assets/img/platforms/${abstractPlatform.platform.image}" alt="${abstractPlatform.platform.platformName}"
+                             class="me-2 rounded-circle" height="24">
                         ${abstractPlatform.platform.platformName}
                     </button>
                 </h2>
@@ -27,42 +29,36 @@
                                         <label class="form-label"
                                                for="${fieldNameForm}">${configurationField.label}</label>
 
-                                        <#if configurationField.type == "list">
-                                            <div class="form">
-                                                <div class="list-values">
-                                                    <#list configurationField.value as value>
-                                                        <div class="input-group mb-3">
-                                                            <input id="${fieldNameForm}"
-                                                                   name="${configurationField.name}" type="text"
-                                                                   class="form-control"
-                                                                   value="${value}">
-                                                            <button class="btn btn-outline-danger" type="button"
-                                                                    onclick="deleteElement(this)">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </#list>
-                                                </div>
+                                        <input id="${fieldNameForm}" name="${configurationField.name}"
+                                               type="${configurationField.type}"
+                                               class="form-control"
+                                               value="${configurationField.value}">
 
-                                                <div class="input-group mb-3">
-                                                    <input type="text" class="form-control" placeholder="Add new"
-                                                           value="" data-id="${fieldNameForm}"
-                                                           data-name="${configurationField.name}">
-                                                    <button class="btn btn-outline-success" type="button"
-                                                            onclick="addElement(this)">
-                                                        <i class="bi bi-plus"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                        <#else>
-                                            <input id="${fieldNameForm}" name="${configurationField.name}"
-                                                   type="${configurationField.type}"
-                                                   class="form-control"
-                                                   value="${configurationField.value}">
+                                        <#if configurationField.caption??>
+                                            <div class="form-text">${configurationField.caption}</div>
                                         </#if>
                                     </div>
                                 </#list>
+                            </div>
+
+                            <div class="mt-3">
+                                <h3 class="mb-3">Simulcasts</h3>
+
+                                <#list abstractPlatform.configuration.simulcasts as simulcast>
+                                    <a href="/admin/platforms/${abstractPlatform.platform.name()}/simulcasts/${simulcast.uuid}"
+                                       class="card text-decoration-none mb-3">
+                                        <div class="card-body">
+                                            ${simulcast.name}
+                                        </div>
+                                    </a>
+                                </#list>
+
+                                <a href="/admin/platforms/${abstractPlatform.platform.name()}/simulcasts" class="card text-decoration-none">
+                                    <div class="card-body">
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        Add simulcast
+                                    </div>
+                                </a>
                             </div>
 
                             <hr class="my-3">
@@ -76,34 +72,4 @@
             </div>
         </#list>
     </div>
-
-    <script>
-        function deleteElement(deleteButton) {
-            const closestInputGroup = deleteButton.closest('.input-group');
-            const closestInput = closestInputGroup.querySelector('input');
-
-            if (confirm('Are you sure you want to delete ' + closestInput.value + '?')) {
-                closestInputGroup.remove();
-            }
-        }
-
-        function addElement(addButton) {
-            const closestInputGroup = addButton.closest('.input-group');
-            const closestInput = closestInputGroup.querySelector('input');
-            const list = closestInputGroup.closest('form').querySelector('.list-values');
-
-            const newInputGroup = document.createElement('div');
-            newInputGroup.classList.add('input-group', 'mb-3');
-            newInputGroup.innerHTML = `
-                <input id="` + closestInput.dataset['id'] + `" name="` + closestInput.dataset['name'] + `" type="text" class="form-control" value="` + closestInput.value + `">
-                <button class="btn btn-outline-danger" type="button" onclick="deleteElement(this)">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-
-            list.appendChild(newInputGroup);
-            closestInput.value = '';
-            closestInput.focus();
-        }
-    </script>
 </@navigation.display>

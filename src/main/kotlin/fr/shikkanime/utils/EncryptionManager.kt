@@ -28,4 +28,10 @@ object EncryptionManager {
         generate.generateBytes(password.toByteArray(StandardCharsets.UTF_8), result, 0, result.size)
         return result
     }
+
+    fun toSHA512(password: String): String {
+        val digest = java.security.MessageDigest.getInstance("SHA-512")
+        val hash = digest.digest(password.toByteArray(StandardCharsets.UTF_8))
+        return hash.fold("") { str, it -> str + "%02x".format(it) }
+    }
 }

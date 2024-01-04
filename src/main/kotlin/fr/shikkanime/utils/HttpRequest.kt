@@ -13,7 +13,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
 
-private const val TIMEOUT = 60_000L
+private const val TIMEOUT = 15_000L
 
 class HttpRequest {
     private var isBrowserInitialized = false
