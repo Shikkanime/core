@@ -1,12 +1,12 @@
 package fr.shikkanime.controllers.api
 
 import fr.shikkanime.module
+import fr.shikkanime.utils.Constant
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import io.ktor.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,9 +24,10 @@ class MetricControllerTest {
         }
     }
 
-    @OptIn(InternalAPI::class)
     @Test
     fun `get metrics authorized`() {
+        Constant.isDev = true
+
         testApplication {
             application {
                 module()

@@ -1,0 +1,13 @@
+{
+  "countryCode": "FR",
+  "name": "Naruto",
+  "releaseDateTime": "2024-01-01T00:00:00Z",
+  "image": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/4EEDaUGF0vUCR5uJw88qj1UOqYL.jpg",
+  "description": "Naruto Uzumaki, a mischievous adolescent ninja, struggles as he searches for recognition and dreams of becoming the Hokage, the village's leader and strongest ninja.",
+  "simulcasts": [
+    {
+      "season": "WINTER",
+      "year": 2024
+    }
+  ]
+}

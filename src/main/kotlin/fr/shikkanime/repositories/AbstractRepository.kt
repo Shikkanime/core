@@ -65,4 +65,10 @@ abstract class AbstractRepository<E : ShikkEntity> {
             it.remove(entity)
         }
     }
+
+    fun deleteAll() {
+        inTransaction {
+            it.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
+        }
+    }
 }
