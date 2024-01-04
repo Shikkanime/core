@@ -1,5 +1,6 @@
 package fr.shikkanime.plugins
 
+import fr.shikkanime.utils.Constant
 import freemarker.cache.ClassTemplateLoader
 import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.ktor.http.*
@@ -40,15 +41,17 @@ fun Application.configureHTTP() {
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
     }
-    install(SwaggerUI) {
-        swagger {
-            swaggerUrl = "api/swagger"
-            forwardRoot = false
-        }
-        info {
-            title = "Shikkanime API"
-            version = "1.0"
-            description = "API for testing and demonstration purposes"
+    if (Constant.isDev) {
+        install(SwaggerUI) {
+            swagger {
+                swaggerUrl = "api/swagger"
+                forwardRoot = false
+            }
+            info {
+                title = "Shikkanime API"
+                version = "1.0"
+                description = "API for testing and demonstration purposes"
+            }
         }
     }
 }

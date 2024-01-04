@@ -1,0 +1,13 @@
+{
+  "countryCode": "FR",
+  "name": "One Piece",
+  "releaseDateTime": "2024-01-01T00:00:00Z",
+  "image": "https://www.themoviedb.org/t/p/w600_and_h900_bestv2/4EEDaUGF0vUCR5uJw88qj1UOqYL.jpg",
+  "description": "Luffy et son équipage naviguent sur les mers à la recherche du légendaire trésor appelé « One Piece » et doivent faire face à de nombreuses aventures. Celui qui s'en emparera deviendra le roi des pirates !",
+  "simulcasts": [
+    {
+      "season": "WINTER",
+      "year": 2024
+    }
+  ]
+}

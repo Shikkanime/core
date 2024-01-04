@@ -22,6 +22,7 @@ object Constant {
 
             return dataFolder
         }
+    var isDev = System.getenv("ENV") == "dev"
 
     init {
         abstractPlatforms.forEach {

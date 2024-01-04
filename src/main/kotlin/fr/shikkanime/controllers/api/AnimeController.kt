@@ -95,29 +95,6 @@ class AnimeController {
         return Response.ok(AbstractConverter.convert(list, AnimeDto::class.java))
     }
 
-    @Path("/{uuid}")
-    @Get
-    @OpenAPI(
-        "Get anime",
-        [
-            OpenAPIResponse(
-                200,
-                "Anime found",
-                AnimeDto::class,
-            ),
-            OpenAPIResponse(
-                404,
-                "Anime not found",
-                MessageDto::class,
-            ),
-        ]
-    )
-    private fun getAnime(@PathParam("uuid") uuid: UUID): Response {
-        val anime =
-            animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
-        return Response.ok(AbstractConverter.convert(anime, AnimeDto::class.java))
-    }
-
     @Path("/{uuid}/image")
     @Get
     @Cached(maxAgeSeconds = 3600)

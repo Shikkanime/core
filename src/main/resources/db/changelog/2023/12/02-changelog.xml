@@ -41,6 +41,12 @@
     </changeSet>
 
     <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="anime_simulcast"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="anime_simulcast">
             <column name="anime_uuid"
                     type="UUID">
@@ -54,6 +60,12 @@
     </changeSet>
 
     <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="simulcast"/>
+            </not>
+        </preConditions>
+
         <createTable tableName="simulcast">
             <column name="uuid"
                     type="UUID">
@@ -73,6 +85,12 @@
     </changeSet>
 
     <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_anisim_on_anime"/>
+            </not>
+        </preConditions>
+
         <addForeignKeyConstraint baseColumnNames="anime_uuid"
                                  baseTableName="anime_simulcast"
                                  constraintName="fk_anisim_on_anime"
@@ -81,6 +99,12 @@
     </changeSet>
 
     <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_anisim_on_simulcast"/>
+            </not>
+        </preConditions>
+
         <addForeignKeyConstraint baseColumnNames="simulcast_uuid"
                                  baseTableName="anime_simulcast"
                                  constraintName="fk_anisim_on_simulcast"

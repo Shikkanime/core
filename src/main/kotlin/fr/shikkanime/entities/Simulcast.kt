@@ -11,7 +11,7 @@ data class Simulcast(
     override val uuid: UUID? = null,
     @Column(nullable = false)
     val season: String? = null,
-    @Column(nullable = false)
+    @Column(nullable = false, name = "year_")
     val year: Int? = null,
 ) : ShikkEntity(uuid) {
     override fun equals(other: Any?): Boolean {
