@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.reflect.TypeToken
 
 object ObjectParser {
     private val gson = Gson()
@@ -20,6 +21,10 @@ object ObjectParser {
 
     fun <T> fromJson(json: String, clazz: Class<T>): T {
         return gson.fromJson(json, clazz)
+    }
+
+    fun <T> fromJson(json: String, typeToken: TypeToken<T>): T {
+        return gson.fromJson(json, typeToken.type)
     }
 
     fun <T> toJson(obj: T): String {
