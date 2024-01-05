@@ -18,7 +18,7 @@
                             <input type="text" class="form-control disabled" id="uuid" name="uuid" value="${anime.uuid.toString()}" aria-label="UUID"
                                    aria-describedby="basic-addon" disabled>
                             <span class="input-group-text" id="basic-addon" onclick="copyToClipboard('${anime.uuid.toString()}')" style="cursor: pointer"><i
-                                        class="bi bi-clipboard-fill"></i></span>
+                                        class="bi bi-clipboard"></i></span>
                         </div>
                     </div>
                     <div class="col-md-6">

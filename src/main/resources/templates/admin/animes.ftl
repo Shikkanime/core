@@ -3,10 +3,8 @@
 <@navigation.display>
     <div class="row g-3 align-items-center mb-3">
         <div class="col-auto">
-            <div class="form-floating">
-                <input type="text" class="form-control" id="floatingInput" placeholder="One Piece">
-                <label for="floatingInput">Name</label>
-            </div>
+            <label class="form-label" for="nameInput">Name</label>
+            <input type="text" class="form-control" id="nameInput" placeholder="One Piece">
         </div>
     </div>
 
@@ -15,7 +13,6 @@
         <tr>
             <th scope="col">Name</th>
             <th scope="col">Description</th>
-            <th scope="col">Status</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -25,15 +22,12 @@
     </table>
 
     <script>
-        function buildTableElement(uuid, name, image, description) {
-            const isInvalid = (image == null || image === '') || (description == null || description === '' || description?.startsWith('('));
+        function buildTableElement(uuid, name, image, description, status) {
+            const isInvalid = status === 'INVALID';
 
             return `<tr>
-                <th scope="row">` + name + `</th>
+                <th scope="row"><span class="me-2 badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>` + name + `</th>
                 <td>` + description + `</td>
-                <td>
-                    <span class="badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>
-                </td>
                 <td>
                     <a href="/admin/animes/` + uuid + `" class="btn btn-warning">
                         <i class="bi bi-pencil-square"></i>
@@ -61,7 +55,7 @@
             table.innerHTML = '';
 
             animes.forEach(anime => {
-                table.innerHTML += buildTableElement(anime.uuid, anime.name, anime.image, anime.description);
+                table.innerHTML += buildTableElement(anime.uuid, anime.name, anime.image, anime.description, anime.status);
             });
         }
 
@@ -72,7 +66,7 @@
 
         let timeout = null;
 
-        document.getElementById('floatingInput').addEventListener('input', async (event) => {
+        document.getElementById('nameInput').addEventListener('input', async (event) => {
             // Avoids calling the API on every key press
             clearTimeout(timeout);
 
