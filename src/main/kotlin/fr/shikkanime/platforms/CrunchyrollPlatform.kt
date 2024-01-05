@@ -172,10 +172,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         return list
     }
 
-    override fun reset() {
-        TODO("Not yet implemented")
-    }
-
     override fun saveConfiguration() {
         super.saveConfiguration()
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))

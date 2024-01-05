@@ -58,10 +58,6 @@ class AnimationDigitalNetworkPlatform :
         return list
     }
 
-    override fun reset() {
-        TODO("Not yet implemented")
-    }
-
     fun convertEpisode(
         countryCode: CountryCode,
         jsonObject: JsonObject,
@@ -79,13 +75,15 @@ class AnimationDigitalNetworkPlatform :
         val animeDescription = show.getAsString("summary")?.replace('\n', ' ') ?: ""
         val genres = show.getAsJsonArray("genres") ?: JsonArray()
 
-        if (genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) {
+        val contains = configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
+
+        if ((genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) && !contains) {
             throw Exception("Anime is not an animation")
         }
 
         var isSimulcasted = show.getAsBoolean("simulcast") == true ||
                 show.getAsString("firstReleaseYear") == zonedDateTime.toLocalDate().year.toString() ||
-                configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
+                contains
 
         val descriptionLowercase = animeDescription.lowercase()
 

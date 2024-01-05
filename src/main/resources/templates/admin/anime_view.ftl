@@ -15,9 +15,11 @@
                         <label for="uuid" class="form-label">UUID</label>
 
                         <div class="input-group">
-                            <input type="text" class="form-control disabled" id="uuid" name="uuid" value="${anime.uuid.toString()}" aria-label="UUID"
+                            <input type="text" class="form-control disabled" id="uuid" name="uuid"
+                                   value="${anime.uuid.toString()}" aria-label="UUID"
                                    aria-describedby="basic-addon" disabled>
-                            <span class="input-group-text" id="basic-addon" onclick="copyToClipboard('${anime.uuid.toString()}')" style="cursor: pointer"><i
+                            <span class="input-group-text" id="basic-addon"
+                                  onclick="copyToClipboard('${anime.uuid.toString()}')" style="cursor: pointer"><i
                                         class="bi bi-clipboard"></i></span>
                         </div>
                     </div>
@@ -36,7 +38,8 @@
                     </div>
                     <div class="col-md-6">
                         <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="6">${anime.description}</textarea>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="6">${anime.description}</textarea>
                     </div>
                 </div>
             </div>

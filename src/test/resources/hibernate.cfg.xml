@@ -16,6 +16,8 @@
         </property>
         <property name="hibernate.search.backend.type">lucene</property>
         <property name="hibernate.search.backend.directory.type">local-filesystem</property>
-        <property name="hibernate.search.backend.analysis.configurer">fr.shikkanime.modules.CustomLuceneAnalysisDefinitionProvider</property>
+        <property name="hibernate.search.backend.analysis.configurer">
+            fr.shikkanime.modules.CustomLuceneAnalysisDefinitionProvider
+        </property>
     </session-factory>
 </hibernate-configuration>
