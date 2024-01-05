@@ -31,7 +31,7 @@
             </ul>
         </div>
 
-        <div class="p-4 container-fluid">
+        <div class="p-4 container-fluid" style="max-height: 100vh; overflow-y: auto;">
             <#nested 1>
         </div>
     </@layout.main>
