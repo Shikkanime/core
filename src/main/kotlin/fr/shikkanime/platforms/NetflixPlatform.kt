@@ -88,8 +88,4 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
 
         return list
     }
-
-    override fun reset() {
-        TODO("Not yet implemented")
-    }
 }

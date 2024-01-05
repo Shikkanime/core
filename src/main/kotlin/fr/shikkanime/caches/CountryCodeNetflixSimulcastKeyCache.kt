@@ -3,7 +3,10 @@ package fr.shikkanime.caches
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 
-data class CountryCodeNetflixSimulcastKeyCache(val countryCode: CountryCode, val netflixSimulcast: NetflixConfiguration.NetflixSimulcast) {
+data class CountryCodeNetflixSimulcastKeyCache(
+    val countryCode: CountryCode,
+    val netflixSimulcast: NetflixConfiguration.NetflixSimulcast
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

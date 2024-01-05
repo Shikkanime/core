@@ -34,7 +34,16 @@ class AnimeControllerTest {
 
         File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
             ?.sortedBy { it.name.lowercase() }
-            ?.forEach { animeService.save(AbstractConverter.convert(ObjectParser.fromJson(it.readText(), AnimeDto::class.java), Anime::class.java)) }
+            ?.forEach {
+                animeService.save(
+                    AbstractConverter.convert(
+                        ObjectParser.fromJson(
+                            it.readText(),
+                            AnimeDto::class.java
+                        ), Anime::class.java
+                    )
+                )
+            }
     }
 
     @AfterTest
@@ -120,15 +129,16 @@ class AnimeControllerTest {
                 module()
             }
 
-            client.get("/api/v1/animes?simulcast=${simulcastService.findAll().first().uuid}&sort=name&desc=name").apply {
-                assertEquals(HttpStatusCode.OK, status)
-                val animes = ObjectParser.fromJson(bodyAsText(), Array<AnimeDto>::class.java)
-                assertEquals(2, animes.size)
-                assertEquals("One Piece", animes[0].name)
-                assertEquals("2024-01-01T00:00:00Z", animes[0].releaseDateTime)
-                assertEquals("WINTER", animes[0].simulcasts!![0].season)
-                assertEquals(2024, animes[0].simulcasts!![0].year)
-            }
+            client.get("/api/v1/animes?simulcast=${simulcastService.findAll().first().uuid}&sort=name&desc=name")
+                .apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    val animes = ObjectParser.fromJson(bodyAsText(), Array<AnimeDto>::class.java)
+                    assertEquals(2, animes.size)
+                    assertEquals("One Piece", animes[0].name)
+                    assertEquals("2024-01-01T00:00:00Z", animes[0].releaseDateTime)
+                    assertEquals("WINTER", animes[0].simulcasts!![0].season)
+                    assertEquals(2024, animes[0].simulcasts!![0].year)
+                }
         }
     }
 }

@@ -23,7 +23,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
 
         return AnimeDto(
             uuid = from.uuid,
-            releaseDateTime = from.releaseDateTime.withZoneSameInstant(utcZone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            releaseDateTime = from.releaseDateTime.withZoneSameInstant(utcZone)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             image = from.image,
             countryCode = from.countryCode!!,
             name = from.name!!,

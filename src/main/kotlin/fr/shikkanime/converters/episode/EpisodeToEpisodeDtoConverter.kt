@@ -18,7 +18,8 @@ class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
             episodeType = from.episodeType!!,
             langType = from.langType!!,
             hash = from.hash!!,
-            releaseDateTime = from.releaseDateTime.withZoneSameInstant(utcZone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            releaseDateTime = from.releaseDateTime.withZoneSameInstant(utcZone)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             season = from.season!!,
             number = from.number!!,
             title = from.title,

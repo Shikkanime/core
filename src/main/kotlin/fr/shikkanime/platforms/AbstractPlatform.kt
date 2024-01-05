@@ -18,7 +18,11 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     abstract fun getPlatform(): Platform
     abstract suspend fun fetchApiContent(key: K, zonedDateTime: ZonedDateTime): V
     abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File? = null): List<Episode>
-    abstract fun reset()
+
+    fun reset() {
+        hashCache.clear()
+        apiCache.clear()
+    }
 
     fun getApiContent(key: K, zonedDateTime: ZonedDateTime): V {
         val entry = apiCache.entries.firstOrNull { it.key.first == key }

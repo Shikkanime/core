@@ -104,10 +104,6 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         return list
     }
 
-    override fun reset() {
-        TODO("Not yet implemented")
-    }
-
     private fun convertEpisode(
         countryCode: CountryCode,
         jsonObject: JsonObject,

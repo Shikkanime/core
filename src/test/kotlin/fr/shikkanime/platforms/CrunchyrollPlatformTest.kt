@@ -147,9 +147,15 @@ class CrunchyrollPlatformTest {
             CrunchyrollPlatform.CrunchyrollAnimeContent("https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/a5ebfaaf02d69d1c0b254f4a49c43082.jpe")
         platform.animeInfoCache[CountryCodeAnimeIdKeyCache(CountryCode.FR, "overtake")] =
             CrunchyrollPlatform.CrunchyrollAnimeContent("https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/150047844fbb4c07a3c57b5def7b42b0.jpe")
-        platform.animeInfoCache[CountryCodeAnimeIdKeyCache(CountryCode.FR, "the-family-circumstances-of-the-irregular-witch")] =
+        platform.animeInfoCache[CountryCodeAnimeIdKeyCache(
+            CountryCode.FR,
+            "the-family-circumstances-of-the-irregular-witch"
+        )] =
             CrunchyrollPlatform.CrunchyrollAnimeContent("https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/43fce24dc917ee4e415aeae5231be54e.jpe")
-        platform.animeInfoCache[CountryCodeAnimeIdKeyCache(CountryCode.FR, "the-100-girlfriends-who-really-really-really-really-really-love-you")] =
+        platform.animeInfoCache[CountryCodeAnimeIdKeyCache(
+            CountryCode.FR,
+            "the-100-girlfriends-who-really-really-really-really-really-love-you"
+        )] =
             CrunchyrollPlatform.CrunchyrollAnimeContent("https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/0ab1a205c9c541ad87cefdbe7fd23390.jpe")
         platform.animeInfoCache[CountryCodeAnimeIdKeyCache(CountryCode.FR, "captain-tsubasa-junior-youth-arc")] =
             CrunchyrollPlatform.CrunchyrollAnimeContent("https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/f0dcc54fec6d201f5a2c7abd01d56e09.jpe")

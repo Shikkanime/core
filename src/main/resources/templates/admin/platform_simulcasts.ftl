@@ -10,7 +10,8 @@
             <a href="/admin/platforms" class="btn btn-secondary ms-0 me-auto">Back</a>
 
             <#if simulcast_config.uuid??>
-                <a href="/admin/platforms/${platform.name()}/simulcasts/${simulcast_config.uuid}/delete" class="btn btn-danger ms-auto me-0">Delete</a>
+                <a href="/admin/platforms/${platform.name()}/simulcasts/${simulcast_config.uuid}/delete"
+                   class="btn btn-danger ms-auto me-0">Delete</a>
                 <button type="submit" class="btn btn-success ms-2 me-0">Update</button>
             <#else>
                 <button type="submit" class="btn btn-success ms-auto me-0">Save</button>

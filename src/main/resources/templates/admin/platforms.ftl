@@ -11,7 +11,8 @@
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                             data-bs-target="#${collapseId}" aria-expanded="false"
                             aria-controls="${collapseId}">
-                        <img src="/admin/assets/img/platforms/${abstractPlatform.platform.image}" alt="${abstractPlatform.platform.platformName}"
+                        <img src="/admin/assets/img/platforms/${abstractPlatform.platform.image}"
+                             alt="${abstractPlatform.platform.platformName}"
                              class="me-2 rounded-circle" height="24">
                         ${abstractPlatform.platform.platformName}
                     </button>
@@ -53,7 +54,8 @@
                                     </a>
                                 </#list>
 
-                                <a href="/admin/platforms/${abstractPlatform.platform.name()}/simulcasts" class="card text-decoration-none">
+                                <a href="/admin/platforms/${abstractPlatform.platform.name()}/simulcasts"
+                                   class="card text-decoration-none">
                                     <div class="card-body">
                                         <i class="bi bi-plus-circle me-2"></i>
                                         Add simulcast

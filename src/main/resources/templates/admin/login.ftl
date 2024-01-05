@@ -4,7 +4,8 @@
     <div class="w-100 d-flex align-items-center justify-content-center">
         <div class="d-block card p-5">
             <div class="d-flex align-items-center justify-content-center text-center mb-5">
-                <img src="/admin/assets/img/icon.jpg" width="32" height="32" alt="Logo" crossorigin="anonymous" class="me-2 rounded-circle">
+                <img src="/admin/assets/img/icon.jpg" width="32" height="32" alt="Logo" crossorigin="anonymous"
+                     class="me-2 rounded-circle">
                 <span class="fs-4">Shikkanime</span>
             </div>
 

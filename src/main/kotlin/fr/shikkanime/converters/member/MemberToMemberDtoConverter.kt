@@ -12,7 +12,8 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
     override fun convert(from: Member): MemberDto {
         return MemberDto(
             uuid = from.uuid,
-            creationDateTime = from.creationDateTime.withZoneSameInstant(utcZone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            creationDateTime = from.creationDateTime.withZoneSameInstant(utcZone)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             username = from.username!!,
             role = from.role,
         )

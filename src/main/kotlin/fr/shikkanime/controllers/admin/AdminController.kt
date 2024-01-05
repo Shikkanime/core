@@ -74,7 +74,8 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun getPlatforms(@PathParam("platform") platform: Platform): Response {
-        val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name } ?: return Response.redirect(Link.PLATFORMS.href)
+        val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
+            ?: return Response.redirect(Link.PLATFORMS.href)
 
         return Response.template(
             "admin/platform_simulcasts.ftl",
@@ -89,8 +90,12 @@ class AdminController {
     @Path("/platforms/{platform}/simulcasts/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun getPlatformSimulcasts(@PathParam("platform") platform: Platform, @PathParam("uuid") uuid: UUID): Response {
-        val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name } ?: return Response.redirect(Link.PLATFORMS.href)
+    private fun getPlatformSimulcasts(
+        @PathParam("platform") platform: Platform,
+        @PathParam("uuid") uuid: UUID
+    ): Response {
+        val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
+            ?: return Response.redirect(Link.PLATFORMS.href)
 
         return Response.template(
             "admin/platform_simulcasts.ftl",
@@ -105,10 +110,15 @@ class AdminController {
     @Path("/platforms/{platform}/simulcasts")
     @Post
     @AdminSessionAuthenticated
-    private fun addPlatformSimulcast(@PathParam("platform") platform: Platform, @BodyParam parameters: Parameters): Response {
-        val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name } ?: return Response.redirect(Link.PLATFORMS.href)
+    private fun addPlatformSimulcast(
+        @PathParam("platform") platform: Platform,
+        @BodyParam parameters: Parameters
+    ): Response {
+        val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
+            ?: return Response.redirect(Link.PLATFORMS.href)
         val uuid = parameters["uuid"]?.let { UUID.fromString(it) }
-        val simulcast = abstractPlatform.configuration!!.simulcasts.find { it.uuid == uuid } ?: abstractPlatform.configuration!!.newPlatformSimulcast()
+        val simulcast = abstractPlatform.configuration!!.simulcasts.find { it.uuid == uuid }
+            ?: abstractPlatform.configuration!!.newPlatformSimulcast()
         simulcast.of(parameters)
 
         if (uuid == null) {
@@ -123,8 +133,12 @@ class AdminController {
     @Path("/platforms/{platform}/simulcasts/{uuid}/delete")
     @Get
     @AdminSessionAuthenticated
-    private fun deletePlatformSimulcast(@PathParam("platform") platform: Platform, @PathParam("uuid") uuid: UUID): Response {
-        val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name } ?: return Response.redirect(Link.PLATFORMS.href)
+    private fun deletePlatformSimulcast(
+        @PathParam("platform") platform: Platform,
+        @PathParam("uuid") uuid: UUID
+    ): Response {
+        val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
+            ?: return Response.redirect(Link.PLATFORMS.href)
         abstractPlatform.configuration?.simulcasts?.removeIf { it.uuid == uuid }
         abstractPlatform.saveConfiguration()
         return Response.redirect(Link.PLATFORMS.href)
