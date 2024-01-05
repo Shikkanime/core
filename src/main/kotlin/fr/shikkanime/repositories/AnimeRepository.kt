@@ -1,6 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import org.hibernate.Hibernate
@@ -18,6 +19,11 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
     private fun List<Anime>.initialize(): List<Anime> {
         this.forEach { anime -> anime.initialize() }
+        return this
+    }
+
+    private fun Pageable<Anime>.initialize(): Pageable<Anime> {
+        this.data.forEach { anime -> anime.initialize() }
         return this
     }
 
@@ -57,16 +63,13 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): List<Anime> {
+    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): Pageable<Anime> {
         return inTransaction {
-            val query = StringBuilder("FROM Anime a")
-            buildSortQuery(sort, query)
+            val queryBuilder = StringBuilder("FROM Anime a")
+            buildSortQuery(sort, queryBuilder)
 
-            it.createQuery(query.toString(), getEntityClass())
-                .setFirstResult(limit * page - limit)
-                .setMaxResults(limit)
-                .resultList
-                .initialize()
+            val query = it.createQuery(queryBuilder.toString(), getEntityClass())
+            buildPageableQuery(query, page, limit).initialize()
         }
     }
 
@@ -80,15 +83,15 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): List<Anime> {
+    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): Pageable<Anime> {
         return inTransaction {
             val searchSession = Search.session(it)
 
-            val searchResult: SearchResult<Anime> = searchSession.search(getEntityClass())
+            val searchResult = searchSession.search(getEntityClass())
                 .where { w -> findWhere(w, name, countryCode) }
-                .fetch((page - 1) * limit, limit) as SearchResult<Anime>
+                .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
-            searchResult.hits().initialize()
+            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount()).initialize()
         }
     }
 
@@ -113,19 +116,17 @@ class AnimeRepository : AbstractRepository<Anime>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): List<Anime> {
+    ): Pageable<Anime> {
         return inTransaction {
-            val query =
+            val queryBuilder =
                 StringBuilder("SELECT a FROM Anime a JOIN a.simulcasts s WHERE a.countryCode = :countryCode AND s.uuid = :uuid")
-            buildSortQuery(sort, query)
+            buildSortQuery(sort, queryBuilder)
 
-            it.createQuery(query.toString(), getEntityClass())
+            val query = it.createQuery(queryBuilder.toString(), getEntityClass())
                 .setParameter("countryCode", countryCode)
                 .setParameter("uuid", uuid)
-                .setFirstResult(limit * page - limit)
-                .setMaxResults(limit)
-                .resultList
-                .initialize()
+
+            buildPageableQuery(query, page, limit).initialize()
         }
     }
 

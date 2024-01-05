@@ -1,14 +1,17 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MessageDto
+import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ImageService
-import fr.shikkanime.utils.routes.*
+import fr.shikkanime.utils.routes.Cached
+import fr.shikkanime.utils.routes.Controller
+import fr.shikkanime.utils.routes.Path
+import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
@@ -30,7 +33,7 @@ class AnimeController {
             OpenAPIResponse(
                 200,
                 "Animes found",
-                Array<AnimeDto>::class,
+                PageableDto::class,
             ),
             OpenAPIResponse(
                 409,
@@ -84,7 +87,7 @@ class AnimeController {
             }
         }
 
-        val list = if (!name.isNullOrBlank()) {
+        val pageable = if (!name.isNullOrBlank()) {
             animeService.findByName(name, country, page, limit)
         } else if (simulcastParam != null) {
             animeService.findBySimulcast(simulcastParam, country, sortParameters, page, limit)
@@ -92,7 +95,7 @@ class AnimeController {
             animeService.findAll(sortParameters, page, limit)
         }
 
-        return Response.ok(AbstractConverter.convert(list, AnimeDto::class.java))
+        return Response.ok(PageableDto.fromPageable(pageable, AnimeDto::class.java))
     }
 
     @Path("/{uuid}/image")

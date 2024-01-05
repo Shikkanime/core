@@ -1,9 +1,12 @@
 package fr.shikkanime.repositories
 
 import com.google.inject.Inject
+import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
+import jakarta.persistence.TypedQuery
+import org.hibernate.query.Query
 import java.lang.reflect.ParameterizedType
 import java.util.*
 
@@ -32,6 +35,20 @@ abstract class AbstractRepository<E : ShikkEntity> {
         }
 
         return result
+    }
+
+    fun buildPageableQuery(
+        query: TypedQuery<E>,
+        page: Int,
+        limit: Int
+    ): Pageable<E> {
+        val scrollableResults = (query as Query).scroll()
+        scrollableResults.last()
+        val total = scrollableResults.rowNumber + 1
+        scrollableResults.close()
+
+        query.setFirstResult((limit * page) - limit).setMaxResults(limit)
+        return Pageable(query.resultList, page, limit, total.toLong())
     }
 
     open fun findAll(): List<E> {

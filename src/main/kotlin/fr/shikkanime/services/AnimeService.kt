@@ -2,6 +2,7 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
@@ -23,7 +24,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository
     }
 
-    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): List<Anime> {
+    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): Pageable<Anime> {
         return animeRepository.findAll(sort, page, limit)
     }
 
@@ -35,7 +36,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository.findByLikeName(countryCode, name)
     }
 
-    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): List<Anime> {
+    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): Pageable<Anime> {
         return animeRepository.findByName(name, countryCode, page, limit)
     }
 
@@ -45,7 +46,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): List<Anime> {
+    ): Pageable<Anime> {
         return animeRepository.findBySimulcast(uuid, countryCode, sort, page, limit)
     }
 
