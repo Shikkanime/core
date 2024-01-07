@@ -14,9 +14,9 @@ import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
 
 private const val TIMEOUT = 15_000L
+private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
 class HttpRequest {
-    private val logger = LoggerFactory.getLogger(javaClass)
     private var isBrowserInitialized = false
     private var playwright: Playwright? = null
     private var browser: Browser? = null
