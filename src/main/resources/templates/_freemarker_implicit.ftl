@@ -8,3 +8,7 @@
 [#-- @ftlvariable name="error" type="kotlin.NumbersKt" --]
 [#-- @ftlvariable name="anime" type="fr.shikkanime.dtos.AnimeDto" --]
 [#-- @ftlvariable name="simulcast_config" type="fr.shikkanime.platforms.configuration.PlatformSimulcast" --]
+[#-- @ftlvariable name="episode" type="fr.shikkanime.dtos.EpisodeDto" --]
+[#-- @ftlvariable name="episodeTypes" type="kotlin.collections.AbstractList<fr.shikkanime.entities.enums.EpisodeType>" --]
+[#-- @ftlvariable name="langTypes" type="kotlin.collections.AbstractList<fr.shikkanime.entities.enums.LangType>" --]
+

@@ -22,6 +22,7 @@ import java.io.File
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.logging.Level
 
 private const val IMAGE_NULL_ERROR = "Image is null"
 
@@ -73,13 +74,13 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 currentSimulcastContent.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
                     .text() ?: return@MapCache simulcasts
             val currentSimulcastCode = getSimulcastCode(currentSimulcast)
-            println("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
+            logger.info("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
             val currentSimulcastAnimes =
                 currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-            println("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
+            logger.info("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
 
             val previousSimulcastCode = getPreviousSimulcastCode(currentSimulcastCode)
-            println("Previous simulcast code for $it: $previousSimulcastCode")
+            logger.info("Previous simulcast code for $it: $previousSimulcastCode")
 
             val previousSimulcastContent = httpRequest.getBrowser(
                 "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts/seasons/$previousSimulcastCode",
@@ -87,17 +88,17 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             )
             val previousSimulcastAnimes =
                 previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-            println("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
+            logger.info("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
 
             val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
             simulcasts.addAll(combinedSimulcasts)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.log(Level.SEVERE, "Error while fetching simulcasts for ${it.name}", e)
         } finally {
             httpRequest.closeBrowser()
         }
 
-        println(simulcasts)
+        logger.info(simulcasts.joinToString(", "))
         return@MapCache simulcasts
     }
 
@@ -118,7 +119,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
                     .text()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.log(Level.SEVERE, "Error while fetching anime info for ${it.countryCode.name} - ${it.animeId}", e)
         } finally {
             httpRequest.closeBrowser()
         }
@@ -164,7 +165,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 } catch (_: AnimeException) {
                     // Ignore
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    logger.log(Level.SEVERE, "Error on converting episode", e)
                 }
             }
         }
@@ -298,7 +299,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 // Convert duration (ex: PT23M39.96199999999999S) to long seconds
                 duration = kotlin.time.Duration.parse(durationString).inWholeSeconds
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.log(Level.SEVERE, "Error while fetching episode duration", e)
             } finally {
                 httpRequest.closeBrowser()
             }

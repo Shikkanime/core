@@ -3,6 +3,7 @@ package fr.shikkanime.utils
 import fr.shikkanime.jobs.AbstractJob
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
+import java.util.logging.Level
 
 object JobManager {
     private val scheduler = StdSchedulerFactory().scheduler
@@ -25,6 +26,8 @@ object JobManager {
     }
 
     class JobExecutor : Job {
+        private val logger = LoggerFactory.getLogger(javaClass)
+
         override fun execute(context: JobExecutionContext?) {
             val jobName = context?.jobDetail?.key?.name ?: return
             val `class` = Class.forName(jobName) ?: return
@@ -33,7 +36,7 @@ object JobManager {
             try {
                 job.run()
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.log(Level.SEVERE, "Error while executing job $jobName", e)
             }
         }
     }

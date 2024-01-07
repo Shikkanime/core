@@ -11,10 +11,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.JobManager
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -22,8 +19,10 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
 
+private val logger = LoggerFactory.getLogger("Shikkanime")
+
 fun main() {
-    println("Starting ShikkAnime...")
+    logger.info("Starting ShikkAnime...")
     ImageService.loadCache()
 
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
@@ -58,14 +57,14 @@ fun main() {
         episodes.filter { it.uuid == null || it.platform?.name != "Disney+" }.forEach { episodeService.save(it) }
     }
 
-    println("Starting jobs...")
+    logger.info("Starting jobs...")
     JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
     JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
     JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
     JobManager.start()
 
-    println("Starting server...")
+    logger.info("Starting server...")
     embeddedServer(
         Netty,
         port = 37100,

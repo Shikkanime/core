@@ -121,7 +121,7 @@ fun main() {
                 AbstractConverter.convert(
                     adnPlatform.convertEpisode(
                         CountryCode.FR,
-                        episodeJson.getAsJsonObject(),
+                        episodeJson.asJsonObject,
                         date
                     ), EpisodeDto::class.java
                 )

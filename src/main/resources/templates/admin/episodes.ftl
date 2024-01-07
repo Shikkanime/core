@@ -3,20 +3,24 @@
 <@navigation.display>
     <div class="row g-3 align-items-center mb-3">
         <div class="col-auto">
-            <label class="form-label" for="nameInput">Name</label>
-            <input type="text" class="form-control" id="nameInput">
+            <label class="form-label" for="animeInput">Anime</label>
+            <input type="text" class="form-control" id="animeInput">
         </div>
     </div>
 
     <table class="table table-striped table-bordered">
         <thead>
         <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Description</th>
+            <th scope="col">Anime</th>
+            <th scope="col">Platform</th>
+            <th scope="col">Episode type</th>
+            <th scope="col">Lang type</th>
+            <th scope="col">Season</th>
+            <th scope="col">Number</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
-        <tbody class="table-group-divider" id="animes-table">
+        <tbody class="table-group-divider" id="episodes-table">
 
         </tbody>
     </table>
@@ -30,14 +34,16 @@
     </div>
 
     <script>
-        function buildTableElement(uuid, name, description, status) {
-            const isInvalid = status === 'INVALID';
-
+        function buildTableElement(uuid, anime, platform, episodeType, langType, season, number) {
             return `<tr>
-                <th scope="row"><span class="me-2 badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>` + name + `</th>
-                <td>` + description + `</td>
+                <th scope="row">` + anime + `</th>
+                <td>` + platform + `</td>
+                <td>` + episodeType + `</td>
+                <td>` + langType + `</td>
+                <td>` + season + `</td>
+                <td>` + number + `</td>
                 <td>
-                    <a href="/admin/animes/` + uuid + `" class="btn btn-warning">
+                    <a href="/admin/episodes/` + uuid + `" class="btn btn-warning">
                         <i class="bi bi-pencil-square"></i>
                         Edit
                     </a>
@@ -45,31 +51,31 @@
             </tr>`
         }
 
-        async function getAnimes(name, page) {
+        async function getEpisodes(anime, page) {
             let params = '?sort=releaseDateTime&desc=releaseDateTime';
 
-            if (name) {
-                params = '?name=' + name;
+            if (anime) {
+                params = '?anime=' + anime;
             }
 
-            return await fetch('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=6')
+            return await fetch('/api/v1/episodes' + params + '&page=' + (page || 1) + '&limit=12')
                 .then(response => response.json())
                 .catch(error => console.error(error));
         }
 
-        function buildTable(animes) {
-            const table = document.getElementById('animes-table');
+        function buildTable(episodes) {
+            const table = document.getElementById('episodes-table');
 
             table.innerHTML = '';
 
-            animes.forEach(anime => {
-                table.innerHTML += buildTableElement(anime.uuid, anime.name, anime.description, anime.status);
+            episodes.forEach(episode => {
+                table.innerHTML += buildTableElement(episode.uuid, episode.anime.name, episode.platform, episode.episodeType, episode.langType, episode.season, episode.number);
             });
         }
 
         async function changePage(page) {
-            const name = document.getElementById('nameInput').value;
-            const pageable = await getAnimes(name, page);
+            const anime = document.getElementById('animeInput').value;
+            const pageable = await getEpisodes(anime, page);
             buildTable(pageable.data);
             buildPagination(pageable);
         }
@@ -104,19 +110,19 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const pageable = await getAnimes();
+            const pageable = await getEpisodes();
             buildTable(pageable.data);
             buildPagination(pageable);
         });
 
         let timeout = null;
 
-        document.getElementById('nameInput').addEventListener('input', async (event) => {
+        document.getElementById('animeInput').addEventListener('input', async (event) => {
             // Avoids calling the API on every key press
             clearTimeout(timeout);
 
             timeout = setTimeout(async () => {
-                const pageable = await getAnimes(event.target.value);
+                const pageable = await getEpisodes(event.target.value);
                 buildTable(pageable.data);
                 buildPagination(pageable);
             }, 500);

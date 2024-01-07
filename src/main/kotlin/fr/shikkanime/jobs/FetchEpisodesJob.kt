@@ -3,11 +3,15 @@ package fr.shikkanime.jobs
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import jakarta.inject.Inject
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.logging.Level
+
 
 class FetchEpisodesJob : AbstractJob() {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private var isInitialized = false
     private var isRunning = false
     private val set = mutableSetOf<String>()
@@ -17,7 +21,7 @@ class FetchEpisodesJob : AbstractJob() {
 
     override fun run() {
         if (isRunning) {
-            println("Job is already running")
+            logger.warning("Job is already running")
             return
         }
 
@@ -35,13 +39,12 @@ class FetchEpisodesJob : AbstractJob() {
         val episodes = mutableListOf<Episode>()
 
         Constant.abstractPlatforms.forEach { abstractPlatform ->
-            println("Fetching episodes for ${abstractPlatform.getPlatform().name}...")
+            logger.info("Fetching episodes for ${abstractPlatform.getPlatform().name}...")
 
             try {
                 episodes.addAll(abstractPlatform.fetchEpisodes(zonedDateTime))
             } catch (e: Exception) {
-                println("Error while fetching episodes for ${abstractPlatform.getPlatform().name}: ${e.message}")
-                e.printStackTrace()
+                logger.log(Level.SEVERE, "Error while fetching episodes for ${abstractPlatform.getPlatform().name}", e)
             }
         }
 

@@ -5,10 +5,13 @@ import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.RandomManager
 
 
 class MemberService : AbstractService<Member, MemberRepository>() {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @Inject
     private lateinit var memberRepository: MemberRepository
 
@@ -32,7 +35,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         }
 
         val password = RandomManager.generateRandomString(32)
-        println("Default admin password: $password")
+        logger.info("Default admin password: $password")
         save(Member(username = "admin", encryptedPassword = EncryptionManager.generate(password), role = Role.ADMIN))
     }
 }

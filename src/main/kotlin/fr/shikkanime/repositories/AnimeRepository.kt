@@ -63,12 +63,32 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): Pageable<Anime> {
+    fun findAllBy(
+        countryCode: CountryCode?,
+        simulcast: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): Pageable<Anime> {
         return inTransaction {
             val queryBuilder = StringBuilder("FROM Anime a")
+            val whereClause = mutableListOf<String>()
+
+            simulcast?.let {
+                queryBuilder.append(" JOIN a.simulcasts s")
+                whereClause.add("s.uuid = :uuid")
+            }
+            countryCode?.let { whereClause.add("a.countryCode = :countryCode") }
+
+            if (whereClause.isNotEmpty()) {
+                queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
+            }
+
             buildSortQuery(sort, queryBuilder)
 
             val query = it.createQuery(queryBuilder.toString(), getEntityClass())
+            countryCode?.let { query.setParameter("countryCode", countryCode) }
+            simulcast?.let { query.setParameter("uuid", simulcast) }
             buildPageableQuery(query, page, limit).initialize()
         }
     }
@@ -83,7 +103,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): Pageable<Anime> {
+    fun findByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
         return inTransaction {
             val searchSession = Search.session(it)
 
@@ -97,37 +117,13 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
     private fun findWhere(
         searchPredicateFactory: SearchPredicateFactory,
-        name: String?,
-        countryCode: CountryCode
+        name: String,
+        countryCode: CountryCode?
     ): BooleanPredicateClausesStep<*>? {
         val bool = searchPredicateFactory.bool()
-
-        if (name != null) {
-            bool.must(searchPredicateFactory.match().field("name").matching(name))
-        }
-
-        bool.must(searchPredicateFactory.match().field("countryCode").matching(countryCode))
+        bool.must(searchPredicateFactory.match().field("name").matching(name))
+        countryCode?.let { bool.must(searchPredicateFactory.match().field("countryCode").matching(it)) }
         return bool
-    }
-
-    fun findBySimulcast(
-        uuid: UUID,
-        countryCode: CountryCode,
-        sort: List<SortParameter>,
-        page: Int,
-        limit: Int
-    ): Pageable<Anime> {
-        return inTransaction {
-            val queryBuilder =
-                StringBuilder("SELECT a FROM Anime a JOIN a.simulcasts s WHERE a.countryCode = :countryCode AND s.uuid = :uuid")
-            buildSortQuery(sort, queryBuilder)
-
-            val query = it.createQuery(queryBuilder.toString(), getEntityClass())
-                .setParameter("countryCode", countryCode)
-                .setParameter("uuid", uuid)
-
-            buildPageableQuery(query, page, limit).initialize()
-        }
     }
 
     override fun find(uuid: UUID): Anime? {

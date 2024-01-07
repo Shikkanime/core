@@ -11,9 +11,11 @@ import liquibase.resource.ClassLoaderResourceAccessor
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import java.io.File
+import java.util.logging.Level
 import kotlin.system.exitProcess
 
 class Database {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val sessionFactory: SessionFactory
 
     constructor(file: File) {
@@ -32,17 +34,17 @@ class Database {
 
         if (databaseUrl?.isNotBlank() == true) {
             configuration.setProperty("hibernate.connection.url", databaseUrl)
-            println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_URL")
+            logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_URL")
         }
 
         if (databaseUsername?.isNotBlank() == true) {
             configuration.setProperty("hibernate.connection.username", databaseUsername)
-            println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_USERNAME")
+            logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_USERNAME")
         }
 
         if (databasePassword?.isNotBlank() == true) {
             configuration.setProperty("hibernate.connection.password", databasePassword)
-            println("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
+            logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
         }
 
         val buildSessionFactory = configuration.buildSessionFactory()
@@ -55,7 +57,7 @@ class Database {
             try {
                 liquibase.update(Contexts(), LabelExpression())
             } catch (e: Exception) {
-                e.printStackTrace()
+                logger.log(Level.SEVERE, "Error while updating database", e)
                 exitProcess(1)
             }
         }
@@ -63,7 +65,7 @@ class Database {
         try {
             buildSessionFactory.schemaManager.validateMappedObjects()
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.log(Level.SEVERE, "Error while validating database", e)
             exitProcess(1)
         }
     }

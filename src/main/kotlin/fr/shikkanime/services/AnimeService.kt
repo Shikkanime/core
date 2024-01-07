@@ -24,8 +24,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository
     }
 
-    fun findAll(sort: List<SortParameter>, page: Int, limit: Int): Pageable<Anime> {
-        return animeRepository.findAll(sort, page, limit)
+    fun findAllBy(
+        countryCode: CountryCode?,
+        simulcast: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): Pageable<Anime> {
+        return animeRepository.findAllBy(countryCode, simulcast, sort, page, limit)
     }
 
     fun preIndex() {
@@ -36,18 +42,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return animeRepository.findByLikeName(countryCode, name)
     }
 
-    fun findByName(name: String?, countryCode: CountryCode, page: Int, limit: Int): Pageable<Anime> {
+    fun findByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
         return animeRepository.findByName(name, countryCode, page, limit)
-    }
-
-    fun findBySimulcast(
-        uuid: UUID,
-        countryCode: CountryCode,
-        sort: List<SortParameter>,
-        page: Int,
-        limit: Int
-    ): Pageable<Anime> {
-        return animeRepository.findBySimulcast(uuid, countryCode, sort, page, limit)
     }
 
     override fun save(entity: Anime): Anime {

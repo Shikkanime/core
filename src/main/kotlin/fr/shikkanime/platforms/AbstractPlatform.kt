@@ -4,13 +4,16 @@ import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformConfiguration
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.lang.reflect.ParameterizedType
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
+    val logger = LoggerFactory.getLogger(javaClass)
     val hashCache = mutableListOf<String>()
     var configuration: C? = null
     private var apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
@@ -43,12 +46,12 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         }
 
         return try {
-            println("Reading config file for ${getPlatform().name} platform")
+            logger.info("Reading config file for ${getPlatform().name} platform")
             val fromJson = ObjectParser.fromJson(file.readText(), getConfigurationClass())
             configuration = fromJson
             fromJson
         } catch (e: Exception) {
-            println("Error while reading config file for ${getPlatform().name} platform: ${e.message}")
+            logger.log(Level.SEVERE, "Error while reading config file for ${getPlatform().name} platform", e)
             defaultValue
         }
     }

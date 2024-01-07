@@ -20,6 +20,7 @@ import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
 import java.io.File
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeAnimeIdKeyCache, JsonArray>() {
     override fun getPlatform(): Platform = Platform.DISN
@@ -91,11 +92,11 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
 
                 api.forEach {
                     try {
-                        list.add(convertEpisode(countryCode, it.getAsJsonObject(), zonedDateTime))
+                        list.add(convertEpisode(countryCode, it.asJsonObject, zonedDateTime))
                     } catch (_: AnimeException) {
                         // Ignore
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        logger.log(Level.SEVERE, "Error on converting episode", e)
                     }
                 }
             }

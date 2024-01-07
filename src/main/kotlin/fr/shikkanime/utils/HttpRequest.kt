@@ -16,6 +16,7 @@ import kotlin.system.measureTimeMillis
 private const val TIMEOUT = 15_000L
 
 class HttpRequest {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private var isBrowserInitialized = false
     private var playwright: Playwright? = null
     private var browser: Browser? = null
@@ -38,7 +39,7 @@ class HttpRequest {
     suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
         val httpClient = httpClient()
 
-        println("Making request to $url... (GET)")
+        logger.info("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
         val response = httpClient.get(url) {
             timeout {
@@ -53,13 +54,13 @@ class HttpRequest {
         }
 
         httpClient.close()
-        println("Request to $url done in ${System.currentTimeMillis() - start}ms (GET)")
+        logger.info("Request to $url done in ${System.currentTimeMillis() - start}ms (GET)")
         return response
     }
 
     suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: String): HttpResponse {
         val httpClient = httpClient()
-        println("Making request to $url... (POST)")
+        logger.info("Making request to $url... (POST)")
         val start = System.currentTimeMillis()
         val response = httpClient.post(url) {
             headers.forEach { (key, value) ->
@@ -69,7 +70,7 @@ class HttpRequest {
             setBody(body)
         }
         httpClient.close()
-        println("Request to $url done in ${System.currentTimeMillis() - start}ms (POST)")
+        logger.info("Request to $url done in ${System.currentTimeMillis() - start}ms (POST)")
         return response
     }
 
@@ -88,7 +89,7 @@ class HttpRequest {
 
     fun getBrowser(url: String, selector: String? = null, retry: Int = 3): Document {
         initBrowser()
-        println("Making request to $url... (BROWSER)")
+        logger.info("Making request to $url... (BROWSER)")
 
         val takeMs = measureTimeMillis {
             try {
@@ -101,7 +102,7 @@ class HttpRequest {
                 }
             } catch (e: Exception) {
                 if (retry > 0) {
-                    println("Retrying...")
+                    logger.info("Retrying...")
                     return getBrowser(url, selector, retry - 1)
                 }
 
@@ -110,7 +111,7 @@ class HttpRequest {
         }
 
         val content = page?.content()
-        println("Request to $url done in ${takeMs}ms (BROWSER)")
+        logger.info("Request to $url done in ${takeMs}ms (BROWSER)")
         return Jsoup.parse(content ?: throw Exception("Content is null"))
     }
 
