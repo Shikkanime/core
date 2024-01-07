@@ -5,6 +5,7 @@ import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -31,12 +32,15 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.util.*
 import java.util.*
+import java.util.logging.Level
 import kotlin.collections.set
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmErasure
+
+private val logger = LoggerFactory.getLogger("Routing")
 
 fun Application.configureRouting() {
     routing {
@@ -197,7 +201,7 @@ private suspend fun handleRequest(
     val parameters = call.parameters.toMap()
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
-    println("$httpMethod ${call.request.origin.uri} -> $replacedPath")
+    logger.info("$httpMethod ${call.request.origin.uri} -> $replacedPath")
 
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)
@@ -245,8 +249,7 @@ private suspend fun handleRequest(
             }
         }
     } catch (e: Exception) {
-        println("Error while calling method $method")
-        e.printStackTrace()
+        logger.log(Level.SEVERE, "Error while calling method $method", e)
         call.respond(HttpStatusCode.BadRequest)
     }
 }

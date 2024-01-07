@@ -1,10 +1,7 @@
 package fr.shikkanime.services
 
 import com.mortennobel.imagescaling.ResampleOp
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.FileManager
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -14,6 +11,7 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.logging.Level
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
@@ -48,6 +46,7 @@ object ImageService {
         }
     }
 
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val threadPool = Executors.newFixedThreadPool(2)
     private val file = File(Constant.dataFolder, "images-cache.shikk")
     private var cache = mutableListOf<Image>()
@@ -75,7 +74,7 @@ object ImageService {
             return
         }
 
-        println("Loading images cache...")
+        logger.info("Loading images cache...")
 
         val take = measureTimeMillis {
             val json = String(FileManager.fromGzip(file.readBytes()))
@@ -83,12 +82,12 @@ object ImageService {
             cache = map
         }
 
-        println("Loaded images cache in $take ms (${cache.size} images)")
+        logger.info("Loaded images cache in $take ms (${cache.size} images)")
     }
 
     fun saveCache() {
         if (!change.get()) {
-            println("No changes detected in images cache")
+            logger.info("No changes detected in images cache")
             return
         }
 
@@ -96,13 +95,13 @@ object ImageService {
             file.createNewFile()
         }
 
-        println("Saving images cache...")
+        logger.info("Saving images cache...")
 
         val take = measureTimeMillis {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        println(
+        logger.info(
             "Saved images cache in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${
                 toHumanReadable(
                     cache.sumOf { it.size })
@@ -112,11 +111,7 @@ object ImageService {
     }
 
     fun add(uuid: UUID, url: String, width: Int, height: Int) {
-        if (get(uuid) != null) {
-            return
-        }
-
-        if (url.isBlank()) {
+        if (get(uuid) != null || url.isBlank()) {
             return
         }
 
@@ -126,40 +121,24 @@ object ImageService {
         threadPool.submit {
             val take = measureTimeMillis {
                 try {
-                    println("Loading image $url...")
-                    val httpResponse = runBlocking {
-                        HttpRequest().get(url)
-                    }
+                    val httpResponse = runBlocking { HttpRequest().get(url) }
+                    val bytes = runBlocking { httpResponse.readBytes() }
 
-                    if (httpResponse.status != HttpStatusCode.OK) {
-                        println("Failed to load image $url")
+                    if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
+                        logger.warning("Failed to load image $url")
                         remove(uuid)
                         return@measureTimeMillis
                     }
 
-                    val bytes = runBlocking {
-                        httpResponse.readBytes()
-                    }
-
-                    if (bytes.isEmpty()) {
-                        println("Failed to load image $url")
-                        remove(uuid)
-                        return@measureTimeMillis
-                    }
-
-                    println("Encoding image to WebP...")
                     val resized = ResampleOp(width, height).filter(ImageIO.read(ByteArrayInputStream(bytes)), null)
-                    val tmpFile = File.createTempFile("shikk", ".png")
-                        .apply {
-                            writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }
-                                .toByteArray())
-                        }
-                    val readBytesResized = tmpFile.readBytes()
-                    val webp = FileManager.encodeToWebP(readBytesResized)
+                    val tmpFile = File.createTempFile("shikk", ".png").apply {
+                        writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
+                    }
+                    val webp = FileManager.encodeToWebP(tmpFile.readBytes())
                     tmpFile.delete()
 
                     if (webp.isEmpty()) {
-                        println("Failed to encode image to WebP")
+                        logger.warning("Failed to encode image to WebP")
                         remove(uuid)
                         return@measureTimeMillis
                     }
@@ -170,13 +149,12 @@ object ImageService {
                     cache[cache.indexOf(image)] = image
                     change.set(true)
                 } catch (e: Exception) {
-                    println("Failed to load image $url: ${e.message}")
-                    e.printStackTrace()
+                    logger.log(Level.SEVERE, "Failed to load image $url", e)
                     remove(uuid)
                 }
             }
 
-            println(
+            logger.info(
                 "Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${
                     toHumanReadable(
                         image.size

@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
 import org.apache.tika.language.detect.LanguageDetector
+import org.hibernate.Hibernate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -29,7 +30,10 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             countryCode = from.countryCode!!,
             name = from.name!!,
             description = from.description,
-            simulcasts = convert(from.simulcasts, SimulcastDto::class.java),
+            simulcasts = if (Hibernate.isInitialized(from.simulcasts)) convert(
+                from.simulcasts,
+                SimulcastDto::class.java
+            ) else null,
             status = status,
         )
     }

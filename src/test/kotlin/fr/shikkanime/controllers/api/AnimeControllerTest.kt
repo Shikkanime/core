@@ -7,6 +7,7 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.SimulcastService
@@ -174,6 +175,26 @@ class AnimeControllerTest {
                     val pageable = ObjectParser.fromJson(bodyAsText(), Token())
                     assertEquals(totalAnimes, pageable.total)
                     assertEquals("Two Piece", pageable.data[0].name)
+                    assertEquals("2024-01-01T00:00:00Z", pageable.data[0].releaseDateTime)
+                    assertEquals("WINTER", pageable.data[0].simulcasts!![0].season)
+                    assertEquals(2024, pageable.data[0].simulcasts!![0].year)
+                }
+        }
+    }
+
+    @Test
+    fun `get by simulcast and country`() {
+        testApplication {
+            application {
+                module()
+            }
+
+            client.get("/api/v1/animes?country=${CountryCode.FR}&simulcast=${simulcastService.findAll().first().uuid}")
+                .apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    val pageable = ObjectParser.fromJson(bodyAsText(), Token())
+                    assertEquals(totalAnimes, pageable.total)
+                    assertEquals("Dragon Ball Z", pageable.data[0].name)
                     assertEquals("2024-01-01T00:00:00Z", pageable.data[0].releaseDateTime)
                     assertEquals("WINTER", pageable.data[0].simulcasts!![0].season)
                     assertEquals(2024, pageable.data[0].simulcasts!![0].year)

@@ -1,12 +1,12 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.routes.Cached
 import fr.shikkanime.utils.routes.Controller
@@ -20,55 +20,31 @@ import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 import java.util.*
 
-@Controller("/api/v1/animes")
-class AnimeController {
+@Controller("/api/v1/episodes")
+class EpisodeController {
     @Inject
-    private lateinit var animeService: AnimeService
+    private lateinit var episodeService: EpisodeService
 
     @Path
     @Get
     @OpenAPI(
-        "Get animes",
+        "Get episodes",
         [
             OpenAPIResponse(
                 200,
-                "Animes found",
+                "Episodes found",
                 PageableDto::class,
-            ),
-            OpenAPIResponse(
-                409,
-                "You can't use simulcast and name at the same time OR You can't use sort and desc with name",
-                MessageDto::class
             ),
         ]
     )
     private fun getAll(
-        @QueryParam("name") name: String?,
         @QueryParam("country") countryParam: CountryCode?,
-        @QueryParam("simulcast") simulcastParam: UUID?,
+        @QueryParam("anime") animeParam: UUID?,
         @QueryParam("page") pageParam: Int?,
         @QueryParam("limit") limitParam: Int?,
         @QueryParam("sort") sortParam: String?,
         @QueryParam("desc") descParam: String?,
     ): Response {
-        if (simulcastParam != null && name != null) {
-            return Response.conflict(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "You can't use simulcast and name at the same time",
-                )
-            )
-        }
-
-        if (name != null && (sortParam != null || descParam != null)) {
-            return Response.conflict(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "You can't use sort and desc with name",
-                )
-            )
-        }
-
         val page = pageParam ?: 1
         val limit = limitParam?.coerceIn(1, 30) ?: 15
 
@@ -77,20 +53,15 @@ class AnimeController {
             SortParameter(sort, if (desc) SortParameter.Order.DESC else SortParameter.Order.ASC)
         } ?: mutableListOf()
 
-        val pageable = if (!name.isNullOrBlank()) {
-            animeService.findByName(name, countryParam, page, limit)
-        } else {
-            animeService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
-        }
-
-        return Response.ok(PageableDto.fromPageable(pageable, AnimeDto::class.java))
+        val pageable = episodeService.findAllBy(countryParam, animeParam, sortParameters, page, limit)
+        return Response.ok(PageableDto.fromPageable(pageable, EpisodeDto::class.java))
     }
 
     @Path("/{uuid}/image")
     @Get
     @Cached(maxAgeSeconds = 3600)
     @OpenAPI(
-        "Get anime image",
+        "Get episode image",
         [
             OpenAPIResponse(
                 200,
@@ -100,19 +71,24 @@ class AnimeController {
             ),
             OpenAPIResponse(
                 404,
-                "Anime not found OR Anime image not found",
+                "Episode not found OR Episode image not found",
                 MessageDto::class,
             ),
         ]
     )
-    private fun getAnimeImage(@PathParam("uuid") uuid: UUID): Response {
-        val anime =
-            animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
+    private fun getEpisodeImage(@PathParam("uuid") uuid: UUID): Response {
+        val episode =
+            episodeService.find(uuid) ?: return Response.notFound(
+                MessageDto(
+                    MessageDto.Type.ERROR,
+                    "Episode not found"
+                )
+            )
 
-        val image = ImageService[anime.uuid!!] ?: return Response.notFound(
+        val image = ImageService[episode.uuid!!] ?: return Response.notFound(
             MessageDto(
                 MessageDto.Type.ERROR,
-                "Anime image not found"
+                "Episode image not found"
             )
         )
         return Response.multipart(image.bytes, ContentType.parse("image/webp"))

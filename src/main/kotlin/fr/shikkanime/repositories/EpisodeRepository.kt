@@ -1,6 +1,9 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.Pageable
+import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.enums.CountryCode
 import org.hibernate.Hibernate
 import java.util.*
 
@@ -15,11 +18,64 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         return this
     }
 
+    private fun Pageable<Episode>.initialize(): Pageable<Episode> {
+        this.data.forEach { episode -> episode.initialize() }
+        return this
+    }
+
+    private fun addOrderBy(query: StringBuilder) {
+        if (!query.contains("ORDER BY")) {
+            query.append(" ORDER BY")
+        }
+    }
+
+    private fun buildSortQuery(sort: List<SortParameter>, query: StringBuilder) {
+        val fields = listOf("episodeType", "langType", "releaseDateTime", "season", "number")
+        val subQuery = mutableListOf<String>()
+
+        sort.filter { fields.contains(it.field) }.forEach { param ->
+            val field = param.field
+            addOrderBy(query)
+            subQuery.add(" e.$field ${param.order.name}")
+        }
+
+        if (subQuery.isNotEmpty()) {
+            query.append(subQuery.joinToString(", "))
+        }
+    }
+
     override fun findAll(): List<Episode> {
         return inTransaction {
             it.createQuery("FROM Episode", getEntityClass())
                 .resultList
                 .initialize()
+        }
+    }
+
+    fun findAllBy(
+        countryCode: CountryCode?,
+        anime: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): Pageable<Episode> {
+        return inTransaction {
+            val queryBuilder = StringBuilder("FROM Episode e")
+            val whereClause = mutableListOf<String>()
+
+            anime?.let { whereClause.add("e.anime.uuid = :uuid") }
+            countryCode?.let { whereClause.add("e.anime.countryCode = :countryCode") }
+
+            if (whereClause.isNotEmpty()) {
+                queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
+            }
+
+            buildSortQuery(sort, queryBuilder)
+
+            val query = it.createQuery(queryBuilder.toString(), getEntityClass())
+            countryCode?.let { query.setParameter("countryCode", countryCode) }
+            anime?.let { query.setParameter("uuid", anime) }
+            buildPageableQuery(query, page, limit).initialize()
         }
     }
 

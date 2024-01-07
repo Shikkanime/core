@@ -18,14 +18,14 @@ data class Episode(
     var anime: Anime? = null,
     @Column(nullable = false, name = "episode_type")
     @Enumerated(EnumType.STRING)
-    val episodeType: EpisodeType? = null,
+    var episodeType: EpisodeType? = null,
     @Column(nullable = false, name = "lang_type")
     @Enumerated(EnumType.STRING)
-    val langType: LangType? = null,
+    var langType: LangType? = null,
     @Column(nullable = false, unique = true)
-    val hash: String? = null,
+    var hash: String? = null,
     @Column(nullable = false, name = "release_date_time")
-    val releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
+    var releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = false)
     var season: Int? = null,
     @Column(nullable = false)

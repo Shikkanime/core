@@ -2,11 +2,17 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.EpisodeRepository
 import fr.shikkanime.utils.Constant
+import io.ktor.http.*
 import org.hibernate.Hibernate
+import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
@@ -23,6 +29,16 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     override fun getRepository(): EpisodeRepository {
         return episodeRepository
+    }
+
+    fun findAllBy(
+        countryCode: CountryCode?,
+        anime: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): Pageable<Episode> {
+        return episodeRepository.findAllBy(countryCode, anime, sort, page, limit)
     }
 
     fun findAllHashes(): List<String> {
@@ -81,5 +97,29 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         val savedEntity = super.save(entity)
         ImageService.add(savedEntity.uuid!!, savedEntity.image!!, 640, 360)
         return savedEntity
+    }
+
+    fun update(uuid: UUID, parameters: Parameters): Episode? {
+        val episode = find(uuid) ?: return null
+
+        parameters["episodeType"]?.let { episode.episodeType = EpisodeType.valueOf(it) }
+        parameters["langType"]?.let { episode.langType = LangType.valueOf(it) }
+        parameters["hash"]?.takeIf { it.isNotBlank() }?.let { episode.hash = it }
+        parameters["releaseDateTime"]?.takeIf { it.isNotBlank() }
+            ?.let { episode.releaseDateTime = ZonedDateTime.parse("$it:00Z") }
+        parameters["season"]?.takeIf { it.isNotBlank() }?.let { episode.season = it.toInt() }
+        parameters["number"]?.takeIf { it.isNotBlank() }?.let { episode.number = it.toInt() }
+        parameters["title"]?.takeIf { it.isNotBlank() }?.let { episode.title = it }
+        parameters["url"]?.takeIf { it.isNotBlank() }?.let { episode.url = it }
+
+        parameters["image"]?.takeIf { it.isNotBlank() }?.let {
+            episode.image = it
+            ImageService.remove(episode.uuid!!)
+            ImageService.add(episode.uuid, episode.image!!, 640, 360)
+        }
+
+        parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }
+
+        return super.update(episode)
     }
 }

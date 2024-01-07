@@ -21,6 +21,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.io.File
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, JsonArray>() {
@@ -46,11 +47,11 @@ class AnimationDigitalNetworkPlatform :
 
             api.forEach {
                 try {
-                    list.add(convertEpisode(countryCode, it.getAsJsonObject(), zonedDateTime))
+                    list.add(convertEpisode(countryCode, it.asJsonObject, zonedDateTime))
                 } catch (_: AnimeException) {
                     // Ignore
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    logger.log(Level.SEVERE, "Error on converting episode", e)
                 }
             }
         }
@@ -109,10 +110,14 @@ class AnimationDigitalNetworkPlatform :
 
         val number = numberAsString?.toIntOrNull() ?: -1
 
-        val episodeType = when (numberAsString) {
+        var episodeType = when (numberAsString) {
             "OAV" -> EpisodeType.SPECIAL
             "Film" -> EpisodeType.FILM
             else -> EpisodeType.EPISODE
+        }
+
+        if (numberAsString?.contains(".") == true) {
+            episodeType = EpisodeType.SPECIAL
         }
 
         val langType = when (jsonObject.getAsJsonArray("languages")?.lastOrNull()?.asString) {
