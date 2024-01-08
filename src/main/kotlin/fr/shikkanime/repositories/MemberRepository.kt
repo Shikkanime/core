@@ -4,7 +4,7 @@ import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.enums.Role
 
 class MemberRepository : AbstractRepository<Member>() {
-    fun findByRole(role: Role): List<Member> {
+    fun findAllByRole(role: Role): List<Member> {
         return inTransaction {
             it.createQuery("FROM Member WHERE role = :role", getEntityClass())
                 .setParameter("role", role)

@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
@@ -20,9 +19,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var episodeService: EpisodeService
 
-    override fun getRepository(): AnimeRepository {
-        return animeRepository
-    }
+    override fun getRepository() = animeRepository
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -30,20 +27,16 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): Pageable<Anime> {
-        return animeRepository.findAllBy(countryCode, simulcast, sort, page, limit)
-    }
+    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit)
 
-    fun preIndex() {
-        animeRepository.preIndex()
-    }
+    fun preIndex() = animeRepository.preIndex()
 
-    fun findByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
-        return animeRepository.findByLikeName(countryCode, name)
-    }
+    fun findAllByLikeName(countryCode: CountryCode, name: String?) = animeRepository.findAllByLikeName(countryCode, name)
 
-    fun findByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
-        return animeRepository.findByName(name, countryCode, page, limit)
+    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) = animeRepository.findAllByName(name, countryCode, page, limit)
+
+    fun addImage(anime: Anime) {
+        ImageService.add(anime.uuid!!, anime.image!!, 480, 720)
     }
 
     override fun save(entity: Anime): Anime {
@@ -54,7 +47,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }.toMutableSet()
 
         val savedEntity = super.save(entity)
-        ImageService.add(savedEntity.uuid!!, savedEntity.image!!, 480, 720)
+        addImage(savedEntity)
         return savedEntity
     }
 
@@ -68,7 +61,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         parameters["image"]?.takeIf { it.isNotBlank() }?.let {
             anime.image = it
             ImageService.remove(anime.uuid!!)
-            ImageService.add(anime.uuid, it, 480, 720)
+            addImage(anime)
         }
 
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
@@ -77,7 +70,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     override fun delete(entity: Anime) {
-        episodeService.findByAnime(entity.uuid!!).forEach { episodeService.delete(it) }
+        episodeService.findAllByAnime(entity.uuid!!).forEach { episodeService.delete(it) }
         super.delete(entity)
     }
 }

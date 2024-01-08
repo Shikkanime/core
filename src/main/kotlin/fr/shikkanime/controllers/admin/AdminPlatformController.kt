@@ -49,7 +49,7 @@ class AdminPlatformController {
             ?: return Response.redirect(Link.PLATFORMS.href)
 
         return Response.template(
-            "admin/platform_simulcasts.ftl",
+            "admin/platforms/edit.ftl",
             platform.name,
             mutableMapOf(
                 "platform" to platform,
@@ -69,7 +69,7 @@ class AdminPlatformController {
             ?: return Response.redirect(Link.PLATFORMS.href)
 
         return Response.template(
-            "admin/platform_simulcasts.ftl",
+            "admin/platforms/edit.ftl",
             platform.name,
             mutableMapOf(
                 "platform" to platform,

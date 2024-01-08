@@ -29,8 +29,8 @@ fun main() {
     val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
 
     animeService.preIndex()
-    animeService.findAll().forEach { ImageService.add(it.uuid!!, it.image!!, 480, 720) }
-    episodeService.findAll().forEach { ImageService.add(it.uuid!!, it.image!!, 640, 360) }
+    animeService.findAll().forEach { animeService.addImage(it) }
+    episodeService.findAll().forEach { episodeService.addImage(it) }
 
     Constant.injector.getInstance(MemberService::class.java).initDefaultAdminUser()
 

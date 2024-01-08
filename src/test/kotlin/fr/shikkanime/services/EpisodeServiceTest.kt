@@ -1,0 +1,78 @@
+package fr.shikkanime.services
+
+import com.google.inject.Inject
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.Constant
+import java.time.ZonedDateTime
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class EpisodeServiceTest {
+    @Inject
+    private lateinit var episodeService: EpisodeService
+
+    @BeforeTest
+    fun setUp() {
+        Constant.injector.injectMembers(this)
+    }
+
+    @Test
+    fun `get winter simulcast`() {
+        val releaseDateTime = ZonedDateTime.parse("2024-01-01T00:00:00Z")
+
+        val episode = Episode(
+            platform = Platform.CRUN,
+            anime = Anime(
+                countryCode = CountryCode.FR,
+                name = "Test",
+                image = "https://www.shikkanime.com/image.png",
+                releaseDateTime = releaseDateTime,
+            ),
+            episodeType = EpisodeType.EPISODE,
+            langType = LangType.SUBTITLES,
+            hash = "hash",
+            releaseDateTime = releaseDateTime,
+            season = 1,
+            number = 1,
+            url = "https://www.shikkanime.com/episode/1",
+            image = "https://www.shikkanime.com/image.png",
+            duration = 1420,
+        )
+
+        val simulcast = episodeService.getSimulcast(episode)
+        assertEquals("WINTER", simulcast.season)
+        assertEquals(2024, simulcast.year)
+    }
+
+    @Test
+    fun `getSimulcast`() {
+        val episode = Episode(
+            platform = Platform.CRUN,
+            anime = Anime(
+                countryCode = CountryCode.FR,
+                name = "Test",
+                image = "https://www.shikkanime.com/image.png",
+                releaseDateTime = ZonedDateTime.parse("2023-12-25T00:00:00Z"),
+            ),
+            episodeType = EpisodeType.EPISODE,
+            langType = LangType.SUBTITLES,
+            hash = "hash",
+            releaseDateTime = ZonedDateTime.parse("2024-01-01T00:00:00Z"),
+            season = 1,
+            number = 2,
+            url = "https://www.shikkanime.com/episode/1",
+            image = "https://www.shikkanime.com/image.png",
+            duration = 1420,
+        )
+
+        val simulcast = episodeService.getSimulcast(episode)
+        assertEquals("AUTUMN", simulcast.season)
+        assertEquals(2023, simulcast.year)
+    }
+}

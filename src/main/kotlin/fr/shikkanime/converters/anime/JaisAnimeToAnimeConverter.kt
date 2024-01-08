@@ -13,7 +13,7 @@ class JaisAnimeToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
     private lateinit var animeService: AnimeService
 
     override fun convert(from: AnimeDto): Anime {
-        val findByName = animeService.findByLikeName(CountryCode.FR, from.name)
+        val findByName = animeService.findAllByLikeName(CountryCode.FR, from.name)
 
         if (findByName.isNotEmpty()) {
             return findByName.first()

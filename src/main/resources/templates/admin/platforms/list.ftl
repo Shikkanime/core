@@ -1,4 +1,4 @@
-<#import "_navigation.ftl" as navigation />
+<#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
     <div class="accordion" id="accordionPlatforms">

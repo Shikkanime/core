@@ -93,7 +93,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
+    fun findAllByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
         return inTransaction {
             it.createQuery("FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
                 .setParameter("countryCode", countryCode)
@@ -103,7 +103,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
+    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
         return inTransaction {
             val searchSession = Search.session(it)
 

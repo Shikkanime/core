@@ -19,7 +19,7 @@ class AnimeDtoToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
         if (findByUuid != null)
             return findByUuid
 
-        val findByName = animeService.findByLikeName(CountryCode.FR, from.name)
+        val findByName = animeService.findAllByLikeName(CountryCode.FR, from.name)
 
         if (findByName.isNotEmpty())
             return findByName.first()

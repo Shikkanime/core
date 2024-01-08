@@ -15,20 +15,15 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     @Inject
     private lateinit var memberRepository: MemberRepository
 
-    override fun getRepository(): MemberRepository {
-        return memberRepository
-    }
+    override fun getRepository() = memberRepository
 
-    private fun findByRole(role: Role): List<Member> {
-        return memberRepository.findByRole(role)
-    }
+    private fun findAllByRole(role: Role) = memberRepository.findAllByRole(role)
 
-    fun findByUsernameAndPassword(username: String, password: String): Member? {
-        return memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
-    }
+    fun findByUsernameAndPassword(username: String, password: String) =
+        memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
     fun initDefaultAdminUser() {
-        val adminUsers = findByRole(Role.ADMIN)
+        val adminUsers = findAllByRole(Role.ADMIN)
 
         if (adminUsers.isNotEmpty()) {
             return
