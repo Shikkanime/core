@@ -51,6 +51,7 @@ private val animes = MapCache<String, AnimeDto> {
             CountryCode.FR,
             name,
             "",
+            "",
             image,
             description,
             simulcasts = emptyList(),
