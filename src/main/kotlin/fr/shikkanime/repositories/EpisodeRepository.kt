@@ -86,20 +86,20 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         }
     }
 
+    fun findAllByAnime(uuid: UUID): List<Episode> {
+        return inTransaction {
+            it.createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .resultList
+        }
+    }
+
     fun findByHash(hash: String?): Episode? {
         return inTransaction {
             it.createQuery("FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
                 .setParameter("hash", "%${hash?.lowercase()}%")
                 .resultList
                 .firstOrNull()
-        }
-    }
-
-    fun findByAnime(uuid: UUID): List<Episode> {
-        return inTransaction {
-            it.createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
-                .setParameter("uuid", uuid)
-                .resultList
         }
     }
 }

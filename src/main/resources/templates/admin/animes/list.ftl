@@ -1,4 +1,4 @@
-<#import "_navigation.ftl" as navigation />
+<#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
     <div class="row g-3 align-items-center mb-3">

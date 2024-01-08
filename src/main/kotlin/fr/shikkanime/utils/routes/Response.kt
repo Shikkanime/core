@@ -73,7 +73,7 @@ open class Response(
             link: Link,
             model: MutableMap<String, Any?> = mutableMapOf(),
             session: MemberDto? = null
-        ): Response = template(link.href.replaceFirst("/", "").plus(".ftl"), link.label, model, session)
+        ): Response = template(link.template, link.label, model, session)
 
         fun redirect(path: String, session: MemberDto? = null): Response =
             Response(HttpStatusCode.Found, type = ResponseType.REDIRECT, data = path, session = session)

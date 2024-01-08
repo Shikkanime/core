@@ -1,4 +1,4 @@
-<#import "_navigation.ftl" as navigation />
+<#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
     <form action="/admin/animes/${anime.uuid}" method="POST">
@@ -40,6 +40,15 @@
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description"
                                   rows="6">${anime.description}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Simulcasts</label>
+
+                        <ul>
+                            <#list anime.simulcasts as simulcast>
+                                <li>${simulcast.season} ${simulcast.year?c}</li>
+                            </#list>
+                        </ul>
                     </div>
                 </div>
             </div>

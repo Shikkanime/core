@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
@@ -16,8 +15,6 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
-    private val simulcastRange = 10
-
     @Inject
     private lateinit var episodeRepository: EpisodeRepository
 
@@ -27,9 +24,10 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     @Inject
     private lateinit var simulcastService: SimulcastService
 
-    override fun getRepository(): EpisodeRepository {
-        return episodeRepository
-    }
+    @Inject
+    private lateinit var configService: ConfigService
+
+    override fun getRepository() = episodeRepository
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -37,65 +35,62 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): Pageable<Episode> {
-        return episodeRepository.findAllBy(countryCode, anime, sort, page, limit)
+    ) = episodeRepository.findAllBy(countryCode, anime, sort, page, limit)
+
+    fun findAllHashes() = episodeRepository.findAllHashes()
+
+    fun findAllByAnime(uuid: UUID) = episodeRepository.findAllByAnime(uuid)
+
+    fun findByHash(hash: String?) = episodeRepository.findByHash(hash)
+
+    fun addImage(episode: Episode) {
+        ImageService.add(episode.uuid!!, episode.image!!, 640, 360)
     }
 
-    fun findAllHashes(): List<String> {
-        return episodeRepository.findAllHashes()
-    }
+    fun getSimulcast(entity: Episode): Simulcast {
+        val simulcastRange = configService.getValueAsInt("simulcast_range") ?: 1
 
-    fun findByHash(hash: String?): Episode? {
-        return episodeRepository.findByHash(hash)
-    }
+        val adjustedDates = listOf(-simulcastRange, 0, simulcastRange).map { days ->
+            entity.releaseDateTime.plusDays(days.toLong())
+        }
 
-    fun findByAnime(uuid: UUID): List<Episode> {
-        return episodeRepository.findByAnime(uuid)
+        val simulcasts = adjustedDates.map {
+            Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year)
+        }
+
+        val previousSimulcast = simulcasts[0]
+        val currentSimulcast = simulcasts[1]
+        val nextSimulcast = simulcasts[2]
+
+        val isAnimeReleaseDateTimeBeforeMinusXDays = entity.anime!!.releaseDateTime.isBefore(adjustedDates[0])
+
+        val choosenSimulcast = when {
+            entity.number!! <= 1 && currentSimulcast != nextSimulcast -> nextSimulcast
+            entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && currentSimulcast != previousSimulcast -> previousSimulcast
+            else -> currentSimulcast
+        }
+
+        return simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!) ?: choosenSimulcast
     }
 
     override fun save(entity: Episode): Episode {
-        entity.anime = animeService.findByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
+        entity.anime = animeService.findAllByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
             ?: animeService.save(entity.anime!!)
 
         if (entity.langType == LangType.SUBTITLES) {
-            val adjustedDates = listOf(-simulcastRange, 0, simulcastRange).map { days ->
-                entity.releaseDateTime.plusDays(days.toLong())
-            }
-
-            val simulcasts = adjustedDates.map {
-                Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year)
-            }
-
-            val previousSimulcast = simulcasts[0]
-            val currentSimulcast = simulcasts[1]
-            val nextSimulcast = simulcasts[2]
-
-            val isAnimeReleaseDateTimeBeforeMinusXDays = entity.anime!!.releaseDateTime.isBefore(adjustedDates[0])
-
-            val choosenSimulcast = when {
-                entity.number!! <= 1 && currentSimulcast != nextSimulcast -> nextSimulcast
-                entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && currentSimulcast != previousSimulcast -> previousSimulcast
-                else -> currentSimulcast
-            }
-
-            val simulcast = simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!)
-                ?: choosenSimulcast
-
+            val simulcast = getSimulcast(entity)
             Hibernate.initialize(entity.anime!!.simulcasts)
             val animeSimulcasts = entity.anime!!.simulcasts
 
             if (animeSimulcasts.isEmpty() || animeSimulcasts.none { s -> s.uuid == simulcast.uuid }) {
-                if (simulcast.uuid == null) {
-                    simulcastService.save(simulcast)
-                }
-
+                simulcast.uuid?.let { simulcastService.save(simulcast) }
                 animeSimulcasts.add(simulcast)
                 animeService.update(entity.anime!!)
             }
         }
 
         val savedEntity = super.save(entity)
-        ImageService.add(savedEntity.uuid!!, savedEntity.image!!, 640, 360)
+        addImage(savedEntity)
         return savedEntity
     }
 
@@ -115,7 +110,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         parameters["image"]?.takeIf { it.isNotBlank() }?.let {
             episode.image = it
             ImageService.remove(episode.uuid!!)
-            ImageService.add(episode.uuid, episode.image!!, 640, 360)
+            addImage(episode)
         }
 
         parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }

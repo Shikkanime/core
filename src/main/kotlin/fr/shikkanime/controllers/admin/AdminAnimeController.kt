@@ -35,7 +35,7 @@ class AdminAnimeController {
         val anime = animeService.find(uuid) ?: return Response.redirect(Link.ANIMES.href)
 
         return Response.template(
-            "admin/anime_view.ftl",
+            "admin/animes/edit.ftl",
             anime.name,
             mutableMapOf("anime" to AbstractConverter.convert(anime, AnimeDto::class.java))
         )

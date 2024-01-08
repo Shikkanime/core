@@ -1,4 +1,4 @@
-<#import "_navigation.ftl" as navigation />
+<#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
     <form action="/admin/episodes/${episode.uuid}" method="POST">

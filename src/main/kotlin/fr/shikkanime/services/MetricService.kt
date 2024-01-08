@@ -9,11 +9,7 @@ class MetricService : AbstractService<Metric, MetricRepository>() {
     @Inject
     private lateinit var metricRepository: MetricRepository
 
-    override fun getRepository(): MetricRepository {
-        return metricRepository
-    }
+    override fun getRepository() = metricRepository
 
-    fun findAllAfter(date: ZonedDateTime): List<Metric> {
-        return metricRepository.findAllAfter(date)
-    }
+    fun findAllAfter(date: ZonedDateTime) = metricRepository.findAllAfter(date)
 }

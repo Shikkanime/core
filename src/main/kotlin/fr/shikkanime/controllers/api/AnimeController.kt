@@ -78,7 +78,7 @@ class AnimeController {
         } ?: mutableListOf()
 
         val pageable = if (!name.isNullOrBlank()) {
-            animeService.findByName(name, countryParam, page, limit)
+            animeService.findAllByName(name, countryParam, page, limit)
         } else {
             animeService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
         }
