@@ -7,6 +7,7 @@
         <title>${title}</title>
 
         <#-- Favicons -->
+        <link rel="icon" type="image/png" sizes="64x64" href="/admin/assets/favicons/favicon-64x64.png">
         <link rel="icon" type="image/png" sizes="32x32" href="/admin/assets/favicons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/admin/assets/favicons/favicon-16x16.png">
 

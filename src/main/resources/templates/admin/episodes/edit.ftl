@@ -80,6 +80,11 @@
                         <input type="number" class="form-control" id="duration" name="duration"
                                value="${episode.duration?c}">
                     </div>
+                    <div class="col-md-6">
+                        <p>Image</p>
+                        <img src="/api/v1/episodes/${episode.uuid}/media-image" class="img-fluid w-50"
+                             alt="Responsive image">
+                    </div>
                 </div>
             </div>
         </div>

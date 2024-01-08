@@ -29,7 +29,8 @@
                     </div>
                     <div class="col-md-6">
                         <label for="shortName" class="form-label">Short name</label>
-                        <input type="text" class="form-control" id="shortName" name="shortName" value="${anime.shortName}" disabled>
+                        <input type="text" class="form-control" id="shortName" name="shortName"
+                               value="${anime.shortName}" disabled>
                     </div>
                     <div class="col-md-6">
                         <label for="releaseDateTime" class="form-label">Release date time</label>

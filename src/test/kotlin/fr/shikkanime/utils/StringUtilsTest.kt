@@ -12,7 +12,10 @@ class StringUtilsTest {
             "Banished from the Hero's Party",
             StringUtils.getShortName("Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside")
         )
-        assertEquals("7th Time Loop", StringUtils.getShortName("7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!"))
+        assertEquals(
+            "7th Time Loop",
+            StringUtils.getShortName("7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!")
+        )
         assertEquals("Shangri-La Frontier", StringUtils.getShortName("Shangri-La Frontier"))
         assertEquals("Captain Tsubasa", StringUtils.getShortName("Captain Tsubasa Saison 2, Junior Youth Arc"))
         assertEquals("SPY x FAMILY", StringUtils.getShortName("SPY x FAMILY"))
@@ -32,11 +35,21 @@ class StringUtilsTest {
         assertEquals("Protocol: Rain", StringUtils.getShortName("Protocol: Rain"))
         assertEquals("B-PROJECT Passion*Love Call", StringUtils.getShortName("B-PROJECT Passion*Love Call"))
         assertEquals("Butareba", StringUtils.getShortName("Butareba -The Story of a Man Turned into a Pig-"))
-        assertEquals("Our Dating Story", StringUtils.getShortName("Our Dating Story: The Experienced You and The Inexperienced Me"))
-        assertEquals("HYPNOSISMIC Rhyme Anima", StringUtils.getShortName("HYPNOSISMIC -Division Rap Battle- Rhyme Anima"))
+        assertEquals(
+            "Our Dating Story",
+            StringUtils.getShortName("Our Dating Story: The Experienced You and The Inexperienced Me")
+        )
+        assertEquals(
+            "HYPNOSISMIC Rhyme Anima",
+            StringUtils.getShortName("HYPNOSISMIC -Division Rap Battle- Rhyme Anima")
+        )
         assertEquals("Fate/strange Fake", StringUtils.getShortName("Fate/strange Fake -Whispers of Dawn-"))
         assertEquals("NieR:Automata Ver1.1a", StringUtils.getShortName("NieR:Automata Ver1.1a"))
-        assertEquals("Reborn as a Vending Machine", StringUtils.getShortName("Reborn as a Vending Machine, I Now Wander the Dungeon"))
+        assertEquals(
+            "Reborn as a Vending Machine",
+            StringUtils.getShortName("Reborn as a Vending Machine, I Now Wander the Dungeon")
+        )
         assertEquals("BIRDIE WING", StringUtils.getShortName("BIRDIE WING -Golf Girls' Story-"))
+        assertEquals("Urusei Yatsura", StringUtils.getShortName("Urusei Yatsura (2022)"))
     }
 }

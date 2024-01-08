@@ -25,7 +25,8 @@
                     </div>
                     <div class="col-md-6">
                         <label for="key" class="form-label">Key</label>
-                        <input type="text" class="form-control" id="key" name="key" value="${config.propertyKey}" disabled>
+                        <input type="text" class="form-control" id="key" name="key" value="${config.propertyKey}"
+                               disabled>
                     </div>
                     <div class="col-md-6">
                         <label for="value" class="form-label">Value</label>
