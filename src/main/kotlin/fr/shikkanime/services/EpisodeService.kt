@@ -83,7 +83,10 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             val animeSimulcasts = entity.anime!!.simulcasts
 
             if (animeSimulcasts.isEmpty() || animeSimulcasts.none { s -> s.uuid == simulcast.uuid }) {
-                simulcast.uuid?.let { simulcastService.save(simulcast) }
+                if (simulcast.uuid == null) {
+                    simulcastService.save(simulcast)
+                }
+
                 animeSimulcasts.add(simulcast)
                 animeService.update(entity.anime!!)
             }
