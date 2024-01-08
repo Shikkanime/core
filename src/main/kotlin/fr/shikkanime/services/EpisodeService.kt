@@ -70,7 +70,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             else -> currentSimulcast
         }
 
-        return simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!) ?: choosenSimulcast
+        return simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!)
+            ?: choosenSimulcast
     }
 
     override fun save(entity: Episode): Episode {

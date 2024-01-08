@@ -3,7 +3,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
     <property global="false" name="id" value="1704708158795"/>
     <property global="false" name="author" value="Ziedelth"/>
 
@@ -14,7 +15,8 @@
             </not>
         </preConditions>
 
-        <addPrimaryKey columnNames="anime_uuid, simulcast_uuid" constraintName="pk_anime_simulcast" tableName="anime_simulcast"/>
+        <addPrimaryKey columnNames="anime_uuid, simulcast_uuid" constraintName="pk_anime_simulcast"
+                       tableName="anime_simulcast"/>
     </changeSet>
 
     <changeSet id="${id}-2" author="${author}">
@@ -40,7 +42,8 @@
     <changeSet id="${id}-3" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
-                <uniqueConstraintExists columnNames="property_key" constraintName="uc_config_property_key" tableName="config"/>
+                <uniqueConstraintExists columnNames="property_key" constraintName="uc_config_property_key"
+                                        tableName="config"/>
             </not>
         </preConditions>
 
