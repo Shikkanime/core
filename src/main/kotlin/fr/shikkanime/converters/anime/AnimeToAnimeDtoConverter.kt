@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.utils.StringUtils
 import org.apache.tika.language.detect.LanguageDetector
 import org.hibernate.Hibernate
 import java.time.ZoneId
@@ -29,6 +30,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             image = from.image,
             countryCode = from.countryCode!!,
             name = from.name!!,
+            shortName = StringUtils.getShortName(from.name!!),
             description = from.description,
             simulcasts = if (Hibernate.isInitialized(from.simulcasts)) convert(
                 from.simulcasts,

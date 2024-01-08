@@ -9,6 +9,7 @@ data class AnimeDto(
     val uuid: UUID?,
     val countryCode: CountryCode,
     var name: String,
+    var shortName: String,
     var releaseDateTime: String,
     val image: String? = null,
     val description: String?,
