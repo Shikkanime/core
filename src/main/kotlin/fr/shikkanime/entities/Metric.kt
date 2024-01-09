@@ -2,12 +2,18 @@ package fr.shikkanime.entities
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(name = "metric")
+@Table(
+    name = "metric",
+    indexes = [
+        Index(name = "idx_metric_date", columnList = "date")
+    ]
+)
 data class Metric(
     override val uuid: UUID? = null,
     @Column(name = "cpu_load")

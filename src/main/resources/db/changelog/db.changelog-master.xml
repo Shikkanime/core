@@ -5,9 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <!-- December 2023 -->
     <include file="/db/changelog/2023/12/01-changelog.xml"/>
     <include file="/db/changelog/2023/12/02-changelog.xml"/>
+    <!-- January 2024 -->
     <include file="/db/changelog/2024/01/01-changelog.xml"/>
     <include file="/db/changelog/2024/01/02-changelog.xml"/>
     <include file="/db/changelog/2024/01/03-changelog.xml"/>
+    <include file="/db/changelog/2024/01/04-changelog.xml"/>
 </databaseChangeLog>
