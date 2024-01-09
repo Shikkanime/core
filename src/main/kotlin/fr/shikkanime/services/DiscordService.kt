@@ -54,6 +54,7 @@ class DiscordService {
                 "https://www.shikkanime.fr/admin/assets/img/platforms/${episodeDto.platform.image}"
             )
             embedMessage.setTitle(episodeDto.anime.shortName, episodeDto.url)
+            embedMessage.setThumbnail(episodeDto.anime.image)
             embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
             embedMessage.setImage(episodeDto.image)
             embedMessage.setFooter("Shikkanime", "https://www.shikkanime.fr/admin/assets/favicons/favicon-64x64.png")
