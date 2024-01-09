@@ -12,4 +12,6 @@ class MetricService : AbstractService<Metric, MetricRepository>() {
     override fun getRepository() = metricRepository
 
     fun findAllAfter(date: ZonedDateTime) = metricRepository.findAllAfter(date)
+
+    fun deleteAllBefore(date: ZonedDateTime) = metricRepository.deleteAllBefore(date)
 }
