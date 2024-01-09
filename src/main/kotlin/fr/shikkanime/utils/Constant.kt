@@ -4,6 +4,7 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import fr.shikkanime.modules.DefaultModule
 import fr.shikkanime.platforms.AbstractPlatform
+import fr.shikkanime.socialnetworks.AbstractSocialNetwork
 import org.reflections.Reflections
 import java.io.File
 
@@ -23,10 +24,15 @@ object Constant {
             return dataFolder
         }
     var isDev = System.getenv("ENV") == "dev"
+    val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
 
     init {
         abstractPlatforms.forEach {
             it.loadConfiguration()
+        }
+
+        abstractSocialNetworks.forEach {
+            it.login()
         }
     }
 }

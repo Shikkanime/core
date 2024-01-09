@@ -3,7 +3,6 @@ package fr.shikkanime.jobs
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.services.DiscordService
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -22,9 +21,6 @@ class FetchEpisodesJob : AbstractJob() {
 
     @Inject
     private lateinit var episodeService: EpisodeService
-
-    @Inject
-    private lateinit var discordService: DiscordService
 
     override fun run() {
         if (isRunning) {
@@ -60,7 +56,8 @@ class FetchEpisodesJob : AbstractJob() {
             .forEach {
                 val savedEpisode = episodeService.save(it)
                 savedEpisode.hash?.let { hash -> set.add(hash) }
-                discordService.sendEpisodeRelease(AbstractConverter.convert(savedEpisode, EpisodeDto::class.java))
+                val dto = AbstractConverter.convert(savedEpisode, EpisodeDto::class.java)
+                Constant.abstractSocialNetworks.forEach { socialNetwork -> socialNetwork.sendEpisodeRelease(dto) }
             }
 
         isRunning = false
