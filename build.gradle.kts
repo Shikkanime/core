@@ -61,7 +61,12 @@ dependencies {
     implementation("com.mortennobel:java-image-scaling:0.8.6")
     implementation("org.apache.tika:tika-core:3.0.0-BETA")
     implementation("org.apache.tika:tika-langdetect-optimaize:3.0.0-BETA")
+
+    // Social networks
     implementation("com.github.discord-jda:JDA:v5.0.0-beta.19")
+    implementation("org.twitter4j:twitter4j-core:4.0.7")
+    implementation("io.github.takke:jp.takke.twitter4j-v2:1.4.3")
+
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("io.ktor:ktor-client-mock:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

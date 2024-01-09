@@ -5,7 +5,8 @@ import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
-import fr.shikkanime.services.DiscordService
+import fr.shikkanime.socialnetworks.AbstractSocialNetwork
+import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.routes.Controller
@@ -34,6 +35,8 @@ class DefaultModule : AbstractModule() {
             bind(it).asEagerSingleton()
         }
 
-        bind(DiscordService::class.java).asEagerSingleton()
+        Constant.reflections.getSubTypesOf(AbstractSocialNetwork::class.java).forEach {
+            bind(it).asEagerSingleton()
+        }
     }
 }

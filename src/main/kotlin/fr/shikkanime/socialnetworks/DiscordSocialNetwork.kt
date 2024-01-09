@@ -1,7 +1,7 @@
-package fr.shikkanime.services
+package fr.shikkanime.socialnetworks
 
-import com.google.inject.Inject
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import net.dv8tion.jda.api.EmbedBuilder
@@ -14,15 +14,15 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
-class DiscordService {
-    @Inject
-    private lateinit var configService: ConfigService
-
-    private val logger = LoggerFactory.getLogger(DiscordService::class.java)
+class DiscordSocialNetwork : AbstractSocialNetwork() {
+    private val logger = LoggerFactory.getLogger(DiscordSocialNetwork::class.java)
     private var isInitialized = false
     private var jda: JDA? = null
 
-    fun init() {
+    private fun getTextChannels(): MutableList<TextChannel>? =
+        jda?.getTextChannelsByName("bot\uD83E\uDD16", true)
+
+    override fun login() {
         if (isInitialized) return
 
         try {
@@ -32,15 +32,30 @@ class DiscordService {
             jda?.awaitReady()
             isInitialized = true
         } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while initializing DiscordService", e)
+            logger.log(Level.SEVERE, "Error while initializing DiscordSocialNetwork", e)
         }
     }
 
-    private fun getTextChannels(): MutableList<TextChannel>? =
-        jda?.getTextChannelsByName("bot\uD83E\uDD16", true)
+    override fun logout() {
+        if (!isInitialized) return
 
-    fun sendEpisodeRelease(episodeDto: EpisodeDto) {
-        init()
+        try {
+            jda?.shutdown()
+            isInitialized = false
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error while shutting down DiscordSocialNetwork", e)
+        }
+    }
+
+    override fun sendMessage(message: String) {
+        login()
+        if (!isInitialized) return
+
+        getTextChannels()?.forEach { it.sendMessage(message).queue() }
+    }
+
+    override fun sendEpisodeRelease(episodeDto: EpisodeDto) {
+        login()
         if (!isInitialized) return
         if (episodeDto.image.isBlank()) return
 

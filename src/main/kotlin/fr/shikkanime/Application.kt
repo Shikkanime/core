@@ -8,6 +8,7 @@ import fr.shikkanime.plugins.configureHTTP
 import fr.shikkanime.plugins.configureRouting
 import fr.shikkanime.plugins.configureSecurity
 import fr.shikkanime.services.*
+import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -25,13 +26,11 @@ fun main() {
     val memberService = Constant.injector.getInstance(MemberService::class.java)
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
-    val discordService = Constant.injector.getInstance(DiscordService::class.java)
 
     memberService.initDefaultAdminUser()
     animeService.preIndex()
     animeService.findAll().forEach { animeService.addImage(it) }
     episodeService.findAll().forEach { episodeService.addImage(it) }
-    discordService.init()
 
     // Sync episodes from Jais
     if (false) {

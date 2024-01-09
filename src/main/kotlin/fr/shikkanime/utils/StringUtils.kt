@@ -31,6 +31,8 @@ object StringUtils {
         return shortName.trim()
     }
 
+    fun getHashtag(fullName: String) = getShortName(fullName).filter { it.isLetterOrDigit() }
+
     fun String.capitalizeWords(): String {
         val delimiters = arrayOf(" ", ",")
 
