@@ -2,7 +2,7 @@ package fr.shikkanime.platforms
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
+import fr.shikkanime.caches.CountryCodeDisneyPlusSimulcastKeyCache
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.CountryCode
@@ -19,13 +19,16 @@ import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
 import java.io.File
+import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 
-class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeAnimeIdKeyCache, JsonArray>() {
+class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, JsonArray>() {
     override fun getPlatform(): Platform = Platform.DISN
 
-    override suspend fun fetchApiContent(key: CountryCodeAnimeIdKeyCache, zonedDateTime: ZonedDateTime): JsonArray {
+    override suspend fun fetchApiContent(key: CountryCodeDisneyPlusSimulcastKeyCache, zonedDateTime: ZonedDateTime): JsonArray {
         check(configuration!!.authorization.isNotBlank()) { "Authorization is null" }
         check(configuration!!.refreshToken.isNotBlank()) { "Refresh token is null" }
         val httpRequest = HttpRequest()
@@ -54,7 +57,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
             .getAsString("accessToken")
 
         val seasonsResponse = httpRequest.get(
-            "https://disney.content.edge.bamgrid.com/svc/content/DmcSeriesBundle/version/5.1/region/${key.countryCode.name}/audience/k-false,l-true/maturity/1850/language/${key.countryCode.locale}/encodedSeriesId/${key.animeId}",
+            "https://disney.content.edge.bamgrid.com/svc/content/DmcSeriesBundle/version/5.1/region/${key.countryCode.name}/audience/k-false,l-true/maturity/1850/language/${key.countryCode.locale}/encodedSeriesId/${key.disneyPlusSimulcast.name}",
             mapOf("Authorization" to "Bearer $accessToken")
         )
         check(seasonsResponse.status.value == 200) { "Failed to fetch Disney+ content" }
@@ -87,12 +90,15 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.map { it.name.lowercase() }.forEach { simulcast ->
-                val api = getApiContent(CountryCodeAnimeIdKeyCache(countryCode, simulcast), zonedDateTime)
+            configuration!!.simulcasts.filter {
+                it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
+                    .isAfter(LocalTime.parse(it.releaseTime))
+            }.forEach { simulcast ->
+                val api = getApiContent(CountryCodeDisneyPlusSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
 
                 api.forEach {
                     try {
-                        list.add(convertEpisode(countryCode, it.asJsonObject, zonedDateTime))
+                        list.add(convertEpisode(countryCode, simulcast, it.asJsonObject, zonedDateTime))
                     } catch (_: AnimeException) {
                         // Ignore
                     } catch (e: Exception) {
@@ -107,6 +113,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
 
     private fun convertEpisode(
         countryCode: CountryCode,
+        simulcast: DisneyPlusConfiguration.DisneyPlusSimulcast,
         jsonObject: JsonObject,
         zonedDateTime: ZonedDateTime
     ): Episode {
@@ -144,20 +151,23 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         }
 
         val langType = LangType.SUBTITLES
+        val releaseDateTimeUTC = zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"))
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
+        val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
         return Episode(
             platform = getPlatform(),
             anime = Anime(
                 countryCode = countryCode,
                 name = animeName,
-                releaseDateTime = zonedDateTime,
+                releaseDateTime = releaseDateTime,
                 image = animeImage,
                 description = animeDescription,
             ),
             episodeType = EpisodeType.EPISODE,
             langType = langType,
             hash = "${countryCode}-${getPlatform()}-$id-$langType",
-            releaseDateTime = zonedDateTime,
+            releaseDateTime = releaseDateTime,
             season = season,
             number = number,
             title = title,
