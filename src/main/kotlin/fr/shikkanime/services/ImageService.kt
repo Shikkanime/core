@@ -1,6 +1,5 @@
 package fr.shikkanime.services
 
-import com.mortennobel.imagescaling.ResampleOp
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
@@ -139,7 +138,7 @@ object ImageService {
                         return@measureTimeMillis
                     }
 
-                    val resized = ResampleOp(width, height).filter(ImageIO.read(ByteArrayInputStream(bytes)), null)
+                    val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(width, height)
                     val tmpFile = File.createTempFile("shikk", ".png").apply {
                         writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
                     }
@@ -321,12 +320,9 @@ object ImageService {
         val backgroundImage = ImageIO.read(backgroundsFolder.listFiles()!!.random())
         val tmpBannerImage = ImageIO.read(bannerFile)
         val bannerScale = 3
-        val bannerImage = ResampleOp(tmpBannerImage.width / bannerScale, tmpBannerImage.height / bannerScale).filter(
-            tmpBannerImage,
-            null
-        )
+        val bannerImage = tmpBannerImage.resize(tmpBannerImage.width / bannerScale, tmpBannerImage.height / bannerScale)
         val font = Font.createFont(Font.TRUETYPE_FONT, fontFile)
-        val animeImage = ResampleOp(480, 720).filter(ImageIO.read(URI(episode.anime.image!!).toURL()), null)
+        val animeImage = ImageIO.read(URI(episode.anime.image!!).toURL()).resize(480, 720)
         return Tuple(backgroundImage, bannerImage, font, animeImage)
     }
 
