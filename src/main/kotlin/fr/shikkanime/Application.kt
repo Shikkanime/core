@@ -62,6 +62,7 @@ fun main() {
     JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
     JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
+    JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
     JobManager.start()
 
     logger.info("Starting server...")

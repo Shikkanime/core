@@ -11,4 +11,12 @@ class MetricRepository : AbstractRepository<Metric>() {
                 .resultList
         }
     }
+
+    fun deleteAllBefore(date: ZonedDateTime) {
+        inTransaction {
+            it.createQuery("DELETE FROM Metric WHERE date < :date")
+                .setParameter("date", date)
+                .executeUpdate()
+        }
+    }
 }
