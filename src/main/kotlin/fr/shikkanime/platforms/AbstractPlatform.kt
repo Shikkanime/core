@@ -6,6 +6,7 @@ import fr.shikkanime.platforms.configuration.PlatformConfiguration
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.isEqualOrAfter
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.lang.reflect.ParameterizedType
@@ -60,10 +61,6 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val file = getConfigurationFile()
         if (!file.exists()) file.createNewFile()
         file.writeText(ObjectParser.toJson(configuration))
-    }
-
-    private fun ZonedDateTime.isEqualOrAfter(other: ZonedDateTime): Boolean {
-        return this.isEqual(other) || this.isAfter(other)
     }
 
     private fun getConfigurationFile(): File {

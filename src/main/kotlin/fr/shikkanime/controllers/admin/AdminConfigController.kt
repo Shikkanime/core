@@ -5,6 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.ConfigService
+import fr.shikkanime.services.DiscordService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -20,6 +21,9 @@ import java.util.*
 class AdminConfigController {
     @Inject
     private lateinit var configService: ConfigService
+
+    @Inject
+    private lateinit var discordService: DiscordService
 
     @Path
     @Get
@@ -46,6 +50,7 @@ class AdminConfigController {
     @AdminSessionAuthenticated
     private fun postConfig(@PathParam("uuid") uuid: UUID, @BodyParam parameters: Parameters): Response {
         configService.update(uuid, parameters)
+        discordService.init()
         return Response.redirect(Link.CONFIG.href)
     }
 }

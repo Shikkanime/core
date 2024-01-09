@@ -179,7 +179,7 @@ object ImageService {
 
     operator fun get(uuid: UUID): Image? = cache.find { it.uuid == uuid.toString() }
 
-    private fun getDominantColor(image: BufferedImage): Color {
+    fun getDominantColor(image: BufferedImage): Color {
         val pixels = IntArray(image.width * image.height).apply {
             image.getRGB(
                 0,
