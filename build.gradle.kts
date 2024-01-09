@@ -1,3 +1,5 @@
+import java.net.URI
+
 val ktor_version: String by project
 val kotlin_version: String by project
 
@@ -19,6 +21,7 @@ application {
 
 repositories {
     mavenCentral()
+    maven { url = URI("https://jitpack.io") }
 }
 
 dependencies {
@@ -58,6 +61,7 @@ dependencies {
     implementation("com.mortennobel:java-image-scaling:0.8.6")
     implementation("org.apache.tika:tika-core:3.0.0-BETA")
     implementation("org.apache.tika:tika-langdetect-optimaize:3.0.0-BETA")
+    implementation("com.github.discord-jda:JDA:v5.0.0-beta.19")
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("io.ktor:ktor-client-mock:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

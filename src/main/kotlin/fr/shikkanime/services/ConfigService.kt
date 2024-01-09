@@ -16,6 +16,7 @@ class ConfigService : AbstractService<Config, ConfigRepository>() {
 
     fun findByName(name: String) = configRepository.findByName(name)
 
+    fun getValueAsString(name: String) = findByName(name)?.propertyValue
     fun getValueAsInt(name: String) = findByName(name)?.propertyValue?.toIntOrNull()
 
     fun update(uuid: UUID, parameters: Parameters): Config? {

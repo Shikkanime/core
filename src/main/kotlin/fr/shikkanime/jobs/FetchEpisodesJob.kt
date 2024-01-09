@@ -1,9 +1,13 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.services.DiscordService
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.isEqualOrAfter
 import jakarta.inject.Inject
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -18,6 +22,9 @@ class FetchEpisodesJob : AbstractJob() {
 
     @Inject
     private lateinit var episodeService: EpisodeService
+
+    @Inject
+    private lateinit var discordService: DiscordService
 
     override fun run() {
         if (isRunning) {
@@ -49,14 +56,11 @@ class FetchEpisodesJob : AbstractJob() {
         }
 
         episodes
-            .filter {
-                (zonedDateTime.isEqual(it.releaseDateTime) || zonedDateTime.isAfter(it.releaseDateTime)) && !set.contains(
-                    it.hash
-                )
-            }
+            .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !set.contains(it.hash) }
             .forEach {
                 val savedEpisode = episodeService.save(it)
                 savedEpisode.hash?.let { hash -> set.add(hash) }
+                discordService.sendEpisodeRelease(AbstractConverter.convert(savedEpisode, EpisodeDto::class.java))
             }
 
         isRunning = false

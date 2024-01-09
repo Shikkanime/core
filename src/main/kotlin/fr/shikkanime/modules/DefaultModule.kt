@@ -5,6 +5,7 @@ import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
+import fr.shikkanime.services.DiscordService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.routes.Controller
@@ -32,5 +33,7 @@ class DefaultModule : AbstractModule() {
         Constant.reflections.getTypesAnnotatedWith(Controller::class.java).forEach {
             bind(it).asEagerSingleton()
         }
+
+        bind(DiscordService::class.java).asEagerSingleton()
     }
 }
