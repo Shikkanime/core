@@ -108,7 +108,7 @@ class AnimationDigitalNetworkPlatform :
             throw Exception("Anime is a trailer")
         }
 
-        val number = numberAsString?.toIntOrNull() ?: -1
+        val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
         var episodeType = when (numberAsString) {
             "OAV" -> EpisodeType.SPECIAL

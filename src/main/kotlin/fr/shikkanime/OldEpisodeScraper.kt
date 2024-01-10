@@ -264,5 +264,6 @@ private fun getEpisodeDto(
         json.getAsString("url")!!,
         json.getNullableJsonObject("screenshot_image")?.getAsString("full_url") ?: "",
         -1,
+        false,
     )
 }
