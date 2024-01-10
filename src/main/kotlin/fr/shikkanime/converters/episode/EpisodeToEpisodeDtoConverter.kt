@@ -26,6 +26,7 @@ class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
             url = from.url!!,
             image = from.image!!,
             duration = from.duration,
+            uncensored = from.image!!.contains("nc/", true),
         )
     }
 }

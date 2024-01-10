@@ -88,10 +88,13 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (twitter == null) return
 
         try {
+            val uncensored = if (episodeDto.uncensored) " non censuré" else ""
             val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
-            val message = "\uD83D\uDEA8 ${information(episodeDto)} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${platformAccount(episodeDto.platform)}\n" +
+            val message = "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${platformAccount(episodeDto.platform)}\n" +
                     "\n" +
-                    "Bon visionnage. \uD83C\uDF7F"
+                    "Bon visionnage. \uD83C\uDF7F\n" +
+                    "\n" +
+                    "\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}"
 
             val byteArrayOutputStream = ByteArrayOutputStream()
             ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)
@@ -101,12 +104,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
                 ByteArrayInputStream(byteArrayOutputStream.toByteArray())
             )
 
-            val tweet = twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
-
-            twitter!!.v2.createTweet(
-                text = "Lien de l'épisode : ${episodeDto.url}",
-                inReplyToTweetId = tweet.id
-            )
+            twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while sending message to Twitter", e)
         }
