@@ -64,7 +64,7 @@ dependencies {
 
     // Social networks
     implementation("com.github.discord-jda:JDA:v5.0.0-beta.19")
-    implementation("org.twitter4j:twitter4j-core:4.0.7")
+    implementation("org.twitter4j:twitter4j-core:4.1.2")
     implementation("io.github.takke:jp.takke.twitter4j-v2:1.4.3")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
