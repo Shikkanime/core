@@ -1,30 +1,39 @@
-<#import "_layout.ftl" as layout />
+<#import "_navigation.ftl" as navigation />
 
-<@layout.main>
-    <#assign margin = "mx-lg-2">
+<@navigation.display>
+    <div class="my-5">
+        <h3>Dernières sorties</h3>
 
-    <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
-        <div class="container-fluid ${margin}">
-            <a class="navbar-brand" href="/">
-                <img src="/assets/img/light_banner.png" alt="Logo" height="24" class="d-inline-block align-text-top">
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav">
-                    <#list links as link>
-                        <li class="nav-item ${margin}">
-                            <a href="${link.href}" class="nav-link ${link.active?then('active', '')}"
-                               aria-current="${link.active?then('page', '')}">
-                                <i class="${link.icon} me-2"></i>
-                                ${link.name}
-                            </a>
-                        </li>
-                    </#list>
-                </ul>
-            </div>
+        <div class="row g-3 mt-3">
+            <#list animes as anime>
+                <div class="col-md-2 col-6 mt-0">
+                    <article>
+                        <a href="/animes/${anime.uuid}" class="text-decoration-none text-white">
+                            <img src="http://localhost:37100/api/v1/animes/${anime.uuid}/image" alt="${anime.shortName}" class="w-100">
+                            <h6 class="mt-2 text-truncate-2">${anime.shortName}</h6>
+                        </a>
+                    </article>
+                </div>
+            </#list>
         </div>
-    </nav>
-</@layout.main>
+    </div>
+
+    <div class="my-5">
+        <h3>Nouveaux épisodes</h3>
+
+        <div class="row g-3 mt-3">
+            <#list episodes as episode>
+                <div class="col-md-2 col-6 mt-0">
+                    <article>
+                        <a href="${episode.url}" class="text-decoration-none text-white">
+                            <img src="http://localhost:37100/api/v1/episodes/${episode.uuid}/image" alt="${episode.anime.shortName}" class="w-100">
+                            <h6 class="mt-2 text-truncate-2">${episode.anime.shortName}</h6>
+                            <p class="text-muted mb-0">Saison ${episode.season} | Épisode ${episode.number}</p>
+                            <p class="text-muted mt-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                        </a>
+                    </article>
+                </div>
+            </#list>
+        </div>
+    </div>
+</@navigation.display>
