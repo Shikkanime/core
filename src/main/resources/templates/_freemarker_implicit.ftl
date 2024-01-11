@@ -12,3 +12,5 @@
 [#-- @ftlvariable name="episodeTypes" type="kotlin.collections.AbstractList<fr.shikkanime.entities.enums.EpisodeType>" --]
 [#-- @ftlvariable name="langTypes" type="kotlin.collections.AbstractList<fr.shikkanime.entities.enums.LangType>" --]
 [#-- @ftlvariable name="config" type="fr.shikkanime.dtos.ConfigDto" --]
+[#-- @ftlvariable name="animes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.AnimeDto>" --]
+[#-- @ftlvariable name="episodes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.EpisodeDto>" --]
