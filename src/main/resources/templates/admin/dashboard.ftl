@@ -26,5 +26,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
-    <script src="/admin/assets/js/home_chart.js" crossorigin="anonymous"></script>
+    <script src="/assets/js/home_chart.js" crossorigin="anonymous"></script>
 </@navigation.display>

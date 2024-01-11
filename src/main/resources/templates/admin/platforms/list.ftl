@@ -11,7 +11,7 @@
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                             data-bs-target="#${collapseId}" aria-expanded="false"
                             aria-controls="${collapseId}">
-                        <img src="/admin/assets/img/platforms/${abstractPlatform.platform.image}"
+                        <img src="/assets/img/platforms/${abstractPlatform.platform.image}"
                              alt="${abstractPlatform.platform.platformName}"
                              class="me-2 rounded-circle" height="24">
                         ${abstractPlatform.platform.platformName}

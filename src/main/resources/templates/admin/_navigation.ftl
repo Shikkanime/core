@@ -5,7 +5,7 @@
         <div class="d-flex flex-column flex-shrink-0 p-3 bg-light shadow">
             <a href="/admin/dashboard"
                class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
-                <img src="/admin/assets/img/banner.png" width="200" height="44" crossorigin="anonymous"
+                <img src="/assets/img/dark_banner.png" width="200" height="44" crossorigin="anonymous"
                      class="img-fluid">
             </a>
             <hr>

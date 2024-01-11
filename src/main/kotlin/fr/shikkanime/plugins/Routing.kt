@@ -44,7 +44,7 @@ private val logger = LoggerFactory.getLogger("Routing")
 
 fun Application.configureRouting() {
     routing {
-        staticResources("/admin/assets", "assets/admin")
+        staticResources("/assets", "assets")
         createRoutes()
     }
 }
@@ -61,11 +61,13 @@ fun Routing.createControllerRoutes(controller: Any) {
         if (controller::class.hasAnnotation<Controller>()) controller::class.findAnnotation<Controller>()!!.value else ""
     val kMethods = controller::class.declaredFunctions.filter { it.hasAnnotation<Path>() }.toMutableSet()
 
-    route("$prefix/", {
-        hidden = true
-    }) {
-        get {
-            call.respondRedirect(prefix)
+    if (prefix != "/") {
+        route("$prefix/", {
+            hidden = true
+        }) {
+            get {
+                call.respondRedirect(prefix)
+            }
         }
     }
 
@@ -229,7 +231,12 @@ private suspend fun handleRequest(
                 val map = response.data as Map<String, Any>
                 val modelMap = map["model"] as MutableMap<String, Any>
 
-                modelMap["links"] = LinkObject.list().map { link ->
+                val list = if (controller.javaClass.simpleName.startsWith("Admin"))
+                    LinkObject.list().filter { it.href.startsWith("/admin") }
+                else
+                    LinkObject.list().filter { !it.href.startsWith("/admin") }
+
+                modelMap["links"] = list.map { link ->
                     link.active = replacedPath.startsWith(link.href)
                     link
                 }
