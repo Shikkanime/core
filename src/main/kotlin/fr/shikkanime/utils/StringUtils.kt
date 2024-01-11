@@ -8,7 +8,7 @@ import java.util.*
 object StringUtils {
     fun getShortName(fullName: String): String {
         val regexs = listOf("-.*-".toRegex(), "Saison \\d*".toRegex(), "\\(\\d*\\)".toRegex())
-        val separators = listOf(":", ",")
+        val separators = listOf(":", ",", "!")
         var shortName = fullName
 
         separators.forEach { separator ->

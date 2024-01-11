@@ -90,11 +90,14 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         try {
             val uncensored = if (episodeDto.uncensored) " non censuré" else ""
             val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
-            val message = "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${platformAccount(episodeDto.platform)}\n" +
-                    "\n" +
-                    "Bon visionnage. \uD83C\uDF7F\n" +
-                    "\n" +
-                    "\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}"
+            val message =
+                "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${
+                    platformAccount(episodeDto.platform)
+                }\n" +
+                        "\n" +
+                        "Bon visionnage. \uD83C\uDF7F\n" +
+                        "\n" +
+                        "\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}"
 
             val byteArrayOutputStream = ByteArrayOutputStream()
             ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)
