@@ -4,7 +4,7 @@
     <div class="w-100 d-flex align-items-center justify-content-center">
         <div class="d-block card p-5">
             <div class="text-center mb-5">
-                <img src="/admin/assets/img/banner.png" width="400" height="88" crossorigin="anonymous"
+                <img src="/assets/img/dark_banner.png" width="400" height="88" crossorigin="anonymous"
                      class="img-fluid">
             </div>
 

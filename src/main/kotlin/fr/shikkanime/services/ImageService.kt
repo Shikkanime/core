@@ -331,7 +331,7 @@ object ImageService {
         val backgroundsFolder = File(mediaImageFolder, "backgrounds")
         require(backgroundsFolder.exists()) { "Background folder not found" }
         require(backgroundsFolder.listFiles()!!.isNotEmpty()) { "Backgrounds not found" }
-        val bannerFile = File(mediaImageFolder, "banner.png")
+        val bannerFile = File(mediaImageFolder, "dark_banner.png")
         require(bannerFile.exists()) { "Banner image not found" }
         val fontFile = File(mediaImageFolder, "font.ttf")
         require(fontFile.exists()) { "Font not found" }
@@ -343,7 +343,7 @@ object ImageService {
         val font = Font.createFont(Font.TRUETYPE_FONT, fontFile)
         val scale = 1
         val animeImage = ImageIO.read(URI(episode.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
-        val platformImage = ImageIO.read(URI("https://www.shikkanime.fr/admin/assets/img/platforms/${episode.platform.image}").toURL()).resize(32, 32)
+        val platformImage = ImageIO.read(URI("https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}").toURL()).resize(32, 32)
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }
 
