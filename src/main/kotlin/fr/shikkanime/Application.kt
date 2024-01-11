@@ -8,7 +8,6 @@ import fr.shikkanime.plugins.configureHTTP
 import fr.shikkanime.plugins.configureRouting
 import fr.shikkanime.plugins.configureSecurity
 import fr.shikkanime.services.*
-import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*

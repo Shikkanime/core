@@ -6,7 +6,6 @@ import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
-import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.routes.Controller
