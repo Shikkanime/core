@@ -22,7 +22,8 @@
     <form action="/admin/animes/${anime.uuid}" method="POST">
         <div class="d-flex mb-3">
             <a href="/admin/animes" class="btn btn-secondary ms-0 me-auto">Back</a>
-            <button type="button" class="btn btn-danger ms-auto me-0" data-bs-toggle="modal" data-bs-target="#deleteModal">
+            <button type="button" class="btn btn-danger ms-auto me-0" data-bs-toggle="modal"
+                    data-bs-target="#deleteModal">
                 Delete
             </button>
             <button type="submit" class="btn btn-success ms-2 me-0">Update</button>

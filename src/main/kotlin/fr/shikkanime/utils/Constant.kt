@@ -24,7 +24,8 @@ object Constant {
             return dataFolder
         }
     var isDev = System.getenv("ENV") == "dev"
-    val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
+    val abstractSocialNetworks =
+        reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
 
     init {
         abstractPlatforms.forEach {

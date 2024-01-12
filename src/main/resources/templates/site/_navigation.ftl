@@ -7,9 +7,11 @@
         <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
             <div class="container-fluid mx-md-5">
                 <a class="navbar-brand" href="/">
-                    <img src="/assets/img/light_banner.png" alt="Logo" height="24" class="d-inline-block align-text-top">
+                    <img src="/assets/img/light_banner.png" alt="Logo" height="24"
+                         class="d-inline-block align-text-top">
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>

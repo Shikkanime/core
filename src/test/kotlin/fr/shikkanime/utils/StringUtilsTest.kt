@@ -51,6 +51,9 @@ class StringUtilsTest {
         )
         assertEquals("BIRDIE WING", StringUtils.getShortName("BIRDIE WING -Golf Girls' Story-"))
         assertEquals("Urusei Yatsura", StringUtils.getShortName("Urusei Yatsura (2022)"))
-        assertEquals("Cherry Magic", StringUtils.getShortName("Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!"))
+        assertEquals(
+            "Cherry Magic",
+            StringUtils.getShortName("Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!")
+        )
     }
 }
