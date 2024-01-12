@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: linux/arm64/v8-buildx-${{ hashFiles('**/package-lock.json') }}
+          key: linux/arm64/v8-buildx-${{ hashFiles('Dockerfile') }}
           restore-keys: |
             linux/arm64/v8-buildx-
 
@@ -50,3 +50,9 @@ jobs:
           platforms: linux/arm64/v8
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
