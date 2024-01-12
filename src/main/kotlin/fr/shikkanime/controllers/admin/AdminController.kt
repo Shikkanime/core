@@ -15,7 +15,9 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 
-@Controller("/admin")
+private const val ADMIN = "/admin"
+
+@Controller(ADMIN)
 class AdminController {
     @Inject
     private lateinit var memberService: MemberService
@@ -33,10 +35,10 @@ class AdminController {
     @Path("/login")
     @Post
     private fun login(@BodyParam parameters: Parameters): Response {
-        val username = parameters["username"] ?: return Response.redirect("/admin")
-        val password = parameters["password"] ?: return Response.redirect("/admin")
+        val username = parameters["username"] ?: return Response.redirect(ADMIN)
+        val password = parameters["password"] ?: return Response.redirect(ADMIN)
         val user =
-            memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("/admin?error=1")
+            memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("$ADMIN?error=1")
 
         return Response.redirect(Link.DASHBOARD.href, AbstractConverter.convert(user, MemberDto::class.java))
     }
@@ -45,7 +47,7 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun logout(): Response {
-        return Response.redirect("/admin", MemberDto.empty)
+        return Response.redirect(ADMIN, MemberDto.empty)
     }
 
     @Path("/dashboard")
