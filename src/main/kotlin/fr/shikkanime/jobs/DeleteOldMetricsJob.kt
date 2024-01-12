@@ -9,7 +9,7 @@ class DeleteOldMetricsJob : AbstractJob() {
     private lateinit var metricService: MetricService
 
     override fun run() {
-        val date = ZonedDateTime.now().minusDays(3)
+        val date = ZonedDateTime.now().minusWeeks(1)
         metricService.deleteAllBefore(date)
     }
 }

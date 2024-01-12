@@ -2,9 +2,6 @@ name: Global workflow
 
 on:
   pull_request:
-  push:
-    branches:
-      - master
 
 jobs:
   test:
