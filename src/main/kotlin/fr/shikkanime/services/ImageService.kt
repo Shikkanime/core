@@ -247,7 +247,11 @@ object ImageService {
         drawImage(backgroundImage, 0, 0, null)
     }
 
-    private fun Graphics2D.drawAnimeImage(episode: EpisodeDto, animeImage: BufferedImage, backgroundImage: BufferedImage) {
+    private fun Graphics2D.drawAnimeImage(
+        episode: EpisodeDto,
+        animeImage: BufferedImage,
+        backgroundImage: BufferedImage
+    ) {
         drawImage(
             makeRoundedCorner(animeImage, 16),
             (backgroundImage.width - animeImage.width) / 2,
@@ -304,7 +308,12 @@ object ImageService {
         val animeName = episode.anime.shortName
         font = adjustFontSizeToFit(animeName, backgroundImage.width - 200)
         drawString(animeName, (backgroundImage.width - fontMetrics.stringWidth(animeName)) / 2f, 150f)
-        fillRect(((backgroundImage.width - fontMetrics.stringWidth(animeName)) / 2f).toInt(), 165, fontMetrics.stringWidth(animeName), 5)
+        fillRect(
+            ((backgroundImage.width - fontMetrics.stringWidth(animeName)) / 2f).toInt(),
+            165,
+            fontMetrics.stringWidth(animeName),
+            5
+        )
 
         color = Color.WHITE
         font = fontTmp.deriveFont(32f)
@@ -312,7 +321,12 @@ object ImageService {
         val episodeTitle = StringUtils.toEpisodeString(episode)
         font = adjustFontSizeToFit(episodeTitle, backgroundImage.width - 200)
         val x = (backgroundImage.width - fontMetrics.stringWidth(episodeTitle)) / 2f + (platformImage.width / 2 + 10)
-        drawImage(makeRoundedCorner(platformImage, 360), (x - platformImage.width - 10).toInt(), 215 - platformImage.height / 2, null)
+        drawImage(
+            makeRoundedCorner(platformImage, 360),
+            (x - platformImage.width - 10).toInt(),
+            215 - platformImage.height / 2,
+            null
+        )
         drawString(episodeTitle, x, 225f)
     }
 
@@ -344,8 +358,11 @@ object ImageService {
         val bannerImage = tmpBannerImage.resize(tmpBannerImage.width / bannerScale, tmpBannerImage.height / bannerScale)
         val font = Font.createFont(Font.TRUETYPE_FONT, fontFile)
         val scale = 1.0
-        val animeImage = ImageIO.read(URI(episode.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
-        val platformImage = ImageIO.read(URI("http://localhost:37100/assets/img/platforms/${episode.platform.image}").toURL()).resize(32, 32)
+        val animeImage =
+            ImageIO.read(URI(episode.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
+        val platformImage =
+            ImageIO.read(URI("http://localhost:37100/assets/img/platforms/${episode.platform.image}").toURL())
+                .resize(32, 32)
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }
 
