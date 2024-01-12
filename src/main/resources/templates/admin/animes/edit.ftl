@@ -1,10 +1,30 @@
 <#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteModalLabel">Delete confirmation</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this anime?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="/admin/animes/${anime.uuid}/delete" class="btn btn-danger">Confirm</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form action="/admin/animes/${anime.uuid}" method="POST">
         <div class="d-flex mb-3">
             <a href="/admin/animes" class="btn btn-secondary ms-0 me-auto">Back</a>
-            <a href="/admin/animes/${anime.uuid}/delete" class="btn btn-danger ms-auto me-0">Delete</a>
+            <button type="button" class="btn btn-danger ms-auto me-0" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                Delete
+            </button>
             <button type="submit" class="btn btn-success ms-2 me-0">Update</button>
         </div>
 
@@ -59,16 +79,4 @@
             </div>
         </div>
     </form>
-
-    <script>
-        function copyToClipboard(content) {
-            const textarea = document.createElement("textarea");
-            textarea.style.height = 0;
-            document.body.appendChild(textarea);
-            textarea.value = content;
-            textarea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textarea);
-        }
-    </script>
 </@navigation.display>

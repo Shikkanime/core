@@ -4,17 +4,17 @@ import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.ZonedDateTime
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.expect
 
 class CrunchyrollPlatformTest {
     @Inject
     lateinit var platform: CrunchyrollPlatform
 
-    @BeforeTest
+    @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
 
@@ -174,14 +174,11 @@ class CrunchyrollPlatformTest {
             )
         )
 
-        println(episodes)
-
-        assert(episodes.isNotEmpty())
-        expect(18) { episodes.size }
-
-        expect("I'm in Love with the Villainess") { episodes[0].anime?.name }
-        expect("I'm in Love with the Villainess") { episodes[1].anime?.name }
-        expect("SHY") { episodes[2].anime?.name }
-        expect("Dead Mount Death Play") { episodes[3].anime?.name }
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(18, episodes.size)
+        assertEquals("I'm in Love with the Villainess", episodes[0].anime?.name)
+        assertEquals("I'm in Love with the Villainess", episodes[1].anime?.name)
+        assertEquals("SHY", episodes[2].anime?.name)
+        assertEquals("Dead Mount Death Play", episodes[3].anime?.name)
     }
 }
