@@ -8,11 +8,11 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class EpisodeServiceTest {
     @Inject
@@ -24,12 +24,12 @@ class EpisodeServiceTest {
     @Inject
     private lateinit var simulcastService: SimulcastService
 
-    @BeforeTest
+    @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
     }
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         episodeService.deleteAll()
         animeService.deleteAll()

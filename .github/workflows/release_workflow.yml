@@ -12,6 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'corretto'
+
+      - name: Build
+        run: gradle clean installDist
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -32,3 +41,5 @@ jobs:
           push: true
           tags: registry.ziedelth.fr:5000/shikkanime-core:latest
           platforms: linux/arm64/v8
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

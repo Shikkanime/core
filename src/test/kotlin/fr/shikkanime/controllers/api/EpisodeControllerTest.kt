@@ -20,9 +20,13 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.*
-import kotlin.test.*
 
 class EpisodeControllerTest {
     class Token : TypeToken<PageableDto<EpisodeDto>>()
@@ -33,7 +37,7 @@ class EpisodeControllerTest {
     @Inject
     private lateinit var episodeService: EpisodeService
 
-    @BeforeTest
+    @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
 
@@ -72,7 +76,7 @@ class EpisodeControllerTest {
             }
     }
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         episodeService.deleteAll()
         animeService.deleteAll()

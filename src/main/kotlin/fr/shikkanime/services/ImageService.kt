@@ -143,7 +143,9 @@ object ImageService {
                         writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
                     }
                     val webp = FileManager.encodeToWebP(tmpFile.readBytes())
-                    tmpFile.delete()
+
+                    if (!tmpFile.delete())
+                        logger.warning("Can not delete tmp file image")
 
                     if (webp.isEmpty()) {
                         logger.warning("Failed to encode image to WebP")

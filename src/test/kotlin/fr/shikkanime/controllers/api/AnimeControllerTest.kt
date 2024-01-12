@@ -12,24 +12,19 @@ import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.hibernate.search.mapper.orm.Search
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.io.File
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
-class AnimeControllerTest {
+internal class AnimeControllerTest {
     class Token : TypeToken<PageableDto<AnimeDto>>()
-
-    @Inject
-    private lateinit var database: Database
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -39,7 +34,7 @@ class AnimeControllerTest {
 
     private var totalAnimes: Long = 0
 
-    @BeforeTest
+    @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
 
@@ -60,11 +55,11 @@ class AnimeControllerTest {
             }
     }
 
-    @AfterTest
+    @AfterEach
     fun tearDown() {
         animeService.deleteAll()
         simulcastService.deleteAll()
-        Search.session(database.getEntityManager()).massIndexer(Anime::class.java).startAndWait()
+        animeService.preIndex()
     }
 
     @Test
