@@ -25,10 +25,14 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 
-class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, JsonArray>() {
+class DisneyPlusPlatform :
+    AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, JsonArray>() {
     override fun getPlatform(): Platform = Platform.DISN
 
-    override suspend fun fetchApiContent(key: CountryCodeDisneyPlusSimulcastKeyCache, zonedDateTime: ZonedDateTime): JsonArray {
+    override suspend fun fetchApiContent(
+        key: CountryCodeDisneyPlusSimulcastKeyCache,
+        zonedDateTime: ZonedDateTime
+    ): JsonArray {
         check(configuration!!.authorization.isNotBlank()) { "Authorization is null" }
         check(configuration!!.refreshToken.isNotBlank()) { "Refresh token is null" }
         val httpRequest = HttpRequest()

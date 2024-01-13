@@ -7,7 +7,7 @@ abstract class AbstractConverter<F, T> {
     abstract fun convert(from: F): T
 
     companion object {
-        private val converters: MutableMap<Pair<Class<*>, Class<*>>, AbstractConverter<*, *>> = mutableMapOf()
+        val converters: MutableMap<Pair<Class<*>, Class<*>>, AbstractConverter<*, *>> = mutableMapOf()
 
         init {
             val converters = Constant.reflections.getSubTypesOf(AbstractConverter::class.java)
@@ -18,7 +18,7 @@ abstract class AbstractConverter<F, T> {
             }
         }
 
-        fun <T> convert(`object`: Any?, to: Class<T>): T {
+        inline fun <reified T> convert(`object`: Any?, to: Class<T>): T {
             if (`object` == null) {
                 throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
             }
@@ -34,7 +34,9 @@ abstract class AbstractConverter<F, T> {
             val method = abstractConverterClass.getMethod("convert", `object`.javaClass)
             method.isAccessible = true
             return try {
-                method.invoke(abstractConverter, `object`) as T
+                val invoke = method.invoke(abstractConverter, `object`) ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
+                check(invoke is T) { "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"" }
+                invoke
             } catch (e: Exception) {
                 throw IllegalStateException(
                     "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"",
@@ -43,7 +45,7 @@ abstract class AbstractConverter<F, T> {
             }
         }
 
-        fun <T> convert(list: Collection<Any>, to: Class<T>): List<T> {
+        inline fun <reified T> convert(list: Collection<Any>, to: Class<T>): List<T> {
             return list.map { convert(it, to) }
         }
     }
