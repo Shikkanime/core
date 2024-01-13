@@ -10,7 +10,7 @@ data class PageableDto<T>(
     val total: Long,
 ) {
     companion object {
-        fun <T : Any, D> fromPageable(pageable: Pageable<T>, dtoClass: Class<D>): PageableDto<D> {
+        inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, dtoClass: Class<D>): PageableDto<D> {
             return PageableDto(
                 data = AbstractConverter.convert(pageable.data, dtoClass),
                 page = pageable.page,
