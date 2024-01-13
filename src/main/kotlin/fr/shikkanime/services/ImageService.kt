@@ -104,6 +104,7 @@ object ImageService {
         }
 
         logger.info("Saving images cache...")
+        val cache = cache.toList()
 
         val take = measureTimeMillis {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
