@@ -86,6 +86,10 @@ class HttpRequest : AutoCloseable {
 
         val takeMs = measureTimeMillis {
             try {
+                if (page?.isClosed == true) {
+                    page = browser?.newPage()
+                }
+
                 page?.navigate(url)
 
                 if (selector != null) {
@@ -94,6 +98,8 @@ class HttpRequest : AutoCloseable {
                     page?.waitForLoadState()
                 }
             } catch (e: Exception) {
+                page?.close()
+
                 if (retry > 0) {
                     logger.info("Retrying...")
                     return getBrowser(url, selector, retry - 1)

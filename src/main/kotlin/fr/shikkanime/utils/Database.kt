@@ -42,7 +42,12 @@ class Database {
             logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
         }
 
-        sessionFactory = configuration.buildSessionFactory()
+        try {
+            sessionFactory = configuration.buildSessionFactory()
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error while building session factory", e)
+            exitProcess(1)
+        }
 
         sessionFactory.openSession().doWork {
             try {
