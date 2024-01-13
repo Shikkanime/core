@@ -53,14 +53,19 @@ object FileManager {
         }
     }
 
+    private fun Any.toByteArray(): ByteArray {
+        ByteArrayOutputStream().use { baos ->
+            ObjectOutputStream(baos).use { oos ->
+                oos.writeObject(this)
+            }
+
+            return baos.toByteArray()
+        }
+    }
+
     fun writeFile(file: File, `object`: Any) {
         try {
-            ByteArrayOutputStream().use { baos ->
-                ObjectOutputStream(baos).use { oos ->
-                    oos.writeObject(`object`)
-                    file.writeBytes(baos.toByteArray())
-                }
-            }
+            file.writeBytes(`object`.toByteArray())
         } catch (e: Exception) {
             e.printStackTrace()
             throw Exception("Failed to write file")
