@@ -78,6 +78,16 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         entity.anime = animeService.findAllByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
             ?: animeService.save(entity.anime!!)
 
+        entity.number.takeIf { it == -1 }?.let {
+            entity.number = episodeRepository.getLastNumber(
+                entity.anime!!.uuid!!,
+                entity.platform!!,
+                entity.season!!,
+                entity.episodeType!!,
+                entity.langType!!
+            ) + 1
+        }
+
         if (entity.langType == LangType.SUBTITLES) {
             val simulcast = getSimulcast(entity)
             Hibernate.initialize(entity.anime!!.simulcasts)
