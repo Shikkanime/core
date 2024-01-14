@@ -4,6 +4,9 @@ import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import org.hibernate.Hibernate
 import java.util.*
 
@@ -100,6 +103,22 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .setParameter("hash", "%${hash?.lowercase()}%")
                 .resultList
                 .firstOrNull()
+        }
+    }
+
+    fun getLastNumber(anime: UUID, platform: Platform, season: Int, episodeType: EpisodeType, langType: LangType): Int {
+        return inTransaction {
+            val query = it.createQuery(
+                "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType = :episodeType AND langType = :langType ORDER BY number DESC",
+                Int::class.java
+            )
+            query.maxResults = 1
+            query.setParameter("uuid", anime)
+            query.setParameter("platform", platform)
+            query.setParameter("season", season)
+            query.setParameter("episodeType", episodeType)
+            query.setParameter("langType", langType)
+            query.resultList.firstOrNull() ?: 0
         }
     }
 }
