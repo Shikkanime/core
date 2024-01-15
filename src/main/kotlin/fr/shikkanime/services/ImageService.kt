@@ -21,6 +21,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import javax.imageio.ImageIO
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
 import kotlin.system.measureTimeMillis
 
 object ImageService {
@@ -286,12 +289,50 @@ object ImageService {
         drawImage(bannerImage, 25, 15, null)
     }
 
+    private fun getRelativeLuminance(color: Color): Double {
+        var r = color.red / 255.0
+        var g = (color.green / 255.0)
+        var b = color.blue / 255.0
+
+        r = if ((r <= 0.03928)) r / 12.92 else ((r + 0.055) / 1.055).pow(2.4)
+        g = if ((g <= 0.03928)) g / 12.92 else ((g + 0.055) / 1.055).pow(2.4)
+        b = if ((b <= 0.03928)) b / 12.92 else ((b + 0.055) / 1.055).pow(2.4)
+
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+
+    private fun adjustColor(color: Color, factor: Double): Color {
+        val r = (color.red * factor).coerceIn(0.0, 255.0).toInt()
+        val g = (color.green * factor).coerceIn(0.0, 255.0).toInt()
+        val b = (color.blue * factor).coerceIn(0.0, 255.0).toInt()
+        return Color(r, g, b)
+    }
+
+    private fun getAdjustedTextColor(backgroundColor: Color, textColor: Color): Color {
+        val backgroundLuminance = getRelativeLuminance(backgroundColor)
+        var adjustedTextColor = textColor
+        var textLuminance = getRelativeLuminance(adjustedTextColor)
+
+        // Calculate the contrast ratio
+        var contrastRatio = (max(backgroundLuminance, textLuminance) + 0.05) / (min(backgroundLuminance, textLuminance) + 0.05)
+
+        // Adjust the text color until the contrast ratio is at least 7 (normal text) or 4.5 (large text)
+        while (contrastRatio < 4.5) {
+            adjustedTextColor = adjustColor(adjustedTextColor, 1.1) // lighten the color by 10%
+            textLuminance = getRelativeLuminance(adjustedTextColor)
+            contrastRatio = (max(backgroundLuminance, textLuminance) + 0.05) / (min(backgroundLuminance, textLuminance) + 0.05)
+        }
+
+        return adjustedTextColor
+    }
+
     private fun Graphics2D.drawText(
         fontTmp: Font,
         episode: EpisodeDto,
         animeImage: BufferedImage,
         backgroundImage: BufferedImage,
-        platformImage: BufferedImage
+        platformImage: BufferedImage?,
+        adjustColor: Boolean
     ) {
         color = Color.WHITE
         font = fontTmp.deriveFont(24f)
@@ -304,7 +345,17 @@ object ImageService {
             50f
         )
 
-        color = getDominantColor(animeImage)
+
+        val textColor = getDominantColor(animeImage)
+
+        val adjustedTextColor = if (adjustColor) {
+            val backgroundColor = getDominantColor(backgroundImage)
+            getAdjustedTextColor(backgroundColor, textColor)
+        } else {
+            textColor
+        }
+
+        color = adjustedTextColor
         font = fontTmp.deriveFont(65f)
         val animeName = episode.anime.shortName
         font = adjustFontSizeToFit(animeName, backgroundImage.width - 200)
@@ -321,13 +372,17 @@ object ImageService {
         font = font.deriveFont(font.style and Font.BOLD.inv())
         val episodeTitle = StringUtils.toEpisodeString(episode)
         font = adjustFontSizeToFit(episodeTitle, backgroundImage.width - 200)
-        val x = (backgroundImage.width - fontMetrics.stringWidth(episodeTitle)) / 2f + (platformImage.width / 2 + 10)
-        drawImage(
-            makeRoundedCorner(platformImage, 360),
-            (x - platformImage.width - 10).toInt(),
-            215 - platformImage.height / 2,
-            null
-        )
+        val x = (backgroundImage.width - fontMetrics.stringWidth(episodeTitle)) / 2f + ((platformImage?.width ?: 0) / 2 + 10)
+
+        if (platformImage != null) {
+            drawImage(
+                makeRoundedCorner(platformImage, 360),
+                (x - platformImage.width - 10).toInt(),
+                215 - platformImage.height / 2,
+                null
+            )
+        }
+
         drawString(episodeTitle, x, 225f)
     }
 
@@ -342,7 +397,7 @@ object ImageService {
 
     data class Tuple<A, B, C, D, E>(val a: A, val b: B, val c: C, val d: D, val e: E)
 
-    private fun loadResources(episode: EpisodeDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage> {
+    private fun loadResources(episode: EpisodeDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage?> {
         val mediaImageFolder = File(Constant.dataFolder, "media-image")
         require(mediaImageFolder.exists()) { "Media image folder not found" }
         val backgroundsFolder = File(mediaImageFolder, "backgrounds")
@@ -361,13 +416,18 @@ object ImageService {
         val scale = 1.0
         val animeImage =
             ImageIO.read(URI(episode.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
-        val platformImage =
+
+        val platformImage = try {
             ImageIO.read(URI("http://localhost:37100/assets/img/platforms/${episode.platform.image}").toURL())
                 .resize(32, 32)
+        } catch (e: Exception) {
+            null
+        }
+
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }
 
-    fun toEpisodeImage(episode: EpisodeDto): BufferedImage {
+    fun toEpisodeImage(episode: EpisodeDto, adjustColor: Boolean = true): BufferedImage {
         val (backgroundImage, bannerImage, font, animeImage, platformImage) = loadResources(episode)
         val finalImage = BufferedImage(backgroundImage.width, backgroundImage.height, BufferedImage.TYPE_INT_ARGB)
 
@@ -376,7 +436,7 @@ object ImageService {
             drawBackgroundImage(backgroundImage)
             drawAnimeImage(episode, animeImage, backgroundImage)
             drawBannerImage(bannerImage)
-            drawText(font, episode, animeImage, backgroundImage, platformImage)
+            drawText(font, episode, animeImage, backgroundImage, platformImage, adjustColor)
         }
 
         graphics.dispose()
