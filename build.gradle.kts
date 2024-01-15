@@ -5,7 +5,7 @@ val kotlinVersion = "1.9.22"
 val hibernateSearchVersion = "7.1.0.Alpha1"
 val junitVersion = "5.10.1"
 val tikaVersion = "3.0.0-BETA"
-val ktorSwaggerUiVersion = "2.7.3"
+val ktorSwaggerUiVersion = "2.7.4"
 
 plugins {
     kotlin("jvm") version "1.9.22"
