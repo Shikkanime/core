@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.isEqualOrAfter
 import java.io.File
 import java.time.LocalTime
 import java.time.ZoneId
@@ -78,7 +79,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         configuration!!.availableCountries.forEach { countryCode ->
             configuration!!.simulcasts.filter {
                 it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
-                    .isAfter(LocalTime.parse(it.releaseTime))
+                    .isEqualOrAfter(LocalTime.parse(it.releaseTime))
             }
                 .forEach { simulcast ->
                     val api = getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)

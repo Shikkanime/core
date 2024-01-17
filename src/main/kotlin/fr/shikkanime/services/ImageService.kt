@@ -314,13 +314,15 @@ object ImageService {
         var textLuminance = getRelativeLuminance(adjustedTextColor)
 
         // Calculate the contrast ratio
-        var contrastRatio = (max(backgroundLuminance, textLuminance) + 0.05) / (min(backgroundLuminance, textLuminance) + 0.05)
+        var contrastRatio =
+            (max(backgroundLuminance, textLuminance) + 0.05) / (min(backgroundLuminance, textLuminance) + 0.05)
 
         // Adjust the text color until the contrast ratio is at least 7 (normal text) or 4.5 (large text)
         while (contrastRatio < 4.5) {
             adjustedTextColor = adjustColor(adjustedTextColor, 1.1) // lighten the color by 10%
             textLuminance = getRelativeLuminance(adjustedTextColor)
-            contrastRatio = (max(backgroundLuminance, textLuminance) + 0.05) / (min(backgroundLuminance, textLuminance) + 0.05)
+            contrastRatio =
+                (max(backgroundLuminance, textLuminance) + 0.05) / (min(backgroundLuminance, textLuminance) + 0.05)
         }
 
         return adjustedTextColor
@@ -372,7 +374,8 @@ object ImageService {
         font = font.deriveFont(font.style and Font.BOLD.inv())
         val episodeTitle = StringUtils.toEpisodeString(episode)
         font = adjustFontSizeToFit(episodeTitle, backgroundImage.width - 200)
-        val x = (backgroundImage.width - fontMetrics.stringWidth(episodeTitle)) / 2f + ((platformImage?.width ?: 0) / 2 + 10)
+        val x = (backgroundImage.width - fontMetrics.stringWidth(episodeTitle)) / 2f + ((platformImage?.width
+            ?: 0) / 2 + 10)
 
         if (platformImage != null) {
             drawImage(

@@ -17,6 +17,7 @@ import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.isEqualOrAfter
 import io.ktor.client.statement.*
 import java.io.File
 import java.time.LocalTime
@@ -96,7 +97,7 @@ class DisneyPlusPlatform :
         configuration!!.availableCountries.forEach { countryCode ->
             configuration!!.simulcasts.filter {
                 it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
-                    .isAfter(LocalTime.parse(it.releaseTime))
+                    .isEqualOrAfter(LocalTime.parse(it.releaseTime))
             }.forEach { simulcast ->
                 val api = getApiContent(CountryCodeDisneyPlusSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
 

@@ -34,7 +34,8 @@ abstract class AbstractConverter<F, T> {
             val method = abstractConverterClass.getMethod("convert", `object`.javaClass)
             method.isAccessible = true
             return try {
-                val invoke = method.invoke(abstractConverter, `object`) ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
+                val invoke = method.invoke(abstractConverter, `object`)
+                    ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
                 check(invoke is T) { "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"" }
                 invoke
             } catch (e: Exception) {

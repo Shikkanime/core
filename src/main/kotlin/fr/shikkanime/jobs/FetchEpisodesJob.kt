@@ -38,7 +38,7 @@ class FetchEpisodesJob : AbstractJob() {
             isInitialized = true
         }
 
-        val zonedDateTime = ZonedDateTime.now().withNano(0).withZoneSameInstant(ZoneId.of("UTC"))
+        val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withZoneSameInstant(ZoneId.of("UTC"))
         val episodes = mutableListOf<Episode>()
 
         Constant.abstractPlatforms.forEach { abstractPlatform ->
