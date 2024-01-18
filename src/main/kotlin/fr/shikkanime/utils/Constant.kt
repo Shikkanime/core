@@ -7,6 +7,7 @@ import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
 import org.reflections.Reflections
 import java.io.File
+import java.time.ZoneId
 
 object Constant {
     val reflections = Reflections("fr.shikkanime")
@@ -26,6 +27,7 @@ object Constant {
     var isDev = System.getenv("ENV") == "dev"
     val abstractSocialNetworks =
         reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
+    val utcZoneId = ZoneId.of("UTC")
 
     init {
         abstractPlatforms.forEach {

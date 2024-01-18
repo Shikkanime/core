@@ -32,7 +32,7 @@ class SiteController {
                     animeService.findAllBy(
                         CountryCode.FR,
                         null,
-                        listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
+                        listOf(SortParameter("name", SortParameter.Order.ASC)),
                         1,
                         6
                     ).data, AnimeDto::class.java

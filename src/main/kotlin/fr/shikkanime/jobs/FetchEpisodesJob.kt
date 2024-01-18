@@ -7,8 +7,8 @@ import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.withUTC
 import jakarta.inject.Inject
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
@@ -38,7 +38,7 @@ class FetchEpisodesJob : AbstractJob() {
             isInitialized = true
         }
 
-        val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withZoneSameInstant(ZoneId.of("UTC"))
+        val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val episodes = mutableListOf<Episode>()
 
         Constant.abstractPlatforms.forEach { abstractPlatform ->
@@ -54,12 +54,26 @@ class FetchEpisodesJob : AbstractJob() {
         episodes
             .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !set.contains(it.hash) }
             .forEach {
-                val savedEpisode = episodeService.save(it)
-                savedEpisode.hash?.let { hash -> set.add(hash) }
-                val dto = AbstractConverter.convert(savedEpisode, EpisodeDto::class.java)
-                Constant.abstractSocialNetworks.forEach { socialNetwork -> socialNetwork.sendEpisodeRelease(dto) }
+                try {
+                    val savedEpisode = episodeService.save(it)
+                    savedEpisode.hash?.let { hash -> set.add(hash) }
+                    val dto = AbstractConverter.convert(savedEpisode, EpisodeDto::class.java)
+                    sendToSocialNetworks(dto)
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while saving episode ${it.hash} (${it.anime?.name})", e)
+                }
             }
 
         isRunning = false
+    }
+
+    private fun sendToSocialNetworks(dto: EpisodeDto) {
+        Constant.abstractSocialNetworks.forEach { socialNetwork ->
+            try {
+                socialNetwork.sendEpisodeRelease(dto)
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork", "")}", e)
+            }
+        }
     }
 }

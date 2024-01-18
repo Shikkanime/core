@@ -8,3 +8,7 @@
 .text-muted {
     color: #a0a0a0 !important;
 }
+
+.blur {
+    filter: blur(0.5rem);
+}

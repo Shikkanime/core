@@ -9,7 +9,7 @@ enum class Link(val href: String, val template: String, val icon: String, val la
     CONFIG("/admin/config", "/admin/config/list.ftl", "bi bi-gear", "Configurations"),
 
     // Site
-    HOME("/", "/site/home.ftl", "", "Home"),
-    CATALOG("/catalog", "/site/catalog.ftl", "", "Catalog"),
+    HOME("/", "/site/home.ftl", "", "Accueil"),
+    CATALOG("/catalog", "/site/catalog.ftl", "", "Catalogue"),
     ;
 }

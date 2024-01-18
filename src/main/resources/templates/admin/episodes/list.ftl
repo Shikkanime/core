@@ -3,7 +3,7 @@
 <@navigation.display>
     <div class="row g-3 align-items-center mb-3">
         <div class="col-auto">
-            <label class="form-label" for="animeInput">Anime</label>
+            <label class="form-label" for="animeInput">Anime UUID</label>
             <input type="text" class="form-control" id="animeInput">
         </div>
     </div>

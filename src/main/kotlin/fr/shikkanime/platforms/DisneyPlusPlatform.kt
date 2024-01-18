@@ -18,10 +18,10 @@ import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.withUTC
 import io.ktor.client.statement.*
 import java.io.File
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.logging.Level
@@ -156,7 +156,7 @@ class DisneyPlusPlatform :
         }
 
         val langType = LangType.SUBTITLES
-        val releaseDateTimeUTC = zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"))
+        val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 

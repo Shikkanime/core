@@ -9,6 +9,10 @@ fun ZonedDateTime.isEqualOrAfter(other: ZonedDateTime): Boolean {
     return this.isEqual(other) || this.isAfter(other)
 }
 
+fun ZonedDateTime.withUTC(): ZonedDateTime {
+    return this.withZoneSameInstant(Constant.utcZoneId)
+}
+
 fun LocalTime.isEqualOrAfter(other: LocalTime): Boolean {
     return this == other || this.isAfter(other)
 }

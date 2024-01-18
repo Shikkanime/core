@@ -6,14 +6,13 @@ import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.withUTC
 import org.apache.tika.language.detect.LanguageDetector
 import org.hibernate.Hibernate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     private val languageDetector: LanguageDetector = LanguageDetector.getDefaultLanguageDetector().loadModels()
-    private val utcZone = ZoneId.of("UTC")
 
     override fun convert(from: Anime): AnimeDto {
         val status = if (
@@ -25,7 +24,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
 
         return AnimeDto(
             uuid = from.uuid,
-            releaseDateTime = from.releaseDateTime.withZoneSameInstant(utcZone)
+            releaseDateTime = from.releaseDateTime.withUTC()
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             image = from.image,
             countryCode = from.countryCode!!,

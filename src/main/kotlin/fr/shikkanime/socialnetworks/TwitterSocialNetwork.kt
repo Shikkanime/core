@@ -58,11 +58,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (!isInitialized) return
         if (twitter == null) return
 
-        try {
-            twitter!!.v2.createTweet(text = message)
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while sending message to Twitter", e)
-        }
+        twitter!!.v2.createTweet(text = message)
     }
 
     private fun platformAccount(platform: Platform): String {
@@ -87,30 +83,26 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (!isInitialized) return
         if (twitter == null) return
 
-        try {
-            val uncensored = if (episodeDto.uncensored) " non censuré" else ""
-            val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
-            val message =
-                "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${
-                    platformAccount(episodeDto.platform)
-                }\n\nBon visionnage. \uD83C\uDF7F"
+        val uncensored = if (episodeDto.uncensored) " non censuré" else ""
+        val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
+        val message =
+            "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${
+                platformAccount(episodeDto.platform)
+            }\n\nBon visionnage. \uD83C\uDF7F"
 
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)
 
-            val uploadMedia = twitter!!.tweets().uploadMedia(
-                UUID.randomUUID().toString(),
-                ByteArrayInputStream(byteArrayOutputStream.toByteArray())
-            )
+        val uploadMedia = twitter!!.tweets().uploadMedia(
+            UUID.randomUUID().toString(),
+            ByteArrayInputStream(byteArrayOutputStream.toByteArray())
+        )
 
-            val tweet = twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
+        val tweet = twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
 
-            twitter!!.v2.createTweet(
-                text = "\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}",
-                inReplyToTweetId = tweet.id
-            )
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while sending message to Twitter", e)
-        }
+        twitter!!.v2.createTweet(
+            text = "\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}",
+            inReplyToTweetId = tweet.id
+        )
     }
 }

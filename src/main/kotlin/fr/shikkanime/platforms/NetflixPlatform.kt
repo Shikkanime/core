@@ -10,9 +10,9 @@ import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.withUTC
 import java.io.File
 import java.time.LocalTime
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -26,7 +26,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val httpRequest = HttpRequest()
         val id = key.netflixSimulcast.name
         val season = key.netflixSimulcast.season
-        val releaseDateTimeUTC = zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"))
+        val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.netflixSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 

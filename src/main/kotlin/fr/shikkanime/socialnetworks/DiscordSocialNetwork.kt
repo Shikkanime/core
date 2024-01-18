@@ -59,26 +59,22 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         if (!isInitialized) return
         if (episodeDto.image.isBlank()) return
 
-        try {
-            val embedMessage = EmbedBuilder()
-            val image = ImageIO.read(URI(episodeDto.image).toURL())
-            embedMessage.setColor(ImageService.getDominantColor(image))
-            embedMessage.setAuthor(
-                episodeDto.platform.platformName,
-                episodeDto.platform.url,
-                "https://www.shikkanime.fr/assets/img/platforms/${episodeDto.platform.image}"
-            )
-            embedMessage.setTitle(episodeDto.anime.shortName, episodeDto.url)
-            embedMessage.setThumbnail(episodeDto.anime.image)
-            embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
-            embedMessage.setImage(episodeDto.image)
-            embedMessage.setFooter("Shikkanime", "https://www.shikkanime.fr/assets/img/favicons/favicon-64x64.png")
-            embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
-            val embed = embedMessage.build()
+        val embedMessage = EmbedBuilder()
+        val image = ImageIO.read(URI(episodeDto.image).toURL())
+        embedMessage.setColor(ImageService.getDominantColor(image))
+        embedMessage.setAuthor(
+            episodeDto.platform.platformName,
+            episodeDto.platform.url,
+            "https://www.shikkanime.fr/assets/img/platforms/${episodeDto.platform.image}"
+        )
+        embedMessage.setTitle(episodeDto.anime.shortName, episodeDto.url)
+        embedMessage.setThumbnail(episodeDto.anime.image)
+        embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
+        embedMessage.setImage(episodeDto.image)
+        embedMessage.setFooter("Shikkanime", "https://www.shikkanime.fr/assets/img/favicons/favicon-64x64.png")
+        embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
+        val embed = embedMessage.build()
 
-            getTextChannels()?.forEach { it.sendMessageEmbeds(embed).queue() }
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while sending message to Discord", e)
-        }
+        getTextChannels()?.forEach { it.sendMessageEmbeds(embed).queue() }
     }
 }

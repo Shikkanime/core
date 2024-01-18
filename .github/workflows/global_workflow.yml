@@ -2,6 +2,9 @@ name: Global workflow
 
 on:
   pull_request:
+  push:
+    branches:
+      - dev
 
 jobs:
   test:
@@ -26,6 +29,8 @@ jobs:
 
       - name: Cache gradle dependencies
         uses: actions/cache@v4
+        # If author is dependabot, we don't cache dependencies
+        if: github.actor != 'dependabot[bot]'
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
@@ -49,6 +54,8 @@ jobs:
 
       - name: Cache gradle dependencies
         uses: actions/cache@v4
+        # If author is dependabot, we don't cache dependencies
+        if: github.actor != 'dependabot[bot]'
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
@@ -60,6 +67,8 @@ jobs:
 
       - name: Cache build
         uses: actions/cache@v4
+        # If author is dependabot, we don't cache dependencies
+        if: github.actor != 'dependabot[bot]'
         with:
           path: build/install/core
           key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
@@ -81,11 +90,17 @@ jobs:
 
       - name: Cache build
         uses: actions/cache@v4
+        # If author is dependabot, we don't cache dependencies
+        if: github.actor != 'dependabot[bot]'
         with:
           path: build/install/core
           key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
           restore-keys: |
             ${{ runner.os }}-build-
+
+      - name: Build
+        if: github.actor == 'dependabot[bot]'
+        run: gradle clean installDist -x test
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -103,6 +118,7 @@ jobs:
 
   clear_cache:
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
 
     needs:
       - docker
