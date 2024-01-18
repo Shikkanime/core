@@ -1,5 +1,5 @@
-FROM mcr.microsoft.com/playwright:v1.40.1-jammy
-ARG version=21.0.1.12-1
+FROM mcr.microsoft.com/playwright:v1.41.0-jammy
+ARG version=21.0.2.13-1
 ENV LANG C.UTF-8
 ENV JAVA_HOME /usr/lib/jvm/java-21-amazon-corretto
 ENV TZ Europe/Paris
