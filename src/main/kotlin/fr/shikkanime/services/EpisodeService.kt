@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.EpisodeRepository
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.MapCache
 import io.ktor.http.*
 import org.hibernate.Hibernate
 import java.time.ZonedDateTime
@@ -105,6 +106,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
         val savedEntity = super.save(entity)
         addImage(savedEntity)
+        MapCache.invalidate(Episode::class.java)
         return savedEntity
     }
 
@@ -129,6 +131,13 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
         parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }
 
-        return super.update(episode)
+        val update = super.update(episode)
+        MapCache.invalidate(Episode::class.java)
+        return update
+    }
+
+    override fun delete(entity: Episode) {
+        super.delete(entity)
+        MapCache.invalidate(Episode::class.java)
     }
 }

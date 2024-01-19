@@ -88,7 +88,7 @@ class AnimeController {
 
     @Path("/{uuid}/image")
     @Get
-    @Cached(maxAgeSeconds = 3600)
+    @Cached(maxAgeSeconds = 31536000)
     @OpenAPI(
         "Get anime image",
         [

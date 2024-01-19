@@ -3,6 +3,7 @@ package fr.shikkanime.utils
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import org.hibernate.mapping.Map
 import java.time.Duration
 
 class MapCache<K : Any, V : Any>(
@@ -27,6 +28,7 @@ class MapCache<K : Any, V : Any>(
         cache = builder
             .build(object : CacheLoader<K, V>() {
                 override fun load(key: K): V {
+                    logger.info("Loading $key")
                     return block(key)
                 }
             })
@@ -50,6 +52,7 @@ class MapCache<K : Any, V : Any>(
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(MapCache::class.java)
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun invalidate(vararg classes: Class<*>) {

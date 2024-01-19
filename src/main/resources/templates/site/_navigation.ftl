@@ -1,7 +1,7 @@
 <#import "_layout.ftl" as layout />
 
-<#macro display>
-    <@layout.main>
+<#macro display header="">
+    <@layout.main header="${header}">
         <#assign margin = "mx-md-2">
 
         <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">

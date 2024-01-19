@@ -9,6 +9,7 @@ import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.caches.EpisodeCacheService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
@@ -25,6 +26,9 @@ import javax.imageio.ImageIO
 class EpisodeController {
     @Inject
     private lateinit var episodeService: EpisodeService
+
+    @Inject
+    private lateinit var episodeCacheService: EpisodeCacheService
 
     @Path
     @Get
@@ -54,13 +58,12 @@ class EpisodeController {
             SortParameter(sort, if (desc) SortParameter.Order.DESC else SortParameter.Order.ASC)
         } ?: mutableListOf()
 
-        val pageable = episodeService.findAllBy(countryParam, animeParam, sortParameters, page, limit)
-        return Response.ok(PageableDto.fromPageable(pageable, EpisodeDto::class.java))
+        return Response.ok(episodeCacheService.findAllBy(countryParam, animeParam, sortParameters, page, limit))
     }
 
     @Path("/{uuid}/image")
     @Get
-    @Cached(maxAgeSeconds = 3600)
+    @Cached(maxAgeSeconds = 31536000)
     @OpenAPI(
         "Get episode image",
         [

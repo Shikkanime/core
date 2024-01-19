@@ -44,7 +44,14 @@ private val logger = LoggerFactory.getLogger("Routing")
 
 fun Application.configureRouting() {
     routing {
-        staticResources("/assets", "assets")
+        staticResources("/assets", "assets") {
+            preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
+
+            cacheControl { url ->
+                listOf(CacheControl.MaxAge(maxAgeSeconds = 31536000))
+            }
+        }
+
         createRoutes()
     }
 }

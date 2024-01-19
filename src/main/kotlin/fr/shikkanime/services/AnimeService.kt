@@ -5,6 +5,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
+import fr.shikkanime.utils.MapCache
 import io.ktor.http.*
 import java.time.ZonedDateTime
 import java.util.*
@@ -50,6 +51,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         val savedEntity = super.save(entity)
         addImage(savedEntity)
+        MapCache.invalidate(Anime::class.java)
         return savedEntity
     }
 
@@ -68,11 +70,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
 
-        return super.update(anime)
+        val update = super.update(anime)
+        MapCache.invalidate(Anime::class.java)
+        return update
     }
 
     override fun delete(entity: Anime) {
         episodeService.findAllByAnime(entity.uuid!!).forEach { episodeService.delete(it) }
         super.delete(entity)
+        MapCache.invalidate(Anime::class.java)
     }
 }

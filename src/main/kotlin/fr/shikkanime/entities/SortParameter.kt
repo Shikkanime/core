@@ -6,6 +6,25 @@ data class SortParameter(
 ) {
     enum class Order {
         ASC,
-        DESC
+        DESC,
+        ;
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SortParameter
+
+        if (field != other.field) return false
+        if (order != other.order) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = field.hashCode()
+        result = 31 * result + order.hashCode()
+        return result
     }
 }
