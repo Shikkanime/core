@@ -9,7 +9,7 @@
                 <div class="col-md-2 col-6 mt-0">
                     <article>
                         <a href="${episode.url}" class="text-decoration-none text-white">
-                            <img src="https://api.shikkanime.fr/v1/episodes/${episode.uuid}/image"
+                            <img loading="lazy" src="https://api.shikkanime.fr/v1/episodes/${episode.uuid}/image"
                                  alt="${episode.anime.shortName}" class="w-100<#if episode.uncensored> blur</#if>">
                             <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
                             <p class="text-muted mb-0">Saison ${episode.season} | Épisode ${episode.number}<#if episode.uncensored> non censuré</#if></p>
@@ -35,13 +35,34 @@
                 <div class="col-md-2 col-6 mt-0">
                     <article>
                         <a href="/animes/${anime.uuid}" class="text-decoration-none text-white">
-                            <img src="https://api.shikkanime.fr/v1/animes/${anime.uuid}/image" alt="${anime.shortName} anime image"
-                                 class="w-100">
-                            <span class="h6 mt-2 text-truncate-2">${anime.shortName}</span>
+                            <div class="anime-card position-relative">
+                                <img loading="lazy" src="https://api.shikkanime.fr/v1/animes/${anime.uuid}/image" alt="${anime.shortName} anime image"
+                                     class="w-100">
+                                <span class="h6 mt-2 text-truncate-2">${anime.shortName}</span>
+
+                                <div class="d-none bg-black bg-opacity-75 anime-card-description position-absolute top-0 start-0 w-100 h-100 p-3">
+                                    ${anime.description}
+                                </div>
+                            </div>
                         </a>
                     </article>
                 </div>
             </#list>
         </div>
     </div>
+
+    <script>
+        // When hover on anime card, show description on the anime card
+        const animeCards = document.querySelectorAll('.anime-card');
+
+        animeCards.forEach((animeCard) => {
+            animeCard.addEventListener('mouseover', () => {
+                animeCard.querySelector('.anime-card-description').classList.remove('d-none');
+            });
+
+            animeCard.addEventListener('mouseout', () => {
+                animeCard.querySelector('.anime-card-description').classList.add('d-none');
+            });
+        });
+    </script>
 </@navigation.display>

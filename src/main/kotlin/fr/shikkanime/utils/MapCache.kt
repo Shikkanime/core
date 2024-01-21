@@ -3,7 +3,6 @@ package fr.shikkanime.utils
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import org.hibernate.mapping.Map
 import java.time.Duration
 
 class MapCache<K : Any, V : Any>(
@@ -51,13 +50,17 @@ class MapCache<K : Any, V : Any>(
         setCache()
     }
 
+    fun invalidate() {
+        cache.invalidateAll()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(MapCache::class.java)
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun invalidate(vararg classes: Class<*>) {
             classes.forEach { clazz ->
-                globalCaches.filter { it.classes.contains(clazz) }.forEach { it.cache.invalidateAll() }
+                globalCaches.filter { it.classes.contains(clazz) }.forEach { it.invalidate() }
             }
         }
     }

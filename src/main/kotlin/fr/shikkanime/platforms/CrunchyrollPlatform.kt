@@ -58,44 +58,43 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             }
         }
 
-        val httpRequest = HttpRequest()
         val simulcasts = mutableSetOf<String>()
 
         val simulcastSelector =
             "#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a"
         val simulcastAnimesSelector = ".erc-browse-cards-collection > .browse-card > div > div > h4 > a"
 
-        try {
-            val currentSimulcastContent = httpRequest.getBrowser(
-                "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts",
-                simulcastSelector
-            )
-            val currentSimulcast =
-                currentSimulcastContent.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
-                    .text() ?: return@MapCache simulcasts
-            val currentSimulcastCode = getSimulcastCode(currentSimulcast)
-            logger.info("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
-            val currentSimulcastAnimes =
-                currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-            logger.info("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
+        HttpRequest().use { httpRequest ->
+            try {
+                val currentSimulcastContent = httpRequest.getBrowser(
+                    "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts",
+                    simulcastSelector
+                )
+                val currentSimulcast =
+                    currentSimulcastContent.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
+                        .text() ?: return@MapCache simulcasts
+                val currentSimulcastCode = getSimulcastCode(currentSimulcast)
+                logger.info("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
+                val currentSimulcastAnimes =
+                    currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
+                logger.info("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
 
-            val previousSimulcastCode = getPreviousSimulcastCode(currentSimulcastCode)
-            logger.info("Previous simulcast code for $it: $previousSimulcastCode")
+                val previousSimulcastCode = getPreviousSimulcastCode(currentSimulcastCode)
+                logger.info("Previous simulcast code for $it: $previousSimulcastCode")
 
-            val previousSimulcastContent = httpRequest.getBrowser(
-                "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts/seasons/$previousSimulcastCode",
-                simulcastSelector
-            )
-            val previousSimulcastAnimes =
-                previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-            logger.info("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
+                val previousSimulcastContent = httpRequest.getBrowser(
+                    "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts/seasons/$previousSimulcastCode",
+                    simulcastSelector
+                )
+                val previousSimulcastAnimes =
+                    previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
+                logger.info("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
 
-            val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
-            simulcasts.addAll(combinedSimulcasts)
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while fetching simulcasts for ${it.name}", e)
-        } finally {
-            httpRequest.closeBrowser()
+                val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
+                simulcasts.addAll(combinedSimulcasts)
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Error while fetching simulcasts for ${it.name}", e)
+            }
         }
 
         logger.info(simulcasts.joinToString(", "))
@@ -103,32 +102,31 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     }
 
     val animeInfoCache = MapCache<CountryCodeAnimeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
-        val httpRequest = HttpRequest()
         var image: String? = null
         var description: String? = null
 
-        try {
-            val content = httpRequest.getBrowser(
-                "https://www.crunchyroll.com/${it.countryCode.name.lowercase()}/${it.animeId}",
-                "div.undefined:nth-child(1) > figure:nth-child(1) > picture:nth-child(1) > img:nth-child(2)"
-            )
-            image =
-                content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
-                    .attr("src")
-            description =
-                content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
-                    .text()
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while fetching anime info for ${it.countryCode.name} - ${it.animeId}", e)
-        } finally {
-            httpRequest.closeBrowser()
+        HttpRequest().use { httpRequest ->
+            try {
+                val content = httpRequest.getBrowser(
+                    "https://www.crunchyroll.com/${it.countryCode.name.lowercase()}/${it.animeId}",
+                    "div.undefined:nth-child(1) > figure:nth-child(1) > picture:nth-child(1) > img:nth-child(2)"
+                )
+                image =
+                    content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
+                        .attr("src")
+                description =
+                    content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
+                        .text()
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Error while fetching anime info for ${it.countryCode.name} - ${it.animeId}", e)
+            }
         }
 
         if (image.isNullOrEmpty()) {
             throw Exception("Image is null or empty")
         }
 
-        return@MapCache CrunchyrollAnimeContent(image, description)
+        return@MapCache CrunchyrollAnimeContent(image!!, description)
     }
 
     override fun getPlatform(): Platform = Platform.CRUN
@@ -281,27 +279,25 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var duration = defaultDuration
 
         if (duration == -1L) {
-            val httpRequest = HttpRequest()
+            HttpRequest().use { httpRequest ->
+                try {
+                    val content = httpRequest.getBrowser(
+                        url,
+                        "#content > div > div.app-body-wrapper > div > div > div.video-player-wrapper > div.erc-watch-premium-upsell"
+                    )
+                    val jsonElement = content.select("script[type=\"application/ld+json\"]").first()?.html()
 
-            try {
-                val content = httpRequest.getBrowser(
-                    url,
-                    "#content > div > div.app-body-wrapper > div > div > div.video-player-wrapper > div.erc-watch-premium-upsell"
-                )
-                val jsonElement = content.select("script[type=\"application/ld+json\"]").first()?.html()
+                    if (jsonElement.isNullOrBlank()) {
+                        return duration
+                    }
 
-                if (jsonElement.isNullOrBlank()) {
-                    return duration
+                    val durationString =
+                        ObjectParser.fromJson(jsonElement, JsonObject::class.java).getAsString("duration")!!
+                    // Convert duration (ex: PT23M39.96199999999999S) to long seconds
+                    duration = kotlin.time.Duration.parse(durationString).inWholeSeconds
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while fetching episode duration", e)
                 }
-
-                val durationString =
-                    ObjectParser.fromJson(jsonElement, JsonObject::class.java).getAsString("duration")!!
-                // Convert duration (ex: PT23M39.96199999999999S) to long seconds
-                duration = kotlin.time.Duration.parse(durationString).inWholeSeconds
-            } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while fetching episode duration", e)
-            } finally {
-                httpRequest.closeBrowser()
             }
         }
 

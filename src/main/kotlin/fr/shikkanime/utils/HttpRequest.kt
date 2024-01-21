@@ -1,9 +1,7 @@
 package fr.shikkanime.utils
 
 import com.microsoft.playwright.Browser
-import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
-import com.microsoft.playwright.Playwright
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
@@ -16,9 +14,8 @@ import kotlin.system.measureTimeMillis
 private const val TIMEOUT = 15_000L
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
-class HttpRequest {
+class HttpRequest : AutoCloseable {
     private var isBrowserInitialized = false
-    private var playwright: Playwright? = null
     private var browser: Browser? = null
     private var page: Page? = null
 
@@ -79,8 +76,7 @@ class HttpRequest {
             return
         }
 
-        playwright = Playwright.create()
-        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true))
+        browser = Constant.playwright.firefox().launch(Constant.launchOptions)
         page = browser?.newPage()
         page?.setDefaultTimeout(TIMEOUT.toDouble())
         page?.setDefaultNavigationTimeout(TIMEOUT.toDouble())
@@ -115,9 +111,8 @@ class HttpRequest {
         return Jsoup.parse(content ?: throw Exception("Content is null"))
     }
 
-    fun closeBrowser() {
+    override fun close() {
         page?.close()
         browser?.close()
-        playwright?.close()
     }
 }

@@ -23,16 +23,13 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): Set<Episode> {
-        val httpRequest = HttpRequest()
         val id = key.netflixSimulcast.name
         val season = key.netflixSimulcast.season
         val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.netflixSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
-        val document = httpRequest.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id")
-        httpRequest.closeBrowser()
-
+        val document = HttpRequest().use { it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id") }
         val animeName = document.selectFirst(".title-title")?.text() ?: return emptySet()
         val animeDescription = document.selectFirst(".title-info-synopsis")?.text()
         val episodes = document.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptySet()

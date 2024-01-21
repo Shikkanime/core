@@ -83,7 +83,7 @@ fun main() {
         httpRequest.get("https://www.crunchyroll.com/fr/rss/anime?lang=frFR")
     }
 
-    println("Enter the end date you want to check (${DD_MM_YYYY}):")
+    println("Enter the end date you want to check ($DD_MM_YYYY):")
     val checkDate = readlnOrNull() ?: return
     val start = System.currentTimeMillis()
 
@@ -176,7 +176,7 @@ fun main() {
         }
     }
 
-    httpRequest.closeBrowser()
+    httpRequest.close()
 
     val groupedEpisodes = episodes.groupBy { it.anime.name }
 
