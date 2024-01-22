@@ -157,7 +157,7 @@ fun main() {
             val id = episodeUrl.split("-").last()
             val json = runBlocking { getCrunchyrollEpisode(id, httpRequest, episodeUrl) } ?: return@forEach
             val collectionId = json.getAsString("collection_id")!!
-            val collection = collections[collectionId]
+            val collection = collections[collectionId]!!
 
             val episodesJson = if (article.attr("data-episode-num").contains("-")) {
                 runBlocking {
@@ -235,7 +235,7 @@ private fun getEpisodeDto(
         LangType.SUBTITLES
 
     val animeId = json.getAsString("series_id")!!
-    val animeDto = animes[animeId].copy()
+    val animeDto = animes[animeId]!!.copy()
     val isFilm = animeDto.name.contains("Film", true)
 
     if (isFilm) {

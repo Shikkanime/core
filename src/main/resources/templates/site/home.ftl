@@ -10,9 +10,11 @@
                     <article>
                         <a href="${episode.url}" class="text-decoration-none text-white">
                             <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}"
-                                 alt="${episode.anime.shortName?replace("\"", "'")} episode preview image" class="w-100<#if episode.uncensored> blur</#if>">
+                                 alt="${episode.anime.shortName?replace("\"", "'")} episode preview image"
+                                 class="w-100<#if episode.uncensored> blur</#if>">
                             <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
-                            <p class="text-muted mb-0">Saison ${episode.season?c} | Épisode ${episode.number?c}<#if episode.uncensored> non censuré</#if></p>
+                            <p class="text-muted mb-0">Saison ${episode.season?c} |
+                                Épisode ${episode.number?c}<#if episode.uncensored> non censuré</#if></p>
                             <p class="text-muted mt-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
                         </a>
                     </article>

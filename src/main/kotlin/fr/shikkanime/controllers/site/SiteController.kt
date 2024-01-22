@@ -31,14 +31,14 @@ class SiteController {
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     6
-                ).data,
+                )!!.data,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
                     null,
                     listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
                     1,
                     6
-                ).data
+                )!!.data
             )
         )
     }

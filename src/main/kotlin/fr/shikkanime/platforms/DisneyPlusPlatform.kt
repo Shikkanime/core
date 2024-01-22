@@ -143,7 +143,7 @@ class DisneyPlusPlatform :
         val title =
             titles.getAsJsonObject("program")?.getAsJsonObject("default")?.getAsString("content")?.ifBlank { null }
 
-        val url = "https://www.disneyplus.com/${countryCode.locale?.lowercase()}/video/$id"
+        val url = "https://www.disneyplus.com/${countryCode.locale.lowercase()}/video/$id"
 
         val image = jsonObject.getAsJsonObject("image")?.getAsJsonObject("thumbnail")?.getAsJsonObject("1.78")
             ?.getAsJsonObject("program")?.getAsJsonObject("default")?.getAsString("url")

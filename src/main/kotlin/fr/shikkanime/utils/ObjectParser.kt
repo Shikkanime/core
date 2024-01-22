@@ -19,6 +19,10 @@ object ObjectParser {
         xmlMapper = XmlMapper(xmlInputFactory)
     }
 
+    fun fromJson(json: String): JsonObject {
+        return gson.fromJson(json, JsonObject::class.java)
+    }
+
     fun <T> fromJson(json: String, clazz: Class<T>): T {
         return gson.fromJson(json, clazz)
     }
@@ -53,6 +57,10 @@ object ObjectParser {
 
     fun JsonObject.getAsLong(key: String, default: Long): Long {
         return this[key]?.asLong ?: default
+    }
+
+    fun JsonObject.getAsBoolean(key: String, default: Boolean): Boolean {
+        return this[key]?.asBoolean ?: default
     }
 
     fun <T> fromXml(xml: String, clazz: Class<T>): T {

@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms
 
 import com.google.gson.JsonObject
+import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
@@ -10,14 +11,19 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
+import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.wrappers.CrunchyrollWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -26,11 +32,20 @@ import java.util.logging.Level
 
 private const val IMAGE_NULL_ERROR = "Image is null"
 
-class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, String>() {
+class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<JsonObject>>() {
     data class CrunchyrollAnimeContent(
         val image: String,
         val description: String? = null,
     )
+
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
+
+    private val identifiers = MapCache<CountryCode, Pair<String, CrunchyrollWrapper.CMS>>(Duration.ofMinutes(30)) {
+        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
+        return@MapCache token to cms
+    }
 
     val simulcasts = MapCache<CountryCode, Set<String>>(Duration.ofHours(1)) {
         fun getSimulcastCode(name: String): String {
@@ -105,20 +120,33 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var image: String? = null
         var description: String? = null
 
-        HttpRequest().use { httpRequest ->
-            try {
-                val content = httpRequest.getBrowser(
-                    "https://www.crunchyroll.com/${it.countryCode.name.lowercase()}/${it.animeId}",
-                    "div.undefined:nth-child(1) > figure:nth-child(1) > picture:nth-child(1) > img:nth-child(2)"
-                )
-                image =
-                    content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
-                        .attr("src")
-                description =
-                    content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
-                        .text()
-            } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while fetching anime info for ${it.countryCode.name} - ${it.animeId}", e)
+        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
+            val (token, cms) = identifiers[it.countryCode]!!
+            val `object` = runBlocking { CrunchyrollWrapper.getObject(token, cms, it.animeId) }[0].asJsonObject
+            val posters = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
+            image =
+                posters?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")
+            description = `object`.getAsString("description")
+        } else {
+            HttpRequest().use { httpRequest ->
+                try {
+                    val content = httpRequest.getBrowser(
+                        "https://www.crunchyroll.com/${it.countryCode.name.lowercase()}/${it.animeId}",
+                        "div.undefined:nth-child(1) > figure:nth-child(1) > picture:nth-child(1) > img:nth-child(2)"
+                    )
+                    image =
+                        content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
+                            .attr("src")
+                    description =
+                        content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
+                            .text()
+                } catch (e: Exception) {
+                    logger.log(
+                        Level.SEVERE,
+                        "Error while fetching anime info for ${it.countryCode.name} - ${it.animeId}",
+                        e
+                    )
+                }
             }
         }
 
@@ -131,33 +159,49 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     override fun getPlatform(): Platform = Platform.CRUN
 
-    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): String {
-        val url = "https://www.crunchyroll.com/rss/anime?lang=${key.locale?.replace("-", "")}"
-        val response = HttpRequest().get(url)
+    private fun jsonObjects(content: String): List<JsonObject> {
+        var bodyAsText = content
+        bodyAsText = bodyAsText.replace(System.lineSeparator(), "").replace("\n", "")
+        return "<item>(.*?)</item>".toRegex().findAll(bodyAsText)
+            .map { ObjectParser.fromXml(it.value, JsonObject::class.java) }.toList()
+    }
 
-        if (response.status != HttpStatusCode.OK) {
-            return ""
+    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): List<JsonObject> {
+        return if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
+            CrunchyrollWrapper.getNewlyAdded(identifiers[key]!!.first)
+        } else {
+            val url = "https://www.crunchyroll.com/rss/anime?lang=${key.locale.replace("-", "")}"
+            val response = HttpRequest().get(url)
+
+            if (response.status != HttpStatusCode.OK) {
+                emptyList()
+            } else {
+                jsonObjects(response.bodyAsText())
+            }
         }
-
-        return response.bodyAsText()
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            var api =
-                if (bypassFileContent != null && bypassFileContent.exists()) bypassFileContent.readText() else getApiContent(
+            val api =
+                if (bypassFileContent != null && bypassFileContent.exists()) {
+                    jsonObjects(bypassFileContent.readText())
+                } else getApiContent(
                     countryCode,
                     zonedDateTime
                 )
-            api = api.replace(System.lineSeparator(), "").replace("\n", "")
-            val array = "<item>(.*?)</item>".toRegex().findAll(api).map { it.value }
 
-            array.forEach {
+            api.forEach {
                 try {
-                    val xml = ObjectParser.fromXml(it, JsonObject::class.java)
-                    list.add(convertEpisode(countryCode, xml))
+                    list.add(
+                        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
+                            convertJsonEpisode(countryCode, it)
+                        } else {
+                            convertXMLEpisode(countryCode, it)
+                        }
+                    )
                 } catch (_: EpisodeException) {
                     // Ignore
                 } catch (_: AnimeException) {
@@ -176,7 +220,93 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
     }
 
-    private fun convertEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
+    private fun convertJsonEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
+        val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
+        val animeName = episodeMetadata.getAsString("series_title") ?: throw Exception("Anime name is null")
+
+        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) {
+            throw AnimeException("\"$animeName\" is blacklisted")
+        }
+
+        val eligibleRegion = episodeMetadata.getAsString("eligible_region")
+
+        if (eligibleRegion.isNullOrBlank() || !eligibleRegion.contains(countryCode.name)) {
+            throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
+        }
+
+        val isDubbed = episodeMetadata.getAsBoolean("is_dubbed", false)
+        val audio = episodeMetadata.getAsString("audio_locale")?.ifBlank { null }
+        val subtitles = episodeMetadata.getAsJsonArray("subtitle_locales").map { it.asString!! }
+
+        if ((!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) || (isDubbed && audio != countryCode.locale)) {
+            throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
+        }
+
+        val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
+
+        val id = jsonObject.getAsString("external_id")?.split(".")?.last() ?: throw Exception("Id is null")
+        val hash = "${countryCode}-${getPlatform()}-$id-$langType"
+
+        if (hashCache.contains(hash)) {
+            throw EpisodeAlreadyReleasedException()
+        }
+
+        val releaseDate =
+            episodeMetadata.getAsString("premium_available_date")?.let { ZonedDateTime.parse(it) }
+                ?: throw Exception("Release date is null")
+
+        val season = episodeMetadata.getAsInt("season_number") ?: 1
+        val number = episodeMetadata.getAsInt("sequence_number") ?: -1
+
+        val episodeType = if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
+        val title = jsonObject.getAsString("title")?.ifBlank { null }
+        val url = "https://www.crunchyroll.com/media-$id"
+
+        val images =
+            jsonObject.getAsJsonObject("images").getAsJsonArray("thumbnail")[0].asJsonArray.map { it.asJsonObject }
+        val biggestImage =
+            images.maxByOrNull { it.asJsonObject.getAsInt("width")!! } ?: throw Exception(IMAGE_NULL_ERROR)
+        val image =
+            biggestImage.asJsonObject.getAsString("source")?.ifBlank { null } ?: throw Exception(IMAGE_NULL_ERROR)
+
+        var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
+
+        val isSimulcasted =
+            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
+                .contains(animeName.lowercase())
+
+        if (!isSimulcasted) {
+            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
+        }
+
+        val animeId = episodeMetadata.getAsString("series_id") ?: throw Exception("Anime id is null")
+        val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
+        duration = getWebsiteEpisodeDuration(duration, url)
+        hashCache.add(hash)
+
+        return Episode(
+            platform = getPlatform(),
+            anime = Anime(
+                countryCode = countryCode,
+                name = animeName,
+                releaseDateTime = releaseDate,
+                image = crunchyrollAnimeContent.image,
+                description = crunchyrollAnimeContent.description
+            ),
+            episodeType = episodeType,
+            langType = langType,
+            hash = hash,
+            releaseDateTime = releaseDate,
+            season = season,
+            number = number,
+            title = title,
+            url = url,
+            image = image,
+            duration = duration
+        )
+    }
+
+    private fun convertXMLEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
         val animeName = jsonObject.getAsString("crunchyroll:seriesTitle") ?: throw Exception("Anime name is null")
 
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) {
@@ -196,7 +326,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val subtitles = jsonObject.getAsString("crunchyroll:subtitleLanguages")?.split(",") ?: emptyList()
 
         if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(
-                countryCode.locale?.replace("-", " - ")?.lowercase()
+                countryCode.locale.replace("-", " - ").lowercase()
             ))
         ) {
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
@@ -234,7 +364,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
 
         var isSimulcasted =
-            simulcasts[countryCode].contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
+            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
                 .contains(animeName.lowercase())
         isSimulcasted = isSimulcasted || isMovie
 
@@ -249,7 +379,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         }
 
         val animeId = splitted[splitted.size - 2]
-        val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]
+        val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
         duration = getWebsiteEpisodeDuration(duration, url)
         hashCache.add(hash)
 

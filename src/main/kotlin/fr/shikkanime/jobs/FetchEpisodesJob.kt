@@ -17,6 +17,8 @@ class FetchEpisodesJob : AbstractJob() {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isInitialized = false
     private var isRunning = false
+    private var lock = 0
+    private val maxLock = 5
     private val set = mutableSetOf<String>()
 
     @Inject
@@ -24,8 +26,14 @@ class FetchEpisodesJob : AbstractJob() {
 
     override fun run() {
         if (isRunning) {
-            logger.warning("Job is already running")
-            return
+            if (++lock > maxLock) {
+                logger.warning("Job is locked, unlocking...")
+                isRunning = false
+                lock = 0
+            } else {
+                logger.warning("Job is already running ($lock/$maxLock)")
+                return
+            }
         }
 
         isRunning = true
@@ -72,7 +80,16 @@ class FetchEpisodesJob : AbstractJob() {
             try {
                 socialNetwork.sendEpisodeRelease(dto)
             } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork", "")}", e)
+                logger.log(
+                    Level.SEVERE,
+                    "Error while sending episode release for ${
+                        socialNetwork.javaClass.simpleName.replace(
+                            "SocialNetwork",
+                            ""
+                        )
+                    }",
+                    e
+                )
             }
         }
     }

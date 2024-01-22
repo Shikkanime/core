@@ -8,6 +8,8 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.EpisodeRepository
+import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import io.ktor.http.*
@@ -26,7 +28,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     private lateinit var simulcastService: SimulcastService
 
     @Inject
-    private lateinit var configService: ConfigService
+    private lateinit var configCacheService: ConfigCacheService
 
     override fun getRepository() = episodeRepository
 
@@ -49,7 +51,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     }
 
     fun getSimulcast(entity: Episode): Simulcast {
-        val simulcastRange = configService.getValueAsInt("simulcast_range") ?: 1
+        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE) ?: 1
 
         val adjustedDates = listOf(-simulcastRange, 0, simulcastRange).map { days ->
             entity.releaseDateTime.plusDays(days.toLong())

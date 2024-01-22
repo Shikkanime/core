@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import java.time.Duration
 
-class MapCache<K : Any, V : Any>(
+class MapCache<K : Any, V : Any?>(
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = listOf(),
     private val block: (K) -> V,
@@ -33,15 +33,15 @@ class MapCache<K : Any, V : Any>(
             })
     }
 
-    fun has(key: K): Boolean {
-        return cache.getIfPresent(key) != null
+    operator fun get(key: K): V? {
+        return try {
+            cache.getUnchecked(key)
+        } catch (e: Exception) {
+            null
+        }
     }
 
-    operator fun get(key: K): V {
-        return cache.getUnchecked(key)
-    }
-
-    operator fun set(key: K, value: V) {
+    operator fun set(key: K, value: V & Any) {
         cache.put(key, value)
     }
 

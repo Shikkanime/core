@@ -5,6 +5,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.ImageService
+import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import twitter4j.Twitter
@@ -29,10 +30,10 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
             twitter = TwitterFactory(
                 ConfigurationBuilder()
                     .setDebugEnabled(true)
-                    .setOAuthConsumerKey(configService.getValueAsString("twitter_consumer_key"))
-                    .setOAuthConsumerSecret(configService.getValueAsString("twitter_consumer_secret"))
-                    .setOAuthAccessToken(configService.getValueAsString("twitter_access_token"))
-                    .setOAuthAccessTokenSecret(configService.getValueAsString("twitter_access_token_secret"))
+                    .setOAuthConsumerKey(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_KEY))
+                    .setOAuthConsumerSecret(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_SECRET))
+                    .setOAuthAccessToken(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN))
+                    .setOAuthAccessTokenSecret(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN_SECRET))
                     .build()
             ).instance
 

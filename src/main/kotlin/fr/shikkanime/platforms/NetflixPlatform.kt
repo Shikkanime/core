@@ -29,7 +29,8 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.netflixSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
-        val document = HttpRequest().use { it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id") }
+        val document =
+            HttpRequest().use { it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id") }
         val animeName = document.selectFirst(".title-title")?.text() ?: return emptySet()
         val animeDescription = document.selectFirst(".title-info-synopsis")?.text()
         val episodes = document.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptySet()

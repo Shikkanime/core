@@ -2,6 +2,7 @@ package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.services.ImageService
+import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import net.dv8tion.jda.api.EmbedBuilder
@@ -26,7 +27,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         if (isInitialized) return
 
         try {
-            val builder = JDABuilder.createDefault(configService.getValueAsString("discord_token"))
+            val builder = JDABuilder.createDefault(configCacheService.getValueAsString(ConfigPropertyKey.DISCORD_TOKEN))
             builder.setActivity(Activity.playing("https://www.shikkanime.fr/"))
             jda = builder.build()
             jda?.awaitReady()

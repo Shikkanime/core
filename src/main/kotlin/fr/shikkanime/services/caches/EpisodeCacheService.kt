@@ -15,9 +15,13 @@ class EpisodeCacheService : AbstractCacheService() {
     @Inject
     private lateinit var episodeService: EpisodeService
 
-    private val cache = MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<EpisodeDto>>(classes = listOf(Episode::class.java)) {
-        PageableDto.fromPageable(episodeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit), EpisodeDto::class.java)
-    }
+    private val cache =
+        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<EpisodeDto>>(classes = listOf(Episode::class.java)) {
+            PageableDto.fromPageable(
+                episodeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
+                EpisodeDto::class.java
+            )
+        }
 
     fun findAllBy(
         countryCode: CountryCode?,

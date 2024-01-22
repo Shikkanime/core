@@ -2,11 +2,11 @@ package fr.shikkanime.socialnetworks
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.EpisodeDto
-import fr.shikkanime.services.ConfigService
+import fr.shikkanime.services.caches.ConfigCacheService
 
 abstract class AbstractSocialNetwork {
     @Inject
-    protected lateinit var configService: ConfigService
+    protected lateinit var configCacheService: ConfigCacheService
 
     abstract fun login()
     abstract fun logout()

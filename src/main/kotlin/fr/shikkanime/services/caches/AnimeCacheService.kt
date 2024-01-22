@@ -15,9 +15,13 @@ class AnimeCacheService : AbstractCacheService() {
     @Inject
     private lateinit var animeService: AnimeService
 
-    private val cache = MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
-        PageableDto.fromPageable(animeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit), AnimeDto::class.java)
-    }
+    private val cache =
+        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
+            PageableDto.fromPageable(
+                animeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
+                AnimeDto::class.java
+            )
+        }
 
     fun findAllBy(
         countryCode: CountryCode?,
