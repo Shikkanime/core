@@ -61,43 +61,6 @@ class EpisodeController {
         return Response.ok(episodeCacheService.findAllBy(countryParam, animeParam, sortParameters, page, limit))
     }
 
-    @Path("/{uuid}/image")
-    @Get
-    @Cached(maxAgeSeconds = 31536000)
-    @OpenAPI(
-        "Get episode image",
-        [
-            OpenAPIResponse(
-                200,
-                "Image found",
-                ByteArray::class,
-                "image/webp"
-            ),
-            OpenAPIResponse(
-                404,
-                "Episode not found OR Episode image not found",
-                MessageDto::class,
-            ),
-        ]
-    )
-    private fun getEpisodeImage(@PathParam("uuid") uuid: UUID): Response {
-        val episode =
-            episodeService.find(uuid) ?: return Response.notFound(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "Episode not found"
-                )
-            )
-
-        val image = ImageService[episode.uuid!!] ?: return Response.notFound(
-            MessageDto(
-                MessageDto.Type.ERROR,
-                "Episode image not found"
-            )
-        )
-        return Response.multipart(image.bytes, ContentType.parse("image/webp"))
-    }
-
     @Path("/{uuid}/media-image")
     @Get
     @Cached(maxAgeSeconds = 3600)

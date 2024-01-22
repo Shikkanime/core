@@ -9,10 +9,10 @@
                 <div class="col-md-2 col-6 mt-0">
                     <article>
                         <a href="${episode.url}" class="text-decoration-none text-white">
-                            <img loading="lazy" src="https://api.shikkanime.fr/v1/episodes/${episode.uuid}/image"
-                                 alt="${episode.anime.shortName}" class="w-100<#if episode.uncensored> blur</#if>">
+                            <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}"
+                                 alt="${episode.anime.shortName?replace("\"", "'")} episode preview image" class="w-100<#if episode.uncensored> blur</#if>">
                             <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
-                            <p class="text-muted mb-0">Saison ${episode.season} | Épisode ${episode.number}<#if episode.uncensored> non censuré</#if></p>
+                            <p class="text-muted mb-0">Saison ${episode.season?c} | Épisode ${episode.number?c}<#if episode.uncensored> non censuré</#if></p>
                             <p class="text-muted mt-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
                         </a>
                     </article>
@@ -36,12 +36,14 @@
                     <article>
                         <a href="/animes/${anime.uuid}" class="text-decoration-none text-white">
                             <div class="anime-card position-relative">
-                                <img loading="lazy" src="https://api.shikkanime.fr/v1/animes/${anime.uuid}/image" alt="${anime.shortName} anime image"
-                                     class="w-100">
+                                <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}"
+                                     alt="${anime.shortName?replace("\"", "'")} anime image" class="w-100">
                                 <span class="h6 mt-2 text-truncate-2">${anime.shortName}</span>
 
                                 <div class="d-none bg-black bg-opacity-75 anime-card-description position-absolute top-0 start-0 w-100 h-100 p-3">
-                                    ${anime.description}
+                                    <div class="anime-card-description-truncate">
+                                        ${anime.description}
+                                    </div>
                                 </div>
                             </div>
                         </a>

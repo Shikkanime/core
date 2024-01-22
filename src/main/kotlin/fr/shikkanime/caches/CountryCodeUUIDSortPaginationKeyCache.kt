@@ -2,7 +2,7 @@ package fr.shikkanime.caches
 
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
-import java.util.UUID
+import java.util.*
 
 data class CountryCodeUUIDSortPaginationKeyCache(
     val countryCode: CountryCode?,

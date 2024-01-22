@@ -1,4 +1,3 @@
 package fr.shikkanime.services.caches
 
-abstract class AbstractCacheService {
-}
+abstract class AbstractCacheService

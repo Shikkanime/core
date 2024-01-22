@@ -7,17 +7,13 @@ import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.ImageService
-import fr.shikkanime.utils.routes.Cached
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
-import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.ktor.http.*
 import java.util.*
 
 @Controller("/api/v1/animes")
@@ -84,37 +80,5 @@ class AnimeController {
         }
 
         return Response.ok(PageableDto.fromPageable(pageable, AnimeDto::class.java))
-    }
-
-    @Path("/{uuid}/image")
-    @Get
-    @Cached(maxAgeSeconds = 31536000)
-    @OpenAPI(
-        "Get anime image",
-        [
-            OpenAPIResponse(
-                200,
-                "Image found",
-                ByteArray::class,
-                "image/webp"
-            ),
-            OpenAPIResponse(
-                404,
-                "Anime not found OR Anime image not found",
-                MessageDto::class,
-            ),
-        ]
-    )
-    private fun getAnimeImage(@PathParam("uuid") uuid: UUID): Response {
-        val anime =
-            animeService.find(uuid) ?: return Response.notFound(MessageDto(MessageDto.Type.ERROR, "Anime not found"))
-
-        val image = ImageService[anime.uuid!!] ?: return Response.notFound(
-            MessageDto(
-                MessageDto.Type.ERROR,
-                "Anime image not found"
-            )
-        )
-        return Response.multipart(image.bytes, ContentType.parse("image/webp"))
     }
 }

@@ -5,6 +5,20 @@
     overflow: hidden;
 }
 
+.anime-card-description-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 17;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* On mobile, make anime-card-description-truncate on 8 lines */
+@media (max-width: 576px) {
+    .anime-card-description-truncate {
+        -webkit-line-clamp: 9;
+    }
+}
+
 .text-muted {
     color: #a0a0a0 !important;
 }
