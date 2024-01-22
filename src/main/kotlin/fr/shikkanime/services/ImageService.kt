@@ -424,6 +424,7 @@ object ImageService {
             ImageIO.read(URI("http://localhost:37100/assets/img/platforms/${episode.platform.image}").toURL())
                 .resize(32, 32)
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
 

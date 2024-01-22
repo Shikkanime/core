@@ -5,10 +5,10 @@ enum class Platform(
     var url: String,
     var image: String
 ) {
-    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.png"),
-    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.png"),
-    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.png"),
-    NETF("Netflix", "https://www.netflix.com/", "netflix.png"),
+    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg"),
+    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg"),
+    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg"),
+    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg"),
     ;
 
     companion object {

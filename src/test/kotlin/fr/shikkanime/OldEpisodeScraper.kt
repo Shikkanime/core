@@ -38,7 +38,6 @@ private const val SESSION_ID = "0095dc7baeb182a071fe7b7b1af7a5e3"
 
 private val animes = MapCache<String, AnimeDto> {
     runBlocking {
-        // Session id is a cookie when you are logged in on https://beta-api.crunchyroll.com/
         val response =
             HttpRequest().get("https://api.crunchyroll.com/info.0.json?session_id=$SESSION_ID&series_id=$it&locale=fr")
         val json = ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java).getAsJsonObject("data")
@@ -133,7 +132,7 @@ fun main() {
                 e.printStackTrace()
                 null
             }
-        }.also { episodes.addAll(it) }
+        }.also { episodes.addAll(it.flatten()) }
     }
 
     weeks.forEachIndexed { _, zonedDateTime ->

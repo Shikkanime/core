@@ -47,7 +47,7 @@ class AnimationDigitalNetworkPlatform :
 
             api.forEach {
                 try {
-                    list.add(convertEpisode(countryCode, it.asJsonObject, zonedDateTime))
+                    list.addAll(convertEpisode(countryCode, it.asJsonObject, zonedDateTime))
                 } catch (_: AnimeException) {
                     // Ignore
                 } catch (e: Exception) {
@@ -63,7 +63,7 @@ class AnimationDigitalNetworkPlatform :
         countryCode: CountryCode,
         jsonObject: JsonObject,
         zonedDateTime: ZonedDateTime
-    ): Episode {
+    ): List<Episode> {
         val show = jsonObject.getAsJsonObject("show") ?: throw Exception("Show is null")
 
         var animeName =
@@ -120,12 +120,6 @@ class AnimationDigitalNetworkPlatform :
             episodeType = EpisodeType.SPECIAL
         }
 
-        val langType = when (jsonObject.getAsJsonArray("languages")?.lastOrNull()?.asString) {
-            "vostf" -> LangType.SUBTITLES
-            "vf" -> LangType.VOICE
-            else -> throw Exception("Language is null")
-        }
-
         val id = jsonObject.getAsInt("id")
 
         val title = jsonObject.getAsString("name")?.ifBlank { null }
@@ -136,25 +130,33 @@ class AnimationDigitalNetworkPlatform :
 
         val duration = jsonObject.getAsLong("duration", -1)
 
-        return Episode(
-            platform = getPlatform(),
-            anime = Anime(
-                countryCode = countryCode,
-                name = animeName,
+        return jsonObject.getAsJsonArray("languages").map {
+            val langType = when (it.asString) {
+                "vostf" -> LangType.SUBTITLES
+                "vf" -> LangType.VOICE
+                else -> throw Exception("Language is null")
+            }
+
+            Episode(
+                platform = getPlatform(),
+                anime = Anime(
+                    countryCode = countryCode,
+                    name = animeName,
+                    releaseDateTime = releaseDate,
+                    image = animeImage,
+                    description = animeDescription,
+                ),
+                episodeType = episodeType,
+                langType = langType,
+                hash = "${countryCode}-${getPlatform()}-$id-$langType",
                 releaseDateTime = releaseDate,
-                image = animeImage,
-                description = animeDescription,
-            ),
-            episodeType = episodeType,
-            langType = langType,
-            hash = "${countryCode}-${getPlatform()}-$id-$langType",
-            releaseDateTime = releaseDate,
-            season = season,
-            number = number,
-            title = title,
-            url = url,
-            image = image,
-            duration = duration,
-        )
+                season = season,
+                number = number,
+                title = title,
+                url = url,
+                image = image,
+                duration = duration,
+            )
+        }
     }
 }

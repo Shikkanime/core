@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
@@ -50,5 +51,20 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
         assertEquals("Pon no Michi", episodes[0].anime?.name)
+    }
+
+    @Test
+    fun `fetchEpisodes for 2024-01-21`() {
+        val zonedDateTime = ZonedDateTime.parse("2024-01-21T21:59:59Z")
+        val episodes = platform.fetchEpisodes(zonedDateTime)
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(4, episodes.size)
+        assertEquals("One Piece", episodes[0].anime?.name)
+        assertEquals("Run For Money", episodes[1].anime?.name)
+
+        assertEquals("MONSTERS", episodes[2].anime?.name)
+        assertEquals(LangType.SUBTITLES, episodes[2].langType)
+        assertEquals(LangType.VOICE, episodes[3].langType)
     }
 }
