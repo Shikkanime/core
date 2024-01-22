@@ -68,7 +68,7 @@ dependencies {
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
 
     // Social networks
-    implementation("com.github.discord-jda:JDA:v5.0.0-beta.19")
+    implementation("com.github.discord-jda:JDA:v5.0.0-beta.20")
     implementation("org.twitter4j:twitter4j-core:4.0.7")
     implementation("io.github.takke:jp.takke.twitter4j-v2:1.4.3")
 
