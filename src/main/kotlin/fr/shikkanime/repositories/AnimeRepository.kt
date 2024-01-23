@@ -4,6 +4,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
@@ -133,6 +134,13 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 .resultList
                 .firstOrNull()
                 ?.initialize()
+        }
+    }
+
+    fun findAllUUIDAndImage(): List<Tuple> {
+        return inTransaction {
+            it.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java)
+                .resultList
         }
     }
 }

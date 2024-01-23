@@ -38,8 +38,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         animeRepository.findAllByName(name, countryCode, page, limit)
 
-    fun addImage(anime: Anime) {
-        ImageService.add(anime.uuid!!, anime.image!!, 480, 720)
+    fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
+
+    fun addImage(uuid: UUID, image: String) {
+        ImageService.add(uuid, image, 480, 720)
     }
 
     override fun save(entity: Anime): Anime {
@@ -50,7 +52,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }.toMutableSet()
 
         val savedEntity = super.save(entity)
-        addImage(savedEntity)
+        addImage(savedEntity.uuid!!, savedEntity.image!!)
         MapCache.invalidate(Anime::class.java)
         return savedEntity
     }
@@ -65,7 +67,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         parameters["image"]?.takeIf { it.isNotBlank() }?.let {
             anime.image = it
             ImageService.remove(anime.uuid!!)
-            addImage(anime)
+            addImage(anime.uuid, anime.image!!)
         }
 
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }

@@ -46,8 +46,10 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     fun findByHash(hash: String?) = episodeRepository.findByHash(hash)
 
-    fun addImage(episode: Episode) {
-        ImageService.add(episode.uuid!!, episode.image!!, 640, 360)
+    fun findAllUUIDAndImage() = episodeRepository.findAllUUIDAndImage()
+
+    fun addImage(uuid: UUID, image: String) {
+        ImageService.add(uuid, image, 640, 360)
     }
 
     fun getSimulcast(entity: Episode): Simulcast {
@@ -107,7 +109,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         }
 
         val savedEntity = super.save(entity)
-        addImage(savedEntity)
+        addImage(savedEntity.uuid!!, savedEntity.image!!)
         MapCache.invalidate(Episode::class.java)
         return savedEntity
     }
@@ -128,7 +130,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         parameters["image"]?.takeIf { it.isNotBlank() }?.let {
             episode.image = it
             ImageService.remove(episode.uuid!!)
-            addImage(episode)
+            addImage(episode.uuid, it)
         }
 
         parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }

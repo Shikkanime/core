@@ -5,8 +5,9 @@ import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.enums.Role
-import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -15,9 +16,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 import java.util.*
+import java.util.logging.Level
+
+private val logger = LoggerFactory.getLogger("Security")
 
 fun Application.configureSecurity() {
-    val memberService = Constant.injector.getInstance(MemberService::class.java)
+    val memberCacheService = Constant.injector.getInstance(MemberCacheService::class.java)
 
     val jwtVerifier = JWT
         .require(Algorithm.HMAC256(Constant.jwtSecret))
@@ -46,14 +50,31 @@ fun Application.configureSecurity() {
                     val username = jwtPrincipal.getClaim("username").asString()
                     val creationDateTime = jwtPrincipal.getClaim("creationDateTime").asString()
                     val role = Role.valueOf(jwtPrincipal.getClaim("role").asString())
+                    val member = memberCacheService.find(uuid) ?: return@validate null
 
-                    val member = memberService.find(uuid) ?: return@validate null
-                    if (member.username != username || member.role != role) return@validate null
-                    if (member.creationDateTime.toString() != creationDateTime) return@validate null
-                    if (member.role != Role.ADMIN) return@validate null
+                    if (member.username != username) {
+                        logger.log(Level.SEVERE, "Error while validating session: username mismatch")
+                        return@validate null
+                    }
+
+                    if (member.role != role) {
+                        logger.log(Level.SEVERE, "Error while validating session: role mismatch")
+                        return@validate null
+                    }
+
+                    if (member.creationDateTime.toString() != creationDateTime) {
+                        logger.log(Level.SEVERE, "Error while validating session: creationDateTime mismatch")
+                        return@validate null
+                    }
+
+                    if (member.role != Role.ADMIN) {
+                        logger.log(Level.SEVERE, "Error while validating session: role is not admin")
+                        return@validate null
+                    }
+
                     return@validate session
                 } catch (e: Exception) {
-                    println(e.message)
+                    logger.log(Level.SEVERE, "Error while validating session", e)
                     return@validate null
                 }
             }

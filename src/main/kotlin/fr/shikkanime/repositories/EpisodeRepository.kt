@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
 import java.util.*
 
@@ -119,6 +120,13 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             query.setParameter("episodeType", episodeType)
             query.setParameter("langType", langType)
             query.resultList.firstOrNull() ?: 0
+        }
+    }
+
+    fun findAllUUIDAndImage(): List<Tuple> {
+        return inTransaction {
+            it.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java)
+                .resultList
         }
     }
 }

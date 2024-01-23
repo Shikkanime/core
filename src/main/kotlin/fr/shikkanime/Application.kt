@@ -14,6 +14,7 @@ import fr.shikkanime.utils.LoggerFactory
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import java.util.UUID
 
 private val logger = LoggerFactory.getLogger("Shikkanime")
 
@@ -27,8 +28,8 @@ fun main() {
 
     memberService.initDefaultAdminUser()
     animeService.preIndex()
-    animeService.findAll().forEach { animeService.addImage(it) }
-    episodeService.findAll().forEach { episodeService.addImage(it) }
+    animeService.findAllUUIDAndImage().forEach { animeService.addImage(it[0] as UUID, it[1] as String) }
+    episodeService.findAllUUIDAndImage().forEach { episodeService.addImage(it[0] as UUID, it[1] as String) }
 
     // Sync episodes from Jais
 //    if (false) {
