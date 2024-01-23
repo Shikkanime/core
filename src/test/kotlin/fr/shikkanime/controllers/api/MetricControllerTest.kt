@@ -18,7 +18,9 @@ class MetricControllerTest {
                 module()
             }
 
-            client.get("/api/metrics").apply {
+            client.get("/api/metrics") {
+                contentType(ContentType.Application.Json)
+            }.apply {
                 assertEquals(HttpStatusCode.Unauthorized, status)
             }
         }

@@ -2,7 +2,7 @@ package fr.shikkanime.controllers.admin
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -28,7 +28,17 @@ class AdminController {
         return Response.template(
             "admin/login.ftl",
             "Login",
-            if (!error.isNullOrBlank()) mutableMapOf("error" to "Invalid credentials") else mutableMapOf()
+            if (!error.isNullOrBlank())
+                mutableMapOf(
+                    "error" to
+                            when (error) {
+                                "1" -> "Invalid credentials"
+                                "2" -> "Token expired"
+                                else -> "Unknown error"
+                            }
+                )
+            else
+                mutableMapOf()
         )
     }
 
@@ -40,14 +50,14 @@ class AdminController {
         val user =
             memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("$ADMIN?error=1")
 
-        return Response.redirect(Link.DASHBOARD.href, AbstractConverter.convert(user, MemberDto::class.java))
+        return Response.redirect(Link.DASHBOARD.href, AbstractConverter.convert(user, TokenDto::class.java))
     }
 
     @Path("/logout")
     @Get
     @AdminSessionAuthenticated
     private fun logout(): Response {
-        return Response.redirect(ADMIN, MemberDto.empty)
+        return Response.redirect(ADMIN, TokenDto.empty)
     }
 
     @Path("/dashboard")

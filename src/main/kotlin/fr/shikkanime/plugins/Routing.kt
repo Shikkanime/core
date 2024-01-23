@@ -1,6 +1,6 @@
 package fr.shikkanime.plugins
 
-import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
@@ -291,7 +291,7 @@ private suspend fun callMethodWithParameters(
             }
 
             method.hasAnnotation<AdminSessionAuthenticated>() && kParameter.hasAnnotation<AdminSessionUser>() -> {
-                call.principal<MemberDto>()
+                call.principal<TokenDto>()
             }
 
             kParameter.hasAnnotation<BodyParam>() -> {

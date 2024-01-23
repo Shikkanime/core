@@ -29,9 +29,13 @@ object Constant {
     var isDev = System.getenv("ENV") == "dev"
     val abstractSocialNetworks =
         reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
-    val utcZoneId = ZoneId.of("UTC")
+    val utcZoneId: ZoneId = ZoneId.of("UTC")
     val playwright: Playwright = Playwright.create()
     val launchOptions: BrowserType.LaunchOptions = BrowserType.LaunchOptions().setHeadless(true)
+    val jwtAudience: String = System.getenv("JWT_AUDIENCE") ?: "jwt-audience"
+    val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"
+    val jwtRealm: String = System.getenv("JWT_REALM") ?: "ktor sample app"
+    val jwtSecret: String = System.getenv("JWT_SECRET") ?: "secret"
 
     init {
         abstractPlatforms.forEach {
