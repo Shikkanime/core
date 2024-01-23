@@ -65,8 +65,11 @@ class FetchEpisodesJob : AbstractJob() {
                 try {
                     val savedEpisode = episodeService.save(it)
                     savedEpisode.hash?.let { hash -> set.add(hash) }
-                    val dto = AbstractConverter.convert(savedEpisode, EpisodeDto::class.java)
-                    sendToSocialNetworks(dto)
+
+                    Thread {
+                        val dto = AbstractConverter.convert(savedEpisode, EpisodeDto::class.java)
+                        sendToSocialNetworks(dto)
+                    }.start()
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while saving episode ${it.hash} (${it.anime?.name})", e)
                 }
