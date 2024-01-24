@@ -16,7 +16,6 @@ import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -190,17 +189,28 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         }
     }
 
+    private fun parseAPIContent(
+        bypassFileContent: File?,
+        countryCode: CountryCode,
+        zonedDateTime: ZonedDateTime
+    ): List<JsonObject> {
+        return if (bypassFileContent != null && bypassFileContent.exists()) {
+            if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
+                ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("items").map { it.asJsonObject }
+            } else {
+                jsonObjects(bypassFileContent.readText())
+            }
+        } else getApiContent(
+            countryCode,
+            zonedDateTime
+        )
+    }
+
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            val api =
-                if (bypassFileContent != null && bypassFileContent.exists()) {
-                    jsonObjects(bypassFileContent.readText())
-                } else getApiContent(
-                    countryCode,
-                    zonedDateTime
-                )
+            val api = parseAPIContent(bypassFileContent, countryCode, zonedDateTime)
 
             api.forEach {
                 try {
@@ -243,11 +253,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
         }
 
-        val isDubbed = episodeMetadata.getAsBoolean("is_dubbed", false)
         val audio = episodeMetadata.getAsString("audio_locale")?.ifBlank { null }
+        val isDubbed = audio == countryCode.locale
         val subtitles = episodeMetadata.getAsJsonArray("subtitle_locales").map { it.asString!! }
 
-        if ((!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) || (isDubbed && audio != countryCode.locale)) {
+        if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) {
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
         }
 
