@@ -12,6 +12,7 @@ data class AnimeDto(
     var shortName: String,
     var releaseDateTime: String,
     val image: String? = null,
+    val banner: String? = null,
     val description: String?,
     val simulcasts: List<SimulcastDto>?,
     val status: Status? = null,

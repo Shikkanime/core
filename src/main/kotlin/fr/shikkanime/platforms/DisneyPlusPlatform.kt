@@ -130,6 +130,9 @@ class DisneyPlusPlatform :
         val animeImage = jsonObject.getAsJsonObject("image")?.getAsJsonObject("tile")?.getAsJsonObject("0.71")
             ?.getAsJsonObject("series")?.getAsJsonObject("default")?.getAsString("url")
             ?: throw Exception("Anime image is null")
+        val animeBanner = jsonObject.getAsJsonObject("image")?.getAsJsonObject("tile")?.getAsJsonObject("1.33")
+            ?.getAsJsonObject("series")?.getAsJsonObject("default")?.getAsString("url")
+            ?: throw Exception("Anime image is null")
         val animeDescription =
             texts.getAsJsonObject("description")?.getAsJsonObject("medium")?.getAsJsonObject("series")
                 ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ') ?: ""
@@ -167,6 +170,7 @@ class DisneyPlusPlatform :
                 name = animeName,
                 releaseDateTime = releaseDateTime,
                 image = animeImage,
+                banner = animeBanner,
                 description = animeDescription,
             ),
             episodeType = EpisodeType.EPISODE,

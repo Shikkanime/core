@@ -70,6 +70,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             addImage(anime.uuid, anime.image!!)
         }
 
+        parameters["banner"]?.takeIf { it.isNotBlank() }?.let { anime.banner = it }
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
 
         val update = super.update(anime)
