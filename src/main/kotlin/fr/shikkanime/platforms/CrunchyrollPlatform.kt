@@ -35,6 +35,7 @@ private const val IMAGE_NULL_ERROR = "Image is null"
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<JsonObject>>() {
     data class CrunchyrollAnimeContent(
         val image: String,
+        val banner: String = "",
         val description: String? = null,
     )
 
@@ -118,14 +119,16 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     val animeInfoCache = MapCache<CountryCodeAnimeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
         var image: String? = null
+        var banner: String? = null
         var description: String? = null
 
         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
             val (token, cms) = identifiers[it.countryCode]!!
             val `object` = runBlocking { CrunchyrollWrapper.getObject(token, cms, it.animeId) }[0].asJsonObject
-            val posters = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
-            image =
-                posters?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")
+            val postersTall = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
+            val postersWide = `object`.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
+            image = postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")
+            banner = postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")
             description = `object`.getAsString("description")
         } else {
             HttpRequest().use { httpRequest ->
@@ -137,6 +140,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     image =
                         content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
                             .attr("src")
+                    banner = content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[1]/figure/picture/img")
+                        .attr("src")
                     description =
                         content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
                             .text()
@@ -154,7 +159,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             throw Exception("Image is null or empty")
         }
 
-        return@MapCache CrunchyrollAnimeContent(image!!, description)
+        if (banner.isNullOrEmpty()) {
+            throw Exception("Banner is null or empty")
+        }
+
+        return@MapCache CrunchyrollAnimeContent(image!!, banner!!, description)
     }
 
     override fun getPlatform(): Platform = Platform.CRUN
@@ -291,6 +300,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 name = animeName,
                 releaseDateTime = releaseDate,
                 image = crunchyrollAnimeContent.image,
+                banner = crunchyrollAnimeContent.banner,
                 description = crunchyrollAnimeContent.description
             ),
             episodeType = episodeType,
@@ -390,6 +400,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 name = animeName,
                 releaseDateTime = releaseDate,
                 image = crunchyrollAnimeContent.image,
+                banner = crunchyrollAnimeContent.banner,
                 description = crunchyrollAnimeContent.description
             ),
             episodeType = episodeType,

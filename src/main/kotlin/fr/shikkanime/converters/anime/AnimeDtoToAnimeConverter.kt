@@ -29,6 +29,7 @@ class AnimeDtoToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
             name = from.name,
             releaseDateTime = ZonedDateTime.parse(from.releaseDateTime),
             image = from.image,
+            banner = from.banner,
             description = from.description,
             simulcasts = convert(from.simulcasts ?: emptyList(), Simulcast::class.java).toMutableSet()
         )

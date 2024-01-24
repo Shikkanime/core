@@ -83,6 +83,11 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         entity.anime = animeService.findAllByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
             ?: animeService.save(entity.anime!!)
 
+        if (entity.anime?.banner.isNullOrBlank()) {
+            entity.anime?.banner = entity.anime?.image
+            animeService.update(entity.anime!!)
+        }
+
         entity.number.takeIf { it == -1 }?.let {
             entity.number = episodeRepository.getLastNumber(
                 entity.anime!!.uuid!!,

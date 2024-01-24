@@ -73,6 +73,7 @@ class AnimationDigitalNetworkPlatform :
         animeName = animeName.replace(Regex(" -.*"), "").trim()
 
         val animeImage = show.getAsString("image2x") ?: throw Exception("Anime image is null")
+        val animeBanner = show.getAsString("imageHorizontal2x") ?: throw Exception("Anime banner is null")
         val animeDescription = show.getAsString("summary")?.replace('\n', ' ') ?: ""
         val genres = show.getAsJsonArray("genres") ?: JsonArray()
 
@@ -144,6 +145,7 @@ class AnimationDigitalNetworkPlatform :
                     name = animeName,
                     releaseDateTime = releaseDate,
                     image = animeImage,
+                    banner = animeBanner,
                     description = animeDescription,
                 ),
                 episodeType = episodeType,

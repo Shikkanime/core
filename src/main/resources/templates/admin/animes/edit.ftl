@@ -63,6 +63,10 @@
                         <input type="text" class="form-control" id="image" name="image" value="${anime.image}">
                     </div>
                     <div class="col-md-6">
+                        <label for="banner" class="form-label">Banner</label>
+                        <input type="text" class="form-control" id="banner" name="banner" value="${anime.banner}">
+                    </div>
+                    <div class="col-md-6">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description"
                                   rows="6">${anime.description}</textarea>

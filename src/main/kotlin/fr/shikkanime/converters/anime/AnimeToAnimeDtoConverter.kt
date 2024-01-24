@@ -17,6 +17,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     override fun convert(from: Anime): AnimeDto {
         val status = if (
             from.image.isNullOrBlank() ||
+            from.banner.isNullOrBlank() ||
             from.description.isNullOrBlank() ||
             from.description?.startsWith("(") == true ||
             languageDetector.detect(from.description).language.lowercase() != from.countryCode!!.name.lowercase()
@@ -27,6 +28,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             releaseDateTime = from.releaseDateTime.withUTC()
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             image = from.image,
+            banner = from.banner,
             countryCode = from.countryCode!!,
             name = from.name!!,
             shortName = StringUtils.getShortName(from.name!!),
