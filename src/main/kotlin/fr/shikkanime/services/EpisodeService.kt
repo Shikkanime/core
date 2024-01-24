@@ -80,11 +80,13 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     }
 
     override fun save(entity: Episode): Episode {
+        val banner = entity.anime?.banner
+
         entity.anime = animeService.findAllByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
             ?: animeService.save(entity.anime!!)
 
-        if (entity.anime?.banner.isNullOrBlank()) {
-            entity.anime?.banner = entity.anime?.image
+        if (entity.anime?.banner.isNullOrBlank() && !banner.isNullOrBlank()) {
+            entity.anime?.banner = banner
             animeService.update(entity.anime!!)
         }
 
