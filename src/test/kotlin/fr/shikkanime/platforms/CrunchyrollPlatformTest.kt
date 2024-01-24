@@ -1,9 +1,15 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.services.ConfigService
+import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.MapCache
 import jakarta.inject.Inject
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +20,9 @@ class CrunchyrollPlatformTest {
     @Inject
     lateinit var platform: CrunchyrollPlatform
 
+    @Inject
+    lateinit var configService: ConfigService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -22,8 +31,14 @@ class CrunchyrollPlatformTest {
         platform.configuration!!.availableCountries.add(CountryCode.FR)
     }
 
+    @AfterEach
+    fun tearDown() {
+        configService.deleteAll()
+        MapCache.invalidate(Config::class.java)
+    }
+
     @Test
-    fun fetchEpisodes() {
+    fun fetchEpisodesXML() {
         val s = "2023-12-11T18:00:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)
 
@@ -180,5 +195,31 @@ class CrunchyrollPlatformTest {
         assertEquals("I'm in Love with the Villainess", episodes[1].anime?.name)
         assertEquals("SHY", episodes[2].anime?.name)
         assertEquals("Dead Mount Death Play", episodes[3].anime?.name)
+    }
+
+    @Test
+    fun fetchEpisodesJSON() {
+        configService.save(Config(propertyKey = ConfigPropertyKey.USE_CRUNCHYROLL_API.key, propertyValue = "true"))
+        MapCache.invalidate(Config::class.java)
+
+        val s = "2024-01-24T18:45:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        platform.simulcasts[CountryCode.FR] = setOf("metallic rouge")
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(2, episodes.size)
+        assertEquals("Metallic Rouge", episodes[0].anime?.name)
+        assertEquals(LangType.VOICE, episodes[0].langType)
+        assertEquals("Metallic Rouge", episodes[1].anime?.name)
+        assertEquals(LangType.SUBTITLES, episodes[1].langType)
     }
 }
