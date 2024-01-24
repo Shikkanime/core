@@ -52,6 +52,7 @@ private val animes = MapCache<String, AnimeDto> {
             "",
             "",
             image,
+            "",
             description,
             simulcasts = emptyList(),
         )
