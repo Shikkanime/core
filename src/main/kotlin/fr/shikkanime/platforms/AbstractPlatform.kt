@@ -72,6 +72,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     private fun getConfigurationClass(): Class<C> {
         val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
         require(type is Class<*>) { "Configuration class must be a class" }
+        @Suppress("UNCHECKED_CAST")
         return type as Class<C>
     }
 }

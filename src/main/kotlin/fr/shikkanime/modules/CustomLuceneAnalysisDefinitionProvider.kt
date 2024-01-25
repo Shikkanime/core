@@ -9,5 +9,8 @@ class CustomLuceneAnalysisDefinitionProvider : LuceneAnalysisConfigurer {
             .tokenizer("standard")
             .tokenFilter("lowercase")
             .tokenFilter("asciifolding")
+            .tokenFilter("ngram")
+            .param("minGramSize", "2")
+            .param("maxGramSize", "4")
     }
 }

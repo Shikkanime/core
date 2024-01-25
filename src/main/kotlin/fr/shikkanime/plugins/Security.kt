@@ -1,6 +1,7 @@
 package fr.shikkanime.plugins
 
 import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.TokenDto
@@ -44,39 +45,7 @@ fun Application.configureSecurity() {
 
         session<TokenDto>("auth-admin-session") {
             validate { session ->
-                try {
-                    val jwtPrincipal = jwtVerifier.verify(session.token)
-                    val uuid = UUID.fromString(jwtPrincipal.getClaim("uuid").asString())
-                    val username = jwtPrincipal.getClaim("username").asString()
-                    val creationDateTime = jwtPrincipal.getClaim("creationDateTime").asString()
-                    val role = Role.valueOf(jwtPrincipal.getClaim("role").asString())
-                    val member = memberCacheService.find(uuid) ?: return@validate null
-
-                    if (member.username != username) {
-                        logger.log(Level.SEVERE, "Error while validating session: username mismatch")
-                        return@validate null
-                    }
-
-                    if (member.role != role) {
-                        logger.log(Level.SEVERE, "Error while validating session: role mismatch")
-                        return@validate null
-                    }
-
-                    if (member.creationDateTime.toString() != creationDateTime) {
-                        logger.log(Level.SEVERE, "Error while validating session: creationDateTime mismatch")
-                        return@validate null
-                    }
-
-                    if (member.role != Role.ADMIN) {
-                        logger.log(Level.SEVERE, "Error while validating session: role is not admin")
-                        return@validate null
-                    }
-
-                    return@validate session
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while validating session", e)
-                    return@validate null
-                }
+                return@validate validationSession(jwtVerifier, session, memberCacheService)
             }
             challenge {
                 // If content type is json, then respond with json
@@ -97,5 +66,45 @@ fun Application.configureSecurity() {
             cookie.path = "/"
             cookie.maxAgeInSeconds = 3600
         }
+    }
+}
+
+private fun validationSession(
+    jwtVerifier: JWTVerifier,
+    session: TokenDto,
+    memberCacheService: MemberCacheService
+): TokenDto? {
+    try {
+        val jwtPrincipal = jwtVerifier.verify(session.token)
+        val uuid = UUID.fromString(jwtPrincipal.getClaim("uuid").asString())
+        val username = jwtPrincipal.getClaim("username").asString()
+        val creationDateTime = jwtPrincipal.getClaim("creationDateTime").asString()
+        val role = Role.valueOf(jwtPrincipal.getClaim("role").asString())
+        val member = memberCacheService.find(uuid) ?: return null
+
+        if (member.username != username) {
+            logger.log(Level.SEVERE, "Error while validating session: username mismatch")
+            return null
+        }
+
+        if (member.role != role) {
+            logger.log(Level.SEVERE, "Error while validating session: role mismatch")
+            return null
+        }
+
+        if (member.creationDateTime.toString() != creationDateTime) {
+            logger.log(Level.SEVERE, "Error while validating session: creationDateTime mismatch")
+            return null
+        }
+
+        if (member.role != Role.ADMIN) {
+            logger.log(Level.SEVERE, "Error while validating session: role is not admin")
+            return null
+        }
+
+        return session
+    } catch (e: Exception) {
+        logger.log(Level.SEVERE, "Error while validating session", e)
+        return null
     }
 }

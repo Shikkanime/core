@@ -2,12 +2,7 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.entities.ShikkEntity
 import jakarta.persistence.EntityManager
-import liquibase.Contexts
-import liquibase.LabelExpression
-import liquibase.Liquibase
-import liquibase.database.DatabaseFactory
-import liquibase.database.jvm.JdbcConnection
-import liquibase.resource.ClassLoaderResourceAccessor
+import liquibase.command.CommandScope
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import java.io.File
@@ -51,11 +46,13 @@ class Database {
         sessionFactory = buildSessionFactory
 
         buildSessionFactory.openSession().doWork {
-            val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(it))
-            val liquibase = Liquibase("db/changelog/db.changelog-master.xml", ClassLoaderResourceAccessor(), database)
-
             try {
-                liquibase.update(Contexts(), LabelExpression())
+                CommandScope("update")
+                    .addArgumentValue("changeLogFile", "db/changelog/db.changelog-master.xml")
+                    .addArgumentValue("url", configuration.getProperty("hibernate.connection.url"))
+                    .addArgumentValue("username", configuration.getProperty("hibernate.connection.username"))
+                    .addArgumentValue("password", configuration.getProperty("hibernate.connection.password"))
+                    .execute()
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error while updating database", e)
                 exitProcess(1)
