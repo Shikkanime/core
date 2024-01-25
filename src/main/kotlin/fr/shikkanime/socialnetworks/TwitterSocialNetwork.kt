@@ -89,7 +89,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         val message =
             "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${
                 platformAccount(episodeDto.platform)
-            }\n\nBon visionnage. \uD83C\uDF7F"
+            }\n\nBon visionnage. \uD83C\uDF7F\n\n\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}"
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)
@@ -99,11 +99,6 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
             ByteArrayInputStream(byteArrayOutputStream.toByteArray())
         )
 
-        val tweet = twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
-
-        twitter!!.v2.createTweet(
-            text = "\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}",
-            inReplyToTweetId = tweet.id
-        )
+        twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
     }
 }
