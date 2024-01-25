@@ -108,7 +108,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return inTransaction {
             val searchSession = Search.session(it)
 
-            val searchResult = searchSession.search(getEntityClass())
+            @Suppress("UNCHECKED_CAST")
+            val searchResult = searchSession.search(Anime::class.java)
                 .where { w -> findWhere(w, name, countryCode) }
                 .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 

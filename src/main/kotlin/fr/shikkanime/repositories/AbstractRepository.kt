@@ -15,6 +15,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
     protected lateinit var database: Database
 
     protected fun getEntityClass(): Class<E> {
+        @Suppress("UNCHECKED_CAST")
         return (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<E>
     }
 

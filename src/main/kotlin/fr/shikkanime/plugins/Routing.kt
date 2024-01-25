@@ -47,7 +47,7 @@ fun Application.configureRouting() {
         staticResources("/assets", "assets") {
             preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
 
-            cacheControl { url ->
+            cacheControl {
                 listOf(CacheControl.MaxAge(maxAgeSeconds = 31536000))
             }
         }

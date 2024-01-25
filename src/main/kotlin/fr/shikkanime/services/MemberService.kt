@@ -24,11 +24,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRole(Role.ADMIN)
-
-        if (adminUsers.isNotEmpty()) {
-            throw IllegalStateException("Admin user already exists")
-        }
-
+        check(adminUsers.isEmpty()) { "Admin user already exists" }
         val password = RandomManager.generateRandomString(32)
         logger.info("Default admin password: $password")
         save(Member(username = "admin", encryptedPassword = EncryptionManager.generate(password), role = Role.ADMIN))
