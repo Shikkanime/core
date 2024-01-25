@@ -58,9 +58,7 @@
                 params = '?anime=' + anime;
             }
 
-            return await fetch('/api/v1/episodes' + params + '&page=' + (page || 1) + '&limit=12')
-                .then(response => response.json())
-                .catch(error => console.error(error));
+            return await callApi('/api/v1/episodes' + params + '&page=' + (page || 1) + '&limit=12');
         }
 
         function buildTable(episodes) {

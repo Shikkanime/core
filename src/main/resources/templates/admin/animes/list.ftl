@@ -52,9 +52,7 @@
                 params = '?name=' + name;
             }
 
-            return await fetch('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=6')
-                .then(response => response.json())
-                .catch(error => console.error(error));
+            return await callApi('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=6');
         }
 
         function buildTable(animes) {
