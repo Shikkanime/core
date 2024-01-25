@@ -40,11 +40,13 @@ open class PlatformConfiguration<S : PlatformSimulcast>(
     val blacklistedSimulcasts: MutableSet<String> = mutableSetOf(),
 ) {
     fun newPlatformSimulcast(): S {
+        @Suppress("UNCHECKED_CAST")
         return ((javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<S>).getConstructor()
             .newInstance()
     }
 
     fun addPlatformSimulcast(simulcast: PlatformSimulcast) {
+        @Suppress("UNCHECKED_CAST")
         simulcasts.add(simulcast as S)
     }
 
