@@ -22,15 +22,16 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
-    fun initDefaultAdminUser() {
+    fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRole(Role.ADMIN)
 
         if (adminUsers.isNotEmpty()) {
-            return
+            throw IllegalStateException("Admin user already exists")
         }
 
         val password = RandomManager.generateRandomString(32)
         logger.info("Default admin password: $password")
         save(Member(username = "admin", encryptedPassword = EncryptionManager.generate(password), role = Role.ADMIN))
+        return password
     }
 }

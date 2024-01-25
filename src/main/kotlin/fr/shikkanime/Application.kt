@@ -26,7 +26,12 @@ fun main() {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
 
-    memberService.initDefaultAdminUser()
+    try {
+        memberService.initDefaultAdminUser()
+    } catch (e: IllegalStateException) {
+        logger.info("Admin user already exists")
+    }
+
     animeService.preIndex()
     animeService.findAllUUIDAndImage().forEach { animeService.addImage(it[0] as UUID, it[1] as String) }
     episodeService.findAllUUIDAndImage().forEach { episodeService.addImage(it[0] as UUID, it[1] as String) }

@@ -44,9 +44,7 @@
                 params = '?name=' + name;
             }
 
-            return await fetch('/api/config' + params)
-                .then(response => response.json())
-                .catch(error => console.error(error));
+            return await callApi('/api/config' + params);
         }
 
         function buildTable(configs) {

@@ -7,3 +7,12 @@ function copyToClipboard(content) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
 }
+
+async function callApi(url) {
+    return await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => response.json())
+        .catch(error => console.error(error));
+}

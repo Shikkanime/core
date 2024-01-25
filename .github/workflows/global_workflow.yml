@@ -33,9 +33,9 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
+          key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-dev-dependencies-
+            ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
 
   build:
     runs-on: ubuntu-latest
@@ -58,9 +58,9 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
+          key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-dev-dependencies-
+            ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
 
       - name: Build
         run: gradle clean installDist -x test
@@ -71,9 +71,9 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         with:
           path: build/install/core
-          key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-build-
+            ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
 
   docker:
     strategy:
@@ -94,9 +94,9 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         with:
           path: build/install/core
-          key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-build-
+            ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
 
       - name: Build
         if: github.actor == 'dependabot[bot]'
@@ -129,9 +129,9 @@ jobs:
       - name: Clear build cache
         uses: prantlf/delete-cache-action@v2
         with:
-          key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}
+          key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
 
       - name: Clear gradle cache
         uses: prantlf/delete-cache-action@v2
         with:
-          key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}
+          key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}

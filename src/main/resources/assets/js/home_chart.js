@@ -75,13 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function getMetrics() {
-    return await fetch('/api/metrics?hours=' + hoursElement.value, {
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => response.json())
-        .catch(error => console.error(error));
+    return await callApi('/api/metrics?hours=' + hoursElement.value);
 }
 
 async function setChartData() {
