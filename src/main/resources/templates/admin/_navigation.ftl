@@ -4,9 +4,12 @@
     <@layout.main>
         <div class="d-flex flex-column flex-shrink-0 p-3 bg-light shadow">
             <a href="/admin/dashboard"
-               class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+               class="d-flex align-items-center mb-md-0 me-md-auto link-dark text-decoration-none">
                 <img src="/assets/img/dark_banner.png" width="200" height="44" crossorigin="anonymous"
-                     class="img-fluid">
+                     class="img-fluid d-none d-md-inline-block" alt="Shikkanime dark banner">
+
+                <img src="/assets/img/dark_logo.png" width="44" height="44" crossorigin="anonymous"
+                     class="img-fluid d-block d-md-none" alt="Shikkanime dark logo">
             </a>
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
@@ -14,8 +17,8 @@
                     <li class="nav-item">
                         <a href="${link.href}" class="nav-link ${link.active?then('bg-dark text-white', 'link-dark')}"
                            aria-current="${link.active?then('page', '')}">
-                            <i class="${link.icon} me-2"></i>
-                            ${link.name}
+                            <i class="${link.icon}"></i>
+                            <span class="d-none d-md-inline-block ms-2">${link.name}</span>
                         </a>
                     </li>
                 </#list>
@@ -24,8 +27,8 @@
             <ul class="nav nav-pills flex-column mb-0 mt-auto">
                 <li class="nav-item">
                     <a href="/admin/logout" class="nav-link link-dark">
-                        <i class="bi bi-outlet me-2"></i>
-                        Log out
+                        <i class="bi bi-outlet"></i>
+                        <span class="d-none d-md-inline-block ms-2">Log out</span>
                     </a>
                 </li>
             </ul>
