@@ -58,7 +58,7 @@ dependencies {
     implementation("org.quartz-scheduler:quartz:2.5.0-rc1")
     implementation("com.google.guava:guava:33.0.0-jre")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.1")
-    implementation("com.microsoft.playwright:playwright:1.41.0")
+    implementation("com.microsoft.playwright:playwright:1.41.1")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.openpnp:opencv:4.9.0-0")
