@@ -1,4 +1,4 @@
-package fr.shikkanime.utils
+package fr.shikkanime.entities.enums
 
 enum class ConfigPropertyKey(val key: String) {
     SIMULCAST_RANGE("simulcast_range"),
@@ -8,4 +8,5 @@ enum class ConfigPropertyKey(val key: String) {
     TWITTER_ACCESS_TOKEN("twitter_access_token"),
     TWITTER_ACCESS_TOKEN_SECRET("twitter_access_token_secret"),
     USE_CRUNCHYROLL_API("use_crunchyroll_api"),
+    SEO_DESCRIPTION("seo_description"),
 }

@@ -5,14 +5,10 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser

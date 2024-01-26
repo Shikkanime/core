@@ -2,8 +2,8 @@ package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Config
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ConfigService
-import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.MapCache
 
 class ConfigCacheService : AbstractCacheService() {
