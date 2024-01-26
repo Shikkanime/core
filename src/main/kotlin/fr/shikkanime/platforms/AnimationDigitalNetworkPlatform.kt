@@ -65,12 +65,15 @@ class AnimationDigitalNetworkPlatform :
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
         val show = jsonObject.getAsJsonObject("show") ?: throw Exception("Show is null")
+        val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
 
-        var animeName =
-            show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
+        var animeName = show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
         animeName = animeName.replace(Regex("Saison \\d"), "").trim()
+        animeName = animeName.replace(season.toString(), "").trim()
         // Replace "Edens Zero -" to get "Edens Zero"
         animeName = animeName.replace(Regex(" -.*"), "").trim()
+        // Replace "Edens Zero Part" to get "Edens Zero"
+        animeName = animeName.replace(Regex(" Part.*"), "").trim()
 
         val animeImage = show.getAsString("image2x") ?: throw Exception("Anime image is null")
         val animeBanner = show.getAsString("imageHorizontal2x") ?: throw Exception("Anime banner is null")
@@ -84,7 +87,7 @@ class AnimationDigitalNetworkPlatform :
         }
 
         var isSimulcasted = show.getAsBoolean("simulcast") == true ||
-                show.getAsString("firstReleaseYear") == zonedDateTime.toLocalDate().year.toString() ||
+                show.getAsString("firstReleaseYear")!! in (0..1).map { (zonedDateTime.year - it).toString() } ||
                 contains
 
         val descriptionLowercase = animeDescription.lowercase()
@@ -101,23 +104,24 @@ class AnimationDigitalNetworkPlatform :
         val releaseDateString = jsonObject.getAsString("releaseDate") ?: throw Exception("Release date is null")
         val releaseDate = ZonedDateTime.parse(releaseDateString)
 
-        val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
-
         val numberAsString = jsonObject.getAsString("shortNumber")
 
-        if (numberAsString?.startsWith("Bande-annonce") == true) {
+        if (numberAsString?.startsWith("Bande-annonce") == true ||
+            numberAsString?.startsWith("Bande annonce") == true ||
+            numberAsString?.startsWith("Court-métrage") == true
+        ) {
             throw Exception("Anime is a trailer")
         }
 
         val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
         var episodeType = when (numberAsString) {
-            "OAV" -> EpisodeType.SPECIAL
+            "OAV", "Épisode spécial" -> EpisodeType.SPECIAL
             "Film" -> EpisodeType.FILM
             else -> EpisodeType.EPISODE
         }
 
-        if (numberAsString?.contains(".") == true) {
+        if (numberAsString?.contains(".") == true || show.getAsString("type") == "OAV") {
             episodeType = EpisodeType.SPECIAL
         }
 

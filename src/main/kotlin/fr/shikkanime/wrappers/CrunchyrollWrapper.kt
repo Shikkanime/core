@@ -8,6 +8,10 @@ import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.ObjectParser.getNullableJsonObject
 import io.ktor.client.statement.*
 
+/**
+ * Implementation of the Crunchyroll API
+ * Based on https://github.com/crunchy-labs/crunchyroll-rs
+ */
 object CrunchyrollWrapper {
     data class CMS(
         val bucket: String,
@@ -16,6 +20,17 @@ object CrunchyrollWrapper {
         val keyPairId: String,
         val expires: String,
     )
+
+    enum class SortType {
+        NEWLY_ADDED,
+        POPULARITY,
+        ALPHABETICAL,
+    }
+
+    enum class MediaType {
+        EPISODE,
+        SERIES,
+    }
 
     private const val BASE_URL = "https://beta-api.crunchyroll.com/"
     private const val LOCALE = "fr-FR"
@@ -64,11 +79,17 @@ object CrunchyrollWrapper {
         } ?: throw Exception("Failed to get CMS")
     }
 
-    suspend fun getNewlyAdded(accessToken: String, size: Int = 25, type: String = "episode"): List<JsonObject> {
+    suspend fun getBrowse(
+        accessToken: String,
+        sortBy: SortType = SortType.NEWLY_ADDED,
+        type: MediaType = MediaType.EPISODE,
+        size: Int = 25,
+        start: Int = 0,
+    ): List<JsonObject> {
         val httpRequest = HttpRequest()
 
         val response = httpRequest.get(
-            "${BASE_URL}content/v1/browse?sort_by=newly_added&n=$size&start=0&locale=$LOCALE&type=$type",
+            "${BASE_URL}content/v1/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$LOCALE",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
@@ -98,5 +119,23 @@ object CrunchyrollWrapper {
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")
             ?: throw Exception("Failed to get media object")
+    }
+
+    suspend fun getSimulcasts(accessToken: String): List<JsonObject> {
+        val httpRequest = HttpRequest()
+
+        val response = httpRequest.get(
+            "${BASE_URL}content/v1/season_list?locale=$LOCALE",
+            headers = mapOf(
+                "Authorization" to "Bearer $accessToken",
+            ),
+        )
+
+        if (response.status.value != 200) {
+            throw Exception("Failed to get simulcasts")
+        }
+
+        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
+            ?: throw Exception("Failed to get simulcasts")
     }
 }

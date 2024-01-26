@@ -75,7 +75,6 @@
         function buildPagination(pageable) {
             const totalPages = Math.ceil(pageable.total / pageable.limit);
             const pagination = document.getElementById('pagination').querySelector('ul');
-
             pagination.innerHTML = '';
 
             const hasPrevious = pageable.page > 1;
@@ -83,22 +82,27 @@
             const hasNext = pageable.page < totalPages;
             const nextPage = hasNext ? pageable.page + 1 : totalPages;
 
-            pagination.innerHTML += `<li class="page-item">
-                <a class="page-link ` + (hasPrevious ? '' : 'disabled') + `" aria-label="Previous" onclick="changePage(` + previousPage + `)" ` + (hasPrevious ? '' : 'disabled') + `>
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>`;
+            pagination.innerHTML += createPageItem(!hasPrevious, null, previousPage, '&laquo;', 'Previous');
 
-            for (let i = 1; i <= totalPages; i++) {
+            const startPage = Math.max(1, pageable.page - 4);
+            const endPage = Math.min(totalPages, pageable.page + 4);
+            for (let i = startPage; i <= endPage; i++) {
                 const isActive = pageable.page === i;
-                pagination.innerHTML += `<li class="page-item ` + (isActive ? 'active' : '') + `"><a class="page-link" onclick="changePage(` + i + `)">` + i + `</a></li>`;
+                pagination.innerHTML += createPageItem(false, isActive, i, i);
             }
 
-            pagination.innerHTML += `<li class="page-item">
-                <a class="page-link ` + (hasNext ? '' : 'disabled') + `" aria-label="Next" onclick="changePage(` + nextPage + `)" ` + (hasNext ? '' : 'disabled') + `>
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>`;
+            pagination.innerHTML += createPageItem(!hasNext, null, nextPage, '&raquo;', 'Next');
+        }
+
+        function createPageItem(isDisable, isActive, page, text, ariaLabel = '') {
+            const activeClass = !isDisable && isActive ? 'active' : '';
+            const disabledClass = isDisable ? 'disabled' : '';
+
+            return `<li class="page-item ` + activeClass + `">
+        <a class="page-link ` + disabledClass + `" aria-label="` + ariaLabel + `" onclick="changePage(` + page + `)" ` + disabledClass + `>
+            <span aria-hidden="true">` + text + `</span>
+        </a>
+    </li>`;
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
