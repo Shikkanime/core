@@ -1,6 +1,7 @@
 [#ftl]
 [#-- @implicitly included --]
 [#-- @ftlvariable name="title" type="java.lang.String" --]
+[#-- @ftlvariable name="description" type="java.lang.String" --]
 [#-- @ftlvariable name="metrics" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.MetricDto>" --]
 [#-- @ftlvariable name="links" type="kotlin.collections.AbstractList<fr.shikkanime.entities.LinkObject>" --]
 [#-- @ftlvariable name="platforms" type="kotlin.collections.AbstractList<fr.shikkanime.platforms.AbstractPlatform>" --]

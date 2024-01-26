@@ -1,11 +1,11 @@
 package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.ImageService
-import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import twitter4j.Twitter

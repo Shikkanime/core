@@ -2,10 +2,10 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
 import fr.shikkanime.entities.Config
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.ConfigService
-import fr.shikkanime.utils.ConfigPropertyKey
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import jakarta.inject.Inject
