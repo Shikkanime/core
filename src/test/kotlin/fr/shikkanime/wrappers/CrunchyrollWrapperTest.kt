@@ -31,17 +31,17 @@ class CrunchyrollWrapperTest {
     }
 
     @Test
-    fun getNewlyAdded() {
+    fun getBrowse() {
         val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val newlyAdded = runBlocking { CrunchyrollWrapper.getNewlyAdded(token) }
+        val newlyAdded = runBlocking { CrunchyrollWrapper.getBrowse(token) }
         assertNotNull(newlyAdded)
         assertEquals(25, newlyAdded.size)
     }
 
     @Test
-    fun getNewlyAddedError() {
+    fun getBrowseError() {
         assertThrows<Exception> {
-            runBlocking { CrunchyrollWrapper.getNewlyAdded(OLD_TOKEN) }
+            runBlocking { CrunchyrollWrapper.getBrowse(OLD_TOKEN) }
         }
     }
 
@@ -51,5 +51,19 @@ class CrunchyrollWrapperTest {
         val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
         val `object` = runBlocking { CrunchyrollWrapper.getObject(token, cms, "G9DUEM48Z") }
         assertNotNull(`object`)
+    }
+
+    @Test
+    fun getSimulcasts() {
+        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(token) }
+        assertEquals(true, simulcasts.isNotEmpty())
+    }
+
+    @Test
+    fun getSimulcastsError() {
+        assertThrows<Exception> {
+            runBlocking { CrunchyrollWrapper.getSimulcasts(OLD_TOKEN) }
+        }
     }
 }

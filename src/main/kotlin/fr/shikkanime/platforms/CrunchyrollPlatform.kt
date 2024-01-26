@@ -176,7 +176,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): List<JsonObject> {
         return if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
-            CrunchyrollWrapper.getNewlyAdded(identifiers[key]!!.first)
+            CrunchyrollWrapper.getBrowse(identifiers[key]!!.first)
         } else {
             val url = "https://www.crunchyroll.com/rss/anime?lang=${key.locale.replace("-", "")}"
             val response = HttpRequest().get(url)

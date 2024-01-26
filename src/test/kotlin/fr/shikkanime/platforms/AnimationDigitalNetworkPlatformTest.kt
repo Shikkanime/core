@@ -67,4 +67,25 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(LangType.SUBTITLES, episodes[2].langType)
         assertEquals(LangType.VOICE, episodes[3].langType)
     }
+
+    @Test
+    fun `fetchEpisodes for 2022-12-09`() {
+        val zonedDateTime = ZonedDateTime.parse("2022-12-09T23:59:59Z")
+        val episodes = platform.fetchEpisodes(zonedDateTime)
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(2, episodes.size)
+        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
+        assertEquals("My Master Has No Tail", episodes[1].anime?.name)
+    }
+
+    @Test
+    fun `fetchEpisodes for 2022-03-18`() {
+        val zonedDateTime = ZonedDateTime.parse("2022-03-18T23:59:59Z")
+        val episodes = platform.fetchEpisodes(zonedDateTime)
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(1, episodes.size)
+        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
+    }
 }
