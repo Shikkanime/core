@@ -22,7 +22,9 @@ class HttpRequest : AutoCloseable {
     private fun httpClient(): HttpClient {
         val httpClient = HttpClient(OkHttp) {
             install(HttpTimeout) {
-                requestTimeoutMillis = 1000
+                requestTimeoutMillis = TIMEOUT
+                connectTimeoutMillis = TIMEOUT
+                socketTimeoutMillis = TIMEOUT
             }
             engine {
                 config {
@@ -39,15 +41,9 @@ class HttpRequest : AutoCloseable {
         logger.info("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
         val response = httpClient.get(url) {
-            timeout {
-                requestTimeoutMillis = TIMEOUT
-                connectTimeoutMillis = TIMEOUT
-                socketTimeoutMillis = TIMEOUT
-            }
             headers.forEach { (key, value) ->
                 header(key, value)
             }
-
         }
 
         httpClient.close()
