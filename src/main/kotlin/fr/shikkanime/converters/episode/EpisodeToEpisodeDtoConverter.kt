@@ -2,9 +2,9 @@ package fr.shikkanime.converters.episode
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.services.caches.LanguageCacheService

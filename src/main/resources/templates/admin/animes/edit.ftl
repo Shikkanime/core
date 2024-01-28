@@ -80,6 +80,15 @@
                             </#list>
                         </ul>
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Genres</label>
+
+                        <ul>
+                            <#list anime.genres as genre>
+                                <li>${genre}</li>
+                            </#list>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

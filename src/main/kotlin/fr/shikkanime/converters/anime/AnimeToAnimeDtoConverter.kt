@@ -2,8 +2,8 @@ package fr.shikkanime.converters.anime
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
@@ -23,7 +23,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             from.banner.isNullOrBlank() ||
             from.description.isNullOrBlank() ||
             from.description?.startsWith("(") == true ||
-            languageCacheService.detectLanguage(from.description) != from.countryCode!!.name.lowercase()
+            languageCacheService.detectLanguage(from.description) != from.countryCode!!.name.lowercase() ||
+            from.genres.isEmpty()
         ) Status.INVALID else Status.VALID
 
         return AnimeDto(
@@ -43,7 +44,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             status = status,
             slug = from.slug,
             lastReleaseDateTime = from.lastReleaseDateTime.withUTC()
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            genres = from.genres.map { it.name }.sorted(),
         )
     }
 }

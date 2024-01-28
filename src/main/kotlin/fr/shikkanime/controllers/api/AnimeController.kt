@@ -48,6 +48,7 @@ class AnimeController : HasPageableRoute() {
         @QueryParam("limit") limitParam: Int?,
         @QueryParam("sort") sortParam: String?,
         @QueryParam("desc") descParam: String?,
+        @QueryParam("invalid") invalidParam: Boolean?,
     ): Response {
         if (simulcastParam != null && name != null) {
             return Response.conflict(
@@ -73,7 +74,11 @@ class AnimeController : HasPageableRoute() {
             if (!name.isNullOrBlank()) {
                 animeCacheService.findAllByName(name, countryParam, page, limit)
             } else {
-                animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
+                if (invalidParam == true) {
+                    animeCacheService.findAllInvalidBy(countryParam, simulcastParam, sortParameters, page, limit)
+                } else {
+                    animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
+                }
             }
         )
     }

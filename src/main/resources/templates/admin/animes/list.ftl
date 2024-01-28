@@ -6,6 +6,10 @@
             <label class="form-label" for="nameInput">Name</label>
             <input type="text" class="form-control" id="nameInput">
         </div>
+        <div class="col-auto">
+            <input class="form-check-input" type="checkbox" value="" id="invalidInput">
+            <label class="form-check-label" for="invalidInput">Only invalid</label>
+        </div>
     </div>
 
     <table class="table table-striped table-bordered">
@@ -45,8 +49,8 @@
             </tr>`
         }
 
-        async function getAnimes(name, page) {
-            let params = '?sort=releaseDateTime&desc=releaseDateTime';
+        async function getAnimes(name, page, invalid) {
+            let params = '?sort=releaseDateTime&desc=releaseDateTime' + (invalid ? '&invalid=true' : '');
 
             if (name) {
                 params = '?name=' + name;
@@ -67,7 +71,8 @@
 
         async function changePage(page) {
             const name = document.getElementById('nameInput').value;
-            const pageable = await getAnimes(name, page);
+            const invalid = document.getElementById('invalidInput').checked;
+            const pageable = await getAnimes(name, page, invalid);
             buildTable(pageable.data);
             buildPagination(pageable);
         }
@@ -118,10 +123,16 @@
             clearTimeout(timeout);
 
             timeout = setTimeout(async () => {
-                const pageable = await getAnimes(event.target.value);
+                const pageable = await getAnimes(event.target.value, 1, false);
                 buildTable(pageable.data);
                 buildPagination(pageable);
             }, 500);
+        });
+
+        document.getElementById('invalidInput').addEventListener('change', async (event) => {
+            const pageable = await getAnimes(null, 1, event.target.checked);
+            buildTable(pageable.data);
+            buildPagination(pageable);
         });
     </script>
 </@navigation.display>

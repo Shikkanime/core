@@ -1,10 +1,10 @@
 package fr.shikkanime.services
 
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType

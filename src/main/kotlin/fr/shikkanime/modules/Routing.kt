@@ -380,7 +380,7 @@ private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any
         UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(
             queryParamValue
         )
-
+        Boolean::class.starProjectedType.withNullability(true) -> queryParamValue?.toBoolean()
         else -> throw Exception("Unknown type ${kParameter.type}")
     }
 }

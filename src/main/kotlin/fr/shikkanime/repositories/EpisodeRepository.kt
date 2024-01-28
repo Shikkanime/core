@@ -21,6 +21,10 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             Hibernate.initialize(this.anime?.simulcasts)
         }
 
+        if (!Hibernate.isInitialized(this.anime?.genres)) {
+            Hibernate.initialize(this.anime?.genres)
+        }
+
         return this
     }
 
@@ -178,6 +182,16 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .setParameter("end", end)
                 .resultList
                 .initialize()
+        }
+    }
+
+    override fun find(uuid: UUID): Episode? {
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Episode WHERE uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .resultList
+                .firstOrNull()
+                ?.initialize()
         }
     }
 }

@@ -2,9 +2,10 @@ package fr.shikkanime.converters.anime
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.enums.Genre
 import fr.shikkanime.services.AnimeService
 import java.time.ZonedDateTime
 
@@ -32,6 +33,7 @@ class AnimeDtoToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
             description = from.description,
             simulcasts = convert(from.simulcasts ?: emptyList(), Simulcast::class.java).toMutableSet(),
             slug = from.slug,
+            genres = from.genres?.map { Genre.valueOf(it) }?.toMutableSet() ?: mutableSetOf()
         )
     }
 }

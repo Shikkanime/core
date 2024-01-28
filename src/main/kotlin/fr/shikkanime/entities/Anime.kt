@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Genre
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -48,6 +49,13 @@ class Anime(
     var slug: String? = null,
     @Column(nullable = false, name = "last_release_date_time")
     var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
+    @ElementCollection
+    @CollectionTable(
+        name = "anime_genre",
+        joinColumns = [JoinColumn(name = "anime_uuid")],
+    )
+    @Enumerated(EnumType.STRING)
+    var genres: MutableSet<Genre> = mutableSetOf(),
 ) : ShikkEntity(uuid) {
     fun copy() = Anime(
         uuid,
@@ -59,6 +67,7 @@ class Anime(
         description,
         simulcasts,
         slug,
-        lastReleaseDateTime
+        lastReleaseDateTime,
+        genres,
     )
 }

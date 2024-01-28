@@ -2,7 +2,7 @@ package fr.shikkanime.controllers.admin
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated

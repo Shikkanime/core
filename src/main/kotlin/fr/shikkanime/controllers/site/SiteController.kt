@@ -1,7 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
@@ -116,21 +116,21 @@ class SiteController {
     @Path("animes/{slug}")
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
-        val anime = animeCacheService.findBySlug(slug) ?: return Response.redirect("/404")
+        val recommendedAnime = animeCacheService.findBySlug(slug) ?: return Response.redirect("/404")
 
         return Response.template(
             "/site/anime.ftl",
-            anime.shortName,
+            recommendedAnime.shortName,
             mutableMapOf(
-                "description" to anime.description,
-                "anime" to anime,
+                "description" to recommendedAnime.description,
+                "recommendedAnime" to recommendedAnime,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
-                    anime.uuid,
+                    recommendedAnime.uuid,
                     listOf(
                         SortParameter("season", SortParameter.Order.ASC),
-                        SortParameter("number", SortParameter.Order.ASC),
                         SortParameter("episodeType", SortParameter.Order.ASC),
+                        SortParameter("number", SortParameter.Order.ASC),
                         SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,

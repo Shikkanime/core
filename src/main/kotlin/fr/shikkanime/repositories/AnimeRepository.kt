@@ -20,6 +20,10 @@ class AnimeRepository : AbstractRepository<Anime>() {
             Hibernate.initialize(this.simulcasts)
         }
 
+        if (!Hibernate.isInitialized(this.genres)) {
+            Hibernate.initialize(this.genres)
+        }
+
         return this
     }
 
@@ -162,6 +166,37 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return inTransaction {
             createReadOnlyQuery(it, "SELECT uuid, image, banner FROM Anime", Tuple::class.java)
                 .resultList
+        }
+    }
+
+    fun findAllInvalidBy(
+        countryCode: CountryCode?,
+        simulcast: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ): Pageable<Anime> {
+        val queryBuilder = StringBuilder("FROM Anime a")
+        val whereClause = mutableListOf<String>()
+
+        simulcast?.let {
+            queryBuilder.append(" JOIN a.simulcasts s")
+            whereClause.add("s.uuid = :uuid")
+        }
+        countryCode?.let { whereClause.add("a.countryCode = :countryCode") }
+        whereClause.add("(a.image IS NULL OR a.banner IS NULL OR a.description IS NULL OR a.description LIKE '%(' OR a.genres IS EMPTY)")
+
+        if (whereClause.isNotEmpty()) {
+            queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
+        }
+
+        buildSortQuery(sort, queryBuilder)
+
+        return inTransaction {
+            val query = createReadOnlyQuery(it, queryBuilder.toString(), getEntityClass())
+            countryCode?.let { query.setParameter("countryCode", countryCode) }
+            simulcast?.let { query.setParameter("uuid", simulcast) }
+            buildPageableQuery(query, page, limit).initialize()
         }
     }
 }

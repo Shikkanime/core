@@ -5,9 +5,10 @@ import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeRecommendationDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.SortParameter
@@ -37,8 +38,20 @@ class AnimeCacheService : AbstractCacheService {
             )
         }
 
-    private val findBySlugCache = MapCache<String, AnimeDto>(classes = listOf(Anime::class.java)) {
-        AbstractConverter.convert(animeService.findBySlug(it), AnimeDto::class.java)
+    private val findBySlugCache = MapCache<String, AnimeRecommendationDto>(classes = listOf(Anime::class.java)) {
+        AbstractConverter.convert(animeService.findBySlug(it), AnimeRecommendationDto::class.java)
+    }
+
+    private val findAllInvalidByCache =
+        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
+            PageableDto.fromPageable(
+                animeService.findAllInvalidBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
+                AnimeDto::class.java
+            )
+        }
+
+    private val findAllWithGenresCache = MapCache<String, List<Anime>>(classes = listOf(Anime::class.java)) {
+        animeService.findAll().filter { it.genres.isNotEmpty() }
     }
 
     private val weeklyCache = MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(Episode::class.java)) {
@@ -60,4 +73,14 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode) =
         weeklyCache[CountryCodeLocalDateKeyCache(countryCode, startOfWeekDay)]
+
+    fun findAllInvalidBy(
+        countryCode: CountryCode?,
+        uuid: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ) = findAllInvalidByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit)]
+
+    fun findAllWithGenres() = findAllWithGenresCache["all"]
 }

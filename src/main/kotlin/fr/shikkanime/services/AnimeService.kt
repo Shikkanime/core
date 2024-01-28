@@ -50,6 +50,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
 
+    fun findAllInvalidBy(
+        countryCode: CountryCode?,
+        simulcast: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ) = animeRepository.findAllInvalidBy(countryCode, simulcast, sort, page, limit)
+
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val start = ZonedDateTime.parse("${startOfWeekDay.minusDays(7)}T00:00:00Z")
         val end = ZonedDateTime.parse("${startOfWeekDay.plusDays(7)}T23:59:59Z")
