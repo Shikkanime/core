@@ -6,6 +6,7 @@ import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
+import org.hibernate.jpa.AvailableHints
 import org.hibernate.query.Query
 import java.lang.reflect.ParameterizedType
 import java.util.*
@@ -54,13 +55,19 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     open fun findAll(): List<E> {
         return inTransaction {
-            it.createQuery("FROM ${getEntityClass().simpleName}", getEntityClass()).resultList
+            it.createQuery("FROM ${getEntityClass().simpleName}", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
+                .resultList
         }
     }
 
     open fun find(uuid: UUID): E? {
         return inTransaction {
-            it.find(getEntityClass(), uuid)
+            it.createQuery("FROM ${getEntityClass().simpleName} WHERE uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
+                .resultList
+                .firstOrNull()
         }
     }
 

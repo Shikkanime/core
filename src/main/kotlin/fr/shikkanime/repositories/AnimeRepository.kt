@@ -6,6 +6,7 @@ import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
+import org.hibernate.jpa.AvailableHints
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
@@ -59,6 +60,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     override fun findAll(): List<Anime> {
         return inTransaction {
             it.createQuery("FROM Anime", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .resultList
                 .initialize()
         }
@@ -88,6 +90,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             buildSortQuery(sort, queryBuilder)
 
             val query = it.createQuery(queryBuilder.toString(), getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
             countryCode?.let { query.setParameter("countryCode", countryCode) }
             simulcast?.let { query.setParameter("uuid", simulcast) }
             buildPageableQuery(query, page, limit).initialize()
@@ -97,6 +100,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     fun findAllByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
         return inTransaction {
             it.createQuery("FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .setParameter("countryCode", countryCode)
                 .setParameter("name", "%${name?.lowercase()}%")
                 .resultList
@@ -131,6 +135,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     override fun find(uuid: UUID): Anime? {
         return inTransaction {
             it.createQuery("FROM Anime WHERE uuid = :uuid", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .setParameter("uuid", uuid)
                 .resultList
                 .firstOrNull()
@@ -141,6 +146,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     fun findAllUUIDAndImage(): List<Tuple> {
         return inTransaction {
             it.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java)
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .resultList
         }
     }
