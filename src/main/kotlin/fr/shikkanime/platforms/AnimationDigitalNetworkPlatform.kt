@@ -11,32 +11,21 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class AnimationDigitalNetworkPlatform :
-    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, JsonArray>() {
+    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, List<JsonObject>>() {
     override fun getPlatform(): Platform = Platform.ANIM
 
-    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): JsonArray {
-        val toDateString = zonedDateTime.toLocalDate().toString()
-        val url = "https://gw.api.animationdigitalnetwork.${key.name.lowercase()}/video/calendar?date=$toDateString"
-        val response = HttpRequest().get(url)
-
-        if (response.status != HttpStatusCode.OK) {
-            return JsonArray()
-        }
-
-        return ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java).getAsJsonArray("videos")!!
+    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): List<JsonObject> {
+        return AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate())
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
@@ -47,7 +36,7 @@ class AnimationDigitalNetworkPlatform :
 
             api.forEach {
                 try {
-                    list.addAll(convertEpisode(countryCode, it.asJsonObject, zonedDateTime))
+                    list.addAll(convertEpisode(countryCode, it, zonedDateTime))
                 } catch (_: AnimeException) {
                     // Ignore
                 } catch (e: Exception) {
@@ -67,7 +56,8 @@ class AnimationDigitalNetworkPlatform :
         val show = jsonObject.getAsJsonObject("show") ?: throw Exception("Show is null")
         val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
 
-        var animeName = show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
+        var animeName =
+            show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
         animeName = animeName.replace(Regex("Saison \\d"), "").trim()
         animeName = animeName.replace(season.toString(), "").trim()
         // Replace "Edens Zero -" to get "Edens Zero"

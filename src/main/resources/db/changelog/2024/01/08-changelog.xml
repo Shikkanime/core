@@ -18,7 +18,8 @@
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
             <column name="property_key" value="seo_description"/>
-            <column name="property_value" value="Soyez au courant de toutes les sorties d'épisodes d'animés grâce à Shikkanime ! Retrouvez les dernières nouveautés des plateformes, tels que ADN, Crunchyroll, etc. Créez votre watchlist et soyez notifiés dès qu'un nouvel épisode est disponible."/>
+            <column name="property_value"
+                    value="Soyez au courant de toutes les sorties d'épisodes d'animés grâce à Shikkanime ! Retrouvez les dernières nouveautés des plateformes, tels que ADN, Crunchyroll, etc. Créez votre watchlist et soyez notifiés dès qu'un nouvel épisode est disponible."/>
         </insert>
     </changeSet>
 </databaseChangeLog>

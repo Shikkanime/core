@@ -99,7 +99,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 )
                 val previousSimulcastAnimes =
                     previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-                logger.info("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
+                logger.info("Found ${previousSimulcastAnimes.size} animes for the sprevious simulcast")
 
                 val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
                 simulcasts.addAll(combinedSimulcasts)
@@ -119,11 +119,24 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
             val (token, cms) = identifiers[it.countryCode]!!
-            val `object` = runBlocking { CrunchyrollWrapper.getObject(token, cms, it.animeId) }[0].asJsonObject
+            val `object` = runBlocking {
+                CrunchyrollWrapper.getObject(
+                    it.countryCode.locale,
+                    token,
+                    cms,
+                    it.animeId
+                )
+            }[0].asJsonObject
             val postersTall = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
             val postersWide = `object`.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
-            image = postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")
-            banner = postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")
+            image =
+                postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString(
+                    "source"
+                )
+            banner =
+                postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString(
+                    "source"
+                )
             description = `object`.getAsString("description")
         } else {
             HttpRequest().use { httpRequest ->
@@ -135,8 +148,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     image =
                         content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
                             .attr("src")
-                    banner = content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[1]/figure/picture/img")
-                        .attr("src")
+                    banner =
+                        content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[1]/figure/picture/img")
+                            .attr("src")
                     description =
                         content.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p")
                             .text()
@@ -172,7 +186,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): List<JsonObject> {
         return if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
-            CrunchyrollWrapper.getBrowse(identifiers[key]!!.first)
+            CrunchyrollWrapper.getBrowse(key.locale, identifiers[key]!!.first)
         } else {
             val url = "https://www.crunchyroll.com/rss/anime?lang=${key.locale.replace("-", "")}"
             val response = HttpRequest().get(url)
