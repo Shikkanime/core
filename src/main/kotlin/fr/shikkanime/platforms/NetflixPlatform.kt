@@ -32,7 +32,9 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val document =
             HttpRequest().use { it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id") }
         val animeName = document.selectFirst(".title-title")?.text() ?: return emptySet()
-        val animeBanner = document.selectXpath("//*[@id=\"section-hero\"]/div[1]/div[2]/picture/source[2]").attr("srcset").substringBefore("?")
+        val animeBanner =
+            document.selectXpath("//*[@id=\"section-hero\"]/div[1]/div[2]/picture/source[2]").attr("srcset")
+                .substringBefore("?")
         val animeDescription = document.selectFirst(".title-info-synopsis")?.text()
         val episodes = document.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptySet()
 

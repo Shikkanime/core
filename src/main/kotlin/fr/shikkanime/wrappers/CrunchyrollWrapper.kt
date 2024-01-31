@@ -33,7 +33,6 @@ object CrunchyrollWrapper {
     }
 
     private const val BASE_URL = "https://beta-api.crunchyroll.com/"
-    private const val LOCALE = "fr-FR"
 
     suspend fun getAnonymousAccessToken(): String {
         val httpRequest = HttpRequest()
@@ -80,6 +79,7 @@ object CrunchyrollWrapper {
     }
 
     suspend fun getBrowse(
+        locale: String,
         accessToken: String,
         sortBy: SortType = SortType.NEWLY_ADDED,
         type: MediaType = MediaType.EPISODE,
@@ -89,7 +89,7 @@ object CrunchyrollWrapper {
         val httpRequest = HttpRequest()
 
         val response = httpRequest.get(
-            "${BASE_URL}content/v1/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$LOCALE",
+            "${BASE_URL}content/v1/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
@@ -103,11 +103,11 @@ object CrunchyrollWrapper {
             ?: throw Exception("Failed to get media list")
     }
 
-    suspend fun getObject(accessToken: String, cms: CMS, vararg ids: String): JsonArray {
+    suspend fun getObject(locale: String, accessToken: String, cms: CMS, vararg ids: String): JsonArray {
         val httpRequest = HttpRequest()
 
         val response = httpRequest.get(
-            "${BASE_URL}cms/v2${cms.bucket}/objects/${ids.joinToString(",")}?Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$LOCALE",
+            "${BASE_URL}cms/v2${cms.bucket}/objects/${ids.joinToString(",")}?Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
@@ -121,11 +121,11 @@ object CrunchyrollWrapper {
             ?: throw Exception("Failed to get media object")
     }
 
-    suspend fun getSimulcasts(accessToken: String): List<JsonObject> {
+    suspend fun getSimulcasts(locale: String, accessToken: String): List<JsonObject> {
         val httpRequest = HttpRequest()
 
         val response = httpRequest.get(
-            "${BASE_URL}content/v1/season_list?locale=$LOCALE",
+            "${BASE_URL}content/v1/season_list?locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),

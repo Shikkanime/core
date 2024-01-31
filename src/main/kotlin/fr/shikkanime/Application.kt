@@ -14,7 +14,7 @@ import fr.shikkanime.utils.LoggerFactory
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import java.util.UUID
+import java.util.*
 
 private val logger = LoggerFactory.getLogger("Shikkanime")
 
