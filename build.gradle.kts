@@ -1,6 +1,6 @@
 import java.net.URI
 
-val ktorVersion = "2.3.7"
+val ktorVersion = "2.3.8"
 val kotlinVersion = "1.9.22"
 val hibernateSearchVersion = "7.1.0.Alpha2"
 val junitVersion = "5.10.1"
@@ -9,7 +9,7 @@ val ktorSwaggerUiVersion = "2.7.4"
 
 plugins {
     kotlin("jvm") version "1.9.22"
-    id("io.ktor.plugin") version "2.3.7"
+    id("io.ktor.plugin") version "2.3.8"
     jacoco
     id("org.sonarqube") version "4.4.1.3373"
 }
@@ -43,7 +43,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson:$ktorVersion")
     implementation("io.ktor:ktor-server-freemarker-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
