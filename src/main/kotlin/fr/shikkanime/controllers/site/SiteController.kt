@@ -41,7 +41,13 @@ class SiteController {
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
                     null,
-                    listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
+                    listOf(
+                        SortParameter("releaseDateTime", SortParameter.Order.DESC),
+                        SortParameter("season", SortParameter.Order.DESC),
+                        SortParameter("number", SortParameter.Order.DESC),
+                        SortParameter("episodeType", SortParameter.Order.ASC),
+                        SortParameter("langType", SortParameter.Order.ASC),
+                    ),
                     1,
                     6
                 )!!.data
