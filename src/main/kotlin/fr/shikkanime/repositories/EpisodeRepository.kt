@@ -130,4 +130,13 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .resultList
         }
     }
+
+    fun findAllByPlatform(platform: Platform): List<Episode> {
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Episode WHERE platform = :platform AND description IS NULL", getEntityClass())
+                .setParameter("platform", platform)
+                .resultList
+                .initialize()
+        }
+    }
 }

@@ -11,6 +11,7 @@ import fr.shikkanime.utils.MapCache
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -192,9 +193,13 @@ class CrunchyrollPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(18, episodes.size)
         assertEquals("I'm in Love with the Villainess", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
         assertEquals("I'm in Love with the Villainess", episodes[1].anime?.name)
+        assertNotNull(episodes[1].description)
         assertEquals("SHY", episodes[2].anime?.name)
+        assertNotNull(episodes[2].description)
         assertEquals("Dead Mount Death Play", episodes[3].anime?.name)
+        assertNotNull(episodes[3].description)
     }
 
     @Test
@@ -219,7 +224,9 @@ class CrunchyrollPlatformTest {
         assertEquals(2, episodes.size)
         assertEquals("Metallic Rouge", episodes[0].anime?.name)
         assertEquals(LangType.VOICE, episodes[0].langType)
+        assertNotNull(episodes[0].description)
         assertEquals("Metallic Rouge", episodes[1].anime?.name)
         assertEquals(LangType.SUBTITLES, episodes[1].langType)
+        assertNotNull(episodes[1].description)
     }
 }

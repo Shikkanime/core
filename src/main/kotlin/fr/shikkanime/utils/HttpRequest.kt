@@ -107,6 +107,9 @@ class HttpRequest : AutoCloseable {
         return Jsoup.parse(content ?: throw Exception("Content is null"))
     }
 
+    val lastPageUrl: String?
+        get() = page?.url()
+
     override fun close() {
         page?.close()
         browser?.close()

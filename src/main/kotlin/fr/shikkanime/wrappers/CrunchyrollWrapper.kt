@@ -1,6 +1,5 @@
 package fr.shikkanime.wrappers
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
@@ -32,12 +31,11 @@ object CrunchyrollWrapper {
         SERIES,
     }
 
-    private const val BASE_URL = "https://beta-api.crunchyroll.com/"
+    private const val BETA_URL = "https://beta-api.crunchyroll.com/"
+    private const val BASE_URL = "https://www.crunchyroll.com/"
 
     suspend fun getAnonymousAccessToken(): String {
-        val httpRequest = HttpRequest()
-
-        val response = httpRequest.post(
+        val response = HttpRequest().post(
             "${BASE_URL}auth/v1/token",
             headers = mapOf(
                 "Content-Type" to "application/x-www-form-urlencoded",
@@ -46,26 +44,20 @@ object CrunchyrollWrapper {
             body = "grant_type=client_id&client_id=offline_access"
         )
 
-        if (response.status.value != 200) {
-            throw Exception("Failed to get anonymous access token")
-        }
+        require(response.status.value == 200) { "Failed to get anonymous access token" }
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsString("access_token")!!
     }
 
     suspend fun getCMS(accessToken: String): CMS {
-        val httpRequest = HttpRequest()
-
-        val response = httpRequest.get(
+        val response = HttpRequest().get(
             "${BASE_URL}index/v2",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
         )
 
-        if (response.status.value != 200) {
-            throw Exception("Failed to get anonymous access token")
-        }
+        require(response.status.value == 200) { "Failed to get CMS" }
 
         return ObjectParser.fromJson(response.bodyAsText()).getNullableJsonObject("cms")?.let {
             CMS(
@@ -85,55 +77,44 @@ object CrunchyrollWrapper {
         type: MediaType = MediaType.EPISODE,
         size: Int = 25,
         start: Int = 0,
+        simulcast: String? = null,
     ): List<JsonObject> {
-        val httpRequest = HttpRequest()
-
-        val response = httpRequest.get(
-            "${BASE_URL}content/v1/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale",
+        val response = HttpRequest().get(
+            "${BASE_URL}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else ""}",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
         )
 
-        if (response.status.value != 200) {
-            throw Exception("Failed to get media list")
-        }
+        require(response.status.value == 200) { "Failed to get media list" }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
+        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")?.map { it.asJsonObject }
             ?: throw Exception("Failed to get media list")
     }
 
-    suspend fun getObject(locale: String, accessToken: String, cms: CMS, vararg ids: String): JsonArray {
-        val httpRequest = HttpRequest()
-
-        val response = httpRequest.get(
-            "${BASE_URL}cms/v2${cms.bucket}/objects/${ids.joinToString(",")}?Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
+    suspend fun getObject(locale: String, accessToken: String, cms: CMS, vararg ids: String): List<JsonObject> {
+        val response = HttpRequest().get(
+            "${BETA_URL}cms/v2${cms.bucket}/objects/${ids.joinToString(",")}?Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
         )
 
-        if (response.status.value != 200) {
-            throw Exception("Failed to get media object")
-        }
+        require(response.status.value == 200) { "Failed to get media object" }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")
+        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
             ?: throw Exception("Failed to get media object")
     }
 
     suspend fun getSimulcasts(locale: String, accessToken: String): List<JsonObject> {
-        val httpRequest = HttpRequest()
-
-        val response = httpRequest.get(
+        val response = HttpRequest().get(
             "${BASE_URL}content/v1/season_list?locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
         )
 
-        if (response.status.value != 200) {
-            throw Exception("Failed to get simulcasts")
-        }
+        require(response.status.value == 200) { "Failed to get simulcasts" }
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
             ?: throw Exception("Failed to get simulcasts")
