@@ -88,4 +88,16 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(1, episodes.size)
         assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
     }
+
+    @Test
+    fun `fetchEpisodes for 2024-02-01`() {
+        val zonedDateTime = ZonedDateTime.parse("2024-02-01T23:59:59Z")
+        val episodes = platform.fetchEpisodes(zonedDateTime)
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(3, episodes.size)
+        assertEquals("Demon Slave", episodes[0].anime?.name)
+        assertEquals("My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!", episodes[1].anime?.name)
+        assertEquals("Urusei Yatsura", episodes[2].anime?.name)
+    }
 }

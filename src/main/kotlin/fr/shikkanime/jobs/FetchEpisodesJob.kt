@@ -3,7 +3,9 @@ package fr.shikkanime.jobs
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.isEqualOrAfter
@@ -23,6 +25,9 @@ class FetchEpisodesJob : AbstractJob() {
 
     @Inject
     private lateinit var episodeService: EpisodeService
+
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
 
     override fun run() {
         if (isRunning) {
@@ -59,21 +64,28 @@ class FetchEpisodesJob : AbstractJob() {
             }
         }
 
-        episodes
+        val savedEpisodes = episodes
             .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !set.contains(it.hash) }
-            .forEach {
+            .mapNotNull {
                 try {
                     val savedEpisode = episodeService.save(it)
                     savedEpisode.hash?.let { hash -> set.add(hash) }
-
-                    Thread {
-                        val dto = AbstractConverter.convert(savedEpisode, EpisodeDto::class.java)
-                        sendToSocialNetworks(dto)
-                    }.start()
+                    savedEpisode
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while saving episode ${it.hash} (${it.anime?.name})", e)
+                    null
                 }
             }
+
+        if (savedEpisodes.isNotEmpty() && savedEpisodes.size < configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
+            val dtos = AbstractConverter.convert(savedEpisodes, EpisodeDto::class.java)
+
+            dtos.forEach {
+                Thread {
+                    sendToSocialNetworks(it)
+                }.start()
+            }
+        }
 
         isRunning = false
     }
