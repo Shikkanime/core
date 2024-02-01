@@ -53,7 +53,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     }
 
     fun getSimulcast(entity: Episode): Simulcast {
-        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE) ?: 1
+        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
 
         val adjustedDates = listOf(-simulcastRange, 0, simulcastRange).map { days ->
             entity.releaseDateTime.plusDays(days.toLong())

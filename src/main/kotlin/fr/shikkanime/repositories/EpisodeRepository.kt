@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
+import org.hibernate.jpa.AvailableHints
 import java.util.*
 
 class EpisodeRepository : AbstractRepository<Episode>() {
@@ -51,6 +52,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     override fun findAll(): List<Episode> {
         return inTransaction {
             it.createQuery("FROM Episode", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .resultList
                 .initialize()
         }
@@ -77,6 +79,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             buildSortQuery(sort, queryBuilder)
 
             val query = it.createQuery(queryBuilder.toString(), getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
             countryCode?.let { query.setParameter("countryCode", countryCode) }
             anime?.let { query.setParameter("uuid", anime) }
             buildPageableQuery(query, page, limit).initialize()
@@ -86,6 +89,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     fun findAllHashes(): List<String> {
         return inTransaction {
             it.createQuery("SELECT hash FROM Episode", String::class.java)
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .resultList
         }
     }
@@ -93,6 +97,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     fun findAllByAnime(uuid: UUID): List<Episode> {
         return inTransaction {
             it.createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .setParameter("uuid", uuid)
                 .resultList
         }
@@ -101,6 +106,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     fun findByHash(hash: String?): Episode? {
         return inTransaction {
             it.createQuery("FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .setParameter("hash", "%${hash?.lowercase()}%")
                 .resultList
                 .firstOrNull()
@@ -112,7 +118,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             val query = it.createQuery(
                 "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType = :episodeType AND langType = :langType ORDER BY number DESC",
                 Int::class.java
-            )
+            ).setHint(AvailableHints.HINT_READ_ONLY, true)
             query.maxResults = 1
             query.setParameter("uuid", anime)
             query.setParameter("platform", platform)
@@ -126,6 +132,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     fun findAllUUIDAndImage(): List<Tuple> {
         return inTransaction {
             it.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java)
+                .setHint(AvailableHints.HINT_READ_ONLY, true)
                 .resultList
         }
     }

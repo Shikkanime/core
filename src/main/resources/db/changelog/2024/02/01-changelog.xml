@@ -5,21 +5,20 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <property global="false" name="id" value="1706283026682"/>
+    <property global="false" name="id" value="1706775711823"/>
     <property global="false" name="author" value="Ziedelth"/>
 
     <changeSet id="${id}-1" author="${author}" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
-                                         WHERE property_key = 'seo_description'</sqlCheck>
+                                         WHERE property_key = 'social_network_episodes_size_limit'</sqlCheck>
         </preConditions>
 
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
-            <column name="property_key" value="seo_description"/>
-            <column name="property_value"
-                    value="Soyez au courant de toutes les sorties d'épisodes d'animés grâce à Shikkanime ! Retrouvez les dernières nouveautés des plateformes, tels que ADN, Crunchyroll, etc. Créez votre watchlist et soyez notifiés dès qu'un nouvel épisode est disponible."/>
+            <column name="property_key" value="social_network_episodes_size_limit"/>
+            <column name="property_value" value="5"/>
         </insert>
     </changeSet>
 </databaseChangeLog>
