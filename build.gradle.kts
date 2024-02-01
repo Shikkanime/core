@@ -9,7 +9,7 @@ val ktorSwaggerUiVersion = "2.7.4"
 
 plugins {
     kotlin("jvm") version "1.9.22"
-    id("io.ktor.plugin") version "2.3.7"
+    id("io.ktor.plugin") version "2.3.8"
     jacoco
     id("org.sonarqube") version "4.4.1.3373"
 }
