@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.utils.ObjectParser.getAsString
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -67,6 +68,26 @@ class CrunchyrollWrapperTest {
     fun getSimulcastsError() {
         assertThrows<Exception> {
             runBlocking { CrunchyrollWrapper.getSimulcasts(locale, OLD_TOKEN) }
+        }
+    }
+
+    @Test
+    fun getWinter2024Series() {
+        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        val series = runBlocking {
+            CrunchyrollWrapper.getBrowse(
+                locale,
+                token,
+                sortBy = CrunchyrollWrapper.SortType.POPULARITY,
+                type = CrunchyrollWrapper.MediaType.SERIES,
+                size = 200,
+                simulcast = "winter-2024"
+            )
+        }
+        assertEquals(true, series.isNotEmpty())
+
+        series.forEach {
+            println(it.getAsString("title"))
         }
     }
 }

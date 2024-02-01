@@ -124,6 +124,7 @@ class DisneyPlusPlatform :
     ): Episode {
         val texts = jsonObject.getAsJsonObject("text")
         val titles = texts?.getAsJsonObject("title")?.getAsJsonObject("full")
+        val descriptions = texts.getAsJsonObject("description")?.getAsJsonObject("medium")
         val animeName = titles?.getAsJsonObject("series")?.getAsJsonObject("default")?.getAsString("content")
             ?: throw Exception("Anime name is null")
 
@@ -133,8 +134,7 @@ class DisneyPlusPlatform :
         val animeBanner = jsonObject.getAsJsonObject("image")?.getAsJsonObject("tile")?.getAsJsonObject("1.33")
             ?.getAsJsonObject("series")?.getAsJsonObject("default")?.getAsString("url")
             ?: throw Exception("Anime image is null")
-        val animeDescription =
-            texts.getAsJsonObject("description")?.getAsJsonObject("medium")?.getAsJsonObject("series")
+        val animeDescription = descriptions?.getAsJsonObject("series")
                 ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ') ?: ""
 
         val season = jsonObject.getAsInt("seasonSequenceNumber")
@@ -157,6 +157,9 @@ class DisneyPlusPlatform :
         if (duration != -1L) {
             duration /= 1000
         }
+
+        val description = descriptions?.getAsJsonObject("program")
+            ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ')?.ifBlank { null }
 
         val langType = LangType.SUBTITLES
         val releaseDateTimeUTC = zonedDateTime.withUTC()
@@ -183,6 +186,7 @@ class DisneyPlusPlatform :
             url = url,
             image = image,
             duration = duration,
+            description = description,
         )
     }
 }

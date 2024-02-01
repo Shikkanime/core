@@ -44,72 +44,67 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     }
 
     val simulcasts = MapCache<CountryCode, Set<String>>(Duration.ofHours(1)) {
-        fun getSimulcastCode(name: String): String {
-            val simulcastCodeTmp = name.lowercase().replace(" ", "-")
-            val simulcastYear = simulcastCodeTmp.split("-").last()
+        val simulcastSeries = mutableSetOf<String>()
 
-            val simulcastSeasonCode = when (simulcastCodeTmp.split("-").first()) {
-                "printemps" -> "spring"
-                "été" -> "summer"
-                "automne" -> "fall"
-                "hiver" -> "winter"
-                else -> throw Exception("Simulcast season not found")
-            }
+        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
+            val accessToken = identifiers[it]!!.first
+            val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2).map { simulcast -> simulcast.getAsString("id") }
 
-            return "$simulcastSeasonCode-$simulcastYear"
-        }
+            val series = simulcasts.flatMap { simulcastId ->
+                runBlocking {
+                    CrunchyrollWrapper.getBrowse(
+                        it.locale,
+                        accessToken,
+                        sortBy = CrunchyrollWrapper.SortType.POPULARITY,
+                        type = CrunchyrollWrapper.MediaType.SERIES,
+                        100,
+                        simulcast = simulcastId
+                    )
+                }
+            }.map { serie -> serie.getAsString("title")!!.lowercase() }.toSet()
 
-        fun getPreviousSimulcastCode(currentSimulcastCode: String): String {
-            return when (currentSimulcastCode.split("-").first()) {
-                "spring" -> "winter-${currentSimulcastCode.split("-").last()}"
-                "winter" -> "fall-${currentSimulcastCode.split("-").last().toInt() - 1}"
-                "fall" -> "summer-${currentSimulcastCode.split("-").last().toInt()}"
-                "summer" -> "spring-${currentSimulcastCode.split("-").last().toInt()}"
-                else -> throw Exception("Simulcast season not found")
-            }
-        }
+            simulcastSeries.addAll(series)
+        } else {
+            val simulcastSelector =
+                "#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a"
+            val simulcastAnimesSelector = ".erc-browse-cards-collection > .browse-card > div > div > h4 > a"
 
-        val simulcasts = mutableSetOf<String>()
+            HttpRequest().use { httpRequest ->
+                try {
+                    val currentSimulcastContent = httpRequest.getBrowser(
+                        "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts",
+                        simulcastSelector
+                    )
+                    val currentSimulcast =
+                        currentSimulcastContent.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
+                            .text() ?: return@MapCache simulcastSeries
+                    val currentSimulcastCode = getSimulcastCode(currentSimulcast)
+                    logger.info("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
+                    val currentSimulcastAnimes =
+                        currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
+                    logger.info("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
 
-        val simulcastSelector =
-            "#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a"
-        val simulcastAnimesSelector = ".erc-browse-cards-collection > .browse-card > div > div > h4 > a"
+                    val previousSimulcastCode = getPreviousSimulcastCode(currentSimulcastCode)
+                    logger.info("Previous simulcast code for $it: $previousSimulcastCode")
 
-        HttpRequest().use { httpRequest ->
-            try {
-                val currentSimulcastContent = httpRequest.getBrowser(
-                    "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts",
-                    simulcastSelector
-                )
-                val currentSimulcast =
-                    currentSimulcastContent.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
-                        .text() ?: return@MapCache simulcasts
-                val currentSimulcastCode = getSimulcastCode(currentSimulcast)
-                logger.info("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
-                val currentSimulcastAnimes =
-                    currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-                logger.info("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
+                    val previousSimulcastContent = httpRequest.getBrowser(
+                        "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts/seasons/$previousSimulcastCode",
+                        simulcastSelector
+                    )
+                    val previousSimulcastAnimes =
+                        previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
+                    logger.info("Found ${previousSimulcastAnimes.size} animes for the sprevious simulcast")
 
-                val previousSimulcastCode = getPreviousSimulcastCode(currentSimulcastCode)
-                logger.info("Previous simulcast code for $it: $previousSimulcastCode")
-
-                val previousSimulcastContent = httpRequest.getBrowser(
-                    "https://www.crunchyroll.com/${it.name.lowercase()}/simulcasts/seasons/$previousSimulcastCode",
-                    simulcastSelector
-                )
-                val previousSimulcastAnimes =
-                    previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-                logger.info("Found ${previousSimulcastAnimes.size} animes for the sprevious simulcast")
-
-                val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
-                simulcasts.addAll(combinedSimulcasts)
-            } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while fetching simulcasts for ${it.name}", e)
+                    val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
+                    simulcastSeries.addAll(combinedSimulcasts)
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while fetching simulcasts for ${it.name}", e)
+                }
             }
         }
 
-        logger.info(simulcasts.joinToString(", "))
-        return@MapCache simulcasts
+        logger.info(simulcastSeries.joinToString(", "))
+        return@MapCache simulcastSeries
     }
 
     val animeInfoCache = MapCache<CountryCodeAnimeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
@@ -126,7 +121,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     cms,
                     it.animeId
                 )
-            }[0].asJsonObject
+            }[0]
             val postersTall = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
             val postersWide = `object`.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
             image =
@@ -173,6 +168,31 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         }
 
         return@MapCache CrunchyrollAnimeContent(image!!, banner!!, description)
+    }
+
+    private fun getSimulcastCode(name: String): String {
+        val simulcastCodeTmp = name.lowercase().replace(" ", "-")
+        val simulcastYear = simulcastCodeTmp.split("-").last()
+
+        val simulcastSeasonCode = when (simulcastCodeTmp.split("-").first()) {
+            "printemps" -> "spring"
+            "été" -> "summer"
+            "automne" -> "fall"
+            "hiver" -> "winter"
+            else -> throw Exception("Simulcast season not found")
+        }
+
+        return "$simulcastSeasonCode-$simulcastYear"
+    }
+
+    private fun getPreviousSimulcastCode(currentSimulcastCode: String): String {
+        return when (currentSimulcastCode.split("-").first()) {
+            "spring" -> "winter-${currentSimulcastCode.split("-").last()}"
+            "winter" -> "fall-${currentSimulcastCode.split("-").last().toInt() - 1}"
+            "fall" -> "summer-${currentSimulcastCode.split("-").last().toInt()}"
+            "summer" -> "spring-${currentSimulcastCode.split("-").last().toInt()}"
+            else -> throw Exception("Simulcast season not found")
+        }
     }
 
     override fun getPlatform(): Platform = Platform.CRUN
@@ -304,6 +324,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
                 .contains(animeName.lowercase())
 
+        val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.ifBlank { null }
+
         if (!isSimulcasted) {
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
         }
@@ -332,7 +354,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             title = title,
             url = url,
             image = image,
-            duration = duration
+            duration = duration,
+            description = description
         )
     }
 
@@ -398,6 +421,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 .contains(animeName.lowercase())
         isSimulcasted = isSimulcasted || isMovie
 
+        val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.ifBlank { null }
+
         if (!isSimulcasted) {
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
         }
@@ -432,7 +457,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             title = title,
             url = url,
             image = image,
-            duration = duration
+            duration = duration,
+            description = description
         )
     }
 
