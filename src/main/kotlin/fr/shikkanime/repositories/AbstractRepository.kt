@@ -57,14 +57,20 @@ abstract class AbstractRepository<E : ShikkEntity> {
         var total = 0L
 
         scrollableResults.use {
-            if (!it.first()) {
+            if (!it.first())
                 return@use
-            }
 
-            while (it.scroll((limit * page) - limit) && list.size < limit) {
+            val result = it.scroll((limit * page) - limit)
+
+            if (!result)
+                return@use
+
+            for (i in 0 until limit) {
                 @Suppress("UNCHECKED_CAST")
                 list.add(it.get() as E)
-                it.next()
+
+                if (!it.next())
+                    break
             }
 
             total = if (it.last()) it.rowNumber + 1L else 0
