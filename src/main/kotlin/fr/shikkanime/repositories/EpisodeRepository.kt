@@ -9,7 +9,6 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
-import org.hibernate.jpa.AvailableHints
 import java.util.*
 
 class EpisodeRepository : AbstractRepository<Episode>() {
@@ -50,12 +49,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     }
 
     override fun findAll(): List<Episode> {
-        return inTransaction {
-            it.createQuery("FROM Episode", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-                .initialize()
-        }
+        return super.findAll().initialize()
     }
 
     fun findAllBy(
@@ -65,75 +59,58 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         page: Int,
         limit: Int
     ): Pageable<Episode> {
-        return inTransaction {
-            val queryBuilder = StringBuilder("FROM Episode e")
-            val whereClause = mutableListOf<String>()
+        val queryBuilder = StringBuilder("FROM Episode e")
+        val whereClause = mutableListOf<String>()
 
-            anime?.let { whereClause.add("e.anime.uuid = :uuid") }
-            countryCode?.let { whereClause.add("e.anime.countryCode = :countryCode") }
+        anime?.let { whereClause.add("e.anime.uuid = :uuid") }
+        countryCode?.let { whereClause.add("e.anime.countryCode = :countryCode") }
 
-            if (whereClause.isNotEmpty()) {
-                queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
-            }
-
-            buildSortQuery(sort, queryBuilder)
-
-            val query = it.createQuery(queryBuilder.toString(), getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-            countryCode?.let { query.setParameter("countryCode", countryCode) }
-            anime?.let { query.setParameter("uuid", anime) }
-            buildPageableQuery(query, page, limit).initialize()
+        if (whereClause.isNotEmpty()) {
+            queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
         }
+
+        buildSortQuery(sort, queryBuilder)
+
+        val query = createQuery(queryBuilder.toString(), getEntityClass())
+        countryCode?.let { query.setParameter("countryCode", countryCode) }
+        anime?.let { query.setParameter("uuid", anime) }
+        return buildPageableQuery(query, page, limit).initialize()
     }
 
     fun findAllHashes(): List<String> {
-        return inTransaction {
-            it.createQuery("SELECT hash FROM Episode", String::class.java)
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-        }
+        return createQuery("SELECT hash FROM Episode", String::class.java)
+            .resultList
     }
 
     fun findAllByAnime(uuid: UUID): List<Episode> {
-        return inTransaction {
-            it.createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .setParameter("uuid", uuid)
-                .resultList
-        }
+        return createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
+            .setParameter("uuid", uuid)
+            .resultList
     }
 
     fun findByHash(hash: String?): Episode? {
-        return inTransaction {
-            it.createQuery("FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .setParameter("hash", "%${hash?.lowercase()}%")
-                .resultList
-                .firstOrNull()
-        }
+        return createQuery("FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
+            .setParameter("hash", "%${hash?.lowercase()}%")
+            .resultList
+            .firstOrNull()
     }
 
     fun getLastNumber(anime: UUID, platform: Platform, season: Int, episodeType: EpisodeType, langType: LangType): Int {
-        return inTransaction {
-            val query = it.createQuery(
-                "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType = :episodeType AND langType = :langType ORDER BY number DESC",
-                Int::class.java
-            ).setHint(AvailableHints.HINT_READ_ONLY, true)
-            query.maxResults = 1
-            query.setParameter("uuid", anime)
-            query.setParameter("platform", platform)
-            query.setParameter("season", season)
-            query.setParameter("episodeType", episodeType)
-            query.setParameter("langType", langType)
-            query.resultList.firstOrNull() ?: 0
-        }
+        val query = createQuery(
+            "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType = :episodeType AND langType = :langType ORDER BY number DESC",
+            Int::class.java
+        )
+        query.maxResults = 1
+        query.setParameter("uuid", anime)
+        query.setParameter("platform", platform)
+        query.setParameter("season", season)
+        query.setParameter("episodeType", episodeType)
+        query.setParameter("langType", langType)
+        return query.resultList.firstOrNull() ?: 0
     }
 
     fun findAllUUIDAndImage(): List<Tuple> {
-        return inTransaction {
-            it.createQuery("SELECT uuid, image FROM Episode", Tuple::class.java)
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-        }
+        return createQuery("SELECT uuid, image FROM Episode", Tuple::class.java)
+            .resultList
     }
 }

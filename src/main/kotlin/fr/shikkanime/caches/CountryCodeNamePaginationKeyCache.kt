@@ -1,13 +1,10 @@
 package fr.shikkanime.caches
 
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
-import java.util.*
 
-data class CountryCodeUUIDSortPaginationKeyCache(
+data class CountryCodeNamePaginationKeyCache(
     override val countryCode: CountryCode?,
-    val uuid: UUID?,
-    val sort: List<SortParameter>,
+    val name: String,
     override val page: Int,
     override val limit: Int,
 ) : CountryCodePaginationKeyCache(countryCode, page, limit) {
@@ -16,11 +13,10 @@ data class CountryCodeUUIDSortPaginationKeyCache(
         if (javaClass != other?.javaClass) return false
         if (!super.equals(other)) return false
 
-        other as CountryCodeUUIDSortPaginationKeyCache
+        other as CountryCodeNamePaginationKeyCache
 
         if (countryCode != other.countryCode) return false
-        if (uuid != other.uuid) return false
-        if (sort != other.sort) return false
+        if (name != other.name) return false
         if (page != other.page) return false
         if (limit != other.limit) return false
 
@@ -30,8 +26,7 @@ data class CountryCodeUUIDSortPaginationKeyCache(
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + (countryCode?.hashCode() ?: 0)
-        result = 31 * result + (uuid?.hashCode() ?: 0)
-        result = 31 * result + sort.hashCode()
+        result = 31 * result + name.hashCode()
         result = 31 * result + page
         result = 31 * result + limit
         return result

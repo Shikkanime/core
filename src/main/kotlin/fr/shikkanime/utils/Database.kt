@@ -3,7 +3,6 @@ package fr.shikkanime.utils
 import fr.shikkanime.entities.ShikkEntity
 import jakarta.persistence.EntityManager
 import liquibase.command.CommandScope
-import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import java.io.File
 import java.util.logging.Level
@@ -11,7 +10,7 @@ import kotlin.system.exitProcess
 
 class Database {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val sessionFactory: SessionFactory
+    val entityManager: EntityManager
 
     constructor(file: File) {
         if (!file.exists()) {
@@ -43,7 +42,6 @@ class Database {
         }
 
         val buildSessionFactory = configuration.buildSessionFactory()
-        sessionFactory = buildSessionFactory
 
         buildSessionFactory.openSession().doWork {
             try {
@@ -65,6 +63,8 @@ class Database {
             logger.log(Level.SEVERE, "Error while validating database", e)
             exitProcess(1)
         }
+
+        entityManager = buildSessionFactory.createEntityManager()
     }
 
     constructor() : this(
@@ -72,8 +72,4 @@ class Database {
             ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
         )
     )
-
-    fun getEntityManager(): EntityManager {
-        return sessionFactory.createEntityManager()
-    }
 }

@@ -35,6 +35,7 @@ import java.util.*
 import java.util.logging.Level
 import kotlin.collections.set
 import kotlin.reflect.KFunction
+import kotlin.reflect.KParameter
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
@@ -263,7 +264,10 @@ private suspend fun handleRequest(
             }
         }
     } catch (e: Exception) {
-        logger.log(Level.SEVERE, "Error while calling method $method", e)
+        if (e.message?.contains("Broken pipe") != true && e.message?.contains("Relais brisé (pipe)") != true) {
+            logger.log(Level.SEVERE, "Error while calling method $method", e)
+        }
+
         call.respond(HttpStatusCode.BadRequest)
     }
 }
@@ -281,63 +285,52 @@ private suspend fun callMethodWithParameters(
 ): Response {
     val methodParams = method.parameters.associateWith { kParameter ->
         when {
-            kParameter.name.isNullOrBlank() -> {
-                controller
-            }
+            kParameter.name.isNullOrBlank() -> controller
+            method.hasAnnotation<JWTAuthenticated>() && kParameter.hasAnnotation<JWTUser>() ->
+                UUID.fromString(call.principal<JWTPrincipal>()!!.payload.getClaim("uuid").asString())
 
-            method.hasAnnotation<JWTAuthenticated>() && kParameter.hasAnnotation<JWTUser>() -> {
-                val jwtPrincipal = call.principal<JWTPrincipal>()
-                UUID.fromString(jwtPrincipal!!.payload.getClaim("uuid").asString())
-            }
-
-            method.hasAnnotation<AdminSessionAuthenticated>() && kParameter.hasAnnotation<AdminSessionUser>() -> {
+            method.hasAnnotation<AdminSessionAuthenticated>() && kParameter.hasAnnotation<AdminSessionUser>() ->
                 call.principal<TokenDto>()
-            }
 
-            kParameter.hasAnnotation<BodyParam>() -> {
-                when (kParameter.type.javaType) {
-                    Array<UUID>::class.java -> call.receive<Array<UUID>>()
-                    Parameters::class.java -> call.receiveParameters()
-                    else -> call.receive<String>()
-                }
-            }
-
-            kParameter.hasAnnotation<QueryParam>() -> {
-                val name = kParameter.findAnnotation<QueryParam>()!!.name.ifBlank { kParameter.name!! }
-                val queryParamValue = call.request.queryParameters[name]
-
-                when (kParameter.type) {
-                    Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
-                    String::class.starProjectedType.withNullability(true) -> queryParamValue
-                    CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(
-                        queryParamValue
-                    )
-
-                    UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(
-                        queryParamValue
-                    )
-
-                    else -> throw Exception("Unknown type ${kParameter.type}")
-                }
-            }
-
-            kParameter.hasAnnotation<PathParam>() -> {
-                val name = kParameter.findAnnotation<PathParam>()!!.name.ifBlank { kParameter.name!! }
-                val pathParamValue = parameters[name]?.firstOrNull()
-
-                when (kParameter.type.javaType) {
-                    UUID::class.java -> UUID.fromString(pathParamValue)
-                    Platform::class.java -> Platform.valueOf(pathParamValue!!)
-                    else -> throw Exception("Unknown type ${kParameter.type}")
-                }
-            }
-
-            else -> {
-                throw Exception("Unknown parameter ${kParameter.name}")
-            }
+            kParameter.hasAnnotation<BodyParam>() -> handleBodyParam(kParameter, call)
+            kParameter.hasAnnotation<QueryParam>() -> handleQueryParam(kParameter, call)
+            kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, parameters)
+            else -> throw Exception("Unknown parameter ${kParameter.name}")
         }
     }
 
     method.isAccessible = true
     return method.callBy(methodParams) as Response
+}
+
+private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCall): Any {
+    return when (kParameter.type.javaType) {
+        Array<UUID>::class.java -> call.receive<Array<UUID>>()
+        Parameters::class.java -> call.receiveParameters()
+        else -> call.receive<String>()
+    }
+}
+
+private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any? {
+    val name = kParameter.findAnnotation<QueryParam>()!!.name.ifBlank { kParameter.name!! }
+    val queryParamValue = call.request.queryParameters[name]
+
+    return when (kParameter.type) {
+        Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
+        String::class.starProjectedType.withNullability(true) -> queryParamValue
+        CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(queryParamValue)
+        UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(queryParamValue)
+        else -> throw Exception("Unknown type ${kParameter.type}")
+    }
+}
+
+private fun handlePathParam(kParameter: KParameter, parameters: Map<String, List<String>>): Any? {
+    val name = kParameter.findAnnotation<PathParam>()!!.name.ifBlank { kParameter.name!! }
+    val pathParamValue = parameters[name]?.firstOrNull()
+
+    return when (kParameter.type.javaType) {
+        UUID::class.java -> UUID.fromString(pathParamValue)
+        Platform::class.java -> Platform.valueOf(pathParamValue!!)
+        else -> throw Exception("Unknown type ${kParameter.type}")
+    }
 }
