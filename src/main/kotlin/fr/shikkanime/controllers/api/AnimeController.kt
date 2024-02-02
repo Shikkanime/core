@@ -1,12 +1,11 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
@@ -19,7 +18,7 @@ import java.util.*
 @Controller("/api/v1/animes")
 class AnimeController {
     @Inject
-    private lateinit var animeService: AnimeService
+    private lateinit var animeCacheService: AnimeCacheService
 
     @Path
     @Get
@@ -74,11 +73,11 @@ class AnimeController {
         } ?: mutableListOf()
 
         val pageable = if (!name.isNullOrBlank()) {
-            animeService.findAllByName(name, countryParam, page, limit)
+            animeCacheService.findAllByName(name, countryParam, page, limit)
         } else {
-            animeService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
+            animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
         }
 
-        return Response.ok(PageableDto.fromPageable(pageable, AnimeDto::class.java))
+        return Response.ok(pageable)
     }
 }

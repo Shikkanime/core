@@ -6,7 +6,6 @@ import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
-import org.hibernate.jpa.AvailableHints
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
@@ -50,20 +49,13 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun preIndex() {
-        inTransaction {
-            val searchSession = Search.session(it)
-            val indexer = searchSession.massIndexer(getEntityClass())
-            indexer.startAndWait()
-        }
+        val searchSession = Search.session(database.entityManager)
+        val indexer = searchSession.massIndexer(getEntityClass())
+        indexer.startAndWait()
     }
 
     override fun findAll(): List<Anime> {
-        return inTransaction {
-            it.createQuery("FROM Anime", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-                .initialize()
-        }
+        return super.findAll().initialize()
     }
 
     fun findAllBy(
@@ -73,52 +65,44 @@ class AnimeRepository : AbstractRepository<Anime>() {
         page: Int,
         limit: Int
     ): Pageable<Anime> {
-        return inTransaction {
-            val queryBuilder = StringBuilder("FROM Anime a")
-            val whereClause = mutableListOf<String>()
+        val queryBuilder = StringBuilder("FROM Anime a")
+        val whereClause = mutableListOf<String>()
 
-            simulcast?.let {
-                queryBuilder.append(" JOIN a.simulcasts s")
-                whereClause.add("s.uuid = :uuid")
-            }
-            countryCode?.let { whereClause.add("a.countryCode = :countryCode") }
-
-            if (whereClause.isNotEmpty()) {
-                queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
-            }
-
-            buildSortQuery(sort, queryBuilder)
-
-            val query = it.createQuery(queryBuilder.toString(), getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-            countryCode?.let { query.setParameter("countryCode", countryCode) }
-            simulcast?.let { query.setParameter("uuid", simulcast) }
-            buildPageableQuery(query, page, limit).initialize()
+        simulcast?.let {
+            queryBuilder.append(" JOIN a.simulcasts s")
+            whereClause.add("s.uuid = :uuid")
         }
+        countryCode?.let { whereClause.add("a.countryCode = :countryCode") }
+
+        if (whereClause.isNotEmpty()) {
+            queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
+        }
+
+        buildSortQuery(sort, queryBuilder)
+
+        val query = createQuery(queryBuilder.toString(), getEntityClass())
+        countryCode?.let { query.setParameter("countryCode", countryCode) }
+        simulcast?.let { query.setParameter("uuid", simulcast) }
+        return buildPageableQuery(query, page, limit).initialize()
     }
 
     fun findAllByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
-        return inTransaction {
-            it.createQuery("FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .setParameter("countryCode", countryCode)
-                .setParameter("name", "%${name?.lowercase()}%")
-                .resultList
-                .initialize()
-        }
+        return createQuery("FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
+            .setParameter("countryCode", countryCode)
+            .setParameter("name", "%${name?.lowercase()}%")
+            .resultList
+            .initialize()
     }
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
-        return inTransaction {
-            val searchSession = Search.session(it)
+        val searchSession = Search.session(database.entityManager)
 
-            @Suppress("UNCHECKED_CAST")
-            val searchResult = searchSession.search(Anime::class.java)
-                .where { w -> findWhere(w, name, countryCode) }
-                .fetch((limit * page) - limit, limit) as SearchResult<Anime>
+        @Suppress("UNCHECKED_CAST")
+        val searchResult = searchSession.search(Anime::class.java)
+            .where { w -> findWhere(w, name, countryCode) }
+            .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
-            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount()).initialize()
-        }
+        return Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount()).initialize()
     }
 
     private fun findWhere(
@@ -133,21 +117,15 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     override fun find(uuid: UUID): Anime? {
-        return inTransaction {
-            it.createQuery("FROM Anime WHERE uuid = :uuid", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .setParameter("uuid", uuid)
-                .resultList
-                .firstOrNull()
-                ?.initialize()
-        }
+        return createQuery("FROM Anime WHERE uuid = :uuid", getEntityClass())
+            .setParameter("uuid", uuid)
+            .resultList
+            .firstOrNull()
+            ?.initialize()
     }
 
     fun findAllUUIDAndImage(): List<Tuple> {
-        return inTransaction {
-            it.createQuery("SELECT uuid, image FROM Anime", Tuple::class.java)
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-        }
+        return createQuery("SELECT uuid, image FROM Anime", Tuple::class.java)
+            .resultList
     }
 }

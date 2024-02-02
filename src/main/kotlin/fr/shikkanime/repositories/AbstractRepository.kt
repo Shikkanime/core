@@ -6,6 +6,7 @@ import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
+import org.hibernate.ScrollMode
 import org.hibernate.jpa.AvailableHints
 import org.hibernate.query.Query
 import java.lang.reflect.ParameterizedType
@@ -21,9 +22,9 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     protected fun <T> inTransaction(block: (EntityManager) -> T): T {
-        val entityManager = database.getEntityManager()
+        val entityManager = database.entityManager
         val transaction = entityManager.transaction
-        transaction.begin()
+        if (!transaction.isActive) transaction.begin()
         val result: T
 
         try {
@@ -32,11 +33,14 @@ abstract class AbstractRepository<E : ShikkEntity> {
         } catch (e: Exception) {
             transaction.rollback()
             throw e
-        } finally {
-            entityManager.close()
         }
 
         return result
+    }
+
+    fun <T> createQuery(query: String, clazz: Class<T>): TypedQuery<T> {
+        return database.entityManager.createQuery(query, clazz)
+            .setHint(AvailableHints.HINT_READ_ONLY, true)
     }
 
     fun buildPageableQuery(
@@ -44,31 +48,41 @@ abstract class AbstractRepository<E : ShikkEntity> {
         page: Int,
         limit: Int
     ): Pageable<E> {
-        val scrollableResults = (query as Query).scroll()
-        scrollableResults.last()
-        val total = scrollableResults.rowNumber + 1
-        scrollableResults.close()
+        val scrollableResults = query.unwrap(Query::class.java)
+            .setReadOnly(true)
+            .setFetchSize(limit)
+            .scroll(ScrollMode.SCROLL_SENSITIVE)
 
-        query.setFirstResult((limit * page) - limit).setMaxResults(limit)
-        return Pageable(query.resultList, page, limit, total.toLong())
+        val list = mutableListOf<E>()
+        var total = 0L
+
+        scrollableResults.use {
+            if (!it.first()) {
+                return@use
+            }
+
+            while (it.scroll((limit * page) - limit) && list.size < limit) {
+                @Suppress("UNCHECKED_CAST")
+                list.add(it.get() as E)
+                it.next()
+            }
+
+            total = if (it.last()) it.rowNumber + 1L else 0
+        }
+
+        return Pageable(list, page, limit, total)
     }
 
     open fun findAll(): List<E> {
-        return inTransaction {
-            it.createQuery("FROM ${getEntityClass().simpleName}", getEntityClass())
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-        }
+        return createQuery("FROM ${getEntityClass().simpleName}", getEntityClass())
+            .resultList
     }
 
     open fun find(uuid: UUID): E? {
-        return inTransaction {
-            it.createQuery("FROM ${getEntityClass().simpleName} WHERE uuid = :uuid", getEntityClass())
-                .setParameter("uuid", uuid)
-                .setHint(AvailableHints.HINT_READ_ONLY, true)
-                .resultList
-                .firstOrNull()
-        }
+        return createQuery("FROM ${getEntityClass().simpleName} WHERE uuid = :uuid", getEntityClass())
+            .setParameter("uuid", uuid)
+            .resultList
+            .firstOrNull()
     }
 
     fun save(entity: E): E {
