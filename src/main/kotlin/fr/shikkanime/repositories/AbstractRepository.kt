@@ -94,6 +94,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
     fun save(entity: E): E {
         return inTransaction {
             it.persist(entity)
+            it.flush()
             entity
         }
     }
@@ -101,6 +102,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
     fun update(entity: E): E {
         return inTransaction {
             it.merge(entity)
+            it.flush()
             entity
         }
     }
@@ -108,6 +110,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
     fun delete(entity: E) {
         inTransaction {
             it.remove(entity)
+            it.flush()
         }
     }
 
