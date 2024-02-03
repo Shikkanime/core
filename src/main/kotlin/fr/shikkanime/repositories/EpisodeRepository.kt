@@ -49,7 +49,11 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     }
 
     override fun findAll(): List<Episode> {
-        return super.findAll().initialize()
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Episode", getEntityClass())
+                .resultList
+                .initialize()
+        }
     }
 
     fun findAllBy(
@@ -71,46 +75,59 @@ class EpisodeRepository : AbstractRepository<Episode>() {
 
         buildSortQuery(sort, queryBuilder)
 
-        val query = createQuery(queryBuilder.toString(), getEntityClass())
-        countryCode?.let { query.setParameter("countryCode", countryCode) }
-        anime?.let { query.setParameter("uuid", anime) }
-        return buildPageableQuery(query, page, limit).initialize()
+        return inTransaction {
+            val query = createReadOnlyQuery(it, queryBuilder.toString(), getEntityClass())
+            countryCode?.let { query.setParameter("countryCode", countryCode) }
+            anime?.let { query.setParameter("uuid", anime) }
+            buildPageableQuery(query, page, limit).initialize()
+        }
     }
 
     fun findAllHashes(): List<String> {
-        return createQuery("SELECT hash FROM Episode", String::class.java)
-            .resultList
+        return inTransaction {
+            createReadOnlyQuery(it, "SELECT hash FROM Episode", String::class.java)
+                .resultList
+        }
     }
 
     fun findAllByAnime(uuid: UUID): List<Episode> {
-        return createQuery("FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
-            .setParameter("uuid", uuid)
-            .resultList
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .resultList
+        }
     }
 
     fun findByHash(hash: String?): Episode? {
-        return createQuery("FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
-            .setParameter("hash", "%${hash?.lowercase()}%")
-            .resultList
-            .firstOrNull()
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
+                .setParameter("hash", "%${hash?.lowercase()}%")
+                .resultList
+                .firstOrNull()
+        }
     }
 
     fun getLastNumber(anime: UUID, platform: Platform, season: Int, episodeType: EpisodeType, langType: LangType): Int {
-        val query = createQuery(
-            "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType = :episodeType AND langType = :langType ORDER BY number DESC",
-            Int::class.java
-        )
-        query.maxResults = 1
-        query.setParameter("uuid", anime)
-        query.setParameter("platform", platform)
-        query.setParameter("season", season)
-        query.setParameter("episodeType", episodeType)
-        query.setParameter("langType", langType)
-        return query.resultList.firstOrNull() ?: 0
+        return inTransaction {
+            val query = createReadOnlyQuery(
+                it,
+                "SELECT number FROM Episode WHERE anime.uuid = :uuid AND platform = :platform AND season = :season AND episodeType = :episodeType AND langType = :langType ORDER BY number DESC",
+                Int::class.java
+            )
+            query.maxResults = 1
+            query.setParameter("uuid", anime)
+            query.setParameter("platform", platform)
+            query.setParameter("season", season)
+            query.setParameter("episodeType", episodeType)
+            query.setParameter("langType", langType)
+            query.resultList.firstOrNull() ?: 0
+        }
     }
 
     fun findAllUUIDAndImage(): List<Tuple> {
-        return createQuery("SELECT uuid, image FROM Episode", Tuple::class.java)
-            .resultList
+        return inTransaction {
+            createReadOnlyQuery(it, "SELECT uuid, image FROM Episode", Tuple::class.java)
+                .resultList
+        }
     }
 }

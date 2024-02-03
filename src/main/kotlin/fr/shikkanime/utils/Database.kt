@@ -3,6 +3,7 @@ package fr.shikkanime.utils
 import fr.shikkanime.entities.ShikkEntity
 import jakarta.persistence.EntityManager
 import liquibase.command.CommandScope
+import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
 import java.io.File
 import java.util.logging.Level
@@ -10,7 +11,7 @@ import kotlin.system.exitProcess
 
 class Database {
     private val logger = LoggerFactory.getLogger(javaClass)
-    val entityManager: EntityManager
+    private val sessionFactory: SessionFactory
 
     constructor(file: File) {
         if (!file.exists()) {
@@ -41,9 +42,9 @@ class Database {
             logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
         }
 
-        val buildSessionFactory = configuration.buildSessionFactory()
+        sessionFactory = configuration.buildSessionFactory()
 
-        buildSessionFactory.openSession().doWork {
+        sessionFactory.openSession().doWork {
             try {
                 CommandScope("update")
                     .addArgumentValue("changeLogFile", "db/changelog/db.changelog-master.xml")
@@ -58,13 +59,11 @@ class Database {
         }
 
         try {
-            buildSessionFactory.schemaManager.validateMappedObjects()
+            sessionFactory.schemaManager.validateMappedObjects()
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while validating database", e)
             exitProcess(1)
         }
-
-        entityManager = buildSessionFactory.createEntityManager()
     }
 
     constructor() : this(
@@ -72,4 +71,7 @@ class Database {
             ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
         )
     )
+
+    val entityManager: EntityManager
+        get() = sessionFactory.createEntityManager()
 }
