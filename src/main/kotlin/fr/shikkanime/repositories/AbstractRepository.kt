@@ -24,7 +24,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
     protected fun <T> inTransaction(block: (EntityManager) -> T): T {
         val entityManager = database.entityManager
         val transaction = entityManager.transaction
-        if (!transaction.isActive) transaction.begin()
+        transaction.begin()
         val result: T
 
         try {
@@ -33,13 +33,15 @@ abstract class AbstractRepository<E : ShikkEntity> {
         } catch (e: Exception) {
             transaction.rollback()
             throw e
+        } finally {
+            entityManager.close()
         }
 
         return result
     }
 
-    fun <T> createQuery(query: String, clazz: Class<T>): TypedQuery<T> {
-        return database.entityManager.createQuery(query, clazz)
+    fun <T> createReadOnlyQuery(entityManager: EntityManager, query: String, clazz: Class<T>): TypedQuery<T> {
+        return entityManager.createQuery(query, clazz)
             .setHint(AvailableHints.HINT_READ_ONLY, true)
     }
 
@@ -80,21 +82,24 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     open fun findAll(): List<E> {
-        return createQuery("FROM ${getEntityClass().simpleName}", getEntityClass())
-            .resultList
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM ${getEntityClass().simpleName}", getEntityClass())
+                .resultList
+        }
     }
 
     open fun find(uuid: UUID): E? {
-        return createQuery("FROM ${getEntityClass().simpleName} WHERE uuid = :uuid", getEntityClass())
-            .setParameter("uuid", uuid)
-            .resultList
-            .firstOrNull()
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM ${getEntityClass().simpleName} WHERE uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .resultList
+                .firstOrNull()
+        }
     }
 
     fun save(entity: E): E {
         return inTransaction {
             it.persist(entity)
-            it.flush()
             entity
         }
     }
@@ -102,7 +107,6 @@ abstract class AbstractRepository<E : ShikkEntity> {
     fun update(entity: E): E {
         return inTransaction {
             it.merge(entity)
-            it.flush()
             entity
         }
     }
@@ -110,7 +114,6 @@ abstract class AbstractRepository<E : ShikkEntity> {
     fun delete(entity: E) {
         inTransaction {
             it.remove(entity)
-            it.flush()
         }
     }
 

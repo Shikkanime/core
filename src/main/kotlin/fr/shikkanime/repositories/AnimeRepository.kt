@@ -49,13 +49,19 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun preIndex() {
-        val searchSession = Search.session(database.entityManager)
-        val indexer = searchSession.massIndexer(getEntityClass())
-        indexer.startAndWait()
+        inTransaction {
+            val searchSession = Search.session(it)
+            val indexer = searchSession.massIndexer(getEntityClass())
+            indexer.startAndWait()
+        }
     }
 
     override fun findAll(): List<Anime> {
-        return super.findAll().initialize()
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Anime", getEntityClass())
+                .resultList
+                .initialize()
+        }
     }
 
     fun findAllBy(
@@ -80,18 +86,22 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
         buildSortQuery(sort, queryBuilder)
 
-        val query = createQuery(queryBuilder.toString(), getEntityClass())
-        countryCode?.let { query.setParameter("countryCode", countryCode) }
-        simulcast?.let { query.setParameter("uuid", simulcast) }
-        return buildPageableQuery(query, page, limit).initialize()
+        return inTransaction {
+            val query = createReadOnlyQuery(it, queryBuilder.toString(), getEntityClass())
+            countryCode?.let { query.setParameter("countryCode", countryCode) }
+            simulcast?.let { query.setParameter("uuid", simulcast) }
+            buildPageableQuery(query, page, limit).initialize()
+        }
     }
 
     fun findAllByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
-        return createQuery("FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
-            .setParameter("countryCode", countryCode)
-            .setParameter("name", "%${name?.lowercase()}%")
-            .resultList
-            .initialize()
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
+                .setParameter("countryCode", countryCode)
+                .setParameter("name", "%${name?.lowercase()}%")
+                .resultList
+                .initialize()
+        }
     }
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
@@ -102,7 +112,9 @@ class AnimeRepository : AbstractRepository<Anime>() {
             .where { w -> findWhere(w, name, countryCode) }
             .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
-        return Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount()).initialize()
+        return inTransaction {
+            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount()).initialize()
+        }
     }
 
     private fun findWhere(
@@ -117,15 +129,19 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     override fun find(uuid: UUID): Anime? {
-        return createQuery("FROM Anime WHERE uuid = :uuid", getEntityClass())
-            .setParameter("uuid", uuid)
-            .resultList
-            .firstOrNull()
-            ?.initialize()
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Anime WHERE uuid = :uuid", getEntityClass())
+                .setParameter("uuid", uuid)
+                .resultList
+                .firstOrNull()
+                ?.initialize()
+        }
     }
 
     fun findAllUUIDAndImage(): List<Tuple> {
-        return createQuery("SELECT uuid, image FROM Anime", Tuple::class.java)
-            .resultList
+        return inTransaction {
+            createReadOnlyQuery(it, "SELECT uuid, image FROM Anime", Tuple::class.java)
+                .resultList
+        }
     }
 }
