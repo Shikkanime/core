@@ -49,7 +49,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     fun findAllUUIDAndImage() = episodeRepository.findAllUUIDAndImage()
 
     fun addImage(uuid: UUID, image: String) {
-        ImageService.add(uuid, image, 640, 360)
+        ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360)
     }
 
     fun getSimulcast(entity: Episode): Simulcast {
@@ -136,7 +136,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
         parameters["image"]?.takeIf { it.isNotBlank() }?.let {
             episode.image = it
-            ImageService.remove(episode.uuid!!)
+            ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
             addImage(episode.uuid, it)
         }
 

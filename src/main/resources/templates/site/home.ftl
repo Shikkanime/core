@@ -9,7 +9,7 @@
                 <div class="col-md-2 col-6 mt-0">
                     <article>
                         <a href="${episode.url}" class="text-decoration-none text-white">
-                            <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}"
+                            <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
                                  alt="${episode.anime.shortName?replace("\"", "'")} episode preview image"
                                  class="w-100<#if episode.uncensored> blur</#if>">
                             <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
@@ -38,7 +38,7 @@
                     <article>
                         <a href="/animes/${anime.uuid}" class="text-decoration-none text-white">
                             <div class="anime-card position-relative">
-                                <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}"
+                                <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
                                      alt="${anime.shortName?replace("\"", "'")} anime image" class="w-100">
                                 <span class="h6 mt-2 text-truncate-2">${anime.shortName}</span>
 
