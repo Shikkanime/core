@@ -34,7 +34,10 @@ class AttachmentController {
             ),
         ]
     )
-    private fun getAttachment(@QueryParam("uuid") uuid: UUID?): Response {
+    private fun getAttachment(
+        @QueryParam("uuid") uuid: UUID?,
+        @QueryParam("type") typeString: String?
+    ): Response {
         if (uuid == null) {
             return Response.badRequest(
                 MessageDto(
@@ -44,7 +47,18 @@ class AttachmentController {
             )
         }
 
-        val image = ImageService[uuid] ?: return Response.notFound(
+        val type = ImageService.Type.entries.find { it.name.equals(typeString, true) }
+
+        if (type == null) {
+            return Response.badRequest(
+                MessageDto(
+                    MessageDto.Type.ERROR,
+                    "Type is required"
+                )
+            )
+        }
+
+        val image = ImageService[uuid, type] ?: return Response.notFound(
             MessageDto(
                 MessageDto.Type.ERROR,
                 "Attachment not found"

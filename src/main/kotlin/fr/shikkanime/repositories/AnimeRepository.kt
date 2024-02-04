@@ -140,7 +140,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
     fun findAllUUIDAndImage(): List<Tuple> {
         return inTransaction {
-            createReadOnlyQuery(it, "SELECT uuid, image FROM Anime", Tuple::class.java)
+            createReadOnlyQuery(it, "SELECT uuid, image, banner FROM Anime", Tuple::class.java)
                 .resultList
         }
     }
