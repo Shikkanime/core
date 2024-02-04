@@ -27,8 +27,14 @@ import kotlin.math.pow
 import kotlin.system.measureTimeMillis
 
 object ImageService {
+    enum class Type {
+        IMAGE,
+        BANNER,
+    }
+
     data class Image(
         val uuid: String,
+        val type: Type,
         val url: String,
         var bytes: ByteArray = byteArrayOf(),
         var originalSize: Long = 0,
@@ -36,9 +42,12 @@ object ImageService {
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
-            if (other !is Image) return false
+            if (javaClass != other?.javaClass) return false
+
+            other as Image
 
             if (uuid != other.uuid) return false
+            if (type != other.type) return false
             if (url != other.url) return false
             if (!bytes.contentEquals(other.bytes)) return false
             if (originalSize != other.originalSize) return false
@@ -49,6 +58,7 @@ object ImageService {
 
         override fun hashCode(): Int {
             var result = uuid.hashCode()
+            result = 31 * result + type.hashCode()
             result = 31 * result + url.hashCode()
             result = 31 * result + bytes.contentHashCode()
             result = 31 * result + originalSize.hashCode()
@@ -113,21 +123,16 @@ object ImageService {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        logger.info(
-            "Saved images cache in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${
-                toHumanReadable(
-                    cache.sumOf { it.size })
-            })"
-        )
+        logger.info("Saved images cache in $take ms ($originalSize} -> $compressedSize)")
         change.set(false)
     }
 
-    fun add(uuid: UUID, url: String, width: Int, height: Int) {
-        if (get(uuid) != null || url.isBlank()) {
+    fun add(uuid: UUID, type: Type, url: String, width: Int, height: Int) {
+        if (get(uuid, type) != null || url.isBlank()) {
             return
         }
 
-        val image = Image(uuid.toString(), url)
+        val image = Image(uuid.toString(), type, url)
         cache.add(image)
 
         threadPool.submit {
@@ -138,7 +143,7 @@ object ImageService {
 
                     if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
                         logger.warning("Failed to load image $url")
-                        remove(uuid)
+                        remove(uuid, type)
                         return@measureTimeMillis
                     }
 
@@ -153,7 +158,7 @@ object ImageService {
 
                     if (webp.isEmpty()) {
                         logger.warning("Failed to encode image to WebP")
-                        remove(uuid)
+                        remove(uuid, type)
                         return@measureTimeMillis
                     }
 
@@ -164,7 +169,7 @@ object ImageService {
                     change.set(true)
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Failed to load image $url", e)
-                    remove(uuid)
+                    remove(uuid, type)
                 }
             }
 
@@ -178,11 +183,41 @@ object ImageService {
         }
     }
 
-    fun remove(uuid: UUID) {
-        cache.removeIf { it.uuid == uuid.toString() }
+    fun remove(uuid: UUID, type: Type) {
+        cache.removeIf { it.uuid == uuid.toString() && it.type == type }
     }
 
-    operator fun get(uuid: UUID): Image? = cache.find { it.uuid == uuid.toString() }
+    operator fun get(uuid: UUID, type: Type): Image? = cache.find { it.uuid == uuid.toString() && it.type == type }
+
+    val size: Int
+        get() = cache.size
+
+    val originalSize: String
+        get() = toHumanReadable(cache.sumOf { it.originalSize })
+
+    val compressedSize: String
+        get() = toHumanReadable(cache.sumOf { it.size })
+
+    fun invalidate() {
+        cache.clear()
+        change.set(true)
+        addAll()
+    }
+
+    fun addAll() {
+        val animeService = Constant.injector.getInstance(AnimeService::class.java)
+        val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
+
+        animeService.findAllUUIDAndImage().forEach {
+            val uuid = it[0] as UUID
+            animeService.addImage(uuid, it[1] as String)
+            animeService.addBanner(uuid, it[2] as String?)
+        }
+
+        episodeService.findAllUUIDAndImage().forEach {
+            episodeService.addImage(it[0] as UUID, it[1] as String)
+        }
+    }
 
     fun getDominantColor(image: BufferedImage): Color {
         val pixels = IntArray(image.width * image.height).apply {

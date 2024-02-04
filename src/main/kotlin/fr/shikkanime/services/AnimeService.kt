@@ -41,7 +41,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
 
     fun addImage(uuid: UUID, image: String) {
-        ImageService.add(uuid, image, 480, 720)
+        ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720)
+    }
+
+    fun addBanner(uuid: UUID, image: String?) {
+        if (image.isNullOrBlank()) return
+        ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360)
     }
 
     override fun save(entity: Anime): Anime {
@@ -52,7 +57,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }.toMutableSet()
 
         val savedEntity = super.save(entity)
-        addImage(savedEntity.uuid!!, savedEntity.image!!)
+        val uuid = savedEntity.uuid!!
+        addImage(uuid, savedEntity.image!!)
+        addBanner(uuid, savedEntity.banner)
         MapCache.invalidate(Anime::class.java)
         return savedEntity
     }
@@ -66,11 +73,16 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         parameters["image"]?.takeIf { it.isNotBlank() }?.let {
             anime.image = it
-            ImageService.remove(anime.uuid!!)
+            ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
             addImage(anime.uuid, anime.image!!)
         }
 
-        parameters["banner"]?.takeIf { it.isNotBlank() }?.let { anime.banner = it }
+        parameters["banner"]?.takeIf { it.isNotBlank() }?.let {
+            anime.banner = it
+            ImageService.remove(anime.uuid!!, ImageService.Type.BANNER)
+            addBanner(anime.uuid, anime.banner)
+        }
+
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
 
         val update = super.update(anime)

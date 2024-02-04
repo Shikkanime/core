@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
@@ -65,5 +66,27 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getDashboard(): Response {
         return Response.template(Link.DASHBOARD)
+    }
+
+    @Path("/images")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getImages(): Response {
+        return Response.template(
+            Link.IMAGES,
+            mutableMapOf(
+                "size" to ImageService.size,
+                "originalSize" to ImageService.originalSize,
+                "compressedSize" to ImageService.compressedSize,
+            )
+        )
+    }
+
+    @Path("/images/invalidate")
+    @Get
+    @AdminSessionAuthenticated
+    private fun invalidateImages(): Response {
+        ImageService.invalidate()
+        return Response.redirect(Link.IMAGES.href)
     }
 }

@@ -15,3 +15,6 @@
 [#-- @ftlvariable name="config" type="fr.shikkanime.dtos.ConfigDto" --]
 [#-- @ftlvariable name="animes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.AnimeDto>" --]
 [#-- @ftlvariable name="episodes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.EpisodeDto>" --]
+[#-- @ftlvariable name="size" type="kotlin.NumbersKt" --]
+[#-- @ftlvariable name="originalSize" type="java.lang.String" --]
+[#-- @ftlvariable name="compressedSize" type="java.lang.String" --]
