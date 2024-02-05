@@ -32,6 +32,7 @@ class EpisodeDtoToEpisodeConverter : AbstractConverter<EpisodeDto, Episode>() {
             url = from.url,
             image = from.image,
             duration = from.duration,
+            description = from.description,
         )
     }
 }
