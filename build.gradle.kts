@@ -48,7 +48,7 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
     implementation("io.github.smiley4:ktor-swagger-ui:$ktorSwaggerUiVersion")
-    implementation("org.hibernate.orm:hibernate-core:6.4.2.Final")
+    implementation("org.hibernate.orm:hibernate-core:6.4.3.Final")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")
     implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
     implementation("org.postgresql:postgresql:42.7.0")
