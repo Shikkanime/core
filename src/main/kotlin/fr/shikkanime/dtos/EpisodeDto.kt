@@ -20,5 +20,6 @@ data class EpisodeDto(
     val url: String,
     val image: String,
     val duration: Long,
+    val description: String?,
     val uncensored: Boolean,
 ) : Serializable

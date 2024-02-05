@@ -123,7 +123,7 @@ object ImageService {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        logger.info("Saved images cache in $take ms ($originalSize} -> $compressedSize)")
+        logger.info("Saved images cache in $take ms ($originalSize -> $compressedSize)")
         change.set(false)
     }
 
