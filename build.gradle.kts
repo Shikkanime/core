@@ -3,7 +3,7 @@ import java.net.URI
 val ktorVersion = "2.3.8"
 val kotlinVersion = "1.9.22"
 val hibernateSearchVersion = "7.1.0.Alpha2"
-val junitVersion = "5.10.1"
+val junitVersion = "5.10.2"
 val tikaVersion = "3.0.0-BETA"
 val ktorSwaggerUiVersion = "2.7.4"
 
@@ -48,7 +48,7 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
     implementation("io.github.smiley4:ktor-swagger-ui:$ktorSwaggerUiVersion")
-    implementation("org.hibernate.orm:hibernate-core:6.4.2.Final")
+    implementation("org.hibernate.orm:hibernate-core:6.4.3.Final")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")
     implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
     implementation("org.postgresql:postgresql:42.7.0")

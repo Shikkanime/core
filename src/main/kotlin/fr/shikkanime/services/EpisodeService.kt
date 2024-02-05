@@ -4,10 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.SortParameter
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.repositories.EpisodeRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
@@ -47,6 +44,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     fun findByHash(hash: String?) = episodeRepository.findByHash(hash)
 
     fun findAllUUIDAndImage() = episodeRepository.findAllUUIDAndImage()
+
+    fun findAllByPlatform(platform: Platform) = episodeRepository.findAllByPlatform(platform)
 
     fun addImage(uuid: UUID, image: String) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360)

@@ -7,6 +7,7 @@ import fr.shikkanime.utils.Constant
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -40,7 +41,9 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
         assertEquals("Paradox Live THE ANIMATION", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
         assertEquals("Helck", episodes[1].anime?.name)
+        assertNotNull(episodes[1].description)
     }
 
     @Test
@@ -51,6 +54,7 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
         assertEquals("Pon no Michi", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
     }
 
     @Test
@@ -61,11 +65,15 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(4, episodes.size)
         assertEquals("One Piece", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
         assertEquals("Run For Money", episodes[1].anime?.name)
+        assertNotNull(episodes[1].description)
 
         assertEquals("MONSTERS", episodes[2].anime?.name)
         assertEquals(LangType.SUBTITLES, episodes[2].langType)
+        assertNotNull(episodes[2].description)
         assertEquals(LangType.VOICE, episodes[3].langType)
+        assertNotNull(episodes[3].description)
     }
 
     @Test
@@ -76,7 +84,9 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
         assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
         assertEquals("My Master Has No Tail", episodes[1].anime?.name)
+        assertNotNull(episodes[1].description)
     }
 
     @Test
@@ -87,6 +97,7 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
         assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
     }
 
     @Test
@@ -97,7 +108,10 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(3, episodes.size)
         assertEquals("Demon Slave", episodes[0].anime?.name)
+        assertNotNull(episodes[0].description)
         assertEquals("My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!", episodes[1].anime?.name)
+        assertNotNull(episodes[1].description)
         assertEquals("Urusei Yatsura", episodes[2].anime?.name)
+        assertNotNull(episodes[2].description)
     }
 }

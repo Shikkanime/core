@@ -37,5 +37,7 @@ data class Episode(
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
     @Column(nullable = false)
-    var duration: Long = -1
+    var duration: Long = -1,
+    @Column(nullable = true, columnDefinition = "VARCHAR(1000)")
+    var description: String? = null,
 ) : ShikkEntity(uuid)

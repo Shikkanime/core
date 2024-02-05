@@ -125,6 +125,8 @@ class AnimationDigitalNetworkPlatform :
 
         val duration = jsonObject.getAsLong("duration", -1)
 
+        val description = jsonObject.getAsString("summary")?.replace('\n', ' ')?.ifBlank { null }
+
         return jsonObject.getAsJsonArray("languages").map {
             val langType = when (it.asString) {
                 "vostf" -> LangType.SUBTITLES
@@ -152,6 +154,7 @@ class AnimationDigitalNetworkPlatform :
                 url = url,
                 image = image,
                 duration = duration,
+                description = description
             )
         }
     }
