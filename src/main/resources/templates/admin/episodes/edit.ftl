@@ -89,6 +89,11 @@
                         <input type="text" class="form-control" id="title" name="title" value="${episode.title!""}">
                     </div>
                     <div class="col-md-6">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="6">${episode.description}</textarea>
+                    </div>
+                    <div class="col-md-6">
                         <label for="url" class="form-label">URL</label>
                         <input type="text" class="form-control" id="url" name="url" value="${episode.url}">
                     </div>
