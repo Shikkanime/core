@@ -12,7 +12,7 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun getRepository() = simulcastRepository
 
-    override fun findAll() = super.findAll().sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) }))
+    override fun findAll() = super.findAll().sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed()
 
     fun findBySeasonAndYear(season: String, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 
