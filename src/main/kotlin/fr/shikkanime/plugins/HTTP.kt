@@ -12,6 +12,7 @@ import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 
 fun Application.configureHTTP() {
@@ -34,6 +35,13 @@ fun Application.configureHTTP() {
         exception<Throwable> { call, cause ->
             call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
+        status(HttpStatusCode.NotFound) { call, _ ->
+            val path = call.request.path()
+
+            if (!path.startsWith("/api") && !path.startsWith("/admin")) {
+                call.respondRedirect("/404")
+            }
+        }
     }
     install(ContentNegotiation) {
         gson {
@@ -41,6 +49,7 @@ fun Application.configureHTTP() {
     }
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
+        whitespaceStripping = true
     }
     install(CachingHeaders) {
     }
