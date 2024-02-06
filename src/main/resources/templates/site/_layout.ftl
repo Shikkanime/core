@@ -4,8 +4,16 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${title}</title>
-        <meta name="description" content="${description}">
+
+        <#if title??>
+            <title>${title}</title>
+        <#else>
+            <title>Shikkanime</title>
+        </#if>
+
+        <#if description??>
+            <meta name="description" content="${description}">
+        </#if>
 
         <#-- Favicons -->
         <link rel="icon" type="image/png" sizes="64x64" href="/assets/img/favicons/favicon-64x64.png">

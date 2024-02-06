@@ -1,6 +1,7 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.SortParameter
@@ -10,7 +11,6 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import io.ktor.http.*
-import org.hibernate.Hibernate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -78,20 +78,27 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             ?: choosenSimulcast
     }
 
+    fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast) {
+        if (anime.simulcasts.isEmpty() || anime.simulcasts.none { s -> s.uuid == simulcast.uuid }) {
+            if (simulcast.uuid == null) {
+                simulcastService.save(simulcast)
+            }
+
+            anime.simulcasts.add(simulcast)
+        }
+    }
+
     override fun save(entity: Episode): Episode {
-        val banner = entity.anime?.banner
+        val copy = entity.anime!!.copy()
+        val anime = animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
 
-        entity.anime = animeService.findAllByLikeName(entity.anime!!.countryCode!!, entity.anime!!.name!!).firstOrNull()
-            ?: animeService.save(entity.anime!!)
-
-        if (entity.anime?.banner.isNullOrBlank() && !banner.isNullOrBlank()) {
-            entity.anime?.banner = banner
-            animeService.update(entity.anime!!)
+        if (anime.banner.isNullOrBlank() && !copy.banner.isNullOrBlank()) {
+            anime.banner = copy.banner
         }
 
         entity.number.takeIf { it == -1 }?.let {
             entity.number = episodeRepository.getLastNumber(
-                entity.anime!!.uuid!!,
+                anime.uuid!!,
                 entity.platform!!,
                 entity.season!!,
                 entity.episodeType!!,
@@ -101,17 +108,11 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
         if (entity.langType == LangType.SUBTITLES) {
             val simulcast = getSimulcast(entity)
-            Hibernate.initialize(entity.anime!!.simulcasts)
-            val animeSimulcasts = entity.anime!!.simulcasts
+            addSimulcastToAnime(anime, simulcast)
+        }
 
-            if (animeSimulcasts.isEmpty() || animeSimulcasts.none { s -> s.uuid == simulcast.uuid }) {
-                if (simulcast.uuid == null) {
-                    simulcastService.save(simulcast)
-                }
-
-                animeSimulcasts.add(simulcast)
-                animeService.update(entity.anime!!)
-            }
+        if (entity.anime != anime) {
+            entity.anime = animeService.update(anime)
         }
 
         val savedEntity = super.save(entity)

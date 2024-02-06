@@ -3,6 +3,7 @@ package fr.shikkanime.services.caches
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.Anime
@@ -31,6 +32,10 @@ class AnimeCacheService : AbstractCacheService() {
         )
     }
 
+    private val findByIdCache = MapCache<UUID, AnimeDto>(classes = listOf(Anime::class.java)) {
+        AbstractConverter.convert(animeService.find(it), AnimeDto::class.java)
+    }
+
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -41,4 +46,6 @@ class AnimeCacheService : AbstractCacheService() {
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit)]
+
+    fun find(uuid: UUID) = findByIdCache[uuid]
 }

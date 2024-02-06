@@ -34,4 +34,34 @@ data class Anime(
         inverseJoinColumns = [JoinColumn(name = "simulcast_uuid")]
     )
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
-) : ShikkEntity(uuid)
+) : ShikkEntity(uuid) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Anime
+
+        if (uuid != other.uuid) return false
+        if (countryCode != other.countryCode) return false
+        if (name != other.name) return false
+        if (releaseDateTime != other.releaseDateTime) return false
+        if (image != other.image) return false
+        if (banner != other.banner) return false
+        if (description != other.description) return false
+        if (simulcasts != other.simulcasts) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = uuid?.hashCode() ?: 0
+        result = 31 * result + (countryCode?.hashCode() ?: 0)
+        result = 31 * result + (name?.hashCode() ?: 0)
+        result = 31 * result + releaseDateTime.hashCode()
+        result = 31 * result + (image?.hashCode() ?: 0)
+        result = 31 * result + (banner?.hashCode() ?: 0)
+        result = 31 * result + (description?.hashCode() ?: 0)
+        result = 31 * result + simulcasts.hashCode()
+        return result
+    }
+}

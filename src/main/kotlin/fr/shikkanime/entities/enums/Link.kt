@@ -8,6 +8,7 @@ enum class Link(val href: String, val template: String, val icon: String, val la
     EPISODES("/admin/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
     CONFIG("/admin/config", "/admin/config/list.ftl", "bi bi-gear", "Configurations"),
     IMAGES("/admin/images", "/admin/images.ftl", "bi bi-images", "Images"),
+    SIMULCASTS("/admin/simulcasts", "/admin/simulcasts.ftl", "bi bi-calendar-event", "Simulcasts"),
 
     // Site
     HOME("/", "/site/home.ftl", "", "Accueil"),

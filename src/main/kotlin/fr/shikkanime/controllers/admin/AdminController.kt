@@ -3,9 +3,15 @@ package fr.shikkanime.controllers.admin
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -22,6 +28,15 @@ private const val ADMIN = "/admin"
 class AdminController {
     @Inject
     private lateinit var memberService: MemberService
+
+    @Inject
+    private lateinit var simulcastCacheService: SimulcastCacheService
+
+    @Inject
+    private lateinit var episodeService: EpisodeService
+
+    @Inject
+    private lateinit var animeService: AnimeService
 
     @Path
     @Get
@@ -88,5 +103,39 @@ class AdminController {
     private fun invalidateImages(): Response {
         ImageService.invalidate()
         return Response.redirect(Link.IMAGES.href)
+    }
+
+    @Path("/simulcasts")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getSimulcasts(): Response {
+        return Response.template(
+            Link.SIMULCASTS,
+            mutableMapOf(
+                "simulcasts" to simulcastCacheService.findAll()
+            )
+        )
+    }
+
+    @Path("/simulcasts/recalculate")
+    @Get
+    @AdminSessionAuthenticated
+    private fun recalculateSimulcasts(): Response {
+        animeService.findAll().forEach { anime ->
+            anime.simulcasts.clear()
+            animeService.update(anime)
+        }
+
+        episodeService.findAll().forEach { episode ->
+            val anime = animeService.find(episode.anime!!.uuid!!)!!
+            episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(episode))
+
+            if (episode.anime != anime) {
+                animeService.update(anime)
+            }
+        }
+
+        MapCache.invalidate(Anime::class.java, Episode::class.java)
+        return Response.redirect(Link.SIMULCASTS.href)
     }
 }

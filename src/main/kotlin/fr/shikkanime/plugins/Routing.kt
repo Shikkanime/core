@@ -245,7 +245,7 @@ private suspend fun handleRequest(
                     LinkObject.list().filter { !it.href.startsWith("/admin") }
 
                 modelMap["links"] = list.map { link ->
-                    link.active = replacedPath.startsWith(link.href)
+                    link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
                     link
                 }
 

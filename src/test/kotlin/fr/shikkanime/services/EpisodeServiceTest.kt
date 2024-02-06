@@ -2,11 +2,9 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.utils.Constant
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,13 +22,18 @@ class EpisodeServiceTest {
     @Inject
     private lateinit var simulcastService: SimulcastService
 
+    @Inject
+    private lateinit var configService: ConfigService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
+        configService.save(Config(propertyKey = ConfigPropertyKey.SIMULCAST_RANGE.key, propertyValue = "10"))
     }
 
     @AfterEach
     fun tearDown() {
+        configService.deleteAll()
         episodeService.deleteAll()
         animeService.deleteAll()
         simulcastService.deleteAll()
@@ -46,6 +49,7 @@ class EpisodeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Test",
                 image = "https://www.shikkanime.com/image.png",
+                banner = "https://www.shikkanime.com/image.png",
                 releaseDateTime = releaseDateTime,
             ),
             episodeType = EpisodeType.EPISODE,
@@ -62,6 +66,12 @@ class EpisodeServiceTest {
         val simulcast = episodeService.getSimulcast(episode)
         assertEquals("WINTER", simulcast.season)
         assertEquals(2024, simulcast.year)
+
+        val savedEpisode = episodeService.save(episode)
+        val simulcasts = savedEpisode.anime!!.simulcasts
+        assertEquals(1, simulcasts.size)
+        assertEquals("WINTER", simulcasts.first().season)
+        assertEquals(2024, simulcasts.first().year)
     }
 
     @Test
@@ -72,7 +82,8 @@ class EpisodeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Test",
                 image = "https://www.shikkanime.com/image.png",
-                releaseDateTime = ZonedDateTime.parse("2023-12-25T00:00:00Z"),
+                banner = "https://www.shikkanime.com/image.png",
+                releaseDateTime = ZonedDateTime.parse("2023-12-20T00:00:00Z"),
             ),
             episodeType = EpisodeType.EPISODE,
             langType = LangType.SUBTITLES,
@@ -100,6 +111,7 @@ class EpisodeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Test",
                 image = "https://www.shikkanime.com/image.png",
+                banner = "https://www.shikkanime.com/image.png",
                 releaseDateTime = releaseDateTime,
             ),
             episodeType = EpisodeType.EPISODE,

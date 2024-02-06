@@ -20,7 +20,7 @@
                         <#list links as link>
                             <li class="nav-item ${margin}">
                                 <a href="${link.href}" class="nav-link ${link.active?then('active', '')}"
-                                   aria-current="${link.active?then('page', '')}">
+                                        ${link.active?then('aria-current="page"', '')}>
                                     <i class="${link.icon} me-2"></i>
                                     ${link.name}
                                 </a>
@@ -30,9 +30,9 @@
                 </div>
             </div>
         </nav>
-    </@layout.main>
 
-    <div class="text-white container-fluid px-md-5">
-        <#nested 1>
-    </div>
+        <div class="text-white container-fluid px-md-5">
+            <#nested 1>
+        </div>
+    </@layout.main>
 </#macro>
