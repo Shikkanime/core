@@ -2,8 +2,10 @@ package fr.shikkanime.plugins
 
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.LinkObject
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.*
@@ -216,6 +218,11 @@ private suspend fun handleRequest(
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)
 
+        if (method.hasAnnotation<Cached>()) {
+            val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
+            call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
+        }
+
         response.session?.let { call.sessions.set(it) }
 
         when (response.type) {
@@ -236,6 +243,7 @@ private suspend fun handleMultipartResponse(call: ApplicationCall, response: Res
 }
 
 private suspend fun handleTemplateResponse(call: ApplicationCall, controller: Any, replacedPath: String, response: Response) {
+    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val map = response.data as Map<String, Any>
     val modelMap = (map["model"] as Map<String, Any>).toMutableMap()
 
@@ -251,6 +259,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
 
     val title = map["title"] as String?
     modelMap["title"] = if (title?.contains(Constant.NAME) == true) title else (if (!title.isNullOrBlank()) "$title - " else "") + Constant.NAME
+    modelMap["description"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION) ?: ""
 
     call.respond(FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }

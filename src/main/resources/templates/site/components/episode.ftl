@@ -4,7 +4,7 @@
             <a href="${episode.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="hover-card position-relative">
                     <div class="position-relative">
-                        <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
+                        <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
                              alt="${episode.anime.shortName?replace("\"", "'")} episode preview image"
                              class="w-100<#if episode.uncensored> blur</#if>">
                         <img src="https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}"
