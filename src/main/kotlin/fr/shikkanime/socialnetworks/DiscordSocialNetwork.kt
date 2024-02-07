@@ -3,6 +3,7 @@ package fr.shikkanime.socialnetworks
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ImageService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import net.dv8tion.jda.api.EmbedBuilder
@@ -72,7 +73,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         embedMessage.setThumbnail(episodeDto.anime.image)
         embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
         embedMessage.setImage(episodeDto.image)
-        embedMessage.setFooter("Shikkanime", "https://www.shikkanime.fr/assets/img/favicons/favicon-64x64.png")
+        embedMessage.setFooter(Constant.NAME, "https://www.shikkanime.fr/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
         val embed = embedMessage.build()
 

@@ -1,6 +1,8 @@
 package fr.shikkanime.entities.enums
 
-enum class Link(val href: String, val template: String, val icon: String, val label: String) {
+import fr.shikkanime.utils.Constant
+
+enum class Link(val href: String, val template: String, val icon: String, val label: String, val title: String = label) {
     // Admin
     DASHBOARD("/admin/dashboard", "/admin/dashboard.ftl", "bi bi-pc-display", "Dashboard"),
     PLATFORMS("/admin/platforms", "/admin/platforms/list.ftl", "bi bi-display", "Platforms"),
@@ -11,7 +13,7 @@ enum class Link(val href: String, val template: String, val icon: String, val la
     SIMULCASTS("/admin/simulcasts", "/admin/simulcasts.ftl", "bi bi-calendar-event", "Simulcasts"),
 
     // Site
-    HOME("/", "/site/home.ftl", "", "Accueil"),
+    HOME("/", "/site/home.ftl", "", "Accueil", "${Constant.NAME} : Ne manquez plus jamais un épisode d'animé !"),
     CATALOG("/catalog", "/site/catalog.ftl", "", "Catalogue"),
     ;
 }
