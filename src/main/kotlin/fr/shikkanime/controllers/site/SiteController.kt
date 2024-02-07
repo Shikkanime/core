@@ -14,6 +14,7 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
+import io.ktor.http.*
 import java.util.*
 
 @Controller("/")
@@ -61,27 +62,32 @@ class SiteController {
         )
     }
 
+    @Path("robots.txt")
+    @Get
+    private fun robots(): Response {
+        return Response.template(
+            "/site/seo/robots.ftl",
+            null,
+            contentType = ContentType.Text.Plain
+        )
+    }
+
+    @Path("sitemap.xml")
+    @Get
+    private fun sitemap(): Response {
+        return Response.template(
+            "/site/seo/sitemap.ftl",
+            null,
+            contentType = ContentType.Text.Xml
+        )
+    }
+
     @Path("catalog")
     @Get
     private fun catalog(): Response {
         val findAll = simulcastCacheService.findAll()!!
         val currentSimulcast = findAll.first()
-
-        return Response.template(
-            Link.CATALOG,
-            mutableMapOf(
-                "description" to configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION),
-                "simulcasts" to findAll,
-                "currentSimulcast" to currentSimulcast,
-                "animes" to animeCacheService.findAllBy(
-                    CountryCode.FR,
-                    currentSimulcast.uuid,
-                    listOf(SortParameter("name", SortParameter.Order.ASC)),
-                    1,
-                    102
-                )!!.data,
-            )
-        )
+        return Response.redirect("/catalog/${currentSimulcast.uuid}")
     }
 
     @Path("catalog/{uuid}")
@@ -125,7 +131,7 @@ class SiteController {
             "/site/anime.ftl",
             anime.shortName,
             mutableMapOf(
-                "description" to anime.description,
+                "description" to configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION),
                 "anime" to anime,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,

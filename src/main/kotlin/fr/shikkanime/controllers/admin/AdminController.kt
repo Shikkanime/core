@@ -5,6 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeService
@@ -126,14 +127,16 @@ class AdminController {
             animeService.update(anime)
         }
 
-        episodeService.findAll().forEach { episode ->
-            val anime = animeService.find(episode.anime!!.uuid!!)!!
-            episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(episode))
+        episodeService.findAll()
+            .filter { it.langType == LangType.SUBTITLES }
+            .forEach { episode ->
+                val anime = animeService.find(episode.anime!!.uuid!!)!!
+                episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(episode))
 
-            if (episode.anime != anime) {
-                animeService.update(anime)
+                if (episode.anime != anime) {
+                    animeService.update(anime)
+                }
             }
-        }
 
         MapCache.invalidate(Anime::class.java, Episode::class.java)
         return Response.redirect(Link.SIMULCASTS.href)

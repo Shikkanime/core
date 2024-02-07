@@ -12,6 +12,7 @@ import java.io.File
 import java.time.ZoneId
 
 object Constant {
+    const val NAME = "Shikkanime"
     val reflections = Reflections("fr.shikkanime")
     val injector: Injector = Guice.createInjector(DefaultModule())
     val abstractPlatforms = reflections.getSubTypesOf(AbstractPlatform::class.java).map { injector.getInstance(it) }

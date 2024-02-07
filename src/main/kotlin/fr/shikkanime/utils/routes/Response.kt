@@ -16,6 +16,7 @@ open class Response(
     val type: ResponseType = ResponseType.JSON,
     val session: TokenDto? = null,
     val data: Any? = null,
+    val contentType: ContentType = ContentType.Application.Json,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -24,6 +25,7 @@ open class Response(
         if (status != other.status) return false
         if (data != other.data) return false
         if (session != other.session) return false
+        if (contentType != other.contentType) return false
 
         return true
     }
@@ -32,6 +34,7 @@ open class Response(
         var result = status.hashCode()
         result = 31 * result + (data?.hashCode() ?: 0)
         result = 31 * result + (session?.hashCode() ?: 0)
+        result = 31 * result + contentType.hashCode()
         return result
     }
 
@@ -60,20 +63,23 @@ open class Response(
         fun template(
             template: String,
             title: String? = null,
-            model: MutableMap<String, Any?> = mutableMapOf(),
-            session: TokenDto? = null
+            model: Map<String, Any?> = mapOf(),
+            session: TokenDto? = null,
+            contentType: ContentType = ContentType.Text.Html.withCharset(Charsets.UTF_8),
         ): Response = Response(
             HttpStatusCode.OK,
             type = ResponseType.TEMPLATE,
             data = mapOf("template" to template, "title" to title, "model" to model),
-            session = session
+            session = session,
+            contentType = contentType
         )
 
         fun template(
             link: Link,
-            model: MutableMap<String, Any?> = mutableMapOf(),
-            session: TokenDto? = null
-        ): Response = template(link.template, link.label, model, session)
+            model: Map<String, Any?> = mapOf(),
+            session: TokenDto? = null,
+            contentType: ContentType = ContentType.Text.Html.withCharset(Charsets.UTF_8),
+        ): Response = template(link.template, link.title, model, session, contentType)
 
         fun redirect(path: String, session: TokenDto? = null): Response =
             Response(HttpStatusCode.Found, type = ResponseType.REDIRECT, data = path, session = session)

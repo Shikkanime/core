@@ -36,9 +36,8 @@
         </style>
     </head>
     <body>
-    <main>
-        <#nested 0>
-    </main>
+
+    <#nested 0>
 
     <script src="/assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     </body>
