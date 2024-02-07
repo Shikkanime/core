@@ -216,60 +216,43 @@ private suspend fun handleRequest(
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)
 
-        if (method.hasAnnotation<Cached>()) {
-            val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
-            call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
-        }
-
-        if (response.session != null) {
-            call.sessions.set(response.session)
-        }
+        response.session?.let { call.sessions.set(it) }
 
         when (response.type) {
-            ResponseType.MULTIPART -> {
-                val map = response.data as Map<String, Any>
-
-                call.respondBytes(
-                    map["image"] as ByteArray,
-                    map["contentType"] as ContentType,
-                )
-            }
-
-            ResponseType.TEMPLATE -> {
-                val map = response.data as Map<String, Any>
-                val modelMap = map["model"] as MutableMap<String, Any>
-
-                val list = if (controller.javaClass.simpleName.startsWith("Admin"))
-                    LinkObject.list().filter { it.href.startsWith("/admin") }
-                else
-                    LinkObject.list().filter { !it.href.startsWith("/admin") }
-
-                modelMap["links"] = list.map { link ->
-                    link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
-                    link
-                }
-
-                val title = map["title"] as String?
-                modelMap["title"] = (if (!title.isNullOrBlank()) "$title - " else "") + "Shikkanime"
-
-                call.respond(FreeMarkerContent(map["template"] as String, modelMap, ""))
-            }
-
-            ResponseType.REDIRECT -> {
-                call.respondRedirect(response.data as String)
-            }
-
-            else -> {
-                call.respond(response.status, response.data ?: "")
-            }
+            ResponseType.MULTIPART -> handleMultipartResponse(call, response)
+            ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
+            ResponseType.REDIRECT -> call.respondRedirect(response.data as String)
+            else -> call.respond(response.status, response.data ?: "")
         }
     } catch (e: Exception) {
-        if (e.message?.contains("Broken pipe") != true && e.message?.contains("Relais brisé (pipe)") != true) {
-            logger.log(Level.SEVERE, "Error while calling method $method", e)
-        }
-
+        logger.log(Level.SEVERE, "Error while calling method $method", e)
         call.respond(HttpStatusCode.BadRequest)
     }
+}
+
+private suspend fun handleMultipartResponse(call: ApplicationCall, response: Response) {
+    val map = response.data as Map<String, Any>
+    call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
+}
+
+private suspend fun handleTemplateResponse(call: ApplicationCall, controller: Any, replacedPath: String, response: Response) {
+    val map = response.data as Map<String, Any>
+    val modelMap = (map["model"] as Map<String, Any>).toMutableMap()
+
+    val list = if (controller.javaClass.simpleName.startsWith("Admin"))
+        LinkObject.list().filter { it.href.startsWith("/admin") }
+    else
+        LinkObject.list().filter { !it.href.startsWith("/admin") }
+
+    modelMap["links"] = list.map { link ->
+        link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
+        link
+    }
+
+    val title = map["title"] as String?
+    modelMap["title"] = if (title?.contains(Constant.NAME) == true) title else (if (!title.isNullOrBlank()) "$title - " else "") + Constant.NAME
+
+    call.respond(FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }
 
 private fun replacePathWithParameters(path: String, parameters: Map<String, List<String>>): String =

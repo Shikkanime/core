@@ -38,6 +38,10 @@ fun Application.configureHTTP() {
         status(HttpStatusCode.NotFound) { call, _ ->
             val path = call.request.path()
 
+            if (path.contains(".")) {
+                return@status
+            }
+
             if (!path.startsWith("/api") && !path.startsWith("/admin")) {
                 call.respondRedirect("/404")
             }
@@ -60,7 +64,7 @@ fun Application.configureHTTP() {
                 forwardRoot = false
             }
             info {
-                title = "Shikkanime API"
+                title = "${Constant.NAME} API"
                 version = "1.0"
                 description = "API for testing and demonstration purposes"
             }

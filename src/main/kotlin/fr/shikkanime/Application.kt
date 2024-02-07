@@ -14,10 +14,10 @@ import io.ktor.server.application.*
 import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 
-private val logger = LoggerFactory.getLogger("Shikkanime")
+private val logger = LoggerFactory.getLogger(Constant.NAME)
 
 fun main() {
-    logger.info("Starting ShikkAnime...")
+    logger.info("Starting ${Constant.NAME}...")
     ImageService.loadCache()
 
     val memberService = Constant.injector.getInstance(MemberService::class.java)
