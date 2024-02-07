@@ -2,7 +2,6 @@ package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.SortParameter
-import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
@@ -37,7 +36,6 @@ class SiteController {
         return Response.template(
             Link.HOME,
             mutableMapOf(
-                "description" to configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION),
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
                     null,
@@ -99,7 +97,6 @@ class SiteController {
         return Response.template(
             Link.CATALOG,
             mutableMapOf(
-                "description" to configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION),
                 "simulcasts" to findAll,
                 "currentSimulcast" to currentSimulcast,
                 "animes" to animeCacheService.findAllBy(
@@ -118,7 +115,7 @@ class SiteController {
     private fun error404(): Response {
         return Response.template(
             "/site/404.ftl",
-            "Page introuvable",
+            "Page introuvable"
         )
     }
 
@@ -131,7 +128,6 @@ class SiteController {
             "/site/anime.ftl",
             anime.shortName,
             mutableMapOf(
-                "description" to configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION),
                 "anime" to anime,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
