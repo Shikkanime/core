@@ -38,6 +38,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         animeRepository.findAllByName(name, countryCode, page, limit)
 
+    fun findBySlug(slug: String) = animeRepository.findBySlug(slug)
+
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
 
     fun addImage(uuid: UUID, image: String) {

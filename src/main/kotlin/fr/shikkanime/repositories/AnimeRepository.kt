@@ -128,6 +128,16 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return bool
     }
 
+    fun findBySlug(slug: String): Anime? {
+        return inTransaction {
+            createReadOnlyQuery(it, "FROM Anime WHERE slug = :slug", getEntityClass())
+                .setParameter("slug", slug)
+                .resultList
+                .firstOrNull()
+                ?.initialize()
+        }
+    }
+
     override fun find(uuid: UUID): Anime? {
         return inTransaction {
             createReadOnlyQuery(it, "FROM Anime WHERE uuid = :uuid", getEntityClass())

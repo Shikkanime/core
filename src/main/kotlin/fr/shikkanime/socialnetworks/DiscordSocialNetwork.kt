@@ -16,6 +16,8 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
+private const val BASE_URL = "https://www.shikkanime.fr/"
+
 class DiscordSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(DiscordSocialNetwork::class.java)
     private var isInitialized = false
@@ -29,7 +31,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
 
         try {
             val builder = JDABuilder.createDefault(configCacheService.getValueAsString(ConfigPropertyKey.DISCORD_TOKEN))
-            builder.setActivity(Activity.playing("https://www.shikkanime.fr/"))
+            builder.setActivity(Activity.playing(BASE_URL))
             jda = builder.build()
             jda?.awaitReady()
             isInitialized = true
@@ -67,13 +69,13 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         embedMessage.setAuthor(
             episodeDto.platform.platformName,
             episodeDto.platform.url,
-            "https://www.shikkanime.fr/assets/img/platforms/${episodeDto.platform.image}"
+            "${BASE_URL}assets/img/platforms/${episodeDto.platform.image}"
         )
-        embedMessage.setTitle(episodeDto.anime.shortName, episodeDto.url)
+        embedMessage.setTitle(episodeDto.anime.shortName, "${BASE_URL}animes/${episodeDto.anime.slug}")
         embedMessage.setThumbnail(episodeDto.anime.image)
         embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
         embedMessage.setImage(episodeDto.image)
-        embedMessage.setFooter(Constant.NAME, "https://www.shikkanime.fr/assets/img/favicons/favicon-64x64.png")
+        embedMessage.setFooter(Constant.NAME, "${BASE_URL}assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
         val embed = embedMessage.build()
 

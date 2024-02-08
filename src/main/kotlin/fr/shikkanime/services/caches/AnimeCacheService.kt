@@ -32,6 +32,10 @@ class AnimeCacheService : AbstractCacheService() {
         )
     }
 
+    private val findBySlugCache = MapCache<String, AnimeDto>(classes = listOf(Anime::class.java)) {
+        AbstractConverter.convert(animeService.findBySlug(it), AnimeDto::class.java)
+    }
+
     private val findByIdCache = MapCache<UUID, AnimeDto>(classes = listOf(Anime::class.java)) {
         AbstractConverter.convert(animeService.find(it), AnimeDto::class.java)
     }
@@ -46,6 +50,8 @@ class AnimeCacheService : AbstractCacheService() {
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit)]
+
+    fun findBySlug(slug: String) = findBySlugCache[slug]
 
     fun find(uuid: UUID) = findByIdCache[uuid]
 }
