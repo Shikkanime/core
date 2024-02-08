@@ -84,12 +84,13 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (!isInitialized) return
         if (twitter == null) return
 
+        val url = "https://www.shikkanime.fr/animes/${episodeDto.anime.slug}"
         val uncensored = if (episodeDto.uncensored) " non censuré" else ""
         val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
         val message =
             "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${
                 platformAccount(episodeDto.platform)
-            }\n\nBon visionnage. \uD83C\uDF7F\n\n\uD83D\uDD36 Lien de l'épisode : ${episodeDto.url}"
+            }\n\nBon visionnage. \uD83C\uDF7F\n\n\uD83D\uDD36 Lien de l'épisode : $url"
 
         val byteArrayOutputStream = ByteArrayOutputStream()
         ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)

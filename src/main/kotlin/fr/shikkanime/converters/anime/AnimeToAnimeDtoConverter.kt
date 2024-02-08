@@ -38,6 +38,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
                 SimulcastDto::class.java
             ) else null,
             status = status,
+            slug = from.slug,
         )
     }
 }

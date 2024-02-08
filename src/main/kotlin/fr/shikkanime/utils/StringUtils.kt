@@ -3,9 +3,14 @@ package fr.shikkanime.utils
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import java.text.Normalizer
 import java.util.*
+import java.util.regex.Pattern
 
 object StringUtils {
+    private val NONLATIN: Pattern = Pattern.compile("[^\\w-]")
+    private val WHITESPACE: Pattern = Pattern.compile("\\s")
+
     fun getShortName(fullName: String): String {
         val regexs = listOf("-.*-".toRegex(), "Saison \\d*".toRegex(), "\\(\\d*\\)".toRegex())
         val separators = listOf(":", ",", "!")
@@ -58,5 +63,12 @@ object StringUtils {
         }
 
         return "Saison ${episode.season} • $etName ${episode.number} $ltName"
+    }
+
+    fun toSlug(input: String): String {
+        val nowhitespace: String = WHITESPACE.matcher(input).replaceAll("-")
+        val normalized: String = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD)
+        val slug: String = NONLATIN.matcher(normalized).replaceAll("")
+        return slug.lowercase()
     }
 }

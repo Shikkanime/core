@@ -1,7 +1,7 @@
 <#macro display anime>
     <div class="col-md-2 col-6 mt-0">
         <article>
-            <a href="/animes/${anime.uuid}" class="text-decoration-none text-white">
+            <a href="/animes/${anime.slug}" class="text-decoration-none text-white">
                 <div class="hover-card position-relative">
                     <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
                          alt="${anime.shortName?replace("\"", "'")} anime image" class="w-100">
