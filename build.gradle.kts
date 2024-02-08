@@ -54,7 +54,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.0")
     implementation("org.reflections:reflections:0.10.2")
     implementation("com.google.inject:guice:7.0.0")
-    implementation("org.liquibase:liquibase-core:4.25.1")
+    implementation("org.liquibase:liquibase-core:4.26.0")
     implementation("org.quartz-scheduler:quartz:2.5.0-rc1")
     implementation("com.google.guava:guava:33.0.0-jre")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.1")
