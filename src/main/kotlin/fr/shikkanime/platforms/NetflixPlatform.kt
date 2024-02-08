@@ -47,6 +47,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                 val durationInSeconds = duration?.substringBefore(" ")?.trim()?.toLongOrNull()?.times(60) ?: -1
                 val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapNotNull null
                 val imageWithoutParams = image.substringBefore("?")
+                val episodeDescription = episode.selectFirst(".epsiode-synopsis")?.text()
 
                 Episode(
                     platform = getPlatform(),
@@ -70,6 +71,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                     url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id",
                     image = imageWithoutParams,
                     duration = durationInSeconds,
+                    description = episodeDescription,
                 ).also { add(it) }
             }
         }
