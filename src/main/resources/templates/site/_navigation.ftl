@@ -57,27 +57,27 @@
 
                 <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
                     <li class="ms-3">
-                        <a class="text-muted" href="https://github.com/Shikkanime" target="_blank">
+                        <a class="text-muted" href="https://github.com/Shikkanime" target="_blank" aria-label="GitHub">
                             <i class="bi bi-github"></i>
                         </a>
                     </li>
                     <li class="ms-3">
-                        <a class="text-muted" href="https://twitter.com/Shikkanime" target="_blank">
+                        <a class="text-muted" href="https://twitter.com/Shikkanime" target="_blank" aria-label="X (Twitter)">
                             <i class="bi bi-twitter-x"></i>
                         </a>
                     </li>
                     <li class="ms-3">
-                        <a class="text-muted" href="https://www.instagram.com/shikkanime/" target="_blank">
+                        <a class="text-muted" href="https://www.instagram.com/shikkanime/" target="_blank" aria-label="Instagram">
                             <i class="bi bi-instagram"></i>
                         </a>
                     </li>
                     <li class="ms-3">
-                        <a class="text-muted" href="https://www.threads.net/@shikkanime" target="_blank">
+                        <a class="text-muted" href="https://www.threads.net/@shikkanime" target="_blank" aria-label="Threads">
                             <i class="bi bi-threads"></i>
                         </a>
                     </li>
                     <li class="ms-3">
-                        <a class="text-muted" href="mailto:contact@shikkanime.fr">
+                        <a class="text-muted" href="mailto:contact@shikkanime.fr" aria-label="Email">
                             <i class="bi bi-envelope"></i>
                         </a>
                     </li>
