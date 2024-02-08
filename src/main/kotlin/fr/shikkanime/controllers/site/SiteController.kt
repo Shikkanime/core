@@ -119,10 +119,10 @@ class SiteController {
         )
     }
 
-    @Path("animes/{uuid}")
+    @Path("animes/{slug}")
     @Get
-    private fun animeDetail(@PathParam("uuid") uuid: UUID): Response {
-        val anime = animeCacheService.find(uuid) ?: return Response.redirect("/404")
+    private fun animeDetail(@PathParam("slug") slug: String): Response {
+        val anime = animeCacheService.findBySlug(slug) ?: return Response.redirect("/404")
 
         return Response.template(
             "/site/anime.ftl",
@@ -131,7 +131,7 @@ class SiteController {
                 "anime" to anime,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
-                    uuid,
+                    anime.uuid,
                     listOf(
                         SortParameter("season", SortParameter.Order.ASC),
                         SortParameter("number", SortParameter.Order.ASC),

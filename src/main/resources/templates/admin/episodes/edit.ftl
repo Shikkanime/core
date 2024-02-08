@@ -91,7 +91,7 @@
                     <div class="col-md-6">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description"
-                                  rows="6">${episode.description}</textarea>
+                                  rows="6">${episode.description!""}</textarea>
                     </div>
                     <div class="col-md-6">
                         <label for="url" class="form-label">URL</label>

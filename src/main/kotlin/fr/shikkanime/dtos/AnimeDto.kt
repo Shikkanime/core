@@ -16,4 +16,5 @@ data class AnimeDto(
     val description: String?,
     val simulcasts: List<SimulcastDto>?,
     val status: Status? = null,
+    val slug: String? = null,
 ) : Serializable
