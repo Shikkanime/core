@@ -38,4 +38,15 @@ class StringUtilsTest {
             assertEquals(expected, StringUtils.getShortName(input))
         }
     }
+
+    @Test
+    fun toSlug() {
+        val list = listOf(
+            "Gloutons & Dragons" to "gloutons-dragons",
+        )
+
+        list.forEach { (input, expected) ->
+            assertEquals(expected, StringUtils.toSlug(input))
+        }
+    }
 }
