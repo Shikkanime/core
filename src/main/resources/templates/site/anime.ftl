@@ -5,7 +5,7 @@
     <div class="container">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
-                <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
+                <img loading="lazy" data-src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
                      alt="${anime.shortName?replace("\"", "'")} anime image" class="w-50">
             </div>
 

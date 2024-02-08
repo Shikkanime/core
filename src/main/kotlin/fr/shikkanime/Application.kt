@@ -33,7 +33,7 @@ fun main() {
     animeService.preIndex()
 
     animeService.findAll()
-        .filter { it.slug.isNullOrBlank() }
+        .filter { it.slug.isNullOrBlank() || it.slug != StringUtils.toSlug(StringUtils.getShortName(it.name!!)) }
         .forEach {
             val name = StringUtils.getShortName(it.name!!)
             val slug = StringUtils.toSlug(name)
