@@ -30,4 +30,5 @@
     </div>
 
     <script src="/assets/js/hover_cards.js"></script>
+    <script src="/assets/js/intersection_observer.js"></script>
 </@navigation.display>

@@ -3,7 +3,7 @@
         <article>
             <a href="/animes/${anime.slug}" class="text-decoration-none text-white">
                 <div class="hover-card position-relative">
-                    <img loading="lazy" src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
+                    <img loading="lazy" data-src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
                          alt="${anime.shortName?replace("\"", "'")} anime image" class="w-100">
                     <span class="h6 mt-2 text-truncate-2">${anime.shortName}</span>
 
