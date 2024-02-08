@@ -20,20 +20,20 @@
         <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicons/favicon-16x16.png">
 
-        <link rel="stylesheet" href="/assets/css/bootstrap.min.css" crossorigin="anonymous">
-        <link rel="stylesheet" href="/assets/css/main.css" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css"
-              crossorigin="anonymous">
+        <link rel="preload" href="/assets/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <link rel="preload" href="/assets/css/main.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css" as="style"
+              onload="this.onload=null;this.rel='stylesheet'">
 
         <#if header??>
             ${header}
         </#if>
 
-        <style>
-            body {
-                background-color: #000;
-            }
-        </style>
+        <noscript>
+            <link rel="stylesheet" href="/assets/css/bootstrap.min.css" crossorigin="anonymous">
+            <link rel="stylesheet" href="/assets/css/main.css" crossorigin="anonymous">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css" crossorigin="anonymous">
+        </noscript>
     </head>
     <body>
 
