@@ -10,4 +10,5 @@ enum class ConfigPropertyKey(val key: String) {
     USE_CRUNCHYROLL_API("use_crunchyroll_api"),
     SEO_DESCRIPTION("seo_description"),
     SOCIAL_NETWORK_EPISODES_SIZE_LIMIT("social_network_episodes_size_limit"),
+    FETCH_OLD_EPISODE_DESCRIPTION_SIZE("fetch_old_episode_description_size"),
 }

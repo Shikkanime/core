@@ -53,28 +53,22 @@ class AnimationDigitalNetworkPlatform :
         jsonObject: JsonObject,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
-        val show = jsonObject.getAsJsonObject("show") ?: throw Exception("Show is null")
+        val show = requireNotNull(jsonObject.getAsJsonObject("show")) { "Show is null" }
         val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
 
-        var animeName =
-            show.getAsString("shortTitle") ?: show.getAsString("title") ?: throw Exception("Anime name is null")
+        var animeName = requireNotNull(show.getAsString("shortTitle") ?: show.getAsString("title")) { "Anime name is null" }
         animeName = animeName.replace(Regex("Saison \\d"), "").trim()
         animeName = animeName.replace(season.toString(), "").trim()
-        // Replace "Edens Zero -" to get "Edens Zero"
         animeName = animeName.replace(Regex(" -.*"), "").trim()
-        // Replace "Edens Zero Part" to get "Edens Zero"
         animeName = animeName.replace(Regex(" Part.*"), "").trim()
 
-        val animeImage = show.getAsString("image2x") ?: throw Exception("Anime image is null")
-        val animeBanner = show.getAsString("imageHorizontal2x") ?: throw Exception("Anime banner is null")
+        val animeImage = requireNotNull(show.getAsString("image2x")) { "Anime image is null" }
+        val animeBanner = requireNotNull(show.getAsString("imageHorizontal2x")) { "Anime banner is null" }
         val animeDescription = show.getAsString("summary")?.replace('\n', ' ') ?: ""
         val genres = show.getAsJsonArray("genres") ?: JsonArray()
 
         val contains = configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
-
-        if ((genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) && !contains) {
-            throw Exception("Anime is not an animation")
-        }
+        if ((genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) && !contains) throw Exception("Anime is not an animation")
 
         var isSimulcasted = show.getAsBoolean("simulcast") == true ||
                 show.getAsString("firstReleaseYear")!! in (0..1).map { (zonedDateTime.year - it).toString() } ||
@@ -87,21 +81,15 @@ class AnimationDigitalNetworkPlatform :
                 descriptionLowercase.startsWith("(diffusion du premier épisode") ||
                 descriptionLowercase.startsWith("(diffusion de l'épisode 1 le")
 
-        if (!isSimulcasted) {
-            throw AnimeNotSimulcastedException("Anime is not simulcasted")
-        }
+        if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
 
-        val releaseDateString = jsonObject.getAsString("releaseDate") ?: throw Exception("Release date is null")
+        val releaseDateString = requireNotNull(jsonObject.getAsString("releaseDate")) { "Release date is null" }
         val releaseDate = ZonedDateTime.parse(releaseDateString)
 
         val numberAsString = jsonObject.getAsString("shortNumber")
-
-        if (numberAsString?.startsWith("Bande-annonce") == true ||
-            numberAsString?.startsWith("Bande annonce") == true ||
-            numberAsString?.startsWith("Court-métrage") == true
-        ) {
-            throw Exception("Anime is a trailer")
-        }
+        if (numberAsString?.startsWith("Bande-annonce") == true || numberAsString?.startsWith("Bande annonce") == true || numberAsString?.startsWith("Court-métrage") == true) throw Exception(
+            "Anime is a trailer"
+        )
 
         val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
@@ -111,20 +99,13 @@ class AnimationDigitalNetworkPlatform :
             else -> EpisodeType.EPISODE
         }
 
-        if (numberAsString?.contains(".") == true || show.getAsString("type") == "OAV") {
-            episodeType = EpisodeType.SPECIAL
-        }
+        if (numberAsString?.contains(".") == true || show.getAsString("type") == "OAV") episodeType = EpisodeType.SPECIAL
 
         val id = jsonObject.getAsInt("id")
-
         val title = jsonObject.getAsString("name")?.ifBlank { null }
-
-        val url = jsonObject.getAsString("url") ?: throw Exception("Url is null")
-
-        val image = jsonObject.getAsString("image2x") ?: throw Exception("Image is null")
-
+        val url = requireNotNull(jsonObject.getAsString("url")) { "Url is null" }
+        val image = requireNotNull(jsonObject.getAsString("image2x")) { "Image is null" }
         val duration = jsonObject.getAsLong("duration", -1)
-
         val description = jsonObject.getAsString("summary")?.replace('\n', ' ')?.ifBlank { null }
 
         return jsonObject.getAsJsonArray("languages").map {

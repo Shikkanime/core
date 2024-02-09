@@ -61,7 +61,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                         simulcast = simulcastId
                     )
                 }
-            }.map { serie -> serie.getAsString("title")!!.lowercase() }.toSet()
+            }.map { jsonObject -> jsonObject.getAsString("title")!!.lowercase() }.toSet()
 
             simulcastSeries.addAll(series)
         } else {
@@ -93,7 +93,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     )
                     val previousSimulcastAnimes =
                         previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
-                    logger.info("Found ${previousSimulcastAnimes.size} animes for the sprevious simulcast")
+                    logger.info("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
 
                     val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
                     simulcastSeries.addAll(combinedSimulcasts)
@@ -271,66 +271,51 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     private fun convertJsonEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
         val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
-        val animeName = episodeMetadata.getAsString("series_title") ?: throw Exception("Anime name is null")
 
-        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) {
-            throw AnimeException("\"$animeName\" is blacklisted")
-        }
+        val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
+        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
-        val eligibleRegion = episodeMetadata.getAsString("eligible_region")
+        val eligibleRegion = requireNotNull(episodeMetadata.getAsString("eligible_region")) { "Eligible region is null" }
+        if (!eligibleRegion.contains(countryCode.name)) throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
 
-        if (eligibleRegion.isNullOrBlank() || !eligibleRegion.contains(countryCode.name)) {
-            throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
-        }
-
-        val audio = episodeMetadata.getAsString("audio_locale")?.ifBlank { null }
+        val audio = episodeMetadata.getAsString("audio_locale")?.takeIf { it.isNotBlank() }
         val isDubbed = audio == countryCode.locale
         val subtitles = episodeMetadata.getAsJsonArray("subtitle_locales").map { it.asString!! }
 
-        if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) {
-            throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
-        }
+        if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
 
-        val id = jsonObject.getAsString("external_id")?.split(".")?.last() ?: throw Exception("Id is null")
+        val id = requireNotNull(jsonObject.getAsString("external_id")?.split(".")?.last()) { "Id is null" }
         val hash = "${countryCode}-${getPlatform()}-$id-$langType"
 
-        if (hashCache.contains(hash)) {
-            throw EpisodeAlreadyReleasedException()
-        }
+        if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
 
         val releaseDate =
-            episodeMetadata.getAsString("premium_available_date")?.let { ZonedDateTime.parse(it) }
-                ?: throw Exception("Release date is null")
+            requireNotNull(episodeMetadata.getAsString("premium_available_date")?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
 
         val season = episodeMetadata.getAsInt("season_number") ?: 1
         val number = episodeMetadata.getAsInt("sequence_number") ?: -1
-
         val episodeType = if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
-        val title = jsonObject.getAsString("title")?.ifBlank { null }
+
+        val title = jsonObject.getAsString("title")
         val url = "https://www.crunchyroll.com/media-$id"
 
-        val images =
-            jsonObject.getAsJsonObject("images").getAsJsonArray("thumbnail")[0].asJsonArray.map { it.asJsonObject }
-        val biggestImage =
-            images.maxByOrNull { it.asJsonObject.getAsInt("width")!! } ?: throw Exception(IMAGE_NULL_ERROR)
-        val image =
-            biggestImage.asJsonObject.getAsString("source")?.ifBlank { null } ?: throw Exception(IMAGE_NULL_ERROR)
+        val biggestImage = requireNotNull(
+            jsonObject.getAsJsonObject("images").getAsJsonArray("thumbnail")[0].asJsonArray.maxByOrNull { it.asJsonObject.getAsInt("width")!! }
+        ) { IMAGE_NULL_ERROR }
+        val image = requireNotNull(biggestImage.asJsonObject.getAsString("source")?.takeIf { it.isNotBlank() }) { IMAGE_NULL_ERROR }
 
         var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
 
         val isSimulcasted =
-            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
-                .contains(animeName.lowercase())
+            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.ifBlank { null }
+        val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
 
-        if (!isSimulcasted) {
-            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
-        }
+        if (!isSimulcasted) throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
-        val animeId = episodeMetadata.getAsString("series_id") ?: throw Exception("Anime id is null")
+        val animeId = requireNotNull(episodeMetadata.getAsString("series_id")) { "Anime id is null" }
         val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
         duration = getWebsiteEpisodeDuration(duration, url)
         hashCache.add(hash)
@@ -358,6 +343,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             description = description
         )
     }
+
 
     private fun convertXMLEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
         val animeName = jsonObject.getAsString("crunchyroll:seriesTitle") ?: throw Exception("Anime name is null")
