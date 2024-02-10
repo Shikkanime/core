@@ -34,9 +34,11 @@
 
                     <#if episode.title?? || episode.description??>
                         <div class="hover-card-description d-none bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3">
-                            <div class="h6 text-truncate-2">
-                                ${episode.title}
-                            </div>
+                            <#if episode.title??>
+                                <div class="h6 text-truncate-2">
+                                    ${episode.title}
+                                </div>
+                            </#if>
 
                             <span class="text-muted">
                                 <i class="bi bi-calendar4 me-1"></i>
