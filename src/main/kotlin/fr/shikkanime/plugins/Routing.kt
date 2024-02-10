@@ -210,10 +210,11 @@ private suspend fun handleRequest(
     controller: Any,
     path: String
 ) {
+    val userAgent = call.request.userAgent()
     val parameters = call.parameters.toMap()
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
-    logger.info("$httpMethod ${call.request.origin.uri} -> $replacedPath")
+    logger.info("$httpMethod ${call.request.origin.uri} -> $replacedPath${if (userAgent != null) " ($userAgent)" else ""}")
 
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)

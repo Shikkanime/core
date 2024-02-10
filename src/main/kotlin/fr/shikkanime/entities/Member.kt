@@ -15,7 +15,11 @@ class Member(
     val username: String? = null,
     @Column(nullable = false, name = "encrypted_password")
     val encryptedPassword: ByteArray? = null,
-    @Column(nullable = false)
+    @ElementCollection
+    @CollectionTable(
+        name = "member_roles",
+        joinColumns = [JoinColumn(name = "member_uuid")]
+    )
     @Enumerated(EnumType.STRING)
-    val role: Role = Role.GUEST,
+    val roles: MutableSet<Role> = mutableSetOf(),
 ) : ShikkEntity(uuid)

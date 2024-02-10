@@ -27,7 +27,6 @@ object Constant {
 
             return dataFolder
         }
-    var isDev = System.getenv("ENV") == "dev"
     val abstractSocialNetworks =
         reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
     val utcZoneId: ZoneId = ZoneId.of("UTC")

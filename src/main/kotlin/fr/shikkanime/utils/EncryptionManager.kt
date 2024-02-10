@@ -5,7 +5,7 @@ import org.bouncycastle.crypto.params.Argon2Parameters
 import java.nio.charset.StandardCharsets
 
 object EncryptionManager {
-    private val salt = "ShikkAnime".toByteArray(StandardCharsets.UTF_8)
+    private val salt = Constant.NAME.toByteArray(StandardCharsets.UTF_8)
     private const val ITERATIONS = 2
     private const val MEM_LIMIT = 66536
     private const val HASH_LENGTH = 32
