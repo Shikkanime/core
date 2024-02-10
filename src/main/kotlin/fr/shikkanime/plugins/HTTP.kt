@@ -57,17 +57,15 @@ fun Application.configureHTTP() {
     }
     install(CachingHeaders) {
     }
-    if (Constant.isDev) {
-        install(SwaggerUI) {
-            swagger {
-                swaggerUrl = "api/swagger"
-                forwardRoot = false
-            }
-            info {
-                title = "${Constant.NAME} API"
-                version = "1.0"
-                description = "API for testing and demonstration purposes"
-            }
+    install(SwaggerUI) {
+        swagger {
+            swaggerUrl = "api/swagger"
+            forwardRoot = false
+        }
+        info {
+            title = "${Constant.NAME} API"
+            version = "1.0"
+            description = "API for testing and demonstration purposes"
         }
     }
 }

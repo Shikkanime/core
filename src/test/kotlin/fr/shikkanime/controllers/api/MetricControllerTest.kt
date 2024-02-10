@@ -1,7 +1,6 @@
 package fr.shikkanime.controllers.api
 
 import fr.shikkanime.module
-import fr.shikkanime.utils.Constant
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
@@ -28,8 +27,6 @@ class MetricControllerTest {
 
     @Test
     fun `get metrics authorized`() {
-        Constant.isDev = true
-
         testApplication {
             application {
                 module()

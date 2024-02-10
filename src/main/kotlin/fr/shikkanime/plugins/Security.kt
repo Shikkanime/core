@@ -31,7 +31,7 @@ fun Application.configureSecurity() {
         .withClaimPresence("uuid")
         .withClaimPresence("username")
         .withClaimPresence("creationDateTime")
-        .withClaimPresence("role")
+        .withClaimPresence("roles")
         .build()
 
     authentication {
@@ -79,7 +79,7 @@ private fun validationSession(
         val uuid = UUID.fromString(jwtPrincipal.getClaim("uuid").asString())
         val username = jwtPrincipal.getClaim("username").asString()
         val creationDateTime = jwtPrincipal.getClaim("creationDateTime").asString()
-        val role = Role.valueOf(jwtPrincipal.getClaim("role").asString())
+        val roles = jwtPrincipal.getClaim("roles").asArray(Role::class.java)
         val member = memberCacheService.find(uuid) ?: return null
 
         if (member.username != username) {
@@ -87,8 +87,8 @@ private fun validationSession(
             return null
         }
 
-        if (member.role != role) {
-            logger.log(Level.SEVERE, "Error while validating session: role mismatch")
+        if (!member.roles.toTypedArray().contentEquals(roles)) {
+            logger.log(Level.SEVERE, "Error while validating session: roles mismatch")
             return null
         }
 
@@ -97,7 +97,7 @@ private fun validationSession(
             return null
         }
 
-        if (member.role != Role.ADMIN) {
+        if (member.roles.none { it == Role.ADMIN }) {
             logger.log(Level.SEVERE, "Error while validating session: role is not admin")
             return null
         }
