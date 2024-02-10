@@ -1,3 +1,14 @@
+<#function getPrefixEpisode(episodeType)>
+    <#switch episodeType>
+        <#case "EPISODE">
+            <#return "Épisode">
+        <#case "FILM">
+            <#return "Film">
+        <#case "SPECIAL">
+            <#return "Spécial">
+    </#switch>
+</#function>
+
 <#macro display episode>
     <div class="col-md-2 col-6 mt-0">
         <article>
@@ -16,7 +27,7 @@
                     <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
 
                     <p class="text-muted mb-0">Saison ${episode.season?c} |
-                        Épisode ${episode.number?c}<#if episode.uncensored> non censuré</#if>
+                        ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
                     </p>
 
                     <p class="text-muted mt-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>

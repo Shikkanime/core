@@ -14,7 +14,6 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import io.ktor.http.*
-import java.util.*
 
 @Controller("/")
 class SiteController {
@@ -85,14 +84,14 @@ class SiteController {
     private fun catalog(): Response {
         val findAll = simulcastCacheService.findAll()!!
         val currentSimulcast = findAll.first()
-        return Response.redirect("/catalog/${currentSimulcast.uuid}")
+        return Response.redirect("/catalog/${currentSimulcast.season.lowercase()}-${currentSimulcast.year}")
     }
 
-    @Path("catalog/{uuid}")
+    @Path("catalog/{slug}")
     @Get
-    private fun catalogSimulcast(@PathParam("uuid") uuid: UUID): Response {
+    private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.first { it.uuid == uuid }
+        val currentSimulcast = findAll.first { "${it.season.lowercase()}-${it.year}" == slug }
 
         return Response.template(
             Link.CATALOG,
