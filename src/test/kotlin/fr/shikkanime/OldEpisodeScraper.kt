@@ -1,5 +1,6 @@
 package fr.shikkanime
 
+import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -10,6 +11,7 @@ import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
@@ -55,6 +57,9 @@ fun main() {
         .map { ZonedDateTime.of(it.atTime(23, 59, 59), Constant.utcZoneId) }
         .sorted()
 
+    val minDate = dates.minOrNull()!!
+    val maxDate = dates.maxOrNull()!!
+
     val simulcasts = dates.map {
         "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
     }.toSet()
@@ -88,11 +93,8 @@ fun main() {
 //        }
 //    }
 
-    val minDate = dates.minOrNull()!!
-    val maxDate = dates.maxOrNull()!!
     val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-    var page = 1
-    val fetch = 1000
+    val cms = runBlocking { CrunchyrollWrapper.getCMS(accessToken) }
 
     val series = simulcasts.flatMap { simulcastId ->
         runBlocking {
@@ -105,45 +107,54 @@ fun main() {
                 simulcast = simulcastId
             )
         }
-    }.map { jsonObject -> jsonObject.getAsString("title")!!.lowercase() }.toSet()
-    println("Simulcasts: $series")
+    }
 
-    crunchyrollPlatform.simulcasts[CountryCode.FR] = series
+    val titles = series.map { jsonObject -> jsonObject.getAsString("title")!!.lowercase() }.toSet()
+    val ids = series.map { jsonObject -> jsonObject.getAsString("id")!! }.toSet()
+    println("Simulcasts: $titles")
 
-    while (true) {
-        val fetchApi = runBlocking { CrunchyrollWrapper.getBrowse(CountryCode.FR.locale, accessToken, size = fetch, start = (page - 1) * fetch) }.toMutableList()
+    crunchyrollPlatform.simulcasts[CountryCode.FR] = titles
 
-        val episodeDates = fetchApi
-            .map { episodeJson ->
-                val episodeMetadata = episodeJson.getAsJsonObject("episode_metadata")
-                episodeJson to requireNotNull(episodeMetadata.getAsString("premium_available_date")?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
-            }.toMutableList()
+    series.forEach {
+        val postersTall = it.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
+        val postersWide = it.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
+        val image = postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
+        val banner = postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
+        val description = it.getAsString("description")
 
-        val lastDate = episodeDates.maxByOrNull { it.second }!!.second
-        val firstDate = episodeDates.minByOrNull { it.second }!!.second
-        episodeDates.removeIf { it.second !in minDate..maxDate }
+        crunchyrollPlatform.animeInfoCache[CountryCodeAnimeIdKeyCache(CountryCode.FR, it.getAsString("id")!!)] = CrunchyrollPlatform.CrunchyrollAnimeContent(image = image, banner = banner, description = description,)
+    }
 
-        episodeDates.forEach { (episodeJson, _) ->
+    val episodeIds = ids.parallelStream().map { seriesId ->
+        runBlocking { CrunchyrollWrapper.getSeasons(CountryCode.FR.locale, accessToken, cms, seriesId) }
+            .filter { jsonObject -> jsonObject.getAsJsonArray("subtitle_locales").map { it.asString }.contains(CountryCode.FR.locale) }
+            .map { jsonObject -> jsonObject.getAsString("id")!! }
+            .flatMap { id -> runBlocking { CrunchyrollWrapper.getEpisodes(CountryCode.FR.locale, accessToken, cms, id) } }
+            .map { jsonObject -> jsonObject.getAsString("id")!! }
+    }.toList().flatten().toSet()
+
+    episodeIds.chunked(25).parallelStream().forEach { episodeIdsChunked ->
+        val `object` = runBlocking { CrunchyrollWrapper.getObject(CountryCode.FR.locale, accessToken, cms, *episodeIdsChunked.toTypedArray()) }
+
+        `object`.forEach { episodeJson ->
             try {
                 episodes.add(crunchyrollPlatform.convertJsonEpisode(
                     CountryCode.FR,
-                    episodeJson
+                    episodeJson,
                 ))
-            } catch (_: Exception) {
-
+            } catch (e: Exception) {
+                println("Error while converting episode (Episode ID: ${episodeJson.getAsString("id")}): ${e.message}")
+                e.printStackTrace()
             }
         }
-
-        if (lastDate.isBefore(minDate) || firstDate.isAfter(maxDate)) {
-            break
-        }
-
-        page++
     }
 
     httpRequest.close()
 
-    episodes.forEach { episode ->
+    episodes.removeIf { it.releaseDateTime.isBefore(minDate) || it.releaseDateTime.isAfter(maxDate) }
+
+    episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
+        episode.anime?.releaseDateTime = episodes.filter { it.anime?.name == episode.anime?.name }.minOf { it.anime!!.releaseDateTime }
         episodeService.save(episode)
     }
 

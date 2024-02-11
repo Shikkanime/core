@@ -10,6 +10,13 @@ class SimulcastToSimulcastDtoConverter : AbstractConverter<Simulcast, SimulcastD
             uuid = from.uuid,
             season = from.season!!,
             year = from.year!!,
+            label = when (from.season) {
+                "WINTER" -> "Hiver"
+                "SPRING" -> "Printemps"
+                "SUMMER" -> "Été"
+                "AUTUMN" -> "Automne"
+                else -> "Inconnu"
+            } + " ${from.year}"
         )
     }
 }
