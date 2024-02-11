@@ -302,9 +302,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val title = jsonObject.getAsString("title")
         val url = "https://www.crunchyroll.com/media-$id"
 
-        val biggestImage = requireNotNull(
-            jsonObject.getAsJsonObject("images").getAsJsonArray("thumbnail")[0].asJsonArray.maxByOrNull { it.asJsonObject.getAsInt("width")!! }
-        ) { IMAGE_NULL_ERROR }
+        val thumbnailArray = requireNotNull(jsonObject.getAsJsonObject("images").getAsJsonArray("thumbnail")) { IMAGE_NULL_ERROR }
+        val biggestImage = requireNotNull(thumbnailArray[0].asJsonArray.maxByOrNull { it.asJsonObject.getAsInt("width")!! }) { IMAGE_NULL_ERROR }
         val image = requireNotNull(biggestImage.asJsonObject.getAsString("source")?.takeIf { it.isNotBlank() }) { IMAGE_NULL_ERROR }
 
         var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
