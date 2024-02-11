@@ -115,6 +115,14 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             entity.anime = animeService.update(anime)
         }
 
+        if (1000 < (entity.title?.length ?: 0)) {
+            entity.title = entity.title!!.substring(0, 1000)
+        }
+
+        if (1000 < (entity.description?.length ?: 0)) {
+            entity.description = entity.description!!.substring(0, 1000)
+        }
+
         val savedEntity = super.save(entity)
         addImage(savedEntity.uuid!!, savedEntity.image!!)
         MapCache.invalidate(Episode::class.java)

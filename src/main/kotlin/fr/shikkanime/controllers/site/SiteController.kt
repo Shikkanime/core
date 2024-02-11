@@ -32,12 +32,15 @@ class SiteController {
     @Path
     @Get
     private fun home(): Response {
+        val findAll = simulcastCacheService.findAll()!!
+        val currentSimulcast = findAll.first()
+
         return Response.template(
             Link.HOME,
             mutableMapOf(
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
-                    null,
+                    currentSimulcast.uuid,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     6
@@ -94,7 +97,8 @@ class SiteController {
         val currentSimulcast = findAll.first { "${it.season.lowercase()}-${it.year}" == slug }
 
         return Response.template(
-            Link.CATALOG,
+            Link.CATALOG.template,
+            currentSimulcast.label,
             mutableMapOf(
                 "simulcasts" to findAll,
                 "currentSimulcast" to currentSimulcast,
@@ -138,7 +142,7 @@ class SiteController {
                         SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
-                    12
+                    24
                 )!!.data
             )
         )
