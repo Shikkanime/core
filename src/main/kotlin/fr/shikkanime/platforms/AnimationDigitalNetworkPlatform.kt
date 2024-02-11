@@ -15,6 +15,7 @@ import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import java.io.File
 import java.time.ZonedDateTime
@@ -71,7 +72,7 @@ class AnimationDigitalNetworkPlatform :
         if ((genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) && !contains) throw Exception("Anime is not an animation")
 
         var isSimulcasted = show.getAsBoolean("simulcast") == true ||
-                show.getAsString("firstReleaseYear")!! in (0..1).map { (zonedDateTime.year - it).toString() } ||
+                show.getAsString("firstReleaseYear") in (0..1).map { (zonedDateTime.year - it).toString() } ||
                 contains
 
         val descriptionLowercase = animeDescription.lowercase()
@@ -124,6 +125,7 @@ class AnimationDigitalNetworkPlatform :
                     image = animeImage,
                     banner = animeBanner,
                     description = animeDescription,
+                    slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
                 ),
                 episodeType = episodeType,
                 langType = langType,

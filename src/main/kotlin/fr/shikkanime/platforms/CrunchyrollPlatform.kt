@@ -15,6 +15,7 @@ import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -269,7 +270,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
     }
 
-    private fun convertJsonEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
+    fun convertJsonEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
         val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
 
         val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
@@ -295,7 +296,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             requireNotNull(episodeMetadata.getAsString("premium_available_date")?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
 
         val season = episodeMetadata.getAsInt("season_number") ?: 1
-        val number = episodeMetadata.getAsInt("sequence_number") ?: -1
+        val number = episodeMetadata.getAsInt("episode_number") ?: -1
         val episodeType = if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
 
         val title = jsonObject.getAsString("title")
@@ -328,7 +329,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 releaseDateTime = releaseDate,
                 image = crunchyrollAnimeContent.image,
                 banner = crunchyrollAnimeContent.banner,
-                description = crunchyrollAnimeContent.description
+                description = crunchyrollAnimeContent.description,
+                slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
             ),
             episodeType = episodeType,
             langType = langType,
@@ -432,7 +434,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 releaseDateTime = releaseDate,
                 image = crunchyrollAnimeContent.image,
                 banner = crunchyrollAnimeContent.banner,
-                description = crunchyrollAnimeContent.description
+                description = crunchyrollAnimeContent.description,
+                slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
             ),
             episodeType = episodeType,
             langType = langType,

@@ -7,10 +7,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.withUTC
+import fr.shikkanime.utils.*
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -58,6 +55,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                         image = key.netflixSimulcast.image,
                         banner = animeBanner,
                         description = animeDescription,
+                        slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
                     ),
                     episodeType = EpisodeType.EPISODE,
                     langType = LangType.SUBTITLES,
