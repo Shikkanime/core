@@ -11,14 +11,11 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.withUTC
 import io.ktor.client.statement.*
 import java.io.File
 import java.time.LocalTime
@@ -175,6 +172,7 @@ class DisneyPlusPlatform :
                 image = animeImage,
                 banner = animeBanner,
                 description = animeDescription,
+                slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
             ),
             episodeType = EpisodeType.EPISODE,
             langType = langType,
