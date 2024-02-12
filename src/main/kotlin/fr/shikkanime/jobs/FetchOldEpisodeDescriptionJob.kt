@@ -79,9 +79,7 @@ class FetchOldEpisodeDescriptionJob : AbstractJob() {
                     return null
                 }
 
-                val finalUrl = httpRequest.lastPageUrl!!
-                val split = finalUrl.split("/")
-                val id = split[split.size - 2]
+                val id = normalizeUrl(httpRequest.lastPageUrl!!)
                 CrunchyrollWrapper.getObject(episode.anime!!.countryCode!!.locale, accessToken, cms, id)[0]
             }
 
@@ -94,6 +92,8 @@ class FetchOldEpisodeDescriptionJob : AbstractJob() {
             }
         }
     }
+
+    fun normalizeUrl(url: String) ="/watch/([A-Z0-9]+)/".toRegex().find(url)!!.groupValues[1]
 
     private fun normalizeDescription(episode: Episode, content: JsonObject): String? {
         var description = when (episode.platform) {
