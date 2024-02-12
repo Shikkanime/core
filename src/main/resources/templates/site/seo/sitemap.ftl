@@ -2,18 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://www.shikkanime.fr/</loc>
-        <lastmod>${episode.releaseDateTime}</lastmod>
+        <lastmod>${episode.releaseDateTime?replace("Z", "+00:00")}</lastmod>
     </url>
     <#list simulcasts as simulcast>
         <url>
             <loc>https://www.shikkanime.fr/catalog/${simulcast.slug}</loc>
-            <lastmod>${simulcast.lastReleaseDateTime}</lastmod>
+            <lastmod>${simulcast.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
         </url>
     </#list>
     <#list animes as anime>
         <url>
             <loc>https://www.shikkanime.fr/animes/${anime.slug}</loc>
-            <lastmod>${anime.lastReleaseDateTime}</lastmod>
+            <lastmod>${anime.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
         </url>
     </#list>
 </urlset>
