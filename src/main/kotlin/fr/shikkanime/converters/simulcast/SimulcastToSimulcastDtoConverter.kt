@@ -19,7 +19,7 @@ class SimulcastToSimulcastDtoConverter : AbstractConverter<Simulcast, SimulcastD
             listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
             1,
             1
-        )?.data?.firstOrNull()?.lastReleaseDateTime
+        )?.data?.firstOrNull()?.releaseDateTime
 
         return SimulcastDto(
             uuid = from.uuid,
