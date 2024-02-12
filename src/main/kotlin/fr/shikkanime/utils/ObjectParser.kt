@@ -48,7 +48,7 @@ object ObjectParser {
     }
 
     fun JsonObject.getAsInt(key: String): Int? {
-        return this[key]?.asInt
+        return if (this[key] != null && !this[key].isJsonNull) this[key]?.asInt else null
     }
 
     fun JsonObject.getAsInt(key: String, default: Int): Int {

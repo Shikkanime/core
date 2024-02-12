@@ -86,7 +86,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get media list" }
+        require(response.status.value == 200) { "Failed to get media list (${response.status.value})" }
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")?.map { it.asJsonObject }
             ?: throw Exception("Failed to get media list")
@@ -104,6 +104,34 @@ object CrunchyrollWrapper {
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
             ?: throw Exception("Failed to get media object")
+    }
+
+    suspend fun getSeasons(locale: String, accessToken: String, cms: CMS, seriesId: String): List<JsonObject> {
+        val response = HttpRequest().get(
+            "${BETA_URL}cms/v2${cms.bucket}/seasons?series_id=$seriesId&Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
+            headers = mapOf(
+                "Authorization" to "Bearer $accessToken",
+            ),
+        )
+
+        require(response.status.value == 200) { "Failed to get seasons" }
+
+        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
+            ?: throw Exception("Failed to get seasons")
+    }
+
+    suspend fun getEpisodes(locale: String, accessToken: String, cms: CMS, seasonId: String): List<JsonObject> {
+        val response = HttpRequest().get(
+            "${BETA_URL}cms/v2${cms.bucket}/episodes?season_id=$seasonId&Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
+            headers = mapOf(
+                "Authorization" to "Bearer $accessToken",
+            ),
+        )
+
+        require(response.status.value == 200) { "Failed to get episodes" }
+
+        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
+            ?: throw Exception("Failed to get episodes")
     }
 
     suspend fun getSimulcasts(locale: String, accessToken: String): List<JsonObject> {

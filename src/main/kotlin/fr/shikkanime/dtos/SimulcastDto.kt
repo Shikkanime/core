@@ -7,4 +7,5 @@ data class SimulcastDto(
     val uuid: UUID?,
     val season: String,
     val year: Int,
+    val label: String,
 ) : Serializable
