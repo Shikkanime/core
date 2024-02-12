@@ -17,7 +17,6 @@ import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.Period
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -53,12 +52,7 @@ fun main() {
         return
     }
 
-    val dates = fromDate.datesUntil(toDate.plusDays(1), Period.ofDays(1)).toList()
-        .map { ZonedDateTime.of(it.atTime(23, 59, 59), Constant.utcZoneId) }
-        .sorted()
-
-    val minDate = dates.minOrNull()!!
-    val maxDate = dates.maxOrNull()!!
+    val dates = fromDate.datesUntil(toDate.plusDays(1), Period.ofDays(1)).toList().sorted()
 
     val simulcasts = dates.map {
         "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
@@ -151,7 +145,7 @@ fun main() {
 
     httpRequest.close()
 
-    episodes.removeIf { it.releaseDateTime.isBefore(minDate) || it.releaseDateTime.isAfter(maxDate) }
+    episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
 
     episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
         episode.anime?.releaseDateTime = episodes.filter { it.anime?.name == episode.anime?.name }.minOf { it.anime!!.releaseDateTime }
