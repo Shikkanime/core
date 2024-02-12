@@ -11,8 +11,12 @@
             <title>Shikkanime</title>
         </#if>
 
-        <#if description??>
+        <#if description?? && description?length != 0>
             <meta name="description" content="${description}">
+        </#if>
+
+        <#if googleSiteVerification?? && googleSiteVerification?length != 0>
+            <meta name="google-site-verification" content="${googleSiteVerification}" />
         </#if>
 
         <#-- Favicons -->
