@@ -40,6 +40,10 @@ class AnimeCacheService : AbstractCacheService() {
         AbstractConverter.convert(animeService.find(it), AnimeDto::class.java)
     }
 
+    private val cache = MapCache<String, List<AnimeDto>>(classes = listOf(Anime::class.java)) {
+        AbstractConverter.convert(animeService.findAll(), AnimeDto::class.java)
+    }
+
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -54,4 +58,6 @@ class AnimeCacheService : AbstractCacheService() {
     fun findBySlug(slug: String) = findBySlugCache[slug]
 
     fun find(uuid: UUID) = findByIdCache[uuid]
+
+    fun findAll() = cache["all"]
 }

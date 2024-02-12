@@ -10,7 +10,7 @@
 
         <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
             <#list simulcasts as simulcast>
-                <li><a class="dropdown-item" href="/catalog/${simulcast.season?lower_case}-${simulcast.year?c}">${simulcast.label}</a></li>
+                <li><a class="dropdown-item" href="/catalog/${simulcast.slug}">${simulcast.label}</a></li>
             </#list>
         </ul>
 
