@@ -5,7 +5,6 @@ import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.routes.Controller
@@ -22,9 +21,6 @@ class SiteController {
 
     @Inject
     private lateinit var episodeCacheService: EpisodeCacheService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
 
     @Inject
     private lateinit var simulcastCacheService: SimulcastCacheService
@@ -75,9 +71,25 @@ class SiteController {
     @Path("sitemap.xml")
     @Get
     private fun sitemap(): Response {
+        val simulcasts = simulcastCacheService.findAll()!!
+        val animes = animeCacheService.findAll()!!
+
+        val episode = episodeCacheService.findAllBy(
+            CountryCode.FR,
+            null,
+            listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
+            1,
+            1
+        )!!.data.first()
+
         return Response.template(
             "/site/seo/sitemap.ftl",
             null,
+            mutableMapOf(
+                "episode" to episode,
+                "simulcasts" to simulcasts,
+                "animes" to animes
+            ),
             contentType = ContentType.Text.Xml
         )
     }
@@ -87,14 +99,14 @@ class SiteController {
     private fun catalog(): Response {
         val findAll = simulcastCacheService.findAll()!!
         val currentSimulcast = findAll.first()
-        return Response.redirect("/catalog/${currentSimulcast.season.lowercase()}-${currentSimulcast.year}")
+        return Response.redirect("/catalog/${currentSimulcast.slug}")
     }
 
     @Path("catalog/{slug}")
     @Get
     private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.first { "${it.season.lowercase()}-${it.year}" == slug }
+        val currentSimulcast = findAll.first { it.slug == slug }
 
         return Response.template(
             Link.CATALOG.template,
