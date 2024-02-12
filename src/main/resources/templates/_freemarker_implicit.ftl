@@ -20,3 +20,4 @@
 [#-- @ftlvariable name="compressedSize" type="java.lang.String" --]
 [#-- @ftlvariable name="simulcasts" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.SimulcastDto>" --]
 [#-- @ftlvariable name="currentSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]
+[#-- @ftlvariable name="googleSiteVerification" type="java.lang.String" --]

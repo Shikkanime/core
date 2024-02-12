@@ -261,6 +261,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
     val title = map["title"] as String?
     modelMap["title"] = if (title?.contains(Constant.NAME) == true) title else (if (!title.isNullOrBlank()) "$title - " else "") + Constant.NAME
     modelMap["description"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION) ?: ""
+    configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)?.let { modelMap["googleSiteVerification"] = it }
 
     call.respond(FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }
