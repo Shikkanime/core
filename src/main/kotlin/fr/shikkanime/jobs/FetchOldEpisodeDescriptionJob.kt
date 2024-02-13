@@ -10,6 +10,7 @@ import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
@@ -55,6 +56,10 @@ class FetchOldEpisodeDescriptionJob : AbstractJob() {
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error while fetching episode description for $s", e)
             }
+        }
+
+        if (episodes.isNotEmpty()) {
+            MapCache.invalidate(Episode::class.java)
         }
 
         httpRequest.close()
