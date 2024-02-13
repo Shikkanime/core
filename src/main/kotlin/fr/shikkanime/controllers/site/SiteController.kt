@@ -71,8 +71,17 @@ class SiteController {
     @Path("sitemap.xml")
     @Get
     private fun sitemap(): Response {
-        val simulcasts = simulcastCacheService.findAll()!!
-        val animes = animeCacheService.findAll()!!
+        val simulcasts = simulcastCacheService.findAllUpdated()!!
+
+        val animes = simulcasts.flatMap {
+            animeCacheService.findAllByUpdated(
+                CountryCode.FR,
+                it.uuid,
+                listOf(SortParameter("name", SortParameter.Order.ASC)),
+                1,
+                102
+            )!!.data
+        }
 
         val episode = episodeCacheService.findAllBy(
             CountryCode.FR,
@@ -87,8 +96,8 @@ class SiteController {
             null,
             mutableMapOf(
                 "episode" to episode,
-                "simulcasts" to simulcasts,
-                "animes" to animes
+                "simulcastsUpdated" to simulcasts,
+                "animesUpdated" to animes
             ),
             contentType = ContentType.Text.Xml
         )

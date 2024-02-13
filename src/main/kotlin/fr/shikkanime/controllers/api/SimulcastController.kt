@@ -2,7 +2,7 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
