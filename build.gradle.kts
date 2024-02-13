@@ -2,7 +2,7 @@ import java.net.URI
 
 val ktorVersion = "2.3.8"
 val kotlinVersion = "1.9.22"
-val hibernateSearchVersion = "7.1.0.Alpha2"
+val hibernateSearchVersion = "7.1.0.CR1"
 val junitVersion = "5.10.2"
 val tikaVersion = "3.0.0-BETA"
 val ktorSwaggerUiVersion = "2.7.4"
