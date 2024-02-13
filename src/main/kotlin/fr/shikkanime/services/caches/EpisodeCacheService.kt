@@ -11,7 +11,7 @@ import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class EpisodeCacheService : AbstractCacheService() {
+class EpisodeCacheService : AbstractCacheService {
     @Inject
     private lateinit var episodeService: EpisodeService
 

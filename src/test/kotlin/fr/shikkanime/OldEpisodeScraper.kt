@@ -107,7 +107,7 @@ fun main() {
     val ids = series.map { jsonObject -> jsonObject.getAsString("id")!! }.toSet()
     println("Simulcasts: $titles")
 
-    crunchyrollPlatform.simulcasts[CountryCode.FR] = titles
+    crunchyrollPlatform.simulcasts.set(CountryCode.FR, titles)
 
     series.forEach {
         val postersTall = it.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
@@ -116,7 +116,10 @@ fun main() {
         val banner = postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
         val description = it.getAsString("description")
 
-        crunchyrollPlatform.animeInfoCache[CountryCodeAnimeIdKeyCache(CountryCode.FR, it.getAsString("id")!!)] = CrunchyrollPlatform.CrunchyrollAnimeContent(image = image, banner = banner, description = description,)
+        crunchyrollPlatform.animeInfoCache.set(
+            CountryCodeAnimeIdKeyCache(CountryCode.FR, it.getAsString("id")!!),
+            CrunchyrollPlatform.CrunchyrollAnimeContent(image = image, banner = banner, description = description)
+        )
     }
 
     val episodeIds = ids.parallelStream().map { seriesId ->

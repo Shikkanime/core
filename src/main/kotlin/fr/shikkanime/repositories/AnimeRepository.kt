@@ -107,7 +107,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
         val searchSession = Search.session(database.entityManager)
 
-        @Suppress("UNCHECKED_CAST")
         val searchResult = searchSession.search(Anime::class.java)
             .where { w -> findWhere(w, name, countryCode) }
             .fetch((limit * page) - limit, limit) as SearchResult<Anime>

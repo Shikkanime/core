@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import java.time.Duration
 
-class MapCache<K : Any, V : Any?>(
+class MapCache<K : Any, V>(
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = listOf(),
     private val block: (K) -> V,
@@ -25,10 +25,10 @@ class MapCache<K : Any, V : Any?>(
         }
 
         cache = builder
-            .build(object : CacheLoader<K, V>() {
-                override fun load(key: K): V {
+            .build(object : CacheLoader<K, V & Any>() {
+                override fun load(key: K): V & Any {
                     logger.info("Loading $key")
-                    return block(key)
+                    return block(key)!!
                 }
             })
     }

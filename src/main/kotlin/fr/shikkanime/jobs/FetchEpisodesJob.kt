@@ -15,7 +15,7 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 
 
-class FetchEpisodesJob : AbstractJob() {
+class FetchEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isInitialized = false
     private var isRunning = false

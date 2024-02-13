@@ -16,6 +16,8 @@ import java.time.format.DateTimeFormatter
 class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<Episode>>() {
     override fun getPlatform(): Platform = Platform.NETF
 
+    override fun getConfigurationClass() = NetflixConfiguration::class.java
+
     override suspend fun fetchApiContent(
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime

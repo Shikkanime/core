@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.services.MetricService
 import java.time.ZonedDateTime
 
-class DeleteOldMetricsJob : AbstractJob() {
+class DeleteOldMetricsJob : AbstractJob {
     @Inject
     private lateinit var metricService: MetricService
 

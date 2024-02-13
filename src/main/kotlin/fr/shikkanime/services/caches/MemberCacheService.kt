@@ -6,7 +6,7 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class MemberCacheService : AbstractCacheService() {
+class MemberCacheService : AbstractCacheService {
     @Inject
     private lateinit var memberService: MemberService
 

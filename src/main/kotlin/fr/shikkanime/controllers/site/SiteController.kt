@@ -115,7 +115,7 @@ class SiteController {
     @Get
     private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.first { it.slug == slug }
+        val currentSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.redirect("/404")
 
         return Response.template(
             Link.CATALOG.template,
@@ -138,6 +138,7 @@ class SiteController {
     @Get
     private fun error404(): Response {
         return Response.template(
+            HttpStatusCode.NotFound,
             "/site/404.ftl",
             "Page introuvable"
         )

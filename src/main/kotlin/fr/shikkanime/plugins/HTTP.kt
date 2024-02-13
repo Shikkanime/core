@@ -42,6 +42,10 @@ fun Application.configureHTTP() {
                 return@status
             }
 
+            if (path.startsWith("/404")) {
+                return@status
+            }
+
             if (!path.startsWith("/api") && !path.startsWith("/admin")) {
                 call.respondRedirect("/404")
             }

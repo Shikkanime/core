@@ -23,4 +23,5 @@ data class EpisodeDto(
     val duration: Long,
     val description: String?,
     val uncensored: Boolean,
+    val lastUpdateDateTime: String?,
 ) : Serializable

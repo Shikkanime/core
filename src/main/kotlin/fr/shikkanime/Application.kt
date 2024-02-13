@@ -49,7 +49,7 @@ fun main() {
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
     JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
     JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
-    JobManager.scheduleJob("0 0 * * * ?", FetchOldEpisodeDescriptionJob::class.java)
+    JobManager.scheduleJob("0 0 * * * ?", FetchDeprecatedEpisodeJob::class.java)
     JobManager.start()
 
     logger.info("Starting server...")

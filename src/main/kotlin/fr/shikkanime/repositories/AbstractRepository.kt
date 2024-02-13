@@ -17,7 +17,6 @@ abstract class AbstractRepository<E : ShikkEntity> {
     protected lateinit var database: Database
 
     protected fun getEntityClass(): Class<E> {
-        @Suppress("UNCHECKED_CAST")
         return (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<E>
     }
 
@@ -45,11 +44,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
             .setHint(AvailableHints.HINT_READ_ONLY, true)
     }
 
-    fun buildPageableQuery(
-        query: TypedQuery<E>,
-        page: Int,
-        limit: Int
-    ): Pageable<E> {
+    fun buildPageableQuery(query: TypedQuery<E>, page: Int, limit: Int): Pageable<E> {
         val scrollableResults = query.unwrap(Query::class.java)
             .setReadOnly(true)
             .setFetchSize(limit)
@@ -58,24 +53,12 @@ abstract class AbstractRepository<E : ShikkEntity> {
         val list = mutableListOf<E>()
         var total = 0L
 
-        scrollableResults.use {
-            if (!it.first())
-                return@use
-
-            val result = it.scroll((limit * page) - limit)
-
-            if (!result)
-                return@use
-
+        if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
             for (i in 0 until limit) {
-                @Suppress("UNCHECKED_CAST")
-                list.add(it.get() as E)
-
-                if (!it.next())
-                    break
+                list.add(scrollableResults.get() as E)
+                if (!scrollableResults.next()) break
             }
-
-            total = if (it.last()) it.rowNumber + 1L else 0
+            total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0
         }
 
         return Pageable(list, page, limit, total)

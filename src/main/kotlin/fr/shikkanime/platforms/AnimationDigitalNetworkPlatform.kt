@@ -25,6 +25,8 @@ class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, List<JsonObject>>() {
     override fun getPlatform(): Platform = Platform.ANIM
 
+    override fun getConfigurationClass() = AnimationDigitalNetworkConfiguration::class.java
+
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): List<JsonObject> {
         return AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate())
     }

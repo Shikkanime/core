@@ -7,7 +7,7 @@ import java.lang.management.ManagementFactory
 import javax.management.Attribute
 import javax.management.ObjectName
 
-class MetricJob : AbstractJob() {
+class MetricJob : AbstractJob {
     @Inject
     private lateinit var metricService: MetricService
 

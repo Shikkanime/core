@@ -263,7 +263,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
     modelMap["description"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION) ?: ""
     configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)?.let { modelMap["googleSiteVerification"] = it }
 
-    call.respond(FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
+    call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }
 
 private fun replacePathWithParameters(path: String, parameters: Map<String, List<String>>): String =
