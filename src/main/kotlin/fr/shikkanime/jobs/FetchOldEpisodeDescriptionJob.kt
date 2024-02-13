@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import com.google.inject.Inject
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -59,14 +60,14 @@ class FetchOldEpisodeDescriptionJob : AbstractJob() {
         httpRequest.close()
     }
 
-    private fun normalizeUrl(episode: Episode): String {
-        return when (episode.platform) {
+    fun normalizeUrl(platform: Platform, countryCode: CountryCode, url: String): String {
+        return when (platform) {
             Platform.CRUN -> {
-                val other = "https://www.crunchyroll.com/${episode.anime?.countryCode?.name?.lowercase()}/"
-                episode.url!!.replace("https://www.crunchyroll.com/", other)
+                val other = "https://www.crunchyroll.com/${countryCode.name.lowercase()}/"
+                url.replace("https://www.crunchyroll.com/", other)
             }
 
-            else -> episode.url!!
+            else -> url
         }
     }
 
@@ -74,7 +75,7 @@ class FetchOldEpisodeDescriptionJob : AbstractJob() {
         return when (episode.platform) {
             Platform.CRUN -> {
                 try {
-                    httpRequest.getBrowser(normalizeUrl(episode))
+                    httpRequest.getBrowser(normalizeUrl(episode.platform!!, episode.anime!!.countryCode!!, episode.url!!))
                 } catch (e: Exception) {
                     return null
                 }
@@ -93,7 +94,7 @@ class FetchOldEpisodeDescriptionJob : AbstractJob() {
         }
     }
 
-    fun normalizeUrl(url: String) ="/watch/([A-Z0-9]+)/".toRegex().find(url)!!.groupValues[1]
+    fun normalizeUrl(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)!!.groupValues[1]
 
     private fun normalizeDescription(episode: Episode, content: JsonObject): String? {
         var description = when (episode.platform) {
