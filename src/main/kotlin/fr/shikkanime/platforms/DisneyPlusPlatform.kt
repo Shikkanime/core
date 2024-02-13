@@ -27,6 +27,8 @@ class DisneyPlusPlatform :
     AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, JsonArray>() {
     override fun getPlatform(): Platform = Platform.DISN
 
+    override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
+
     override suspend fun fetchApiContent(
         key: CountryCodeDisneyPlusSimulcastKeyCache,
         zonedDateTime: ZonedDateTime

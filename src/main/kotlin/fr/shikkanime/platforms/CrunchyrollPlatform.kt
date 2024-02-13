@@ -12,6 +12,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -33,6 +34,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val image: String,
         val banner: String = "",
         val description: String? = null,
+        val simulcast: Boolean = false,
     )
 
     @Inject
@@ -112,6 +114,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var image: String? = null
         var banner: String? = null
         var description: String? = null
+        var simulcast = false
 
         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
             val (token, cms) = identifiers[it.countryCode]!!
@@ -134,6 +137,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     "source"
                 )
             description = `object`.getAsString("description")
+            simulcast = `object`.getAsJsonObject("series_metadata").getAsBoolean("is_simulcast") ?: false
         } else {
             HttpRequest().use { httpRequest ->
                 try {
@@ -168,7 +172,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             throw Exception("Banner is null or empty")
         }
 
-        return@MapCache CrunchyrollAnimeContent(image!!, banner!!, description)
+        return@MapCache CrunchyrollAnimeContent(image!!, banner!!, description, simulcast)
     }
 
     private fun getSimulcastCode(name: String): String {
@@ -197,6 +201,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     }
 
     override fun getPlatform(): Platform = Platform.CRUN
+
+    override fun getConfigurationClass() = CrunchyrollConfiguration::class.java
 
     private fun jsonObjects(content: String): List<JsonObject> {
         var bodyAsText = content
@@ -362,7 +368,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val fullName = jsonObject.getAsString("title") ?: throw Exception("Episode title is null")
         val isDubbed = fullName.contains("(${countryCode.voice})", true)
         val isMovie = fullName.contains("movie", true) || fullName.contains("film", true)
-
         val subtitles = jsonObject.getAsString("crunchyroll:subtitleLanguages")?.split(",") ?: emptyList()
 
         if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(
@@ -373,7 +378,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         }
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
-
         val id = jsonObject.getAsString("crunchyroll:mediaId") ?: throw Exception("Id is null")
         val hash = "${countryCode}-${getPlatform()}-$id-$langType"
 
@@ -384,36 +388,18 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val releaseDate =
             jsonObject.getAsString("pubDate")?.let { ZonedDateTime.parse(it, DateTimeFormatter.RFC_1123_DATE_TIME) }
                 ?: throw Exception("Release date is null")
-
         val season = jsonObject.getAsString("crunchyroll:season")?.toIntOrNull() ?: 1
-
         val number = jsonObject.getAsString("crunchyroll:episodeNumber")?.toIntOrNull() ?: -1
-
         val episodeType =
             if (isMovie) EpisodeType.FILM else if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
-
         val title = jsonObject.getAsString("crunchyroll:episodeTitle")?.ifBlank { null }
-
         val url = jsonObject.getAsString("link")?.ifBlank { null } ?: throw Exception("Url is null")
-
         val images = jsonObject.getAsJsonArray("media:thumbnail") ?: throw Exception(IMAGE_NULL_ERROR)
         val biggestImage =
             images.maxByOrNull { it.asJsonObject.getAsInt("width")!! } ?: throw Exception(IMAGE_NULL_ERROR)
         val image = biggestImage.asJsonObject.getAsString("url")?.ifBlank { null } ?: throw Exception(IMAGE_NULL_ERROR)
-
-        var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
-
-        var isSimulcasted =
-            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
-                .contains(animeName.lowercase())
-        isSimulcasted = isSimulcasted || isMovie
-
         val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.ifBlank { null }
-
-        if (!isSimulcasted) {
-            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
-        }
-
+        var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
         val splitted = url.split("/")
 
         if (splitted.size < 2) {
@@ -422,6 +408,17 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         val animeId = splitted[splitted.size - 2]
         val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
+
+        var isSimulcasted = simulcasts[countryCode]!!.contains(animeName.lowercase()) ||
+                configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase()) ||
+                crunchyrollAnimeContent.simulcast
+
+        isSimulcasted = isSimulcasted || isMovie
+
+        if (!isSimulcasted) {
+            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
+        }
+
         duration = getWebsiteEpisodeDuration(duration, url)
         hashCache.add(hash)
 

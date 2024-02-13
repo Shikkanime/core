@@ -40,4 +40,6 @@ data class Episode(
     var duration: Long = -1,
     @Column(nullable = true, columnDefinition = "VARCHAR(1000)")
     var description: String? = null,
+    @Column(nullable = true, name = "last_update_date_time")
+    var lastUpdateDateTime: ZonedDateTime? = releaseDateTime,
 ) : ShikkEntity(uuid)

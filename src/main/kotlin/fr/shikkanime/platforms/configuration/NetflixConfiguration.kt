@@ -54,4 +54,6 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
             )
         }
     }
+
+    override fun newPlatformSimulcast() = NetflixSimulcast()
 }

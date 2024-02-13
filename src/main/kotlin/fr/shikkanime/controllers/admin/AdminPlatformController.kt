@@ -92,7 +92,7 @@ class AdminPlatformController {
             ?: abstractPlatform.configuration!!.newPlatformSimulcast()
         simulcast.of(parameters)
 
-        if (uuid == null) {
+        if (simulcast.uuid == null) {
             simulcast.uuid = UUID.randomUUID()
             abstractPlatform.configuration?.addPlatformSimulcast(simulcast)
         }
