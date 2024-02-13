@@ -1,6 +1,7 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.animes
 
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.entities.enums.CountryCode
 import java.io.Serializable
 import java.util.*
@@ -17,5 +18,4 @@ data class AnimeDto(
     val simulcasts: List<SimulcastDto>?,
     val status: Status? = null,
     val slug: String? = null,
-    val lastReleaseDateTime: String? = null
 ) : Serializable

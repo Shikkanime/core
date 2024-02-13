@@ -4,8 +4,9 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.UpdatedAnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
@@ -22,6 +23,14 @@ class AnimeCacheService : AbstractCacheService() {
             PageableDto.fromPageable(
                 animeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
                 AnimeDto::class.java
+            )
+        }
+
+    private val findAllByUpdatedCache =
+        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<UpdatedAnimeDto>>(classes = listOf(Anime::class.java)) {
+            PageableDto.fromPageable(
+                animeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
+                UpdatedAnimeDto::class.java
             )
         }
 
@@ -51,6 +60,14 @@ class AnimeCacheService : AbstractCacheService() {
         page: Int,
         limit: Int
     ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit)]
+
+    fun findAllByUpdated(
+        countryCode: CountryCode?,
+        uuid: UUID?,
+        sort: List<SortParameter>,
+        page: Int,
+        limit: Int
+    ) = findAllByUpdatedCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit)]
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit)]

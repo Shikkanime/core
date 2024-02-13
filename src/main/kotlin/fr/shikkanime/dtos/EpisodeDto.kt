@@ -1,5 +1,6 @@
 package fr.shikkanime.dtos
 
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
