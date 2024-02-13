@@ -1,35 +1,49 @@
 package fr.shikkanime.converters.anime
 
+import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.UpdatedAnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.services.caches.EpisodeCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
 import org.apache.tika.language.detect.LanguageDetector
 import org.hibernate.Hibernate
 import java.time.format.DateTimeFormatter
 
-class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
+class AnimeToUpdatedAnimeDtoConverter : AbstractConverter<Anime, UpdatedAnimeDto>() {
     private val languageDetector: LanguageDetector = LanguageDetector.getDefaultLanguageDetector().loadModels()
 
-    override fun convert(from: Anime): AnimeDto {
+    @Inject
+    private lateinit var episodeCacheService: EpisodeCacheService
+
+    override fun convert(from: Anime): UpdatedAnimeDto {
+        val lastReleaseDate = episodeCacheService.findAllBy(
+            from.countryCode!!,
+            from.uuid,
+            listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
+            1,
+            1
+        )?.data?.firstOrNull()?.releaseDateTime
+
         val status = if (
             from.image.isNullOrBlank() ||
             from.banner.isNullOrBlank() ||
             from.description.isNullOrBlank() ||
             from.description?.startsWith("(") == true ||
-            languageDetector.detect(from.description).language.lowercase() != from.countryCode!!.name.lowercase()
+            languageDetector.detect(from.description).language.lowercase() != from.countryCode.name.lowercase()
         ) Status.INVALID else Status.VALID
 
-        return AnimeDto(
+        return UpdatedAnimeDto(
             uuid = from.uuid,
             releaseDateTime = from.releaseDateTime.withUTC()
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             image = from.image,
             banner = from.banner,
-            countryCode = from.countryCode!!,
+            countryCode = from.countryCode,
             name = from.name!!,
             shortName = StringUtils.getShortName(from.name!!),
             description = from.description,
@@ -39,6 +53,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             ) else null,
             status = status,
             slug = from.slug,
+            lastReleaseDateTime = lastReleaseDate
         )
     }
 }

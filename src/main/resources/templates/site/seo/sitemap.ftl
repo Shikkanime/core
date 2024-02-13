@@ -4,13 +4,13 @@
         <loc>https://www.shikkanime.fr/</loc>
         <lastmod>${episode.releaseDateTime?replace("Z", "+00:00")}</lastmod>
     </url>
-    <#list simulcasts as simulcast>
+    <#list simulcastsUpdated as simulcast>
         <url>
             <loc>https://www.shikkanime.fr/catalog/${simulcast.slug}</loc>
             <lastmod>${simulcast.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
         </url>
     </#list>
-    <#list animes as anime>
+    <#list animesUpdated as anime>
         <url>
             <loc>https://www.shikkanime.fr/animes/${anime.slug}</loc>
             <lastmod>${anime.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>

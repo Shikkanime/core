@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    <div class="row g-3 mt-5 justify-content-center">
+    <div class="row mt-5 justify-content-center">
         <#list episodes as episode>
             <@episodeComponent.display episode=episode />
         </#list>
