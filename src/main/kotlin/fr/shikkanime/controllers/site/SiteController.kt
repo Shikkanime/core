@@ -81,7 +81,7 @@ class SiteController {
                 1,
                 102
             )!!.data
-        }
+        }.distinctBy { it.uuid }
 
         val episode = episodeCacheService.findAllBy(
             CountryCode.FR,
