@@ -8,7 +8,7 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 
-class SimulcastCacheService : AbstractCacheService() {
+class SimulcastCacheService : AbstractCacheService {
     @Inject
     private lateinit var simulcastService: SimulcastService
 

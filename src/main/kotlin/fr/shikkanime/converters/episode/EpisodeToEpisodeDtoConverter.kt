@@ -25,6 +25,7 @@ class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
             duration = from.duration,
             description = from.description,
             uncensored = from.image!!.contains("nc/", true),
+            lastUpdateDateTime = from.lastUpdateDateTime?.withUTC()?.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         )
     }
 }

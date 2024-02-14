@@ -31,14 +31,14 @@ object AnimationDigitalNetworkWrapper {
             ?: throw Exception("Failed to get show id")
     }
 
-    suspend fun getShowVideos(animeId: Int, videoId: Int, limit: Int = 1): List<JsonObject> {
-        val response = HttpRequest().get("${BASE_URL}video/show/$animeId?videoId=$videoId&limit=$limit")
+    suspend fun getShowVideo(videoId: Int): JsonObject {
+        val response = HttpRequest().get("${BASE_URL}video/$videoId/public?withMicrodata=true&withSeo=true")
 
         if (response.status.value != 200) {
-            throw Exception("Failed to get videos")
+            throw Exception("Failed to get video")
         }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("videos")?.map { it.asJsonObject }
-            ?: throw Exception("Failed to get videos")
+        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("video")
+            ?: throw Exception("Failed to get video")
     }
 }

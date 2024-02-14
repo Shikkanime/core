@@ -61,18 +61,27 @@ open class Response(
             )
 
         fun template(
+            code: HttpStatusCode,
             template: String,
             title: String? = null,
             model: Map<String, Any?> = mapOf(),
             session: TokenDto? = null,
             contentType: ContentType = ContentType.Text.Html.withCharset(Charsets.UTF_8),
         ): Response = Response(
-            HttpStatusCode.OK,
+            code,
             type = ResponseType.TEMPLATE,
             data = mapOf("template" to template, "title" to title, "model" to model),
             session = session,
             contentType = contentType
         )
+
+        fun template(
+            template: String,
+            title: String? = null,
+            model: Map<String, Any?> = mapOf(),
+            session: TokenDto? = null,
+            contentType: ContentType = ContentType.Text.Html.withCharset(Charsets.UTF_8),
+        ) = template(HttpStatusCode.OK, template, title, model, session, contentType)
 
         fun template(
             link: Link,

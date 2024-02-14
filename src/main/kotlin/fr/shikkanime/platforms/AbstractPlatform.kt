@@ -9,7 +9,6 @@ import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.isEqualOrAfter
 import kotlinx.coroutines.runBlocking
 import java.io.File
-import java.lang.reflect.ParameterizedType
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
@@ -20,6 +19,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     private var apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
 
     abstract fun getPlatform(): Platform
+    abstract fun getConfigurationClass(): Class<C>
     abstract suspend fun fetchApiContent(key: K, zonedDateTime: ZonedDateTime): V
     abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File? = null): List<Episode>
 
@@ -67,12 +67,5 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val folder = File(Constant.dataFolder, "config")
         if (!folder.exists()) folder.mkdirs()
         return File(folder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
-    }
-
-    private fun getConfigurationClass(): Class<C> {
-        val type = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0]
-        require(type is Class<*>) { "Configuration class must be a class" }
-        @Suppress("UNCHECKED_CAST")
-        return type as Class<C>
     }
 }

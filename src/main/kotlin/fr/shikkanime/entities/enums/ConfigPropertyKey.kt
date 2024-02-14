@@ -12,4 +12,5 @@ enum class ConfigPropertyKey(val key: String) {
     SOCIAL_NETWORK_EPISODES_SIZE_LIMIT("social_network_episodes_size_limit"),
     FETCH_OLD_EPISODE_DESCRIPTION_SIZE("fetch_old_episode_description_size"),
     GOOGLE_SITE_VERIFICATION_ID("google_site_verification_id"),
+    FETCH_DEPRECATED_EPISODE_DATE("fetch_deprecated_episode_date"),
 }

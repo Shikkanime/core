@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
+import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeRepository : AbstractRepository<Episode>() {
@@ -131,10 +132,15 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         }
     }
 
-    fun findAllByPlatform(platform: Platform): List<Episode> {
+    fun findAllByPlatformDeprecatedEpisodes(platform: Platform, lastUpdateDateTime: ZonedDateTime): List<Episode> {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM Episode WHERE platform = :platform AND description IS NULL", getEntityClass())
+            createReadOnlyQuery(
+                it,
+                "FROM Episode WHERE platform = :platform AND (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL)",
+                getEntityClass()
+            )
                 .setParameter("platform", platform)
+                .setParameter("lastUpdateDateTime", lastUpdateDateTime)
                 .resultList
                 .initialize()
         }

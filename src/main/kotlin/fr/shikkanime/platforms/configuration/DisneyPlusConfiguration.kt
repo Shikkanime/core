@@ -38,6 +38,8 @@ data class DisneyPlusConfiguration(
         }
     }
 
+    override fun newPlatformSimulcast() = DisneyPlusSimulcast()
+
     override fun of(parameters: Parameters) {
         super.of(parameters)
         parameters["authorization"]?.let { authorization = it }

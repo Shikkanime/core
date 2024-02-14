@@ -14,7 +14,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class AnimeCacheService : AbstractCacheService() {
+class AnimeCacheService : AbstractCacheService {
     @Inject
     private lateinit var animeService: AnimeService
 
