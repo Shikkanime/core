@@ -151,6 +151,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
         parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { episode.description = it }
+        episode.lastUpdateDateTime = ZonedDateTime.now()
 
         val update = super.update(episode)
         MapCache.invalidate(Episode::class.java)
