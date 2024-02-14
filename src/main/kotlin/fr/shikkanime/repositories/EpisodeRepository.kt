@@ -35,7 +35,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     }
 
     private fun buildSortQuery(sort: List<SortParameter>, query: StringBuilder) {
-        val fields = listOf("episodeType", "langType", "releaseDateTime", "season", "number")
+        val fields = listOf("episodeType", "langType", "releaseDateTime", "season", "number", "lastUpdateDateTime")
         val subQuery = mutableListOf<String>()
 
         sort.filter { fields.contains(it.field) }.forEach { param ->

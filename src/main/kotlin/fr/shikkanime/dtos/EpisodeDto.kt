@@ -1,6 +1,7 @@
 package fr.shikkanime.dtos
 
 import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
@@ -24,4 +25,5 @@ data class EpisodeDto(
     val description: String?,
     val uncensored: Boolean,
     val lastUpdateDateTime: String?,
+    val status: Status? = null,
 ) : Serializable

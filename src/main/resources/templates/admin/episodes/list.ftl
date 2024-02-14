@@ -13,10 +13,8 @@
         <tr>
             <th scope="col">Anime</th>
             <th scope="col">Platform</th>
-            <th scope="col">Episode type</th>
-            <th scope="col">Lang type</th>
-            <th scope="col">Season</th>
-            <th scope="col">Number</th>
+            <th scope="col">Details</th>
+            <th scope="col">Description</th>
             <th scope="col">Actions</th>
         </tr>
         </thead>
@@ -34,14 +32,40 @@
     </div>
 
     <script>
-        function buildTableElement(uuid, anime, platform, episodeType, langType, season, number) {
+        function buildTableElement(uuid, anime, platform, episodeType, langType, season, number, description, status) {
+            let episodeTypePrefix = '';
+
+            switch (episodeType) {
+                case 'EPISODE':
+                    episodeTypePrefix = 'EP';
+                    break;
+                case 'SPECIAL':
+                    episodeTypePrefix = 'SP';
+                    break;
+                case 'FILM':
+                    episodeTypePrefix = 'MOV';
+                    break;
+            }
+
+            let langTypePrefix = '';
+
+            switch (langType) {
+                case 'SUBTITLES':
+                    langTypePrefix = 'SUB';
+                    break;
+                case 'VOICE':
+                    langTypePrefix = 'DUB';
+                    break;
+            }
+
+            const details = 'S' + season + ' ' + episodeTypePrefix + number + ' ' + langTypePrefix;
+            const isInvalid = status === 'INVALID';
+
             return `<tr>
-                <th scope="row">` + anime + `</th>
+                <th scope="row"><span class="me-2 badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>` + anime + `</th>
                 <td>` + platform + `</td>
-                <td>` + episodeType + `</td>
-                <td>` + langType + `</td>
-                <td>` + season + `</td>
-                <td>` + number + `</td>
+                <td>` + details + `</td>
+                <td>` + description + `</td>
                 <td>
                     <a href="/admin/episodes/` + uuid + `" class="btn btn-warning">
                         <i class="bi bi-pencil-square"></i>
@@ -52,7 +76,7 @@
         }
 
         async function getEpisodes(anime, page) {
-            let params = '?sort=releaseDateTime&desc=releaseDateTime';
+            let params = '?sort=lastUpdateDateTime&desc=lastUpdateDateTime';
 
             if (anime) {
                 params = '?anime=' + anime;
@@ -63,11 +87,20 @@
 
         function buildTable(episodes) {
             const table = document.getElementById('episodes-table');
-
             table.innerHTML = '';
 
             episodes.forEach(episode => {
-                table.innerHTML += buildTableElement(episode.uuid, episode.anime.name, episode.platform, episode.episodeType, episode.langType, episode.season, episode.number);
+                table.innerHTML += buildTableElement(
+                    episode.uuid,
+                    episode.anime.shortName,
+                    episode.platform,
+                    episode.episodeType,
+                    episode.langType,
+                    episode.season,
+                    episode.number,
+                    episode.description || '',
+                    episode.status,
+                );
             });
         }
 
