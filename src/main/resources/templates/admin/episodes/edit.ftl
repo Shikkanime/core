@@ -77,6 +77,13 @@
                                value="${episode.releaseDateTime?keep_before_last(":")}">
                     </div>
                     <div class="col-md-6">
+                        <label for="lastUpdateDateTime" class="form-label">Last update date time</label>
+                        <input type="datetime-local" class="form-control disabled" id="lastUpdateDateTime"
+                               name="lastUpdateDateTime"
+                               value="<#if episode.lastUpdateDateTime??>${episode.lastUpdateDateTime?keep_before_last(":")}</#if>"
+                               disabled>
+                    </div>
+                    <div class="col-md-6">
                         <label for="season" class="form-label">Season</label>
                         <input type="number" class="form-control" id="season" name="season" value="${episode.season?c}">
                     </div>
