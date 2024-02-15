@@ -13,6 +13,7 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import io.ktor.http.*
+import java.time.ZonedDateTime
 
 @Controller("/")
 class SiteController {
@@ -71,16 +72,20 @@ class SiteController {
     @Path("sitemap.xml")
     @Get
     private fun sitemap(): Response {
-        val simulcasts = simulcastCacheService.findAllUpdated()!!
+        val simulcasts = simulcastCacheService.findAll()!!
 
         val animes = simulcasts.flatMap {
-            animeCacheService.findAllByUpdated(
+            val data = animeCacheService.findAllBy(
                 CountryCode.FR,
                 it.uuid,
                 listOf(SortParameter("name", SortParameter.Order.ASC)),
                 1,
                 102
             )!!.data
+
+            it.lastReleaseDateTime = data.maxBy { d -> ZonedDateTime.parse(d.releaseDateTime) }.lastReleaseDateTime
+
+            data
         }.distinctBy { it.uuid }
 
         val episode = episodeCacheService.findAllBy(
@@ -96,8 +101,8 @@ class SiteController {
             null,
             mutableMapOf(
                 "episode" to episode,
-                "simulcastsUpdated" to simulcasts,
-                "animesUpdated" to animes
+                "simulcasts" to simulcasts,
+                "animes" to animes
             ),
             contentType = ContentType.Text.Xml
         )

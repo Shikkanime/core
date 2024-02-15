@@ -2,7 +2,7 @@ package fr.shikkanime.converters.anime
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.CountryCode

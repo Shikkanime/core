@@ -35,16 +35,17 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     private fun buildSortQuery(sort: List<SortParameter>, query: StringBuilder) {
-        if (sort.any { param -> param.field == "name" }) {
-            val param = sort.first { param -> param.field == "name" }
+        val fields = listOf("name", "releaseDateTime", "lastReleaseDateTime")
+        val subQuery = mutableListOf<String>()
+
+        sort.filter { fields.contains(it.field) }.forEach { param ->
+            val field = param.field
             addOrderBy(query)
-            query.append(" LOWER(a.name) ${param.order.name}")
+            subQuery.add(" a.$field ${param.order.name}")
         }
 
-        if (sort.any { param -> param.field == "releaseDateTime" }) {
-            val param = sort.first { param -> param.field == "releaseDateTime" }
-            addOrderBy(query)
-            query.append(" a.releaseDateTime ${param.order.name}")
+        if (subQuery.isNotEmpty()) {
+            query.append(subQuery.joinToString(", "))
         }
     }
 

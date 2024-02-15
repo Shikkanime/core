@@ -314,15 +314,22 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
 
-        val isSimulcasted =
-            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
+        val checkCrunchyrollSimulcasts = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS, true)
+
+        if (checkCrunchyrollSimulcasts) {
+            val isSimulcasted = simulcasts[countryCode]!!.contains(animeName.lowercase()) ||
+                    configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
+
+            if (!isSimulcasted) throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
+        }
 
         val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
-
-        if (!isSimulcasted) throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
-
         val animeId = requireNotNull(episodeMetadata.getAsString("series_id")) { "Anime id is null" }
         val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
+
+        if (!checkCrunchyrollSimulcasts && !crunchyrollAnimeContent.simulcast)
+            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
+
         duration = getWebsiteEpisodeDuration(duration, url)
         hashCache.add(hash)
 
@@ -398,8 +405,20 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val biggestImage =
             images.maxByOrNull { it.asJsonObject.getAsInt("width")!! } ?: throw Exception(IMAGE_NULL_ERROR)
         val image = biggestImage.asJsonObject.getAsString("url")?.ifBlank { null } ?: throw Exception(IMAGE_NULL_ERROR)
-        val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.ifBlank { null }
+
         var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
+
+        var isSimulcasted =
+            simulcasts[countryCode]!!.contains(animeName.lowercase()) || configuration!!.simulcasts.map { it.name.lowercase() }
+                .contains(animeName.lowercase())
+        isSimulcasted = isSimulcasted || isMovie
+
+        val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.ifBlank { null }
+
+        if (!isSimulcasted) {
+            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
+        }
+
         val splitted = url.split("/")
 
         if (splitted.size < 2) {
@@ -408,17 +427,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         val animeId = splitted[splitted.size - 2]
         val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
-
-        var isSimulcasted = simulcasts[countryCode]!!.contains(animeName.lowercase()) ||
-                configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase()) ||
-                crunchyrollAnimeContent.simulcast
-
-        isSimulcasted = isSimulcasted || isMovie
-
-        if (!isSimulcasted) {
-            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
-        }
-
         duration = getWebsiteEpisodeDuration(duration, url)
         hashCache.add(hash)
 

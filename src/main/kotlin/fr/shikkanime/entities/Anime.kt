@@ -36,6 +36,8 @@ data class Anime(
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
     @Column(nullable = true)
     var slug: String? = null,
+    @Column(nullable = false, name = "last_release_date_time")
+    var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
 ) : ShikkEntity(uuid) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -52,6 +54,7 @@ data class Anime(
         if (description != other.description) return false
         if (simulcasts != other.simulcasts) return false
         if (slug != other.slug) return false
+        if (lastReleaseDateTime != other.lastReleaseDateTime) return false
 
         return true
     }
@@ -66,6 +69,7 @@ data class Anime(
         result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + simulcasts.hashCode()
         result = 31 * result + (slug?.hashCode() ?: 0)
+        result = 31 * result + lastReleaseDateTime.hashCode()
         return result
     }
 }
