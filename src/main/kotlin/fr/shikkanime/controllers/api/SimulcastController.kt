@@ -2,8 +2,8 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.simulcasts.SimulcastDto
-import fr.shikkanime.services.SimulcastService
+import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
@@ -14,7 +14,7 @@ import java.util.*
 @Controller("/api/v1/simulcasts")
 class SimulcastController {
     @Inject
-    private lateinit var simulcastService: SimulcastService
+    private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Path
     @Get
@@ -29,6 +29,6 @@ class SimulcastController {
         ]
     )
     private fun getAll(): Response {
-        return Response.ok(AbstractConverter.convert(simulcastService.findAll(), SimulcastDto::class.java))
+        return Response.ok(AbstractConverter.convert(simulcastCacheService.findAll(), SimulcastDto::class.java))
     }
 }

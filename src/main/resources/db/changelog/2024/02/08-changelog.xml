@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1708001374730"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="anime"/>
+
+            <not>
+                <columnExists tableName="anime" columnName="last_release_date_time"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="anime">
+            <column name="last_release_date_time" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <sql>
+            UPDATE anime
+            SET last_release_date_time = (SELECT MAX(release_date_time) FROM episode WHERE anime_uuid = anime.uuid)
+            FROM anime an
+                     INNER JOIN episode ep ON an.uuid = ep.anime_uuid
+            WHERE an.last_release_date_time IS NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="anime" columnName="last_release_date_time"/>
+        </preConditions>
+
+        <addNotNullConstraint tableName="anime" columnName="last_release_date_time"/>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'check_crunchyroll_simulcasts'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="check_crunchyroll_simulcasts"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

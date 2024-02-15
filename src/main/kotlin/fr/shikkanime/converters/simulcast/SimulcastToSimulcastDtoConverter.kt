@@ -1,7 +1,7 @@
 package fr.shikkanime.converters.simulcast
 
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.simulcasts.SimulcastDto
+import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Simulcast
 
 class SimulcastToSimulcastDtoConverter : AbstractConverter<Simulcast, SimulcastDto>() {
