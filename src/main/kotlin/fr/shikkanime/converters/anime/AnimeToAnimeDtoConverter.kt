@@ -1,9 +1,9 @@
 package fr.shikkanime.converters.anime
 
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
@@ -39,6 +39,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             ) else null,
             status = status,
             slug = from.slug,
+            lastReleaseDateTime = from.lastReleaseDateTime.withUTC()
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
         )
     }
 }

@@ -3,9 +3,9 @@ package fr.shikkanime.controllers.api
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.EpisodeType

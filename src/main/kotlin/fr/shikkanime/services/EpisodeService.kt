@@ -112,6 +112,10 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             addSimulcastToAnime(anime, simulcast)
         }
 
+        if (anime.lastReleaseDateTime.isBefore(entity.releaseDateTime)) {
+            anime.lastReleaseDateTime = entity.releaseDateTime
+        }
+
         if (entity.anime != anime) {
             entity.anime = animeService.update(anime)
         }
