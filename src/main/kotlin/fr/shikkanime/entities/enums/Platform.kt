@@ -9,6 +9,7 @@ enum class Platform(
     CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg"),
     DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg"),
     NETF("Netflix", "https://www.netflix.com/", "netflix.jpg"),
+    PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg"),
     ;
 
     companion object {

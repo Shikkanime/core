@@ -68,6 +68,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
             Platform.CRUN -> "@Crunchyroll_fr"
             Platform.NETF -> "@NetflixFR"
             Platform.DISN -> "@DisneyPlusFR"
+            Platform.PRIM -> "@PrimeVideoFR"
         }
     }
 

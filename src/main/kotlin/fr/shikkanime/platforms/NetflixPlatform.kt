@@ -37,44 +37,42 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val animeDescription = document.selectFirst(".title-info-synopsis")?.text()
         val episodes = document.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptySet()
 
-        return mutableSetOf<Episode>().apply {
-            episodes.mapNotNull { episode ->
-                val episodeTitleAndNumber = episode.selectFirst(".episode-title")?.text()
-                val episodeTitle = episodeTitleAndNumber?.substringAfter(".")
-                val episodeNumber = episodeTitleAndNumber?.substringBefore(".")?.toIntOrNull() ?: -1
-                val duration = episode.selectFirst(".episode-runtime")?.text()
-                val durationInSeconds = duration?.substringBefore(" ")?.trim()?.toLongOrNull()?.times(60) ?: -1
-                val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapNotNull null
-                val imageWithoutParams = image.substringBefore("?")
-                val episodeDescription = episode.selectFirst(".epsiode-synopsis")?.text()
+        return episodes.mapNotNull { episode ->
+            val episodeTitleAndNumber = episode.selectFirst(".episode-title")?.text()
+            val episodeTitle = episodeTitleAndNumber?.substringAfter(".")
+            val episodeNumber = episodeTitleAndNumber?.substringBefore(".")?.toIntOrNull() ?: -1
+            val duration = episode.selectFirst(".episode-runtime")?.text()
+            val durationInSeconds = duration?.substringBefore(" ")?.trim()?.toLongOrNull()?.times(60) ?: -1
+            val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapNotNull null
+            val imageWithoutParams = image.substringBefore("?")
+            val episodeDescription = episode.selectFirst(".epsiode-synopsis")?.text()
 
-                Episode(
-                    platform = getPlatform(),
-                    anime = Anime(
-                        countryCode = key.countryCode,
-                        name = animeName,
-                        releaseDateTime = releaseDateTime,
-                        image = key.netflixSimulcast.image,
-                        banner = animeBanner,
-                        description = animeDescription,
-                        slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
-                    ),
-                    episodeType = EpisodeType.EPISODE,
-                    langType = LangType.SUBTITLES,
-                    hash = "${key.countryCode}-${getPlatform()}-${
-                        EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
-                    }-${LangType.SUBTITLES}",
+            Episode(
+                platform = getPlatform(),
+                anime = Anime(
+                    countryCode = key.countryCode,
+                    name = animeName,
                     releaseDateTime = releaseDateTime,
-                    season = season,
-                    number = episodeNumber,
-                    title = episodeTitle,
-                    url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id",
-                    image = imageWithoutParams,
-                    duration = durationInSeconds,
-                    description = episodeDescription,
-                ).also { add(it) }
-            }
-        }
+                    image = key.netflixSimulcast.image,
+                    banner = animeBanner,
+                    description = animeDescription,
+                    slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
+                ),
+                episodeType = EpisodeType.EPISODE,
+                langType = LangType.SUBTITLES,
+                hash = "${key.countryCode}-${getPlatform()}-${
+                    EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
+                }-${LangType.SUBTITLES}",
+                releaseDateTime = releaseDateTime,
+                season = season,
+                number = episodeNumber,
+                title = episodeTitle,
+                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id",
+                image = imageWithoutParams,
+                duration = durationInSeconds,
+                description = episodeDescription,
+            )
+        }.toSet()
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
