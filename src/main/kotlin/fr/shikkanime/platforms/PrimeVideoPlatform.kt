@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 class PrimeVideoPlatform :
     AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, Set<Episode>>() {
@@ -44,7 +45,7 @@ class PrimeVideoPlatform :
             val image = domEpisode.selectFirst("img[data-testid=\"base-image\"]")?.attr("src") ?: return@mapNotNull null
             val episodeDescription = domEpisode.selectFirst("div[dir=\"auto\"]")?.text()
             val text = domEpisode.selectFirst("div[data-testid=\"episode-release-date\"]")?.text()
-            val releaseDate = LocalDate.parse(text, DateTimeFormatter.ofPattern("dd MMMM yyyy"))
+            val releaseDate = LocalDate.parse(text, DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH))
             val releaseDateTime = ZonedDateTime.parse("${releaseDate}T15:00:00Z").withUTC()
 
             Episode(
