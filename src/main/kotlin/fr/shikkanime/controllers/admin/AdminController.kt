@@ -5,6 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.AnimeService
@@ -128,7 +129,7 @@ class AdminController {
         }
 
         episodeService.findAll()
-            .filter { it.langType == LangType.SUBTITLES }
+            .filter { it.langType == LangType.SUBTITLES && it.episodeType != EpisodeType.FILM }
             .forEach { episode ->
                 val anime = animeService.find(episode.anime!!.uuid!!)!!
                 episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(episode))
