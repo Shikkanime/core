@@ -107,7 +107,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             ) + 1
         }
 
-        if (entity.langType == LangType.SUBTITLES) {
+        if (entity.langType == LangType.SUBTITLES && entity.episodeType != EpisodeType.FILM) {
             val simulcast = getSimulcast(entity)
             addSimulcastToAnime(anime, simulcast)
         }
