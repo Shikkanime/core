@@ -303,7 +303,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         val season = episodeMetadata.getAsInt("season_number") ?: 1
         val number = episodeMetadata.getAsInt("episode_number") ?: -1
-        val episodeType = if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
+        val seasonSlugTitle = episodeMetadata.getAsString("season_slug_title")
+
+        val episodeType = if (seasonSlugTitle?.contains("movie", true) == true)
+            EpisodeType.FILM
+        else if (number == -1)
+            EpisodeType.SPECIAL
+        else
+            EpisodeType.EPISODE
 
         val title = jsonObject.getAsString("title")
         val url = "https://www.crunchyroll.com/media-$id"
@@ -315,19 +322,16 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
 
         val checkCrunchyrollSimulcasts = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS, true)
+        val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        if (checkCrunchyrollSimulcasts) {
-            val isSimulcasted = simulcasts[countryCode]!!.contains(animeName.lowercase()) ||
-                    configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
-
-            if (!isSimulcasted) throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
-        }
+        if (checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || simulcasts[countryCode]!!.contains(animeName.lowercase())))
+            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
         val animeId = requireNotNull(episodeMetadata.getAsString("series_id")) { "Anime id is null" }
         val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
 
-        if (!checkCrunchyrollSimulcasts && !crunchyrollAnimeContent.simulcast)
+        if (!checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         duration = getWebsiteEpisodeDuration(duration, url)
