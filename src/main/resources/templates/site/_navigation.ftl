@@ -8,7 +8,7 @@
             <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
                 <div class="container-fluid mx-md-5">
                     <a class="navbar-brand" href="/">
-                        <img src="/assets/img/light_banner.webp" alt="Logo" height="24"
+                        <img src="/assets/img/light_banner.webp" alt="Logo" width="181" height="24"
                              class="d-inline-block align-text-top">
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -43,7 +43,7 @@
                 <div class="col-md-4 d-flex align-items-center">
                     <div>
                         <a href="/" class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
-                            <img src="/assets/img/favicons/favicon-64x64.png" alt="Logo" height="24">
+                            <img src="/assets/img/favicons/favicon-64x64.png" alt="Logo" width="24" height="24">
                         </a>
 
                         <p class="my-3 text-white">

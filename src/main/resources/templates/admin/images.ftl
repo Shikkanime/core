@@ -2,7 +2,8 @@
 
 <@navigation.display>
     <div class="d-flex mb-3">
-        <a href="/admin/images/invalidate" class="btn btn-success ms-auto me-0">Invalidate</a>
+        <a href="/admin/images/invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
+        <a href="/admin/images/save" class="btn btn-success ms-2 me-0">Save</a>
     </div>
 
     <div class="card">
