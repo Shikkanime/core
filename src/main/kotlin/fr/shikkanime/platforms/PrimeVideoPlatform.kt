@@ -9,7 +9,6 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import fr.shikkanime.utils.*
 import java.io.File
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -26,6 +25,9 @@ class PrimeVideoPlatform :
         zonedDateTime: ZonedDateTime
     ): Set<Episode> {
         val id = key.primeVideoSimulcast.name
+        val releaseDateTimeUTC = zonedDateTime.withUTC()
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.primeVideoSimulcast.releaseTime}Z"
+        val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
         val document =
             HttpRequest().use { it.getBrowser("https://www.primevideo.com/-/${key.countryCode.name.lowercase()}/detail/$id?language=${key.countryCode.locale}") }
@@ -44,9 +46,6 @@ class PrimeVideoPlatform :
             val durationInSeconds = duration?.substringBefore("min")?.trim()?.toLongOrNull()?.times(60) ?: -1
             val image = domEpisode.selectFirst("img[data-testid=\"base-image\"]")?.attr("src") ?: return@mapNotNull null
             val episodeDescription = domEpisode.selectFirst("div[dir=\"auto\"]")?.text()
-            val text = domEpisode.selectFirst("div[data-testid=\"episode-release-date\"]")?.text()
-            val releaseDate = LocalDate.parse(text, DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH))
-            val releaseDateTime = ZonedDateTime.parse("${releaseDate}T15:00:00Z").withUTC()
 
             Episode(
                 platform = getPlatform(),
