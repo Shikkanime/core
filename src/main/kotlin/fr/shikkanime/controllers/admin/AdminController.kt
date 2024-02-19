@@ -99,6 +99,14 @@ class AdminController {
         )
     }
 
+    @Path("/images/save")
+    @Get
+    @AdminSessionAuthenticated
+    private fun saveImages(): Response {
+        ImageService.saveCache()
+        return Response.redirect(Link.IMAGES.href)
+    }
+
     @Path("/images/invalidate")
     @Get
     @AdminSessionAuthenticated
