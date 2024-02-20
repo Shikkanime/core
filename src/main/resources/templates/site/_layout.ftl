@@ -24,16 +24,12 @@
         <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicons/favicon-16x16.png">
 
-        <link rel="preload" href="/assets/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-        <link rel="stylesheet" href="/assets/css/main.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="/assets/css/purged/bootstrap.min.css" crossorigin="anonymous">
+        <link rel="stylesheet" href="/assets/css/purged/main.min.css" crossorigin="anonymous">
 
         <#if header??>
             ${header}
         </#if>
-
-        <noscript>
-            <link rel="stylesheet" href="/assets/css/bootstrap.min.css" crossorigin="anonymous">
-        </noscript>
 
         <script defer src="/assets/js/alpinejs.min.js" crossorigin="anonymous"></script>
     </head>
