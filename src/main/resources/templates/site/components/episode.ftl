@@ -16,7 +16,7 @@
                @mouseleave="hover = false">
                 <div class="position-relative">
                     <div class="position-relative">
-                        <img loading="lazy" data-src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
+                        <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
                              alt="${episode.anime.shortName?replace("\"", "'")} episode preview image"
                              class="img-fluid<#if episode.uncensored> blur</#if>" width="640" height="360">
 

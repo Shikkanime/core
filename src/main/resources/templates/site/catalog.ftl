@@ -20,6 +20,4 @@
             </#list>
         </div>
     </div>
-
-    <script src="/assets/js/intersection_observer.js"></script>
 </@navigation.display>
