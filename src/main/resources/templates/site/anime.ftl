@@ -5,7 +5,7 @@
     <div class="container">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
-                <img loading="lazy" data-src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
+                <img src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
                      alt="${anime.shortName?replace("\"", "'")} anime image" class="img-fluid w-50" width="480" height="720">
             </div>
 
@@ -22,6 +22,4 @@
             <@episodeComponent.display episode=episode />
         </#list>
     </div>
-
-    <script src="/assets/js/intersection_observer.js"></script>
 </@navigation.display>
