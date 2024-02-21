@@ -5,14 +5,17 @@ import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.isEqualOrAfter
 import fr.shikkanime.utils.withUTC
 import jakarta.inject.Inject
+import java.io.ByteArrayOutputStream
 import java.time.ZonedDateTime
 import java.util.logging.Level
+import javax.imageio.ImageIO
 
 
 class FetchEpisodesJob : AbstractJob {
@@ -91,9 +94,18 @@ class FetchEpisodesJob : AbstractJob {
     }
 
     private fun sendToSocialNetworks(dto: EpisodeDto) {
+        val mediaImage = try {
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            ImageIO.write(ImageService.toEpisodeImage(dto), "png", byteArrayOutputStream)
+            byteArrayOutputStream.toByteArray()
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error while converting episode image for social networks", e)
+            return
+        }
+
         Constant.abstractSocialNetworks.forEach { socialNetwork ->
             try {
-                socialNetwork.sendEpisodeRelease(dto)
+                socialNetwork.sendEpisodeRelease(dto, mediaImage)
             } catch (e: Exception) {
                 logger.log(
                     Level.SEVERE,

@@ -4,20 +4,22 @@
 
 <@navigation.display>
     <div class="mt-3">
-        <button class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            ${currentSimulcast.label}
-        </button>
+        <#if currentSimulcast??>
+            <button class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                ${currentSimulcast.label}
+            </button>
 
-        <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
-            <#list simulcasts as simulcast>
-                <li><a class="dropdown-item" href="/catalog/${simulcast.slug}">${simulcast.label}</a></li>
-            </#list>
-        </ul>
+            <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
+                <#list simulcasts as simulcast>
+                    <li><a class="dropdown-item" href="/catalog/${simulcast.slug}">${simulcast.label}</a></li>
+                </#list>
+            </ul>
 
-        <div class="row mt-3 justify-content-center">
-            <#list animes as anime>
-                <@animeComponent.display anime=anime />
-            </#list>
-        </div>
+            <div class="row mt-3 justify-content-center">
+                <#list animes as anime>
+                    <@animeComponent.display anime=anime />
+                </#list>
+            </div>
+        </#if>
     </div>
 </@navigation.display>

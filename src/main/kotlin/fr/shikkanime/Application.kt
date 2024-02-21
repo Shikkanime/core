@@ -1,9 +1,9 @@
 package fr.shikkanime
 
 import fr.shikkanime.jobs.*
-import fr.shikkanime.plugins.configureHTTP
-import fr.shikkanime.plugins.configureRouting
-import fr.shikkanime.plugins.configureSecurity
+import fr.shikkanime.modules.configureHTTP
+import fr.shikkanime.modules.configureRouting
+import fr.shikkanime.modules.configureSecurity
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService

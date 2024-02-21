@@ -5,7 +5,6 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import twitter4j.Twitter
@@ -13,10 +12,8 @@ import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
 import twitter4j.v2
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.util.*
 import java.util.logging.Level
-import javax.imageio.ImageIO
 
 class TwitterSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(TwitterSocialNetwork::class.java)
@@ -80,7 +77,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeDto) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         login()
         if (!isInitialized) return
         if (twitter == null) return
@@ -93,12 +90,9 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
                 platformAccount(episodeDto.platform)
             }\n\nBon visionnage. \uD83C\uDF7F\n\n\uD83D\uDD36 Lien de l'épisode : $url"
 
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        ImageIO.write(ImageService.toEpisodeImage(episodeDto), "png", byteArrayOutputStream)
-
         val uploadMedia = twitter!!.tweets().uploadMedia(
             UUID.randomUUID().toString(),
-            ByteArrayInputStream(byteArrayOutputStream.toByteArray())
+            ByteArrayInputStream(mediaImage)
         )
 
         twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)

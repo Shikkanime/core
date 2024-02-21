@@ -58,7 +58,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         getTextChannels()?.forEach { it.sendMessage(message).queue() }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeDto) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         login()
         if (!isInitialized) return
         if (episodeDto.image.isBlank()) return

@@ -10,7 +10,6 @@ import java.util.*
 
 class MemberToTokenDtoConverter : AbstractConverter<Member, TokenDto>() {
     override fun convert(from: Member): TokenDto {
-        println(from)
         val token = JWT.create()
             .withAudience(Constant.jwtAudience)
             .withIssuer(Constant.jwtDomain)
