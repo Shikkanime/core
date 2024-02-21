@@ -51,7 +51,7 @@ class HttpRequest : AutoCloseable {
         return response
     }
 
-    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: String): HttpResponse {
+    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: Any): HttpResponse {
         val httpClient = httpClient()
         logger.info("Making request to $url... (POST)")
         val start = System.currentTimeMillis()

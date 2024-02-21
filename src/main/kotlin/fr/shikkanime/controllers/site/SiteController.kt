@@ -30,14 +30,14 @@ class SiteController {
     @Get
     private fun home(): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.first()
+        val currentSimulcast = findAll.firstOrNull()
 
         return Response.template(
             Link.HOME,
             mutableMapOf(
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
-                    currentSimulcast.uuid,
+                    currentSimulcast?.uuid,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     6
@@ -94,7 +94,7 @@ class SiteController {
             listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
             1,
             1
-        )!!.data.first()
+        )!!.data.firstOrNull()
 
         return Response.template(
             "/site/seo/sitemap.ftl",
@@ -112,7 +112,7 @@ class SiteController {
     @Get
     private fun catalog(): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.first()
+        val currentSimulcast = findAll.firstOrNull() ?: return Response.template(Link.CATALOG.template, "Catalogue")
         return Response.redirect("/catalog/${currentSimulcast.slug}")
     }
 
@@ -158,6 +158,7 @@ class SiteController {
             "/site/anime.ftl",
             anime.shortName,
             mutableMapOf(
+                "description" to anime.description,
                 "anime" to anime,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,

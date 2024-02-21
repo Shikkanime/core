@@ -58,13 +58,14 @@ class AdminControllerTest {
         page.click("button[type=submit]")
 
         Link.entries.filter { it.href.startsWith("/admin") }.forEach {
-            val allA = page.querySelectorAll("a").distinctBy { it.getAttribute("href") }
-                .groupBy { it.getAttribute("href") }
+            val allA = page.querySelectorAll("a")
+                .distinctBy { a -> a.getAttribute("href") }
+                .groupBy { a -> a.getAttribute("href") }
 
             val currentA = allA[it.href]?.firstOrNull()
             assertEquals(true, currentA != null)
             currentA!!.click()
-            page.waitForTimeout(1000.0)
+            page.waitForTimeout(5000.0)
             val s = it.label + " - Shikkanime"
             println(s)
             assertEquals(s, page.title())

@@ -1,4 +1,4 @@
-package fr.shikkanime.plugins
+package fr.shikkanime.modules
 
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.LinkObject
@@ -33,6 +33,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.util.*
+import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
 import kotlin.collections.set
@@ -44,8 +45,24 @@ import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmErasure
 
 private val logger = LoggerFactory.getLogger("Routing")
+private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
 
 fun Application.configureRouting() {
+    environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
+        call.attributes.put(callStartTime, ZonedDateTime.now())
+    }
+
+    environment.monitor.subscribe(Routing.RoutingCallFinished) { call ->
+        val startTime = call.attributes[callStartTime]
+        val duration = ZonedDateTime.now().toInstant().toEpochMilli() - startTime.toInstant().toEpochMilli()
+        val path = call.request.path()
+        val httpMethod = call.request.httpMethod.value
+        val userAgent = call.request.userAgent()
+        val status = call.response.status() ?: "Unhandled"
+
+        logger.info("$httpMethod ${call.request.origin.uri} [$status - $duration ms] -> $path${if (userAgent != null) " ($userAgent)" else ""}")
+    }
+
     routing {
         staticResources("/assets", "assets") {
             preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
@@ -179,42 +196,38 @@ private fun Route.handleMethods(
 
     if (method.hasAnnotation<Get>()) {
         get(path, swaggerBuilder) {
-            handleRequest("GET", call, method, prefix, controller, path)
+            handleRequest(call, method, prefix, controller, path)
         }
     }
 
     if (method.hasAnnotation<Post>()) {
         post(path, swaggerBuilder) {
-            handleRequest("POST", call, method, prefix, controller, path)
+            handleRequest(call, method, prefix, controller, path)
         }
     }
 
     if (method.hasAnnotation<Put>()) {
         put(path, swaggerBuilder) {
-            handleRequest("PUT", call, method, prefix, controller, path)
+            handleRequest(call, method, prefix, controller, path)
         }
     }
 
     if (method.hasAnnotation<Delete>()) {
         delete(path, swaggerBuilder) {
-            handleRequest("DELETE", call, method, prefix, controller, path)
+            handleRequest(call, method, prefix, controller, path)
         }
     }
 }
 
 private suspend fun handleRequest(
-    httpMethod: String,
     call: ApplicationCall,
     method: KFunction<*>,
     prefix: String,
     controller: Any,
     path: String
 ) {
-    val userAgent = call.request.userAgent()
     val parameters = call.parameters.toMap()
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
-
-    logger.info("$httpMethod ${call.request.origin.uri} -> $replacedPath${if (userAgent != null) " ($userAgent)" else ""}")
 
     try {
         val response = callMethodWithParameters(method, controller, call, parameters)
@@ -246,21 +259,30 @@ private suspend fun handleMultipartResponse(call: ApplicationCall, response: Res
 private suspend fun handleTemplateResponse(call: ApplicationCall, controller: Any, replacedPath: String, response: Response) {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val map = response.data as Map<String, Any>
-    val modelMap = (map["model"] as Map<String, Any>).toMutableMap()
+    val modelMap = (map["model"] as Map<String, Any?>).toMutableMap()
+
+    val linkObjects = LinkObject.list()
 
     val list = if (controller.javaClass.simpleName.startsWith("Admin"))
-        LinkObject.list().filter { it.href.startsWith("/admin") }
+        linkObjects.filter { it.href.startsWith("/admin") }
     else
-        LinkObject.list().filter { !it.href.startsWith("/admin") }
+        linkObjects.filter { !it.href.startsWith("/admin") }
 
     modelMap["links"] = list.map { link ->
-        link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
+        link.active = if (link.href == "/")
+            replacedPath == link.href
+        else
+            replacedPath.startsWith(link.href)
+
         link
     }
 
-    val title = map["title"] as String?
-    modelMap["title"] = if (title?.contains(Constant.NAME) == true) title else (if (!title.isNullOrBlank()) "$title - " else "") + Constant.NAME
-    modelMap["description"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION) ?: ""
+    modelMap["title"] = (map["title"] as? String)?.let { title ->
+        if (title.contains(Constant.NAME)) title else "$title - ${Constant.NAME}"
+    } ?: Constant.NAME
+
+    modelMap["description"] =
+        modelMap["description"] as? String ?: configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
     configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)?.let { modelMap["googleSiteVerification"] = it }
 
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))

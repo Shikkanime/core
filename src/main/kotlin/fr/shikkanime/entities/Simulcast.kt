@@ -1,34 +1,21 @@
 package fr.shikkanime.entities
 
+import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.util.*
 
 @Entity
 @Table(name = "simulcast")
-data class Simulcast(
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+class Simulcast(
     override val uuid: UUID? = null,
     @Column(nullable = false)
     val season: String? = null,
     @Column(nullable = false, name = "year_")
     val year: Int? = null,
-) : ShikkEntity(uuid) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Simulcast) return false
-
-        if (uuid != other.uuid) return false
-        if (season != other.season) return false
-        if (year != other.year) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = uuid?.hashCode() ?: 0
-        result = 31 * result + (season?.hashCode() ?: 0)
-        result = 31 * result + (year ?: 0)
-        return result
-    }
-}
+) : ShikkEntity(uuid)

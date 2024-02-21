@@ -12,5 +12,5 @@ abstract class AbstractSocialNetwork {
     abstract fun logout()
 
     abstract fun sendMessage(message: String)
-    abstract fun sendEpisodeRelease(episodeDto: EpisodeDto)
+    abstract fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray)
 }

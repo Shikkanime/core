@@ -10,10 +10,9 @@
 </#function>
 
 <#macro display episode>
-    <div class="col-md-2 col-6 mt-0">
-        <article x-data="{ hover: false }">
-            <a href="${episode.url}" target="_blank" class="text-decoration-none text-white" @mouseenter="hover = true"
-               @mouseleave="hover = false">
+    <div class="col-md-2 col-6 mt-0" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
+        <article>
+            <a href="${episode.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="position-relative">
                     <div class="position-relative">
                         <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
@@ -34,29 +33,43 @@
 
                     <p class="text-muted mt-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
 
-                    <#if episode.title?? || episode.description??>
-                        <div class="bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3" style="display: none;" x-show="hover">
-                            <#if episode.title??>
-                                <div class="h6 text-truncate-2">
-                                    ${episode.title}
-                                </div>
-                            </#if>
+                    <div class="bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3"
+                         style="display: none;" x-show="hover">
+                        <#if episode.title??>
+                            <div class="h6 text-truncate-2">
+                                ${episode.title}
+                            </div>
+                        </#if>
 
-                            <span class="text-muted">
+                        <span class="text-muted">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                 class="bi bi-calendar4 me-1" viewBox="0 0 16 16">
+                                <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/>
+                            </svg>
+
+                            ${episode.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
+                        </span>
+
+                        <#if episode.description??>
+                            <div class="text-truncate-4 mt-3">
+                                ${episode.description}
+                            </div>
+                        </#if>
+
+                        <div class="mt-3 text-warning fw-bold">
+                            <i class="me-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                     class="bi bi-calendar4 me-1" viewBox="0 0 16 16">
-                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/>
+                                     class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd"
+                                          d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
+                                    <path fill-rule="evenodd"
+                                          d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
                                 </svg>
-                                ${episode.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
-                            </span>
+                            </i>
 
-                            <#if episode.description??>
-                                <div class="text-truncate-6 mt-3">
-                                    ${episode.description}
-                                </div>
-                            </#if>
+                            Regarder maintenant
                         </div>
-                    </#if>
+                    </div>
                 </div>
             </a>
         </article>

@@ -5,7 +5,6 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.ConfigService
-import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
@@ -22,9 +21,6 @@ import java.util.*
 class AdminConfigController {
     @Inject
     private lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var discordSocialNetwork: DiscordSocialNetwork
 
     @Path
     @Get

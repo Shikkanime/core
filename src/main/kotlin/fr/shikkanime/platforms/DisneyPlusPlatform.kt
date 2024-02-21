@@ -39,10 +39,10 @@ class DisneyPlusPlatform :
 
         val loginDevice = httpRequest.post(
             "https://disney.api.edge.bamgrid.com/graph/v1/device/graphql",
-            mapOf(
+            headers = mapOf(
                 "Authorization" to configuration!!.authorization,
             ),
-            ObjectParser.toJson(
+            body = ObjectParser.toJson(
                 mapOf(
                     "operationName" to "refreshToken",
                     "query" to "mutation refreshToken(\$input:RefreshTokenInput!){refreshToken(refreshToken:\$input){activeSession{sessionId}}}",
