@@ -4,6 +4,8 @@ val ktorVersion = "2.3.8"
 val kotlinVersion = "1.9.22"
 val ktorSwaggerUiVersion = "2.7.4"
 val hibernateCoreVersion = "6.4.4.Final"
+val ehcacheVersion = "3.10.8"
+val glassfishJaxbVersion = "4.0.4"
 val hibernateSearchVersion = "7.1.0.CR1"
 val tikaVersion = "3.0.0-BETA"
 val postgresqlVersion = "42.7.2"
@@ -46,6 +48,7 @@ application {
 repositories {
     mavenCentral()
     maven { url = URI("https://jitpack.io") }
+    maven { url = uri("https://repo.repsy.io/mvn/uakihir0/public") }
 }
 
 dependencies {
@@ -68,6 +71,11 @@ dependencies {
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
     implementation("io.github.smiley4:ktor-swagger-ui:$ktorSwaggerUiVersion")
     implementation("org.hibernate.orm:hibernate-core:$hibernateCoreVersion")
+    implementation("org.hibernate.orm:hibernate-jcache:$hibernateCoreVersion")
+    implementation("org.ehcache:ehcache:$ehcacheVersion") {
+        exclude(group = "org.glassfish.jaxb", module = "jaxb-runtime")
+    }
+    implementation("org.glassfish.jaxb:jaxb-runtime:$glassfishJaxbVersion")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")
     implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")

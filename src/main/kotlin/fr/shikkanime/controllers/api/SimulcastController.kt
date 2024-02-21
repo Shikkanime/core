@@ -1,7 +1,6 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.routes.*
@@ -29,6 +28,6 @@ class SimulcastController {
         ]
     )
     private fun getAll(): Response {
-        return Response.ok(AbstractConverter.convert(simulcastCacheService.findAll(), SimulcastDto::class.java))
+        return Response.ok(simulcastCacheService.findAll())
     }
 }

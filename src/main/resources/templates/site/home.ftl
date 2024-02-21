@@ -5,11 +5,17 @@
 <@navigation.display>
     <h1 class="h3 my-3">Nouveaux épisodes</h1>
 
-    <div class="row">
-        <#list episodes as episode>
-            <@episodeComponent.display episode=episode />
-        </#list>
-    </div>
+    <#if episodes?? && episodes?size != 0>
+        <div class="row">
+            <#list episodes as episode>
+                <@episodeComponent.display episode=episode />
+            </#list>
+        </div>
+    <#else>
+        <div class="d-flex justify-content-center align-items-center my-5">
+            <p class="text-muted p-5">Aucun épisode disponible pour le moment</p>
+        </div>
+    </#if>
 
     <div class="d-flex align-content-center my-3">
         <h1 class="h3 ms-0 me-auto">Simulcast en cours</h1>
@@ -22,9 +28,15 @@
         </a>
     </div>
 
-    <div class="row">
-        <#list animes as anime>
-            <@animeComponent.display anime=anime />
-        </#list>
-    </div>
+    <#if animes?? && animes?size != 0>
+        <div class="row">
+            <#list animes as anime>
+                <@animeComponent.display anime=anime />
+            </#list>
+        </div>
+    <#else>
+        <div class="d-flex justify-content-center align-items-center my-5">
+            <p class="text-muted p-5">Aucun animé disponible pour le moment</p>
+        </div>
+    </#if>
 </@navigation.display>

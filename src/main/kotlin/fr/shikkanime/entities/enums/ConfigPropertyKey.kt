@@ -14,4 +14,6 @@ enum class ConfigPropertyKey(val key: String) {
     GOOGLE_SITE_VERIFICATION_ID("google_site_verification_id"),
     FETCH_DEPRECATED_EPISODE_DATE("fetch_deprecated_episode_date"),
     CHECK_CRUNCHYROLL_SIMULCASTS("check_crunchyroll_simulcasts"),
+    BSKY_IDENTIFIER("bsky_identifier"),
+    BSKY_PASSWORD("bsky_password"),
 }

@@ -1,4 +1,4 @@
-package fr.shikkanime.plugins
+package fr.shikkanime.modules
 
 import fr.shikkanime.utils.Constant
 import freemarker.cache.ClassTemplateLoader

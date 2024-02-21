@@ -4,17 +4,22 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.*
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
 @Table(name = "episode")
-data class Episode(
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+class Episode(
     override val uuid: UUID? = null,
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     var platform: Platform? = null,
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var anime: Anime? = null,
     @Column(nullable = false, name = "episode_type")
     @Enumerated(EnumType.STRING)

@@ -1,9 +1,8 @@
 package fr.shikkanime.entities
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Index
-import jakarta.persistence.Table
+import jakarta.persistence.*
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -14,7 +13,9 @@ import java.util.*
         Index(name = "idx_metric_date", columnList = "date")
     ]
 )
-data class Metric(
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+class Metric(
     override val uuid: UUID? = null,
     @Column(name = "cpu_load")
     val cpuLoad: Double = 0.0,
