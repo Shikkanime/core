@@ -3,6 +3,7 @@ package fr.shikkanime.utils
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 
 object EncryptionManager {
     private val salt = Constant.NAME.toByteArray(StandardCharsets.UTF_8)
@@ -30,7 +31,7 @@ object EncryptionManager {
     }
 
     fun toSHA512(password: String): String {
-        val digest = java.security.MessageDigest.getInstance("SHA-512")
+        val digest = MessageDigest.getInstance("SHA-512")
         val hash = digest.digest(password.toByteArray(StandardCharsets.UTF_8))
         return hash.fold("") { str, it -> str + "%02x".format(it) }
     }
