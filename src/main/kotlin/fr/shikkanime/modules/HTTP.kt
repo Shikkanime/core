@@ -71,5 +71,8 @@ fun Application.configureHTTP() {
             version = "1.0"
             description = "API for testing and demonstration purposes"
         }
+        server {
+            url = "http://localhost:37100"
+        }
     }
 }

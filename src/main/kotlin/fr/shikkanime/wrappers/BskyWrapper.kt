@@ -17,9 +17,10 @@ object BskyWrapper {
 
     private const val BASE_URL = "https://bsky.social/xrpc"
     private val contentType = ContentType.Application.Json
+    private val httpRequest = HttpRequest()
 
     suspend fun createSession(identifier: String, password: String): JsonObject {
-        val response = HttpRequest().post(
+        val response = httpRequest.post(
             "$BASE_URL/com.atproto.server.createSession",
             headers = mapOf(
                 HttpHeaders.ContentType to contentType.toString(),
@@ -38,7 +39,7 @@ object BskyWrapper {
     }
 
     suspend fun uploadBlob(accessJwt: String, contentType: ContentType, content: ByteArray): JsonObject {
-        val response = HttpRequest().post(
+        val response = httpRequest.post(
             "$BASE_URL/com.atproto.repo.uploadBlob",
             headers = mapOf(
                 HttpHeaders.ContentType to contentType.toString(),
@@ -73,7 +74,7 @@ object BskyWrapper {
             )
         }
 
-        val response = HttpRequest().post(
+        val response = httpRequest.post(
             "$BASE_URL/com.atproto.repo.createRecord",
             headers = mapOf(
                 HttpHeaders.ContentType to contentType.toString(),

@@ -13,7 +13,6 @@ val reflectionsVersion = "0.10.2"
 val guiceVersion = "7.0.0"
 val liquibaseCoreVersion = "4.26.0"
 val quartzVersion = "2.5.0-rc1"
-val guavaVersion = "33.0.0-jre"
 val jacksonVersion = "2.16.1"
 val playwrightVersion = "1.41.2"
 val jsoupVersion = "1.17.2"
@@ -65,7 +64,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson:$ktorVersion")
     implementation("io.ktor:ktor-server-freemarker-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-cio:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
@@ -80,10 +79,11 @@ dependencies {
     implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")
     implementation("org.reflections:reflections:$reflectionsVersion")
-    implementation("com.google.inject:guice:$guiceVersion")
+    implementation("com.google.inject:guice:$guiceVersion") {
+        exclude(group = "com.google.guava", module = "guava")
+    }
     implementation("org.liquibase:liquibase-core:$liquibaseCoreVersion")
     implementation("org.quartz-scheduler:quartz:$quartzVersion")
-    implementation("com.google.guava:guava:$guavaVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
     implementation("com.microsoft.playwright:playwright:$playwrightVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
@@ -92,7 +92,9 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:$bcprovVersion")
     implementation("com.mortennobel:java-image-scaling:$javaImageScalingVersion")
     implementation("org.apache.tika:tika-core:$tikaVersion")
-    implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
+    implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion") {
+        exclude(group = "com.google.guava", module = "guava")
+    }
 
     // Social networks
     implementation("com.github.discord-jda:JDA:$jdaVersion")

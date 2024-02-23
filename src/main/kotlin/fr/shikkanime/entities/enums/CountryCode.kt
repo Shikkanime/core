@@ -1,6 +1,5 @@
 package fr.shikkanime.entities.enums
 
-
 enum class CountryCode(val locale: String, val voice: String) {
     FR("fr-FR", "VF"),
     ;
