@@ -8,9 +8,10 @@ import java.time.LocalDate
 
 object AnimationDigitalNetworkWrapper {
     private const val BASE_URL = "https://gw.api.animationdigitalnetwork.fr/"
+    private val httpRequest = HttpRequest()
 
     suspend fun getLatestVideos(dateString: LocalDate): List<JsonObject> {
-        val response = HttpRequest().get("${BASE_URL}video/calendar?date=$dateString")
+        val response = httpRequest.get("${BASE_URL}video/calendar?date=$dateString")
 
         if (response.status.value != 200) {
             throw Exception("Failed to get media list")
@@ -21,7 +22,7 @@ object AnimationDigitalNetworkWrapper {
     }
 
     suspend fun getShow(animeName: String): JsonObject {
-        val response = HttpRequest().get("${BASE_URL}show/$animeName?withMicrodata=true&withSeo=true")
+        val response = httpRequest.get("${BASE_URL}show/$animeName?withMicrodata=true&withSeo=true")
 
         if (response.status.value != 200) {
             throw Exception("Failed to get show id")
@@ -32,7 +33,7 @@ object AnimationDigitalNetworkWrapper {
     }
 
     suspend fun getShowVideo(videoId: Int): JsonObject {
-        val response = HttpRequest().get("${BASE_URL}video/$videoId/public?withMicrodata=true&withSeo=true")
+        val response = httpRequest.get("${BASE_URL}video/$videoId/public?withMicrodata=true&withSeo=true")
 
         if (response.status.value != 200) {
             throw Exception("Failed to get video")

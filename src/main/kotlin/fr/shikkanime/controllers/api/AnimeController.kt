@@ -3,10 +3,10 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.utils.routes.Controller
+import fr.shikkanime.utils.routes.HasPageableRoute
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
@@ -16,7 +16,7 @@ import fr.shikkanime.utils.routes.param.QueryParam
 import java.util.*
 
 @Controller("/api/v1/animes")
-class AnimeController {
+class AnimeController : HasPageableRoute() {
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
 
@@ -39,7 +39,7 @@ class AnimeController {
     )
     private fun getAll(
         @QueryParam("name") name: String?,
-        @QueryParam("country") countryParam: CountryCode?,
+        @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: CountryCode?,
         @QueryParam("simulcast") simulcastParam: UUID?,
         @QueryParam("page") pageParam: Int?,
         @QueryParam("limit") limitParam: Int?,
@@ -64,20 +64,14 @@ class AnimeController {
             )
         }
 
-        val page = pageParam ?: 1
-        val limit = limitParam?.coerceIn(1, 30) ?: 15
+        val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
 
-        val sortParameters = sortParam?.split(",")?.map { sort ->
-            val desc = descParam?.split(",")?.contains(sort) ?: false
-            SortParameter(sort, if (desc) SortParameter.Order.DESC else SortParameter.Order.ASC)
-        } ?: mutableListOf()
-
-        val pageable = if (!name.isNullOrBlank()) {
-            animeCacheService.findAllByName(name, countryParam, page, limit)
-        } else {
-            animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
-        }
-
-        return Response.ok(pageable)
+        return Response.ok(
+            if (!name.isNullOrBlank()) {
+                animeCacheService.findAllByName(name, countryParam, page, limit)
+            } else {
+                animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit)
+            }
+        )
     }
 }

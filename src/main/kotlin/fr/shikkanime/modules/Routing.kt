@@ -129,7 +129,7 @@ private fun swagger(
 
     return {
         tags = routeTags
-        hidden = hiddenRoute
+        hidden = hiddenRoute || openApi.hidden
         description = openApi.description
         request {
             method.parameters.filter { it.hasAnnotation<QueryParam>() }.forEach { parameter ->

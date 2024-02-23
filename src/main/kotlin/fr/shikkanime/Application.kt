@@ -11,8 +11,8 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
 import io.ktor.server.application.*
-import io.ktor.server.cio.*
 import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
@@ -42,7 +42,7 @@ fun main() {
 
     logger.info("Starting server...")
     embeddedServer(
-        CIO,
+        Netty,
         port = 37100,
         host = "0.0.0.0",
         module = Application::module

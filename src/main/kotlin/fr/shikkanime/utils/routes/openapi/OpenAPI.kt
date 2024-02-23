@@ -5,4 +5,5 @@ package fr.shikkanime.utils.routes.openapi
 annotation class OpenAPI(
     val description: String = "",
     val responses: Array<OpenAPIResponse> = [],
+    val hidden: Boolean = false,
 )

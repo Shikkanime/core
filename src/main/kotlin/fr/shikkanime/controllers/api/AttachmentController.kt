@@ -35,8 +35,8 @@ class AttachmentController {
         ]
     )
     private fun getAttachment(
-        @QueryParam("uuid") uuid: UUID?,
-        @QueryParam("type") typeString: String?
+        @QueryParam("uuid", required = true) uuid: UUID?,
+        @QueryParam("type", description = "By default: IMAGE", type = ImageService.Type::class) typeString: String?
     ): Response {
         if (uuid == null) {
             return Response.badRequest(
