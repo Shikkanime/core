@@ -281,8 +281,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
         if (title.contains(Constant.NAME)) title else "$title - ${Constant.NAME}"
     } ?: Constant.NAME
 
-    modelMap["description"] =
-        modelMap["description"] as? String ?: configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
+    modelMap["seoDescription"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
     configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)?.let { modelMap["googleSiteVerification"] = it }
 
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
