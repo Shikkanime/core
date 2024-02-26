@@ -13,6 +13,8 @@
 
         <#if description?? && description?length != 0>
             <meta name="description" content="${description}">
+        <#elseif seoDescription?? && seoDescription?length != 0>
+            <meta name="description" content="${seoDescription}">
         </#if>
 
         <#if googleSiteVerification?? && googleSiteVerification?length != 0>
