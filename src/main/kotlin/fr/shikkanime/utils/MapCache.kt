@@ -1,54 +1,57 @@
 package fr.shikkanime.utils
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import java.time.Duration
-import java.time.ZonedDateTime
 
 class MapCache<K : Any, V>(
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = listOf(),
     private val block: (K) -> V,
 ) {
-    private val cache = mutableMapOf<K, V>()
-    private var lastInvalidation: ZonedDateTime? = null
+    private lateinit var cache: LoadingCache<K, V>
 
     init {
+        setCache()
         globalCaches.add(this)
     }
 
-    private fun getUnchecked(key: K): V? {
-        if (lastInvalidation != null && duration != null && lastInvalidation!!.plus(duration) < ZonedDateTime.now()) {
-            invalidate()
+    private fun MapCache<K, V>.setCache() {
+        val builder = CacheBuilder.newBuilder()
+
+        if (duration != null) {
+            builder.expireAfterWrite(duration!!)
         }
 
-        return cache[key] ?: kotlin.run {
-            logger.info("Loading $key")
-            val value = block(key)
-            cache[key] = value
-            lastInvalidation = ZonedDateTime.now()
-            value
-        }
+        cache = builder
+            .build(object : CacheLoader<K, V & Any>() {
+                override fun load(key: K): V & Any {
+                    logger.info("Loading $key")
+                    return block(key)!!
+                }
+            })
     }
 
     operator fun get(key: K): V? {
         return try {
-            getUnchecked(key)
+            cache.getUnchecked(key)
         } catch (e: Exception) {
             null
         }
     }
 
     operator fun set(key: K, value: V & Any) {
-        cache[key] = value
+        cache.put(key, value)
     }
 
     fun resetWithNewDuration(duration: Duration) {
         this.duration = duration
-        invalidate()
+        setCache()
     }
 
     fun invalidate() {
-        cache.clear()
-        lastInvalidation = ZonedDateTime.now()
+        cache.invalidateAll()
     }
 
     companion object {
