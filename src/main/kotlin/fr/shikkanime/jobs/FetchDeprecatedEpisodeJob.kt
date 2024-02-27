@@ -31,51 +31,44 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
 
     override fun run() {
         val httpRequest = HttpRequest()
-        val anonymousAccessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val cms = runBlocking { CrunchyrollWrapper.getCMS(anonymousAccessToken) }
-
         val takeSize = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODE_DESCRIPTION_SIZE, 0)
-
         val now = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val deprecatedDateTime = now.minusDays(
-            configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_DEPRECATED_EPISODE_DATE, 30).toLong()
-        )
-
+        val deprecatedDateTime = now.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_DEPRECATED_EPISODE_DATE, 30).toLong())
         val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
         val adnEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.ANIM, deprecatedDateTime)
-
-        val episodes = (crunchyrollEpisodes + adnEpisodes)
-            .shuffled()
-            .take(takeSize)
+        val episodes = (crunchyrollEpisodes + adnEpisodes).shuffled().take(takeSize)
 
         logger.info("Found ${episodes.size} episodes")
 
-        episodes.forEachIndexed { index, episode ->
-            logger.info("Fetching episode description ${index + 1}/${episodes.size}")
-
-            val s = "${episode.anime?.name} - S${episode.season} ${
-                when (episode.episodeType!!) {
-                    EpisodeType.EPISODE -> "EP"
-                    EpisodeType.SPECIAL -> "SP"
-                    EpisodeType.FILM -> "MOV"
-                }
-            }${episode.number}"
-
-            try {
-                val content = runBlocking { normalizeContent(episode, httpRequest, anonymousAccessToken, cms) } ?: return@forEachIndexed
-                val title = normalizeTitle(episode.platform!!, content)
-                val description = normalizeDescription(episode.platform!!, content)
-                logger.config("$s : $title - $description")
-                episode.title = title
-                episode.description = description
-                episode.lastUpdateDateTime = now
-                episodeService.update(episode)
-            } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while fetching episode description for $s", e)
-            }
-        }
-
         if (episodes.isNotEmpty()) {
+            val anonymousAccessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+            val cms = runBlocking { CrunchyrollWrapper.getCMS(anonymousAccessToken) }
+
+            episodes.forEachIndexed { index, episode ->
+                logger.info("Fetching episode description ${index + 1}/${episodes.size}")
+
+                val s = "${episode.anime?.name} - S${episode.season} ${
+                    when (episode.episodeType!!) {
+                        EpisodeType.EPISODE -> "EP"
+                        EpisodeType.SPECIAL -> "SP"
+                        EpisodeType.FILM -> "MOV"
+                    }
+                }${episode.number}"
+
+                try {
+                    val content = runBlocking { normalizeContent(episode, httpRequest, anonymousAccessToken, cms) } ?: return@forEachIndexed
+                    val title = normalizeTitle(episode.platform!!, content)
+                    val description = normalizeDescription(episode.platform!!, content)
+                    logger.config("$s : $title - $description")
+                    episode.title = title
+                    episode.description = description
+                    episode.lastUpdateDateTime = now
+                    episodeService.update(episode)
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while fetching episode description for $s", e)
+                }
+            }
+
             MapCache.invalidate(Episode::class.java)
         }
 
