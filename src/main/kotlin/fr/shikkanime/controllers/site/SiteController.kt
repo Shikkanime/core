@@ -13,7 +13,6 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import io.ktor.http.*
-import java.time.ZonedDateTime
 
 @Controller("/")
 class SiteController {
@@ -26,18 +25,25 @@ class SiteController {
     @Inject
     private lateinit var simulcastCacheService: SimulcastCacheService
 
+    @Path("404")
+    @Get
+    private fun error404(): Response {
+        return Response.template(
+            HttpStatusCode.NotFound,
+            "/site/404.ftl",
+            "Page introuvable"
+        )
+    }
+
     @Path
     @Get
     private fun home(): Response {
-        val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.firstOrNull()
-
         return Response.template(
             Link.HOME,
             mutableMapOf(
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
-                    currentSimulcast?.uuid,
+                    simulcastCacheService.currentSimulcast?.uuid,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     6
@@ -59,93 +65,26 @@ class SiteController {
         )
     }
 
-    @Path("robots.txt")
-    @Get
-    private fun robots(): Response {
-        return Response.template(
-            "/site/seo/robots.ftl",
-            null,
-            contentType = ContentType.Text.Plain
-        )
-    }
-
-    @Path("sitemap.xml")
-    @Get
-    private fun sitemap(): Response {
-        val simulcasts = simulcastCacheService.findAll()!!
-
-        val animes = simulcasts.flatMap {
-            val data = animeCacheService.findAllBy(
-                CountryCode.FR,
-                it.uuid,
-                listOf(SortParameter("name", SortParameter.Order.ASC)),
-                1,
-                102
-            )!!.data
-
-            it.lastReleaseDateTime = data.maxBy { d -> ZonedDateTime.parse(d.releaseDateTime) }.lastReleaseDateTime
-
-            data
-        }.distinctBy { it.uuid }
-
-        val episode = episodeCacheService.findAllBy(
-            CountryCode.FR,
-            null,
-            listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
-            1,
-            1
-        )!!.data.firstOrNull()
-
-        return Response.template(
-            "/site/seo/sitemap.ftl",
-            null,
-            mutableMapOf(
-                "episode" to episode,
-                "simulcasts" to simulcasts,
-                "animes" to animes
-            ),
-            contentType = ContentType.Text.Xml
-        )
-    }
-
-    @Path("catalog")
-    @Get
-    private fun catalog(): Response {
-        val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.firstOrNull() ?: return Response.template(Link.CATALOG.template, "Catalogue")
-        return Response.redirect("/catalog/${currentSimulcast.slug}")
-    }
-
     @Path("catalog/{slug}")
     @Get
     private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val currentSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.redirect("/404")
+        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.redirect("/404")
 
         return Response.template(
             Link.CATALOG.template,
-            currentSimulcast.label,
+            selectedSimulcast.label,
             mutableMapOf(
                 "simulcasts" to findAll,
-                "currentSimulcast" to currentSimulcast,
+                "selectedSimulcast" to selectedSimulcast,
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
-                    currentSimulcast.uuid,
+                    selectedSimulcast.uuid,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     102
                 )!!.data,
             )
-        )
-    }
-
-    @Path("404")
-    @Get
-    private fun error404(): Response {
-        return Response.template(
-            HttpStatusCode.NotFound,
-            "/site/404.ftl",
-            "Page introuvable"
         )
     }
 
