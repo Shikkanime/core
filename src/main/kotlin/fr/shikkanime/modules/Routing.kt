@@ -271,7 +271,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
     else
         linkObjects.filter { !it.href.startsWith("/admin") }
 
-    modelMap["links"] = list.map { link ->
+    modelMap["links"] = list.filter { !it.footer }.map { link ->
         link.href = link.href.replace("{currentSimulcast}", simulcastCacheService.currentSimulcast?.slug ?: "")
         link.active = if (link.href == "/")
             replacedPath == link.href
@@ -280,6 +280,8 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
 
         link
     }
+
+    modelMap["footerLinks"] = list.filter { it.footer }
 
     modelMap["title"] = (map["title"] as? String)?.let { title ->
         if (title.contains(Constant.NAME)) title else "$title - ${Constant.NAME}"
