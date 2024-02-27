@@ -36,6 +36,7 @@ object Constant {
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"
     val jwtRealm: String = System.getenv("JWT_REALM") ?: "ktor sample app"
     val jwtSecret: String = System.getenv("JWT_SECRET") ?: "secret"
+    const val DEFAULT_IMAGE_PREVIEW = "https://www.shikkanime.fr/assets/img/episode_no_image_preview.jpg"
 
     init {
         abstractPlatforms.forEach {
