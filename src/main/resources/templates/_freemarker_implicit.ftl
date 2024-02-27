@@ -23,3 +23,4 @@
 [#-- @ftlvariable name="googleSiteVerification" type="java.lang.String" --]
 [#-- @ftlvariable name="seoDescription" type="java.lang.String" --]
 [#-- @ftlvariable name="currentSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]
+[#-- @ftlvariable name="footerLinks" type="kotlin.collections.AbstractList<fr.shikkanime.entities.LinkObject>" --]

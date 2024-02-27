@@ -114,4 +114,10 @@ class SiteController {
             )
         )
     }
+
+    @Path("presentation")
+    @Get
+    private fun presentation(): Response {
+        return Response.template(Link.PRESENTATION)
+    }
 }
