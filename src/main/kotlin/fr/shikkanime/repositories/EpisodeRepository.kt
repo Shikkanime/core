@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.Constant
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
 import java.time.ZonedDateTime
@@ -136,11 +137,12 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         return inTransaction {
             createReadOnlyQuery(
                 it,
-                "FROM Episode WHERE platform = :platform AND (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL)",
+                "FROM Episode WHERE platform = :platform AND ((lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR description IS NULL OR image = :defaultImage)",
                 getEntityClass()
             )
                 .setParameter("platform", platform)
                 .setParameter("lastUpdateDateTime", lastUpdateDateTime)
+                .setParameter("defaultImage", Constant.DEFAULT_IMAGE_PREVIEW)
                 .resultList
                 .initialize()
         }
