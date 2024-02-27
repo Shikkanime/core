@@ -65,7 +65,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson:$ktorVersion")
     implementation("io.ktor:ktor-server-freemarker-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-cio:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")

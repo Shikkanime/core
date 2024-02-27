@@ -5,7 +5,6 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
@@ -23,7 +22,7 @@ import javax.imageio.ImageIO
 
 
 @Controller("/api/v1/episodes")
-class EpisodeController {
+class EpisodeController : HasPageableRoute() {
     @Inject
     private lateinit var episodeService: EpisodeService
 
@@ -43,43 +42,21 @@ class EpisodeController {
         ]
     )
     private fun getAll(
-        @QueryParam("country") countryParam: CountryCode?,
+        @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
         @QueryParam("anime") animeParam: UUID?,
         @QueryParam("page") pageParam: Int?,
         @QueryParam("limit") limitParam: Int?,
         @QueryParam("sort") sortParam: String?,
         @QueryParam("desc") descParam: String?,
     ): Response {
-        val page = pageParam ?: 1
-        val limit = limitParam?.coerceIn(1, 30) ?: 15
-
-        val sortParameters = sortParam?.split(",")?.map { sort ->
-            val desc = descParam?.split(",")?.contains(sort) ?: false
-            SortParameter(sort, if (desc) SortParameter.Order.DESC else SortParameter.Order.ASC)
-        } ?: mutableListOf()
-
-        return Response.ok(episodeCacheService.findAllBy(countryParam, animeParam, sortParameters, page, limit))
+        val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
+        return Response.ok(episodeCacheService.findAllBy(CountryCode.fromNullable(countryParam) ?: CountryCode.FR, animeParam, sortParameters, page, limit))
     }
 
     @Path("/{uuid}/media-image")
     @Get
     @Cached(maxAgeSeconds = 3600)
-    @OpenAPI(
-        "Get episode media image",
-        [
-            OpenAPIResponse(
-                200,
-                "Image found",
-                ByteArray::class,
-                "image/png"
-            ),
-            OpenAPIResponse(
-                404,
-                "Episode not found",
-                MessageDto::class,
-            ),
-        ]
-    )
+    @OpenAPI(hidden = true)
     @AdminSessionAuthenticated
     private fun getEpisodeMediaImage(@PathParam("uuid") uuid: UUID): Response {
         val episode =

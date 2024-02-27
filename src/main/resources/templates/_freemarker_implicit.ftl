@@ -19,5 +19,7 @@
 [#-- @ftlvariable name="originalSize" type="java.lang.String" --]
 [#-- @ftlvariable name="compressedSize" type="java.lang.String" --]
 [#-- @ftlvariable name="simulcasts" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.SimulcastDto>" --]
-[#-- @ftlvariable name="currentSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]
+[#-- @ftlvariable name="selectedSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]
 [#-- @ftlvariable name="googleSiteVerification" type="java.lang.String" --]
+[#-- @ftlvariable name="seoDescription" type="java.lang.String" --]
+[#-- @ftlvariable name="currentSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]

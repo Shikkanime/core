@@ -77,18 +77,28 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
+    fun getMessage(episodeDto: EpisodeDto): String {
+        val uncensored = if (episodeDto.uncensored) " non censuré" else ""
+        val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
+
+        var configMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_MESSAGE) ?: ""
+        configMessage = configMessage.replace("{SHIKKANIME_URL}", "https://www.shikkanime.fr/animes/${episodeDto.anime.slug}")
+        configMessage = configMessage.replace("{URL}", episodeDto.url)
+        configMessage = configMessage.replace("{PLATFORM_ACCOUNT}", platformAccount(episodeDto.platform))
+        configMessage = configMessage.replace("{ANIME_HASHTAG}", "#${StringUtils.getHashtag(episodeDto.anime.shortName)}")
+        configMessage = configMessage.replace("{ANIME_TITLE}", episodeDto.anime.shortName)
+        configMessage = configMessage.replace("{EPISODE_INFORMATION}", "${information(episodeDto)}${uncensored}")
+        configMessage = configMessage.replace("{VOICE}", isVoice)
+        configMessage = configMessage.replace("\\n", "\n")
+        configMessage = configMessage.trim()
+        return configMessage
+    }
+
     override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         login()
         if (!isInitialized) return
         if (twitter == null) return
-
-        val url = "https://www.shikkanime.fr/animes/${episodeDto.anime.slug}"
-        val uncensored = if (episodeDto.uncensored) " non censuré" else ""
-        val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
-        val message =
-            "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de #${StringUtils.getHashtag(episodeDto.anime.shortName)} est maintenant disponible${isVoice}sur ${
-                platformAccount(episodeDto.platform)
-            }\n\nBon visionnage. \uD83C\uDF7F\n\n\uD83D\uDD36 Lien de l'épisode : $url"
+        val message = getMessage(episodeDto)
 
         val uploadMedia = twitter!!.tweets().uploadMedia(
             UUID.randomUUID().toString(),

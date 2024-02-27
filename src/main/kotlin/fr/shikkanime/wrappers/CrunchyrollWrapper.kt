@@ -33,9 +33,10 @@ object CrunchyrollWrapper {
 
     private const val BETA_URL = "https://beta-api.crunchyroll.com/"
     private const val BASE_URL = "https://www.crunchyroll.com/"
+    private val httpRequest = HttpRequest()
 
     suspend fun getAnonymousAccessToken(): String {
-        val response = HttpRequest().post(
+        val response = httpRequest.post(
             "${BASE_URL}auth/v1/token",
             headers = mapOf(
                 "Content-Type" to "application/x-www-form-urlencoded",
@@ -50,7 +51,7 @@ object CrunchyrollWrapper {
     }
 
     suspend fun getCMS(accessToken: String): CMS {
-        val response = HttpRequest().get(
+        val response = httpRequest.get(
             "${BASE_URL}index/v2",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
@@ -79,7 +80,7 @@ object CrunchyrollWrapper {
         start: Int = 0,
         simulcast: String? = null,
     ): List<JsonObject> {
-        val response = HttpRequest().get(
+        val response = httpRequest.get(
             "${BASE_URL}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else ""}",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
@@ -93,7 +94,7 @@ object CrunchyrollWrapper {
     }
 
     suspend fun getObject(locale: String, accessToken: String, cms: CMS, vararg ids: String): List<JsonObject> {
-        val response = HttpRequest().get(
+        val response = httpRequest.get(
             "${BETA_URL}cms/v2${cms.bucket}/objects/${ids.joinToString(",")}?Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
@@ -107,7 +108,7 @@ object CrunchyrollWrapper {
     }
 
     suspend fun getSeasons(locale: String, accessToken: String, cms: CMS, seriesId: String): List<JsonObject> {
-        val response = HttpRequest().get(
+        val response = httpRequest.get(
             "${BETA_URL}cms/v2${cms.bucket}/seasons?series_id=$seriesId&Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
@@ -121,7 +122,7 @@ object CrunchyrollWrapper {
     }
 
     suspend fun getEpisodes(locale: String, accessToken: String, cms: CMS, seasonId: String): List<JsonObject> {
-        val response = HttpRequest().get(
+        val response = httpRequest.get(
             "${BETA_URL}cms/v2${cms.bucket}/episodes?season_id=$seasonId&Policy=${cms.policy}&Signature=${cms.signature}&Key-Pair-Id=${cms.keyPairId}&locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
@@ -135,7 +136,7 @@ object CrunchyrollWrapper {
     }
 
     suspend fun getSimulcasts(locale: String, accessToken: String): List<JsonObject> {
-        val response = HttpRequest().get(
+        val response = httpRequest.get(
             "${BASE_URL}content/v1/season_list?locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",

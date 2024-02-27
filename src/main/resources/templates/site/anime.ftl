@@ -12,6 +12,19 @@
             <div class="col-md-8 col-12 mt-0 text-start mt-md-0 mt-5 d-flex flex-column justify-content-center">
                 <h6 class="h6">${anime.shortName?upper_case}</h6>
                 <p class="text-muted">${anime.name}</p>
+
+                <#if (anime.simulcasts?size > 1)>
+                    <div class="my-3 d-inline">
+                        <#list anime.simulcasts as simulcast>
+                            <a href="/catalog/${simulcast.slug}" class="text-white mx-1">${simulcast.label}</a>
+
+                            <#if (simulcast?has_next)>
+                                <span class="mx-2 text-muted">-</span>
+                            </#if>
+                        </#list>
+                    </div>
+                </#if>
+
                 <span class="mt-2">${anime.description}</span>
             </div>
         </div>

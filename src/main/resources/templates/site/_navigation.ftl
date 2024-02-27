@@ -46,11 +46,13 @@
                             <img src="/assets/img/favicons/favicon-64x64.png" alt="Logo" width="24" height="24">
                         </a>
 
-                        <p class="my-3 text-white">
-                            ${description}
-                        </p>
+                        <#if seoDescription?? && seoDescription?length != 0>
+                            <p class="my-3 text-white">
+                                ${seoDescription}
+                            </p>
+                        </#if>
 
-                        <small class="d-block text-muted">© 2023 - ${.now?string("yyyy")} Shikkanime</small>
+                        <small class="d-block text-muted">&copy; 2023 - ${.now?string("yyyy")} Shikkanime</small>
                     </div>
                 </div>
 

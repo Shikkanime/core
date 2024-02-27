@@ -1,6 +1,5 @@
 package fr.shikkanime.dtos
 
-import java.io.Serializable
 import java.util.*
 
 data class MetricDto(
@@ -8,4 +7,4 @@ data class MetricDto(
     val cpuLoad: String,
     val memoryUsage: String,
     val date: String,
-) : Serializable
+)

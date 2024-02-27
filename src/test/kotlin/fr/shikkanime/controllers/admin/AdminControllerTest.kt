@@ -6,8 +6,8 @@ import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.module
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
-import io.ktor.server.cio.*
 import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -35,7 +35,7 @@ class AdminControllerTest {
             }
         }
 
-        server = embeddedServer(CIO, environment).start(false)
+        server = embeddedServer(Netty, environment).start(false)
     }
 
     @AfterEach
