@@ -16,4 +16,5 @@ enum class ConfigPropertyKey(val key: String) {
     CHECK_CRUNCHYROLL_SIMULCASTS("check_crunchyroll_simulcasts"),
     BSKY_IDENTIFIER("bsky_identifier"),
     BSKY_PASSWORD("bsky_password"),
+    TWITTER_MESSAGE("twitter_message"),
 }
