@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.*
@@ -258,6 +259,8 @@ private suspend fun handleMultipartResponse(call: ApplicationCall, response: Res
 
 private suspend fun handleTemplateResponse(call: ApplicationCall, controller: Any, replacedPath: String, response: Response) {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+    val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
+
     val map = response.data as Map<String, Any>
     val modelMap = (map["model"] as Map<String, Any?>).toMutableMap()
 
@@ -269,6 +272,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
         linkObjects.filter { !it.href.startsWith("/admin") }
 
     modelMap["links"] = list.map { link ->
+        link.href = link.href.replace("{currentSimulcast}", simulcastCacheService.currentSimulcast?.slug ?: "")
         link.active = if (link.href == "/")
             replacedPath == link.href
         else
@@ -283,6 +287,7 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
 
     modelMap["seoDescription"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
     configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)?.let { modelMap["googleSiteVerification"] = it }
+    simulcastCacheService.currentSimulcast?.let { modelMap["currentSimulcast"] = it }
 
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }

@@ -16,4 +16,7 @@ class SimulcastCacheService : AbstractCacheService {
     }
 
     fun findAll() = cache["all"]
+
+    val currentSimulcast: SimulcastDto?
+        get() = findAll()?.firstOrNull()
 }

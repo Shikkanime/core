@@ -4,9 +4,9 @@
 
 <@navigation.display>
     <div class="mt-3">
-        <#if currentSimulcast??>
+        <#if selectedSimulcast??>
             <button class="btn btn-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                ${currentSimulcast.label}
+                ${selectedSimulcast.label}
             </button>
 
             <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">

@@ -3,7 +3,7 @@ package fr.shikkanime.entities
 import fr.shikkanime.entities.enums.Link
 
 data class LinkObject(
-    val href: String,
+    var href: String,
     val icon: String,
     val name: String,
     var active: Boolean = false,
