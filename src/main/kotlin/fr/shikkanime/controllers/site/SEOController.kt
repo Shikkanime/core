@@ -3,6 +3,7 @@ package fr.shikkanime.controllers.site
 import com.google.inject.Inject
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.EpisodeCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
@@ -67,7 +68,8 @@ class SEOController {
             mutableMapOf(
                 "episode" to episode,
                 "simulcasts" to simulcasts,
-                "animes" to animes
+                "animes" to animes,
+                "seoLinks" to Link.entries.filter { !it.href.startsWith("/admin") && it.footer }.toList()
             ),
             contentType = ContentType.Text.Xml
         )

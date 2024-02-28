@@ -9,14 +9,11 @@ import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -26,8 +23,6 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.logging.Level
-
-private const val IMAGE_NULL_ERROR = "Image is null"
 
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<JsonObject>>() {
     data class CrunchyrollAnimeContent(
@@ -315,9 +310,10 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val title = jsonObject.getAsString("title")
         val url = "https://www.crunchyroll.com/media-$id"
 
-        val thumbnailArray = requireNotNull(jsonObject.getAsJsonObject("images").getAsJsonArray("thumbnail")) { IMAGE_NULL_ERROR }
-        val biggestImage = requireNotNull(thumbnailArray[0].asJsonArray.maxByOrNull { it.asJsonObject.getAsInt("width")!! }) { IMAGE_NULL_ERROR }
-        val image = requireNotNull(biggestImage.asJsonObject.getAsString("source")?.takeIf { it.isNotBlank() }) { IMAGE_NULL_ERROR }
+        val thumbnailArray = jsonObject.getAsJsonObject("images")?.getAsJsonArray("thumbnail")
+        val biggestImage = thumbnailArray?.get(0)?.asJsonArray?.maxByOrNull { it.asJsonObject.getAsInt("width") ?: 0 }
+        val image = biggestImage?.asJsonObject?.getAsString("source")?.takeIf { it.isNotBlank() }
+            ?: Constant.DEFAULT_IMAGE_PREVIEW
 
         var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
 
@@ -405,10 +401,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             if (isMovie) EpisodeType.FILM else if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
         val title = jsonObject.getAsString("crunchyroll:episodeTitle")?.ifBlank { null }
         val url = jsonObject.getAsString("link")?.ifBlank { null } ?: throw Exception("Url is null")
-        val images = jsonObject.getAsJsonArray("media:thumbnail") ?: throw Exception(IMAGE_NULL_ERROR)
-        val biggestImage =
-            images.maxByOrNull { it.asJsonObject.getAsInt("width")!! } ?: throw Exception(IMAGE_NULL_ERROR)
-        val image = biggestImage.asJsonObject.getAsString("url")?.ifBlank { null } ?: throw Exception(IMAGE_NULL_ERROR)
+
+        val images = jsonObject.getAsJsonArray("media:thumbnail")
+        val biggestImage = images?.maxByOrNull { it.asJsonObject.getAsInt("width") ?: 0 }
+        val image =
+            biggestImage?.asJsonObject?.getAsString("url")?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
 
         var duration = jsonObject.getAsLong("crunchyroll:duration", -1)
 
