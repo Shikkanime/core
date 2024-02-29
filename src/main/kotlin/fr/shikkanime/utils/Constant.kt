@@ -7,6 +7,7 @@ import com.microsoft.playwright.Playwright
 import fr.shikkanime.modules.DefaultModule
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
+import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import org.reflections.Reflections
 import java.io.File
 import java.time.ZoneId
@@ -43,7 +44,9 @@ object Constant {
             it.loadConfiguration()
         }
 
-        abstractSocialNetworks.forEach {
+        abstractSocialNetworks
+            .filter { it.javaClass != DiscordSocialNetwork::class.java }
+            .forEach {
             it.login()
         }
     }
