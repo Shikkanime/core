@@ -51,11 +51,18 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         isInitialized = false
     }
 
-    override fun sendMessage(message: String) {
-        login()
+    private fun checkSession() {
         if (!isInitialized) return
-        if (username == null || deviceId == null || token == null || userId == null) return
 
+        if (initializedAt!!.plusMinutes(10).isBefore(ZonedDateTime.now())) {
+            logout()
+            login()
+        }
+    }
+
+    override fun sendMessage(message: String) {
+        checkSession()
+        if (!isInitialized) return
         runBlocking { ThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message) }
     }
 
@@ -92,9 +99,8 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     }
 
     override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
-        login()
+        checkSession()
         if (!isInitialized) return
-        if (username == null || deviceId == null || token == null || userId == null) return
 
         val message = getMessage(episodeDto)
         runBlocking { ThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
