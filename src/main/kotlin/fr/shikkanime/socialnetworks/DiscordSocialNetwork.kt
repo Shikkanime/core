@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
+import net.dv8tion.jda.api.events.session.ReadyEvent
+import net.dv8tion.jda.api.hooks.ListenerAdapter
 import java.net.URI
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -34,9 +36,14 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
             if (token.isBlank()) throw Exception("Token is empty")
             val builder = JDABuilder.createDefault(token)
             builder.setActivity(Activity.playing(BASE_URL))
-            jda = builder.build()
-            jda?.awaitReady()
-            isInitialized = true
+            builder.addEventListeners(object : ListenerAdapter() {
+                override fun onReady(event: ReadyEvent) {
+                    logger.info("DiscordSocialNetwork is ready")
+                    isInitialized = true
+                    jda = event.jda
+                }
+            })
+            builder.build()
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while initializing DiscordSocialNetwork", e)
         }
