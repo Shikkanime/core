@@ -18,7 +18,7 @@
         </#if>
 
         <#if googleSiteVerification?? && googleSiteVerification?length != 0>
-            <meta name="google-site-verification" content="${googleSiteVerification}" />
+            <meta name="google-site-verification" content="${googleSiteVerification}"/>
         </#if>
 
         <#-- Favicons -->

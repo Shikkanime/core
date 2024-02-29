@@ -3,7 +3,7 @@ package fr.shikkanime.repositories
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.enums.Role
 import org.hibernate.Hibernate
-import java.util.UUID
+import java.util.*
 
 class MemberRepository : AbstractRepository<Member>() {
     private fun Member.initialize(): Member {
@@ -31,7 +31,11 @@ class MemberRepository : AbstractRepository<Member>() {
 
     fun findByUsernameAndPassword(username: String, password: ByteArray): Member? {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM Member WHERE username = :username AND encryptedPassword = :password", getEntityClass())
+            createReadOnlyQuery(
+                it,
+                "FROM Member WHERE username = :username AND encryptedPassword = :password",
+                getEntityClass()
+            )
                 .setParameter("username", username)
                 .setParameter("password", password)
                 .resultList

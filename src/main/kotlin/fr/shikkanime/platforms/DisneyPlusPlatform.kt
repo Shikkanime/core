@@ -134,7 +134,7 @@ class DisneyPlusPlatform :
             ?.getAsJsonObject("series")?.getAsJsonObject("default")?.getAsString("url")
             ?: throw Exception("Anime image is null")
         val animeDescription = descriptions?.getAsJsonObject("series")
-                ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ') ?: ""
+            ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ') ?: ""
 
         val season = jsonObject.getAsInt("seasonSequenceNumber")
 

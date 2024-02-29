@@ -18,7 +18,8 @@
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
             <column name="property_key" value="twitter_message"/>
-            <column name="property_value" value="🚨 {EPISODE_INFORMATION} de {ANIME_HASHTAG} est maintenant disponible{VOICE}sur {PLATFORM_ACCOUNT}\n\nBon visionnage. 🍿\n\n🔶 Lien de l'épisode : {SHIKKANIME_URL}"/>
+            <column name="property_value"
+                    value="🚨 {EPISODE_INFORMATION} de {ANIME_HASHTAG} est maintenant disponible{VOICE}sur {PLATFORM_ACCOUNT}\n\nBon visionnage. 🍿\n\n🔶 Lien de l'épisode : {SHIKKANIME_URL}"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

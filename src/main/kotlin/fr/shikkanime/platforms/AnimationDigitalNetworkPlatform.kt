@@ -59,7 +59,8 @@ class AnimationDigitalNetworkPlatform :
         val show = requireNotNull(jsonObject.getAsJsonObject("show")) { "Show is null" }
         val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
 
-        var animeName = requireNotNull(show.getAsString("shortTitle") ?: show.getAsString("title")) { "Anime name is null" }
+        var animeName =
+            requireNotNull(show.getAsString("shortTitle") ?: show.getAsString("title")) { "Anime name is null" }
         animeName = animeName.replace(Regex("Saison \\d"), "").trim()
         animeName = animeName.replace(season.toString(), "").trim()
         animeName = animeName.replace(Regex(" -.*"), "").trim()
@@ -71,7 +72,12 @@ class AnimationDigitalNetworkPlatform :
         val genres = show.getAsJsonArray("genres") ?: JsonArray()
 
         val contains = configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
-        if ((genres.isEmpty || !genres.any { it.asString.startsWith("Animation ", true) }) && !contains) throw Exception("Anime is not an animation")
+        if ((genres.isEmpty || !genres.any {
+                it.asString.startsWith(
+                    "Animation ",
+                    true
+                )
+            }) && !contains) throw Exception("Anime is not an animation")
 
         var isSimulcasted = show.getAsBoolean("simulcast") == true ||
                 show.getAsString("firstReleaseYear") in (0..1).map { (zonedDateTime.year - it).toString() } ||
@@ -90,7 +96,10 @@ class AnimationDigitalNetworkPlatform :
         val releaseDate = ZonedDateTime.parse(releaseDateString)
 
         val numberAsString = jsonObject.getAsString("shortNumber")
-        if (numberAsString?.startsWith("Bande-annonce") == true || numberAsString?.startsWith("Bande annonce") == true || numberAsString?.startsWith("Court-métrage") == true) throw Exception(
+        if (numberAsString?.startsWith("Bande-annonce") == true || numberAsString?.startsWith("Bande annonce") == true || numberAsString?.startsWith(
+                "Court-métrage"
+            ) == true
+        ) throw Exception(
             "Anime is a trailer"
         )
 
@@ -102,7 +111,8 @@ class AnimationDigitalNetworkPlatform :
             else -> EpisodeType.EPISODE
         }
 
-        if (numberAsString?.contains(".") == true || show.getAsString("type") == "OAV") episodeType = EpisodeType.SPECIAL
+        if (numberAsString?.contains(".") == true || show.getAsString("type") == "OAV") episodeType =
+            EpisodeType.SPECIAL
 
         val id = jsonObject.getAsInt("id")
         val title = jsonObject.getAsString("name")?.ifBlank { null }

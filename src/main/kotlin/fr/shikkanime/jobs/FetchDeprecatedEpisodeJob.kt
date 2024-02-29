@@ -37,7 +37,9 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
 
         val takeSize = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODE_DESCRIPTION_SIZE, 0)
         val now = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val deprecatedDateTime = now.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_DEPRECATED_EPISODE_DATE, 30).toLong())
+        val deprecatedDateTime = now.minusDays(
+            configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_DEPRECATED_EPISODE_DATE, 30).toLong()
+        )
         val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
         val adnEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.ANIM, deprecatedDateTime)
         val episodes = (crunchyrollEpisodes + adnEpisodes).shuffled().take(takeSize)
@@ -134,11 +136,22 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         }
     }
 
-    private suspend fun normalizeContent(episode: Episode, httpRequest: HttpRequest, accessToken: String, cms: CrunchyrollWrapper.CMS): JsonObject? {
+    private suspend fun normalizeContent(
+        episode: Episode,
+        httpRequest: HttpRequest,
+        accessToken: String,
+        cms: CrunchyrollWrapper.CMS
+    ): JsonObject? {
         return when (episode.platform) {
             Platform.CRUN -> {
                 try {
-                    httpRequest.getBrowser(normalizeUrl(episode.platform!!, episode.anime!!.countryCode!!, episode.url!!))
+                    httpRequest.getBrowser(
+                        normalizeUrl(
+                            episode.platform!!,
+                            episode.anime!!.countryCode!!,
+                            episode.url!!
+                        )
+                    )
                 } catch (e: Exception) {
                     return null
                 }

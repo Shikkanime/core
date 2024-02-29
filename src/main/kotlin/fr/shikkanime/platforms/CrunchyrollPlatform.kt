@@ -46,7 +46,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_CRUNCHYROLL_API)) {
             val accessToken = identifiers[it]!!.first
-            val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2).map { simulcast -> simulcast.getAsString("id") }
+            val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2)
+                .map { simulcast -> simulcast.getAsString("id") }
 
             val series = simulcasts.flatMap { simulcastId ->
                 runBlocking {
@@ -79,7 +80,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     val currentSimulcastCode = getSimulcastCode(currentSimulcast)
                     logger.info("Current simulcast code for $it: $currentSimulcast > $currentSimulcastCode")
                     val currentSimulcastAnimes =
-                        currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
+                        currentSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }
+                            .toSet()
                     logger.info("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
 
                     val previousSimulcastCode = getPreviousSimulcastCode(currentSimulcastCode)
@@ -90,7 +92,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                         simulcastSelector
                     )
                     val previousSimulcastAnimes =
-                        previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }.toSet()
+                        previousSimulcastContent.select(simulcastAnimesSelector).map { a -> a.text().lowercase() }
+                            .toSet()
                     logger.info("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
 
                     val combinedSimulcasts = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
@@ -277,14 +280,17 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
-        val eligibleRegion = requireNotNull(episodeMetadata.getAsString("eligible_region")) { "Eligible region is null" }
+        val eligibleRegion =
+            requireNotNull(episodeMetadata.getAsString("eligible_region")) { "Eligible region is null" }
         if (!eligibleRegion.contains(countryCode.name)) throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
 
         val audio = episodeMetadata.getAsString("audio_locale")?.takeIf { it.isNotBlank() }
         val isDubbed = audio == countryCode.locale
         val subtitles = episodeMetadata.getAsJsonArray("subtitle_locales").map { it.asString!! }
 
-        if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
+        if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) throw EpisodeNoSubtitlesOrVoiceException(
+            "Episode is not available in ${countryCode.name} with subtitles or voice"
+        )
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
 
@@ -294,7 +300,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
 
         val releaseDate =
-            requireNotNull(episodeMetadata.getAsString("premium_available_date")?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
+            requireNotNull(
+                episodeMetadata.getAsString("premium_available_date")
+                    ?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
 
         val season = episodeMetadata.getAsInt("season_number") ?: 1
         val number = episodeMetadata.getAsInt("episode_number") ?: -1
@@ -317,7 +325,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         var duration = episodeMetadata.getAsLong("duration_ms", -1000) / 1000
 
-        val checkCrunchyrollSimulcasts = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS, true)
+        val checkCrunchyrollSimulcasts =
+            configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS, true)
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
         if (checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || simulcasts[countryCode]!!.contains(animeName.lowercase())))

@@ -97,7 +97,11 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
     fun findAllByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name", getEntityClass())
+            createReadOnlyQuery(
+                it,
+                "FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name",
+                getEntityClass()
+            )
                 .setParameter("countryCode", countryCode)
                 .setParameter("name", "%${name?.lowercase()}%")
                 .resultList

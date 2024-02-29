@@ -145,7 +145,8 @@ class TwitterSocialNetworkTest {
                     "\n" +
                     "Bon visionnage. \uD83C\uDF7F\n" +
                     "\n" +
-                    "\uD83D\uDD36 Lien de l'épisode : https://www.shikkanime.fr/animes/shangri-la-frontier", twitterSocialNetwork.getMessage(episodeDto)
+                    "\uD83D\uDD36 Lien de l'épisode : https://www.shikkanime.fr/animes/shangri-la-frontier",
+            twitterSocialNetwork.getMessage(episodeDto)
         )
     }
 
@@ -197,7 +198,8 @@ class TwitterSocialNetworkTest {
                     "\n" +
                     "Bon visionnage. \uD83C\uDF7F\n" +
                     "\n" +
-                    "\uD83D\uDD36 Lien de l'épisode : https://www.shikkanime.fr/animes/looking-up-to-magical-girls", twitterSocialNetwork.getMessage(episodeDto)
+                    "\uD83D\uDD36 Lien de l'épisode : https://www.shikkanime.fr/animes/looking-up-to-magical-girls",
+            twitterSocialNetwork.getMessage(episodeDto)
         )
     }
 
