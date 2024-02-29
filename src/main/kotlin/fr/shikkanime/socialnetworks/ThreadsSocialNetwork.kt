@@ -28,7 +28,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         try {
             val username = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_USERNAME))
             val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_PASSWORD))
-
+            if (username.isBlank() || password.isBlank()) throw Exception("Username or password is empty")
             val generateDeviceId = ThreadsWrapper.generateDeviceId(username, password)
             val (token, userId) = runBlocking { ThreadsWrapper.login(generateDeviceId, username, password) }
 
@@ -39,7 +39,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
             isInitialized = true
             initializedAt = ZonedDateTime.now()
         } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while initializing BskySocialNetwork", e)
+            logger.log(Level.SEVERE, "Error while initializing ThreadsSocialNetwork", e)
         }
     }
 
