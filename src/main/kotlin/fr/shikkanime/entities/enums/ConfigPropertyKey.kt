@@ -17,4 +17,7 @@ enum class ConfigPropertyKey(val key: String) {
     BSKY_IDENTIFIER("bsky_identifier"),
     BSKY_PASSWORD("bsky_password"),
     TWITTER_MESSAGE("twitter_message"),
+    THREADS_USERNAME("threads_username"),
+    THREADS_PASSWORD("threads_password"),
+    THREADS_MESSAGE("threads_message"),
 }
