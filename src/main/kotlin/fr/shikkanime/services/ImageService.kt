@@ -69,9 +69,9 @@ object ImageService {
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val threadPool = Executors.newFixedThreadPool(2)
-    private val file = File(Constant.dataFolder, "images-cache.shikk")
-    private var cache = mutableListOf<Image>()
+    private val cache = mutableListOf<Image>()
     private val change = AtomicBoolean(false)
+    private const val CACHE_FILE_NUMBER = 5
 
     private fun toHumanReadable(bytes: Long): String {
         val kiloByte = 1024L
@@ -89,21 +89,36 @@ object ImageService {
     }
 
     fun loadCache() {
-        if (!file.exists()) {
-            change.set(true)
-            saveCache()
-            return
+        logger.info("Loading images cache...")
+        val cachePart = mutableListOf<Image>()
+
+        val take = measureTimeMillis {
+            (0..<CACHE_FILE_NUMBER).toList().parallelStream().forEach { index ->
+                val part = loadCachePart(File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                cachePart.addAll(part)
+            }
         }
 
-        logger.info("Loading images cache...")
+        this.cache.addAll(cachePart)
+        logger.info("Loaded images cache in $take ms (${this.cache.size} images)")
+    }
+
+    private fun loadCachePart(file: File): List<Image> {
+        if (!file.exists()) {
+            return emptyList()
+        }
+
+        logger.info("Loading images cache part...")
+        val cache = mutableListOf<Image>()
 
         val take = measureTimeMillis {
             val json = String(FileManager.fromGzip(file.readBytes()))
             val map = ObjectParser.fromJson(json, Array<Image>::class.java).toMutableList()
-            cache = map
+            cache.addAll(map)
         }
 
         logger.info("Loaded images cache in $take ms (${cache.size} images)")
+        return cache
     }
 
     fun saveCache() {
@@ -112,19 +127,35 @@ object ImageService {
             return
         }
 
+        change.set(false)
+
+        val cacheSize = cache.size
+        val partSize = (cacheSize / CACHE_FILE_NUMBER) + 1
+        val parts = cache.toList().chunked(partSize + 1)
+
+        logger.info("Saving images cache...")
+
+        val take = measureTimeMillis {
+            parts.parallelStream().forEach { part ->
+                val index = parts.indexOf(part)
+                saveCachePart(part, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+            }
+        }
+
+        logger.info("Saved images cache in $take ms ($originalSize -> $compressedSize)")
+    }
+
+    private fun saveCachePart(cache: List<Image>, file: File) {
         if (!file.exists()) {
             file.createNewFile()
         }
 
-        logger.info("Saving images cache...")
-        val cache = cache.toList()
-
+        logger.info("Saving images cache part...")
         val take = measureTimeMillis {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        logger.info("Saved images cache in $take ms ($originalSize -> $compressedSize)")
-        change.set(false)
+        logger.info("Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${toHumanReadable(cache.sumOf { it.size })})")
     }
 
     fun add(uuid: UUID, type: Type, url: String, width: Int, height: Int) {
