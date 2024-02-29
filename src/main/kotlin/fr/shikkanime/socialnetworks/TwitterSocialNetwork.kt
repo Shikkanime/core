@@ -24,13 +24,19 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (isInitialized) return
 
         try {
+            val consumerKey = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_KEY))
+            val consumerSecret = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_SECRET))
+            val accessToken = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN))
+            val accessTokenSecret = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN_SECRET))
+            if (consumerKey.isBlank() || consumerSecret.isBlank() || accessToken.isBlank() || accessTokenSecret.isBlank()) throw Exception("Twitter credentials are empty")
+
             twitter = TwitterFactory(
                 ConfigurationBuilder()
                     .setDebugEnabled(true)
-                    .setOAuthConsumerKey(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_KEY))
-                    .setOAuthConsumerSecret(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_SECRET))
-                    .setOAuthAccessToken(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN))
-                    .setOAuthAccessTokenSecret(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN_SECRET))
+                    .setOAuthConsumerKey(consumerKey)
+                    .setOAuthConsumerSecret(consumerSecret)
+                    .setOAuthAccessToken(accessToken)
+                    .setOAuthAccessTokenSecret(accessTokenSecret)
                     .build()
             ).instance
 
