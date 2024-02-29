@@ -155,7 +155,12 @@ object ImageService {
             file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
         }
 
-        logger.info("Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${toHumanReadable(cache.sumOf { it.size })})")
+        logger.info(
+            "Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${
+                toHumanReadable(
+                    cache.sumOf { it.size })
+            })"
+        )
     }
 
     fun add(uuid: UUID, type: Type, url: String, width: Int, height: Int) {

@@ -109,7 +109,10 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(3, episodes.size)
         assertEquals("Demon Slave", episodes[0].anime?.name)
         assertNotNull(episodes[0].description)
-        assertEquals("My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!", episodes[1].anime?.name)
+        assertEquals(
+            "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!",
+            episodes[1].anime?.name
+        )
         assertNotNull(episodes[1].description)
         assertEquals("Urusei Yatsura", episodes[2].anime?.name)
         assertNotNull(episodes[2].description)

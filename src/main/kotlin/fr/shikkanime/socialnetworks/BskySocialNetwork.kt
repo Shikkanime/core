@@ -4,6 +4,7 @@ import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -73,14 +74,15 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         checkSession()
         if (!isInitialized) return
 
-        val url = "https://www.shikkanime.fr/animes/${episodeDto.anime.slug}"
+        val url = "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}"
         val uncensored = if (episodeDto.uncensored) " non censuré" else ""
         val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
         val message =
             "\uD83D\uDEA8 ${information(episodeDto)}${uncensored} de ${episodeDto.anime.shortName} est maintenant disponible${isVoice}sur ${episodeDto.platform.platformName}\n\nBon visionnage. \uD83C\uDF7F"
 
         val webpByteArray = FileManager.encodeToWebP(mediaImage)
-        val imageJson = runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
+        val imageJson =
+            runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
         runBlocking { BskyWrapper.createRecord(accessJwt!!, did!!, message, listOf(BskyWrapper.Image(imageJson, url))) }
     }
 }

@@ -25,12 +25,13 @@ class AnimeCacheService : AbstractCacheService {
             )
         }
 
-    private val findAllByNameCache = MapCache<CountryCodeNamePaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
-        PageableDto.fromPageable(
-            animeService.findAllByName(it.name, it.countryCode, it.page, it.limit),
-            AnimeDto::class.java
-        )
-    }
+    private val findAllByNameCache =
+        MapCache<CountryCodeNamePaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
+            PageableDto.fromPageable(
+                animeService.findAllByName(it.name, it.countryCode, it.page, it.limit),
+                AnimeDto::class.java
+            )
+        }
 
     private val findBySlugCache = MapCache<String, AnimeDto>(classes = listOf(Anime::class.java)) {
         AbstractConverter.convert(animeService.findBySlug(it), AnimeDto::class.java)

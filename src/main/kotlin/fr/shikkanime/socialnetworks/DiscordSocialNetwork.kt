@@ -11,14 +11,10 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
-import net.dv8tion.jda.api.events.session.ReadyEvent
-import net.dv8tion.jda.api.hooks.ListenerAdapter
 import java.net.URI
 import java.time.ZonedDateTime
 import java.util.logging.Level
 import javax.imageio.ImageIO
-
-private const val BASE_URL = "https://www.shikkanime.fr/"
 
 class DiscordSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(DiscordSocialNetwork::class.java)
@@ -35,15 +31,9 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
             val token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.DISCORD_TOKEN))
             if (token.isBlank()) throw Exception("Token is empty")
             val builder = JDABuilder.createDefault(token)
-            builder.setActivity(Activity.playing(BASE_URL))
-            builder.addEventListeners(object : ListenerAdapter() {
-                override fun onReady(event: ReadyEvent) {
-                    logger.info("DiscordSocialNetwork is ready")
-                    isInitialized = true
-                    jda = event.jda
-                }
-            })
-            builder.build()
+            builder.setActivity(Activity.playing(Constant.BASE_URL))
+            this.jda = builder.build().awaitReady()
+            isInitialized = true
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while initializing DiscordSocialNetwork", e)
         }
@@ -78,13 +68,13 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         embedMessage.setAuthor(
             episodeDto.platform.platformName,
             episodeDto.platform.url,
-            "${BASE_URL}assets/img/platforms/${episodeDto.platform.image}"
+            "${Constant.BASE_URL}/assets/img/platforms/${episodeDto.platform.image}"
         )
-        embedMessage.setTitle(episodeDto.anime.shortName, "${BASE_URL}animes/${episodeDto.anime.slug}")
+        embedMessage.setTitle(episodeDto.anime.shortName, "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}")
         embedMessage.setThumbnail(episodeDto.anime.image)
         embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
         embedMessage.setImage(episodeDto.image)
-        embedMessage.setFooter(Constant.NAME, "${BASE_URL}assets/img/favicons/favicon-64x64.png")
+        embedMessage.setFooter(Constant.NAME, "${Constant.BASE_URL}/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
         val embed = embedMessage.build()
 

@@ -7,7 +7,6 @@ import com.microsoft.playwright.Playwright
 import fr.shikkanime.modules.DefaultModule
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
-import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import org.reflections.Reflections
 import java.io.File
 import java.time.ZoneId
@@ -37,17 +36,13 @@ object Constant {
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"
     val jwtRealm: String = System.getenv("JWT_REALM") ?: "ktor sample app"
     val jwtSecret: String = System.getenv("JWT_SECRET") ?: "secret"
-    const val DEFAULT_IMAGE_PREVIEW = "https://www.shikkanime.fr/assets/img/episode_no_image_preview.jpg"
+
+    const val BASE_URL = "https://www.shikkanime.fr"
+    const val DEFAULT_IMAGE_PREVIEW = "$BASE_URL/assets/img/episode_no_image_preview.jpg"
 
     init {
         abstractPlatforms.forEach {
             it.loadConfiguration()
-        }
-
-        abstractSocialNetworks
-            .filter { it.javaClass != DiscordSocialNetwork::class.java }
-            .forEach {
-            it.login()
         }
     }
 }
