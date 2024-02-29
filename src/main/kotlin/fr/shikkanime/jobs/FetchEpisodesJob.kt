@@ -82,12 +82,7 @@ class FetchEpisodesJob : AbstractJob {
 
         if (savedEpisodes.isNotEmpty() && savedEpisodes.size < configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
             val dtos = AbstractConverter.convert(savedEpisodes, EpisodeDto::class.java)
-
-            dtos.forEach {
-                Thread {
-                    sendToSocialNetworks(it)
-                }.start()
-            }
+            dtos.forEach { sendToSocialNetworks(it) }
         }
 
         isRunning = false
@@ -104,20 +99,22 @@ class FetchEpisodesJob : AbstractJob {
         }
 
         Constant.abstractSocialNetworks.forEach { socialNetwork ->
-            try {
-                socialNetwork.sendEpisodeRelease(dto, mediaImage)
-            } catch (e: Exception) {
-                logger.log(
-                    Level.SEVERE,
-                    "Error while sending episode release for ${
-                        socialNetwork.javaClass.simpleName.replace(
-                            "SocialNetwork",
-                            ""
-                        )
-                    }",
-                    e
-                )
-            }
+            Thread {
+                try {
+                    socialNetwork.sendEpisodeRelease(dto, mediaImage)
+                } catch (e: Exception) {
+                    logger.log(
+                        Level.SEVERE,
+                        "Error while sending episode release for ${
+                            socialNetwork.javaClass.simpleName.replace(
+                                "SocialNetwork",
+                                ""
+                            )
+                        }",
+                        e
+                    )
+                }
+            }.start()
         }
     }
 }

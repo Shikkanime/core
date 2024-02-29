@@ -71,7 +71,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
             Platform.CRUN -> "@crunchyroll_fr"
             Platform.NETF -> "@netflixfr"
             Platform.PRIM -> "@primevideofr"
-            else -> platform.name
+            else -> platform.platformName
         }
     }
 
