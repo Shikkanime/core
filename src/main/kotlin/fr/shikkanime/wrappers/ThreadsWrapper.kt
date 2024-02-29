@@ -36,7 +36,7 @@ object ThreadsWrapper {
     private val httpRequest = HttpRequest()
     private val secureRandom = SecureRandom()
 
-    suspend fun qeSync(): HttpResponse {
+    private suspend fun qeSync(): HttpResponse {
         val uuid = UUID.randomUUID().toString()
 
         return httpRequest.post(
@@ -54,11 +54,13 @@ object ThreadsWrapper {
         )
     }
 
-    suspend fun encryptPassword(password: String): Map<String, String> {
+    private suspend fun encryptPassword(password: String): Map<String, String> {
         // https://github.com/instagram4j/instagram4j/blob/39635974c391e21a322ab3294275df99d7f75f84/src/main/java/com/github/instagram4j/instagram4j/utils/IGUtils.java#L176
         val randKey = ByteArray(32).also { secureRandom.nextBytes(it) }
         val iv = ByteArray(12).also { secureRandom.nextBytes(it) }
-        val headers = qeSync().headers
+        val response = qeSync()
+        require(response.status.value == 200) { "Failed to get qeSync: ${response.status}" }
+        val headers = response.headers
         val time = (System.currentTimeMillis() / 1000).toString()
 
         val passwordEncryptionKeyID = headers["ig-set-password-encryption-key-id"]!!.toInt()

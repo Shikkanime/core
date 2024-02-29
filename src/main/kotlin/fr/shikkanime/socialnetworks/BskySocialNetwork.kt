@@ -27,6 +27,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         try {
             val identifier = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.BSKY_IDENTIFIER))
             val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.BSKY_PASSWORD))
+            if (identifier.isBlank() || password.isBlank()) throw Exception("Identifier or password is empty")
             val session = runBlocking { BskyWrapper.createSession(identifier, password) }
             accessJwt = requireNotNull(session.getAsString("accessJwt"))
             did = requireNotNull(session.getAsString("did"))
