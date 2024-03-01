@@ -5,20 +5,21 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <property global="false" name="id" value="1709212941466"/>
+    <property global="false" name="id" value="1709281579180"/>
     <property global="false" name="author" value="Ziedelth"/>
 
     <changeSet id="${id}-1" author="${author}" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
-                                         WHERE property_key = 'threads_username'</sqlCheck>
+                                         WHERE property_key = 'bsky_message'</sqlCheck>
         </preConditions>
 
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
-            <column name="property_key" value="threads_username"/>
-            <column name="property_value" value=""/>
+            <column name="property_key" value="bsky_message"/>
+            <column name="property_value"
+                    value="🚨 {EPISODE_INFORMATION} de {ANIME_TITLE} est maintenant disponible{VOICE}sur {PLATFORM_ACCOUNT}\n\nBon visionnage. 🍿"/>
         </insert>
     </changeSet>
 
@@ -26,13 +27,13 @@
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
-                                         WHERE property_key = 'threads_password'</sqlCheck>
+                                         WHERE property_key = 'bsky_session_timeout'</sqlCheck>
         </preConditions>
 
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
-            <column name="property_key" value="threads_password"/>
-            <column name="property_value" value=""/>
+            <column name="property_key" value="bsky_session_timeout"/>
+            <column name="property_value" value="10"/>
         </insert>
     </changeSet>
 
@@ -40,14 +41,13 @@
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
-                                         WHERE property_key = 'threads_message'</sqlCheck>
+                                         WHERE property_key = 'threads_session_timeout'</sqlCheck>
         </preConditions>
 
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
-            <column name="property_key" value="threads_message"/>
-            <column name="property_value"
-                    value="🚨 {EPISODE_INFORMATION} de {ANIME_TITLE} est maintenant disponible{VOICE}sur {PLATFORM_ACCOUNT}\n\nBon visionnage. 🍿\n\n🔶 Lien de l'épisode : {URL}"/>
+            <column name="property_key" value="threads_session_timeout"/>
+            <column name="property_value" value="60"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

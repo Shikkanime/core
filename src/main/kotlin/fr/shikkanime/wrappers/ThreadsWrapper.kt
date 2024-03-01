@@ -152,8 +152,10 @@ object ThreadsWrapper {
         require(response.status.value == 200) { "Failed to login: ${response.status}" }
 
         val responseJson = ObjectParser.fromJson(response.bodyAsText())
-        val rawBloks = responseJson.getAsJsonObject("layout").getAsJsonObject("bloks_payload").getAsJsonObject("tree").getAsJsonObject("㐟").getAsString("#")
-        val substring = rawBloks!!.substring(rawBloks.indexOfFirst { it == '{' }, rawBloks.indexOfLast { it == '}' } + 1)
+        val rawBloks = responseJson.getAsJsonObject("layout").getAsJsonObject("bloks_payload").getAsJsonObject("tree")
+            .getAsJsonObject("㐟").getAsString("#")
+        val substring =
+            rawBloks!!.substring(rawBloks.indexOfFirst { it == '{' }, rawBloks.indexOfLast { it == '}' } + 1)
 
         val sToken = substring.split("Bearer IGT:2:")[1]
         val token = sToken.substring(0, sToken.indexOf("\\\\\\\""))

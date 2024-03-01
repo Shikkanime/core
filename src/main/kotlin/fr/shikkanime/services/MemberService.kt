@@ -27,7 +27,13 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         check(adminUsers.isEmpty()) { "Admin user already exists" }
         val password = RandomManager.generateRandomString(32)
         logger.info("Default admin password: $password")
-        save(Member(username = "admin", encryptedPassword = EncryptionManager.generate(password), roles = mutableSetOf(Role.ADMIN)))
+        save(
+            Member(
+                username = "admin",
+                encryptedPassword = EncryptionManager.generate(password),
+                roles = mutableSetOf(Role.ADMIN)
+            )
+        )
         return password
     }
 }

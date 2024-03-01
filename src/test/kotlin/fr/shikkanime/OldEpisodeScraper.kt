@@ -112,8 +112,10 @@ fun main() {
     series.forEach {
         val postersTall = it.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
         val postersWide = it.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
-        val image = postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
-        val banner = postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
+        val image =
+            postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
+        val banner =
+            postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
         val description = it.getAsString("description")
 
         crunchyrollPlatform.animeInfoCache.set(
@@ -124,21 +126,41 @@ fun main() {
 
     val episodeIds = ids.parallelStream().map { seriesId ->
         runBlocking { CrunchyrollWrapper.getSeasons(CountryCode.FR.locale, accessToken, cms, seriesId) }
-            .filter { jsonObject -> jsonObject.getAsJsonArray("subtitle_locales").map { it.asString }.contains(CountryCode.FR.locale) }
+            .filter { jsonObject ->
+                jsonObject.getAsJsonArray("subtitle_locales").map { it.asString }.contains(CountryCode.FR.locale)
+            }
             .map { jsonObject -> jsonObject.getAsString("id")!! }
-            .flatMap { id -> runBlocking { CrunchyrollWrapper.getEpisodes(CountryCode.FR.locale, accessToken, cms, id) } }
+            .flatMap { id ->
+                runBlocking {
+                    CrunchyrollWrapper.getEpisodes(
+                        CountryCode.FR.locale,
+                        accessToken,
+                        cms,
+                        id
+                    )
+                }
+            }
             .map { jsonObject -> jsonObject.getAsString("id")!! }
     }.toList().flatten().toSet()
 
     episodeIds.chunked(25).parallelStream().forEach { episodeIdsChunked ->
-        val `object` = runBlocking { CrunchyrollWrapper.getObject(CountryCode.FR.locale, accessToken, cms, *episodeIdsChunked.toTypedArray()) }
+        val `object` = runBlocking {
+            CrunchyrollWrapper.getObject(
+                CountryCode.FR.locale,
+                accessToken,
+                cms,
+                *episodeIdsChunked.toTypedArray()
+            )
+        }
 
         `object`.forEach { episodeJson ->
             try {
-                episodes.add(crunchyrollPlatform.convertJsonEpisode(
-                    CountryCode.FR,
-                    episodeJson,
-                ))
+                episodes.add(
+                    crunchyrollPlatform.convertJsonEpisode(
+                        CountryCode.FR,
+                        episodeJson,
+                    )
+                )
             } catch (e: Exception) {
                 println("Error while converting episode (Episode ID: ${episodeJson.getAsString("id")}): ${e.message}")
                 e.printStackTrace()
@@ -151,7 +173,8 @@ fun main() {
     episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
 
     episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
-        episode.anime?.releaseDateTime = episodes.filter { it.anime?.name == episode.anime?.name }.minOf { it.anime!!.releaseDateTime }
+        episode.anime?.releaseDateTime =
+            episodes.filter { it.anime?.name == episode.anime?.name }.minOf { it.anime!!.releaseDateTime }
         episodeService.save(episode)
     }
 

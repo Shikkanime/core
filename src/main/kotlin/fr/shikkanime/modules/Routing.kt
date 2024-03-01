@@ -257,7 +257,12 @@ private suspend fun handleMultipartResponse(call: ApplicationCall, response: Res
     call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
 }
 
-private suspend fun handleTemplateResponse(call: ApplicationCall, controller: Any, replacedPath: String, response: Response) {
+private suspend fun handleTemplateResponse(
+    call: ApplicationCall,
+    controller: Any,
+    replacedPath: String,
+    response: Response
+) {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
 
@@ -288,7 +293,8 @@ private suspend fun handleTemplateResponse(call: ApplicationCall, controller: An
     } ?: Constant.NAME
 
     modelMap["seoDescription"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
-    configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)?.let { modelMap["googleSiteVerification"] = it }
+    configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)
+        ?.let { modelMap["googleSiteVerification"] = it }
     simulcastCacheService.currentSimulcast?.let { modelMap["currentSimulcast"] = it }
 
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
@@ -341,7 +347,10 @@ private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any
         Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
         String::class.starProjectedType.withNullability(true) -> queryParamValue
         CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(queryParamValue)
-        UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(queryParamValue)
+        UUID::class.starProjectedType.withNullability(true) -> if (queryParamValue.isNullOrBlank()) null else UUID.fromString(
+            queryParamValue
+        )
+
         else -> throw Exception("Unknown type ${kParameter.type}")
     }
 }

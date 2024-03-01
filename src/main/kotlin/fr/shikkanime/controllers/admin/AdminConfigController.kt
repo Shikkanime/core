@@ -47,12 +47,7 @@ class AdminConfigController {
     @AdminSessionAuthenticated
     private fun postConfig(@PathParam("uuid") uuid: UUID, @BodyParam parameters: Parameters): Response {
         configService.update(uuid, parameters)
-
-        Constant.abstractSocialNetworks.forEach {
-            it.logout()
-            it.login()
-        }
-
+        Constant.abstractSocialNetworks.forEach { it.logout() }
         return Response.redirect(Link.CONFIG.href)
     }
 }

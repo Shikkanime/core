@@ -16,12 +16,14 @@
 
                 <div class="col-md-4">
                     <label class="form-label" for="originalSize">Original size</label>
-                    <input id="originalSize" name="originalSize" type="text" class="form-control disabled" value="${originalSize}" disabled>
+                    <input id="originalSize" name="originalSize" type="text" class="form-control disabled"
+                           value="${originalSize}" disabled>
                 </div>
 
                 <div class="col-md-4">
                     <label class="form-label" for="compressedSize">Compressed size</label>
-                    <input id="compressedSize" name="compressedSize" type="text" class="form-control disabled" value="${compressedSize}" disabled>
+                    <input id="compressedSize" name="compressedSize" type="text" class="form-control disabled"
+                           value="${compressedSize}" disabled>
                 </div>
             </div>
         </div>

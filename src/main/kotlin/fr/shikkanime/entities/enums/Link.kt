@@ -2,7 +2,14 @@ package fr.shikkanime.entities.enums
 
 import fr.shikkanime.utils.Constant
 
-enum class Link(var href: String, val template: String, val icon: String, val label: String, val title: String = label, val footer: Boolean = false) {
+enum class Link(
+    var href: String,
+    val template: String,
+    val icon: String,
+    val label: String,
+    val title: String = label,
+    val footer: Boolean = false
+) {
     // Admin
     DASHBOARD("/admin/dashboard", "/admin/dashboard.ftl", "bi bi-pc-display", "Dashboard"),
     PLATFORMS("/admin/platforms", "/admin/platforms/list.ftl", "bi bi-display", "Platforms"),
