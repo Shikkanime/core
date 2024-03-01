@@ -39,38 +39,12 @@ object ImageService {
         var bytes: ByteArray = byteArrayOf(),
         var originalSize: Long = 0,
         var size: Long = 0,
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Image
-
-            if (uuid != other.uuid) return false
-            if (type != other.type) return false
-            if (url != other.url) return false
-            if (!bytes.contentEquals(other.bytes)) return false
-            if (originalSize != other.originalSize) return false
-            if (size != other.size) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = uuid.hashCode()
-            result = 31 * result + type.hashCode()
-            result = 31 * result + url.hashCode()
-            result = 31 * result + bytes.contentHashCode()
-            result = 31 * result + originalSize.hashCode()
-            result = 31 * result + size.hashCode()
-            return result
-        }
-    }
+    )
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private val threadPool = Executors.newFixedThreadPool(2)
-    private val cache = mutableListOf<Image>()
-    private val change = AtomicBoolean(false)
+    val cache = mutableListOf<Image>()
+    val change = AtomicBoolean(false)
     private const val CACHE_FILE_NUMBER = 5
 
     private fun toHumanReadable(bytes: Long): String {
@@ -117,7 +91,7 @@ object ImageService {
             cache.addAll(map)
         }
 
-        logger.info("Loaded images cache in $take ms (${cache.size} images)")
+        logger.info("Loaded images cache part in $take ms (${cache.size} images)")
         return cache
     }
 
@@ -136,9 +110,15 @@ object ImageService {
         logger.info("Saving images cache...")
 
         val take = measureTimeMillis {
-            parts.parallelStream().forEach { part ->
-                val index = parts.indexOf(part)
-                saveCachePart(part, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+            if (parts.isNotEmpty()) {
+                parts.parallelStream().forEach { part ->
+                    val index = parts.indexOf(part)
+                    saveCachePart(part, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                }
+            } else {
+                (0..<CACHE_FILE_NUMBER).toList().parallelStream().forEach { index ->
+                    saveCachePart(emptyList(), File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                }
             }
         }
 
@@ -171,52 +151,69 @@ object ImageService {
         val image = Image(uuid.toString(), type, url)
         cache.add(image)
 
-        threadPool.submit {
-            val take = measureTimeMillis {
-                try {
-                    val httpResponse = runBlocking { HttpRequest().get(url) }
-                    val bytes = runBlocking { httpResponse.readBytes() }
+        threadPool.submit { encodeImage(url, uuid, type, width, height, image) }
+    }
 
-                    if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
-                        logger.warning("Failed to load image $url")
-                        remove(uuid, type)
-                        return@measureTimeMillis
-                    }
+    private fun encodeImage(
+        url: String,
+        uuid: UUID,
+        type: Type,
+        width: Int,
+        height: Int,
+        image: Image
+    ) {
+        val take = measureTimeMillis {
+            try {
+                val httpResponse = runBlocking { HttpRequest().get(url) }
+                val bytes = runBlocking { httpResponse.readBytes() }
 
-                    val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(width, height)
-                    val tmpFile = File.createTempFile("shikk", ".png").apply {
-                        writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
-                    }
-                    val webp = FileManager.encodeToWebP(tmpFile.readBytes())
-
-                    if (!tmpFile.delete())
-                        logger.warning("Can not delete tmp file image")
-
-                    if (webp.isEmpty()) {
-                        logger.warning("Failed to encode image to WebP")
-                        remove(uuid, type)
-                        return@measureTimeMillis
-                    }
-
-                    image.bytes = webp
-                    image.originalSize = bytes.size.toLong()
-                    image.size = webp.size.toLong()
-                    cache[cache.indexOf(image)] = image
-                    change.set(true)
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Failed to load image $url", e)
+                if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
+                    logger.warning("Failed to load image $url")
                     remove(uuid, type)
+                    return@measureTimeMillis
                 }
-            }
 
-            logger.info(
-                "Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${
-                    toHumanReadable(
-                        image.size
-                    )
-                })"
-            )
+                val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(width, height)
+                val tmpFile = File.createTempFile("shikk", ".png").apply {
+                    writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
+                }
+                val webp = FileManager.encodeToWebP(tmpFile.readBytes())
+
+                if (!tmpFile.delete())
+                    logger.warning("Can not delete tmp file image")
+
+                if (webp.isEmpty()) {
+                    logger.warning("Failed to encode image to WebP")
+                    remove(uuid, type)
+                    return@measureTimeMillis
+                }
+
+                image.bytes = webp
+                image.originalSize = bytes.size.toLong()
+                image.size = webp.size.toLong()
+
+                val indexOf = cache.indexOf(image)
+
+                if (indexOf == -1) {
+                    logger.warning("Failed to find image in cache")
+                    return@measureTimeMillis
+                }
+
+                cache[indexOf] = image
+                change.set(true)
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Failed to load image $url", e)
+                remove(uuid, type)
+            }
         }
+
+        logger.info(
+            "Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${
+                toHumanReadable(
+                    image.size
+                )
+            })"
+        )
     }
 
     fun remove(uuid: UUID, type: Type) {
@@ -472,7 +469,11 @@ object ImageService {
     data class Tuple<A, B, C, D, E>(val a: A, val b: B, val c: C, val d: D, val e: E)
 
     private fun loadResources(episode: EpisodeDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage?> {
-        val mediaImageFolder = File(Constant.dataFolder, "media-image")
+        val mediaImageFolder =
+            File(ClassLoader.getSystemClassLoader().getResource("media-image")!!.file).takeIf { it.exists() } ?: File(
+                Constant.dataFolder,
+                "media-image"
+            )
         require(mediaImageFolder.exists()) { "Media image folder not found" }
         val backgroundsFolder = File(mediaImageFolder, "backgrounds")
         require(backgroundsFolder.exists()) { "Background folder not found" }

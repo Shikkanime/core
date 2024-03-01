@@ -25,6 +25,10 @@ object JobManager {
         scheduler.start()
     }
 
+    fun stop() {
+        scheduler.shutdown()
+    }
+
     class JobExecutor : Job {
         private val logger = LoggerFactory.getLogger(javaClass)
 
