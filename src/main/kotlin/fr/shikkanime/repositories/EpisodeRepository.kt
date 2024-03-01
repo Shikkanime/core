@@ -14,6 +14,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeRepository : AbstractRepository<Episode>() {
+    override fun getEntityClass() = Episode::class.java
+
     private fun Episode.initialize(): Episode {
         Hibernate.initialize(this.anime?.simulcasts)
         return this

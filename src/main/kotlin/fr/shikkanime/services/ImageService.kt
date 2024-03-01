@@ -117,7 +117,7 @@ object ImageService {
             cache.addAll(map)
         }
 
-        logger.info("Loaded images cache in $take ms (${cache.size} images)")
+        logger.info("Loaded images cache part in $take ms (${cache.size} images)")
         return cache
     }
 
