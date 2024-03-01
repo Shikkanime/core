@@ -20,4 +20,7 @@ enum class ConfigPropertyKey(val key: String) {
     THREADS_USERNAME("threads_username"),
     THREADS_PASSWORD("threads_password"),
     THREADS_MESSAGE("threads_message"),
+    BSKY_MESSAGE("bsky_message"),
+    BSKY_SESSION_TIMEOUT("bsky_session_timeout"),
+    THREADS_SESSION_TIMEOUT("threads_session_timeout"),
 }
