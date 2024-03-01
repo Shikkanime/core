@@ -46,12 +46,14 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     }
 
     private fun checkSession() {
-        if (!isInitialized) return
-
-        if (initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.BSKY_SESSION_TIMEOUT, 10).toLong()).isBefore(ZonedDateTime.now())) {
-            logout()
-            login()
+        if (initializedAt != null && initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.BSKY_SESSION_TIMEOUT, 10).toLong())
+                .isAfter(ZonedDateTime.now())
+        ) {
+            return
         }
+
+        logout()
+        login()
     }
 
     override fun sendMessage(message: String) {
