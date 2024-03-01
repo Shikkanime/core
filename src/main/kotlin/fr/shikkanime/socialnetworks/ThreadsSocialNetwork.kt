@@ -2,8 +2,6 @@ package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.wrappers.ThreadsWrapper
@@ -54,7 +52,9 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private fun checkSession() {
         if (!isInitialized) return
 
-        if (initializedAt!!.plusMinutes(10).isBefore(ZonedDateTime.now())) {
+        if (initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong())
+                .isBefore(ZonedDateTime.now())
+        ) {
             logout()
             login()
         }
@@ -66,7 +66,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         runBlocking { ThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message) }
     }
 
-    private fun platformAccount(platform: Platform): String {
+    override fun platformAccount(platform: Platform): String {
         return when (platform) {
             Platform.CRUN -> "@crunchyroll_fr"
             Platform.NETF -> "@netflixfr"
@@ -75,34 +75,10 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    private fun information(episodeDto: EpisodeDto): String {
-        return when (episodeDto.episodeType) {
-            EpisodeType.SPECIAL -> "L'épisode spécial"
-            EpisodeType.FILM -> "Le film"
-            else -> "L'épisode ${episodeDto.number}"
-        }
-    }
-
-    fun getMessage(episodeDto: EpisodeDto): String {
-        val uncensored = if (episodeDto.uncensored) " non censuré" else ""
-        val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
-
-        var configMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: ""
-        configMessage = configMessage.replace("{URL}", episodeDto.url)
-        configMessage = configMessage.replace("{PLATFORM_ACCOUNT}", platformAccount(episodeDto.platform))
-        configMessage = configMessage.replace("{ANIME_TITLE}", episodeDto.anime.shortName)
-        configMessage = configMessage.replace("{EPISODE_INFORMATION}", "${information(episodeDto)}${uncensored}")
-        configMessage = configMessage.replace("{VOICE}", isVoice)
-        configMessage = configMessage.replace("\\n", "\n")
-        configMessage = configMessage.trim()
-        return configMessage
-    }
-
     override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
-
-        val message = getMessage(episodeDto)
+        val message = getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: "")
         runBlocking { ThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
     }
 }
