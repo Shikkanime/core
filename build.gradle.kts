@@ -110,6 +110,13 @@ kotlin {
     jvmToolchain(21)
 }
 
+sonar {
+    properties {
+        property("sonar.projectKey", "core")
+        property("sonar.projectName", "core")
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
     finalizedBy("jacocoTestReport")
@@ -122,4 +129,8 @@ tasks.jacocoTestReport {
         xml.required = true
         html.required = false
     }
+}
+
+tasks.sonar {
+    dependsOn("jacocoTestReport")
 }
