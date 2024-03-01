@@ -50,14 +50,14 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     }
 
     private fun checkSession() {
-        if (!isInitialized) return
-
-        if (initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong())
-                .isBefore(ZonedDateTime.now())
+        if (initializedAt != null && initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong())
+                .isAfter(ZonedDateTime.now())
         ) {
-            logout()
-            login()
+            return
         }
+
+        logout()
+        login()
     }
 
     override fun sendMessage(message: String) {
