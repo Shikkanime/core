@@ -14,6 +14,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeRepository : AbstractRepository<Episode>() {
+    override fun getEntityClass() = Episode::class.java
+
     private fun Episode.initialize(): Episode {
         Hibernate.initialize(this.anime?.simulcasts)
         return this
@@ -137,7 +139,15 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         return inTransaction {
             createReadOnlyQuery(
                 it,
-                "FROM Episode WHERE platform = :platform AND ((lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR description IS NULL OR image = :defaultImage)",
+                """
+                    FROM Episode 
+                    WHERE platform = :platform 
+                    AND (
+                        (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR
+                        (description IS NULL OR description = '') OR
+                        image = :defaultImage
+                    )
+                """.trimIndent(),
                 getEntityClass()
             )
                 .setParameter("platform", platform)

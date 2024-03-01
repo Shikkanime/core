@@ -6,6 +6,8 @@ import org.hibernate.Hibernate
 import java.util.*
 
 class MemberRepository : AbstractRepository<Member>() {
+    override fun getEntityClass() = Member::class.java
+
     private fun Member.initialize(): Member {
         Hibernate.initialize(this.roles)
         return this

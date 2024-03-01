@@ -2,6 +2,7 @@ name: Global workflow
 
 on:
   pull_request:
+    types: [ opened, synchronize, reopened ]
   push:
     branches:
       - dev
@@ -33,7 +34,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }}
+        run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} -Dsonar.qualitygate.wait=true
 
       - name: Cache gradle dependencies
         uses: actions/cache@v4
