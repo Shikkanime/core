@@ -19,13 +19,21 @@ jobs:
           java-version: 21
           distribution: 'corretto'
 
-      - name: Tests
-        run: gradle clean test jacocoTestReport
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+      - name: Analyze push
+        # If push, we analyze the code
+        if: github.event_name == 'push'
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: ./gradlew sonar --info
+
+      - name: Analyse pull request
+        # If pull request, we analyze the code
+        if: github.event_name == 'pull_request'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }}
 
       - name: Cache gradle dependencies
         uses: actions/cache@v4
