@@ -29,8 +29,8 @@ jobs:
         run: ./gradlew sonar --info
 
       - name: Analyse pull request
-        # If pull request, we analyze the code
-        if: github.event_name == 'pull_request'
+        # If pull request, we analyze the code, and if the target branch is not master
+        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref != 'master'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
