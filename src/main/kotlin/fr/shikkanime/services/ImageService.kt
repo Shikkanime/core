@@ -470,7 +470,9 @@ object ImageService {
 
     private fun loadResources(episode: EpisodeDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage?> {
         val mediaImageFolder =
-            File(ClassLoader.getSystemClassLoader().getResource("media-image")!!.file).takeIf { it.exists() } ?: File(
+            ClassLoader.getSystemClassLoader()
+                .getResource("media-image")?.file?.let { File(it).takeIf { file -> file.exists() } }
+                ?: File(
                 Constant.dataFolder,
                 "media-image"
             )
