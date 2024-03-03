@@ -111,6 +111,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             if (image != episode.image) {
                 episode.image = image
                 ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
+                episodeService.addImage(episode.uuid, image)
                 needUpdate = true
             }
 
@@ -179,7 +180,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         title = title?.replace("\n", "")
         title = title?.replace("\r", "")
         title = title?.trim()
-        return title
+        return title.takeIf { !it.isNullOrBlank() }
     }
 
     fun normalizeDescription(platform: Platform, content: JsonObject): String? {
@@ -191,7 +192,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         description = description?.replace("\n", "")
         description = description?.replace("\r", "")
         description = description?.trim()
-        return description
+        return description.takeIf { !it.isNullOrBlank() }
     }
 
     fun normalizeImage(platform: Platform, content: JsonObject): String {
