@@ -253,7 +253,7 @@ private suspend fun handleRequest(
 }
 
 private suspend fun handleMultipartResponse(call: ApplicationCall, response: Response) {
-    val map = response.data as Map<String, Any>
+    val map = response.data as Map<String, Any> // NOSONAR
     call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
 }
 
@@ -266,8 +266,8 @@ private suspend fun handleTemplateResponse(
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
 
-    val map = response.data as Map<String, Any>
-    val modelMap = (map["model"] as Map<String, Any?>).toMutableMap()
+    val map = response.data as Map<String, Any> // NOSONAR
+    val modelMap = (map["model"] as Map<String, Any?>).toMutableMap() // NOSONAR
 
     val linkObjects = LinkObject.list()
 

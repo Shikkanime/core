@@ -11,6 +11,7 @@ import java.util.logging.Level
 
 class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(ThreadsSocialNetwork::class.java)
+    private val threadsWrapper = ThreadsWrapper()
 
     private var isInitialized = false
     private var initializedAt: ZonedDateTime? = null
@@ -27,8 +28,8 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
             val username = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_USERNAME))
             val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_PASSWORD))
             if (username.isBlank() || password.isBlank()) throw Exception("Username or password is empty")
-            val generateDeviceId = ThreadsWrapper.generateDeviceId(username, password)
-            val (token, userId) = runBlocking { ThreadsWrapper.login(generateDeviceId, username, password) }
+            val generateDeviceId = threadsWrapper.generateDeviceId(username, password)
+            val (token, userId) = runBlocking { threadsWrapper.login(generateDeviceId, username, password) }
 
             this.username = username
             this.deviceId = generateDeviceId
@@ -63,7 +64,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     override fun sendMessage(message: String) {
         checkSession()
         if (!isInitialized) return
-        runBlocking { ThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message) }
+        runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message) }
     }
 
     override fun platformAccount(platform: Platform): String {
@@ -79,6 +80,6 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         checkSession()
         if (!isInitialized) return
         val message = getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: "")
-        runBlocking { ThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
+        runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
     }
 }

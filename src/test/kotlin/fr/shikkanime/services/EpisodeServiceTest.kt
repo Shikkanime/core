@@ -129,4 +129,109 @@ class EpisodeServiceTest {
         assertEquals("WINTER", episode.anime!!.simulcasts.first().season)
         assertEquals(2024, episode.anime!!.simulcasts.first().year)
     }
+
+    @Test
+    fun findDeprecatedEpisodes() {
+        val releaseDateTime = ZonedDateTime.parse("2024-01-01T00:00:00Z")
+
+        episodeService.save(
+            Episode(
+                platform = Platform.CRUN,
+                anime = Anime(
+                    countryCode = CountryCode.FR,
+                    name = "Test",
+                    image = "https://www.shikkanime.com/image.png",
+                    banner = "https://www.shikkanime.com/image.png",
+                    releaseDateTime = releaseDateTime,
+                ),
+                episodeType = EpisodeType.EPISODE,
+                langType = LangType.SUBTITLES,
+                hash = "hash-1",
+                releaseDateTime = releaseDateTime,
+                season = 1,
+                number = 1,
+                url = "https://www.shikkanime.com/episode/1",
+                image = "https://www.shikkanime.com/image.png",
+                duration = 1420,
+                description = null,
+                lastUpdateDateTime = null,
+            )
+        )
+
+        episodeService.save(
+            Episode(
+                platform = Platform.CRUN,
+                anime = Anime(
+                    countryCode = CountryCode.FR,
+                    name = "Test",
+                    image = "https://www.shikkanime.com/image.png",
+                    banner = "https://www.shikkanime.com/image.png",
+                    releaseDateTime = releaseDateTime,
+                ),
+                episodeType = EpisodeType.EPISODE,
+                langType = LangType.SUBTITLES,
+                hash = "hash-2",
+                releaseDateTime = releaseDateTime,
+                season = 1,
+                number = 2,
+                url = "https://www.shikkanime.com/episode/1",
+                image = "https://www.shikkanime.com/image.png",
+                duration = 1420,
+                description = "Test",
+                lastUpdateDateTime = releaseDateTime.minusYears(1),
+            )
+        )
+
+        episodeService.save(
+            Episode(
+                platform = Platform.CRUN,
+                anime = Anime(
+                    countryCode = CountryCode.FR,
+                    name = "Test",
+                    image = "https://www.shikkanime.com/image.png",
+                    banner = "https://www.shikkanime.com/image.png",
+                    releaseDateTime = releaseDateTime,
+                ),
+                episodeType = EpisodeType.EPISODE,
+                langType = LangType.SUBTITLES,
+                hash = "hash-3",
+                releaseDateTime = releaseDateTime,
+                season = 1,
+                number = 3,
+                url = "https://www.shikkanime.com/episode/1",
+                image = "https://www.shikkanime.com/image.png",
+                duration = 1420,
+                description = "",
+                lastUpdateDateTime = releaseDateTime,
+            )
+        )
+
+        episodeService.save(
+            Episode(
+                platform = Platform.CRUN,
+                anime = Anime(
+                    countryCode = CountryCode.FR,
+                    name = "Test",
+                    image = "https://www.shikkanime.com/image.png",
+                    banner = "https://www.shikkanime.com/image.png",
+                    releaseDateTime = releaseDateTime,
+                ),
+                episodeType = EpisodeType.EPISODE,
+                langType = LangType.SUBTITLES,
+                hash = "hash-4",
+                releaseDateTime = releaseDateTime,
+                season = 1,
+                number = 4,
+                url = "https://www.shikkanime.com/episode/1",
+                image = Constant.DEFAULT_IMAGE_PREVIEW,
+                duration = 1420,
+                description = "test",
+                lastUpdateDateTime = releaseDateTime,
+            )
+        )
+
+        val deprecatedEpisodes =
+            episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, releaseDateTime.minusDays(30))
+        assertEquals(4, deprecatedEpisodes.size)
+    }
 }

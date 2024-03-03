@@ -9,16 +9,13 @@ import jakarta.persistence.TypedQuery
 import org.hibernate.ScrollMode
 import org.hibernate.jpa.AvailableHints
 import org.hibernate.query.Query
-import java.lang.reflect.ParameterizedType
 import java.util.*
 
 abstract class AbstractRepository<E : ShikkEntity> {
     @Inject
     protected lateinit var database: Database
 
-    protected fun getEntityClass(): Class<E> {
-        return (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<E>
-    }
+    protected abstract fun getEntityClass(): Class<E>
 
     protected fun <T> inTransaction(block: (EntityManager) -> T): T {
         val entityManager = database.entityManager
@@ -55,7 +52,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
         if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
             for (i in 0 until limit) {
-                list.add(scrollableResults.get() as E)
+                list.add(scrollableResults.get() as E) // NOSONAR
                 if (!scrollableResults.next()) break
             }
             total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0

@@ -3,6 +3,8 @@ package fr.shikkanime.repositories
 import fr.shikkanime.entities.Config
 
 class ConfigRepository : AbstractRepository<Config>() {
+    override fun getEntityClass() = Config::class.java
+
     fun findAllByName(name: String): List<Config> {
         return inTransaction {
             createReadOnlyQuery(it, "FROM Config c WHERE LOWER(c.propertyKey) LIKE :name", getEntityClass())

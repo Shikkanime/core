@@ -13,6 +13,8 @@ import org.hibernate.search.mapper.orm.Search
 import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
+    override fun getEntityClass() = Anime::class.java
+
     private fun Anime.initialize(): Anime {
         Hibernate.initialize(this.simulcasts)
         return this
@@ -112,7 +114,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
         val searchSession = Search.session(database.entityManager)
 
-        val searchResult = searchSession.search(Anime::class.java)
+        @Suppress("UNCHECKED_CAST")
+        val searchResult = searchSession.search(getEntityClass())
             .where { w -> findWhere(w, name, countryCode) }
             .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
