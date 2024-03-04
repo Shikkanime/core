@@ -5,7 +5,7 @@ import fr.shikkanime.platforms.configuration.NetflixConfiguration
 
 data class CountryCodeNetflixSimulcastKeyCache(
     val countryCode: CountryCode,
-    val netflixSimulcast: NetflixConfiguration.NetflixSimulcast
+    val netflixSimulcast: NetflixConfiguration.NetflixSimulcastDay
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
