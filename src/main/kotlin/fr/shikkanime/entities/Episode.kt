@@ -10,7 +10,16 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(name = "episode")
+@Table(
+    name = "episode",
+    indexes = [
+        Index(name = "idx_episode_release_date_time", columnList = "release_date_time"),
+        Index(name = "idx_episode_season", columnList = "season"),
+        Index(name = "idx_episode_number", columnList = "number"),
+        Index(name = "idx_episode_episode_type", columnList = "episode_type"),
+        Index(name = "idx_episode_lang_type", columnList = "lang_type"),
+    ]
+)
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Episode(
