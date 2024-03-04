@@ -3,6 +3,7 @@ package fr.shikkanime.controllers.admin
 import com.google.inject.Inject
 import com.microsoft.playwright.Playwright
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.initAll
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
@@ -42,7 +43,7 @@ class AdminControllerTest {
 
         Constant.injector.injectMembers(this)
         server = initAll(password, port, false)
-        JobManager.stop()
+        JobManager.invalidate()
     }
 
     @AfterEach
@@ -52,7 +53,7 @@ class AdminControllerTest {
     }
 
     @Test
-    fun `test admin login`() {
+    fun `test admin login and all links`() {
         val playwright = Playwright.create()
         val browser = playwright.chromium().launch()
         val page = browser.newPage()
@@ -75,6 +76,63 @@ class AdminControllerTest {
             println(s)
             assertEquals(s, page.title())
         }
+
+        page.close()
+        browser.close()
+        playwright.close()
+    }
+
+    @Test
+    fun `create netflix simulcast`() {
+        val playwright = Playwright.create()
+        val browser = playwright.chromium().launch()
+        val page = browser.newPage()
+
+        page.navigate("http://localhost:$port/admin")
+        assertEquals("Login - Shikkanime", page.title())
+        page.fill("input[name=username]", "admin")
+        page.fill("input[name=password]", password.get())
+        page.click("button[type=submit]")
+
+        page.navigate("http://localhost:$port${Link.PLATFORMS.href}")
+        page.click("button[data-bs-target='#collapse${Platform.NETF.name}']")
+        page.click("a[href='${Link.PLATFORMS.href}/${Platform.NETF.name}/simulcasts']")
+
+        page.fill("input[name=name]", "81564899")
+        page.fill("input[name=releaseDay]", "4")
+        page.fill("input[name=image]", "https://cdn.myanimelist.net/images/anime/1938/140374.jpg")
+        page.fill("input[name=releaseTime]", "13:30")
+        page.fill("input[name=season]", "2")
+
+        page.click("button[type=submit]")
+
+        page.close()
+        browser.close()
+        playwright.close()
+    }
+
+    @Test
+    fun `create prime video simulcast`() {
+        val playwright = Playwright.create()
+        val browser = playwright.chromium().launch()
+        val page = browser.newPage()
+
+        page.navigate("http://localhost:$port/admin")
+        assertEquals("Login - Shikkanime", page.title())
+        page.fill("input[name=username]", "admin")
+        page.fill("input[name=password]", password.get())
+        page.click("button[type=submit]")
+
+        page.navigate("http://localhost:$port${Link.PLATFORMS.href}")
+        page.click("button[data-bs-target='#collapse${Platform.PRIM.name}']")
+        page.click("a[href='${Link.PLATFORMS.href}/${Platform.PRIM.name}/simulcasts']")
+
+        page.fill("input[name=name]", "0QN9ZXJ935YBTNK8U9FV5OAX5B")
+        page.fill("input[name=releaseDay]", "1")
+        page.fill("input[name=image]", "https://cdn.myanimelist.net/images/anime/1142/141351.jpg")
+        page.fill("input[name=releaseTime]", "17:01")
+
+        page.click("button[type=submit]")
 
         page.close()
         browser.close()

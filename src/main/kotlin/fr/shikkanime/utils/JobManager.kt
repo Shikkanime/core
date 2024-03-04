@@ -25,8 +25,8 @@ object JobManager {
         scheduler.start()
     }
 
-    fun stop() {
-        scheduler.shutdown()
+    fun invalidate() {
+        scheduler.clear()
     }
 
     class JobExecutor : Job {
