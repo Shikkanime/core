@@ -43,6 +43,8 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
     JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
     // Every minute
     JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
+    // Every 10 minutes
+    JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
     // Every hour
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
     JobManager.scheduleJob("0 0 * * * ?", FetchDeprecatedEpisodeJob::class.java)
