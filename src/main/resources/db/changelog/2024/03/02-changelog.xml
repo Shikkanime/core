@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1709569841763"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="anime" indexName="idx_anime_country_code"/>
+        </preConditions>
+
+        <createIndex indexName="idx_anime_country_code" tableName="anime">
+            <column name="country_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="episode" indexName="idx_episode_episode_type"/>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_episode_type" tableName="episode">
+            <column name="episode_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="episode" indexName="idx_episode_lang_type"/>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_lang_type" tableName="episode">
+            <column name="lang_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="episode" indexName="idx_episode_number"/>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_number" tableName="episode">
+            <column name="number"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="episode" indexName="idx_episode_release_date_time"/>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_release_date_time" tableName="episode">
+            <column name="release_date_time"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="episode" indexName="idx_episode_season"/>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_season" tableName="episode">
+            <column name="season"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-7" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="simulcast" indexName="idx_simulcast_season"/>
+        </preConditions>
+
+        <createIndex indexName="idx_simulcast_season"
+                     tableName="simulcast">
+            <column name="season"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-8" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="simulcast" indexName="idx_simulcast_season_year"/>
+        </preConditions>
+
+        <createIndex indexName="idx_simulcast_season_year"
+                     tableName="simulcast">
+            <column name="season"/>
+            <column name="year_"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-9" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists tableName="simulcast" indexName="idx_simulcast_year"/>
+        </preConditions>
+
+        <createIndex indexName="idx_simulcast_year"
+                     tableName="simulcast">
+            <column name="year_"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
