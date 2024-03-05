@@ -1,6 +1,6 @@
 import java.net.URI
 
-val ktorVersion = "2.3.8"
+val ktorVersion = "2.3.9"
 val kotlinVersion = "1.9.22"
 val ktorSwaggerUiVersion = "2.7.4"
 val hibernateCoreVersion = "6.4.4.Final"
