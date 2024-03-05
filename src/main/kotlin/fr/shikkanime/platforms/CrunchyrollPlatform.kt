@@ -294,9 +294,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
 
-        val id = requireNotNull(jsonObject.getAsString("external_id")?.split(".")?.last()) { "Id is null" }
-        val hash = "${countryCode}-${getPlatform()}-$id-$langType"
+        // @DEPRECATED
+        val externalId = jsonObject.getAsString("external_id")?.split(".")?.last() ?: ""
+        val deprecatedHash = "${countryCode}-${getPlatform()}-$externalId-$langType"
+        if (hashCache.contains(deprecatedHash)) throw EpisodeAlreadyReleasedException()
+        // @DEPRECATED
 
+        val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
+        val hash = "${countryCode}-${getPlatform()}-$id-$langType"
         if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
 
         val releaseDate =
@@ -316,7 +321,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             EpisodeType.EPISODE
 
         val title = jsonObject.getAsString("title")
-        val url = "https://www.crunchyroll.com/media-$id"
+        val slugTitle = jsonObject.getAsString("slug_title")
+        val url = "https://www.crunchyroll.com/${countryCode.name.lowercase()}/watch/$id/$slugTitle"
 
         val thumbnailArray = jsonObject.getAsJsonObject("images")?.getAsJsonArray("thumbnail")
         val biggestImage = thumbnailArray?.get(0)?.asJsonArray?.maxByOrNull { it.asJsonObject.getAsInt("width") ?: 0 }

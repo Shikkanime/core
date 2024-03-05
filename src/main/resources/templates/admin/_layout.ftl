@@ -27,6 +27,8 @@
                 overflow-x: auto;
             }
         </style>
+
+        <script defer src="/assets/js/alpinejs.min.js" crossorigin="anonymous"></script>
     </head>
     <body>
     <main>

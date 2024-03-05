@@ -17,7 +17,8 @@ class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
             from.image.isNullOrBlank() ||
             from.description.isNullOrBlank() ||
             from.description?.startsWith("(") == true ||
-            languageDetector.detect(from.description).language.lowercase() != from.anime!!.countryCode!!.name.lowercase()
+            languageDetector.detect(from.description).language.lowercase() != from.anime!!.countryCode!!.name.lowercase() ||
+            from.url?.contains("media-", true) == true
         ) Status.INVALID else Status.VALID
 
         return EpisodeDto(
