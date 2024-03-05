@@ -48,7 +48,11 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         )
 
         val adnEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.ANIM, deprecatedDateTime)
-        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
+        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(
+            Platform.CRUN,
+            deprecatedDateTime,
+            "https://www.crunchyroll.com/fr/watch/%"
+        )
         val primeVideoEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.PRIM, deprecatedDateTime)
 
         val episodes = (adnEpisodes + crunchyrollEpisodes + primeVideoEpisodes).shuffled().take(takeSize)
@@ -122,10 +126,6 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
 
             if (episode.platform!! == Platform.CRUN) {
                 val url = buildCrunchyrollEpisodeUrl(content, episode)
-
-                if (url.contains("media-")) {
-                    logger.warning("Please update the episode URL for ${getIdentifier(episode)}")
-                }
 
                 if (url != episode.url) {
                     episode.url = url
@@ -239,10 +239,12 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             ?: throw Exception("Failed to find serie id for ${episode.anime!!.name}")
         val allEpisodes =
             episodesInfoCache[CountryCodeAnimeIdKeyCache(episode.anime!!.countryCode!!, seriesId)] ?: return null
-        return allEpisodes.find { it.getAsString("external_id")?.contains(getExternalId(episode.url!!)!!) == true }
+
+        val externalId = "EPI.${getExternalId(episode.url!!)}"
+        return allEpisodes.find { it.getAsString("external_id") == externalId }
     }
 
-    private fun getExternalId(url: String) = "-([0-9]+)".toRegex().find(url)?.groupValues?.get(1)
+    private fun getExternalId(url: String) = "-([0-9]{6})".toRegex().find(url)?.groupValues?.get(1)
 
     private fun getCrunchyrollSeriesId(url: String) = "/series/([A-Z0-9]+)".toRegex().find(url)?.groupValues?.get(1)
 
