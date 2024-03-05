@@ -30,14 +30,14 @@ jobs:
 
       - name: Analyse pull request
         # If pull request, we analyze the code, and if the target branch is not master
-        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref != 'master'
+        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref != 'master' && github.actor != 'dependabot[bot]'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} -Dsonar.qualitygate.wait=true
 
       - name: Test
-        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'master'
+        if: github.event_name == 'pull_request' && (github.event.pull_request.base.ref == 'master' || github.actor == 'dependabot[bot]')
         run: ./gradlew clean test --info
 
       - name: Cache gradle dependencies
