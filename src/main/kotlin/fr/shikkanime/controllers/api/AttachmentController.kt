@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.api
 
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.services.ImageService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.Cached
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -17,7 +18,7 @@ import java.util.*
 class AttachmentController {
     @Path
     @Get
-    @Cached(maxAgeSeconds = 31536000)
+    @Cached(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION)
     @OpenAPI(
         "Get attachment",
         [

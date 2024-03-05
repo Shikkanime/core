@@ -1,6 +1,6 @@
 import java.net.URI
 
-val ktorVersion = "2.3.8"
+val ktorVersion = "2.3.9"
 val kotlinVersion = "1.9.22"
 val ktorSwaggerUiVersion = "2.7.4"
 val hibernateCoreVersion = "6.4.4.Final"
@@ -30,7 +30,7 @@ val h2Version = "2.2.224"
 
 plugins {
     kotlin("jvm") version "1.9.22"
-    id("io.ktor.plugin") version "2.3.8"
+    id("io.ktor.plugin") version "2.3.9"
     jacoco
     id("org.sonarqube") version "4.4.1.3373"
 }

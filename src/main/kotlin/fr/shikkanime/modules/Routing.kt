@@ -51,6 +51,24 @@ private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
 fun Application.configureRouting() {
     environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
+
+        // Security headers
+        call.response.pipeline.intercept(ApplicationSendPipeline.Transform) {
+            context.response.header(HttpHeaders.StrictTransportSecurity, "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload")
+
+            context.response.header(
+                "Content-Security-Policy", "default-src 'self'; " +
+                        "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' https://api.shikkanime.fr https://www.shikkanime.fr; " +
+                        "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+                        "font-src 'self' https://cdn.jsdelivr.net; " +
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net"
+            )
+
+            context.response.header("X-Frame-Options", "DENY")
+            context.response.header("X-Content-Type-Options", "nosniff")
+            context.response.header("Referrer-Policy", "no-referrer")
+            context.response.header("Permissions-Policy", "geolocation=(), microphone=()")
+        }
     }
 
     environment.monitor.subscribe(Routing.RoutingCallFinished) { call ->
@@ -69,7 +87,7 @@ fun Application.configureRouting() {
             preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
 
             cacheControl {
-                listOf(CacheControl.MaxAge(maxAgeSeconds = 31536000))
+                listOf(CacheControl.MaxAge(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION))
             }
         }
 
