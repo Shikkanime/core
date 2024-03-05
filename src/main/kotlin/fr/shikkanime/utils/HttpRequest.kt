@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
 
 private const val TIMEOUT = 60_000L
+private const val BROWSER_TIMEOUT = 15_000L
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
 class HttpRequest : AutoCloseable {
@@ -74,8 +75,8 @@ class HttpRequest : AutoCloseable {
 
         browser = Constant.playwright.firefox().launch(Constant.launchOptions)
         page = browser?.newPage()
-        page?.setDefaultTimeout(TIMEOUT.toDouble())
-        page?.setDefaultNavigationTimeout(TIMEOUT.toDouble())
+        page?.setDefaultTimeout(BROWSER_TIMEOUT.toDouble())
+        page?.setDefaultNavigationTimeout(BROWSER_TIMEOUT.toDouble())
         isBrowserInitialized = true
     }
 
@@ -106,9 +107,6 @@ class HttpRequest : AutoCloseable {
         logger.info("Request to $url done in ${takeMs}ms (BROWSER)")
         return Jsoup.parse(content ?: throw Exception("Content is null"))
     }
-
-    val lastPageUrl: String?
-        get() = page?.url()
 
     override fun close() {
         page?.close()

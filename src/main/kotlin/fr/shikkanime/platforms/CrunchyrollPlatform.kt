@@ -293,16 +293,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
-
-        // @DEPRECATED
-        val externalId = jsonObject.getAsString("external_id")?.split(".")?.last() ?: ""
-        val deprecatedHash = "${countryCode}-${getPlatform()}-$externalId-$langType"
-        if (hashCache.contains(deprecatedHash)) throw EpisodeAlreadyReleasedException()
-        // @DEPRECATED
-
-        val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
-        val hash = "${countryCode}-${getPlatform()}-$id-$langType"
-        if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
+        val (id, hash) = getEpisodeIdAndHash(jsonObject, countryCode, langType)
 
         val releaseDate =
             requireNotNull(
@@ -322,7 +313,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         val title = jsonObject.getAsString("title")
         val slugTitle = jsonObject.getAsString("slug_title")
-        val url = "https://www.crunchyroll.com/${countryCode.name.lowercase()}/watch/$id/$slugTitle"
+        val url = CrunchyrollWrapper.buildUrl(countryCode, id, slugTitle)
 
         val thumbnailArray = jsonObject.getAsJsonObject("images")?.getAsJsonArray("thumbnail")
         val biggestImage = thumbnailArray?.get(0)?.asJsonArray?.maxByOrNull { it.asJsonObject.getAsInt("width") ?: 0 }
@@ -371,6 +362,23 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             duration = duration,
             description = description
         )
+    }
+
+    private fun getEpisodeIdAndHash(
+        jsonObject: JsonObject,
+        countryCode: CountryCode,
+        langType: LangType
+    ): Pair<String, String> {
+        // @DEPRECATED
+        val externalId = jsonObject.getAsString("external_id")?.split(".")?.last() ?: ""
+        val deprecatedHash = "${countryCode}-${getPlatform()}-$externalId-$langType"
+        if (hashCache.contains(deprecatedHash)) throw EpisodeAlreadyReleasedException()
+        // @DEPRECATED
+
+        val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
+        val hash = "${countryCode}-${getPlatform()}-$id-$langType"
+        if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
+        return Pair(id, hash)
     }
 
 

@@ -2,9 +2,9 @@ package fr.shikkanime.jobs
 
 import com.google.gson.JsonObject
 import com.google.inject.Inject
+import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.EpisodeService
@@ -20,6 +20,9 @@ import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import fr.shikkanime.wrappers.PrimeVideoWrapper
 import kotlinx.coroutines.runBlocking
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
@@ -27,6 +30,9 @@ private const val IMAGE_NULL_ERROR = "Image is null"
 
 class FetchDeprecatedEpisodeJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
+
+    var accessToken: String = ""
+    lateinit var cms: CrunchyrollWrapper.CMS
 
     @Inject
     private lateinit var episodeService: EpisodeService
@@ -55,7 +61,9 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
 
         val httpRequest = HttpRequest()
         val anonymousAccessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        accessToken = anonymousAccessToken
         val cms = runBlocking { CrunchyrollWrapper.getCMS(anonymousAccessToken) }
+        this.cms = cms
         var count = 0
 
         episodes.forEachIndexed { index, episode ->
@@ -84,7 +92,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         }
     }${episode.number}"
 
-    private fun update(
+    fun update(
         episode: Episode,
         httpRequest: HttpRequest,
         anonymousAccessToken: String,
@@ -112,6 +120,19 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 needUpdate = true
             }
 
+            if (episode.platform!! == Platform.CRUN) {
+                val url = buildCrunchyrollEpisodeUrl(content, episode)
+
+                if (url.contains("media-")) {
+                    logger.warning("Please update the episode URL for ${getIdentifier(episode)}")
+                }
+
+                if (url != episode.url) {
+                    episode.url = url
+                    needUpdate = true
+                }
+            }
+
             if (image != episode.image) {
                 episode.image = image
                 ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
@@ -130,15 +151,11 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         return needUpdate
     }
 
-    private fun normalizeUrl(platform: Platform, countryCode: CountryCode, url: String): String {
-        return when (platform) {
-            Platform.CRUN -> {
-                val other = "https://www.crunchyroll.com/${countryCode.name.lowercase()}/"
-                url.replace("https://www.crunchyroll.com/", other)
-            }
-
-            else -> url
-        }
+    fun buildCrunchyrollEpisodeUrl(content: JsonObject, episode: Episode): String {
+        val id = content.getAsString("id")!!
+        val slugTitle = content.getAsString("slug_title")
+        val url = CrunchyrollWrapper.buildUrl(episode.anime!!.countryCode!!, id, slugTitle)
+        return url
     }
 
     private suspend fun normalizeContent(
@@ -155,11 +172,8 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             }
 
             Platform.CRUN -> {
-                val id = getCrunchyrollId(episode.url!!) ?: return run {
-                    logger.warning("Please update the episode URL for ${getIdentifier(episode)}")
-                    crunchyrollExternalIdToId(httpRequest, episode, accessToken, cms)
-                }
-
+                val id =
+                    getCrunchyrollEpisodeId(episode.url!!) ?: return crunchyrollExternalIdToId(httpRequest, episode)
                 CrunchyrollWrapper.getObject(episode.anime!!.countryCode!!.locale, accessToken, cms, id)[0]
             }
 
@@ -177,30 +191,62 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         }
     }
 
-    @Deprecated("This method is deprecated due to Crunchyroll no redirecting to the correct page")
-    private suspend fun crunchyrollExternalIdToId(
+    private val episodesInfoCache = MapCache<CountryCodeAnimeIdKeyCache, List<JsonObject>>(Duration.ofDays(1)) {
+        runBlocking {
+            val episodes = CrunchyrollWrapper.getSeasons(it.countryCode.locale, accessToken, cms, it.animeId)
+                .flatMap { season ->
+                    CrunchyrollWrapper.getEpisodes(
+                        it.countryCode.locale,
+                        accessToken,
+                        cms,
+                        season.getAsString("id")!!
+                    )
+                }
+                .map { it.getAsString("id")!! }
+                .chunked(25)
+
+            episodes.flatMap { chunk ->
+                CrunchyrollWrapper.getObject(it.countryCode.locale, accessToken, cms, *chunk.toTypedArray())
+            }
+        }
+    }
+
+    fun crunchyrollExternalIdToId(
         httpRequest: HttpRequest,
         episode: Episode,
-        accessToken: String,
-        cms: CrunchyrollWrapper.CMS
     ): JsonObject? {
-        try {
+        val selector = "div[data-t=\"search-series-card\"]"
+        val titleSelector = "a[tabindex=\"0\"]"
+
+        val content = try {
             httpRequest.getBrowser(
-                normalizeUrl(
-                    episode.platform!!,
-                    episode.anime!!.countryCode!!,
-                    episode.url!!
-                )
+                "https://www.crunchyroll.com/${episode.anime!!.countryCode!!.name.lowercase()}/search?q=${
+                    URLEncoder.encode(
+                        episode.anime!!.name!!,
+                        StandardCharsets.UTF_8
+                    )
+                }",
+                selector
             )
         } catch (e: Exception) {
             return null
         }
 
-        val id = getCrunchyrollId(httpRequest.lastPageUrl!!) ?: return null
-        return CrunchyrollWrapper.getObject(episode.anime!!.countryCode!!.locale, accessToken, cms, id)[0]
+        val seriesCard = content.select(selector)
+        val serieCard = seriesCard.find { it.select(titleSelector).attr("title") == episode.anime!!.name }
+            ?: throw Exception("Failed to find serie card for ${episode.anime!!.name}")
+        val seriesId = getCrunchyrollSeriesId(serieCard.select(titleSelector).attr("href"))
+            ?: throw Exception("Failed to find serie id for ${episode.anime!!.name}")
+        val allEpisodes =
+            episodesInfoCache[CountryCodeAnimeIdKeyCache(episode.anime!!.countryCode!!, seriesId)] ?: return null
+        return allEpisodes.find { it.getAsString("external_id")?.contains(getExternalId(episode.url!!)!!) == true }
     }
 
-    fun getCrunchyrollId(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)?.groupValues?.get(1)
+    private fun getExternalId(url: String) = "-([0-9]+)".toRegex().find(url)?.groupValues?.get(1)
+
+    private fun getCrunchyrollSeriesId(url: String) = "/series/([A-Z0-9]+)".toRegex().find(url)?.groupValues?.get(1)
+
+    fun getCrunchyrollEpisodeId(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)?.groupValues?.get(1)
 
     fun normalizeTitle(platform: Platform, content: JsonObject): String? {
         var title = when (platform) {
