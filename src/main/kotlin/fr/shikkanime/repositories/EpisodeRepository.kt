@@ -135,7 +135,11 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         }
     }
 
-    fun findAllByPlatformDeprecatedEpisodes(platform: Platform, lastUpdateDateTime: ZonedDateTime): List<Episode> {
+    fun findAllByPlatformDeprecatedEpisodes(
+        platform: Platform,
+        lastUpdateDateTime: ZonedDateTime,
+        notLike: String? = null
+    ): List<Episode> {
         return inTransaction {
             createReadOnlyQuery(
                 it,
@@ -145,8 +149,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                     AND (
                         (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR
                         (description IS NULL OR description = '') OR
-                        image = :defaultImage OR
-                        url LIKE '%media-%'
+                        image = :defaultImage ${notLike?.let { "OR url NOT LIKE :notLike" } ?: ""}
                     )
                 """.trimIndent(),
                 getEntityClass()
@@ -154,6 +157,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .setParameter("platform", platform)
                 .setParameter("lastUpdateDateTime", lastUpdateDateTime)
                 .setParameter("defaultImage", Constant.DEFAULT_IMAGE_PREVIEW)
+                .apply { notLike?.let { setParameter("notLike", notLike) } }
                 .resultList
                 .initialize()
         }

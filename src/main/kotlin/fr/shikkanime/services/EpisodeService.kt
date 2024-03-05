@@ -45,8 +45,12 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     fun findAllUUIDAndImage() = episodeRepository.findAllUUIDAndImage()
 
-    fun findAllByPlatformDeprecatedEpisodes(platform: Platform, lastUpdateDateTime: ZonedDateTime) =
-        episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime)
+    fun findAllByPlatformDeprecatedEpisodes(
+        platform: Platform,
+        lastUpdateDateTime: ZonedDateTime,
+        notLike: String? = null
+    ) =
+        episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime, notLike)
 
     fun addImage(uuid: UUID, image: String) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360)

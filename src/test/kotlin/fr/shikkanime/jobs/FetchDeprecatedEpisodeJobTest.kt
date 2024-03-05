@@ -165,6 +165,42 @@ class FetchDeprecatedEpisodeJobTest {
     }
 
     @Test
+    fun bug2() {
+        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
+
+        val episode = Episode(
+            platform = Platform.CRUN,
+            anime = Anime(
+                countryCode = CountryCode.FR,
+                name = "Bottom-Tier Character Tomozaki",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/fa8c0b715dda49a4cbb8094c4136b382.jpe",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b2dbd10a57e485f3ba4fcab6116f7625.jpe",
+                description = "Tomozaki Fumiya est à la fois l'un des meilleurs gamers du Japon et un lycéen des plus solitaires. Un jour, celui qui voit la vie comme un jeu sans intérêt rencontre l'héroïne parfaite de son établissement, Hinami Aoi... qui lui ordonne de prendre sa vie en main aussi sérieusement qu'il vit ses parties de jeu vidéo ! La vie est-elle un jeu sans intérêt ou le plus fin des plaisirs ? Avec Hinami aux manettes, une petite révolution s'amorce dans l'existence de Tomozaki !",
+                slug = "bottom-tier-character-tomozaki"
+            ),
+            episodeType = EpisodeType.EPISODE,
+            langType = LangType.SUBTITLES,
+            hash = "FR-CRUN-917959-SUBTITLES",
+            season = 2,
+            number = 1,
+            title = "Collecter des informations sans s’ennuyer, c’est parfait",
+            url = "https://www.crunchyroll.com/fr/episode-1-the-best-games-make-reconnaissance-fun-917959",
+            image = "https://img1.ak.crunchyroll.com/i/spire4-tmb/63cf5c6f4cbc2a0beac3c3f10b8fe3791704287894_full.jpg",
+            duration = 1422
+        )
+
+        fetchDeprecatedEpisodeJob.accessToken = token
+        fetchDeprecatedEpisodeJob.cms = cms
+        val content = fetchDeprecatedEpisodeJob.crunchyrollExternalIdToId(HttpRequest(), episode)!!
+        assertEquals("G7PU413X5", content.getAsString("id"))
+        assertEquals(
+            "https://www.crunchyroll.com/fr/watch/G7PU413X5/the-best-games-make-reconnaissance-fun",
+            fetchDeprecatedEpisodeJob.buildCrunchyrollEpisodeUrl(content, episode)
+        )
+    }
+
+    @Test
     fun normalizeDescription() {
         val content = runBlocking { AnimationDigitalNetworkWrapper.getShowVideo(24108) }
         assertEquals(
