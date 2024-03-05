@@ -39,6 +39,7 @@ object Constant {
 
     const val BASE_URL = "https://www.shikkanime.fr"
     const val DEFAULT_IMAGE_PREVIEW = "$BASE_URL/assets/img/episode_no_image_preview.jpg"
+    const val DEFAULT_CACHE_DURATION = 31536000 // 1 year
 
     init {
         abstractPlatforms.forEach {
