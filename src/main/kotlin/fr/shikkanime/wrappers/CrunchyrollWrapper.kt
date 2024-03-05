@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers
 
 import com.google.gson.JsonObject
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -148,4 +149,7 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
             ?: throw Exception("Failed to get simulcasts")
     }
+
+    fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =
+        "https://www.crunchyroll.com/${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: ""}"
 }

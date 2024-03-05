@@ -21,7 +21,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.util.*
@@ -105,43 +104,64 @@ class FetchDeprecatedEpisodeJobTest {
     fun normalizeUrl() {
         assertEquals(
             "GMKUXPD53",
-            fetchDeprecatedEpisodeJob.getCrunchyrollId("https://www.crunchyroll.com/fr/watch/GMKUXPD53/")
+            fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/GMKUXPD53/")
         )
         assertEquals(
             "G14U415N4",
-            fetchDeprecatedEpisodeJob.getCrunchyrollId("https://www.crunchyroll.com/fr/watch/G14U415N4/the-panicked-foolish-angel-and-demon")
+            fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/G14U415N4/the-panicked-foolish-angel-and-demon")
         )
         assertEquals(
             "G14U415D2",
-            fetchDeprecatedEpisodeJob.getCrunchyrollId("https://www.crunchyroll.com/fr/watch/G14U415D2/natsukawa-senpai-is-super-good-looking")
+            fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/G14U415D2/natsukawa-senpai-is-super-good-looking")
         )
         assertEquals(
             "G8WUN158J",
-            fetchDeprecatedEpisodeJob.getCrunchyrollId("https://www.crunchyroll.com/fr/watch/G8WUN158J/")
+            fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/G8WUN158J/")
         )
         assertEquals(
             "GEVUZD021",
-            fetchDeprecatedEpisodeJob.getCrunchyrollId("https://www.crunchyroll.com/fr/watch/GEVUZD021/becoming-a-three-star-chef")
+            fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/GEVUZD021/becoming-a-three-star-chef")
         )
         assertEquals(
             "GK9U3KWN4",
-            fetchDeprecatedEpisodeJob.getCrunchyrollId("https://www.crunchyroll.com/fr/watch/GK9U3KWN4/yukis-world")
+            fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/GK9U3KWN4/yukis-world")
         )
     }
 
     @Test
-    @Disabled("Crunchyroll redirect to a 404 page")
     fun bug() {
-        val normalizeUrl = "https://www.crunchyroll.com/fr/media-918855"
+        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
 
-        val lastPage = HttpRequest().use {
-            it.getBrowser(normalizeUrl)
-            it.lastPageUrl!!
-        }
+        val episode = Episode(
+            platform = Platform.CRUN,
+            anime = Anime(
+                countryCode = CountryCode.FR,
+                name = "Villainess Level 99: I May Be the Hidden Boss But I'm Not the Demon Lord",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/9cf39e672287c0b7d81d6ce6ba897b25.jpe",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b759905ae99ec12686f372129ce96799.jpe",
+                description = "Cette étudiante japonaise discrète est réincarnée dans le corps d’Eumiella Dolkness, la méchante de son otome game préféré. Aspirant toujours à une vie tranquille, elle n’est pas vraiment ravie et décide d’abandonner ses fonctions maléfiques. Jusqu'à ce que son côté gamer entre en jeu et qu'elle atteigne accidentellement le niveau 99 ! À présent, tout le monde la soupçonne d'être l'infâme Maître des Démons…",
+                slug = "villainess-level-99"
+            ),
+            episodeType = EpisodeType.EPISODE,
+            langType = LangType.SUBTITLES,
+            hash = "FR-CRUN-918565-SUBTITLES",
+            season = 1,
+            number = 9,
+            title = "Le boss caché se fait démarcher par un pays ennemi",
+            url = "https://www.crunchyroll.com/media-918565",
+            image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/f4afb9fbdd5a99bcdfbe349e6d00acb2.jpe",
+            duration = 1420
+        )
 
-        println(lastPage)
-        val id = fetchDeprecatedEpisodeJob.getCrunchyrollId(lastPage)
-        assertEquals("GVWU07GP0", id)
+        fetchDeprecatedEpisodeJob.accessToken = token
+        fetchDeprecatedEpisodeJob.cms = cms
+        val content = fetchDeprecatedEpisodeJob.crunchyrollExternalIdToId(HttpRequest(), episode)!!
+        assertEquals("G7PU418J7", content.getAsString("id"))
+        assertEquals(
+            "https://www.crunchyroll.com/fr/watch/G7PU418J7/the-hidden-boss-is-solicited-by-an-enemy-nation",
+            fetchDeprecatedEpisodeJob.buildCrunchyrollEpisodeUrl(content, episode)
+        )
     }
 
     @Test
