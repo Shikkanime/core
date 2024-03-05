@@ -10,7 +10,12 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(name = "anime")
+@Table(
+    name = "anime",
+    indexes = [
+        Index(name = "idx_anime_country_code", columnList = "country_code"),
+    ]
+)
 @Indexed
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)

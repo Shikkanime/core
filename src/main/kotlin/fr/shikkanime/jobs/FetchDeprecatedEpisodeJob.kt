@@ -18,6 +18,7 @@ import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
+import fr.shikkanime.wrappers.PrimeVideoWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -34,15 +35,17 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
     private lateinit var configCacheService: ConfigCacheService
 
     override fun run() {
-
         val takeSize = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODE_DESCRIPTION_SIZE, 0)
         val now = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val deprecatedDateTime = now.minusDays(
             configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_DEPRECATED_EPISODE_DATE, 30).toLong()
         )
-        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
+
         val adnEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.ANIM, deprecatedDateTime)
-        val episodes = (crunchyrollEpisodes + adnEpisodes).shuffled().take(takeSize)
+        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
+        val primeVideoEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.PRIM, deprecatedDateTime)
+
+        val episodes = (adnEpisodes + crunchyrollEpisodes + primeVideoEpisodes).shuffled().take(takeSize)
 
         logger.info("Found ${episodes.size} episodes")
 
@@ -144,6 +147,12 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         cms: CrunchyrollWrapper.CMS
     ): JsonObject? {
         return when (episode.platform) {
+            Platform.ANIM -> {
+                val split = episode.url!!.split("/")
+                val videoId = split[split.size - 1].split("-")[0].toInt()
+                AnimationDigitalNetworkWrapper.getShowVideo(videoId)
+            }
+
             Platform.CRUN -> {
                 try {
                     httpRequest.getBrowser(
@@ -161,19 +170,25 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 CrunchyrollWrapper.getObject(episode.anime!!.countryCode!!.locale, accessToken, cms, id)[0]
             }
 
-            else -> {
-                val split = episode.url!!.split("/")
-                val videoId = split[split.size - 1].split("-")[0].toInt()
-                AnimationDigitalNetworkWrapper.getShowVideo(videoId)
+            Platform.PRIM -> {
+                val id = episode.url!!.split("/").last()
+
+                PrimeVideoWrapper.getShowVideos(
+                    episode.anime!!.countryCode!!.name,
+                    episode.anime!!.countryCode!!.locale,
+                    id
+                ).find { it.getAsString("id") == episode.hash }
             }
+
+            else -> null
         }
     }
 
     fun normalizeUrl(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)!!.groupValues[1]
 
-    private fun normalizeTitle(platform: Platform, content: JsonObject): String? {
+    fun normalizeTitle(platform: Platform, content: JsonObject): String? {
         var title = when (platform) {
-            Platform.CRUN -> content.getAsString("title")
+            Platform.CRUN, Platform.PRIM -> content.getAsString("title")
             else -> content.getAsString("name")
         }
 
@@ -185,7 +200,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
 
     fun normalizeDescription(platform: Platform, content: JsonObject): String? {
         var description = when (platform) {
-            Platform.CRUN -> content.getAsString("description")
+            Platform.CRUN, Platform.PRIM -> content.getAsString("description")
             else -> content.getAsString("summary")
         }
 
@@ -205,7 +220,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 requireNotNull(
                     biggestImage.asJsonObject.getAsString("source")?.takeIf { it.isNotBlank() }) { IMAGE_NULL_ERROR }
             }
-
+            Platform.PRIM -> content.getAsString("image")!!
             else -> content.getAsString("image2x")!!
         }
     }
