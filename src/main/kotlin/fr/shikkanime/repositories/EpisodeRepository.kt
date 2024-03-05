@@ -145,7 +145,8 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                     AND (
                         (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR
                         (description IS NULL OR description = '') OR
-                        image = :defaultImage
+                        image = :defaultImage OR
+                        url LIKE '%media-%'
                     )
                 """.trimIndent(),
                 getEntityClass()
