@@ -10,7 +10,7 @@ const cpuChart = new Chart(cpuChartElement, {
             {
                 label: '% CPU',
                 data: [],
-                backgroundColor: ['rgba(33,37,41, .2)'],
+                fill: false,
                 borderColor: ['rgba(33,37,41, 1)'],
                 tension: 0.1
             }
@@ -30,6 +30,11 @@ const cpuChart = new Chart(cpuChartElement, {
         },
         animation: {
             duration: 0
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
         }
     }
 });
@@ -42,7 +47,7 @@ const memoryChart = new Chart(memoryChartElement, {
             {
                 label: 'RAM in MB',
                 data: [],
-                backgroundColor: ['rgba(33,37,41, .2)'],
+                fill: false,
                 borderColor: ['rgba(33,37,41, 1)'],
                 tension: 0.1
             }
@@ -62,6 +67,11 @@ const memoryChart = new Chart(memoryChartElement, {
         },
         animation: {
             duration: 0
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
         }
     }
 });

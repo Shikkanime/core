@@ -1,5 +1,5 @@
 module.exports = {
-    content: ['**/*.ftl', '**/*.js'],
+    content: ['**/site/*.ftl', '**/site/**/*.ftl', '**/*.js'],
     css: ['**/*.css',],
     output: 'assets/css/purged',
 }

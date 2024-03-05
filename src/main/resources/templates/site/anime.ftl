@@ -17,10 +17,10 @@
                 <#if (anime.simulcasts?size > 1)>
                     <div class="my-3 d-inline">
                         <#list anime.simulcasts as simulcast>
-                            <a href="/catalog/${simulcast.slug}" class="text-white mx-1">${simulcast.label}</a>
+                            <a href="/catalog/${simulcast.slug}" class="text-white">${simulcast.label}</a>
 
                             <#if (simulcast?has_next)>
-                                <span class="mx-2 text-muted">-</span>
+                                <span class="mx-1 text-muted">-</span>
                             </#if>
                         </#list>
                     </div>
