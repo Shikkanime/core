@@ -76,6 +76,14 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         MapCache.invalidate(Episode::class.java)
     }
 
+    private fun getIdentifier(episode: Episode) = "${episode.anime?.name} - S${episode.season} ${
+        when (episode.episodeType!!) {
+            EpisodeType.EPISODE -> "EP"
+            EpisodeType.SPECIAL -> "SP"
+            EpisodeType.FILM -> "MOV"
+        }
+    }${episode.number}"
+
     private fun update(
         episode: Episode,
         httpRequest: HttpRequest,
@@ -84,14 +92,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         now: ZonedDateTime,
     ): Boolean {
         var needUpdate = false
-
-        val s = "${episode.anime?.name} - S${episode.season} ${
-            when (episode.episodeType!!) {
-                EpisodeType.EPISODE -> "EP"
-                EpisodeType.SPECIAL -> "SP"
-                EpisodeType.FILM -> "MOV"
-            }
-        }${episode.number}"
+        val identifier = getIdentifier(episode)
 
         try {
             val content =
@@ -99,7 +100,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             val title = normalizeTitle(episode.platform!!, content)
             val description = normalizeDescription(episode.platform!!, content)
             val image = normalizeImage(episode.platform!!, content)
-            logger.config("$s : $title - $description - $image")
+            logger.config("$identifier : $title - $description - $image")
 
             if (title != null && title != episode.title) {
                 episode.title = title
@@ -123,7 +124,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 episodeService.update(episode)
             }
         } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while fetching episode description for $s", e)
+            logger.log(Level.SEVERE, "Error while fetching episode description for $identifier", e)
         }
 
         return needUpdate
@@ -154,19 +155,11 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             }
 
             Platform.CRUN -> {
-                try {
-                    httpRequest.getBrowser(
-                        normalizeUrl(
-                            episode.platform!!,
-                            episode.anime!!.countryCode!!,
-                            episode.url!!
-                        )
-                    )
-                } catch (e: Exception) {
-                    return null
+                val id = getCrunchyrollId(episode.url!!) ?: return run {
+                    logger.warning("Please update the episode URL for ${getIdentifier(episode)}")
+                    crunchyrollExternalIdToId(httpRequest, episode, accessToken, cms)
                 }
 
-                val id = normalizeUrl(httpRequest.lastPageUrl!!)
                 CrunchyrollWrapper.getObject(episode.anime!!.countryCode!!.locale, accessToken, cms, id)[0]
             }
 
@@ -184,7 +177,30 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         }
     }
 
-    fun normalizeUrl(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)!!.groupValues[1]
+    @Deprecated("This method is deprecated due to Crunchyroll no redirecting to the correct page")
+    private suspend fun crunchyrollExternalIdToId(
+        httpRequest: HttpRequest,
+        episode: Episode,
+        accessToken: String,
+        cms: CrunchyrollWrapper.CMS
+    ): JsonObject? {
+        try {
+            httpRequest.getBrowser(
+                normalizeUrl(
+                    episode.platform!!,
+                    episode.anime!!.countryCode!!,
+                    episode.url!!
+                )
+            )
+        } catch (e: Exception) {
+            return null
+        }
+
+        val id = getCrunchyrollId(httpRequest.lastPageUrl!!) ?: return null
+        return CrunchyrollWrapper.getObject(episode.anime!!.countryCode!!.locale, accessToken, cms, id)[0]
+    }
+
+    fun getCrunchyrollId(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)?.groupValues?.get(1)
 
     fun normalizeTitle(platform: Platform, content: JsonObject): String? {
         var title = when (platform) {

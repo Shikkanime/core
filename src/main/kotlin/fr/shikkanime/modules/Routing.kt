@@ -68,6 +68,7 @@ fun Application.configureRouting() {
             context.response.header("X-Content-Type-Options", "nosniff")
             context.response.header("Referrer-Policy", "no-referrer")
             context.response.header("Permissions-Policy", "geolocation=(), microphone=()")
+            context.response.header("X-XSS-Protection", "1; mode=block")
         }
     }
 

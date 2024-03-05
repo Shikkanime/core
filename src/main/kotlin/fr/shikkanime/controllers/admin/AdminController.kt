@@ -5,6 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Link
@@ -82,16 +83,10 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun getDashboard(): Response {
-        return Response.template(Link.DASHBOARD)
-    }
-
-    @Path("/images")
-    @Get
-    @AdminSessionAuthenticated
-    private fun getImages(): Response {
         return Response.template(
-            Link.IMAGES,
-            mutableMapOf(
+            Link.DASHBOARD,
+            mapOf(
+                "simulcasts" to simulcastCacheService.findAll(),
                 "size" to ImageService.size,
                 "originalSize" to ImageService.originalSize,
                 "compressedSize" to ImageService.compressedSize,
@@ -99,38 +94,26 @@ class AdminController {
         )
     }
 
-    @Path("/images/save")
+    @Path("/images-save")
     @Get
     @AdminSessionAuthenticated
     private fun saveImages(): Response {
         ImageService.saveCache()
-        return Response.redirect(Link.IMAGES.href)
+        return Response.redirect(Link.DASHBOARD.href)
     }
 
-    @Path("/images/invalidate")
+    @Path("/images-invalidate")
     @Get
     @AdminSessionAuthenticated
     private fun invalidateImages(): Response {
         ImageService.invalidate()
-        return Response.redirect(Link.IMAGES.href)
+        return Response.redirect(Link.DASHBOARD.href)
     }
 
-    @Path("/simulcasts")
+    @Path("/simulcasts-invalidate")
     @Get
     @AdminSessionAuthenticated
-    private fun getSimulcasts(): Response {
-        return Response.template(
-            Link.SIMULCASTS,
-            mutableMapOf(
-                "simulcasts" to simulcastCacheService.findAll()
-            )
-        )
-    }
-
-    @Path("/simulcasts/recalculate")
-    @Get
-    @AdminSessionAuthenticated
-    private fun recalculateSimulcasts(): Response {
+    private fun invalidateSimulcasts(): Response {
         animeService.findAll().forEach { anime ->
             anime.simulcasts.clear()
             animeService.update(anime)
@@ -147,7 +130,7 @@ class AdminController {
                 }
             }
 
-        MapCache.invalidate(Anime::class.java, Episode::class.java)
-        return Response.redirect(Link.SIMULCASTS.href)
+        MapCache.invalidate(Anime::class.java, Episode::class.java, Simulcast::class.java)
+        return Response.redirect(Link.DASHBOARD.href)
     }
 }
