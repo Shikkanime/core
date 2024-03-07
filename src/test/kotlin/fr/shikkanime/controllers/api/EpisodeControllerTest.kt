@@ -41,6 +41,13 @@ class EpisodeControllerTest {
     fun setUp() {
         Constant.injector.injectMembers(this)
 
+        val descriptions = listOf(
+            "The story of the Saiyan Goku and his friends continues after the defeat of Majin Buu.",
+            "C'est l'histoire de la suite de Dragon Ball Z. L'histoire se passe 10 ans après la défaite de Majin Buu.",
+            "(Test) - The story of the Saiyan Goku and his friends continues after the defeat of Majin Buu.",
+            "(Test) - C'est l'histoire de la suite de Dragon Ball Z. L'histoire se passe 10 ans après la défaite de Majin Buu."
+        )
+
         val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
 
         listFiles
@@ -67,6 +74,7 @@ class EpisodeControllerTest {
                             season = 1,
                             number = number,
                             title = "Episode $number",
+                            description = descriptions[number % descriptions.size],
                             url = "https://www.google.com",
                             image = "https://pbs.twimg.com/profile_banners/1726908281640091649/1700562801/1500x500",
                             duration = 1420

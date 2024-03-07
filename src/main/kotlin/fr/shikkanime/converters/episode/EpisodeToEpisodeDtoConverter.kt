@@ -1,23 +1,25 @@
 package fr.shikkanime.converters.episode
 
+import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.withUTC
-import org.apache.tika.language.detect.LanguageDetector
 import java.time.format.DateTimeFormatter
 
 class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
-    private val languageDetector: LanguageDetector = LanguageDetector.getDefaultLanguageDetector().loadModels()
+    @Inject
+    private lateinit var languageCacheService: LanguageCacheService
 
     override fun convert(from: Episode): EpisodeDto {
         val status = if (
             from.image.isNullOrBlank() ||
             from.description.isNullOrBlank() ||
             from.description?.startsWith("(") == true ||
-            languageDetector.detect(from.description).language.lowercase() != from.anime!!.countryCode!!.name.lowercase() ||
+            languageCacheService.detectLanguage(from.description) != from.anime!!.countryCode!!.name.lowercase() ||
             from.url?.contains("media-", true) == true
         ) Status.INVALID else Status.VALID
 

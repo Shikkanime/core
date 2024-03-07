@@ -48,8 +48,7 @@ fun Application.configureSecurity() {
                 return@validate validationSession(jwtVerifier, session, memberCacheService)
             }
             challenge {
-                // If content type is json, then respond with json
-                if (call.request.contentType() == ContentType.Application.Json) {
+                if (call.request.contentType() != ContentType.Text.Html) {
                     call.respond(
                         HttpStatusCode.Unauthorized,
                         MessageDto(MessageDto.Type.ERROR, "You are not authorized to access this page")

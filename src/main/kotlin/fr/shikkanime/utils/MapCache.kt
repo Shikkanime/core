@@ -8,6 +8,7 @@ import java.time.Duration
 class MapCache<K : Any, V>(
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = listOf(),
+    private val log: Boolean = true,
     private val block: (K) -> V,
 ) {
     private lateinit var cache: LoadingCache<K, V>
@@ -27,7 +28,10 @@ class MapCache<K : Any, V>(
         cache = builder
             .build(object : CacheLoader<K, V & Any>() {
                 override fun load(key: K): V & Any {
-                    logger.info("Loading $key")
+                    if (log) {
+                        logger.info("Loading $key")
+                    }
+
                     return block(key)!!
                 }
             })
