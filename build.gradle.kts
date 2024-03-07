@@ -1,11 +1,10 @@
 import java.net.URI
 
 val ktorVersion = "2.3.9"
-val kotlinVersion = "1.9.22"
 val ktorSwaggerUiVersion = "2.7.4"
 val hibernateCoreVersion = "6.4.4.Final"
 val ehcacheVersion = "3.10.8"
-val glassfishJaxbVersion = "4.0.4"
+val glassfishJaxbVersion = "4.0.5"
 val hibernateSearchVersion = "7.1.0.Final"
 val tikaVersion = "3.0.0-BETA"
 val postgresqlVersion = "42.7.2"
@@ -29,7 +28,7 @@ val junitVersion = "5.10.2"
 val h2Version = "2.2.224"
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "1.9.23"
     id("io.ktor.plugin") version "2.3.9"
     jacoco
     id("org.sonarqube") version "4.4.1.3373"

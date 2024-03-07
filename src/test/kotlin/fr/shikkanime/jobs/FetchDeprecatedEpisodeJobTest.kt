@@ -11,7 +11,6 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
@@ -125,78 +124,6 @@ class FetchDeprecatedEpisodeJobTest {
         assertEquals(
             "GK9U3KWN4",
             fetchDeprecatedEpisodeJob.getCrunchyrollEpisodeId("https://www.crunchyroll.com/fr/watch/GK9U3KWN4/yukis-world")
-        )
-    }
-
-    @Test
-    fun bug() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
-
-        val episode = Episode(
-            platform = Platform.CRUN,
-            anime = Anime(
-                countryCode = CountryCode.FR,
-                name = "Villainess Level 99: I May Be the Hidden Boss But I'm Not the Demon Lord",
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/9cf39e672287c0b7d81d6ce6ba897b25.jpe",
-                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b759905ae99ec12686f372129ce96799.jpe",
-                description = "Cette étudiante japonaise discrète est réincarnée dans le corps d’Eumiella Dolkness, la méchante de son otome game préféré. Aspirant toujours à une vie tranquille, elle n’est pas vraiment ravie et décide d’abandonner ses fonctions maléfiques. Jusqu'à ce que son côté gamer entre en jeu et qu'elle atteigne accidentellement le niveau 99 ! À présent, tout le monde la soupçonne d'être l'infâme Maître des Démons…",
-                slug = "villainess-level-99"
-            ),
-            episodeType = EpisodeType.EPISODE,
-            langType = LangType.SUBTITLES,
-            hash = "FR-CRUN-918565-SUBTITLES",
-            season = 1,
-            number = 9,
-            title = "Le boss caché se fait démarcher par un pays ennemi",
-            url = "https://www.crunchyroll.com/media-918565",
-            image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/f4afb9fbdd5a99bcdfbe349e6d00acb2.jpe",
-            duration = 1420
-        )
-
-        fetchDeprecatedEpisodeJob.accessToken = token
-        fetchDeprecatedEpisodeJob.cms = cms
-        val content = fetchDeprecatedEpisodeJob.crunchyrollExternalIdToId(HttpRequest(), episode)!!
-        assertEquals("G7PU418J7", content.getAsString("id"))
-        assertEquals(
-            "https://www.crunchyroll.com/fr/watch/G7PU418J7/the-hidden-boss-is-solicited-by-an-enemy-nation",
-            fetchDeprecatedEpisodeJob.buildCrunchyrollEpisodeUrl(content, episode)
-        )
-    }
-
-    @Test
-    fun bug2() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
-
-        val episode = Episode(
-            platform = Platform.CRUN,
-            anime = Anime(
-                countryCode = CountryCode.FR,
-                name = "Bottom-Tier Character Tomozaki",
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/fa8c0b715dda49a4cbb8094c4136b382.jpe",
-                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b2dbd10a57e485f3ba4fcab6116f7625.jpe",
-                description = "Tomozaki Fumiya est à la fois l'un des meilleurs gamers du Japon et un lycéen des plus solitaires. Un jour, celui qui voit la vie comme un jeu sans intérêt rencontre l'héroïne parfaite de son établissement, Hinami Aoi... qui lui ordonne de prendre sa vie en main aussi sérieusement qu'il vit ses parties de jeu vidéo ! La vie est-elle un jeu sans intérêt ou le plus fin des plaisirs ? Avec Hinami aux manettes, une petite révolution s'amorce dans l'existence de Tomozaki !",
-                slug = "bottom-tier-character-tomozaki"
-            ),
-            episodeType = EpisodeType.EPISODE,
-            langType = LangType.SUBTITLES,
-            hash = "FR-CRUN-917959-SUBTITLES",
-            season = 2,
-            number = 1,
-            title = "Collecter des informations sans s’ennuyer, c’est parfait",
-            url = "https://www.crunchyroll.com/fr/episode-1-the-best-games-make-reconnaissance-fun-917959",
-            image = "https://img1.ak.crunchyroll.com/i/spire4-tmb/63cf5c6f4cbc2a0beac3c3f10b8fe3791704287894_full.jpg",
-            duration = 1422
-        )
-
-        fetchDeprecatedEpisodeJob.accessToken = token
-        fetchDeprecatedEpisodeJob.cms = cms
-        val content = fetchDeprecatedEpisodeJob.crunchyrollExternalIdToId(HttpRequest(), episode)!!
-        assertEquals("G7PU413X5", content.getAsString("id"))
-        assertEquals(
-            "https://www.crunchyroll.com/fr/watch/G7PU413X5/the-best-games-make-reconnaissance-fun",
-            fetchDeprecatedEpisodeJob.buildCrunchyrollEpisodeUrl(content, episode)
         )
     }
 
