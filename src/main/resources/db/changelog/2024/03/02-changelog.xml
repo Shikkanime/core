@@ -4,12 +4,14 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <property global="false" name="id" value="1709569841763"/>
+    <property global="false" name="id" value="1709800525900"/>
     <property global="false" name="author" value="Ziedelth"/>
 
     <changeSet id="${id}-1" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="anime" indexName="idx_anime_country_code"/>
+            <not>
+                <indexExists tableName="anime" indexName="idx_anime_country_code"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_anime_country_code" tableName="anime">
@@ -19,7 +21,9 @@
 
     <changeSet id="${id}-2" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="episode" indexName="idx_episode_episode_type"/>
+            <not>
+                <indexExists tableName="episode" indexName="idx_episode_episode_type"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_episode_episode_type" tableName="episode">
@@ -29,7 +33,9 @@
 
     <changeSet id="${id}-3" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="episode" indexName="idx_episode_lang_type"/>
+            <not>
+                <indexExists tableName="episode" indexName="idx_episode_lang_type"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_episode_lang_type" tableName="episode">
@@ -39,7 +45,9 @@
 
     <changeSet id="${id}-4" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="episode" indexName="idx_episode_number"/>
+            <not>
+                <indexExists tableName="episode" indexName="idx_episode_number"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_episode_number" tableName="episode">
@@ -49,7 +57,9 @@
 
     <changeSet id="${id}-5" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="episode" indexName="idx_episode_release_date_time"/>
+            <not>
+                <indexExists tableName="episode" indexName="idx_episode_release_date_time"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_episode_release_date_time" tableName="episode">
@@ -59,7 +69,9 @@
 
     <changeSet id="${id}-6" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="episode" indexName="idx_episode_season"/>
+            <not>
+                <indexExists tableName="episode" indexName="idx_episode_season"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_episode_season" tableName="episode">
@@ -69,7 +81,9 @@
 
     <changeSet id="${id}-7" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="simulcast" indexName="idx_simulcast_season"/>
+            <not>
+                <indexExists tableName="simulcast" indexName="idx_simulcast_season"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_simulcast_season"
@@ -80,7 +94,9 @@
 
     <changeSet id="${id}-8" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="simulcast" indexName="idx_simulcast_season_year"/>
+            <not>
+                <indexExists tableName="simulcast" indexName="idx_simulcast_season_year"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_simulcast_season_year"
@@ -92,7 +108,9 @@
 
     <changeSet id="${id}-9" author="${author}">
         <preConditions onFail="MARK_RAN">
-            <indexExists tableName="simulcast" indexName="idx_simulcast_year"/>
+            <not>
+                <indexExists tableName="simulcast" indexName="idx_simulcast_year"/>
+            </not>
         </preConditions>
 
         <createIndex indexName="idx_simulcast_year"
