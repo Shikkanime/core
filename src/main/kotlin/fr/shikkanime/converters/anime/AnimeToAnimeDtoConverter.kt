@@ -1,18 +1,20 @@
 package fr.shikkanime.converters.anime
 
+import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
-import org.apache.tika.language.detect.LanguageDetector
 import org.hibernate.Hibernate
 import java.time.format.DateTimeFormatter
 
 class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
-    private val languageDetector: LanguageDetector = LanguageDetector.getDefaultLanguageDetector().loadModels()
+    @Inject
+    private lateinit var languageCacheService: LanguageCacheService
 
     override fun convert(from: Anime): AnimeDto {
         val status = if (
@@ -20,7 +22,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             from.banner.isNullOrBlank() ||
             from.description.isNullOrBlank() ||
             from.description?.startsWith("(") == true ||
-            languageDetector.detect(from.description).language.lowercase() != from.countryCode!!.name.lowercase()
+            languageCacheService.detectLanguage(from.description) != from.countryCode!!.name.lowercase()
         ) Status.INVALID else Status.VALID
 
         return AnimeDto(

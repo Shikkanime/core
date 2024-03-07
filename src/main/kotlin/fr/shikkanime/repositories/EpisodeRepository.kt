@@ -17,7 +17,10 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     override fun getEntityClass() = Episode::class.java
 
     private fun Episode.initialize(): Episode {
-        Hibernate.initialize(this.anime?.simulcasts)
+        if (!Hibernate.isInitialized(this.anime?.simulcasts)) {
+            Hibernate.initialize(this.anime?.simulcasts)
+        }
+
         return this
     }
 

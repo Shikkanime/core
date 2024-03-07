@@ -16,7 +16,10 @@ class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
 
     private fun Anime.initialize(): Anime {
-        Hibernate.initialize(this.simulcasts)
+        if (!Hibernate.isInitialized(this.simulcasts)) {
+            Hibernate.initialize(this.simulcasts)
+        }
+
         return this
     }
 
