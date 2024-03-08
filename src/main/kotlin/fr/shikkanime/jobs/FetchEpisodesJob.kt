@@ -98,23 +98,21 @@ class FetchEpisodesJob : AbstractJob {
             return
         }
 
-        Constant.abstractSocialNetworks.forEach { socialNetwork ->
-            Thread {
-                try {
-                    socialNetwork.sendEpisodeRelease(dto, mediaImage)
-                } catch (e: Exception) {
-                    logger.log(
-                        Level.SEVERE,
-                        "Error while sending episode release for ${
-                            socialNetwork.javaClass.simpleName.replace(
-                                "SocialNetwork",
-                                ""
-                            )
-                        }",
-                        e
-                    )
-                }
-            }.start()
+        Constant.abstractSocialNetworks.parallelStream().forEach { socialNetwork ->
+            try {
+                socialNetwork.sendEpisodeRelease(dto, mediaImage)
+            } catch (e: Exception) {
+                logger.log(
+                    Level.SEVERE,
+                    "Error while sending episode release for ${
+                        socialNetwork.javaClass.simpleName.replace(
+                            "SocialNetwork",
+                            ""
+                        )
+                    }",
+                    e
+                )
+            }
         }
     }
 }
