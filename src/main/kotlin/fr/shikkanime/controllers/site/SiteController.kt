@@ -12,6 +12,7 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
+import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 
 @Controller("/")
@@ -111,6 +112,19 @@ class SiteController {
                     1,
                     24
                 )!!.data
+            )
+        )
+    }
+
+    @Path("search")
+    @Get
+    private fun search(
+        @QueryParam("q") query: String?,
+    ): Response {
+        return Response.template(
+            Link.SEARCH,
+            mutableMapOf(
+                "query" to query
             )
         )
     }
