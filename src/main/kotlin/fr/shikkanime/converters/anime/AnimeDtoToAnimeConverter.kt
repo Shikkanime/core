@@ -5,7 +5,6 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
 import java.time.ZonedDateTime
 
@@ -19,7 +18,7 @@ class AnimeDtoToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
         if (findByUuid != null)
             return findByUuid
 
-        val findByName = animeService.findAllByLikeName(CountryCode.FR, from.name)
+        val findByName = animeService.findAllByLikeName(from.countryCode, from.name)
 
         if (findByName.isNotEmpty())
             return findByName.first()

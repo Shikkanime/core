@@ -20,6 +20,7 @@ enum class Link(
     // Site
     HOME("/", "/site/home.ftl", "", "Accueil", "${Constant.NAME} : Ne manquez plus jamais un épisode d'animé !"),
     CATALOG("/catalog/{currentSimulcast}", "/site/catalog.ftl", "", "Catalogue"),
+    SEARCH("/search", "/site/search.ftl", "", "Recherche"),
     PRESENTATION("/presentation", "/site/presentation.ftl", "", "Présentation", footer = true),
     ;
 }
