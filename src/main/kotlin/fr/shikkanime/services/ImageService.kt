@@ -495,7 +495,9 @@ object ImageService {
             ImageIO.read(URI(episode.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
 
         val platformImage = try {
-            ImageIO.read(URI("http://localhost:37100/assets/img/platforms/${episode.platform.image}").toURL())
+            ImageIO.read(
+                ClassLoader.getSystemClassLoader().getResourceAsStream("assets/img/platforms/${episode.platform.image}")
+            )
                 .resize(32, 32)
         } catch (e: Exception) {
             e.printStackTrace()
