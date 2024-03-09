@@ -3,7 +3,7 @@
 <@navigation.display>
     <div class="container my-3">
         <input type="text" id="search" class="form-control-lg w-100 bg-dark text-white"
-               placeholder="Rechercher" value="<#if query??>${query}</#if>">
+               placeholder="Rechercher" value="<#if query??>${query}</#if>" autofocus>
     </div>
 
     <div class="row justify-content-center" id="result-list" style="min-height: 50vh;">
