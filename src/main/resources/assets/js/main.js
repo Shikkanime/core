@@ -8,8 +8,9 @@ function copyToClipboard(content) {
     document.body.removeChild(textarea);
 }
 
-async function callApi(url) {
+async function callApi(url, abortSignal) {
     return await fetch(url, {
+        signal: abortSignal,
         headers: {
             'Content-Type': 'application/json'
         }
