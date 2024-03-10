@@ -65,6 +65,7 @@ class AnimationDigitalNetworkPlatform :
         animeName = animeName.replace(season.toString(), "").trim()
         animeName = animeName.replace(Regex(" -.*"), "").trim()
         animeName = animeName.replace(Regex(" Part.*"), "").trim()
+        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
         val animeImage = requireNotNull(show.getAsString("image2x")) { "Anime image is null" }
         val animeBanner = requireNotNull(show.getAsString("imageHorizontal2x")) { "Anime banner is null" }
@@ -96,9 +97,12 @@ class AnimationDigitalNetworkPlatform :
         val releaseDate = ZonedDateTime.parse(releaseDateString)
 
         val numberAsString = jsonObject.getAsString("shortNumber")
-        if (numberAsString?.startsWith("Bande-annonce") == true || numberAsString?.startsWith("Bande annonce") == true || numberAsString?.startsWith(
-                "Court-métrage"
-            ) == true
+        val showType = show.getAsString("type")
+
+        if (numberAsString?.startsWith("Bande-annonce") == true ||
+            numberAsString?.startsWith("Bande annonce") == true ||
+            numberAsString?.startsWith("Court-métrage") == true ||
+            showType == "PV"
         ) throw Exception(
             "Anime is a trailer"
         )
@@ -111,7 +115,7 @@ class AnimationDigitalNetworkPlatform :
             else -> EpisodeType.EPISODE
         }
 
-        if (numberAsString?.contains(".") == true || show.getAsString("type") == "OAV") episodeType =
+        if (numberAsString?.contains(".") == true || showType == "OAV") episodeType =
             EpisodeType.SPECIAL
 
         val id = jsonObject.getAsInt("id")
