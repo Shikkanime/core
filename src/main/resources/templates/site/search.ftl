@@ -12,6 +12,8 @@
 
     <script src="/assets/js/main.js"></script>
     <script>
+        let abortController = null;
+
         <#if query??>
         search('${query}');
         </#if>
@@ -27,6 +29,12 @@
         });
 
         async function search(query) {
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+            }
+
+            abortController = new AbortController();
             const trimmedQuery = query.trim();
 
             if (trimmedQuery.length === 0) {
@@ -34,7 +42,7 @@
                 return;
             }
 
-            const animes = await callApi('/api/v1/animes?name=' + trimmedQuery + '&limit=12');
+            const animes = await callApi('/api/v1/animes?name=' + trimmedQuery + '&limit=12', abortController.signal);
             document.getElementById('result-list').innerHTML = animes.data.map(anime => template(anime)).join('');
         }
 
