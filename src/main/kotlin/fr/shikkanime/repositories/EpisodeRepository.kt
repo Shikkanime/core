@@ -102,15 +102,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             createReadOnlyQuery(it, "FROM Episode WHERE anime.uuid = :uuid", getEntityClass())
                 .setParameter("uuid", uuid)
                 .resultList
-        }
-    }
-
-    fun findByHash(hash: String?): Episode? {
-        return inTransaction {
-            createReadOnlyQuery(it, "FROM Episode WHERE LOWER(hash) LIKE :hash", getEntityClass())
-                .setParameter("hash", "%${hash?.lowercase()}%")
-                .resultList
-                .firstOrNull()
+                .initialize()
         }
     }
 

@@ -13,7 +13,7 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     override fun getRepository() = simulcastRepository
 
     override fun findAll() =
-        super.findAll().sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed()
+        super.findAll().sortBySeasonAndYear()
 
     fun findBySeasonAndYear(season: String, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 
@@ -26,5 +26,13 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     override fun delete(entity: Simulcast) {
         super.delete(entity)
         MapCache.invalidate(Simulcast::class.java)
+    }
+
+    companion object {
+        fun List<Simulcast>.sortBySeasonAndYear() =
+            this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed()
+
+        fun Set<Simulcast>.sortBySeasonAndYear() =
+            this.toList().sortBySeasonAndYear().toSet()
     }
 }

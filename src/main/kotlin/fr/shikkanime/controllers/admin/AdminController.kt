@@ -121,9 +121,10 @@ class AdminController {
 
         episodeService.findAll()
             .filter { it.langType == LangType.SUBTITLES && it.episodeType != EpisodeType.FILM }
+            .sortedBy { it.releaseDateTime }
             .forEach { episode ->
                 val anime = animeService.find(episode.anime!!.uuid!!)!!
-                episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(episode))
+                episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(anime, episode))
 
                 if (episode.anime != anime) {
                     animeService.update(anime)
