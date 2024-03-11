@@ -12,6 +12,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import io.ktor.http.*
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
@@ -41,8 +42,6 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     fun findAllByAnime(uuid: UUID) = episodeRepository.findAllByAnime(uuid)
 
-    fun findByHash(hash: String?) = episodeRepository.findByHash(hash)
-
     fun findAllUUIDAndImage() = episodeRepository.findAllUUIDAndImage()
 
     fun findAllByPlatformDeprecatedEpisodes(
@@ -56,7 +55,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360)
     }
 
-    fun getSimulcast(entity: Episode): Simulcast {
+    fun getSimulcast(anime: Anime, entity: Episode): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
 
         val adjustedDates = listOf(-simulcastRange, 0, simulcastRange).map { days ->
@@ -71,10 +70,19 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         val currentSimulcast = simulcasts[1]
         val nextSimulcast = simulcasts[2]
 
-        val isAnimeReleaseDateTimeBeforeMinusXDays = entity.anime!!.releaseDateTime.isBefore(adjustedDates[0])
+        val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates[0])
+        val animeEpisodes = anime.uuid?.let { episodeRepository.findAllByAnime(it).sortedBy { it.releaseDateTime } }
+        val previousEpisode =
+            animeEpisodes?.lastOrNull { it.releaseDateTime.isBefore(entity.releaseDateTime) && it.episodeType == entity.episodeType && it.langType == entity.langType }
+        val diff = previousEpisode?.releaseDateTime?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
 
         val choosenSimulcast = when {
+            anime.simulcasts.any { it.year == nextSimulcast.year && it.season == nextSimulcast.season } -> nextSimulcast
             entity.number!! <= 1 && currentSimulcast != nextSimulcast -> nextSimulcast
+            entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && (diff == -1L || diff >= configCacheService.getValueAsInt(
+                ConfigPropertyKey.SIMULCAST_RANGE_DELAY,
+                3
+            )) -> nextSimulcast
             entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && currentSimulcast != previousSimulcast -> previousSimulcast
             else -> currentSimulcast
         }
@@ -95,8 +103,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     override fun save(entity: Episode): Episode {
         val copy = entity.anime!!.copy()
-        val anime =
-            animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
+        val anime = animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
+        entity.anime = anime.copy()
 
         if (anime.banner.isNullOrBlank() && !copy.banner.isNullOrBlank()) {
             anime.banner = copy.banner
@@ -113,7 +121,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         }
 
         if (entity.langType == LangType.SUBTITLES && entity.episodeType != EpisodeType.FILM) {
-            val simulcast = getSimulcast(entity)
+            val simulcast = getSimulcast(anime, entity)
             addSimulcastToAnime(anime, simulcast)
         }
 

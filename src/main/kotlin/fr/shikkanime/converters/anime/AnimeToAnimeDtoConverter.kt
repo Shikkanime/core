@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
@@ -36,7 +37,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             shortName = StringUtils.getShortName(from.name!!),
             description = from.description,
             simulcasts = if (Hibernate.isInitialized(from.simulcasts)) convert(
-                from.simulcasts,
+                from.simulcasts.sortBySeasonAndYear(),
                 SimulcastDto::class.java
             ) else null,
             status = status,

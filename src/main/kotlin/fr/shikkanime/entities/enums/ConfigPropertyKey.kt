@@ -23,4 +23,5 @@ enum class ConfigPropertyKey(val key: String) {
     BSKY_MESSAGE("bsky_message"),
     BSKY_SESSION_TIMEOUT("bsky_session_timeout"),
     THREADS_SESSION_TIMEOUT("threads_session_timeout"),
+    SIMULCAST_RANGE_DELAY("simulcast_range_delay"),
 }
