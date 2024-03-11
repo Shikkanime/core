@@ -68,11 +68,11 @@ fun Application.configureHTTP() {
         }
         info {
             title = "${Constant.NAME} API"
-            version = "1.0"
+            version = "1.0.0"
             description = "API for testing and demonstration purposes"
         }
         server {
-            url = "http://localhost:37100"
+            url = Constant.BASE_URL
         }
     }
 }
