@@ -2,19 +2,30 @@ package fr.shikkanime.controllers.admin
 
 import com.google.inject.Inject
 import com.microsoft.playwright.Playwright
+import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.initAll
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
+import fr.shikkanime.utils.ObjectParser
 import io.ktor.server.engine.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.net.BindException
 import java.net.ServerSocket
+import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
 class AdminControllerTest {
@@ -24,6 +35,12 @@ class AdminControllerTest {
 
     @Inject
     private lateinit var memberService: MemberService
+
+    @Inject
+    private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var episodeService: EpisodeService
 
     private fun isPortInUse(port: Int): Boolean {
         try {
@@ -44,12 +61,56 @@ class AdminControllerTest {
         Constant.injector.injectMembers(this)
         server = initAll(password, port, false)
         JobManager.invalidate()
+
+        val descriptions = listOf(
+            "The story of the Saiyan Goku and his friends continues after the defeat of Majin Buu.",
+            "C'est l'histoire de la suite de Dragon Ball Z. L'histoire se passe 10 ans après la défaite de Majin Buu.",
+            "(Test) - The story of the Saiyan Goku and his friends continues after the defeat of Majin Buu.",
+            "(Test) - C'est l'histoire de la suite de Dragon Ball Z. L'histoire se passe 10 ans après la défaite de Majin Buu."
+        )
+
+        val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
+
+        listFiles
+            ?.sortedBy { it.name.lowercase() }
+            ?.forEach {
+                val anime = animeService.save(
+                    AbstractConverter.convert(
+                        ObjectParser.fromJson(
+                            it.readText(),
+                            AnimeDto::class.java
+                        ), Anime::class.java
+                    )
+                )
+
+                (1..10).forEach { number ->
+                    episodeService.save(
+                        Episode(
+                            platform = Platform.entries.random(),
+                            anime = anime,
+                            episodeType = EpisodeType.entries.random(),
+                            langType = LangType.entries.random(),
+                            hash = UUID.randomUUID().toString(),
+                            releaseDateTime = anime.releaseDateTime,
+                            season = 1,
+                            number = number,
+                            title = "Episode $number",
+                            description = descriptions[number % descriptions.size],
+                            url = "https://www.google.com",
+                            image = "https://pbs.twimg.com/profile_banners/1726908281640091649/1700562801/1500x500",
+                            duration = 1420
+                        )
+                    )
+                }
+            }
     }
 
     @AfterEach
     fun tearDown() {
         memberService.deleteAll()
         server?.stop(1000, 10000)
+        episodeService.deleteAll()
+        animeService.deleteAll()
     }
 
     @Test
@@ -133,6 +194,25 @@ class AdminControllerTest {
         page.fill("input[name=releaseTime]", "17:01")
 
         page.click("button[type=submit]")
+
+        page.close()
+        browser.close()
+        playwright.close()
+    }
+
+    @Test
+    fun `invalidate simulcasts`() {
+        val playwright = Playwright.create()
+        val browser = playwright.chromium().launch()
+        val page = browser.newPage()
+
+        page.navigate("http://localhost:$port/admin")
+        assertEquals("Login - Shikkanime", page.title())
+        page.fill("input[name=username]", "admin")
+        page.fill("input[name=password]", password.get())
+        page.click("button[type=submit]")
+
+        page.click("#simulcasts-invalidate")
 
         page.close()
         browser.close()

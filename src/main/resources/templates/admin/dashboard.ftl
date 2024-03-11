@@ -46,7 +46,7 @@
                 <div class="card p-3">
                     <div class="d-flex mb-4">
                         <h4 class="card-title">Simulcasts</h4>
-                        <a href="/admin/simulcasts-invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
+                        <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
                     </div>
 
                     <ul class="list-group list-group-numbered">
