@@ -24,4 +24,7 @@ enum class ConfigPropertyKey(val key: String) {
     BSKY_SESSION_TIMEOUT("bsky_session_timeout"),
     THREADS_SESSION_TIMEOUT("threads_session_timeout"),
     SIMULCAST_RANGE_DELAY("simulcast_range_delay"),
+    ANALYTICS_DOMAIN("analytics_domain"),
+    ANALYTICS_API("analytics_api"),
+    ANALYTICS_SCRIPT("analytics_script"),
 }

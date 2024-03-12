@@ -17,6 +17,8 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
     private var isInitialized = false
     private var twitter: Twitter? = null
 
+    override fun utmSource() = "twitter"
+
     override fun login() {
         if (isInitialized) return
 

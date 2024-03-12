@@ -21,6 +21,8 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private var token: String? = null
     private var userId: String? = null
 
+    override fun utmSource() = "threads"
+
     override fun login() {
         if (isInitialized) return
 

@@ -34,6 +34,12 @@
         </#if>
 
         <script defer src="/assets/js/alpinejs.min.js" crossorigin="anonymous"></script>
+
+        <#if (analyticsDomain?? && analyticsDomain?length != 0) && (analyticsApi?? && analyticsApi?length != 0) && (analyticsScript?? && analyticsScript?length != 0)>
+            <script data-domain="${analyticsDomain}" data-api="${analyticsApi}">
+                ${analyticsScript}
+            </script>
+        </#if>
     </head>
     <body>
     <#nested 0>
