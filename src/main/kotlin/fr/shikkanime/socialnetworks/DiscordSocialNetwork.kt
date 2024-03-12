@@ -24,6 +24,8 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
     private fun getTextChannels(): MutableList<TextChannel>? =
         jda?.getTextChannelsByName("bot\uD83E\uDD16", true)
 
+    override fun utmSource() = "discord"
+
     override fun login() {
         if (isInitialized) return
 
@@ -70,7 +72,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
             episodeDto.platform.url,
             "${Constant.BASE_URL}/assets/img/platforms/${episodeDto.platform.image}"
         )
-        embedMessage.setTitle(episodeDto.anime.shortName, "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}")
+        embedMessage.setTitle(episodeDto.anime.shortName, getShikkanimeUrl(episodeDto))
         embedMessage.setThumbnail(episodeDto.anime.image)
         embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
         embedMessage.setImage(episodeDto.image)

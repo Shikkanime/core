@@ -13,6 +13,7 @@ abstract class AbstractSocialNetwork {
     @Inject
     protected lateinit var configCacheService: ConfigCacheService
 
+    abstract fun utmSource(): String
     abstract fun login()
     abstract fun logout()
 
@@ -35,7 +36,7 @@ abstract class AbstractSocialNetwork {
         val isVoice = if (episodeDto.langType == LangType.VOICE) " en VF " else " "
 
         var configMessage = baseMessage
-        configMessage = configMessage.replace("{SHIKKANIME_URL}", "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}")
+        configMessage = configMessage.replace("{SHIKKANIME_URL}", getShikkanimeUrl(episodeDto))
         configMessage = configMessage.replace("{URL}", episodeDto.url)
         configMessage = configMessage.replace("{PLATFORM_ACCOUNT}", platformAccount(episodeDto.platform))
         configMessage = configMessage.replace("{ANIME_HASHTAG}", "#${StringUtils.getHashtag(episodeDto.anime.shortName)}")
@@ -46,6 +47,9 @@ abstract class AbstractSocialNetwork {
         configMessage = configMessage.trim()
         return configMessage
     }
+
+    protected fun getShikkanimeUrl(episodeDto: EpisodeDto) =
+        "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}?utm_campaign=episode_post&utm_medium=social&utm_source=${utmSource()}&utm_content=${episodeDto.uuid}"
 
     abstract fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray)
 }
