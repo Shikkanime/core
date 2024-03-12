@@ -1,7 +1,8 @@
 package fr.shikkanime.controllers.admin
 
 import com.google.inject.Inject
-import com.microsoft.playwright.Playwright
+import com.microsoft.playwright.Page
+import com.microsoft.playwright.junit.UsePlaywright
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.Anime
@@ -28,6 +29,7 @@ import java.net.ServerSocket
 import java.util.*
 import java.util.concurrent.atomic.AtomicReference
 
+@UsePlaywright
 class AdminControllerTest {
     private var port: Int = -1
     private var server: ApplicationEngine? = null
@@ -69,7 +71,7 @@ class AdminControllerTest {
             "(Test) - C'est l'histoire de la suite de Dragon Ball Z. L'histoire se passe 10 ans après la défaite de Majin Buu."
         )
 
-        val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
+        val listFiles = ClassLoader.getSystemClassLoader().getResource("animes")?.file?.let { File(it).listFiles() }
 
         listFiles
             ?.sortedBy { it.name.lowercase() }
@@ -114,10 +116,7 @@ class AdminControllerTest {
     }
 
     @Test
-    fun `test admin login and all links`() {
-        val playwright = Playwright.create()
-        val browser = playwright.chromium().launch()
-        val page = browser.newPage()
+    fun `test admin login and all links`(page: Page) {
         page.navigate("http://localhost:$port/admin")
         assertEquals("Login - Shikkanime", page.title())
         page.fill("input[name=username]", "admin")
@@ -137,18 +136,10 @@ class AdminControllerTest {
             println(s)
             assertEquals(s, page.title())
         }
-
-        page.close()
-        browser.close()
-        playwright.close()
     }
 
     @Test
-    fun `create netflix simulcast`() {
-        val playwright = Playwright.create()
-        val browser = playwright.chromium().launch()
-        val page = browser.newPage()
-
+    fun `create netflix simulcast`(page: Page) {
         page.navigate("http://localhost:$port/admin")
         assertEquals("Login - Shikkanime", page.title())
         page.fill("input[name=username]", "admin")
@@ -166,18 +157,10 @@ class AdminControllerTest {
         page.fill("input[name=season]", "2")
 
         page.click("button[type=submit]")
-
-        page.close()
-        browser.close()
-        playwright.close()
     }
 
     @Test
-    fun `create prime video simulcast`() {
-        val playwright = Playwright.create()
-        val browser = playwright.chromium().launch()
-        val page = browser.newPage()
-
+    fun `create prime video simulcast`(page: Page) {
         page.navigate("http://localhost:$port/admin")
         assertEquals("Login - Shikkanime", page.title())
         page.fill("input[name=username]", "admin")
@@ -194,18 +177,10 @@ class AdminControllerTest {
         page.fill("input[name=releaseTime]", "17:01")
 
         page.click("button[type=submit]")
-
-        page.close()
-        browser.close()
-        playwright.close()
     }
 
     @Test
-    fun `invalidate simulcasts`() {
-        val playwright = Playwright.create()
-        val browser = playwright.chromium().launch()
-        val page = browser.newPage()
-
+    fun `invalidate simulcasts`(page: Page) {
         page.navigate("http://localhost:$port/admin")
         assertEquals("Login - Shikkanime", page.title())
         page.fill("input[name=username]", "admin")
@@ -213,9 +188,5 @@ class AdminControllerTest {
         page.click("button[type=submit]")
 
         page.click("#simulcasts-invalidate")
-
-        page.close()
-        browser.close()
-        playwright.close()
     }
 }
