@@ -2,7 +2,6 @@ package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -19,6 +18,8 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     private var initializedAt: ZonedDateTime? = null
     private var accessJwt: String? = null
     private var did: String? = null
+
+    override fun utmSource() = "bsky"
 
     override fun login() {
         if (isInitialized) return
@@ -65,10 +66,16 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
-        val url = "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}"
         val message = getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.BSKY_MESSAGE) ?: "")
         val webpByteArray = FileManager.encodeToWebP(mediaImage)
         val imageJson = runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
-        runBlocking { BskyWrapper.createRecord(accessJwt!!, did!!, message, listOf(BskyWrapper.Image(imageJson, url))) }
+        runBlocking {
+            BskyWrapper.createRecord(
+                accessJwt!!,
+                did!!,
+                message,
+                listOf(BskyWrapper.Image(imageJson, getShikkanimeUrl(episodeDto)))
+            )
+        }
     }
 }
