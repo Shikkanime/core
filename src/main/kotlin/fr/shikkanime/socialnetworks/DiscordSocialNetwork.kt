@@ -66,7 +66,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         val image = ImageIO.read(URI(episodeDto.image).toURL())
         embedMessage.setColor(ImageService.getDominantColor(image))
         embedMessage.setAuthor(
-            episodeDto.platform.platformName,
+            episodeDto.platform.name,
             episodeDto.platform.url,
             "${Constant.BASE_URL}/assets/img/platforms/${episodeDto.platform.image}"
         )

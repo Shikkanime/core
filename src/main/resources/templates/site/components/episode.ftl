@@ -20,7 +20,7 @@
                              class="img-fluid<#if episode.uncensored> blur</#if>" width="640" height="360">
 
                         <img src="https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}"
-                             alt="${episode.platform.name()} platform image"
+                             alt="${episode.platform.name} platform image"
                              class="position-absolute top-0 end-0 rounded-circle me-1 mt-1" width="24"
                              height="24">
                     </div>

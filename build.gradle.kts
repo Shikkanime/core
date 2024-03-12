@@ -1,5 +1,3 @@
-import java.net.URI
-
 val ktorVersion = "2.3.9"
 val ktorSwaggerUiVersion = "2.7.4"
 val hibernateCoreVersion = "6.4.4.Final"
@@ -14,13 +12,13 @@ val liquibaseCoreVersion = "4.26.0"
 val quartzVersion = "2.5.0-rc1"
 val guavaVersion = "33.0.0-jre"
 val jacksonVersion = "2.16.2"
-val playwrightVersion = "1.41.2"
+val playwrightVersion = "1.42.0"
 val jsoupVersion = "1.17.2"
 val gsonVersion = "2.10.1"
 val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.77"
 val javaImageScalingVersion = "0.8.6"
-val jdaVersion = "5.0.0-beta.20"
+val jdaVersion = "5.0.0-beta.21"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.3"
 
@@ -46,8 +44,6 @@ application {
 
 repositories {
     mavenCentral()
-    maven { url = URI("https://jitpack.io") }
-    maven { url = uri("https://repo.repsy.io/mvn/uakihir0/public") }
 }
 
 dependencies {
@@ -94,7 +90,7 @@ dependencies {
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
 
     // Social networks
-    implementation("com.github.discord-jda:JDA:$jdaVersion")
+    implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
 
