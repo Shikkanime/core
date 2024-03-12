@@ -49,6 +49,8 @@ private val logger = LoggerFactory.getLogger("Routing")
 private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
 
 fun Application.configureRouting() {
+    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+
     environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
 
@@ -61,7 +63,9 @@ fun Application.configureRouting() {
                         "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' https://api.shikkanime.fr https://www.shikkanime.fr; " +
                         "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
                         "font-src 'self' https://cdn.jsdelivr.net; " +
-                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net"
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+                        configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API)
+                            ?.let { "connect-src 'self' $it; " }
             )
 
             context.response.header("X-Frame-Options", "DENY")
@@ -315,6 +319,10 @@ private suspend fun handleTemplateResponse(
     configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)
         ?.let { modelMap["googleSiteVerification"] = it }
     simulcastCacheService.currentSimulcast?.let { modelMap["currentSimulcast"] = it }
+
+    configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_DOMAIN)?.let { modelMap["analyticsDomain"] = it }
+    configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API)?.let { modelMap["analyticsApi"] = it }
+    configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_SCRIPT)?.let { modelMap["analyticsScript"] = it }
 
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }

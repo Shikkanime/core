@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1710284914290"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <columnExists columnName="property_value" tableName="config"/>
+        </preConditions>
+
+        <modifyDataType columnName="property_value"
+                        newDataType="VARCHAR(5000)"
+                        tableName="config"/>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'analytics_domain'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="analytics_domain"/>
+            <column name="property_value" value="example.com"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'analytics_api'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="analytics_api"/>
+            <column name="property_value" value="http://localhost:8080/api/event"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'analytics_script'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="analytics_script"/>
+            <column name="property_value" value=""/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

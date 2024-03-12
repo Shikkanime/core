@@ -16,6 +16,6 @@ class Config(
     override val uuid: UUID? = null,
     @Column(nullable = false, name = "property_key", unique = true)
     val propertyKey: String? = null,
-    @Column(nullable = false, name = "property_value")
+    @Column(nullable = false, name = "property_value", length = 5000)
     var propertyValue: String? = null,
 ) : ShikkEntity(uuid)
