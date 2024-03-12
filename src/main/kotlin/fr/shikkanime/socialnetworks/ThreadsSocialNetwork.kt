@@ -1,8 +1,8 @@
 package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.wrappers.ThreadsWrapper
 import kotlinx.coroutines.runBlocking
@@ -67,12 +67,12 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message) }
     }
 
-    override fun platformAccount(platform: Platform): String {
-        return when (platform) {
-            Platform.CRUN -> "@crunchyroll_fr"
-            Platform.NETF -> "@netflixfr"
-            Platform.PRIM -> "@primevideofr"
-            else -> platform.platformName
+    override fun platformAccount(platform: PlatformDto): String {
+        return when (platform.id) {
+            "CRUN" -> "@crunchyroll_fr"
+            "NETF" -> "@netflixfr"
+            "PRIM" -> "@primevideofr"
+            else -> platform.name
         }
     }
 

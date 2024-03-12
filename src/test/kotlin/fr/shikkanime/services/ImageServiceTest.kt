@@ -1,7 +1,9 @@
 package fr.shikkanime.services
 
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
@@ -40,7 +42,7 @@ class ImageServiceTest {
     fun toEpisodeImage() {
         val dto = EpisodeDto(
             uuid = UUID.fromString("0335449b-87af-489e-9513-57cb2c854738"),
-            platform = Platform.CRUN,
+            platform = AbstractConverter.convert(Platform.CRUN, PlatformDto::class.java),
             anime = AnimeDto(
                 uuid = UUID.fromString("ebf540e4-42d2-4c35-92fc-6069b08d6db3"),
                 countryCode = CountryCode.FR,

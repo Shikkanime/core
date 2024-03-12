@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.services.caches.LanguageCacheService
@@ -25,7 +26,7 @@ class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
 
         return EpisodeDto(
             uuid = from.uuid,
-            platform = from.platform!!,
+            platform = convert(from.platform!!, PlatformDto::class.java),
             anime = convert(from.anime, AnimeDto::class.java),
             episodeType = from.episodeType!!,
             langType = from.langType!!,
