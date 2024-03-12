@@ -2,9 +2,9 @@ package fr.shikkanime.socialnetworks
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
@@ -18,8 +18,8 @@ abstract class AbstractSocialNetwork {
 
     abstract fun sendMessage(message: String)
 
-    open fun platformAccount(platform: Platform): String {
-        return platform.platformName
+    open fun platformAccount(platform: PlatformDto): String {
+        return platform.name
     }
 
     private fun information(episodeDto: EpisodeDto): String {

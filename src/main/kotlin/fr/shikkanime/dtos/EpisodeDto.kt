@@ -3,12 +3,11 @@ package fr.shikkanime.dtos
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
 import java.util.*
 
 data class EpisodeDto(
     val uuid: UUID?,
-    val platform: Platform,
+    val platform: PlatformDto,
     var anime: AnimeDto,
     val episodeType: EpisodeType,
     val langType: LangType,

@@ -63,7 +63,7 @@
 
             return `<tr>
                 <th scope="row"><span class="me-2 badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>` + anime + `</th>
-                <td>` + platform + `</td>
+                <td>` + platform.name + `</td>
                 <td>` + details + `</td>
                 <td>` + description + `</td>
                 <td>
