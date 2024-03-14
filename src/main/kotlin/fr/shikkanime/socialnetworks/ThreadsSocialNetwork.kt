@@ -53,8 +53,9 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     }
 
     private fun checkSession() {
-        if (initializedAt != null && initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong())
-                .isAfter(ZonedDateTime.now())
+        if (isInitialized &&
+            initializedAt != null &&
+            initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong()).isAfter(ZonedDateTime.now())
         ) {
             return
         }
