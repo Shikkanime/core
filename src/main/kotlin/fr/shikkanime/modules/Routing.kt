@@ -9,6 +9,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -291,6 +292,7 @@ private suspend fun handleTemplateResponse(
 
     val map = response.data as Map<String, Any> // NOSONAR
     val modelMap = (map["model"] as Map<String, Any?>).toMutableMap() // NOSONAR
+    modelMap["su"] = StringUtils
 
     val linkObjects = LinkObject.list()
 
@@ -308,6 +310,7 @@ private suspend fun handleTemplateResponse(
 
         link
     }
+
 
     modelMap["footerLinks"] = list.filter { it.footer }
 

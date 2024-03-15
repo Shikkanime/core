@@ -5,7 +5,7 @@
                @mouseleave="hover = false">
                 <div class="position-relative">
                     <img src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
-                         alt="${anime.shortName?replace("\"", "'")} anime image" class="img-fluid" width="480"
+                         alt="${su.sanitizeXSS(anime.shortName)} anime image" class="img-fluid" width="480"
                          height="720">
 
                     <span class="h6 mt-2 text-truncate-2">${anime.shortName}</span>

@@ -71,4 +71,12 @@ object StringUtils {
         val slug: String = NONLATIN.matcher(normalized).replaceAll("").replace("-+".toRegex(), "-")
         return slug.lowercase()
     }
+
+    fun sanitizeXSS(input: String): String = input.replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+
+    fun unSanitizeXSS(input: String): String = input.replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
 }

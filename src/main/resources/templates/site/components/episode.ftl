@@ -16,7 +16,7 @@
                 <div class="position-relative">
                     <div class="position-relative">
                         <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
-                             alt="${episode.anime.shortName?replace("\"", "'")} episode preview image"
+                             alt="${su.sanitizeXSS(episode.anime.shortName)} episode preview image"
                              class="img-fluid<#if episode.uncensored> blur</#if>" width="640" height="360">
 
                         <img src="https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}"
