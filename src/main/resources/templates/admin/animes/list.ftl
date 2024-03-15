@@ -61,7 +61,7 @@
             table.innerHTML = '';
 
             animes.forEach(anime => {
-                table.innerHTML += buildTableElement(anime.uuid, anime.name, anime.description, anime.status);
+                table.innerHTML += buildTableElement(anime.uuid, anime.shortName, anime.description, anime.status);
             });
         }
 

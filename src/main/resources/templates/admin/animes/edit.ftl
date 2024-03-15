@@ -46,12 +46,12 @@
                     </div>
                     <div class="col-md-6">
                         <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" name="name" value="${anime.name}">
+                        <input type="text" class="form-control" id="name" name="name" value="${su.sanitizeXSS(anime.name)}">
                     </div>
                     <div class="col-md-6">
                         <label for="shortName" class="form-label">Short name</label>
                         <input type="text" class="form-control" id="shortName" name="shortName"
-                               value="${anime.shortName}" disabled>
+                               value="${su.sanitizeXSS(anime.shortName)}" disabled>
                     </div>
                     <div class="col-md-6">
                         <label for="releaseDateTime" class="form-label">Release date time</label>

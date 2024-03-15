@@ -30,7 +30,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="value" class="form-label">Value</label>
-                        <input type="text" class="form-control" id="value" name="value" value="${config.propertyValue}">
+                        <input type="text" class="form-control" id="value" name="value" value="${su.sanitizeXSS(config.propertyValue)}">
                     </div>
                 </div>
             </div>
