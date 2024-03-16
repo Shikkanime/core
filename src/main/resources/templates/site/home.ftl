@@ -6,9 +6,21 @@
     <h1 class="h3 my-3">Nouveaux épisodes</h1>
 
     <#if episodes?? && episodes?size != 0>
-        <div class="row">
+        <div class="row g-3">
             <#list episodes as episode>
-                <@episodeComponent.display episode=episode />
+            <#-- If episode is the first element -->
+                <#assign col="col-md-2">
+                <#assign firstRow=false>
+
+                <#if episode?index == 0>
+                    <#assign col="col-md-7">
+                    <#assign firstRow=true>
+                <#elseif episode?index == 1>
+                    <#assign col="col-md-5">
+                    <#assign firstRow=true>
+                </#if>
+
+                <@episodeComponent.display episode=episode col=col cover=firstRow />
             </#list>
         </div>
     <#else>

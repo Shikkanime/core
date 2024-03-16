@@ -60,7 +60,7 @@ class SiteController {
                         SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
-                    6
+                    8
                 )!!.data
             )
         )

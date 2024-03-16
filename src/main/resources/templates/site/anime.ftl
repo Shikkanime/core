@@ -33,7 +33,7 @@
 
     <div class="row mt-5 justify-content-center">
         <#list episodes as episode>
-            <@episodeComponent.display episode=episode />
+            <@episodeComponent.display episode=episode cover=false col="col-md-2" />
         </#list>
     </div>
 </@navigation.display>
