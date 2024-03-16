@@ -126,10 +126,8 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 needUpdate = true
             }
 
-            if (needUpdate) {
-                episode.lastUpdateDateTime = now
-                episodeService.update(episode)
-            }
+            episode.lastUpdateDateTime = now
+            episodeService.update(episode)
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while fetching episode description for $identifier", e)
         }
@@ -137,7 +135,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         return needUpdate
     }
 
-    fun buildCrunchyrollEpisodeUrl(content: JsonObject, episode: Episode): String {
+    private fun buildCrunchyrollEpisodeUrl(content: JsonObject, episode: Episode): String {
         val id = content.getAsString("id")!!
         val slugTitle = content.getAsString("slug_title")
         val url = CrunchyrollWrapper.buildUrl(episode.anime!!.countryCode!!, id, slugTitle)

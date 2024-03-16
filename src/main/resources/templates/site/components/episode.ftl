@@ -9,29 +9,44 @@
     </#switch>
 </#function>
 
-<#macro display episode>
-    <div class="col-md-2 col-6 mt-0" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
+<#macro display episode col cover>
+    <div class="${col} col-12" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
         <article>
             <a href="${episode.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="position-relative">
                     <div class="position-relative">
                         <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
                              alt="${su.sanitizeXSS(episode.anime.shortName)} episode preview image"
-                             class="img-fluid<#if episode.uncensored> blur</#if>" width="640" height="360">
+                             class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if> <#if episode.uncensored>blur</#if>"
+                             width="640" height="360">
 
                         <img src="https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}"
                              alt="${episode.platform.name} platform image"
                              class="position-absolute top-0 end-0 rounded-circle me-1 mt-1" width="24"
                              height="24">
+
+                        <#if cover?? && cover>
+                            <div class="position-absolute bottom-0 start-0 py-2 px-3 bg-black bg-opacity-50 m w-100">
+                                <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
+
+                                <p class="text-muted mb-0">Saison ${episode.season?c} |
+                                    ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
+                                </p>
+
+                                <p class="text-muted mt-0 mb-0 pb-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                            </div>
+                        </#if>
                     </div>
 
-                    <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
+                    <#if cover?? && !cover>
+                        <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
 
-                    <p class="text-muted mb-0">Saison ${episode.season?c} |
-                        ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
-                    </p>
+                        <p class="text-muted mb-0">Saison ${episode.season?c} |
+                            ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
+                        </p>
 
-                    <p class="text-muted mt-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                        <p class="text-muted mt-0 mb-0 pb-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                    </#if>
 
                     <div class="bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3"
                          style="display: none;" x-show="hover">
