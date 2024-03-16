@@ -248,7 +248,10 @@ object ImageService {
         }
 
         episodeService.findAllUUIDAndImage().forEach {
-            episodeService.addImage(it[0] as UUID, it[1] as String)
+            episodeService.addImage(
+                it[0] as UUID,
+                (it[1] as String?)?.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+            )
         }
     }
 
