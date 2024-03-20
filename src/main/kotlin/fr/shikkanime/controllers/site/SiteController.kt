@@ -1,6 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
@@ -36,19 +37,41 @@ class SiteController {
         )
     }
 
+    private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
+        val animeSimulcastLimit = 6
+
+        val animes = animeCacheService.findAllBy(
+            CountryCode.FR,
+            simulcastCacheService.currentSimulcast?.uuid,
+            listOf(SortParameter("name", SortParameter.Order.ASC)),
+            1,
+            animeSimulcastLimit
+        )!!.data.toMutableList()
+
+        val simulcasts = simulcastCacheService.findAll()
+
+        if (animes.size in 1..<animeSimulcastLimit && simulcasts!!.size > 1) {
+            val previousSimulcastAnimes = animeCacheService.findAllBy(
+                CountryCode.FR,
+                simulcasts[1].uuid,
+                listOf(SortParameter("name", SortParameter.Order.ASC)),
+                1,
+                animeSimulcastLimit - animes.size
+            )!!.data
+
+            animes.addAll(previousSimulcastAnimes)
+        }
+
+        return animes
+    }
+
     @Path
     @Get
     private fun home(): Response {
         return Response.template(
             Link.HOME,
             mutableMapOf(
-                "animes" to animeCacheService.findAllBy(
-                    CountryCode.FR,
-                    simulcastCacheService.currentSimulcast?.uuid,
-                    listOf(SortParameter("name", SortParameter.Order.ASC)),
-                    1,
-                    6
-                )!!.data,
+                "animes" to getFullAnimesSimulcast(),
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
                     null,

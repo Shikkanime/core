@@ -38,7 +38,7 @@
             </div>
         </main>
 
-        <div class="container">
+        <div class="container-fluid px-md-5">
             <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
                 <div class="col-md-4 d-flex align-items-center">
                     <div>
@@ -116,7 +116,7 @@
                     <ul class="mt-3 list-unstyled justify-content-end text-md-end">
                         <#list footerLinks as link>
                             <li>
-                                <a href="${link.href}" class="text-muted">
+                                <a href="${link.href}" class="text-muted text-decoration-none">
                                     ${link.name}
                                 </a>
                             </li>

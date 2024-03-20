@@ -20,7 +20,7 @@
                     <#assign firstRow=true>
                 </#if>
 
-                <@episodeComponent.display episode=episode col=col cover=firstRow />
+                <@episodeComponent.display episode=episode desktopColSize=col mobileColSize="col-12" cover=firstRow />
             </#list>
         </div>
     <#else>

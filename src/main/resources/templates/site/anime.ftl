@@ -10,7 +10,7 @@
                      height="720">
             </div>
 
-            <div class="col-md-8 col-12 mt-0 text-start mt-md-0 mt-5 d-flex flex-column justify-content-center">
+            <div class="col-md-8 col-12 text-start mt-md-0 mt-5 d-flex flex-column justify-content-center">
                 <h6 class="h6">${anime.shortName?upper_case}</h6>
                 <p class="text-muted">${anime.name}</p>
 
@@ -31,9 +31,9 @@
         </div>
     </div>
 
-    <div class="row mt-5 justify-content-center">
+    <div class="row g-3 mt-5 justify-content-center">
         <#list episodes as episode>
-            <@episodeComponent.display episode=episode cover=false col="col-md-2" />
+            <@episodeComponent.display episode=episode cover=false desktopColSize="col-md-2" mobileColSize="col-6" />
         </#list>
     </div>
 </@navigation.display>
