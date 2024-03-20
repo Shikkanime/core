@@ -9,8 +9,9 @@
     </#switch>
 </#function>
 
-<#macro display episode col cover>
-    <div class="${col} col-12" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
+<#macro display episode desktopColSize mobileColSize cover>
+    <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
+         @mouseleave="hover = false">
         <article>
             <a href="${episode.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="position-relative">
