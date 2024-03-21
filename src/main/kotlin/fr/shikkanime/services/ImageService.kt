@@ -296,7 +296,7 @@ object ImageService {
         return Color(redAverage.toInt(), greenAverage.toInt(), blueAverage.toInt())
     }
 
-    private fun makeRoundedCorner(image: BufferedImage, cornerRadius: Int): BufferedImage {
+    fun makeRoundedCorner(image: BufferedImage, cornerRadius: Int): BufferedImage {
         return BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB).apply {
             createGraphics().apply {
                 composite = AlphaComposite.Src
@@ -319,7 +319,7 @@ object ImageService {
         }
     }
 
-    private fun Graphics2D.setRenderingHints() {
+    fun Graphics2D.setRenderingHints() {
         setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
         setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
         setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB)
@@ -532,5 +532,25 @@ object ImageService {
 
         graphics.dispose()
         return finalImage
+    }
+
+    fun Graphics2D.drawStringRect(
+        text: String,
+        x: Int,
+        y: Int,
+        marginX: Int,
+        marginY: Int,
+        borderWidth: Int = 2,
+        backgroundColor: Color = Color(0x000),
+    ) {
+        val fontMetrics = fontMetrics
+        val textWidth = fontMetrics.stringWidth(text)
+        val textHeight = fontMetrics.height
+
+        fillRoundRect(x, y, textWidth + marginX, textHeight + marginY, 10, 10)
+        color = backgroundColor
+        fillRoundRect(x + borderWidth, y + borderWidth, textWidth + marginX - (borderWidth * 2), textHeight + marginY - (borderWidth * 2), 10, 10)
+        color = Color.WHITE
+        drawString(text, x + marginX / 2, y + (marginY / 2) + textHeight - 5)
     }
 }

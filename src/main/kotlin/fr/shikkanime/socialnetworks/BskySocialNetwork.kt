@@ -78,4 +78,19 @@ class BskySocialNetwork : AbstractSocialNetwork() {
             )
         }
     }
+
+    override fun sendCalendar(message: String, calendarImage: ByteArray) {
+        checkSession()
+        if (!isInitialized) return
+        val webpByteArray = FileManager.encodeToWebP(calendarImage)
+        val imageJson = runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
+        runBlocking {
+            BskyWrapper.createRecord(
+                accessJwt!!,
+                did!!,
+                message,
+                listOf(BskyWrapper.Image(imageJson))
+            )
+        }
+    }
 }

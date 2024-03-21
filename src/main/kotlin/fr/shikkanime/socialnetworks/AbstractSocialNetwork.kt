@@ -52,4 +52,8 @@ abstract class AbstractSocialNetwork {
         "${Constant.BASE_URL}/animes/${episodeDto.anime.slug}?utm_campaign=episode_post&utm_medium=social&utm_source=${utmSource()}&utm_content=${episodeDto.uuid}"
 
     abstract fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray)
+
+    open fun sendCalendar(message: String, calendarImage: ByteArray) {
+        // Default implementation
+    }
 }

@@ -109,7 +109,7 @@ sonar {
     properties {
         property("sonar.projectKey", "core")
         property("sonar.projectName", "core")
-        property("sonar.exclusions", "**/fr/shikkanime/socialnetworks/**")
+        property("sonar.exclusions", "**/fr/shikkanime/socialnetworks/**,**/fr/shikkanime/jobs/FetchCalendarJob.kt")
     }
 }
 
