@@ -15,6 +15,7 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
+import java.time.ZonedDateTime
 
 @Controller("/")
 class SiteController {
@@ -148,6 +149,19 @@ class SiteController {
             Link.SEARCH,
             mutableMapOf(
                 "query" to query
+            )
+        )
+    }
+
+    @Path("calendar")
+    @Get
+    private fun calendar(): Response {
+        val now = ZonedDateTime.now().toLocalDate()
+
+        return Response.template(
+            Link.CALENDAR,
+            mutableMapOf(
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(now.minusDays(now.dayOfWeek.value.toLong() - 1), CountryCode.FR),
             )
         )
     }

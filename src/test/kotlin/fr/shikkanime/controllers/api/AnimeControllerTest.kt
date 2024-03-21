@@ -6,10 +6,16 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
@@ -22,6 +28,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
+import java.util.*
 
 internal class AnimeControllerTest {
     class Token : TypeToken<PageableDto<AnimeDto>>()
@@ -32,13 +39,16 @@ internal class AnimeControllerTest {
     @Inject
     private lateinit var simulcastService: SimulcastService
 
+    @Inject
+    private lateinit var episodeService: EpisodeService
+
     private var totalAnimes: Long = 0
 
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
 
-        val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
+        val listFiles = ClassLoader.getSystemClassLoader().getResource("animes")?.file?.let { File(it).listFiles() }
         totalAnimes = listFiles?.size?.toLong() ?: 0
 
         listFiles
@@ -193,6 +203,78 @@ internal class AnimeControllerTest {
                     assertEquals("2024-01-01T00:00:00Z", pageable.data[0].releaseDateTime)
                     assertEquals("WINTER", pageable.data[0].simulcasts!![0].season)
                     assertEquals(2024, pageable.data[0].simulcasts!![0].year)
+                }
+        }
+    }
+
+    @Test
+    fun `get weekly`() {
+        (1..10).forEach { number ->
+            animeService.findAll().forEach { anime ->
+                episodeService.save(
+                    Episode(
+                        platform = Platform.entries.random(),
+                        anime = anime,
+                        episodeType = EpisodeType.entries.random(),
+                        langType = LangType.entries.random(),
+                        hash = UUID.randomUUID().toString(),
+                        releaseDateTime = anime.releaseDateTime,
+                        season = 1,
+                        number = number,
+                        title = "Episode $number",
+                        description = "Description $number",
+                        url = "https://www.google.com",
+                        image = "https://pbs.twimg.com/profile_banners/1726908281640091649/1700562801/1500x500",
+                        duration = 1420
+                    )
+                )
+            }
+        }
+
+        testApplication {
+            application {
+                module()
+            }
+
+            client.get("/api/v1/animes/weekly?date=2024-01-01")
+                .apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    val weeklyAnimesDtos = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java)
+                    assertEquals(7, weeklyAnimesDtos.size)
+                    assertEquals(4, weeklyAnimesDtos[0].releases.size)
+                }
+        }
+
+        episodeService.deleteAll()
+    }
+
+    @Test
+    fun `get weekly invalid date`() {
+        testApplication {
+            application {
+                module()
+            }
+
+            client.get("/api/v1/animes/weekly?date=abc")
+                .apply {
+                    assertEquals(HttpStatusCode.BadRequest, status)
+                }
+        }
+    }
+
+    @Test
+    fun `get weekly with no parameter`() {
+        testApplication {
+            application {
+                module()
+            }
+
+            client.get("/api/v1/animes/weekly")
+                .apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    val weeklyAnimesDtos = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java)
+                    assertEquals(7, weeklyAnimesDtos.size)
+                    assertEquals(0, weeklyAnimesDtos.sumOf { it.releases.size })
                 }
         }
     }

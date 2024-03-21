@@ -476,9 +476,9 @@ object ImageService {
             ClassLoader.getSystemClassLoader()
                 .getResource("media-image")?.file?.let { File(it).takeIf { file -> file.exists() } }
                 ?: File(
-                Constant.dataFolder,
-                "media-image"
-            )
+                    Constant.dataFolder,
+                    "media-image"
+                )
         require(mediaImageFolder.exists()) { "Media image folder not found" }
         val backgroundsFolder = File(mediaImageFolder, "backgrounds")
         require(backgroundsFolder.exists()) { "Background folder not found" }

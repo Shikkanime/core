@@ -157,4 +157,29 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .initialize()
         }
     }
+
+    fun findAllByDateRange(
+        countryCode: CountryCode,
+        start: ZonedDateTime,
+        end: ZonedDateTime,
+        blacklisted: List<UUID>,
+    ): List<Episode> {
+        return inTransaction { entityManager ->
+            createReadOnlyQuery(
+                entityManager,
+                """
+                    FROM Episode e 
+                    WHERE e.anime.countryCode = :countryCode AND e.releaseDateTime BETWEEN :start AND :end AND e.anime.uuid NOT IN :blacklisted
+                    ORDER BY e.releaseDateTime ASC
+                """.trimIndent(),
+                getEntityClass()
+            )
+                .setParameter("countryCode", countryCode)
+                .setParameter("start", start)
+                .setParameter("end", end)
+                .setParameter("blacklisted", blacklisted)
+                .resultList
+                .initialize()
+        }
+    }
 }

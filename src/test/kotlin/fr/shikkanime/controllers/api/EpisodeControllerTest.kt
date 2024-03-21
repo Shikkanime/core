@@ -48,7 +48,7 @@ class EpisodeControllerTest {
             "(Test) - C'est l'histoire de la suite de Dragon Ball Z. L'histoire se passe 10 ans après la défaite de Majin Buu."
         )
 
-        val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
+        val listFiles = ClassLoader.getSystemClassLoader().getResource("animes")?.file?.let { File(it).listFiles() }
 
         listFiles
             ?.sortedBy { it.name.lowercase() }

@@ -1,16 +1,20 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
+import java.time.LocalDate
 import java.util.*
 
 class AnimeCacheService : AbstractCacheService {
@@ -37,6 +41,10 @@ class AnimeCacheService : AbstractCacheService {
         AbstractConverter.convert(animeService.findBySlug(it), AnimeDto::class.java)
     }
 
+    private val weeklyCache = MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(Episode::class.java)) {
+        animeService.getWeeklyAnimes(it.localDate, it.countryCode)
+    }
+
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -49,4 +57,7 @@ class AnimeCacheService : AbstractCacheService {
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit)]
 
     fun findBySlug(slug: String) = findBySlugCache[slug]
+
+    fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode) =
+        weeklyCache[CountryCodeLocalDateKeyCache(countryCode, startOfWeekDay)]
 }
