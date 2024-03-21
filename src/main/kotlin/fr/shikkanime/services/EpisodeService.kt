@@ -51,6 +51,13 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     ) =
         episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime, notLike)
 
+    fun findAllByDateRange(
+        countryCode: CountryCode,
+        start: ZonedDateTime,
+        end: ZonedDateTime,
+        blacklisted: List<UUID>
+    ) = episodeRepository.findAllByDateRange(countryCode, start, end, blacklisted)
+
     fun addImage(uuid: UUID, image: String) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360)
     }
@@ -71,7 +78,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         val nextSimulcast = simulcasts[2]
 
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates[0])
-        val animeEpisodes = anime.uuid?.let { episodeRepository.findAllByAnime(it).sortedBy { it.releaseDateTime } }
+        val animeEpisodes = anime.uuid?.let { episodeRepository.findAllByAnime(it).sortedBy { episode -> episode.releaseDateTime } }
         val previousEpisode =
             animeEpisodes?.lastOrNull { it.releaseDateTime.isBefore(entity.releaseDateTime) && it.episodeType == entity.episodeType && it.langType == entity.langType }
         val diff = previousEpisode?.releaseDateTime?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
@@ -83,6 +90,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
                 ConfigPropertyKey.SIMULCAST_RANGE_DELAY,
                 3
             )) -> nextSimulcast
+
             entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && currentSimulcast != previousSimulcast -> previousSimulcast
             else -> currentSimulcast
         }

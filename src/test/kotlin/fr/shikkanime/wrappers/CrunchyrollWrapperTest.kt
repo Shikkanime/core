@@ -5,6 +5,7 @@ import fr.shikkanime.utils.ObjectParser.getAsString
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -16,14 +17,11 @@ class CrunchyrollWrapperTest {
 
     @Test
     fun getAnonymousAccessToken() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
         assertNotNull(token)
     }
 
     @Test
     fun getCMS() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
         assertNotNull(cms)
     }
 
@@ -36,8 +34,7 @@ class CrunchyrollWrapperTest {
 
     @Test
     fun getBrowse() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val newlyAdded = runBlocking { CrunchyrollWrapper.getBrowse(locale, token) }
+        val newlyAdded = runBlocking { CrunchyrollWrapper.getBrowse(locale, token!!) }
         assertNotNull(newlyAdded)
         assertEquals(25, newlyAdded.size)
     }
@@ -51,16 +48,13 @@ class CrunchyrollWrapperTest {
 
     @Test
     fun getObject() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
-        val `object` = runBlocking { CrunchyrollWrapper.getObject(locale, token, cms, "G9DUEM48Z") }
+        val `object` = runBlocking { CrunchyrollWrapper.getObject(locale, token!!, cms!!, "G9DUEM48Z") }
         assertNotNull(`object`)
     }
 
     @Test
     fun getSimulcasts() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(locale, token) }
+        val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(locale, token!!) }
         assertEquals(true, simulcasts.isNotEmpty())
     }
 
@@ -73,11 +67,10 @@ class CrunchyrollWrapperTest {
 
     @Test
     fun getWinter2024Series() {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
         val series = runBlocking {
             CrunchyrollWrapper.getBrowse(
                 locale,
-                token,
+                token!!,
                 sortBy = CrunchyrollWrapper.SortType.POPULARITY,
                 type = CrunchyrollWrapper.MediaType.SERIES,
                 size = 200,
@@ -88,6 +81,18 @@ class CrunchyrollWrapperTest {
 
         series.forEach {
             println(it.getAsString("title"))
+        }
+    }
+
+    companion object {
+        private var token: String? = null
+        private var cms: CrunchyrollWrapper.CMS? = null
+
+        @JvmStatic
+        @BeforeAll
+        fun setUp() {
+            token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+            cms = runBlocking { CrunchyrollWrapper.getCMS(token!!) }
         }
     }
 }

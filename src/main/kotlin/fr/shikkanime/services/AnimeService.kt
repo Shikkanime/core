@@ -1,13 +1,21 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.WeeklyAnimeDto
+import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils.capitalizeWords
 import io.ktor.http.*
+import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
@@ -41,6 +49,40 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findBySlug(slug: String) = animeRepository.findBySlug(slug)
 
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
+
+    fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
+        return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).map {
+            val start = ZonedDateTime.parse("${it}T00:00:00Z")
+            val end = ZonedDateTime.parse("${it}T23:59:59Z")
+            val dateTitle =
+                it.format(DateTimeFormatter.ofPattern("EEEE", Locale.of(countryCode.locale.split("-")[0], countryCode.locale.split("-")[1]))).capitalizeWords()
+            val list = episodeService.findAllByDateRange(countryCode, start, end, emptyList()).toMutableList()
+
+            list.addAll(
+                episodeService.findAllByDateRange(
+                    countryCode,
+                    start.minusDays(7),
+                    end.minusDays(7),
+                    list.mapNotNull { anime -> anime.uuid })
+            )
+
+            WeeklyAnimesDto(
+                dateTitle,
+                AbstractConverter.convert(
+                    list.distinctBy { episode -> episode.anime?.uuid },
+                    EpisodeDto::class.java
+                ).map { episodeDto ->
+                    WeeklyAnimeDto(
+                        episodeDto.anime,
+                        episodeDto.releaseDateTime,
+                        AbstractConverter.convert(list.filter { episode -> episode.anime?.uuid == episodeDto.anime.uuid }
+                            .map { episode -> episode.platform!! }
+                            .distinct(), PlatformDto::class.java)
+                    )
+                }
+            )
+        }.toList()
+    }
 
     fun addImage(uuid: UUID, image: String) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720)

@@ -50,6 +50,7 @@ class EpisodeController : HasPageableRoute() {
         @QueryParam("desc") descParam: String?,
     ): Response {
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
+
         return Response.ok(
             episodeCacheService.findAllBy(
                 CountryCode.fromNullable(countryParam) ?: CountryCode.FR,

@@ -80,17 +80,17 @@ class EpisodeServiceTest {
     fun `get autumn simulcast`() {
         episodeService.save(
             Episode(
-            platform = Platform.CRUN,
-            anime = Anime(
-                countryCode = CountryCode.FR,
-                name = "Test",
-                image = "https://www.shikkanime.com/image.png",
-                banner = "https://www.shikkanime.com/image.png",
-                releaseDateTime = ZonedDateTime.parse("2023-12-20T00:00:00Z"),
-            ),
-            episodeType = EpisodeType.EPISODE,
-            langType = LangType.SUBTITLES,
-            hash = "hash",
+                platform = Platform.CRUN,
+                anime = Anime(
+                    countryCode = CountryCode.FR,
+                    name = "Test",
+                    image = "https://www.shikkanime.com/image.png",
+                    banner = "https://www.shikkanime.com/image.png",
+                    releaseDateTime = ZonedDateTime.parse("2023-12-20T00:00:00Z"),
+                ),
+                episodeType = EpisodeType.EPISODE,
+                langType = LangType.SUBTITLES,
+                hash = "hash",
                 releaseDateTime = ZonedDateTime.parse("2023-12-25T00:00:00Z"),
                 season = 1,
                 number = 1,
