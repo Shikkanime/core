@@ -31,7 +31,8 @@ class StringUtilsTest {
             "Reborn as a Vending Machine" to "Reborn as a Vending Machine, I Now Wander the Dungeon",
             "BIRDIE WING" to "BIRDIE WING -Golf Girls' Story-",
             "Urusei Yatsura" to "Urusei Yatsura (2022)",
-            "Cherry Magic" to "Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!"
+            "Cherry Magic" to "Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!",
+            "KONOSUBA" to "KONOSUBA -God's blessing on this wonderful world!"
         )
 
         list.forEach { (expected, input) ->

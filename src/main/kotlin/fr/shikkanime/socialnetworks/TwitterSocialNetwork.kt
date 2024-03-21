@@ -94,4 +94,17 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
 
         twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
     }
+
+    override fun sendCalendar(message: String, calendarImage: ByteArray) {
+        login()
+        if (!isInitialized) return
+        if (twitter == null) return
+
+        val uploadMedia = twitter!!.tweets().uploadMedia(
+            UUID.randomUUID().toString(),
+            ByteArrayInputStream(calendarImage)
+        )
+
+        twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
+    }
 }

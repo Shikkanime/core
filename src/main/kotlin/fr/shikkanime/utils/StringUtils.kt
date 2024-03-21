@@ -12,9 +12,13 @@ object StringUtils {
     private val WHITESPACE: Pattern = Pattern.compile("\\s")
 
     fun getShortName(fullName: String): String {
-        val regexs = listOf("-.*-".toRegex(), "Saison \\d*".toRegex(), "\\(\\d*\\)".toRegex())
+        val regexs = listOf("[-|!].*[-|!]".toRegex(), "Saison \\d*".toRegex(), "\\(\\d*\\)".toRegex())
         val separators = listOf(":", ",", "!")
         var shortName = fullName
+
+        regexs.forEach { regex ->
+            shortName = regex.replace(shortName, "")
+        }
 
         separators.forEach { separator ->
             if (shortName.contains(separator)) {
@@ -26,10 +30,6 @@ object StringUtils {
                     shortName = firstPart
                 }
             }
-        }
-
-        regexs.forEach { regex ->
-            shortName = regex.replace(shortName, "")
         }
 
         shortName = shortName.replace(" +".toRegex(), " ")
