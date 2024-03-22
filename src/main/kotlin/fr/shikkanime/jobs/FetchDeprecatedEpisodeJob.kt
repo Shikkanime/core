@@ -209,6 +209,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 requireNotNull(
                     biggestImage.asJsonObject.getAsString("source")?.takeIf { it.isNotBlank() }) { IMAGE_NULL_ERROR }
             }
+
             Platform.PRIM -> content.getAsString("image")!!
             else -> content.getAsString("image2x")!!
         }
