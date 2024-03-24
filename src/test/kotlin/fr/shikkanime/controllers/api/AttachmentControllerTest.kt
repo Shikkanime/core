@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
@@ -31,7 +32,7 @@ class AttachmentControllerTest {
     fun setUp() {
         Constant.injector.injectMembers(this)
 
-        val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
+        val listFiles = ClassLoader.getSystemClassLoader().getResource("animes")?.file?.let { File(it).listFiles() }
 
         listFiles
             ?.sortedBy { it.name.lowercase() }
@@ -52,6 +53,9 @@ class AttachmentControllerTest {
         animeService.deleteAll()
         simulcastService.deleteAll()
         animeService.preIndex()
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
     }
 
     @Test

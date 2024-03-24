@@ -16,6 +16,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
@@ -70,6 +71,9 @@ internal class AnimeControllerTest {
         animeService.deleteAll()
         simulcastService.deleteAll()
         animeService.preIndex()
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
     }
 
     @Test

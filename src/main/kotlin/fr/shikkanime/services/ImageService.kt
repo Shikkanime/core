@@ -143,13 +143,22 @@ object ImageService {
         )
     }
 
-    fun add(uuid: UUID, type: Type, url: String, width: Int, height: Int) {
-        if (get(uuid, type) != null || url.isBlank()) {
+    fun add(uuid: UUID, type: Type, url: String, width: Int, height: Int, bypass: Boolean = false) {
+        if (!bypass && (get(uuid, type) != null || url.isBlank())) {
             return
         }
 
-        val image = Image(uuid.toString(), type, url)
-        cache.add(image)
+        val image = if (!bypass) {
+            val image = Image(uuid.toString(), type, url)
+            cache.add(image)
+            image
+        } else {
+            get(uuid, type) ?: run {
+                val image = Image(uuid.toString(), type, url)
+                cache.add(image)
+                image
+            }
+        }
 
         threadPool.submit { encodeImage(url, uuid, type, width, height, image) }
     }
@@ -232,25 +241,24 @@ object ImageService {
         get() = toHumanReadable(cache.sumOf { it.size })
 
     fun invalidate() {
-        cache.clear()
-        change.set(true)
-        addAll()
+        addAll(true)
     }
 
-    fun addAll() {
+    fun addAll(bypass: Boolean = false) {
         val animeService = Constant.injector.getInstance(AnimeService::class.java)
         val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
 
         animeService.findAllUUIDAndImage().forEach {
             val uuid = it[0] as UUID
-            animeService.addImage(uuid, it[1] as String)
-            animeService.addBanner(uuid, it[2] as String?)
+            animeService.addImage(uuid, it[1] as String, bypass)
+            animeService.addBanner(uuid, it[2] as String?, bypass)
         }
 
         episodeService.findAllUUIDAndImage().forEach {
             episodeService.addImage(
                 it[0] as UUID,
                 (it[1] as String?)?.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+                bypass
             )
         }
     }

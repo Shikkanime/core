@@ -58,8 +58,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         blacklisted: List<UUID>
     ) = episodeRepository.findAllByDateRange(countryCode, start, end, blacklisted)
 
-    fun addImage(uuid: UUID, image: String) {
-        ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360)
+    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
+        ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360, bypass)
     }
 
     fun getSimulcast(anime: Anime, entity: Episode): Simulcast {

@@ -14,6 +14,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
@@ -88,6 +89,9 @@ class EpisodeControllerTest {
     fun tearDown() {
         episodeService.deleteAll()
         animeService.deleteAll()
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
     }
 
     @Test
