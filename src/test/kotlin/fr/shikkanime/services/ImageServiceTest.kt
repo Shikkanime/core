@@ -86,7 +86,7 @@ class ImageServiceTest {
     }
 
     @Test
-    fun `invalidate images`() {
+    fun `add bypass images`() {
         val uuid1 = UUID.randomUUID()
         val uuid2 = UUID.randomUUID()
         ImageService.add(
@@ -122,6 +122,22 @@ class ImageServiceTest {
             1080,
             true
         )
+        Thread.sleep(5000)
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
+    }
+
+    @Test
+    fun `invalid images`() {
+        Thread.sleep(5000)
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
+
+        Thread.sleep(5000)
+        ImageService.invalidate()
+
         Thread.sleep(5000)
         ImageService.cache.clear()
         ImageService.change.set(true)
