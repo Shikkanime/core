@@ -76,7 +76,7 @@
                 <div class="card p-3">
                     <div class="d-flex mb-4">
                         <h4 class="card-title">Images</h4>
-                        <a href="/admin/images-invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
+                        <a id="images-invalidate" href="/admin/images-invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
                         <a href="/admin/images-save" class="btn btn-success ms-2 me-0">Save</a>
                     </div>
 

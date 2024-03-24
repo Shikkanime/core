@@ -84,13 +84,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }.toList()
     }
 
-    fun addImage(uuid: UUID, image: String) {
-        ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720)
+    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
+        ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720, bypass)
     }
 
-    fun addBanner(uuid: UUID, image: String?) {
+    fun addBanner(uuid: UUID, image: String?, bypass: Boolean = false) {
         if (image.isNullOrBlank()) return
-        ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360)
+        ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360, bypass)
     }
 
     override fun save(entity: Anime): Anime {
