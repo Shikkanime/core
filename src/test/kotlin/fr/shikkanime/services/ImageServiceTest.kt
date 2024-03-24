@@ -84,4 +84,47 @@ class ImageServiceTest {
         val image = ImageService.toEpisodeImage(dto)
         assertNotNull(image)
     }
+
+    @Test
+    fun `invalidate images`() {
+        val uuid1 = UUID.randomUUID()
+        val uuid2 = UUID.randomUUID()
+        ImageService.add(
+            uuid1,
+            ImageService.Type.IMAGE,
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/efd4a6f29ce3b03a6f9d14d818b804bf.jpe",
+            1920,
+            1080,
+            true
+        )
+        ImageService.add(
+            uuid2,
+            ImageService.Type.IMAGE,
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/1e9c79ce0d5cebd2670bddd2a27cd9dd.jpe",
+            1920,
+            1080,
+            true
+        )
+        Thread.sleep(5000)
+        ImageService.add(
+            uuid1,
+            ImageService.Type.IMAGE,
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/efd4a6f29ce3b03a6f9d14d818b804bf.jpe",
+            1920,
+            1080,
+            true
+        )
+        ImageService.add(
+            uuid2,
+            ImageService.Type.IMAGE,
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/1e9c79ce0d5cebd2670bddd2a27cd9dd.jpe",
+            1920,
+            1080,
+            true
+        )
+        Thread.sleep(5000)
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
+    }
 }

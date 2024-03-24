@@ -39,6 +39,9 @@ class EpisodeServiceTest {
         episodeService.deleteAll()
         animeService.deleteAll()
         simulcastService.deleteAll()
+        ImageService.cache.clear()
+        ImageService.change.set(true)
+        ImageService.saveCache()
     }
 
     @Test
