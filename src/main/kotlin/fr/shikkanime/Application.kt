@@ -50,6 +50,8 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
     JobManager.scheduleJob("0 0 * * * ?", FetchDeprecatedEpisodeJob::class.java)
     // Every day at midnight
     JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
+    // Every day at 9am
+    JobManager.scheduleJob("0 0 9 * * ?", FetchCalendarJob::class.java)
     JobManager.start()
 
     logger.info("Starting server...")
