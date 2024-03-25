@@ -51,31 +51,29 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
-        return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).map {
-            val start = ZonedDateTime.parse("${it}T00:00:00Z")
-            val end = ZonedDateTime.parse("${it}T23:59:59Z")
-            val dateTitle =
-                it.format(DateTimeFormatter.ofPattern("EEEE", Locale.of(countryCode.locale.split("-")[0], countryCode.locale.split("-")[1]))).capitalizeWords()
-            val list = episodeService.findAllByDateRange(countryCode, start, end, emptyList()).toMutableList()
+        val start = ZonedDateTime.parse("${startOfWeekDay.minusDays(7)}T00:00:00Z")
+        val end = ZonedDateTime.parse("${startOfWeekDay.plusDays(7)}T23:59:59Z")
+        val list = episodeService.findAllByDateRange(countryCode, start, end).toMutableList()
 
-            list.addAll(
-                episodeService.findAllByDateRange(
-                    countryCode,
-                    start.minusDays(7),
-                    end.minusDays(7),
-                    list.mapNotNull { anime -> anime.uuid })
-            )
+        return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).map { date ->
+            val dateTitle = date.format(
+                DateTimeFormatter.ofPattern(
+                    "EEEE",
+                    Locale.of(countryCode.locale.split("-")[0], countryCode.locale.split("-")[1])
+                )
+            ).capitalizeWords()
+            val episodes = list.filter { it.releaseDateTime.dayOfWeek == date.dayOfWeek }
 
             WeeklyAnimesDto(
                 dateTitle,
                 AbstractConverter.convert(
-                    list.distinctBy { episode -> episode.anime?.uuid },
+                    episodes.distinctBy { episode -> episode.anime?.uuid },
                     EpisodeDto::class.java
                 ).map { episodeDto ->
                     WeeklyAnimeDto(
                         episodeDto.anime,
                         episodeDto.releaseDateTime,
-                        AbstractConverter.convert(list.filter { episode -> episode.anime?.uuid == episodeDto.anime.uuid }
+                        AbstractConverter.convert(episodes.filter { episode -> episode.anime?.uuid == episodeDto.anime.uuid }
                             .map { episode -> episode.platform!! }
                             .distinct(), PlatformDto::class.java)
                     )
