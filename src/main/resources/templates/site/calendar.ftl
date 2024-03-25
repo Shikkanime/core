@@ -28,7 +28,7 @@
                                                  class="img-fluid" width="640"
                                                  height="360">
 
-                                            <div class="position-absolute top-0 start-0 p-1">
+                                            <div class="position-absolute top-0 end-0 p-1">
                                                 <div class="d-flex">
                                                     <#list release.platforms as platform>
                                                         <img src="https://www.shikkanime.fr/assets/img/platforms/${platform.image}"
@@ -38,15 +38,13 @@
                                                     </#list>
                                                 </div>
                                             </div>
-
-                                            <div class="position-absolute bottom-0 start-0 p-1 px-md-3 bg-black"
-                                                 data-release-date-time="${release.releaseDateTime}">
-                                            </div>
                                         </div>
 
-                                        <span class="h6 mt-1 mb-3 text-truncate-2">
-                                            ${release.anime.shortName}
-                                        </span>
+                                        <div class="mt-1 mb-2">
+                                            <span class="h6 text-truncate-2 mb-0">${release.anime.shortName}</span>
+                                            <span class="text-muted mt-0"
+                                                  data-release-date-time="${release.releaseDateTime}"></span>
+                                        </div>
 
                                         <div class="bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3"
                                              x-show="hover">

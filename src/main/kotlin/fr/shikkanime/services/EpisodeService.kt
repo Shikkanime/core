@@ -54,9 +54,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     fun findAllByDateRange(
         countryCode: CountryCode,
         start: ZonedDateTime,
-        end: ZonedDateTime,
-        blacklisted: List<UUID>
-    ) = episodeRepository.findAllByDateRange(countryCode, start, end, blacklisted)
+        end: ZonedDateTime
+    ) = episodeRepository.findAllByDateRange(countryCode, start, end)
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360, bypass)
