@@ -26,7 +26,7 @@ val junitVersion = "5.10.2"
 val h2Version = "2.2.224"
 
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "2.0.0-Beta5"
     id("io.ktor.plugin") version "2.3.9"
     jacoco
     id("org.sonarqube") version "4.4.1.3373"

@@ -2,15 +2,15 @@ package fr.shikkanime.platforms
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
+import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
@@ -23,6 +23,9 @@ import java.util.logging.Level
 
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, List<JsonObject>>() {
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
+
     override fun getPlatform(): Platform = Platform.ANIM
 
     override fun getConfigurationClass() = AnimationDigitalNetworkConfiguration::class.java
@@ -31,11 +34,24 @@ class AnimationDigitalNetworkPlatform :
         return AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate())
     }
 
+    private fun parseAPIContent(
+        bypassFileContent: File?,
+        countryCode: CountryCode,
+        zonedDateTime: ZonedDateTime
+    ): List<JsonObject> {
+        return if (bypassFileContent != null && bypassFileContent.exists()) {
+            ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("videos").map { it.asJsonObject }
+        } else getApiContent(
+            countryCode,
+            zonedDateTime
+        )
+    }
+
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            val api = getApiContent(countryCode, zonedDateTime)
+            val api = parseAPIContent(bypassFileContent, countryCode, zonedDateTime)
 
             api.forEach {
                 try {
@@ -86,10 +102,10 @@ class AnimationDigitalNetworkPlatform :
 
         val descriptionLowercase = animeDescription.lowercase()
 
-        isSimulcasted = isSimulcasted || descriptionLowercase.startsWith("(premier épisode ") ||
-                descriptionLowercase.startsWith("(diffusion des ") ||
-                descriptionLowercase.startsWith("(diffusion du premier épisode") ||
-                descriptionLowercase.startsWith("(diffusion de l'épisode 1 le")
+        isSimulcasted = isSimulcasted ||
+                configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)?.let {
+                    Regex(it).containsMatchIn(descriptionLowercase)
+                } == true
 
         if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
 

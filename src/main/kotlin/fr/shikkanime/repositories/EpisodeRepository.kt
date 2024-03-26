@@ -162,22 +162,20 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
-        blacklisted: List<UUID>,
     ): List<Episode> {
         return inTransaction { entityManager ->
             createReadOnlyQuery(
                 entityManager,
                 """
-                    FROM Episode e 
-                    WHERE e.anime.countryCode = :countryCode AND e.releaseDateTime BETWEEN :start AND :end AND e.anime.uuid NOT IN :blacklisted
-                    ORDER BY e.releaseDateTime ASC
+                    FROM Episode e
+                    WHERE e.anime.countryCode = :countryCode AND e.releaseDateTime BETWEEN :start AND :end
+                    ORDER BY e.releaseDateTime ASC, LOWER(e.anime.name) ASC
                 """.trimIndent(),
                 getEntityClass()
             )
                 .setParameter("countryCode", countryCode)
                 .setParameter("start", start)
                 .setParameter("end", end)
-                .setParameter("blacklisted", blacklisted)
                 .resultList
                 .initialize()
         }

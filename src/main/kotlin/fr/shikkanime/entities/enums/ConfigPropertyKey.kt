@@ -28,4 +28,5 @@ enum class ConfigPropertyKey(val key: String) {
     ANALYTICS_API("analytics_api"),
     ANALYTICS_SCRIPT("analytics_script"),
     CRUNCHYROLL_FETCH_API_SIZE("crunchyroll_fetch_api_size"),
+    ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX("animation_digital_network_simulcast_detection_regex"),
 }
