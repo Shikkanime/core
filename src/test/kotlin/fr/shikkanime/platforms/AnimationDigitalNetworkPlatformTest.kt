@@ -1,21 +1,29 @@
 package fr.shikkanime.platforms
 
+import fr.shikkanime.entities.Config
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
+import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.MapCache
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.time.ZonedDateTime
 import java.util.*
 
 class AnimationDigitalNetworkPlatformTest {
     @Inject
     lateinit var platform: AnimationDigitalNetworkPlatform
+
+    @Inject
+    lateinit var configService: ConfigService
 
     @BeforeEach
     fun setUp() {
@@ -31,6 +39,8 @@ class AnimationDigitalNetworkPlatformTest {
         platform.configuration!!.availableCountries.remove(CountryCode.FR)
         platform.configuration!!.simulcasts.removeIf { it.name == "Pon no Michi" }
         platform.reset()
+        configService.deleteAll()
+        MapCache.invalidate(Config::class.java)
     }
 
     @Test
@@ -116,5 +126,29 @@ class AnimationDigitalNetworkPlatformTest {
         assertNotNull(episodes[1].description)
         assertEquals("Urusei Yatsura", episodes[2].anime?.name)
         assertNotNull(episodes[2].description)
+    }
+
+    @Test
+    fun `fetchEpisodes for 2024-04-10`() {
+        configService.save(
+            Config(
+                propertyKey = ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX.key,
+                propertyValue = "\\((premier épisode |diffusion des épisodes |diffusion du premier épisode|diffusion de l'épisode 1 le)"
+            )
+        )
+        MapCache.invalidate(Config::class.java)
+
+        val s = "2024-04-10T08:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isEmpty())
     }
 }
