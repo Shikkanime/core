@@ -169,7 +169,6 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 """
                     FROM Episode e
                     WHERE e.anime.countryCode = :countryCode AND e.releaseDateTime BETWEEN :start AND :end
-                    ORDER BY e.releaseDateTime ASC, LOWER(e.anime.name) ASC
                 """.trimIndent(),
                 getEntityClass()
             )
