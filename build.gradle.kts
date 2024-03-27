@@ -29,7 +29,7 @@ plugins {
     kotlin("jvm") version "2.0.0-Beta5"
     id("io.ktor.plugin") version "2.3.9"
     jacoco
-    id("org.sonarqube") version "4.4.1.3373"
+    id("org.sonarqube") version "5.0.0.4638"
 }
 
 group = "fr.shikkanime"
