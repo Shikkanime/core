@@ -1,13 +1,10 @@
 package fr.shikkanime
 
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
-import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.HttpRequest
@@ -62,13 +59,6 @@ fun main() {
     println("Simulcasts: $simulcasts")
 
     val episodes = mutableListOf<Episode>()
-    val configService = Constant.injector.getInstance(ConfigService::class.java)
-
-    configService.findByName(ConfigPropertyKey.USE_CRUNCHYROLL_API.key)?.let {
-        configService.delete(it)
-    }
-
-    configService.save(Config(propertyKey = ConfigPropertyKey.USE_CRUNCHYROLL_API.key, propertyValue = "true"))
     val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
     val adnPlatform = Constant.injector.getInstance(AnimationDigitalNetworkPlatform::class.java)
     val crunchyrollPlatform = Constant.injector.getInstance(CrunchyrollPlatform::class.java)

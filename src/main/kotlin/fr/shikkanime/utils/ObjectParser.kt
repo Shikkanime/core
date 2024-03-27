@@ -1,23 +1,11 @@
 package fr.shikkanime.utils
 
-import com.ctc.wstx.stax.WstxInputFactory
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 
 object ObjectParser {
     private val gson = Gson()
-    private val objectMapper = ObjectMapper()
-    private val xmlInputFactory = WstxInputFactory()
-    private val xmlMapper: XmlMapper
-
-    init {
-        xmlInputFactory.configureForSpeed()
-        xmlInputFactory.setProperty(WstxInputFactory.IS_NAMESPACE_AWARE, false)
-        xmlMapper = XmlMapper(xmlInputFactory)
-    }
 
     fun fromJson(json: String): JsonObject {
         return gson.fromJson(json, JsonObject::class.java)
@@ -61,9 +49,5 @@ object ObjectParser {
 
     fun JsonObject.getAsBoolean(key: String, default: Boolean): Boolean {
         return this[key]?.asBoolean ?: default
-    }
-
-    fun <T> fromXml(xml: String, clazz: Class<T>): T {
-        return objectMapper.writeValueAsString(xmlMapper.readTree(xml)).let { gson.fromJson(it, clazz) }
     }
 }
