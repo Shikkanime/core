@@ -11,7 +11,6 @@ val guiceVersion = "7.0.0"
 val liquibaseCoreVersion = "4.26.0"
 val quartzVersion = "2.5.0-rc1"
 val guavaVersion = "33.1.0-jre"
-val jacksonVersion = "2.17.0"
 val playwrightVersion = "1.42.0"
 val jsoupVersion = "1.17.2"
 val gsonVersion = "2.10.1"
@@ -29,7 +28,7 @@ plugins {
     kotlin("jvm") version "2.0.0-Beta5"
     id("io.ktor.plugin") version "2.3.9"
     jacoco
-    id("org.sonarqube") version "4.4.1.3373"
+    id("org.sonarqube") version "5.0.0.4638"
 }
 
 group = "fr.shikkanime"
@@ -79,7 +78,6 @@ dependencies {
     implementation("org.liquibase:liquibase-core:$liquibaseCoreVersion")
     implementation("org.quartz-scheduler:quartz:$quartzVersion")
     implementation("com.google.guava:guava:$guavaVersion")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
     implementation("com.microsoft.playwright:playwright:$playwrightVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.gson:gson:$gsonVersion")

@@ -63,6 +63,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 )
             ).capitalizeWords()
             val episodes = list.filter { it.releaseDateTime.dayOfWeek == date.dayOfWeek }
+                .sortedWith(compareBy({ it.releaseDateTime.toLocalTime() }, { it.anime?.name?.lowercase() }))
 
             WeeklyAnimesDto(
                 dateTitle,
