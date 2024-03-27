@@ -3,9 +3,11 @@ package fr.shikkanime.controllers.site
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.routes.Controller
@@ -27,6 +29,9 @@ class SiteController {
 
     @Inject
     private lateinit var simulcastCacheService: SimulcastCacheService
+
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
 
     @Path("404")
     @Get
@@ -134,7 +139,7 @@ class SiteController {
                         SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
-                    24
+                    configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
                 )!!.data
             )
         )
