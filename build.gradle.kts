@@ -17,6 +17,8 @@ val gsonVersion = "2.10.1"
 val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.77"
 val javaImageScalingVersion = "0.8.6"
+val firebaseVersion = "9.2.0"
+
 val jdaVersion = "5.0.0-beta.21"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.3"
@@ -86,6 +88,7 @@ dependencies {
     implementation("com.mortennobel:java-image-scaling:$javaImageScalingVersion")
     implementation("org.apache.tika:tika-core:$tikaVersion")
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
+    implementation("com.google.firebase:firebase-admin:$firebaseVersion")
 
     // Social networks
     implementation("net.dv8tion:JDA:$jdaVersion")
@@ -107,7 +110,12 @@ sonar {
     properties {
         property("sonar.projectKey", "core")
         property("sonar.projectName", "core")
-        property("sonar.exclusions", "**/fr/shikkanime/socialnetworks/**,**/fr/shikkanime/jobs/FetchCalendarJob.kt")
+        property(
+            "sonar.exclusions",
+            "**/fr/shikkanime/socialnetworks/**," +
+                    "**/fr/shikkanime/jobs/FetchCalendarJob.kt," +
+                    "**/fr/shikkanime/utils/FirebaseNotification.kt"
+        )
     }
 }
 
