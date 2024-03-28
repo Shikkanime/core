@@ -14,6 +14,7 @@ object FirebaseNotification {
     private fun init() {
         if (isInitialized) return
         val file = File(Constant.dataFolder, "firebase.json")
+        if (!file.exists()) return
 
         FirebaseApp.initializeApp(
             FirebaseOptions.builder()
