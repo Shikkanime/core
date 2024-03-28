@@ -7,10 +7,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.withUTC
+import fr.shikkanime.utils.*
 import jakarta.inject.Inject
 import java.io.ByteArrayOutputStream
 import java.time.ZonedDateTime
@@ -82,7 +79,11 @@ class FetchEpisodesJob : AbstractJob {
 
         if (savedEpisodes.isNotEmpty() && savedEpisodes.size < configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
             val dtos = AbstractConverter.convert(savedEpisodes, EpisodeDto::class.java)
-            dtos.forEach { sendToSocialNetworks(it) }
+
+            dtos.forEach {
+                sendToSocialNetworks(it)
+                FirebaseNotification.send(it)
+            }
         }
 
         isRunning = false
