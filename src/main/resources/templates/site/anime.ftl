@@ -11,7 +11,7 @@
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-5 d-flex flex-column justify-content-center">
-                <h6 class="h6">${anime.shortName?upper_case}</h6>
+                <h1 class="h6">${anime.shortName?upper_case}</h1>
                 <p class="text-muted">${anime.name}</p>
 
                 <#if (anime.simulcasts?size > 1)>

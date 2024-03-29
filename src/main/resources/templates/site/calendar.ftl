@@ -1,6 +1,8 @@
 <#import "_navigation.ftl" as navigation />
 
-<@navigation.display>
+<#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr/calendar\"/>" />
+
+<@navigation.display header="${canonicalUrl}">
     <div class="table-responsive">
         <table class="table table-dark table-borderless my-5">
             <thead>
