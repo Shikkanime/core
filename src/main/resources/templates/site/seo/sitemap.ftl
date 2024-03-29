@@ -6,7 +6,15 @@
             <loc>${baseUrl}/</loc>
             <lastmod>${episode.releaseDateTime?replace("Z", "+00:00")}</lastmod>
         </url>
+        <url>
+            <loc>${baseUrl}/calendar</loc>
+            <lastmod>${episode.releaseDateTime?replace("Z", "+00:00")}</lastmod>
+        </url>
     </#if>
+    <url>
+        <loc>${baseUrl}/search</loc>
+        <lastmod>2024-03-20T17:00:00+00:00</lastmod>
+    </url>
     <#list simulcasts as simulcast>
         <url>
             <loc>${baseUrl}/catalog/${simulcast.slug}</loc>
