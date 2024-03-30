@@ -32,7 +32,9 @@ class StringUtilsTest {
             "BIRDIE WING" to "BIRDIE WING -Golf Girls' Story-",
             "Urusei Yatsura" to "Urusei Yatsura (2022)",
             "Cherry Magic" to "Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!",
-            "KONOSUBA" to "KONOSUBA -God's blessing on this wonderful world!"
+            "KONOSUBA" to "KONOSUBA -God's blessing on this wonderful world!",
+            "Moi, quand je me réincarne en Slime" to "Moi, quand je me réincarne en Slime",
+            "Studio Apartment" to "Studio Apartment, Good Lighting, Angel Included",
         )
 
         list.forEach { (expected, input) ->
@@ -44,6 +46,7 @@ class StringUtilsTest {
     fun toSlug() {
         val list = listOf(
             "Gloutons & Dragons" to "gloutons-dragons",
+            "Moi, quand je me réincarne en Slime" to "moi-quand-je-me-reincarne-en-slime",
         )
 
         list.forEach { (input, expected) ->
