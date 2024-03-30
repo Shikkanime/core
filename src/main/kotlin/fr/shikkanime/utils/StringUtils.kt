@@ -26,7 +26,8 @@ object StringUtils {
                 val firstPart = split[0].trim()
                 val lastPart = split.subList(1, split.size).joinToString(" ").trim()
 
-                if (lastPart.count { it == ' ' } >= 2) {
+                if (lastPart.count { it == ' ' } >= 2 &&
+                    (firstPart.split(" ").size > 1 || firstPart.length > 5)) {
                     shortName = firstPart
                 }
             }

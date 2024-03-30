@@ -111,6 +111,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val anime = find(uuid) ?: return null
 
         parameters["name"]?.takeIf { it.isNotBlank() }?.let { anime.name = it }
+        parameters["slug"]?.takeIf { it.isNotBlank() }?.let { anime.slug = it }
         parameters["releaseDateTime"]?.takeIf { it.isNotBlank() }
             ?.let { anime.releaseDateTime = ZonedDateTime.parse("$it:00Z") }
 
