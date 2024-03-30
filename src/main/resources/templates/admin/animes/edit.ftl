@@ -54,6 +54,11 @@
                                value="${su.sanitizeXSS(anime.shortName)}" disabled>
                     </div>
                     <div class="col-md-6">
+                        <label for="slug" class="form-label">Short name</label>
+                        <input type="text" class="form-control" id="slug" name="slug"
+                               value="${anime.slug}">
+                    </div>
+                    <div class="col-md-6">
                         <label for="releaseDateTime" class="form-label">Release date time</label>
                         <input type="datetime-local" class="form-control" id="releaseDateTime" name="releaseDateTime"
                                value="${anime.releaseDateTime?keep_before_last(":")}">
