@@ -13,7 +13,7 @@ object StringUtils {
 
     fun getShortName(fullName: String): String {
         val regexs = listOf("[-|!].*[-|!]".toRegex(), "Saison \\d*".toRegex(), "\\(\\d*\\)".toRegex())
-        val separators = listOf(":", ",", "!")
+        val separators = listOf(":", ",", "!", " so ")
         var shortName = fullName
 
         regexs.forEach { regex ->
