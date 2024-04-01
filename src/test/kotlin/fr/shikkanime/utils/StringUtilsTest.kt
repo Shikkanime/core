@@ -35,6 +35,8 @@ class StringUtilsTest {
             "KONOSUBA" to "KONOSUBA -God's blessing on this wonderful world!",
             "Moi, quand je me réincarne en Slime" to "Moi, quand je me réincarne en Slime",
             "Studio Apartment" to "Studio Apartment, Good Lighting, Angel Included",
+            "I Was Reincarnated as the 7th Prince" to "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability",
+            "Mushoku Tensei: Jobless Reincarnation" to "Mushoku Tensei: Jobless Reincarnation",
         )
 
         list.forEach { (expected, input) ->
@@ -47,10 +49,11 @@ class StringUtilsTest {
         val list = listOf(
             "Gloutons & Dragons" to "gloutons-dragons",
             "Moi, quand je me réincarne en Slime" to "moi-quand-je-me-reincarne-en-slime",
+            "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability" to "i-was-reincarnated-as-the-7th-prince",
         )
 
         list.forEach { (input, expected) ->
-            assertEquals(expected, StringUtils.toSlug(input))
+            assertEquals(expected, StringUtils.toSlug(StringUtils.getShortName(input)))
         }
     }
 }
