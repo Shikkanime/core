@@ -10,6 +10,7 @@ import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
@@ -127,7 +128,7 @@ class SiteController {
             "/site/anime.ftl",
             anime.shortName,
             mutableMapOf(
-                "description" to anime.description,
+                "description" to anime.description?.let { StringUtils.sanitizeXSS(it) },
                 "anime" to anime,
                 "episodes" to episodeCacheService.findAllBy(
                     CountryCode.FR,
