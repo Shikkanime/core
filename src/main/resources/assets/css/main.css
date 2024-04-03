@@ -1,5 +1,6 @@
 body {
     background-color: #000;
+    font-family: Satoshi, sans-serif;
 }
 
 .text-truncate-2 {
@@ -26,9 +27,17 @@ body {
 }
 
 .text-muted {
-    color: #a0a0a0 !important;
+    color: #b9b9b9 !important;
 }
 
 .blur {
     filter: blur(0.5rem);
+}
+
+.border-light {
+    border: 1px solid #FFFFFF14 !important;
+}
+
+.bg-blur {
+    backdrop-filter: blur(0.25rem);
 }
