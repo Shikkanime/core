@@ -12,13 +12,13 @@
 <#macro display episode desktopColSize mobileColSize cover>
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">
-        <article>
+        <article class="rounded-4 border-light">
             <a href="${episode.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="position-relative">
                     <div class="position-relative">
                         <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
                              alt="${su.sanitizeXSS(episode.anime.shortName)} episode preview image"
-                             class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if> <#if episode.uncensored>blur</#if>"
+                             class="<#if cover>w-100 object-fit-cover rounded-4<#else>img-fluid rounded-top-4</#if> <#if episode.uncensored>blur</#if>"
                              width="640" height="360">
 
                         <img src="https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}"
@@ -27,32 +27,34 @@
                              height="24">
 
                         <#if cover?? && cover>
-                            <div class="position-absolute bottom-0 start-0 py-2 px-3 bg-black bg-opacity-50 m w-100">
-                                <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
+                            <div class="position-absolute bottom-0 start-0 p-2 bg-black bg-opacity-25 bg-blur rounded-bottom-4 m w-100">
+                                <span class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episode.anime.shortName}</span>
 
                                 <p class="text-muted mb-0">Saison ${episode.season?c} |
                                     ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
                                 </p>
 
-                                <p class="text-muted mt-0 mb-0 pb-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                                <p class="text-muted mt-0 mb-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
                             </div>
                         </#if>
                     </div>
 
                     <#if cover?? && !cover>
-                        <span class="h6 mt-2 text-truncate-2">${episode.anime.shortName}</span>
+                        <div class="mx-2">
+                            <h6 class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episode.anime.shortName}</h6>
 
-                        <p class="text-muted mb-0">Saison ${episode.season?c} |
-                            ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
-                        </p>
+                            <p class="text-muted mb-0">Saison ${episode.season?c} |
+                                ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
+                            </p>
 
-                        <p class="text-muted mt-0 mb-0 pb-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                            <p class="text-muted mt-0 mb-1"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                        </div>
                     </#if>
 
-                    <div class="bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3"
+                    <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-4"
                          style="display: none;" x-show="hover">
                         <#if episode.title??>
-                            <div class="h6 text-truncate-2">
+                            <div class="h6 text-truncate-2 fw-bold">
                                 ${episode.title}
                             </div>
                         </#if>

@@ -4,9 +4,10 @@
     <@layout.main header="${header}">
         <#assign margin = "mx-md-2">
 
-        <header>
-            <nav class="navbar navbar-expand-lg bg-dark" data-bs-theme="dark">
-                <div class="container-fluid mx-md-5">
+        <header class="position-fixed" style="z-index: 1000; width: 100%;">
+            <nav class="navbar navbar-expand-lg bg-black bg-opacity-75" data-bs-theme="dark"
+                 style="backdrop-filter: blur(0.5rem);">
+                <div class="container-fluid px-md-5 d-md-flex">
                     <a class="navbar-brand" href="/">
                         <img src="/assets/img/light_banner.webp" alt="Logo" width="181" height="24"
                              class="d-inline-block align-text-top">
@@ -17,7 +18,7 @@
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                        <ul class="navbar-nav">
+                        <ul class="navbar-nav ms-md-auto me-md-0">
                             <#list links as link>
                                 <li class="nav-item ${margin}">
                                     <a href="${link.href}"
@@ -32,7 +33,7 @@
             </nav>
         </header>
 
-        <main>
+        <main style="padding-top: 50px;">
             <div class="text-white container-fluid px-md-5">
                 <#nested 1>
             </div>

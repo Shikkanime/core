@@ -31,11 +31,11 @@
         </div>
     </#if>
 
-    <div class="d-flex align-content-center my-3">
+    <div class="d-flex align-content-center my-4">
         <h1 class="h3 ms-0 me-auto">Simulcast en cours</h1>
 
         <#if currentSimulcast??>
-            <a href="/catalog/${currentSimulcast.slug}" class="btn btn-outline-light ms-auto me-0 rounded-pill px-3">
+            <a href="/catalog/${currentSimulcast.slug}" class="btn btn-outline-light ms-auto me-0 rounded-pill px-4">
                 PLUS
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                      class="bi bi-chevron-right" viewBox="0 0 16 16">
