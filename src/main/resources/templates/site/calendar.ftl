@@ -4,7 +4,7 @@
 
 <@navigation.display header="${canonicalUrl}">
     <div class="table-responsive">
-        <table class="table table-dark table-borderless my-5">
+        <table class="table table-dark table-borderless my-3">
             <thead>
             <tr>
                 <#list weeklyAnimes as dailyAnimes>
@@ -17,9 +17,9 @@
             <tbody>
             <tr>
                 <#list weeklyAnimes as dailyAnimes>
-                    <td style="background-color: #060606">
+                    <td class="bg-black border-start border-end border-dark">
                         <#list dailyAnimes.releases as release>
-                            <article x-data="{ hover: false }">
+                            <article x-data="{ hover: false }" class="rounded-4 border-light mb-3">
                                 <a href="/animes/${release.anime.slug}" class="text-decoration-none text-white"
                                    @mouseenter="hover = true"
                                    @mouseleave="hover = false">
@@ -27,7 +27,7 @@
                                         <div class="position-relative">
                                             <img src="https://api.shikkanime.fr/v1/attachments?uuid=${release.anime.uuid}&type=banner"
                                                  alt="${su.sanitizeXSS(release.anime.shortName)} anime banner"
-                                                 class="img-fluid" width="640"
+                                                 class="img-fluid rounded-top-4" width="640"
                                                  height="360">
 
                                             <div class="position-absolute top-0 end-0 p-1">
@@ -42,13 +42,13 @@
                                             </div>
                                         </div>
 
-                                        <div class="mt-1 mb-2">
-                                            <span class="h6 text-truncate-2 mb-0">${release.anime.shortName}</span>
-                                            <span class="text-muted mt-0"
+                                        <div class="mt-1 mx-2">
+                                            <span class="h6 text-truncate-2 mb-0 fw-bold">${release.anime.shortName}</span>
+                                            <span class="text-muted mt-0 mb-1"
                                                   data-release-date-time="${release.releaseDateTime}"></span>
                                         </div>
 
-                                        <div class="bg-black bg-opacity-75 position-absolute top-0 start-0 w-100 h-100 mh-100 p-3"
+                                        <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-4"
                                              x-show="hover">
                                             <#if release.anime.description??>
                                                 <div class="text-truncate-6">

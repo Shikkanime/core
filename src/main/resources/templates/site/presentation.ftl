@@ -1,6 +1,8 @@
 <#import "_navigation.ftl" as navigation />
 
-<@navigation.display>
+<#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr/presentation\"/>" />
+
+<@navigation.display header="${canonicalUrl}">
     <div class="container mt-3">
         <h2>Shikkanime : Révolutionnez votre expérience de visionnage d'animés !</h2>
         <p><strong>Qu'est-ce que Shikkanime ?</strong></p>
