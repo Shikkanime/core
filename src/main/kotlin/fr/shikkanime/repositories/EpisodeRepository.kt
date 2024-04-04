@@ -173,6 +173,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
+                .initialize()
         }
     }
 }
