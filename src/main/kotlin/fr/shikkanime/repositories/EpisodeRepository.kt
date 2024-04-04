@@ -163,15 +163,15 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     ): List<Episode> {
         return inTransaction { entityManager ->
             val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(Episode::class.java)
-            val root = query.from(Episode::class.java)
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
             val countryPredicate = cb.equal(root[Episode_.anime][Anime_.countryCode], countryCode)
             val datePredicate = cb.between(root[Episode_.releaseDateTime], start, end)
 
             query.select(root).where(cb.and(countryPredicate, datePredicate))
 
-            entityManager.createQuery(query)
+            createReadOnlyQuery(entityManager, query)
                 .resultList
         }
     }

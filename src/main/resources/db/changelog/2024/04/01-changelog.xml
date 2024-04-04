@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1712236123260"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <uniqueConstraintExists tableName="anime" columnNames="slug" constraintName="uc_anime_slug"/>
+            </not>
+        </preConditions>
+
+        <addUniqueConstraint columnNames="slug" constraintName="uc_anime_slug" tableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_anime_slug" tableName="anime"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_anime_slug" tableName="anime">
+            <column name="slug"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="anime" columnName="slug"/>
+        </preConditions>
+
+        <addNotNullConstraint columnDataType="VARCHAR(255)" columnName="slug" tableName="anime" validate="true"/>
+    </changeSet>
+</databaseChangeLog>
