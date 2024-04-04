@@ -11,7 +11,7 @@ object StringUtils {
     private val NONLATIN: Pattern = Pattern.compile("[^\\w-]")
     private val WHITESPACE: Pattern = Pattern.compile("\\s")
     private val regex = "([-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
-    private val separators = listOf(":", ",", "!", " so ")
+    private val separators = listOf(":", ",", "!", "–", " so ")
 
     fun getShortName(fullName: String): String {
         var shortName = regex.replace(fullName, "")

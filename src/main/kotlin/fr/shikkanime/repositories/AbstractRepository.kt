@@ -6,6 +6,7 @@ import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
+import jakarta.persistence.criteria.CriteriaQuery
 import org.hibernate.ScrollMode
 import org.hibernate.jpa.AvailableHints
 import org.hibernate.query.Query
@@ -38,6 +39,11 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     fun <T> createReadOnlyQuery(entityManager: EntityManager, query: String, clazz: Class<T>): TypedQuery<T> {
         return entityManager.createQuery(query, clazz)
+            .setHint(AvailableHints.HINT_READ_ONLY, true)
+    }
+
+    fun <T> createReadOnlyQuery(entityManager: EntityManager, criteriaQuery: CriteriaQuery<T>): TypedQuery<T> {
+        return entityManager.createQuery(criteriaQuery)
             .setHint(AvailableHints.HINT_READ_ONLY, true)
     }
 

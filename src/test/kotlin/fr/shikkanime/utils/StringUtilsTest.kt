@@ -37,6 +37,7 @@ class StringUtilsTest {
             "Studio Apartment" to "Studio Apartment, Good Lighting, Angel Included",
             "I Was Reincarnated as the 7th Prince" to "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability",
             "Mushoku Tensei: Jobless Reincarnation" to "Mushoku Tensei: Jobless Reincarnation",
+            "Yuru Camp" to "Yuru Camp – Au grand air",
         )
 
         list.forEach { (expected, input) ->
