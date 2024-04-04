@@ -10,15 +10,11 @@ import java.util.regex.Pattern
 object StringUtils {
     private val NONLATIN: Pattern = Pattern.compile("[^\\w-]")
     private val WHITESPACE: Pattern = Pattern.compile("\\s")
+    private val regex = "([-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
+    private val separators = listOf(":", ",", "!", " so ")
 
     fun getShortName(fullName: String): String {
-        val regexs = listOf("[-|!].*[-|!]".toRegex(), "Saison \\d*".toRegex(), "\\(\\d*\\)".toRegex())
-        val separators = listOf(":", ",", "!", " so ")
-        var shortName = fullName
-
-        regexs.forEach { regex ->
-            shortName = regex.replace(shortName, "")
-        }
+        var shortName = regex.replace(fullName, "")
 
         separators.forEach { separator ->
             if (shortName.contains(separator)) {
@@ -32,8 +28,7 @@ object StringUtils {
             }
         }
 
-        shortName = shortName.replace(" +".toRegex(), " ")
-        return shortName.trim()
+        return shortName.replace(" +".toRegex(), " ").trim()
     }
 
     fun getHashtag(fullName: String) = getShortName(fullName).capitalizeWords().filter { it.isLetterOrDigit() }

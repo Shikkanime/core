@@ -28,6 +28,7 @@ val h2Version = "2.2.224"
 
 plugins {
     kotlin("jvm") version "2.0.0-Beta5"
+    kotlin("kapt") version "1.9.23"
     id("io.ktor.plugin") version "2.3.9"
     jacoco
     id("org.sonarqube") version "5.0.0.4638"
@@ -94,6 +95,9 @@ dependencies {
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
+
+    kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
+    compileOnly("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")

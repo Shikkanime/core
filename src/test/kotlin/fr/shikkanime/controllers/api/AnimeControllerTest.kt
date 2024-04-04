@@ -3,10 +3,10 @@ package fr.shikkanime.controllers.api
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.CountryCode
