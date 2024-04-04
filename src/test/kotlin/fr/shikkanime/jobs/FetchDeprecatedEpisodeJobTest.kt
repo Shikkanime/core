@@ -2,7 +2,7 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.Episode
@@ -41,7 +41,7 @@ class FetchDeprecatedEpisodeJobTest {
         Constant.injector.injectMembers(this)
         Constant.injector.injectMembers(fetchDeprecatedEpisodeJob)
 
-        val listFiles = File(ClassLoader.getSystemClassLoader().getResource("animes")?.file).listFiles()
+        val listFiles = ClassLoader.getSystemClassLoader().getResource("animes")?.file?.let { File(it).listFiles() }
 
         listFiles
             ?.sortedBy { it.name.lowercase() }

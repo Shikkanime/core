@@ -1,6 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Anime_
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
@@ -139,9 +140,15 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun findBySlug(slug: String): Anime? {
-        return inTransaction {
-            createReadOnlyQuery(it, "FROM Anime WHERE slug = :slug", getEntityClass())
-                .setParameter("slug", slug)
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.select(root)
+                .where(cb.equal(root[Anime_.slug], slug))
+
+            createReadOnlyQuery(entityManager, query)
                 .resultList
                 .firstOrNull()
                 ?.initialize()

@@ -14,6 +14,7 @@ import java.util.*
     name = "anime",
     indexes = [
         Index(name = "idx_anime_country_code", columnList = "country_code"),
+        Index(name = "idx_anime_slug", columnList = "slug"),
     ]
 )
 @Indexed
@@ -44,7 +45,7 @@ class Anime(
     )
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
-    @Column(nullable = true)
+    @Column(nullable = false, unique = true)
     var slug: String? = null,
     @Column(nullable = false, name = "last_release_date_time")
     var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
