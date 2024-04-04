@@ -2,16 +2,17 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.animes.AnimeNoStatusDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils.capitalizeWords
+import fr.shikkanime.utils.withUTC
 import io.ktor.http.*
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -53,34 +54,31 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val start = ZonedDateTime.parse("${startOfWeekDay.minusDays(7)}T00:00:00Z")
         val end = ZonedDateTime.parse("${startOfWeekDay.plusDays(7)}T23:59:59Z")
-        val list = episodeService.findAllByDateRange(countryCode, start, end).toMutableList()
+        val list = episodeService.findAllByDateRange(countryCode, start, end)
+        val pattern = DateTimeFormatter.ofPattern("EEEE", Locale.of(countryCode.locale.split("-")[0], countryCode.locale.split("-")[1]))
 
-        return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).map { date ->
-            val dateTitle = date.format(
-                DateTimeFormatter.ofPattern(
-                    "EEEE",
-                    Locale.of(countryCode.locale.split("-")[0], countryCode.locale.split("-")[1])
-                )
-            ).capitalizeWords()
+        return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
+            val dateTitle = date.format(pattern).capitalizeWords()
             val episodes = list.filter { it.releaseDateTime.dayOfWeek == date.dayOfWeek }
                 .sortedWith(compareBy({ it.releaseDateTime.toLocalTime() }, { it.anime?.name?.lowercase() }))
 
             WeeklyAnimesDto(
                 dateTitle,
-                AbstractConverter.convert(
-                    episodes.distinctBy { episode -> episode.anime?.uuid },
-                    EpisodeDto::class.java
-                ).map { episodeDto ->
+                episodes.distinctBy { episode -> episode.anime?.uuid }.map { distinctEpisode ->
+                    val platforms = episodes.mapNotNull { episode ->
+                        if (episode.anime?.uuid == distinctEpisode.anime?.uuid)
+                            episode.platform!!
+                        else null
+                    }.distinct()
+
                     WeeklyAnimeDto(
-                        episodeDto.anime,
-                        episodeDto.releaseDateTime,
-                        AbstractConverter.convert(episodes.filter { episode -> episode.anime?.uuid == episodeDto.anime.uuid }
-                            .map { episode -> episode.platform!! }
-                            .distinct(), PlatformDto::class.java)
+                        AbstractConverter.convert(distinctEpisode.anime, AnimeNoStatusDto::class.java).toAnimeDto(),
+                        distinctEpisode.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                        AbstractConverter.convert(platforms, PlatformDto::class.java)
                     )
                 }
             )
-        }.toList()
+        }
     }
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {

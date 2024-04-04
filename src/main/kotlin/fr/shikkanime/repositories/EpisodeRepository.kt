@@ -1,8 +1,6 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.Pageable
-import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
@@ -164,19 +162,17 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         end: ZonedDateTime,
     ): List<Episode> {
         return inTransaction { entityManager ->
-            createReadOnlyQuery(
-                entityManager,
-                """
-                    FROM Episode e
-                    WHERE e.anime.countryCode = :countryCode AND e.releaseDateTime BETWEEN :start AND :end
-                """.trimIndent(),
-                getEntityClass()
-            )
-                .setParameter("countryCode", countryCode)
-                .setParameter("start", start)
-                .setParameter("end", end)
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(Episode::class.java)
+            val root = query.from(Episode::class.java)
+
+            val countryPredicate = cb.equal(root[Episode_.anime][Anime_.countryCode], countryCode)
+            val datePredicate = cb.between(root[Episode_.releaseDateTime], start, end)
+
+            query.select(root).where(cb.and(countryPredicate, datePredicate))
+
+            entityManager.createQuery(query)
                 .resultList
-                .initialize()
         }
     }
 }
