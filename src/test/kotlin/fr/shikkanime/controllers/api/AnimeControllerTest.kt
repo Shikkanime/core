@@ -245,7 +245,7 @@ internal class AnimeControllerTest {
                     assertEquals(HttpStatusCode.OK, status)
                     val weeklyAnimesDtos = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java)
                     assertEquals(7, weeklyAnimesDtos.size)
-                    assertEquals(4, weeklyAnimesDtos[0].releases.size)
+                    assertEquals(8, weeklyAnimesDtos[0].releases.size)
                 }
         }
 

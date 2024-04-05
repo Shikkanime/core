@@ -17,6 +17,7 @@ import fr.shikkanime.utils.StringUtils.capitalizeWords
 import fr.shikkanime.utils.withUTC
 import io.ktor.http.*
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -54,19 +55,22 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
+        val zoneId = ZoneId.of(countryCode.timezone)
         val start = startOfWeekDay.minusDays(7).atStartOfDay(Constant.utcZoneId)
         val end = startOfWeekDay.plusDays(7).atTime(23, 59, 59).withUTC()
         val list = episodeService.findAllByDateRange(countryCode, start, end)
         val pattern = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
+            val zonedDate = date.atStartOfDay(zoneId)
             val dateTitle = date.format(pattern).capitalizeWords()
-            val episodes = list.filter { it.releaseDateTime.dayOfWeek == date.dayOfWeek }
-                .sortedWith(compareBy({ it.releaseDateTime.toLocalTime() }, { it.anime?.name?.lowercase() }))
+            val episodes =
+                list.filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
 
             WeeklyAnimesDto(
                 dateTitle,
-                episodes.distinctBy { episode -> episode.anime?.uuid }.map { distinctEpisode ->
+                episodes.distinctBy { episode -> episode.anime?.uuid.toString() + episode.langType.toString() }
+                    .map { distinctEpisode ->
                     val platforms = episodes.filter { it.anime?.uuid == distinctEpisode.anime?.uuid }
                         .mapNotNull(Episode::platform)
                         .distinct()
@@ -74,9 +78,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     WeeklyAnimeDto(
                         AbstractConverter.convert(distinctEpisode.anime, AnimeNoStatusDto::class.java).toAnimeDto(),
                         distinctEpisode.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                        distinctEpisode.langType!!,
                         AbstractConverter.convert(platforms, PlatformDto::class.java)
                     )
-                }
+                    }.sortedBy { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() }
             )
         }
     }
