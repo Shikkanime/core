@@ -7,9 +7,11 @@ import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.animes.AnimeNoStatusDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import fr.shikkanime.utils.withUTC
@@ -52,10 +54,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
-        val start = ZonedDateTime.parse("${startOfWeekDay.minusDays(7)}T00:00:00Z")
-        val end = ZonedDateTime.parse("${startOfWeekDay.plusDays(7)}T23:59:59Z")
+        val start = startOfWeekDay.minusDays(7).atStartOfDay(Constant.utcZoneId)
+        val end = startOfWeekDay.plusDays(7).atTime(23, 59, 59).withUTC()
         val list = episodeService.findAllByDateRange(countryCode, start, end)
-        val pattern = DateTimeFormatter.ofPattern("EEEE", Locale.of(countryCode.locale.split("-")[0], countryCode.locale.split("-")[1]))
+        val pattern = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
             val dateTitle = date.format(pattern).capitalizeWords()
@@ -65,11 +67,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             WeeklyAnimesDto(
                 dateTitle,
                 episodes.distinctBy { episode -> episode.anime?.uuid }.map { distinctEpisode ->
-                    val platforms = episodes.mapNotNull { episode ->
-                        if (episode.anime?.uuid == distinctEpisode.anime?.uuid)
-                            episode.platform!!
-                        else null
-                    }.distinct()
+                    val platforms = episodes.filter { it.anime?.uuid == distinctEpisode.anime?.uuid }
+                        .mapNotNull(Episode::platform)
+                        .distinct()
 
                     WeeklyAnimeDto(
                         AbstractConverter.convert(distinctEpisode.anime, AnimeNoStatusDto::class.java).toAnimeDto(),

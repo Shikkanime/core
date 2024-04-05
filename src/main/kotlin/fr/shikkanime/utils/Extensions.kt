@@ -2,6 +2,7 @@ package fr.shikkanime.utils
 
 import com.mortennobel.imagescaling.ResampleOp
 import java.awt.image.BufferedImage
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
 
@@ -11,6 +12,10 @@ fun ZonedDateTime.isEqualOrAfter(other: ZonedDateTime): Boolean {
 
 fun ZonedDateTime.withUTC(): ZonedDateTime {
     return this.withZoneSameInstant(Constant.utcZoneId)
+}
+
+fun LocalDateTime.withUTC(): ZonedDateTime {
+    return this.atZone(Constant.utcZoneId)
 }
 
 fun LocalTime.isEqualOrAfter(other: LocalTime): Boolean {
