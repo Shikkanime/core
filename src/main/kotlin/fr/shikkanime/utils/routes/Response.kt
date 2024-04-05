@@ -18,30 +18,6 @@ open class Response(
     val data: Any? = null,
     val contentType: ContentType = ContentType.Application.Json,
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Response) return false
-
-        if (status != other.status) return false
-        if (data != other.data) return false
-        if (session != other.session) return false
-        if (contentType != other.contentType) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = status.hashCode()
-        result = 31 * result + (data?.hashCode() ?: 0)
-        result = 31 * result + (session?.hashCode() ?: 0)
-        result = 31 * result + contentType.hashCode()
-        return result
-    }
-
-    override fun toString(): String {
-        return "Response(status=$status, data=$data, session=$session)"
-    }
-
     companion object {
         fun ok(data: Any? = null, session: TokenDto? = null): Response =
             Response(HttpStatusCode.OK, data = data, session = session)
