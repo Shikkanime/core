@@ -85,8 +85,8 @@ class SiteController {
                     listOf(
                         SortParameter("releaseDateTime", SortParameter.Order.DESC),
                         SortParameter("season", SortParameter.Order.DESC),
+                        SortParameter("episodeType", SortParameter.Order.DESC),
                         SortParameter("number", SortParameter.Order.DESC),
-                        SortParameter("episodeType", SortParameter.Order.ASC),
                         SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
@@ -135,8 +135,8 @@ class SiteController {
                     anime.uuid,
                     listOf(
                         SortParameter("season", SortParameter.Order.ASC),
+                        SortParameter("episodeType", SortParameter.Order.DESC),
                         SortParameter("number", SortParameter.Order.ASC),
-                        SortParameter("episodeType", SortParameter.Order.ASC),
                         SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
