@@ -30,6 +30,14 @@ class AdminEpisodeController {
         return Response.template(Link.EPISODES)
     }
 
+    @Path("/delete-duplicates")
+    @Get
+    @AdminSessionAuthenticated
+    private fun deleteDuplicates(): Response {
+        episodeService.deleteDuplicates()
+        return Response.redirect(Link.EPISODES.href)
+    }
+
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated

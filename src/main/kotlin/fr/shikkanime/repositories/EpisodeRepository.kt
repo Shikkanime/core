@@ -176,4 +176,35 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                 .initialize()
         }
     }
+
+    fun isAlreadyExists(
+        anime: UUID,
+        season: Int,
+        episodeType: EpisodeType,
+        number: Int,
+        langType: LangType
+    ): Boolean {
+        return inTransaction {
+            createReadOnlyQuery(
+                it,
+                """
+                    SELECT COUNT(*) 
+                    FROM Episode 
+                    WHERE anime.uuid = :uuid 
+                    AND season = :season 
+                    AND episodeType = :episodeType 
+                    AND number = :number 
+                    AND langType = :langType
+                """.trimIndent(),
+                Long::class.java
+            )
+                .setParameter("uuid", anime)
+                .setParameter("season", season)
+                .setParameter("episodeType", episodeType)
+                .setParameter("number", number)
+                .setParameter("langType", langType)
+                .resultList
+                .first() > 0
+        }
+    }
 }
