@@ -2,6 +2,7 @@ package fr.shikkanime.dtos.animes
 
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import java.util.*
 
 open class AnimeNoStatusDto(
@@ -26,7 +27,9 @@ open class AnimeNoStatusDto(
     @Transient
     open val slug: String? = null,
     @Transient
-    open val lastReleaseDateTime: String? = null
+    open val lastReleaseDateTime: String? = null,
+    @Transient
+    open val langTypes: List<LangType>? = null,
 ) {
     fun toAnimeDto() = AnimeDto.from(this, null)
 }

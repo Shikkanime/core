@@ -77,7 +77,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         val nextSimulcast = simulcasts[2]
 
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates[0])
-        val animeEpisodes = anime.uuid?.let { episodeRepository.findAllByAnime(it).sortedBy { episode -> episode.releaseDateTime } }
+        val animeEpisodes =
+            anime.uuid?.let { episodeRepository.findAllByAnime(it).sortedBy { episode -> episode.releaseDateTime } }
         val previousEpisode =
             animeEpisodes?.lastOrNull { it.releaseDateTime.isBefore(entity.releaseDateTime) && it.episodeType == entity.episodeType && it.langType == entity.langType }
         val diff = previousEpisode?.releaseDateTime?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
@@ -110,7 +111,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     override fun save(entity: Episode): Episode {
         val copy = entity.anime!!.copy()
-        val anime = animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
+        val anime =
+            animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
         entity.anime = anime.copy()
 
         if (anime.banner.isNullOrBlank() && !copy.banner.isNullOrBlank()) {

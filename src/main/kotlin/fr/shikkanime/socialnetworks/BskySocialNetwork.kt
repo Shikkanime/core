@@ -47,7 +47,12 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     }
 
     private fun checkSession() {
-        if (initializedAt != null && initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.BSKY_SESSION_TIMEOUT, 10).toLong())
+        if (initializedAt != null && initializedAt!!.plusMinutes(
+                configCacheService.getValueAsInt(
+                    ConfigPropertyKey.BSKY_SESSION_TIMEOUT,
+                    10
+                ).toLong()
+            )
                 .isAfter(ZonedDateTime.now())
         ) {
             return
@@ -66,9 +71,11 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
-        val message = getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.BSKY_MESSAGE) ?: "")
+        val message =
+            getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.BSKY_MESSAGE) ?: "")
         val webpByteArray = FileManager.encodeToWebP(mediaImage)
-        val imageJson = runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
+        val imageJson =
+            runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
         runBlocking {
             BskyWrapper.createRecord(
                 accessJwt!!,
@@ -83,7 +90,8 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         checkSession()
         if (!isInitialized) return
         val webpByteArray = FileManager.encodeToWebP(calendarImage)
-        val imageJson = runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
+        val imageJson =
+            runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
         runBlocking {
             BskyWrapper.createRecord(
                 accessJwt!!,

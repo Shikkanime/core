@@ -5,6 +5,7 @@ import fr.shikkanime.entities.Anime_
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
@@ -168,6 +169,18 @@ class AnimeRepository : AbstractRepository<Anime>() {
     fun findAllUUIDAndImage(): List<Tuple> {
         return inTransaction {
             createReadOnlyQuery(it, "SELECT uuid, image, banner FROM Anime", Tuple::class.java)
+                .resultList
+        }
+    }
+
+    fun getAllLangTypes(anime: Anime): List<LangType> {
+        return inTransaction {
+            createReadOnlyQuery(
+                it,
+                "SELECT DISTINCT e.langType FROM Episode e WHERE e.anime = :anime",
+                LangType::class.java
+            )
+                .setParameter("anime", anime)
                 .resultList
         }
     }

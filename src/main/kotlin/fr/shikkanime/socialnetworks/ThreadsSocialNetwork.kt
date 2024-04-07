@@ -55,7 +55,9 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private fun checkSession() {
         if (isInitialized &&
             initializedAt != null &&
-            initializedAt!!.plusMinutes(configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong()).isAfter(ZonedDateTime.now())
+            initializedAt!!.plusMinutes(
+                configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong()
+            ).isAfter(ZonedDateTime.now())
         ) {
             return
         }
@@ -73,6 +75,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     override fun platformAccount(platform: PlatformDto): String {
         return when (platform.id) {
             "CRUN" -> "@crunchyroll_fr"
+            "DISN" -> "@disneyplus"
             "NETF" -> "@netflixfr"
             "PRIM" -> "@primevideofr"
             else -> platform.name
@@ -82,7 +85,8 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
-        val message = getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: "")
+        val message =
+            getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: "")
         runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
     }
 

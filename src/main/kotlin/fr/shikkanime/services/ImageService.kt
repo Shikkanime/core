@@ -549,7 +549,14 @@ object ImageService {
 
         fillRoundRect(x, y, textWidth + marginX, textHeight + marginY, 10, 10)
         color = backgroundColor
-        fillRoundRect(x + borderWidth, y + borderWidth, textWidth + marginX - (borderWidth * 2), textHeight + marginY - (borderWidth * 2), 10, 10)
+        fillRoundRect(
+            x + borderWidth,
+            y + borderWidth,
+            textWidth + marginX - (borderWidth * 2),
+            textHeight + marginY - (borderWidth * 2),
+            10,
+            10
+        )
         color = Color.WHITE
         drawString(text, x + marginX / 2, y + (marginY / 2) + textHeight - 5)
     }

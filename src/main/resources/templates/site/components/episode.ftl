@@ -1,3 +1,5 @@
+<#import "langType.ftl" as langTypeComponent />
+
 <#function getPrefixEpisode(episodeType)>
     <#switch episodeType>
         <#case "EPISODE">
@@ -34,7 +36,7 @@
                                     ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
                                 </p>
 
-                                <p class="text-muted mt-0 mb-0"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                                <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=episode.langType /></p>
                             </div>
                         </#if>
                     </div>
@@ -47,7 +49,7 @@
                                 ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
                             </p>
 
-                            <p class="text-muted mt-0 mb-1"><#if episode.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                            <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=episode.langType /></p>
                         </div>
                     </#if>
 

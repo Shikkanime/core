@@ -1,9 +1,11 @@
 package fr.shikkanime.converters.anime
 
+import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.animes.AnimeNoStatusDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
@@ -11,6 +13,9 @@ import org.hibernate.Hibernate
 import java.time.format.DateTimeFormatter
 
 class AnimeToAnimeNoStatusDtoConverter : AbstractConverter<Anime, AnimeNoStatusDto>() {
+    @Inject
+    private lateinit var animeService: AnimeService
+
     override fun convert(from: Anime): AnimeNoStatusDto {
         return AnimeNoStatusDto(
             uuid = from.uuid,
@@ -28,7 +33,8 @@ class AnimeToAnimeNoStatusDtoConverter : AbstractConverter<Anime, AnimeNoStatusD
             ) else null,
             slug = from.slug,
             lastReleaseDateTime = from.lastReleaseDateTime.withUTC()
-                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+            langTypes = animeService.getAllLangTypes(from)
         )
     }
 }

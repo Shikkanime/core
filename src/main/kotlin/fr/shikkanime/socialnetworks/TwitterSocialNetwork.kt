@@ -85,7 +85,8 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         login()
         if (!isInitialized) return
         if (twitter == null) return
-        val message = getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_MESSAGE) ?: "")
+        val message =
+            getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_MESSAGE) ?: "")
 
         val uploadMedia = twitter!!.tweets().uploadMedia(
             UUID.randomUUID().toString(),
