@@ -1,10 +1,19 @@
 <#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
-    <div class="row g-3 align-items-center mb-3">
-        <div class="col-auto">
-            <label class="form-label" for="animeInput">Anime UUID</label>
-            <input type="text" class="form-control" id="animeInput">
+    <div class="d-flex mb-3">
+        <div class="ms-0 me-auto row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="form-label" for="animeInput">Anime UUID</label>
+                <input type="text" class="form-control" id="animeInput">
+            </div>
+        </div>
+
+        <div class="ms-auto me-0">
+            <a href="/admin/episodes/delete-duplicates" class="btn btn-danger">
+                <i class="bi bi-trash"></i>
+                Delete Duplicates
+            </a>
         </div>
     </div>
 
