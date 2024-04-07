@@ -167,7 +167,10 @@ class SiteController {
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(now.minusDays(now.dayOfWeek.value.toLong() - 1), CountryCode.FR),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(
+                    now.minusDays(now.dayOfWeek.value.toLong() - 1),
+                    CountryCode.FR
+                ),
             )
         )
     }

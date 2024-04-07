@@ -3,6 +3,7 @@ package fr.shikkanime.controllers.admin
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -13,9 +14,12 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import io.ktor.http.*
 import java.util.*
+import java.util.logging.Level
 
 @Controller("/admin/platforms")
 class AdminPlatformController {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @Path
     @Get
     @AdminSessionAuthenticated
@@ -87,14 +91,19 @@ class AdminPlatformController {
     ): Response {
         val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
             ?: return Response.redirect(Link.PLATFORMS.href)
+        val platformConfiguration = abstractPlatform.configuration!!
+
         val uuid = parameters["uuid"]?.let { UUID.fromString(it) }
-        val simulcast = abstractPlatform.configuration!!.simulcasts.find { it.uuid == uuid }
-            ?: abstractPlatform.configuration!!.newPlatformSimulcast()
+        val simulcast =
+            platformConfiguration.simulcasts.find { it.uuid == uuid } ?: platformConfiguration.newPlatformSimulcast()
         simulcast.of(parameters)
 
         if (simulcast.uuid == null) {
             simulcast.uuid = UUID.randomUUID()
-            abstractPlatform.configuration?.addPlatformSimulcast(simulcast)
+
+            if (!platformConfiguration.addPlatformSimulcast(simulcast)) {
+                logger.log(Level.SEVERE, "Failed to add simulcast")
+            }
         }
 
         abstractPlatform.saveConfiguration()

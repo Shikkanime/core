@@ -120,7 +120,12 @@ class FetchCalendarJob : AbstractJob {
             val platformImage = getPlatformImage(platform)
             platformImage?.let { graphics.drawImage(it, 25, y - 25, null) }
             graphics.drawString(platformName, 65, y)
-            graphics.fillRect(25, y + 15, (platformImage?.width ?: 0) + 10 + graphics.fontMetrics.stringWidth(platformName), 2)
+            graphics.fillRect(
+                25,
+                y + 15,
+                (platformImage?.width ?: 0) + 10 + graphics.fontMetrics.stringWidth(platformName),
+                2
+            )
 
             episodes.sortedBy { it.anime.lowercase() }.groupBy { it.anime }.forEach { (anime, episodes) ->
                 val twoLines = if (episodes.size == 1) {
@@ -213,14 +218,17 @@ class FetchCalendarJob : AbstractJob {
 
         val animeBody = Jsoup.parse(animePage.bodyAsText())
         val list = animeBody.select(".info_fiche > div") ?: return@mapNotNull null
-        val licencePlatforms = list.find { it.text().contains("Licence VOD") }?.select("a")?.map { it.text() }?.toMutableList()
+        val licencePlatforms =
+            list.find { it.text().contains("Licence VOD") }?.select("a")?.map { it.text() }?.toMutableList()
         licencePlatforms?.removeIf { it.contains("TF1") }
 
         if (licencePlatforms.isNullOrEmpty()) {
             return@mapNotNull null
         }
 
-        val alternativeTitles = list.find { it.text().contains("Titre alternatif") }?.text()?.replace("Titre alternatif :", "")?.split("/") ?: emptyList()
+        val alternativeTitles =
+            list.find { it.text().contains("Titre alternatif") }?.text()?.replace("Titre alternatif :", "")?.split("/")
+                ?: emptyList()
         val detectedLanguage = languageCacheService.detectLanguage(title)
 
         if (detectedLanguage != null && detectedLanguage == "fr" && alternativeTitles.isNotEmpty()) {
@@ -253,7 +261,9 @@ class FetchCalendarJob : AbstractJob {
 
             // If the last word of the first line and the first word of the second line is the same, we move the separator
             // Or if the first word of the first line and the first word of the second line is the same, we move the separator
-            if (first.split(" ").last() == second.split(" ").first() || first.split(" ").first() == second.split(" ").first()) {
+            if (first.split(" ").last() == second.split(" ").first() || first.split(" ").first() == second.split(" ")
+                    .first()
+            ) {
                 separator++
                 val (firstHalfTry, secondHalfTry) = words.withIndex().partition { (index, _) -> index < separator }
                 first = firstHalfTry.joinToString(" ") { it.value }

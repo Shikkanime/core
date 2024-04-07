@@ -21,7 +21,6 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             languageCacheService.detectLanguage(from.description) != from.countryCode!!.name.lowercase()
         ) Status.INVALID else Status.VALID
 
-
         return AnimeDto.from(
             convert(from, AnimeNoStatusDto::class.java),
             status

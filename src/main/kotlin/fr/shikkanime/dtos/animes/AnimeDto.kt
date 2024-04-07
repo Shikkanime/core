@@ -3,6 +3,7 @@ package fr.shikkanime.dtos.animes
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import java.util.*
 
 data class AnimeDto(
@@ -18,6 +19,7 @@ data class AnimeDto(
     override val slug: String? = null,
     override val lastReleaseDateTime: String? = null,
     val status: Status? = null,
+    override val langTypes: List<LangType>? = null,
 ) : AnimeNoStatusDto(
     uuid,
     countryCode,
@@ -46,6 +48,7 @@ data class AnimeDto(
                 animeNoStatusDto.slug,
                 animeNoStatusDto.lastReleaseDateTime,
                 status,
+                animeNoStatusDto.langTypes
             )
         }
     }

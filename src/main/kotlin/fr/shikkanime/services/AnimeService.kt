@@ -71,20 +71,22 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 dateTitle,
                 episodes.distinctBy { episode -> episode.anime?.uuid.toString() + episode.langType.toString() }
                     .map { distinctEpisode ->
-                    val platforms = episodes.filter { it.anime?.uuid == distinctEpisode.anime?.uuid }
-                        .mapNotNull(Episode::platform)
-                        .distinct()
+                        val platforms = episodes.filter { it.anime?.uuid == distinctEpisode.anime?.uuid }
+                            .mapNotNull(Episode::platform)
+                            .distinct()
 
-                    WeeklyAnimeDto(
-                        AbstractConverter.convert(distinctEpisode.anime, AnimeNoStatusDto::class.java).toAnimeDto(),
-                        distinctEpisode.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                        distinctEpisode.langType!!,
-                        AbstractConverter.convert(platforms, PlatformDto::class.java)
-                    )
+                        WeeklyAnimeDto(
+                            AbstractConverter.convert(distinctEpisode.anime, AnimeNoStatusDto::class.java).toAnimeDto(),
+                            distinctEpisode.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                            distinctEpisode.langType!!,
+                            AbstractConverter.convert(platforms, PlatformDto::class.java)
+                        )
                     }.sortedBy { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() }
             )
         }
     }
+
+    fun getAllLangTypes(anime: Anime) = animeRepository.getAllLangTypes(anime)
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720, bypass)

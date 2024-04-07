@@ -103,9 +103,10 @@ class AnimationDigitalNetworkPlatform :
         val descriptionLowercase = animeDescription.lowercase()
 
         isSimulcasted = isSimulcasted ||
-                configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)?.let {
-                    Regex(it).containsMatchIn(descriptionLowercase)
-                } == true
+                configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)
+                    ?.let {
+                        Regex(it).containsMatchIn(descriptionLowercase)
+                    } == true
 
         if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
 

@@ -30,6 +30,22 @@ open class PlatformSimulcast(
             ),
         )
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PlatformSimulcast) return false
+
+        if (uuid != other.uuid) return false
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = uuid?.hashCode() ?: 0
+        result = 31 * result + name.hashCode()
+        return result
+    }
 }
 
 abstract class PlatformConfiguration<S : PlatformSimulcast>(

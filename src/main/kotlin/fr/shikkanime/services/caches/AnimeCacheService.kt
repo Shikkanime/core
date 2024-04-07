@@ -41,9 +41,10 @@ class AnimeCacheService : AbstractCacheService {
         AbstractConverter.convert(animeService.findBySlug(it), AnimeDto::class.java)
     }
 
-    private val weeklyCache = MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(Episode::class.java)) {
-        animeService.getWeeklyAnimes(it.localDate, it.countryCode)
-    }
+    private val weeklyCache =
+        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(Episode::class.java)) {
+            animeService.getWeeklyAnimes(it.localDate, it.countryCode)
+        }
 
     fun findAllBy(
         countryCode: CountryCode?,

@@ -1,4 +1,5 @@
 <#import "_navigation.ftl" as navigation />
+<#import "components/langType.ftl" as langTypeComponent />
 
 <#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr/calendar\"/>" />
 
@@ -49,7 +50,7 @@
                                                 <div class="vr mx-2"></div>
                                                 <div class="d-block mt-2">
                                                     <span class="h6 text-truncate-2 mb-0 fw-bold">${release.anime.shortName}</span>
-                                                    <p class="text-muted mt-0 mb-1"><#if release.langType == 'SUBTITLES'>Sous-titrage<#else>Doublage</#if></p>
+                                                    <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=release.langType /></p>
                                                 </div>
                                             </div>
                                         </div>
