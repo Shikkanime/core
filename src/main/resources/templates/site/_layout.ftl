@@ -37,7 +37,7 @@
 
         <#if (analyticsDomain?? && analyticsDomain?length != 0) && (analyticsApi?? && analyticsApi?length != 0) && (analyticsScript?? && analyticsScript?length != 0)>
             <script data-domain="${analyticsDomain}" data-api="${analyticsApi}">
-                ${su.unSanitizeXSS(analyticsScript)}
+                ${su.unsanitizeXSS(analyticsScript)}
             </script>
         </#if>
     </head>

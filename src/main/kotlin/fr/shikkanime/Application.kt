@@ -5,6 +5,7 @@ import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
@@ -24,7 +25,22 @@ fun main() {
 }
 
 fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Boolean = true): NettyApplicationEngine {
+    val animeService = Constant.injector.getInstance(AnimeService::class.java)
+    val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
+    animeService.preIndex()
+
+    animeService.findAll().forEach { anime ->
+        anime.status = StringUtils.getStatus(anime)
+        animeService.update(anime)
+    }
+
+    episodeService.findAll().forEach { episode ->
+        episode.status = StringUtils.getStatus(episode)
+        episodeService.update(episode)
+    }
+
     ImageService.loadCache()
+    ImageService.addAll()
 
     if (adminPassword != null) {
         val memberService = Constant.injector.getInstance(MemberService::class.java)
@@ -35,20 +51,6 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
             logger.info("Admin user already exists")
         }
     }
-
-    val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    animeService.preIndex()
-
-    animeService.findAll().forEach {
-        val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
-
-        if (it.slug != toSlug) {
-            it.slug = toSlug
-            animeService.update(it)
-        }
-    }
-
-    ImageService.addAll()
 
     logger.info("Starting jobs...")
     // Every 10 seconds

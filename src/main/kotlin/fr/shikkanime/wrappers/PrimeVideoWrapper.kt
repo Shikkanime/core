@@ -1,7 +1,6 @@
 package fr.shikkanime.wrappers
 
 import com.google.gson.JsonObject
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.HttpRequest
@@ -34,12 +33,7 @@ object PrimeVideoWrapper {
                     addProperty("banner", showBanner)
                     addProperty("description", showDescription)
                 })
-                addProperty(
-                    "id",
-                    "${countryCode}-$platform-${
-                        EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
-                    }-${LangType.SUBTITLES}"
-                )
+                addProperty("id", EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8))
                 addProperty("season", season)
                 addProperty("number", episodeNumber)
                 addProperty("title", episodeTitle)

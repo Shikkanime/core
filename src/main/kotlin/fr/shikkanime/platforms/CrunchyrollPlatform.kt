@@ -161,8 +161,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             requireNotNull(episodeMetadata.getAsString("eligible_region")) { "Eligible region is null" }
         if (!eligibleRegion.contains(countryCode.name)) throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
 
-        val audio = episodeMetadata.getAsString("audio_locale")?.takeIf { it.isNotBlank() }
-        val isDubbed = audio == countryCode.locale
+        val audioLocale = requireNotNull(episodeMetadata.getAsString("audio_locale")) { "Audio locale is null" }
+        val isDubbed = audioLocale == countryCode.locale
         val subtitles = episodeMetadata.getAsJsonArray("subtitle_locales").map { it.asString!! }
 
         if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) throw EpisodeNoSubtitlesOrVoiceException(
@@ -170,7 +170,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
-        val (id, hash) = getEpisodeIdAndHash(jsonObject, countryCode, langType)
+
+        val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
+        val (deprecatedHash, hash) = getDeprecatedHashAndHash(countryCode, id, audioLocale, langType)
 
         val releaseDate =
             requireNotNull(
@@ -213,7 +215,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (!checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
-        hashCache.add(hash)
+        hashCache.addAll(listOf(deprecatedHash, hash))
 
         return Episode(
             platform = getPlatform(),
@@ -228,6 +230,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             ),
             episodeType = episodeType,
             langType = langType,
+            audioLocale = audioLocale,
             hash = hash,
             releaseDateTime = releaseDate,
             season = season,
@@ -238,22 +241,5 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             duration = duration,
             description = description
         )
-    }
-
-    private fun getEpisodeIdAndHash(
-        jsonObject: JsonObject,
-        countryCode: CountryCode,
-        langType: LangType
-    ): Pair<String, String> {
-        // @DEPRECATED
-        val externalId = jsonObject.getAsString("external_id")?.split(".")?.last() ?: ""
-        val deprecatedHash = "${countryCode}-${getPlatform()}-$externalId-$langType"
-        if (hashCache.contains(deprecatedHash)) throw EpisodeAlreadyReleasedException()
-        // @DEPRECATED
-
-        val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
-        val hash = "${countryCode}-${getPlatform()}-$id-$langType"
-        if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
-        return Pair(id, hash)
     }
 }

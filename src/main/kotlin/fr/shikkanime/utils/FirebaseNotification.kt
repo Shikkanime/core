@@ -30,6 +30,7 @@ object FirebaseNotification {
 
     fun send(episodeDto: EpisodeDto) {
         init()
+        if (!isInitialized) return
 
         FirebaseMessaging.getInstance()
             .send(

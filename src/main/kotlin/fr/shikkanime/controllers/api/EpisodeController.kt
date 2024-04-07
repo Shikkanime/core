@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.caches.EpisodeCacheService
@@ -48,8 +49,10 @@ class EpisodeController : HasPageableRoute() {
         @QueryParam("limit") limitParam: Int?,
         @QueryParam("sort") sortParam: String?,
         @QueryParam("desc") descParam: String?,
+        @QueryParam("status") statusParam: String?,
     ): Response {
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
+        val status = statusParam?.let { Status.valueOf(it) }
 
         return Response.ok(
             episodeCacheService.findAllBy(
@@ -57,7 +60,8 @@ class EpisodeController : HasPageableRoute() {
                 animeParam,
                 sortParameters,
                 page,
-                limit
+                limit,
+                status
             )
         )
     }

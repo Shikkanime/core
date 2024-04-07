@@ -1,11 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.utils.Constant
+import fr.shikkanime.entities.enums.*
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
 import java.time.ZonedDateTime
@@ -66,13 +62,15 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         anime: UUID?,
         sort: List<SortParameter>,
         page: Int,
-        limit: Int
+        limit: Int,
+        status: Status?,
     ): Pageable<Episode> {
         val queryBuilder = StringBuilder("FROM Episode e")
         val whereClause = mutableListOf<String>()
 
         anime?.let { whereClause.add("e.anime.uuid = :uuid") }
         countryCode?.let { whereClause.add("e.anime.countryCode = :countryCode") }
+        status?.let { whereClause.add("e.status = :status") }
 
         if (whereClause.isNotEmpty()) {
             queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
@@ -84,6 +82,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
             val query = createReadOnlyQuery(it, queryBuilder.toString(), getEntityClass())
             countryCode?.let { query.setParameter("countryCode", countryCode) }
             anime?.let { query.setParameter("uuid", anime) }
+            status?.let { query.setParameter("status", status) }
             buildPageableQuery(query, page, limit).initialize()
         }
     }
@@ -130,8 +129,7 @@ class EpisodeRepository : AbstractRepository<Episode>() {
 
     fun findAllByPlatformDeprecatedEpisodes(
         platform: Platform,
-        lastUpdateDateTime: ZonedDateTime,
-        notLike: String? = null
+        lastUpdateDateTime: ZonedDateTime
     ): List<Episode> {
         return inTransaction {
             createReadOnlyQuery(
@@ -140,17 +138,15 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                     FROM Episode 
                     WHERE platform = :platform 
                     AND (
-                        (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR
-                        (description IS NULL OR description = '') OR
-                        image = :defaultImage ${notLike?.let { "OR url NOT LIKE :notLike" } ?: ""}
+                      (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR
+                      status = :status
                     )
                 """.trimIndent(),
                 getEntityClass()
             )
                 .setParameter("platform", platform)
                 .setParameter("lastUpdateDateTime", lastUpdateDateTime)
-                .setParameter("defaultImage", Constant.DEFAULT_IMAGE_PREVIEW)
-                .apply { notLike?.let { setParameter("notLike", notLike) } }
+                .setParameter("status", Status.INVALID)
                 .resultList
                 .initialize()
         }

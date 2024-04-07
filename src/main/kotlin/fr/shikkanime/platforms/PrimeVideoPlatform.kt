@@ -32,11 +32,15 @@ class PrimeVideoPlatform :
         val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.primeVideoSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
-
         val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode.name, key.countryCode.locale, id)
 
         return episodes.map {
             val animeName = it.getAsJsonObject("show").getAsString("name")!!
+
+            val computedId = it.getAsString("id")!!
+            val audioLocale = "ja-JP"
+            val langType = LangType.SUBTITLES
+            val (_, hash) = getDeprecatedHashAndHash(key.countryCode, computedId, audioLocale, langType)
 
             Episode(
                 platform = getPlatform(),
@@ -50,8 +54,9 @@ class PrimeVideoPlatform :
                     slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
                 ),
                 episodeType = EpisodeType.EPISODE,
-                langType = LangType.SUBTITLES,
-                hash = it.getAsString("id")!!,
+                langType = langType,
+                audioLocale = audioLocale,
+                hash = hash,
                 releaseDateTime = releaseDateTime,
                 season = it.getAsInt("season")!!,
                 number = it.getAsInt("number")!!,

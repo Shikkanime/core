@@ -1,9 +1,8 @@
 package fr.shikkanime.dtos
 
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Status
 import java.util.*
 
 data class EpisodeDto(
@@ -12,6 +11,7 @@ data class EpisodeDto(
     var anime: AnimeDto,
     val episodeType: EpisodeType,
     val langType: LangType,
+    val audioLocale: String?,
     val hash: String,
     val releaseDateTime: String,
     val season: Int,
@@ -22,6 +22,6 @@ data class EpisodeDto(
     val duration: Long,
     val description: String?,
     val uncensored: Boolean,
-    val lastUpdateDateTime: String?,
-    val status: Status? = null,
+    val lastUpdateDateTime: String,
+    val status: Status,
 )

@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
@@ -135,7 +136,7 @@ class AnimationDigitalNetworkPlatform :
         if (numberAsString?.contains(".") == true || showType == "OAV") episodeType =
             EpisodeType.SPECIAL
 
-        val id = jsonObject.getAsInt("id")
+        val id = requireNotNull(jsonObject.getAsInt("id")?.toString()) { "Id is null" }
         val title = jsonObject.getAsString("name")?.ifBlank { null }
         val url = requireNotNull(jsonObject.getAsString("url")) { "Url is null" }
         val image = requireNotNull(jsonObject.getAsString("image2x")) { "Image is null" }
@@ -143,11 +144,8 @@ class AnimationDigitalNetworkPlatform :
         val description = jsonObject.getAsString("summary")?.replace('\n', ' ')?.ifBlank { null }
 
         return jsonObject.getAsJsonArray("languages").map {
-            val langType = when (it.asString) {
-                "vostf" -> LangType.SUBTITLES
-                "vf" -> LangType.VOICE
-                else -> throw Exception("Language is null")
-            }
+            val (langType, audioLocale) = getLangTypeAndAudioLocale(it, countryCode)
+            val (_, hash) = getDeprecatedHashAndHash(countryCode, id, audioLocale, langType)
 
             Episode(
                 platform = getPlatform(),
@@ -162,7 +160,8 @@ class AnimationDigitalNetworkPlatform :
                 ),
                 episodeType = episodeType,
                 langType = langType,
-                hash = "${countryCode}-${getPlatform()}-$id-$langType",
+                audioLocale = audioLocale,
+                hash = hash,
                 releaseDateTime = releaseDate,
                 season = season,
                 number = number,
@@ -173,5 +172,19 @@ class AnimationDigitalNetworkPlatform :
                 description = description
             )
         }
+    }
+
+    private fun getLangTypeAndAudioLocale(
+        it: JsonElement,
+        countryCode: CountryCode
+    ): Pair<LangType, String> {
+        val langType = when (it.asString) {
+            "vostf" -> LangType.SUBTITLES
+            "vf" -> LangType.VOICE
+            else -> throw Exception("Language is null")
+        }
+
+        val audioLocale = if (langType == LangType.VOICE) countryCode.locale else "ja-JP"
+        return Pair(langType, audioLocale)
     }
 }

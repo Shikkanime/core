@@ -1,4 +1,4 @@
-package fr.shikkanime.dtos.enums
+package fr.shikkanime.entities.enums
 
 enum class Status {
     VALID,

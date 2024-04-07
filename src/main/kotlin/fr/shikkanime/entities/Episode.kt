@@ -3,6 +3,7 @@ package fr.shikkanime.entities
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.Status
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -36,6 +37,8 @@ class Episode(
     @Column(nullable = false, name = "lang_type")
     @Enumerated(EnumType.STRING)
     var langType: LangType? = null,
+    @Column(nullable = true, name = "audio_locale")
+    var audioLocale: String? = null,
     @Column(nullable = false, unique = true)
     var hash: String? = null,
     @Column(nullable = false, name = "release_date_time")
@@ -56,4 +59,7 @@ class Episode(
     var description: String? = null,
     @Column(nullable = true, name = "last_update_date_time")
     var lastUpdateDateTime: ZonedDateTime? = releaseDateTime,
+    @Column(nullable = true, name = "status")
+    @Enumerated(EnumType.STRING)
+    var status: Status = Status.VALID,
 ) : ShikkEntity(uuid)

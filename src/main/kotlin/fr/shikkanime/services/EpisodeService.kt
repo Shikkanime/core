@@ -10,6 +10,7 @@ import fr.shikkanime.repositories.EpisodeRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -35,8 +36,9 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         anime: UUID?,
         sort: List<SortParameter>,
         page: Int,
-        limit: Int
-    ) = episodeRepository.findAllBy(countryCode, anime, sort, page, limit)
+        limit: Int,
+        status: Status?,
+    ) = episodeRepository.findAllBy(countryCode, anime, sort, page, limit, status)
 
     fun findAllHashes() = episodeRepository.findAllHashes()
 
@@ -46,10 +48,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     fun findAllByPlatformDeprecatedEpisodes(
         platform: Platform,
-        lastUpdateDateTime: ZonedDateTime,
-        notLike: String? = null
-    ) =
-        episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime, notLike)
+        lastUpdateDateTime: ZonedDateTime
+    ) = episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime)
 
     fun findAllByDateRange(
         countryCode: CountryCode,
@@ -150,6 +150,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             entity.description = entity.description!!.substring(0, 1000)
         }
 
+        entity.status = StringUtils.getStatus(entity)
         val savedEntity = super.save(entity)
         addImage(savedEntity.uuid!!, savedEntity.image!!)
         MapCache.invalidate(Episode::class.java)
@@ -161,6 +162,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
         parameters["episodeType"]?.let { episode.episodeType = EpisodeType.valueOf(it) }
         parameters["langType"]?.let { episode.langType = LangType.valueOf(it) }
+        parameters["audioLocale"]?.let { episode.audioLocale = it }
         parameters["hash"]?.takeIf { it.isNotBlank() }?.let { episode.hash = it }
         parameters["releaseDateTime"]?.takeIf { it.isNotBlank() }
             ?.let { episode.releaseDateTime = ZonedDateTime.parse("$it:00Z") }
@@ -178,6 +180,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { episode.description = it }
 
+        episode.status = StringUtils.getStatus(episode)
         episode.lastUpdateDateTime = ZonedDateTime.now()
         val update = super.update(episode)
         MapCache.invalidate(Episode::class.java)

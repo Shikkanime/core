@@ -1,12 +1,12 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.exceptions.EpisodeAlreadyReleasedException
 import fr.shikkanime.platforms.configuration.PlatformConfiguration
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.*
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
@@ -67,5 +67,19 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val folder = File(Constant.dataFolder, "config")
         if (!folder.exists()) folder.mkdirs()
         return File(folder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
+    }
+
+    protected fun getDeprecatedHashAndHash(
+        countryCode: CountryCode,
+        computedId: String,
+        audioLocale: String,
+        langType: LangType,
+        add: Boolean = true
+    ): Pair<String, String> {
+        val deprecatedHash = StringUtils.getDeprecatedHash(countryCode, getPlatform(), computedId, langType)
+        val hash = StringUtils.getHash(countryCode, getPlatform(), computedId, audioLocale)
+        if (hashCache.contains(deprecatedHash) || hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
+        if (add) hashCache.addAll(listOf(deprecatedHash, hash))
+        return Pair(deprecatedHash, hash)
     }
 }

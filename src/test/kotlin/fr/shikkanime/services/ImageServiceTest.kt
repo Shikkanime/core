@@ -1,15 +1,11 @@
 package fr.shikkanime.services
 
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.SimulcastDto
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
@@ -63,10 +59,12 @@ class ImageServiceTest {
                 ),
                 status = Status.VALID,
                 slug = "frieren",
-                lastReleaseDateTime = "2024-03-01T20:30:00Z"
+                lastReleaseDateTime = "2024-03-01T20:30:00Z",
+                langTypes = listOf(LangType.VOICE),
             ),
             episodeType = EpisodeType.EPISODE,
             langType = LangType.VOICE,
+            audioLocale = CountryCode.FR.locale,
             hash = "FR-CRUN-922724-VOICE",
             releaseDateTime = "2024-03-01T20:30:00Z",
             season = 1,

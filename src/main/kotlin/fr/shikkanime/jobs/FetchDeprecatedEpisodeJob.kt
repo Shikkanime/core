@@ -5,6 +5,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
@@ -13,6 +14,7 @@ import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
@@ -40,14 +42,10 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         )
 
         val adnEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.ANIM, deprecatedDateTime)
-        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(
-            Platform.CRUN,
-            deprecatedDateTime,
-            "https://www.crunchyroll.com/fr/watch/%"
-        )
+        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
         val primeVideoEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.PRIM, deprecatedDateTime)
 
-        val episodes = (adnEpisodes + crunchyrollEpisodes + primeVideoEpisodes).shuffled().take(takeSize)
+        val episodes = (adnEpisodes + crunchyrollEpisodes).shuffled().take(takeSize)
 
         logger.info("Found ${episodes.size} episodes")
 
@@ -59,9 +57,15 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         val cms = runBlocking { CrunchyrollWrapper.getCMS(anonymousAccessToken) }
         var count = 0
 
-        episodes.forEachIndexed { index, episode ->
-            logger.info("Fetching episode description ${index + 1}/${episodes.size}")
+        // PARALLEL
+        episodes.parallelStream().forEach { episode ->
+            if (update(episode, anonymousAccessToken, cms, now)) {
+                count++
+            }
+        }
 
+        // SYNCHRONOUS
+        primeVideoEpisodes.forEach { episode ->
             if (update(episode, anonymousAccessToken, cms, now)) {
                 count++
             }
@@ -95,9 +99,13 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         try {
             val content =
                 runBlocking { normalizeContent(episode, anonymousAccessToken, cms) } ?: return false
+            val id = requireNotNull("[A-Z]{2}-[A-Z]{4}-(.*)-.*".toRegex().find(episode.hash!!)?.groupValues?.get(1)) {
+                "Error while fetching episode description for $identifier"
+            }
             val title = normalizeTitle(episode.platform!!, content)
             val description = normalizeDescription(episode.platform!!, content)
             val image = normalizeImage(episode.platform!!, content)
+            val audioLocale = normalizeAudioLocale(episode.platform!!, episode, content)
             logger.config("$identifier : $title - $description - $image")
 
             if (title != null && title != episode.title) {
@@ -126,6 +134,19 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 needUpdate = true
             }
 
+            if (audioLocale != episode.audioLocale) {
+                episode.audioLocale = audioLocale
+                needUpdate = true
+            }
+
+            val computedHash = StringUtils.getHash(episode.anime!!.countryCode!!, episode.platform!!, id, audioLocale)
+
+            if (episode.hash != computedHash) {
+                episode.hash = computedHash
+                needUpdate = true
+            }
+
+            episode.status = StringUtils.getStatus(episode)
             episode.lastUpdateDateTime = now
             episodeService.update(episode)
         } catch (e: Exception) {
@@ -166,7 +187,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                     episode.anime!!.countryCode!!.name,
                     episode.anime!!.countryCode!!.locale,
                     id
-                ).find { it.getAsString("id") == episode.hash }
+                ).find { episode.hash!!.contains(it.getAsString("id")!!) }
             }
 
             else -> null
@@ -213,5 +234,23 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             Platform.PRIM -> content.getAsString("image")!!
             else -> content.getAsString("image2x")!!
         }
+    }
+
+    fun normalizeAudioLocale(platform: Platform, episode: Episode, content: JsonObject): String {
+        return when (platform) {
+            Platform.CRUN -> content.getAsJsonObject("episode_metadata").getAsString("audio_locale")
+            Platform.ANIM -> try {
+                val langType = LangType.valueOf(episode.hash!!.split("-").last())
+
+                when (langType) {
+                    LangType.SUBTITLES -> "ja-JP"
+                    LangType.VOICE -> "fr-FR"
+                }
+            } catch (e: Exception) {
+                null
+            }
+
+            else -> null
+        } ?: "ja-JP"
     }
 }

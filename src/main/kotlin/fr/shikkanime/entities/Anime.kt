@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -49,6 +50,9 @@ class Anime(
     var slug: String? = null,
     @Column(nullable = false, name = "last_release_date_time")
     var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
+    @Column(nullable = true, name = "status")
+    @Enumerated(EnumType.STRING)
+    var status: Status = Status.VALID,
 ) : ShikkEntity(uuid) {
     fun copy() = Anime(
         uuid,

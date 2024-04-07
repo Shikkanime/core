@@ -7,6 +7,7 @@ import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.MapCache
 import java.util.*
@@ -18,7 +19,7 @@ class EpisodeCacheService : AbstractCacheService {
     private val cache =
         MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<EpisodeDto>>(classes = listOf(Episode::class.java)) {
             PageableDto.fromPageable(
-                episodeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
+                episodeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit, it.status),
                 EpisodeDto::class.java
             )
         }
@@ -28,6 +29,7 @@ class EpisodeCacheService : AbstractCacheService {
         uuid: UUID?,
         sort: List<SortParameter>,
         page: Int,
-        limit: Int
-    ) = cache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit)]
+        limit: Int,
+        status: Status? = null,
+    ) = cache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, status)]
 }

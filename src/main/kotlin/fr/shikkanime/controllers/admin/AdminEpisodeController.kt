@@ -6,7 +6,9 @@ import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.jobs.FetchDeprecatedEpisodeJob
 import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -28,6 +30,14 @@ class AdminEpisodeController {
     @AdminSessionAuthenticated
     private fun getEpisodes(): Response {
         return Response.template(Link.EPISODES)
+    }
+
+    @Path("/update-all")
+    @Get
+    @AdminSessionAuthenticated
+    private fun updateAllEpisodes(): Response {
+        Constant.injector.getInstance(FetchDeprecatedEpisodeJob::class.java)?.run()
+        return Response.redirect(Link.EPISODES.href)
     }
 
     @Path("/{uuid}")

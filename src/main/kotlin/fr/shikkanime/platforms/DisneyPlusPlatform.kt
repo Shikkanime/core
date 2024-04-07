@@ -140,7 +140,7 @@ class DisneyPlusPlatform :
 
         val number = jsonObject.getAsInt("episodeSequenceNumber")
 
-        val id = jsonObject.getAsString("contentId")
+        val id = requireNotNull(jsonObject.getAsString("contentId")) { "Id is null" }
 
         val title =
             titles.getAsJsonObject("program")?.getAsJsonObject("default")?.getAsString("content")?.ifBlank { null }
@@ -164,6 +164,8 @@ class DisneyPlusPlatform :
         val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
+        val audioLocale = "ja-JP"
+        val (_, hash) = getDeprecatedHashAndHash(countryCode, id, audioLocale, langType)
 
         return Episode(
             platform = getPlatform(),
@@ -178,7 +180,8 @@ class DisneyPlusPlatform :
             ),
             episodeType = EpisodeType.EPISODE,
             langType = langType,
-            hash = "${countryCode}-${getPlatform()}-$id-$langType",
+            audioLocale = audioLocale,
+            hash = hash,
             releaseDateTime = releaseDateTime,
             season = season,
             number = number,

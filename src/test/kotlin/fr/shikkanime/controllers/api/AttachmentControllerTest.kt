@@ -2,7 +2,7 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.module
 import fr.shikkanime.services.AnimeService

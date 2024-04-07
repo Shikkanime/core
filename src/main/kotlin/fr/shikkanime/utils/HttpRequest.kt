@@ -80,7 +80,7 @@ class HttpRequest : AutoCloseable {
         isBrowserInitialized = true
     }
 
-    fun getBrowser(url: String, selector: String? = null, retry: Int = 3): Document {
+    fun getBrowser(url: String, selector: String? = null, retry: Int = 2): Document {
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 

@@ -1,10 +1,27 @@
 <#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
-    <div class="row g-3 align-items-center mb-3">
-        <div class="col-auto">
-            <label class="form-label" for="animeInput">Anime UUID</label>
-            <input type="text" class="form-control" id="animeInput">
+    <div class="d-flex align-content-center align-items-center mb-3">
+        <div class="ms-0 me-auto row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="form-label" for="animeInput">Anime UUID</label>
+                <input type="text" class="form-control" id="animeInput">
+            </div>
+            <div class="col-auto">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="invalidCheckbox">
+                    <label class="form-check-label" for="invalidCheckbox">
+                        Invalid
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="ms-auto me-0">
+            <a href="/admin/episodes/update-all" class="btn btn-danger">
+                <i class="bi bi-arrow-clockwise"></i>
+                Update all
+            </a>
         </div>
     </div>
 
@@ -80,6 +97,12 @@
 
             if (anime) {
                 params = '?anime=' + anime;
+            }
+
+            let isInvalid = document.getElementById('invalidCheckbox').checked;
+
+            if (isInvalid) {
+                params += '&status=INVALID';
             }
 
             return await callApi('/api/v1/episodes' + params + '&page=' + (page || 1) + '&limit=12');
@@ -161,6 +184,12 @@
                 buildTable(pageable.data);
                 buildPagination(pageable);
             }, 500);
+        });
+
+        document.getElementById('invalidCheckbox').addEventListener('change', async (event) => {
+            const pageable = await getEpisodes(document.getElementById('animeInput').value);
+            buildTable(pageable.data);
+            buildPagination(pageable);
         });
     </script>
 </@navigation.display>
