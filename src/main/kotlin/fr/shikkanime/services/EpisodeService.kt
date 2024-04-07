@@ -115,24 +115,13 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
         entity.anime = anime.copy()
 
-        if (episodeRepository.isAlreadyExists(
-                anime.uuid!!,
-                entity.season!!,
-                entity.episodeType!!,
-                entity.number!!,
-                entity.langType!!
-            )
-        ) {
-            throw IllegalArgumentException("Episode already exists")
-        }
-
         if (anime.banner.isNullOrBlank() && !copy.banner.isNullOrBlank()) {
             anime.banner = copy.banner
         }
 
         entity.number.takeIf { it == -1 }?.let {
             entity.number = episodeRepository.getLastNumber(
-                anime.uuid,
+                anime.uuid!!,
                 entity.platform!!,
                 entity.season!!,
                 entity.episodeType!!,
@@ -197,22 +186,6 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
 
     override fun delete(entity: Episode) {
         super.delete(entity)
-        MapCache.invalidate(Episode::class.java)
-    }
-
-    fun deleteDuplicates() {
-        val all = episodeRepository.findAll()
-        // Group by anime, season, episodeType, number, langType
-        // Filter by having count > 1
-        val grouped = all.groupBy { it.anime?.uuid to it.season to it.episodeType to it.number to it.langType }
-        val duplicates = grouped.values.filter { it.size > 1 }
-
-        duplicates.forEach { group ->
-            val sorted = group.sortedBy { it.releaseDateTime }
-            val toDelete = sorted.drop(1)
-            toDelete.forEach { episodeRepository.delete(it) }
-        }
-
         MapCache.invalidate(Episode::class.java)
     }
 }
