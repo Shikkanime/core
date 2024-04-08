@@ -15,7 +15,7 @@ val playwrightVersion = "1.42.0"
 val jsoupVersion = "1.17.2"
 val gsonVersion = "2.10.1"
 val openCvVersion = "4.9.0-0"
-val bcprovVersion = "1.77"
+val bcprovVersion = "1.78"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.2.0"
 
