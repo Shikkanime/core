@@ -29,7 +29,7 @@ val h2Version = "2.2.224"
 plugins {
     kotlin("jvm") version "2.0.0-Beta5"
     kotlin("kapt") version "1.9.23"
-    id("io.ktor.plugin") version "2.3.9"
+    id("io.ktor.plugin") version "2.3.10"
     jacoco
     id("org.sonarqube") version "5.0.0.4638"
 }
