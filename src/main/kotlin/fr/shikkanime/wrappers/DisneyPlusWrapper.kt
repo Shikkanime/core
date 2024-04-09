@@ -9,13 +9,11 @@ import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
 
 object DisneyPlusWrapper {
-    private const val BASE_URL = "https://disney.api.edge.bamgrid.com"
-
     suspend fun getAccessToken(authorization: String?, refreshToken: String?): String {
         require(!authorization.isNullOrBlank() && !refreshToken.isNullOrBlank()) { "Missing Disney+ authorization or refresh token" }
 
         val loginDevice = HttpRequest().post(
-            "$BASE_URL/graph/v1/device/graphql",
+            "https://disney.api.edge.bamgrid.com/graph/v1/device/graphql",
             headers = mapOf(
                 "Authorization" to authorization,
             ),
@@ -42,7 +40,7 @@ object DisneyPlusWrapper {
 
     suspend fun getSeasons(accessToken: String, countryCode: CountryCode, id: String): List<String> {
         val seasonsResponse = HttpRequest().get(
-            "${BASE_URL}/svc/content/DmcSeriesBundle/version/5.1/region/${countryCode.name}/audience/k-false,l-true/maturity/1850/language/${countryCode.locale}/encodedSeriesId/$id",
+            "https://disney.content.edge.bamgrid.com/svc/content/DmcSeriesBundle/version/5.1/region/${countryCode.name}/audience/k-false,l-true/maturity/1850/language/${countryCode.locale}/encodedSeriesId/$id",
             mapOf("Authorization" to "Bearer $accessToken")
         )
 
@@ -62,7 +60,7 @@ object DisneyPlusWrapper {
 
         do {
             val url =
-                "${BASE_URL}/svc/content/DmcEpisodes/version/5.1/region/${countryCode.name}/audience/k-false,l-true/maturity/1850/language/${countryCode.locale}/seasonId/$seasonId/pageSize/15/page/${page++}"
+                "https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/${countryCode.name}/audience/k-false,l-true/maturity/1850/language/${countryCode.locale}/seasonId/$seasonId/pageSize/15/page/${page++}"
             val response = HttpRequest().get(url, mapOf("Authorization" to "Bearer $accessToken"))
             require(response.status.value == 200) { "Failed to fetch Disney+ content" }
             val json = ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java)
