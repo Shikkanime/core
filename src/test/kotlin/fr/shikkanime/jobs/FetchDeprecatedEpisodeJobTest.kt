@@ -170,7 +170,7 @@ class FetchDeprecatedEpisodeJobTest {
             )
         }
 
-        val content1 = list.first { it.getAsString("id") == "FR-PRIM-467dd829-SUBTITLES" }
+        val content1 = list.first { it.getAsString("id") == "467dd829" }
         assertEquals(
             "https://m.media-amazon.com/images/S/pv-target-images/3be1307dd8c3e901ca1b97c0f50142657aaa9db169ddb98c899dc8a2b1bcdaa4._AC_SX720_FMjpg_.jpg",
             fetchDeprecatedEpisodeJob.normalizeImage(Platform.PRIM, content1)
@@ -186,7 +186,7 @@ class FetchDeprecatedEpisodeJobTest {
             fetchDeprecatedEpisodeJob.normalizeDescription(Platform.PRIM, content1)
         )
 
-        val content2 = list.first { it.getAsString("id") == "FR-PRIM-de79b9d1-SUBTITLES" }
+        val content2 = list.first { it.getAsString("id") == "de79b9d1" }
 
         assertEquals(
             "https://m.media-amazon.com/images/S/pv-target-images/57471c2ecc25e001050ae0a12acbfa12c3ee4da88eb7d1d142749434c4500596._AC_SX720_FMjpg_.jpg",

@@ -162,7 +162,7 @@ class AnimationDigitalNetworkPlatform :
                 ),
                 episodeType = episodeType,
                 langType = langType,
-                hash = "${countryCode}-${getPlatform()}-$id-$langType",
+                hash = StringUtils.getHash(countryCode, getPlatform(), id.toString(), langType),
                 releaseDateTime = releaseDate,
                 season = season,
                 number = number,

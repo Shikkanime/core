@@ -12,6 +12,10 @@ updates:
       - "Ziedelth"
     reviewers:
       - "Ziedelth"
+    groups:
+      ktor:
+        patterns:
+          - "*ktor*"
 
   - package-ecosystem: "github-actions"
     directory: "/"

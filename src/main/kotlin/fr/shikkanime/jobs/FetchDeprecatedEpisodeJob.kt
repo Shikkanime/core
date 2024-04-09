@@ -13,6 +13,7 @@ import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
@@ -124,6 +125,16 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
                 episodeService.addImage(episode.uuid, image)
                 needUpdate = true
+            }
+
+            if (episode.platform == Platform.CRUN) {
+                val id = getCrunchyrollEpisodeId(episode.url!!) ?: return false
+                val hash = StringUtils.getHash(episode.anime!!.countryCode!!, episode.platform!!, id, episode.langType!!)
+
+                if (hash != episode.hash) {
+                    episode.hash = hash
+                    needUpdate = true
+                }
             }
 
             episode.lastUpdateDateTime = now

@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.9"
+val ktorVersion = "2.3.10"
 val ktorSwaggerUiVersion = "2.8.0"
 val hibernateCoreVersion = "6.4.4.Final"
 val ehcacheVersion = "3.10.8"
@@ -15,11 +15,11 @@ val playwrightVersion = "1.42.0"
 val jsoupVersion = "1.17.2"
 val gsonVersion = "2.10.1"
 val openCvVersion = "4.9.0-0"
-val bcprovVersion = "1.77"
+val bcprovVersion = "1.78"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.2.0"
 
-val jdaVersion = "5.0.0-beta.21"
+val jdaVersion = "5.0.0-beta.22"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.3"
 
@@ -27,9 +27,9 @@ val junitVersion = "5.10.2"
 val h2Version = "2.2.224"
 
 plugins {
-    kotlin("jvm") version "2.0.0-Beta5"
+    kotlin("jvm") version "2.0.0-RC1"
     kotlin("kapt") version "1.9.23"
-    id("io.ktor.plugin") version "2.3.9"
+    id("io.ktor.plugin") version "2.3.10"
     jacoco
     id("org.sonarqube") version "5.0.0.4638"
 }

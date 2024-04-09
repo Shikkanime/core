@@ -1,93 +1,59 @@
 package fr.shikkanime.platforms
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeDisneyPlusSimulcastKeyCache
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
-import fr.shikkanime.utils.*
-import fr.shikkanime.utils.ObjectParser.getAsBoolean
+import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import io.ktor.client.statement.*
+import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.withUTC
+import fr.shikkanime.wrappers.DisneyPlusWrapper
+import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.time.Duration
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 
 class DisneyPlusPlatform :
-    AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, JsonArray>() {
+    AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, List<JsonObject>>() {
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
+
     override fun getPlatform(): Platform = Platform.DISN
 
     override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
 
+    private val identifiers = MapCache<CountryCode, String>(Duration.ofHours(3).plusMinutes(30), listOf(Config::class.java)) {
+        return@MapCache runBlocking {
+            DisneyPlusWrapper.getAccessToken(
+                configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION),
+                configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_REFRESH_TOKEN)
+            )
+        }
+    }
+
+    private val seasons = MapCache<CountryCodeDisneyPlusSimulcastKeyCache, List<String>>(Duration.ofDays(1)) {
+        val accessToken = identifiers[it.countryCode]!!
+        return@MapCache runBlocking { DisneyPlusWrapper.getSeasons(accessToken, it.countryCode, it.disneyPlusSimulcast.name) }
+    }
+
     override suspend fun fetchApiContent(
         key: CountryCodeDisneyPlusSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ): JsonArray {
-        check(configuration!!.authorization.isNotBlank()) { "Authorization is null" }
-        check(configuration!!.refreshToken.isNotBlank()) { "Refresh token is null" }
-        val httpRequest = HttpRequest()
-
-        val loginDevice = httpRequest.post(
-            "https://disney.api.edge.bamgrid.com/graph/v1/device/graphql",
-            headers = mapOf(
-                "Authorization" to configuration!!.authorization,
-            ),
-            body = ObjectParser.toJson(
-                mapOf(
-                    "operationName" to "refreshToken",
-                    "query" to "mutation refreshToken(\$input:RefreshTokenInput!){refreshToken(refreshToken:\$input){activeSession{sessionId}}}",
-                    "variables" to mapOf(
-                        "input" to mapOf(
-                            "refreshToken" to configuration!!.refreshToken
-                        )
-                    ),
-                )
-            )
-        )
-
-        check(loginDevice.status.value == 200) { "Failed to login to Disney+" }
-        val loginDeviceJson = ObjectParser.fromJson(loginDevice.bodyAsText(), JsonObject::class.java)
-        val accessToken = loginDeviceJson.getAsJsonObject("extensions").getAsJsonObject("sdk").getAsJsonObject("token")
-            .getAsString("accessToken")
-
-        val seasonsResponse = httpRequest.get(
-            "https://disney.content.edge.bamgrid.com/svc/content/DmcSeriesBundle/version/5.1/region/${key.countryCode.name}/audience/k-false,l-true/maturity/1850/language/${key.countryCode.locale}/encodedSeriesId/${key.disneyPlusSimulcast.name}",
-            mapOf("Authorization" to "Bearer $accessToken")
-        )
-        check(seasonsResponse.status.value == 200) { "Failed to fetch Disney+ content" }
-        val seasonsJson = ObjectParser.fromJson(seasonsResponse.bodyAsText(), JsonObject::class.java)
-        val seasons = seasonsJson.getAsJsonObject("data").getAsJsonObject("DmcSeriesBundle").getAsJsonObject("seasons")
-            .getAsJsonArray("seasons").mapNotNull { it.asJsonObject.getAsString("seasonId") }
-        val episodes = JsonArray()
-
-        seasons.forEach { season ->
-            var page = 1
-            var hasMore: Boolean
-
-            do {
-                val url =
-                    "https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/${key.countryCode.name}/audience/k-false,l-true/maturity/1850/language/${key.countryCode.locale}/seasonId/${season}/pageSize/15/page/${page++}"
-                val response = httpRequest.get(url, mapOf("Authorization" to "Bearer $accessToken"))
-                check(response.status.value == 200) { "Failed to fetch Disney+ content" }
-                val json = ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java)
-
-                val dmcEpisodesMeta = json.getAsJsonObject("data").getAsJsonObject("DmcEpisodes")
-                hasMore = dmcEpisodesMeta.getAsJsonObject("meta").getAsBoolean("hasMore") ?: false
-                dmcEpisodesMeta.getAsJsonArray("videos").forEach { episodes.add(it) }
-            } while (hasMore)
-        }
-
-        return episodes
+    ) = this.seasons[key]!!.flatMap { season ->
+        DisneyPlusWrapper.getEpisodes(identifiers[key.countryCode]!!, key.countryCode, season)
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
@@ -102,7 +68,7 @@ class DisneyPlusPlatform :
 
                 api.forEach {
                     try {
-                        list.add(convertEpisode(countryCode, simulcast, it.asJsonObject, zonedDateTime))
+                        list.add(convertEpisode(countryCode, simulcast, it, zonedDateTime))
                     } catch (_: AnimeException) {
                         // Ignore
                     } catch (e: Exception) {
@@ -178,7 +144,7 @@ class DisneyPlusPlatform :
             ),
             episodeType = EpisodeType.EPISODE,
             langType = langType,
-            hash = "${countryCode}-${getPlatform()}-$id-$langType",
+            hash = StringUtils.getHash(countryCode, getPlatform(), id.toString(), langType),
             releaseDateTime = releaseDateTime,
             season = season,
             number = number,
