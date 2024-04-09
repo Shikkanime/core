@@ -27,7 +27,7 @@ val junitVersion = "5.10.2"
 val h2Version = "2.2.224"
 
 plugins {
-    kotlin("jvm") version "2.0.0-Beta5"
+    kotlin("jvm") version "2.0.0-RC1"
     kotlin("kapt") version "1.9.23"
     id("io.ktor.plugin") version "2.3.10"
     jacoco
