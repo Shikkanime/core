@@ -29,4 +29,6 @@ enum class ConfigPropertyKey(val key: String) {
     CRUNCHYROLL_FETCH_API_SIZE("crunchyroll_fetch_api_size"),
     ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX("animation_digital_network_simulcast_detection_regex"),
     ANIME_EPISODES_SIZE_LIMIT("anime_episodes_size_limit"),
+    DISNEY_PLUS_AUTHORIZATION("disney_plus_authorization"),
+    DISNEY_PLUS_REFRESH_TOKEN("disney_plus_refresh_token"),
 }
