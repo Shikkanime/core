@@ -2,9 +2,7 @@
 <#import "components/episode.ftl" as episodeComponent />
 <#import "components/anime.ftl" as animeComponent />
 
-<#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr/catalog/${selectedSimulcast.slug}\"/>" />
-
-<@navigation.display header="${canonicalUrl}">
+<@navigation.display canonicalUrl="https://www.shikkanime.fr/catalog/${selectedSimulcast.slug}">
     <div class="mt-3">
         <#if selectedSimulcast??>
             <div class="d-flex align-items-center">
