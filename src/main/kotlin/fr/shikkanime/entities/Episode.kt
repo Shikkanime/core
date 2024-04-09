@@ -1,5 +1,6 @@
 package fr.shikkanime.entities
 
+import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
@@ -56,4 +57,7 @@ class Episode(
     var description: String? = null,
     @Column(nullable = true, name = "last_update_date_time")
     var lastUpdateDateTime: ZonedDateTime? = releaseDateTime,
+    @Column(nullable = true, name = "status")
+    @Enumerated(EnumType.STRING)
+    var status: Status = Status.VALID,
 ) : ShikkEntity(uuid)

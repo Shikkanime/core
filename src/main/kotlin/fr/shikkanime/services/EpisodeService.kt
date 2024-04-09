@@ -10,6 +10,7 @@ import fr.shikkanime.repositories.EpisodeRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -47,9 +48,8 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     fun findAllByPlatformDeprecatedEpisodes(
         platform: Platform,
         lastUpdateDateTime: ZonedDateTime,
-        notLike: String? = null
     ) =
-        episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime, notLike)
+        episodeRepository.findAllByPlatformDeprecatedEpisodes(platform, lastUpdateDateTime)
 
     fun findAllByDateRange(
         countryCode: CountryCode,
@@ -150,6 +150,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
             entity.description = entity.description!!.substring(0, 1000)
         }
 
+        entity.status = StringUtils.getStatus(entity)
         val savedEntity = super.save(entity)
         addImage(savedEntity.uuid!!, savedEntity.image!!)
         MapCache.invalidate(Episode::class.java)
@@ -178,6 +179,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         parameters["duration"]?.takeIf { it.isNotBlank() }?.let { episode.duration = it.toLong() }
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { episode.description = it }
 
+        episode.status = StringUtils.getStatus(episode)
         episode.lastUpdateDateTime = ZonedDateTime.now()
         val update = super.update(episode)
         MapCache.invalidate(Episode::class.java)
