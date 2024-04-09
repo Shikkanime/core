@@ -10,7 +10,6 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -24,7 +23,10 @@ fun main() {
 }
 
 fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Boolean = true): NettyApplicationEngine {
+    Constant.injector.getInstance(AnimeService::class.java).preIndex()
+
     ImageService.loadCache()
+    ImageService.addAll()
 
     if (adminPassword != null) {
         val memberService = Constant.injector.getInstance(MemberService::class.java)
@@ -35,20 +37,6 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
             logger.info("Admin user already exists")
         }
     }
-
-    val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    animeService.preIndex()
-
-    animeService.findAll().forEach {
-        val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
-
-        if (it.slug != toSlug) {
-            it.slug = toSlug
-            animeService.update(it)
-        }
-    }
-
-    ImageService.addAll()
 
     logger.info("Starting jobs...")
     // Every 10 seconds

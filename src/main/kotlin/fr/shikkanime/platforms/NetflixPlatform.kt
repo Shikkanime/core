@@ -46,6 +46,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
             val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapNotNull null
             val imageWithoutParams = image.substringBefore("?")
             val episodeDescription = episode.selectFirst(".epsiode-synopsis")?.text()
+            val computedId = EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
 
             Episode(
                 platform = getPlatform(),
@@ -60,14 +61,12 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                 ),
                 episodeType = EpisodeType.EPISODE,
                 langType = LangType.SUBTITLES,
-                hash = "${key.countryCode}-${getPlatform()}-${
-                    EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
-                }-${LangType.SUBTITLES}",
+                hash = StringUtils.getHash(key.countryCode, getPlatform(), computedId, LangType.SUBTITLES),
                 releaseDateTime = releaseDateTime,
                 season = season,
                 number = episodeNumber,
                 title = episodeTitle,
-                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id",
+                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$computedId",
                 image = imageWithoutParams,
                 duration = durationInSeconds,
                 description = episodeDescription,
