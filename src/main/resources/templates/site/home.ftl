@@ -2,9 +2,7 @@
 <#import "components/episode.ftl" as episodeComponent />
 <#import "components/anime.ftl" as animeComponent />
 
-<#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr\"/>" />
-
-<@navigation.display header="${canonicalUrl}">
+<@navigation.display canonicalUrl="https://www.shikkanime.fr">
     <h1 class="h3 my-3">Nouveaux épisodes</h1>
 
     <#if episodes?? && episodes?size != 0>

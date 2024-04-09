@@ -1,7 +1,7 @@
 <#import "_layout.ftl" as layout />
 
-<#macro display header="">
-    <@layout.main header="${header}">
+<#macro display canonicalUrl="" openGraphImage="">
+    <@layout.main canonicalUrl="${canonicalUrl}" openGraphImage="${openGraphImage}">
         <#assign margin = "mx-md-2">
 
         <header class="position-fixed" style="z-index: 1000; width: 100%;">

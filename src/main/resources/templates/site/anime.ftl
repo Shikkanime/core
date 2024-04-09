@@ -2,9 +2,7 @@
 <#import "components/episode.ftl" as episodeComponent />
 <#import "components/langType.ftl" as langTypeComponent />
 
-<#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr/animes/${anime.slug}\" />">
-
-<@navigation.display header="${canonicalUrl}">
+<@navigation.display canonicalUrl="https://www.shikkanime.fr/animes/${anime.slug}" openGraphImage="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=banner">
     <div class="container">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
