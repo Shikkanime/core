@@ -1,14 +1,10 @@
 package fr.shikkanime.wrappers
 
 import com.google.gson.JsonObject
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.HttpRequest
 
 object PrimeVideoWrapper {
-    private val platform = Platform.PRIM
-
     fun getShowVideos(countryCode: String, locale: String, id: String): List<JsonObject> {
         val document =
             HttpRequest().use { it.getBrowser("https://www.primevideo.com/-/${countryCode.lowercase()}/detail/$id?language=$locale") }
@@ -36,9 +32,7 @@ object PrimeVideoWrapper {
                 })
                 addProperty(
                     "id",
-                    "${countryCode}-$platform-${
-                        EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
-                    }-${LangType.SUBTITLES}"
+                    EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
                 )
                 addProperty("season", season)
                 addProperty("number", episodeNumber)
