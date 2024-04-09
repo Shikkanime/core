@@ -1,8 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 
-<#assign canonicalUrl = "<link rel=\"canonical\" href=\"https://www.shikkanime.fr/search\"/>" />
-
-<@navigation.display header="${canonicalUrl}">
+<@navigation.display canonicalUrl="https://www.shikkanime.fr/search">
     <div class="container my-3">
         <input type="text" id="search" class="form-control-lg w-100 bg-dark text-white"
                placeholder="Rechercher" value="<#if query??>${query}</#if>" autofocus>
