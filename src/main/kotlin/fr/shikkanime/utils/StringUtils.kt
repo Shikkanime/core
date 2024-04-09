@@ -1,10 +1,14 @@
 package fr.shikkanime.utils
 
 import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.services.caches.LanguageCacheService
 import java.text.Normalizer
 import java.util.*
 import java.util.regex.Pattern
@@ -78,4 +82,33 @@ object StringUtils {
         .replace("&quot;", "\"")
 
     fun getHash(countryCode: CountryCode, platform: Platform, id: String, langType: LangType) = "${countryCode}-${platform}-$id-$langType"
+
+    private fun isInvalid(
+        image: String?,
+        description: String?,
+        countryCode: CountryCode,
+        languageCacheService: LanguageCacheService
+    ) = image.isNullOrBlank() ||
+            description.isNullOrBlank() ||
+            description.startsWith("(") ||
+            languageCacheService.detectLanguage(description) != countryCode.name.lowercase()
+
+    fun getStatus(anime: Anime): Status {
+        val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
+
+        return if (
+            isInvalid(anime.image, anime.description, anime.countryCode!!, languageCacheService) ||
+            anime.banner.isNullOrBlank()
+        ) Status.INVALID else Status.VALID
+    }
+
+    fun getStatus(episode: Episode): Status {
+        val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
+
+        return if (
+            isInvalid(episode.image, episode.description, episode.anime!!.countryCode!!, languageCacheService) ||
+            episode.image == Constant.DEFAULT_IMAGE_PREVIEW ||
+            (episode.platform!! == Platform.CRUN && !".*-CRUN-([A-Z0-9]{9})-.*".toRegex().matches(episode.hash!!))
+        ) Status.INVALID else Status.VALID
+    }
 }

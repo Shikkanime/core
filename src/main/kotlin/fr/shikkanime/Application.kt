@@ -5,11 +5,13 @@ import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -23,7 +25,19 @@ fun main() {
 }
 
 fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Boolean = true): NettyApplicationEngine {
-    Constant.injector.getInstance(AnimeService::class.java).preIndex()
+    val animeService = Constant.injector.getInstance(AnimeService::class.java)
+    val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
+    animeService.preIndex()
+
+    animeService.findAll().forEach {
+        it.status = StringUtils.getStatus(it)
+        animeService.update(it)
+    }
+
+    episodeService.findAll().forEach {
+        it.status = StringUtils.getStatus(it)
+        episodeService.update(it)
+    }
 
     ImageService.loadCache()
     ImageService.addAll()
