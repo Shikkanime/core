@@ -2,10 +2,10 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.animes.AnimeNoStatusDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.SortParameter
@@ -13,6 +13,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import fr.shikkanime.utils.withUTC
 import io.ktor.http.*
@@ -76,7 +77,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                             .distinct()
 
                         WeeklyAnimeDto(
-                            AbstractConverter.convert(distinctEpisode.anime, AnimeNoStatusDto::class.java).toAnimeDto(),
+                            AbstractConverter.convert(distinctEpisode.anime, AnimeDto::class.java),
                             distinctEpisode.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
                             distinctEpisode.langType!!,
                             AbstractConverter.convert(platforms, PlatformDto::class.java)
@@ -104,6 +105,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             )
         }.toMutableSet()
 
+        entity.status = StringUtils.getStatus(entity)
         val savedEntity = super.save(entity)
         val uuid = savedEntity.uuid!!
         addImage(uuid, savedEntity.image!!)
@@ -134,6 +136,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
 
+        anime.status = StringUtils.getStatus(anime)
         val update = super.update(anime)
         MapCache.invalidate(Anime::class.java)
         return update

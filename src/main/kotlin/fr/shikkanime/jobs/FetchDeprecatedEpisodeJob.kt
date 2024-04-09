@@ -41,13 +41,8 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         )
 
         val adnEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.ANIM, deprecatedDateTime)
-        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(
-            Platform.CRUN,
-            deprecatedDateTime,
-            "https://www.crunchyroll.com/fr/watch/%"
-        )
+        val crunchyrollEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.CRUN, deprecatedDateTime)
         val primeVideoEpisodes = episodeService.findAllByPlatformDeprecatedEpisodes(Platform.PRIM, deprecatedDateTime)
-
         val episodes = (adnEpisodes + crunchyrollEpisodes + primeVideoEpisodes).shuffled().take(takeSize)
 
         logger.info("Found ${episodes.size} episodes")
@@ -137,6 +132,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 }
             }
 
+            episode.status = StringUtils.getStatus(episode)
             episode.lastUpdateDateTime = now
             episodeService.update(episode)
         } catch (e: Exception) {
@@ -184,7 +180,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
         }
     }
 
-    fun getCrunchyrollEpisodeId(url: String) = "/watch/([A-Z0-9]+)".toRegex().find(url)?.groupValues?.get(1)
+    fun getCrunchyrollEpisodeId(url: String) = "/watch/([A-Z0-9]{9})".toRegex().find(url)?.groupValues?.get(1)
 
     fun normalizeTitle(platform: Platform, content: JsonObject): String? {
         var title = when (platform) {

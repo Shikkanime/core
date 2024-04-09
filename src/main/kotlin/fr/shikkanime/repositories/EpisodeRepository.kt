@@ -1,11 +1,11 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.utils.Constant
 import jakarta.persistence.Tuple
 import org.hibernate.Hibernate
 import java.time.ZonedDateTime
@@ -131,7 +131,6 @@ class EpisodeRepository : AbstractRepository<Episode>() {
     fun findAllByPlatformDeprecatedEpisodes(
         platform: Platform,
         lastUpdateDateTime: ZonedDateTime,
-        notLike: String? = null
     ): List<Episode> {
         return inTransaction {
             createReadOnlyQuery(
@@ -141,16 +140,14 @@ class EpisodeRepository : AbstractRepository<Episode>() {
                     WHERE platform = :platform 
                     AND (
                         (lastUpdateDateTime < :lastUpdateDateTime OR lastUpdateDateTime IS NULL) OR
-                        (description IS NULL OR description = '') OR
-                        image = :defaultImage ${notLike?.let { "OR url NOT LIKE :notLike" } ?: ""}
+                        status = :status
                     )
                 """.trimIndent(),
                 getEntityClass()
             )
                 .setParameter("platform", platform)
                 .setParameter("lastUpdateDateTime", lastUpdateDateTime)
-                .setParameter("defaultImage", Constant.DEFAULT_IMAGE_PREVIEW)
-                .apply { notLike?.let { setParameter("notLike", notLike) } }
+                .setParameter("status", Status.INVALID)
                 .resultList
                 .initialize()
         }

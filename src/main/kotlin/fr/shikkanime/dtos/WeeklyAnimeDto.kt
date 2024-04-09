@@ -1,6 +1,5 @@
 package fr.shikkanime.dtos
 
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.enums.LangType
 
 data class WeeklyAnimeDto(
