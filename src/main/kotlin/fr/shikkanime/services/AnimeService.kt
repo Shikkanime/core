@@ -105,6 +105,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             )
         }.toMutableSet()
 
+        entity.description = entity.description?.replace("\n", "")
+            ?.replace("\r", "")
         entity.status = StringUtils.getStatus(entity)
         val savedEntity = super.save(entity)
         val uuid = savedEntity.uuid!!

@@ -91,7 +91,7 @@ object StringUtils {
     ) = image.isNullOrBlank() ||
             description.isNullOrBlank() ||
             description.startsWith("(") ||
-            languageCacheService.detectLanguage(description) != countryCode.name.lowercase()
+            (description.isNotBlank() && languageCacheService.detectLanguage(description) != countryCode.name.lowercase())
 
     fun getStatus(anime: Anime): Status {
         val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)

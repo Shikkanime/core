@@ -139,6 +139,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
         }
 
         if (entity.anime != anime) {
+            anime.status = StringUtils.getStatus(anime)
             entity.anime = animeService.update(anime)
         }
 
