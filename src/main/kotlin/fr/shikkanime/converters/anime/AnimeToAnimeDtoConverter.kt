@@ -34,7 +34,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             slug = from.slug,
             lastReleaseDateTime = from.lastReleaseDateTime.withUTC()
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-            langTypes = animeService.getAllLangTypes(from)
+            langTypes = animeService.getAllLangTypes(from),
+            status = from.status,
         )
     }
 }
