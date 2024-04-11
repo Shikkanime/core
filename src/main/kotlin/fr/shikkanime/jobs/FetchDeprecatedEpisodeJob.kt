@@ -173,7 +173,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                     episode.anime!!.countryCode!!.name,
                     episode.anime!!.countryCode!!.locale,
                     id
-                ).find { it.getAsString("id") == episode.hash }
+                ).find { episode.hash!!.contains(it.getAsString("id")!!, true) }
             }
 
             else -> null
