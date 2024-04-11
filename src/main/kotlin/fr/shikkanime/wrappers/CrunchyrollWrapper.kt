@@ -7,6 +7,7 @@ import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.ObjectParser.getNullableJsonObject
 import io.ktor.client.statement.*
+import java.util.*
 
 /**
  * Implementation of the Crunchyroll API
@@ -41,7 +42,8 @@ object CrunchyrollWrapper {
             "${BASE_URL}auth/v1/token",
             headers = mapOf(
                 "Content-Type" to "application/x-www-form-urlencoded",
-                "Authorization" to "Basic b2VkYXJteHN0bGgxanZhd2ltbnE6OWxFaHZIWkpEMzJqdVY1ZFc5Vk9TNTdkb3BkSnBnbzE="
+                "Authorization" to "Basic Y3Jfd2ViOg==",
+                "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
             ),
             body = "grant_type=client_id&client_id=offline_access"
         )
