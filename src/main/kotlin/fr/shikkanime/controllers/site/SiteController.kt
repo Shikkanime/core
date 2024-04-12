@@ -84,6 +84,7 @@ class SiteController {
                     null,
                     listOf(
                         SortParameter("releaseDateTime", SortParameter.Order.DESC),
+                        SortParameter("animeName", SortParameter.Order.DESC),
                         SortParameter("season", SortParameter.Order.DESC),
                         SortParameter("episodeType", SortParameter.Order.DESC),
                         SortParameter("number", SortParameter.Order.DESC),
