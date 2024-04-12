@@ -61,6 +61,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                 ),
                 episodeType = EpisodeType.EPISODE,
                 langType = LangType.SUBTITLES,
+                audioLocale = "ja-JP",
                 hash = StringUtils.getHash(key.countryCode, getPlatform(), computedId, LangType.SUBTITLES),
                 releaseDateTime = releaseDateTime,
                 season = season,

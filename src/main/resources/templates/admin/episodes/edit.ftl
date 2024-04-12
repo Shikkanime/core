@@ -68,6 +68,10 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label for="audioLocale" class="form-label">Audio locale</label>
+                        <input type="text" class="form-control" id="audioLocale" name="audioLocale" value="${episode.audioLocale!""}">
+                    </div>
+                    <div class="col-md-6">
                         <label for="hash" class="form-label">Hash</label>
                         <input type="text" class="form-control" id="hash" name="hash" value="${episode.hash}">
                     </div>

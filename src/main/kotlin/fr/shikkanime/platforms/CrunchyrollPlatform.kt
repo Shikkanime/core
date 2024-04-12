@@ -170,6 +170,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
 
         val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
+        val audioLocale = requireNotNull(episodeMetadata.getAsString("audio_locale")) { "Audio locale is null" }
         val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
         val hash = StringUtils.getHash(countryCode, getPlatform(), id, langType)
         if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
@@ -230,6 +231,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             ),
             episodeType = episodeType,
             langType = langType,
+            audioLocale = audioLocale,
             hash = hash,
             releaseDateTime = releaseDate,
             season = season,

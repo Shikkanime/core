@@ -11,6 +11,7 @@ data class EpisodeDto(
     var anime: AnimeDto,
     val episodeType: EpisodeType,
     val langType: LangType,
+    val audioLocale: String?,
     val hash: String,
     val releaseDateTime: String,
     val season: Int,

@@ -67,6 +67,7 @@ class ImageServiceTest {
             ),
             episodeType = EpisodeType.EPISODE,
             langType = LangType.VOICE,
+            audioLocale = "fr-FR",
             hash = "FR-CRUN-922724-VOICE",
             releaseDateTime = "2024-03-01T20:30:00Z",
             season = 1,
