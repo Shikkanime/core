@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
+import jakarta.persistence.criteria.Predicate
 import org.hibernate.Hibernate
 import java.time.ZonedDateTime
 import java.util.*
@@ -32,27 +33,6 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         return this
     }
 
-    private fun addOrderBy(query: StringBuilder) {
-        if (!query.contains("ORDER BY")) {
-            query.append(" ORDER BY")
-        }
-    }
-
-    private fun buildSortQuery(sort: List<SortParameter>, query: StringBuilder) {
-        val fields = listOf("episodeType", "langType", "releaseDateTime", "season", "number", "lastUpdateDateTime")
-        val subQuery = mutableListOf<String>()
-
-        sort.filter { fields.contains(it.field) }.forEach { param ->
-            val field = param.field
-            addOrderBy(query)
-            subQuery.add(" e.$field ${param.order.name}")
-        }
-
-        if (subQuery.isNotEmpty()) {
-            query.append(subQuery.joinToString(", "))
-        }
-    }
-
     override fun findAll(): List<Episode> {
         return inTransaction {
             createReadOnlyQuery(it, "FROM Episode", getEntityClass())
@@ -68,23 +48,37 @@ class EpisodeRepository : AbstractRepository<Episode>() {
         page: Int,
         limit: Int
     ): Pageable<Episode> {
-        val queryBuilder = StringBuilder("FROM Episode e")
-        val whereClause = mutableListOf<String>()
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
-        anime?.let { whereClause.add("e.anime.uuid = :uuid") }
-        countryCode?.let { whereClause.add("e.anime.countryCode = :countryCode") }
+            val predicates = mutableListOf<Predicate>()
 
-        if (whereClause.isNotEmpty()) {
-            queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
-        }
+            anime?.let { predicates.add(cb.equal(root[Episode_.anime].get<UUID>(Anime_.UUID), it)) }
+            countryCode?.let { predicates.add(cb.equal(root[Episode_.anime][Anime_.countryCode], it)) }
 
-        buildSortQuery(sort, queryBuilder)
+            query.where(*predicates.toTypedArray())
 
-        return inTransaction {
-            val query = createReadOnlyQuery(it, queryBuilder.toString(), getEntityClass())
-            countryCode?.let { query.setParameter("countryCode", countryCode) }
-            anime?.let { query.setParameter("uuid", anime) }
-            buildPageableQuery(query, page, limit).initialize()
+            val orders = sort.mapNotNull { sortParameter ->
+                val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc
+
+                val field = when (sortParameter.field) {
+                    "episodeType" -> root[Episode_.episodeType]
+                    "langType" -> root[Episode_.langType]
+                    "releaseDateTime" -> root[Episode_.releaseDateTime]
+                    "season" -> root[Episode_.season]
+                    "number" -> root[Episode_.number]
+                    "lastUpdateDateTime" -> root[Episode_.lastUpdateDateTime]
+                    "animeName" -> root[Episode_.anime][Anime_.name]
+                    else -> null
+                }
+
+                field?.let { order(it) }
+            }
+
+            query.orderBy(orders)
+            buildPageableQuery(entityManager.createQuery(query), page, limit).initialize()
         }
     }
 
