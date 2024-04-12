@@ -31,4 +31,5 @@ enum class ConfigPropertyKey(val key: String) {
     ANIME_EPISODES_SIZE_LIMIT("anime_episodes_size_limit"),
     DISNEY_PLUS_AUTHORIZATION("disney_plus_authorization"),
     DISNEY_PLUS_REFRESH_TOKEN("disney_plus_refresh_token"),
+    TRANSLATE_CALENDAR("translate_calendar"),
 }

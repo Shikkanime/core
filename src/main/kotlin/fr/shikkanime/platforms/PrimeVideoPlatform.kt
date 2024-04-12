@@ -51,6 +51,7 @@ class PrimeVideoPlatform :
                 ),
                 episodeType = EpisodeType.EPISODE,
                 langType = LangType.SUBTITLES,
+                audioLocale = "ja-JP",
                 hash = StringUtils.getHash(key.countryCode, getPlatform(), it.getAsString("id")!!, LangType.SUBTITLES),
                 releaseDateTime = releaseDateTime,
                 season = it.getAsInt("season")!!,

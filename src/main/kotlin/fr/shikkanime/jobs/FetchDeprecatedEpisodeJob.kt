@@ -94,6 +94,7 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
             val title = normalizeTitle(episode.platform!!, content)
             val description = normalizeDescription(episode.platform!!, content)
             val image = normalizeImage(episode.platform!!, content)
+            val audioLocale = normalizeAudioLocale(episode.platform!!, content)
             logger.config("$identifier : $title - $description - $image")
 
             if (title != null && title != episode.title) {
@@ -119,6 +120,11 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
                 episode.image = image
                 ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
                 episodeService.addImage(episode.uuid, image)
+                needUpdate = true
+            }
+
+            if (audioLocale != episode.audioLocale) {
+                episode.audioLocale = audioLocale
                 needUpdate = true
             }
 
@@ -219,6 +225,13 @@ class FetchDeprecatedEpisodeJob : AbstractJob {
 
             Platform.PRIM -> content.getAsString("image")!!
             else -> content.getAsString("image2x")!!
+        }
+    }
+
+    private fun normalizeAudioLocale(platform: Platform, content: JsonObject): String {
+        return when (platform) {
+            Platform.CRUN -> requireNotNull(content.getAsJsonObject("episode_metadata").getAsString("audio_locale")) { "Audio locale is null" }
+            else -> "ja-JP"
         }
     }
 }

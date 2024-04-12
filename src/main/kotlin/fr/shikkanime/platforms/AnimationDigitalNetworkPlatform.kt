@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms
 
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
@@ -143,11 +144,7 @@ class AnimationDigitalNetworkPlatform :
         val description = jsonObject.getAsString("summary")?.replace('\n', ' ')?.ifBlank { null }
 
         return jsonObject.getAsJsonArray("languages").map {
-            val langType = when (it.asString) {
-                "vostf" -> LangType.SUBTITLES
-                "vf" -> LangType.VOICE
-                else -> throw Exception("Language is null")
-            }
+            val (langType, audioLocale) = getLangTypeAndAudioLocale(it)
 
             Episode(
                 platform = getPlatform(),
@@ -162,6 +159,7 @@ class AnimationDigitalNetworkPlatform :
                 ),
                 episodeType = episodeType,
                 langType = langType,
+                audioLocale = audioLocale,
                 hash = StringUtils.getHash(countryCode, getPlatform(), id.toString(), langType),
                 releaseDateTime = releaseDate,
                 season = season,
@@ -172,6 +170,14 @@ class AnimationDigitalNetworkPlatform :
                 duration = duration,
                 description = description
             )
+        }
+    }
+
+    private fun getLangTypeAndAudioLocale(it: JsonElement): Pair<LangType, String> {
+        return when (it.asString) {
+            "vostf" -> LangType.SUBTITLES to "fr-FR"
+            "vf" -> LangType.VOICE to "ja-JP"
+            else -> throw Exception("Language is null")
         }
     }
 }

@@ -16,6 +16,7 @@ class EpisodeToEpisodeDtoConverter : AbstractConverter<Episode, EpisodeDto>() {
             anime = convert(from.anime, AnimeDto::class.java),
             episodeType = from.episodeType!!,
             langType = from.langType!!,
+            audioLocale = from.audioLocale,
             hash = from.hash!!,
             releaseDateTime = from.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             season = from.season!!,

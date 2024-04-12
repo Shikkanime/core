@@ -54,7 +54,7 @@
                                value="${su.sanitizeXSS(anime.shortName)}" disabled>
                     </div>
                     <div class="col-md-6">
-                        <label for="slug" class="form-label">Short name</label>
+                        <label for="slug" class="form-label">Slug</label>
                         <input type="text" class="form-control" id="slug" name="slug"
                                value="${anime.slug}">
                     </div>

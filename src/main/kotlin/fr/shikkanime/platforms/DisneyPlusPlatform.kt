@@ -144,6 +144,7 @@ class DisneyPlusPlatform :
             ),
             episodeType = EpisodeType.EPISODE,
             langType = langType,
+            audioLocale = "ja-JP",
             hash = StringUtils.getHash(countryCode, getPlatform(), id.toString(), langType),
             releaseDateTime = releaseDateTime,
             season = season,

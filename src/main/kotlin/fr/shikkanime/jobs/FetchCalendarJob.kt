@@ -2,10 +2,12 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.CalendarEpisodeDto
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.ImageService.drawStringRect
 import fr.shikkanime.services.ImageService.setRenderingHints
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
@@ -31,6 +33,9 @@ class FetchCalendarJob : AbstractJob {
 
     @Inject
     private lateinit var languageCacheService: LanguageCacheService
+
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
 
     override fun run() {
         runBlocking {
@@ -226,13 +231,15 @@ class FetchCalendarJob : AbstractJob {
             return@mapNotNull null
         }
 
-        val alternativeTitles =
-            list.find { it.text().contains("Titre alternatif") }?.text()?.replace("Titre alternatif :", "")?.split("/")
-                ?: emptyList()
-        val detectedLanguage = languageCacheService.detectLanguage(title)
+        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.TRANSLATE_CALENDAR)) {
+            val alternativeTitles =
+                list.find { it.text().contains("Titre alternatif") }?.text()?.replace("Titre alternatif :", "")?.split("/")
+                    ?: emptyList()
+            val detectedLanguage = languageCacheService.detectLanguage(title)
 
-        if (detectedLanguage != null && detectedLanguage == "fr" && alternativeTitles.isNotEmpty()) {
-            title = alternativeTitles.first().trim()
+            if (detectedLanguage != null && detectedLanguage == "fr" && alternativeTitles.isNotEmpty()) {
+                title = alternativeTitles.first().trim()
+            }
         }
 
         title = title.replace(Regex(" - Saison \\d+"), "").trim()
