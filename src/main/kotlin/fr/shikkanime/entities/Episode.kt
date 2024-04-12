@@ -37,6 +37,8 @@ class Episode(
     @Column(nullable = false, name = "lang_type")
     @Enumerated(EnumType.STRING)
     var langType: LangType? = null,
+    @Column(nullable = true, name = "audio_locale")
+    var audioLocale: String? = null,
     @Column(nullable = false, unique = true)
     var hash: String? = null,
     @Column(nullable = false, name = "release_date_time")

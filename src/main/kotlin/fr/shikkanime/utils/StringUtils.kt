@@ -108,7 +108,8 @@ object StringUtils {
         return if (
             isInvalid(episode.image, episode.description, episode.anime!!.countryCode!!, languageCacheService) ||
             episode.image == Constant.DEFAULT_IMAGE_PREVIEW ||
-            (episode.platform!! == Platform.CRUN && !".*-CRUN-([A-Z0-9]{9})-.*".toRegex().matches(episode.hash!!))
+            (episode.platform!! == Platform.CRUN && !".*-CRUN-([A-Z0-9]{9})-.*".toRegex().matches(episode.hash!!)) ||
+            episode.audioLocale.isNullOrBlank()
         ) Status.INVALID else Status.VALID
     }
 }
