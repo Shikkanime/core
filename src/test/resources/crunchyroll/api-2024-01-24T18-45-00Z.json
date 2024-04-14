@@ -1,6 +1,6 @@
 {
   "total": 10000,
-  "items": [
+  "data": [
     {
       "external_id": "EPI.918881",
       "__class__": "panel",
