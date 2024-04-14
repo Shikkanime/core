@@ -117,7 +117,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         zonedDateTime: ZonedDateTime
     ): List<JsonObject> {
         return if (bypassFileContent != null && bypassFileContent.exists()) {
-            ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("items").map { it.asJsonObject }
+            ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("data").map { it.asJsonObject }
         } else getApiContent(
             countryCode,
             zonedDateTime
@@ -181,15 +181,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     ?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
 
         val season = episodeMetadata.getAsInt("season_number") ?: 1
-        val number = episodeMetadata.getAsInt("episode_number") ?: -1
-        val seasonSlugTitle = episodeMetadata.getAsString("season_slug_title")
-
-        val episodeType = if (seasonSlugTitle?.contains("movie", true) == true)
-            EpisodeType.FILM
-        else if (number == -1)
-            EpisodeType.SPECIAL
-        else
-            EpisodeType.EPISODE
+        val (number, episodeType) = getEpisodeTypeAndNumber(episodeMetadata)
 
         val title = jsonObject.getAsString("title")
         val slugTitle = jsonObject.getAsString("slug_title")
@@ -242,5 +234,26 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             duration = duration,
             description = description
         )
+    }
+
+    private fun getEpisodeTypeAndNumber(episodeMetadata: JsonObject): Pair<Int, EpisodeType> {
+        val seasonSlugTitle = episodeMetadata.getAsString("season_slug_title")
+        val episodeString = episodeMetadata.getAsString("episode")!!
+        var number = episodeMetadata.getAsInt("episode_number") ?: -1
+        val toRegex = "SP(\\d*)".toRegex()
+
+        var episodeType = if (seasonSlugTitle?.contains("movie", true) == true)
+            EpisodeType.FILM
+        else if (number == -1)
+            EpisodeType.SPECIAL
+        else
+            EpisodeType.EPISODE
+
+        if (toRegex.containsMatchIn(episodeString)) {
+            episodeType = EpisodeType.SPECIAL
+            number = toRegex.find(episodeString)!!.groupValues[1].toInt()
+        }
+
+        return Pair(number, episodeType)
     }
 }

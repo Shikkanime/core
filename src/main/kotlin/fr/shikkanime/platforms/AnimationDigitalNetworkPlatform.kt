@@ -125,7 +125,7 @@ class AnimationDigitalNetworkPlatform :
             "Anime is a trailer"
         )
 
-        val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
+        var number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
         var episodeType = when (numberAsString) {
             "OAV", "Épisode spécial" -> EpisodeType.SPECIAL
@@ -135,6 +135,13 @@ class AnimationDigitalNetworkPlatform :
 
         if (numberAsString?.contains(".") == true || showType == "OAV") episodeType =
             EpisodeType.SPECIAL
+
+        val toRegex = "Épisode spécial (\\d*)".toRegex()
+
+        if (toRegex.containsMatchIn(numberAsString ?: "")) {
+            episodeType = EpisodeType.SPECIAL
+            number = toRegex.find(numberAsString ?: "")?.groupValues?.get(1)?.toIntOrNull() ?: -1
+        }
 
         val id = jsonObject.getAsInt("id")
         val title = jsonObject.getAsString("name")?.ifBlank { null }
