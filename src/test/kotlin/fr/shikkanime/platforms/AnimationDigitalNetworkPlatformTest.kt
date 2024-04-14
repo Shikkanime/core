@@ -3,6 +3,7 @@ package fr.shikkanime.platforms
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.services.ConfigService
@@ -150,5 +151,25 @@ class AnimationDigitalNetworkPlatformTest {
         )
 
         assertEquals(true, episodes.isEmpty())
+    }
+
+    @Test
+    fun `fetchEpisodes for 2024-04-14`() {
+        val s = "2024-04-14T09:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader()
+                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals("One Piece", episodes[0].anime?.name)
+        assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
+        assertEquals(13, episodes[0].number)
     }
 }

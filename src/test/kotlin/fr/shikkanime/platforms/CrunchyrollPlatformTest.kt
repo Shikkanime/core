@@ -2,6 +2,7 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
@@ -59,5 +60,26 @@ class CrunchyrollPlatformTest {
         assertEquals("Metallic Rouge", episodes[1].anime?.name)
         assertEquals(LangType.SUBTITLES, episodes[1].langType)
         assertNotNull(episodes[1].description)
+    }
+
+    @Test
+    fun `fetchEpisodes for 2024-04-14`() {
+        val s = "2024-04-14T09:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        platform.simulcasts[CountryCode.FR] = setOf("one piece")
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals("One Piece", episodes[0].anime?.name)
+        assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
+        assertEquals(13, episodes[0].number)
     }
 }
