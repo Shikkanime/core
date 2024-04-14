@@ -181,7 +181,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     ?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
 
         val season = episodeMetadata.getAsInt("season_number") ?: 1
-        val (number, episodeType) = getEpisodeTypeAndNumber(episodeMetadata)
+        val (number, episodeType) = getNumberAndEpisodeType(episodeMetadata)
 
         val title = jsonObject.getAsString("title")
         val slugTitle = jsonObject.getAsString("slug_title")
@@ -236,22 +236,21 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
     }
 
-    private fun getEpisodeTypeAndNumber(episodeMetadata: JsonObject): Pair<Int, EpisodeType> {
+    private fun getNumberAndEpisodeType(episodeMetadata: JsonObject): Pair<Int, EpisodeType> {
         val seasonSlugTitle = episodeMetadata.getAsString("season_slug_title")
         val episodeString = episodeMetadata.getAsString("episode")!!
         var number = episodeMetadata.getAsInt("episode_number") ?: -1
-        val toRegex = "SP(\\d*)".toRegex()
+        val specialEpisodeRegex = "SP(\\d*)".toRegex()
 
-        var episodeType = if (seasonSlugTitle?.contains("movie", true) == true)
-            EpisodeType.FILM
-        else if (number == -1)
-            EpisodeType.SPECIAL
-        else
-            EpisodeType.EPISODE
+        var episodeType = when {
+            seasonSlugTitle?.contains("movie", true) == true -> EpisodeType.FILM
+            number == -1 -> EpisodeType.SPECIAL
+            else -> EpisodeType.EPISODE
+        }
 
-        if (toRegex.containsMatchIn(episodeString)) {
+        specialEpisodeRegex.find(episodeString)?.let {
             episodeType = EpisodeType.SPECIAL
-            number = toRegex.find(episodeString)!!.groupValues[1].toInt()
+            number = it.groupValues[1].toInt()
         }
 
         return Pair(number, episodeType)
