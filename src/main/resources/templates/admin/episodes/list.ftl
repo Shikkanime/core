@@ -1,166 +1,105 @@
 <#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
-    <div class="row g-3 align-items-center mb-3">
-        <div class="col-auto">
-            <label class="form-label" for="animeInput">Anime UUID</label>
-            <input type="text" class="form-control" id="animeInput">
+    <div x-data="{
+        pageable: {},
+        page: 1,
+        maxPage: 0,
+        anime: '',
+        invalid: false,
+        setPageable: function (page, pageable) {
+            this.page = page;
+            this.pageable = pageable;
+            this.maxPage = Math.ceil(pageable.total / pageable.limit);
+        }
+    }" x-init="setPageable(1, await getEpisodes('', page, false));">
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-auto">
+                <label class="form-label" for="animeInput">Anime UUID</label>
+                <input type="text" class="form-control" id="animeInput"
+                       x-model="anime" @input="setPageable(1, await getEpisodes(anime, 1, invalid))">
+            </div>
+            <div class="col-auto">
+                <input class="form-check-input" type="checkbox" id="invalidInput"
+                       @input="invalid = $event.target.checked; setPageable(1, await getEpisodes(anime, 1, invalid))">
+                <label class="form-check-label" for="invalidInput">Only invalid</label>
+            </div>
+        </div>
+
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Anime</th>
+                <th scope="col">Details</th>
+                <th scope="col">Description</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            <template x-for="episode in pageable.data">
+                <tr>
+                    <th scope="row">
+                        <span class="me-1 badge bg-danger" x-show="episode.status === 'INVALID'">Invalid</span>
+                        <span class="me-1 badge bg-success" x-show="episode.status !== 'INVALID'">Valid</span>
+                        <span x-text="episode.anime.shortName"></span>
+                    </th>
+                    <td>
+                        S<span x-text="episode.season"></span>
+                        <span x-show="episode.episodeType === 'EPISODE'">EP</span>
+                        <span x-show="episode.episodeType === 'FILM'">MOV</span>
+                        <span x-show="episode.episodeType === 'SPECIAL'">SP</span>
+                        <span x-text="episode.number"></span>
+                    </td>
+                    <td x-text="episode.description"></td>
+                    <td>
+                        <a x-bind:href="'/admin/episodes/' + episode.uuid" class="btn btn-warning">
+                            <i class="bi bi-pencil-square"></i>
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+
+        <div class="mt-3">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link"
+                           x-bind:class="{disabled: page === 1}"
+                           @click="setPageable(1, await getEpisodes(anime, page - 1, invalid))">
+                            &laquo;
+                        </a>
+                    </li>
+                    <template
+                            x-for="i in Array.from({length: 7}, (_, index) => page + index - 3).filter(i => i >= 1 && i <= maxPage)">
+                        <li class="page-item" x-bind:class="{active: page === i}">
+                            <a class="page-link" @click="setPageable(i, await getEpisodes(anime, i, invalid))"
+                               x-text="i"></a>
+                        </li>
+                    </template>
+                    <li class="page-item">
+                        <a class="page-link"
+                           x-bind:class="{disabled: page === maxPage}"
+                           @click="setPageable(maxPage, await getEpisodes(anime, maxPage, invalid))">
+                            &raquo;
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 
-    <table class="table table-striped table-bordered">
-        <thead>
-        <tr>
-            <th scope="col">Anime</th>
-            <th scope="col">Platform</th>
-            <th scope="col">Details</th>
-            <th scope="col">Description</th>
-            <th scope="col">Actions</th>
-        </tr>
-        </thead>
-        <tbody class="table-group-divider" id="episodes-table">
-
-        </tbody>
-    </table>
-
-    <div class="mt-3">
-        <nav aria-label="Page navigation" id="pagination">
-            <ul class="pagination justify-content-center">
-
-            </ul>
-        </nav>
-    </div>
-
     <script>
-        function buildTableElement(uuid, anime, platform, episodeType, langType, season, number, description, status) {
-            let episodeTypePrefix = '';
-
-            switch (episodeType) {
-                case 'EPISODE':
-                    episodeTypePrefix = 'EP';
-                    break;
-                case 'SPECIAL':
-                    episodeTypePrefix = 'SP';
-                    break;
-                case 'FILM':
-                    episodeTypePrefix = 'MOV';
-                    break;
-            }
-
-            let langTypePrefix = '';
-
-            switch (langType) {
-                case 'SUBTITLES':
-                    langTypePrefix = 'SUB';
-                    break;
-                case 'VOICE':
-                    langTypePrefix = 'DUB';
-                    break;
-            }
-
-            const details = 'S' + season + ' ' + episodeTypePrefix + number + ' ' + langTypePrefix;
-            const isInvalid = status === 'INVALID';
-
-            return `<tr>
-                <th scope="row"><span class="me-2 badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>` + anime + `</th>
-                <td>` + platform.name + `</td>
-                <td>` + details + `</td>
-                <td>` + description + `</td>
-                <td>
-                    <a href="/admin/episodes/` + uuid + `" class="btn btn-warning">
-                        <i class="bi bi-pencil-square"></i>
-                        Edit
-                    </a>
-                </td>
-            </tr>`
-        }
-
-        async function getEpisodes(anime, page) {
-            let params = '?sort=lastUpdateDateTime&desc=lastUpdateDateTime';
+        async function getEpisodes(anime, page, invalid) {
+            let params = '?sort=lastReleaseDateTime,animeName,season,episodeType,number&desc=lastReleaseDateTime,animeName,season,episodeType,number' + (invalid ? '&status=INVALID' : '');
 
             if (anime) {
                 params = '?anime=' + anime;
             }
 
-            return await callApi('/api/v1/episodes' + params + '&page=' + (page || 1) + '&limit=12');
+            return await callApi('/api/v1/episode-mappings' + params + '&page=' + (page || 1) + '&limit=9');
         }
-
-        function buildTable(episodes) {
-            const table = document.getElementById('episodes-table');
-            table.innerHTML = '';
-
-            episodes.forEach(episode => {
-                table.innerHTML += buildTableElement(
-                    episode.uuid,
-                    episode.anime.shortName,
-                    episode.platform,
-                    episode.episodeType,
-                    episode.langType,
-                    episode.season,
-                    episode.number,
-                    episode.description || '',
-                    episode.status,
-                );
-            });
-        }
-
-        async function changePage(page) {
-            const anime = document.getElementById('animeInput').value;
-            const pageable = await getEpisodes(anime, page);
-            buildTable(pageable.data);
-            buildPagination(pageable);
-        }
-
-        function buildPagination(pageable) {
-            const totalPages = Math.ceil(pageable.total / pageable.limit);
-            const pagination = document.getElementById('pagination').querySelector('ul');
-            pagination.innerHTML = '';
-
-            const hasPrevious = pageable.page > 1;
-            const previousPage = hasPrevious ? pageable.page - 1 : 1;
-            const hasNext = pageable.page < totalPages;
-            const nextPage = hasNext ? pageable.page + 1 : totalPages;
-
-            pagination.innerHTML += createPageItem(!hasPrevious, null, previousPage, '&laquo;', 'Previous');
-
-            const startPage = Math.max(1, pageable.page - 4);
-            const endPage = Math.min(totalPages, pageable.page + 4);
-            for (let i = startPage; i <= endPage; i++) {
-                const isActive = pageable.page === i;
-                pagination.innerHTML += createPageItem(false, isActive, i, i);
-            }
-
-            pagination.innerHTML += createPageItem(!hasNext, null, nextPage, '&raquo;', 'Next');
-        }
-
-        function createPageItem(isDisable, isActive, page, text, ariaLabel = '') {
-            const activeClass = !isDisable && isActive ? 'active' : '';
-            const disabledClass = isDisable ? 'disabled' : '';
-
-            return `<li class="page-item ` + activeClass + `">
-        <a class="page-link ` + disabledClass + `" aria-label="` + ariaLabel + `" onclick="changePage(` + page + `)" ` + disabledClass + `>
-            <span aria-hidden="true">` + text + `</span>
-        </a>
-    </li>`;
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const pageable = await getEpisodes();
-            buildTable(pageable.data);
-            buildPagination(pageable);
-        });
-
-        let timeout = null;
-
-        document.getElementById('animeInput').addEventListener('input', async (event) => {
-            // Avoids calling the API on every key press
-            clearTimeout(timeout);
-
-            timeout = setTimeout(async () => {
-                const pageable = await getEpisodes(event.target.value);
-                buildTable(pageable.data);
-                buildPagination(pageable);
-            }, 500);
-        });
     </script>
 </@navigation.display>

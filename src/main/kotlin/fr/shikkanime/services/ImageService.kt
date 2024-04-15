@@ -1,6 +1,6 @@
 package fr.shikkanime.services
 
-import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import io.ktor.client.statement.*
@@ -13,8 +13,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.URI
-import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.Executors
@@ -44,7 +43,7 @@ object ImageService {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val threadPool = Executors.newFixedThreadPool(2)
     val cache = mutableListOf<Image>()
-    val change = AtomicBoolean(false)
+    private val change = AtomicBoolean(false)
     private const val CACHE_FILE_NUMBER = 5
 
     private fun toHumanReadable(bytes: Long): String {
@@ -246,18 +245,17 @@ object ImageService {
 
     fun addAll(bypass: Boolean = false) {
         val animeService = Constant.injector.getInstance(AnimeService::class.java)
-        val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
+        val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
 
-        animeService.findAllUUIDAndImage().forEach {
-            val uuid = it[0] as UUID
-            animeService.addImage(uuid, it[1] as String, bypass)
-            animeService.addBanner(uuid, it[2] as String?, bypass)
+        animeService.findAll().forEach {
+            animeService.addImage(it.uuid!!, it.image!!, bypass)
+            animeService.addBanner(it.uuid, it.banner, bypass)
         }
 
-        episodeService.findAllUUIDAndImage().forEach {
-            episodeService.addImage(
-                it[0] as UUID,
-                (it[1] as String?)?.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+        episodeMappingService.findAll().forEach {
+            episodeMappingService.addImage(
+                it.uuid as UUID,
+                it.image?.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 bypass
             )
         }
@@ -331,7 +329,7 @@ object ImageService {
     }
 
     private fun Graphics2D.drawAnimeImage(
-        episode: EpisodeDto,
+        episode: EpisodeVariantDto,
         animeImage: BufferedImage,
         backgroundImage: BufferedImage
     ) {
@@ -409,7 +407,7 @@ object ImageService {
 
     private fun Graphics2D.drawText(
         fontTmp: Font,
-        episode: EpisodeDto,
+        episode: EpisodeVariantDto,
         animeImage: BufferedImage,
         backgroundImage: BufferedImage,
         platformImage: BufferedImage?,
@@ -418,7 +416,7 @@ object ImageService {
         color = Color.WHITE
         font = fontTmp.deriveFont(24f)
         font = font.deriveFont(font.style and Font.BOLD.inv())
-        val currentDateFormatted = LocalDate.now(ZoneId.of("Europe/Paris"))
+        val currentDateFormatted = ZonedDateTime.parse(episode.releaseDateTime)
             .format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH)).capitalizeWords()
         drawString(
             currentDateFormatted,
@@ -438,7 +436,7 @@ object ImageService {
 
         color = adjustedTextColor
         font = fontTmp.deriveFont(65f)
-        val animeName = episode.anime.shortName
+        val animeName = episode.mapping.anime.shortName
         font = adjustFontSizeToFit(animeName, backgroundImage.width - 200)
         drawString(animeName, (backgroundImage.width - fontMetrics.stringWidth(animeName)) / 2f, 150f)
         fillRect(
@@ -479,9 +477,9 @@ object ImageService {
 
     data class Tuple<A, B, C, D, E>(val a: A, val b: B, val c: C, val d: D, val e: E)
 
-    private fun loadResources(episode: EpisodeDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage?> {
+    private fun loadResources(episode: EpisodeVariantDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage?> {
         val mediaImageFolder =
-            ClassLoader.getSystemClassLoader()
+            this.javaClass.classLoader
                 .getResource("media-image")?.file?.let { File(it).takeIf { file -> file.exists() } }
                 ?: File(
                     Constant.dataFolder,
@@ -503,13 +501,14 @@ object ImageService {
         val font = Font.createFont(Font.TRUETYPE_FONT, fontFile)
         val scale = 1.0
         val animeImage =
-            ImageIO.read(URI(episode.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
+            ImageIO.read(URI(episode.mapping.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
 
         val platformImage = try {
-            ImageIO.read(
-                ClassLoader.getSystemClassLoader().getResourceAsStream("assets/img/platforms/${episode.platform.image}")
-            )
-                .resize(32, 32)
+            val resourceAsStream =
+                this.javaClass.classLoader.getResourceAsStream("assets/img/platforms/${episode.platform.image}")
+            val resized = ImageIO.read(resourceAsStream).resize(32, 32)
+            resourceAsStream?.close()
+            resized
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -518,7 +517,7 @@ object ImageService {
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }
 
-    fun toEpisodeImage(episode: EpisodeDto, adjustColor: Boolean = true): BufferedImage {
+    fun toEpisodeImage(episode: EpisodeVariantDto, adjustColor: Boolean = true): BufferedImage {
         val (backgroundImage, bannerImage, font, animeImage, platformImage) = loadResources(episode)
         val finalImage = BufferedImage(backgroundImage.width, backgroundImage.height, BufferedImage.TYPE_INT_ARGB)
 

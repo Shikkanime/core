@@ -1,7 +1,7 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import twitter4j.Twitter
@@ -81,7 +81,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
         login()
         if (!isInitialized) return
         if (twitter == null) return

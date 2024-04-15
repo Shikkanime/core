@@ -30,12 +30,9 @@ body {
     color: #b9b9b9 !important;
 }
 
-.blur {
-    filter: blur(0.5rem);
-}
-
-.border-light {
+.card {
     border: 1px solid #FFFFFF14 !important;
+    background-color: #FFFFFF14 !important;
 }
 
 .bg-blur {

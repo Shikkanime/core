@@ -1,6 +1,10 @@
 package fr.shikkanime.modules
 
+import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.ConfigDto
+import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
@@ -230,6 +234,9 @@ private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCal
     return when (kParameter.type.javaType) {
         Array<UUID>::class.java -> call.receive<Array<UUID>>()
         Parameters::class.java -> call.receiveParameters()
+        ConfigDto::class.java -> call.receive<ConfigDto>()
+        AnimeDto::class.java -> call.receive<AnimeDto>()
+        EpisodeMappingDto::class.java -> call.receive<EpisodeMappingDto>()
         else -> call.receive<String>()
     }
 }
@@ -243,6 +250,13 @@ private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any
         String::class.starProjectedType.withNullability(true) -> queryParamValue
         CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(queryParamValue)
         UUID::class.starProjectedType.withNullability(true) -> queryParamValue?.let { UUID.fromString(it) }
+        Status::class.starProjectedType.withNullability(true) -> queryParamValue?.let {
+            try {
+                Status.valueOf(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
         else -> throw Exception("Unknown type ${kParameter.type}")
     }
 }

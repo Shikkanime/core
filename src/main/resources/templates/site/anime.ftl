@@ -1,13 +1,13 @@
 <#import "_navigation.ftl" as navigation />
-<#import "components/episode.ftl" as episodeComponent />
+<#import "components/episode-mapping.ftl" as episodeMappingComponent />
 <#import "components/langType.ftl" as langTypeComponent />
 
 <@navigation.display canonicalUrl="https://www.shikkanime.fr/animes/${anime.slug}" openGraphImage="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=banner">
     <div class="container">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
-                <img src="https://api.shikkanime.fr/v1/attachments?uuid=${anime.uuid}&type=image"
-                     alt="${su.sanitizeXSS(anime.shortName)} anime image" class="img-fluid w-50 rounded-4 border-light"
+                <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
+                     alt="${su.sanitizeXSS(anime.shortName)} anime image" class="img-fluid w-50 rounded-4"
                      width="480"
                      height="720">
             </div>
@@ -37,8 +37,8 @@
     </div>
 
     <div class="row g-3 mt-4 justify-content-center">
-        <#list episodes as episode>
-            <@episodeComponent.display episode=episode cover=false desktopColSize="col-md-2" mobileColSize="col-6" />
+        <#list episodeMappings as episodeMapping>
+            <@episodeMappingComponent.display episodeMapping=episodeMapping cover=false desktopColSize="col-md-2" mobileColSize="col-6" />
         </#list>
     </div>
 </@navigation.display>

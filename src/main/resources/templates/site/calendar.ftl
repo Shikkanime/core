@@ -18,13 +18,13 @@
                 <#list weeklyAnimes as dailyAnimes>
                     <td class="bg-black border-start border-end border-dark">
                         <#list dailyAnimes.releases as release>
-                            <article x-data="{ hover: false }" class="rounded-4 border-light mb-3">
+                            <article x-data="{ hover: false }" class="rounded-4 card mb-3">
                                 <a href="/animes/${release.anime.slug}" class="text-decoration-none text-white"
                                    @mouseenter="hover = true"
                                    @mouseleave="hover = false">
                                     <div class="position-relative">
                                         <div class="position-relative">
-                                            <img src="https://api.shikkanime.fr/v1/attachments?uuid=${release.anime.uuid}&type=banner"
+                                            <img src="${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner"
                                                  alt="${su.sanitizeXSS(release.anime.shortName)} anime banner"
                                                  class="img-fluid rounded-top-4" width="640"
                                                  height="360">
@@ -32,7 +32,7 @@
                                             <div class="position-absolute top-0 end-0 p-1">
                                                 <div class="d-flex">
                                                     <#list release.platforms as platform>
-                                                        <img src="https://www.shikkanime.fr/assets/img/platforms/${platform.image}"
+                                                        <img src="${baseUrl}/assets/img/platforms/${platform.image}"
                                                              alt="${platform.name} platform image"
                                                              class="rounded-circle me-1" width="20"
                                                              height="20">

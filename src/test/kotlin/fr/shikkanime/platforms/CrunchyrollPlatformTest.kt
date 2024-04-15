@@ -3,7 +3,6 @@ package fr.shikkanime.platforms
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
@@ -54,11 +53,11 @@ class CrunchyrollPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
-        assertEquals("Metallic Rouge", episodes[0].anime?.name)
-        assertEquals(LangType.VOICE, episodes[0].langType)
+        assertEquals("Metallic Rouge", episodes[0].anime)
+        assertEquals("fr-FR", episodes[0].audioLocale)
         assertNotNull(episodes[0].description)
-        assertEquals("Metallic Rouge", episodes[1].anime?.name)
-        assertEquals(LangType.SUBTITLES, episodes[1].langType)
+        assertEquals("Metallic Rouge", episodes[1].anime)
+        assertEquals("ja-JP", episodes[1].audioLocale)
         assertNotNull(episodes[1].description)
     }
 
@@ -78,7 +77,7 @@ class CrunchyrollPlatformTest {
         )
 
         assertEquals(true, episodes.isNotEmpty())
-        assertEquals("One Piece", episodes[0].anime?.name)
+        assertEquals("One Piece", episodes[0].anime)
         assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
         assertEquals(13, episodes[0].number)
     }

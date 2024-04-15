@@ -36,9 +36,9 @@ object Constant {
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"
     val jwtRealm: String = System.getenv("JWT_REALM") ?: "ktor sample app"
     val jwtSecret: String = System.getenv("JWT_SECRET") ?: "secret"
-
-    const val BASE_URL = "https://www.shikkanime.fr"
-    const val DEFAULT_IMAGE_PREVIEW = "$BASE_URL/assets/img/episode_no_image_preview.jpg"
+    val apiUrl: String = System.getenv("API_URL") ?: "http://localhost:37100/api"
+    val baseUrl: String = System.getenv("BASE_URL") ?: "http://localhost:37100"
+    val DEFAULT_IMAGE_PREVIEW = "$baseUrl/assets/img/episode_no_image_preview.jpg"
     const val DEFAULT_CACHE_DURATION = 31536000 // 1 year
 
     init {

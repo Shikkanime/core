@@ -1,6 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -8,7 +9,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeCacheService
+import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.Controller
@@ -26,7 +27,7 @@ class SiteController {
     private lateinit var animeCacheService: AnimeCacheService
 
     @Inject
-    private lateinit var episodeCacheService: EpisodeCacheService
+    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     @Inject
     private lateinit var simulcastCacheService: SimulcastCacheService
@@ -79,20 +80,19 @@ class SiteController {
             Link.HOME,
             mutableMapOf(
                 "animes" to getFullAnimesSimulcast(),
-                "episodes" to episodeCacheService.findAllBy(
+                "episodeMappings" to episodeMappingCacheService.findAllBy(
                     CountryCode.FR,
                     null,
                     listOf(
-                        SortParameter("releaseDateTime", SortParameter.Order.DESC),
+                        SortParameter("lastReleaseDateTime", SortParameter.Order.DESC),
                         SortParameter("animeName", SortParameter.Order.DESC),
                         SortParameter("season", SortParameter.Order.DESC),
                         SortParameter("episodeType", SortParameter.Order.DESC),
                         SortParameter("number", SortParameter.Order.DESC),
-                        SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
                     8
-                )!!.data
+                )!!.data,
             )
         )
     }
@@ -124,25 +124,25 @@ class SiteController {
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
         val anime = animeCacheService.findBySlug(slug) ?: return Response.redirect("/404")
+        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
 
         return Response.template(
             "/site/anime.ftl",
-            anime.shortName,
+            dto.shortName,
             mutableMapOf(
-                "description" to anime.description?.let { StringUtils.sanitizeXSS(it) },
-                "anime" to anime,
-                "episodes" to episodeCacheService.findAllBy(
+                "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
+                "anime" to dto,
+                "episodeMappings" to episodeMappingCacheService.findAllBy(
                     CountryCode.FR,
                     anime.uuid,
                     listOf(
                         SortParameter("season", SortParameter.Order.ASC),
-                        SortParameter("episodeType", SortParameter.Order.DESC),
+                        SortParameter("episodeType", SortParameter.Order.ASC),
                         SortParameter("number", SortParameter.Order.ASC),
-                        SortParameter("langType", SortParameter.Order.ASC),
                     ),
                     1,
                     configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
-                )!!.data
+                )!!.data,
             )
         )
     }

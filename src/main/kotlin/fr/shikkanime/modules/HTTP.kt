@@ -72,7 +72,7 @@ fun Application.configureHTTP() {
             description = "API for testing and demonstration purposes"
         }
         server {
-            url = Constant.BASE_URL
+            url = Constant.baseUrl
         }
     }
 }

@@ -1,60 +1,16 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Anime_
-import fr.shikkanime.entities.Pageable
-import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.LangType
-import jakarta.persistence.Tuple
-import org.hibernate.Hibernate
+import jakarta.persistence.criteria.Predicate
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
 import org.hibernate.search.mapper.orm.Search
-import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
-
-    private fun Anime.initialize(): Anime {
-        if (!Hibernate.isInitialized(this.simulcasts)) {
-            Hibernate.initialize(this.simulcasts)
-        }
-
-        return this
-    }
-
-    private fun List<Anime>.initialize(): List<Anime> {
-        this.forEach { anime -> anime.initialize() }
-        return this
-    }
-
-    private fun Pageable<Anime>.initialize(): Pageable<Anime> {
-        this.data.forEach { anime -> anime.initialize() }
-        return this
-    }
-
-    private fun addOrderBy(query: StringBuilder) {
-        if (!query.contains("ORDER BY")) {
-            query.append(" ORDER BY")
-        }
-    }
-
-    private fun buildSortQuery(sort: List<SortParameter>, query: StringBuilder) {
-        val fields = listOf("name", "releaseDateTime", "lastReleaseDateTime")
-        val subQuery = mutableListOf<String>()
-
-        sort.filter { fields.contains(it.field) }.forEach { param ->
-            val field = param.field
-            addOrderBy(query)
-            subQuery.add(" a.$field ${param.order.name}")
-        }
-
-        if (subQuery.isNotEmpty()) {
-            query.append(subQuery.joinToString(", "))
-        }
-    }
 
     fun preIndex() {
         inTransaction {
@@ -64,56 +20,40 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    override fun findAll(): List<Anime> {
-        return inTransaction {
-            createReadOnlyQuery(it, "FROM Anime", getEntityClass())
-                .resultList
-                .initialize()
-        }
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
-        simulcast: UUID?,
+        simulcast: Simulcast?,
         sort: List<SortParameter>,
         page: Int,
-        limit: Int
+        limit: Int,
+        status: Status? = null
     ): Pageable<Anime> {
-        val queryBuilder = StringBuilder("FROM Anime a")
-        val whereClause = mutableListOf<String>()
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
-        simulcast?.let {
-            queryBuilder.append(" JOIN a.simulcasts s")
-            whereClause.add("s.uuid = :uuid")
-        }
-        countryCode?.let { whereClause.add("a.countryCode = :countryCode") }
+            val predicates = mutableListOf<Predicate>()
+            simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
+            countryCode?.let { predicates.add(cb.equal(root[Anime_.countryCode], it)) }
+            status?.let { predicates.add(cb.equal(root[Anime_.status], it)) }
+            query.where(*predicates.toTypedArray())
 
-        if (whereClause.isNotEmpty()) {
-            queryBuilder.append(" WHERE ${whereClause.joinToString(" AND ")}")
-        }
+            val orders = sort.mapNotNull { sortParameter ->
+                val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc
 
-        buildSortQuery(sort, queryBuilder)
+                val field = when (sortParameter.field) {
+                    "name" -> root[Anime_.name]
+                    "releaseDateTime" -> root[Anime_.releaseDateTime]
+                    "lastReleaseDateTime" -> root[Anime_.lastReleaseDateTime]
+                    else -> null
+                }
 
-        return inTransaction {
-            val query = createReadOnlyQuery(it, queryBuilder.toString(), getEntityClass())
-            countryCode?.let { query.setParameter("countryCode", countryCode) }
-            simulcast?.let { query.setParameter("uuid", simulcast) }
-            buildPageableQuery(query, page, limit).initialize()
-        }
-    }
+                field?.let { order(it) }
+            }
 
-    fun findByName(countryCode: CountryCode, name: String?): Anime? {
-        return inTransaction {
-            createReadOnlyQuery(
-                it,
-                "FROM Anime WHERE countryCode = :countryCode AND LOWER(name) = :name",
-                getEntityClass()
-            )
-                .setParameter("countryCode", countryCode)
-                .setParameter("name", name?.lowercase())
-                .resultList
-                .firstOrNull()
-                ?.initialize()
+            query.orderBy(orders)
+            buildPageableQuery(entityManager.createQuery(query), page, limit)
         }
     }
 
@@ -126,7 +66,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
         return inTransaction {
-            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount()).initialize()
+            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount())
         }
     }
 
@@ -136,8 +76,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
         countryCode: CountryCode?
     ): BooleanPredicateClausesStep<*>? {
         val bool = searchPredicateFactory.bool()
-        bool.must(searchPredicateFactory.match().field("name").matching(name))
-        countryCode?.let { bool.must(searchPredicateFactory.match().field("countryCode").matching(it)) }
+        bool.must(searchPredicateFactory.match().field(Anime_.NAME).matching(name))
+        countryCode?.let { bool.must(searchPredicateFactory.match().field(Anime_.COUNTRY_CODE).matching(it)) }
         return bool
     }
 
@@ -146,43 +86,30 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
-
-            query.select(root)
-                .where(cb.equal(root[Anime_.slug], slug))
+            query.where(cb.equal(root[Anime_.slug], slug))
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
                 .firstOrNull()
-                ?.initialize()
         }
     }
 
-    override fun find(uuid: UUID): Anime? {
+    fun findByName(countryCode: CountryCode, name: String?): Anime? {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM Anime WHERE uuid = :uuid", getEntityClass())
-                .setParameter("uuid", uuid)
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[Anime_.countryCode], countryCode),
+                    cb.equal(cb.lower(root[Anime_.name]), name?.lowercase())
+                )
+            )
+
+            it.createQuery(query)
                 .resultList
                 .firstOrNull()
-                ?.initialize()
-        }
-    }
-
-    fun findAllUUIDAndImage(): List<Tuple> {
-        return inTransaction {
-            createReadOnlyQuery(it, "SELECT uuid, image, banner FROM Anime", Tuple::class.java)
-                .resultList
-        }
-    }
-
-    fun getAllLangTypes(anime: Anime): List<LangType> {
-        return inTransaction {
-            createReadOnlyQuery(
-                it,
-                "SELECT DISTINCT e.langType FROM Episode e WHERE e.anime = :anime",
-                LangType::class.java
-            )
-                .setParameter("anime", anime)
-                .resultList
         }
     }
 }

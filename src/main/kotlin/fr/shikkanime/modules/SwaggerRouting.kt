@@ -41,7 +41,7 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
                 when {
                     parameter.hasAnnotation<QueryParam>() -> {
                         val qp = parameter.findAnnotation<QueryParam>()!!
-                        queryParameter(name, type) {
+                        queryParameter(qp.name.ifBlank { name }, type) {
                             description = qp.description
                             required = qp.required
                         }
@@ -49,7 +49,7 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
 
                     parameter.hasAnnotation<PathParam>() -> {
                         val pp = parameter.findAnnotation<PathParam>()!!
-                        pathParameter(name, type) {
+                        pathParameter(pp.name.ifBlank { name }, type) {
                             description = pp.description
                             required = true
                         }

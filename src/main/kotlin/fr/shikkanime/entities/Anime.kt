@@ -38,13 +38,12 @@ class Anime(
     var banner: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(2000)")
     var description: String? = null,
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "anime_simulcast",
         joinColumns = [JoinColumn(name = "anime_uuid")],
         inverseJoinColumns = [JoinColumn(name = "simulcast_uuid")]
     )
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
     @Column(nullable = false, unique = true)
     var slug: String? = null,
@@ -53,17 +52,6 @@ class Anime(
     @Column(nullable = true, name = "status")
     @Enumerated(EnumType.STRING)
     var status: Status = Status.VALID,
-) : ShikkEntity(uuid) {
-    fun copy() = Anime(
-        uuid,
-        countryCode,
-        name,
-        releaseDateTime,
-        image,
-        banner,
-        description,
-        simulcasts,
-        slug,
-        lastReleaseDateTime
-    )
-}
+    @OneToMany(mappedBy = "anime", fetch = FetchType.EAGER)
+    var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
+) : ShikkEntity(uuid)

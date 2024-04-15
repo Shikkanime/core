@@ -4,9 +4,10 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.inject.Inject
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
@@ -16,7 +17,6 @@ import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import java.io.File
 import java.time.ZonedDateTime
@@ -68,7 +68,7 @@ class AnimationDigitalNetworkPlatform :
         return list
     }
 
-    fun convertEpisode(
+    private fun convertEpisode(
         countryCode: CountryCode,
         jsonObject: JsonObject,
         zonedDateTime: ZonedDateTime
@@ -135,31 +135,25 @@ class AnimationDigitalNetworkPlatform :
         val description = jsonObject.getAsString("summary")?.replace('\n', ' ')?.ifBlank { null }
 
         return jsonObject.getAsJsonArray("languages").map {
-            val (langType, audioLocale) = getLangTypeAndAudioLocale(it)
-
             Episode(
-                platform = getPlatform(),
-                anime = Anime(
-                    countryCode = countryCode,
-                    name = animeName,
-                    releaseDateTime = releaseDate,
-                    image = animeImage,
-                    banner = animeBanner,
-                    description = animeDescription,
-                    slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
-                ),
-                episodeType = episodeType,
-                langType = langType,
-                audioLocale = audioLocale,
-                hash = StringUtils.getHash(countryCode, getPlatform(), id.toString(), langType),
+                countryCode = countryCode,
+                anime = animeName,
+                animeImage = animeImage,
+                animeBanner = animeBanner,
+                animeDescription = animeDescription,
                 releaseDateTime = releaseDate,
+                episodeType = episodeType,
                 season = season,
                 number = number,
-                title = title,
-                url = url,
-                image = image,
                 duration = duration,
-                description = description
+                title = title,
+                description = description,
+                image = image,
+                platform = getPlatform(),
+                audioLocale = getAudioLocale(it),
+                id = id.toString(),
+                url = url,
+                uncensored = jsonObject.getAsString("title")?.contains("(NC)") == true,
             )
         }
     }
@@ -184,10 +178,10 @@ class AnimationDigitalNetworkPlatform :
         return Pair(number, episodeType)
     }
 
-    private fun getLangTypeAndAudioLocale(it: JsonElement): Pair<LangType, String> {
+    private fun getAudioLocale(it: JsonElement): String {
         return when (it.asString) {
-            "vostf" -> LangType.SUBTITLES to "fr-FR"
-            "vf" -> LangType.VOICE to "ja-JP"
+            "vostf" -> "fr-FR"
+            "vf" -> "ja-JP"
             else -> throw Exception("Language is null")
         }
     }

@@ -1,26 +1,26 @@
 <#import "_navigation.ftl" as navigation />
-<#import "components/episode.ftl" as episodeComponent />
+<#import "components/episode-mapping.ftl" as episodeMappingComponent />
 <#import "components/anime.ftl" as animeComponent />
 
 <@navigation.display canonicalUrl="https://www.shikkanime.fr">
     <h1 class="h3 my-3">Nouveaux épisodes</h1>
 
-    <#if episodes?? && episodes?size != 0>
+    <#if episodeMappings?? && episodeMappings?size != 0>
         <div class="row g-3">
-            <#list episodes as episode>
+            <#list episodeMappings as episodeMapping>
             <#-- If episode is the first element -->
                 <#assign col="col-md-2">
                 <#assign firstRow=false>
 
-                <#if episode?index == 0>
+                <#if episodeMapping?index == 0>
                     <#assign col="col-md-7">
                     <#assign firstRow=true>
-                <#elseif episode?index == 1>
+                <#elseif episodeMapping?index == 1>
                     <#assign col="col-md-5">
                     <#assign firstRow=true>
                 </#if>
 
-                <@episodeComponent.display episode=episode desktopColSize=col mobileColSize="col-12" cover=firstRow />
+                <@episodeMappingComponent.display episodeMapping=episodeMapping desktopColSize=col mobileColSize="col-12" cover=firstRow />
             </#list>
         </div>
     <#else>
