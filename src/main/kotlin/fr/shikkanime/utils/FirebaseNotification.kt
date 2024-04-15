@@ -7,7 +7,7 @@ import com.google.firebase.messaging.AndroidConfig
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.Notification
-import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import java.io.File
 import java.io.FileInputStream
 
@@ -28,7 +28,7 @@ object FirebaseNotification {
         isInitialized = true
     }
 
-    fun send(episodeDto: EpisodeDto) {
+    fun send(episodeDto: EpisodeVariantDto) {
         init()
 
         FirebaseMessaging.getInstance()
@@ -36,7 +36,7 @@ object FirebaseNotification {
                 Message.builder()
                     .setNotification(
                         Notification.builder()
-                            .setTitle(episodeDto.anime.shortName)
+                            .setTitle(episodeDto.mapping.anime.shortName)
                             .setBody(StringUtils.toEpisodeString(episodeDto))
                             .setImage("https://api.shikkanime.fr/v1/attachments?uuid=${episodeDto.uuid}&type=image")
                             .build()

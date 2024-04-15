@@ -1,127 +1,97 @@
 <#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
-    <div class="row g-3 align-items-center mb-3">
-        <div class="col-auto">
-            <label class="form-label" for="nameInput">Name</label>
-            <input type="text" class="form-control" id="nameInput">
+    <div x-data="{
+        pageable: {},
+        page: 1,
+        maxPage: 0,
+        search: '',
+        invalid: false,
+        setPageable: function (page, pageable) {
+            this.page = page;
+            this.pageable = pageable;
+            this.maxPage = Math.ceil(pageable.total / pageable.limit);
+        }
+    }" x-init="setPageable(1, await getAnimes('', page, false));">
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-auto">
+                <label class="form-label" for="nameInput">Name</label>
+                <input type="text" class="form-control" id="nameInput"
+                       x-model="search" @input="setPageable(1, await getAnimes(search, 1, invalid))">
+            </div>
+            <div class="col-auto">
+                <input class="form-check-input" type="checkbox" id="invalidInput"
+                       @input="invalid = $event.target.checked; setPageable(1, await getAnimes(search, 1, invalid))">
+                <label class="form-check-label" for="invalidInput">Only invalid</label>
+            </div>
+        </div>
+
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="table-group-divider">
+            <template x-for="anime in pageable.data">
+                <tr>
+                    <th scope="row">
+                        <span class="me-1 badge bg-danger" x-show="anime.status === 'INVALID'">Invalid</span>
+                        <span class="me-1 badge bg-success" x-show="anime.status !== 'INVALID'">Valid</span>
+                        <span x-text="anime.shortName"></span>
+                    </th>
+                    <td x-text="anime.description"></td>
+                    <td>
+                        <a x-bind:href="'/admin/animes/' + anime.uuid" class="btn btn-warning">
+                            <i class="bi bi-pencil-square"></i>
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
+
+        <div class="mt-3">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item">
+                        <a class="page-link"
+                           x-bind:class="{disabled: page === 1}"
+                           @click="setPageable(1, await getAnimes(search, page - 1, invalid))">
+                            &laquo;
+                        </a>
+                    </li>
+                    <template
+                            x-for="i in Array.from({length: 7}, (_, index) => page + index - 3).filter(i => i >= 1 && i <= maxPage)">
+                        <li class="page-item" x-bind:class="{active: page === i}">
+                            <a class="page-link" @click="setPageable(i, await getAnimes(search, i, invalid))"
+                               x-text="i"></a>
+                        </li>
+                    </template>
+                    <li class="page-item">
+                        <a class="page-link"
+                           x-bind:class="{disabled: page === maxPage}"
+                           @click="setPageable(maxPage, await getAnimes(search, page + 1, invalid))">
+                            &raquo;
+                        </a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 
-    <table class="table table-striped table-bordered">
-        <thead>
-        <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Description</th>
-            <th scope="col">Actions</th>
-        </tr>
-        </thead>
-        <tbody class="table-group-divider" id="animes-table">
-
-        </tbody>
-    </table>
-
-    <div class="mt-3">
-        <nav aria-label="Page navigation" id="pagination">
-            <ul class="pagination justify-content-center">
-
-            </ul>
-        </nav>
-    </div>
-
     <script>
-        function buildTableElement(uuid, name, description, status) {
-            const isInvalid = status === 'INVALID';
-
-            return `<tr>
-                <th scope="row"><span class="me-2 badge bg-` + (isInvalid ? 'danger' : 'success') + `">` + (isInvalid ? 'Invalid' : 'Valid') + `</span>` + name + `</th>
-                <td>` + description + `</td>
-                <td>
-                    <a href="/admin/animes/` + uuid + `" class="btn btn-warning">
-                        <i class="bi bi-pencil-square"></i>
-                        Edit
-                    </a>
-                </td>
-            </tr>`
-        }
-
-        async function getAnimes(name, page) {
-            let params = '?sort=releaseDateTime&desc=releaseDateTime';
+        async function getAnimes(name, page, invalid) {
+            let params = '?sort=releaseDateTime&desc=releaseDateTime' + (invalid ? '&status=INVALID' : '');
 
             if (name) {
                 params = '?name=' + name;
             }
 
-            return await callApi('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=6');
+            return await callApi('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=7');
         }
-
-        function buildTable(animes) {
-            const table = document.getElementById('animes-table');
-
-            table.innerHTML = '';
-
-            animes.forEach(anime => {
-                table.innerHTML += buildTableElement(anime.uuid, anime.shortName, anime.description, anime.status);
-            });
-        }
-
-        async function changePage(page) {
-            const name = document.getElementById('nameInput').value;
-            const pageable = await getAnimes(name, page);
-            buildTable(pageable.data);
-            buildPagination(pageable);
-        }
-
-        function buildPagination(pageable) {
-            const totalPages = Math.ceil(pageable.total / pageable.limit);
-            const pagination = document.getElementById('pagination').querySelector('ul');
-            pagination.innerHTML = '';
-
-            const hasPrevious = pageable.page > 1;
-            const previousPage = hasPrevious ? pageable.page - 1 : 1;
-            const hasNext = pageable.page < totalPages;
-            const nextPage = hasNext ? pageable.page + 1 : totalPages;
-
-            pagination.innerHTML += createPageItem(!hasPrevious, null, previousPage, '&laquo;', 'Previous');
-
-            const startPage = Math.max(1, pageable.page - 4);
-            const endPage = Math.min(totalPages, pageable.page + 4);
-            for (let i = startPage; i <= endPage; i++) {
-                const isActive = pageable.page === i;
-                pagination.innerHTML += createPageItem(false, isActive, i, i);
-            }
-
-            pagination.innerHTML += createPageItem(!hasNext, null, nextPage, '&raquo;', 'Next');
-        }
-
-        function createPageItem(isDisable, isActive, page, text, ariaLabel = '') {
-            const activeClass = !isDisable && isActive ? 'active' : '';
-            const disabledClass = isDisable ? 'disabled' : '';
-
-            return `<li class="page-item ` + activeClass + `">
-        <a class="page-link ` + disabledClass + `" aria-label="` + ariaLabel + `" onclick="changePage(` + page + `)" ` + disabledClass + `>
-            <span aria-hidden="true">` + text + `</span>
-        </a>
-    </li>`;
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const pageable = await getAnimes();
-            buildTable(pageable.data);
-            buildPagination(pageable);
-        });
-
-        let timeout = null;
-
-        document.getElementById('nameInput').addEventListener('input', async (event) => {
-            // Avoids calling the API on every key press
-            clearTimeout(timeout);
-
-            timeout = setTimeout(async () => {
-                const pageable = await getAnimes(event.target.value);
-                buildTable(pageable.data);
-                buildPagination(pageable);
-            }, 500);
-        });
     </script>
 </@navigation.display>

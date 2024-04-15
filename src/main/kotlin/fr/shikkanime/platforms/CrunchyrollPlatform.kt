@@ -3,9 +3,10 @@ package fr.shikkanime.platforms
 import com.google.gson.JsonObject
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -16,7 +17,6 @@ import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -132,7 +132,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
             api.forEach {
                 try {
-                    list.add(convertJsonEpisode(countryCode, it))
+                    list.add(convertEpisode(countryCode, it))
                 } catch (_: EpisodeException) {
                     // Ignore
                 } catch (_: AnimeException) {
@@ -151,7 +151,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
     }
 
-    fun convertJsonEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
+    private fun convertEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
         val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
 
         val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
@@ -169,11 +169,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             "Episode is not available in ${countryCode.name} with subtitles or voice"
         )
 
-        val langType = if (isDubbed) LangType.VOICE else LangType.SUBTITLES
         val audioLocale = requireNotNull(episodeMetadata.getAsString("audio_locale")) { "Audio locale is null" }
         val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
-        val hash = StringUtils.getHash(countryCode, getPlatform(), id, langType)
-        if (hashCache.contains(hash)) throw EpisodeAlreadyReleasedException()
 
         val releaseDate =
             requireNotNull(
@@ -208,31 +205,25 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (!checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
-        hashCache.add(hash)
-
         return Episode(
-            platform = getPlatform(),
-            anime = Anime(
-                countryCode = countryCode,
-                name = animeName,
-                releaseDateTime = releaseDate,
-                image = crunchyrollAnimeContent.image,
-                banner = crunchyrollAnimeContent.banner,
-                description = crunchyrollAnimeContent.description,
-                slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
-            ),
-            episodeType = episodeType,
-            langType = langType,
-            audioLocale = audioLocale,
-            hash = hash,
+            countryCode = countryCode,
+            anime = animeName,
+            animeImage = crunchyrollAnimeContent.image,
+            animeBanner = crunchyrollAnimeContent.banner,
+            animeDescription = crunchyrollAnimeContent.description,
             releaseDateTime = releaseDate,
+            episodeType = episodeType,
             season = season,
             number = number,
-            title = title,
-            url = url,
-            image = image,
             duration = duration,
-            description = description
+            title = title,
+            description = description,
+            image = image,
+            platform = getPlatform(),
+            audioLocale = audioLocale,
+            id = id,
+            url = url,
+            uncensored = false,
         )
     }
 

@@ -42,17 +42,19 @@
                 return;
             }
 
-            const animes = await callApi('/api/v1/animes?name=' + trimmedQuery + '&limit=12', abortController.signal);
+            const animes = await callApi('${apiUrl}/v1/animes?name=' + trimmedQuery + '&limit=12', {
+                abortSignal: abortController.signal
+            });
             document.getElementById('result-list').innerHTML = animes.data.map(anime => template(anime)).join('');
         }
 
         function template(anime) {
             return `<div class="col-md-2 col-6 mt-0 mb-4">
-        <article x-data="{ hover: false }" class="rounded-4 border-light">
+        <article x-data="{ hover: false }" class="rounded-4 card">
             <a href="/animes/` + anime.slug + `" class="text-decoration-none text-white" @mouseenter="hover = true"
                @mouseleave="hover = false">
                 <div class="position-relative">
-                    <img src="https://api.shikkanime.fr/v1/attachments?uuid=` + anime.uuid + `&type=image"
+                    <img src="${apiUrl}/v1/attachments?uuid=` + anime.uuid + `&type=image"
                          alt="` + anime.shortName.replace("\"", "'") + ` anime image" class="img-fluid rounded-top-4" width="480"
                          height="720">
 

@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 fun ZonedDateTime.isEqualOrAfter(other: ZonedDateTime): Boolean {
     return this.isEqual(other) || this.isAfter(other)
@@ -12,6 +13,10 @@ fun ZonedDateTime.isEqualOrAfter(other: ZonedDateTime): Boolean {
 
 fun ZonedDateTime.withUTC(): ZonedDateTime {
     return this.withZoneSameInstant(Constant.utcZoneId)
+}
+
+fun ZonedDateTime.withUTCString(): String {
+    return withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 }
 
 fun LocalDateTime.withUTC(): ZonedDateTime {

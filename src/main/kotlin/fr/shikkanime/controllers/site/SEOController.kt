@@ -5,7 +5,7 @@ import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.EpisodeCacheService
+import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -20,7 +20,7 @@ class SEOController {
     private lateinit var animeCacheService: AnimeCacheService
 
     @Inject
-    private lateinit var episodeCacheService: EpisodeCacheService
+    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     @Inject
     private lateinit var simulcastCacheService: SimulcastCacheService
@@ -54,7 +54,7 @@ class SEOController {
             data
         }.distinctBy { it.uuid }
 
-        val episode = episodeCacheService.findAllBy(
+        val episodeMapping = episodeMappingCacheService.findAllBy(
             CountryCode.FR,
             null,
             listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
@@ -66,7 +66,7 @@ class SEOController {
             "/site/seo/sitemap.ftl",
             null,
             mutableMapOf(
-                "episode" to episode,
+                "episodeMapping" to episodeMapping,
                 "simulcasts" to simulcasts,
                 "animes" to animes,
                 "seoLinks" to Link.entries.filter { !it.href.startsWith("/admin") && it.footer }.toList()

@@ -1,6 +1,6 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.LoggerFactory
@@ -68,7 +68,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         runBlocking { BskyWrapper.createRecord(accessJwt!!, did!!, message) }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
         val message =

@@ -1,19 +1,19 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.withUTC
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<Episode>>() {
+class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
@@ -49,28 +49,24 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
             val computedId = EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
 
             Episode(
-                platform = getPlatform(),
-                anime = Anime(
-                    countryCode = key.countryCode,
-                    name = animeName,
-                    releaseDateTime = releaseDateTime,
-                    image = key.netflixSimulcast.image,
-                    banner = animeBanner,
-                    description = animeDescription,
-                    slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
-                ),
-                episodeType = EpisodeType.EPISODE,
-                langType = LangType.SUBTITLES,
-                audioLocale = "ja-JP",
-                hash = StringUtils.getHash(key.countryCode, getPlatform(), computedId, LangType.SUBTITLES),
+                countryCode = key.countryCode,
+                anime = animeName,
+                animeImage = imageWithoutParams,
+                animeBanner = animeBanner,
+                animeDescription = animeDescription,
                 releaseDateTime = releaseDateTime,
+                episodeType = EpisodeType.EPISODE,
                 season = season,
                 number = episodeNumber,
-                title = episodeTitle,
-                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$computedId",
-                image = imageWithoutParams,
                 duration = durationInSeconds,
+                title = episodeTitle,
                 description = episodeDescription,
+                image = imageWithoutParams,
+                platform = getPlatform(),
+                audioLocale = "ja-JP",
+                id = computedId,
+                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$computedId",
+                uncensored = false,
             )
         }.toSet()
     }

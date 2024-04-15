@@ -1,11 +1,9 @@
 package fr.shikkanime
 
 import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
-import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.EpisodeService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -58,8 +56,6 @@ fun main() {
     println("Checking ${dates.size} dates...")
     println("Simulcasts: $simulcasts")
 
-    val episodes = mutableListOf<Episode>()
-    val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
     val adnPlatform = Constant.injector.getInstance(AnimationDigitalNetworkPlatform::class.java)
     val crunchyrollPlatform = Constant.injector.getInstance(CrunchyrollPlatform::class.java)
 
@@ -145,12 +141,12 @@ fun main() {
 
         `object`.forEach { episodeJson ->
             try {
-                episodes.add(
-                    crunchyrollPlatform.convertJsonEpisode(
-                        CountryCode.FR,
-                        episodeJson,
-                    )
-                )
+//                episodes.add(
+//                    crunchyrollPlatform.convertJsonEpisode(
+//                        CountryCode.FR,
+//                        episodeJson,
+//                    )
+//                )
             } catch (e: Exception) {
                 println("Error while converting episode (Episode ID: ${episodeJson.getAsString("id")}): ${e.message}")
                 e.printStackTrace()
@@ -160,13 +156,13 @@ fun main() {
 
     httpRequest.close()
 
-    episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
-
-    episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
-        episode.anime?.releaseDateTime =
-            episodes.filter { it.anime?.name == episode.anime?.name }.minOf { it.anime!!.releaseDateTime }
-        episodeService.save(episode)
-    }
+//    episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
+//
+//    episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
+//        episode.anime?.releaseDateTime =
+//            episodes.filter { it.anime?.name == episode.anime?.name }.minOf { it.anime!!.releaseDateTime }
+//        episodeService.save(episode)
+//    }
 
     println("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
 }

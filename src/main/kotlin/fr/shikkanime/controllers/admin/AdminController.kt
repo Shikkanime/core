@@ -4,15 +4,12 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Link
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeService
-import fr.shikkanime.services.ImageService
-import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -36,10 +33,13 @@ class AdminController {
     private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Inject
-    private lateinit var episodeService: EpisodeService
+    private lateinit var animeService: AnimeService
 
     @Inject
-    private lateinit var animeService: AnimeService
+    private lateinit var episodeMappingService: EpisodeMappingService
+
+    @Inject
+    private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path
     @Get
@@ -119,19 +119,54 @@ class AdminController {
             animeService.update(anime)
         }
 
-        episodeService.findAll()
-            .filter { it.langType == LangType.SUBTITLES && it.episodeType != EpisodeType.FILM }
+        episodeMappingService.findAll()
+            .filter { it.variants.any { variant -> variant.audioLocale != CountryCode.FR.locale } && it.episodeType != EpisodeType.FILM }
             .sortedBy { it.releaseDateTime }
-            .forEach { episode ->
-                val anime = animeService.find(episode.anime!!.uuid!!)!!
-                episodeService.addSimulcastToAnime(anime, episodeService.getSimulcast(anime, episode))
+            .forEach { episodeMapping ->
+                val anime = animeService.find(episodeMapping.anime!!.uuid!!)!!
+                animeService.addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
 
-                if (episode.anime != anime) {
+                if (episodeMapping.anime != anime) {
                     animeService.update(anime)
                 }
             }
 
-        MapCache.invalidate(Anime::class.java, Episode::class.java, Simulcast::class.java)
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, Simulcast::class.java)
         return Response.redirect(Link.DASHBOARD.href)
+    }
+
+    @Path("/animes")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getAnimes(): Response {
+        return Response.template(Link.ANIMES)
+    }
+
+    @Path("/animes/{uuid}")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getAnimeView(): Response {
+        return Response.template("admin/animes/edit.ftl", "Edit anime")
+    }
+
+    @Path("/episodes")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getEpisodes(): Response {
+        return Response.template(Link.EPISODES)
+    }
+
+    @Path("/episodes/{uuid}")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getEpisodeView(): Response {
+        return Response.template("admin/episodes/edit.ftl", "Edit episode")
+    }
+
+    @Path("/config")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getConfigs(): Response {
+        return Response.template(Link.CONFIG)
     }
 }

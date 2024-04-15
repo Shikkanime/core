@@ -1,10 +1,12 @@
 package fr.shikkanime.jobs
 
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.EpisodeDto
-import fr.shikkanime.entities.Episode
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.services.EpisodeService
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.platforms.AbstractPlatform
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
@@ -14,17 +16,18 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
-
 class FetchEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isInitialized = false
     private var isRunning = false
     private var lock = 0
     private val maxLock = 5
-    private val set = mutableSetOf<String>()
+
+    private val identifiers = mutableSetOf<String>()
+    private val typeIdentifiers = mutableSetOf<String>()
 
     @Inject
-    private lateinit var episodeService: EpisodeService
+    private lateinit var episodeVariantService: EpisodeVariantService
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
@@ -44,15 +47,17 @@ class FetchEpisodesJob : AbstractJob {
         isRunning = true
 
         if (!isInitialized) {
-            val hashes = episodeService.findAllHashes()
+            val variants = episodeVariantService.findAll()
+            identifiers.addAll(variants.mapNotNull { it.identifier }.toSet())
 
-            set.addAll(hashes)
-            Constant.abstractPlatforms.forEach { it.hashCache.addAll(hashes) }
+            // COMPARE COUNTRY, ANIME, PLATFORM, EPISODE TYPE, SEASON, NUMBER, AND LANG TYPE
+            variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
+
             isInitialized = true
         }
 
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val episodes = mutableListOf<Episode>()
+        val episodes = mutableListOf<AbstractPlatform.Episode>()
 
         Constant.abstractPlatforms.forEach { abstractPlatform ->
             logger.info("Fetching episodes for ${abstractPlatform.getPlatform().name}...")
@@ -65,31 +70,55 @@ class FetchEpisodesJob : AbstractJob {
         }
 
         val savedEpisodes = episodes
-            .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !set.contains(it.hash) }
+            .sortedWith(compareBy({ it.releaseDateTime }, { it.anime }, { it.season }, { it.episodeType }, { it.number }, { it.audioLocale }))
+            .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !identifiers.contains(it.getIdentifier()) }
             .mapNotNull {
                 try {
-                    val savedEpisode = episodeService.save(it)
-                    savedEpisode.hash?.let { hash -> set.add(hash) }
+                    val savedEpisode = episodeVariantService.save(it)
+                    identifiers.add(it.getIdentifier())
                     savedEpisode
                 } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while saving episode ${it.hash} (${it.anime?.name})", e)
+                    logger.log(Level.SEVERE, "Error while saving episode ${it.getIdentifier()} (${it.anime})", e)
                     null
                 }
             }
 
-        if (savedEpisodes.isNotEmpty() && savedEpisodes.size < configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
-            val dtos = AbstractConverter.convert(savedEpisodes, EpisodeDto::class.java)
-
-            dtos.forEach {
-                sendToSocialNetworks(it)
-                FirebaseNotification.send(it)
-            }
-        }
-
+        sendToNetworks(savedEpisodes)
         isRunning = false
     }
 
-    private fun sendToSocialNetworks(dto: EpisodeDto) {
+    private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
+        if (savedEpisodes.isNotEmpty() && savedEpisodes.size < configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
+            for (episode in savedEpisodes) {
+                val typeIdentifier = getTypeIdentifier(episode)
+
+                if (typeIdentifiers.contains(typeIdentifier)) {
+                    continue
+                }
+
+                typeIdentifiers.add(typeIdentifier)
+                val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
+                sendToSocialNetworks(episodeDto)
+                FirebaseNotification.send(episodeDto)
+            }
+        }
+    }
+
+    private fun getTypeIdentifier(episodeVariant: EpisodeVariant): String {
+        val country = episodeVariant.mapping!!.anime!!.countryCode!!
+        val anime = episodeVariant.mapping!!.anime!!.uuid!!
+        val platform = episodeVariant.platform!!
+        val episodeType = episodeVariant.mapping!!.episodeType!!
+        val season = episodeVariant.mapping!!.season!!
+        val number = episodeVariant.mapping!!.number!!
+        val audioLocale = episodeVariant.audioLocale!!
+
+        val langType = LangType.fromAudioLocale(country, audioLocale)
+        val typeIdentifier = "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
+        return typeIdentifier
+    }
+
+    private fun sendToSocialNetworks(dto: EpisodeVariantDto) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
             ImageIO.write(ImageService.toEpisodeImage(dto), "png", byteArrayOutputStream)

@@ -23,6 +23,7 @@ import java.util.*
 )
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Deprecated("Use EpisodeMapping instead")
 class Episode(
     override val uuid: UUID? = null,
     @Column(nullable = false)

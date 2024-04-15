@@ -1,6 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Metric
+import fr.shikkanime.entities.Metric_
 import java.time.ZonedDateTime
 
 class MetricRepository : AbstractRepository<Metric>() {
@@ -8,8 +9,13 @@ class MetricRepository : AbstractRepository<Metric>() {
 
     fun findAllAfter(date: ZonedDateTime): List<Metric> {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM Metric WHERE date > :date ORDER BY date", getEntityClass())
-                .setParameter("date", date)
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            query.where(cb.greaterThan(root[Metric_.date], date))
+            query.orderBy(cb.asc(root[Metric_.date]))
+
+            createReadOnlyQuery(it, query)
                 .resultList
         }
     }

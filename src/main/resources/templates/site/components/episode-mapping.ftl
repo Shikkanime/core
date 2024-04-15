@@ -11,53 +11,44 @@
     </#switch>
 </#function>
 
-<#macro display episode desktopColSize mobileColSize cover>
+<#macro display episodeMapping desktopColSize mobileColSize cover>
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">
-        <article class="rounded-4 border-light">
-            <a href="${episode.url}" target="_blank" class="text-decoration-none text-white">
+        <article class="rounded-4 card">
+            <a href="${episodeMapping.variants?first.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="position-relative">
                     <div class="position-relative">
-                        <img src="https://api.shikkanime.fr/v1/attachments?uuid=${episode.uuid}&type=image"
-                             alt="${su.sanitizeXSS(episode.anime.shortName)} episode preview image"
-                             class="<#if cover>w-100 object-fit-cover rounded-4<#else>img-fluid rounded-top-4</#if> <#if episode.uncensored>blur</#if>"
+                        <img src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image"
+                             alt="${su.sanitizeXSS(episodeMapping.anime.shortName)} episode preview image"
+                             class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if> rounded-top-4"
                              width="640" height="360">
 
-                        <img src="https://www.shikkanime.fr/assets/img/platforms/${episode.platform.image}"
-                             alt="${episode.platform.name} platform image"
-                             class="position-absolute top-0 end-0 rounded-circle me-1 mt-1" width="24"
-                             height="24">
-
-                        <#if cover?? && cover>
-                            <div class="position-absolute bottom-0 start-0 p-2 bg-black bg-opacity-25 bg-blur rounded-bottom-4 m w-100">
-                                <span class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episode.anime.shortName}</span>
-
-                                <p class="text-muted mb-0">Saison ${episode.season?c} |
-                                    ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
-                                </p>
-
-                                <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=episode.langType /></p>
-                            </div>
-                        </#if>
+                        <div class="position-absolute top-0 end-0 mt-1 d-flex">
+                            <#list episodeMapping.platforms as platform>
+                                <img src="${baseUrl}/assets/img/platforms/${platform.image}"
+                                     alt="${platform.name} platform image"
+                                     class="rounded-circle me-1" width="20"
+                                     height="20">
+                            </#list>
+                        </div>
                     </div>
 
-                    <#if cover?? && !cover>
-                        <div class="mx-2">
-                            <h6 class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episode.anime.shortName}</h6>
+                    <div class="mx-2 mb-1">
+                        <h6 class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</h6>
 
-                            <p class="text-muted mb-0">Saison ${episode.season?c} |
-                                ${getPrefixEpisode(episode.episodeType)} ${episode.number?c}<#if episode.uncensored> non censuré</#if>
-                            </p>
+                        <p class="text-muted mb-0">Saison ${episodeMapping.season?c}
+                            | ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}</p>
 
-                            <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=episode.langType /></p>
-                        </div>
-                    </#if>
+                        <#list episodeMapping.langTypes as langTypes>
+                            <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=langTypes /></p>
+                        </#list>
+                    </div>
 
                     <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-4"
                          style="display: none;" x-show="hover">
-                        <#if episode.title??>
+                        <#if episodeMapping.title??>
                             <div class="h6 text-truncate-2 fw-bold">
-                                ${episode.title}
+                                ${episodeMapping.title}
                             </div>
                         </#if>
 
@@ -67,12 +58,12 @@
                                 <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/>
                             </svg>
 
-                            ${episode.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
+                            ${episodeMapping.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
                         </span>
 
-                        <#if episode.description??>
+                        <#if episodeMapping.description??>
                             <div class="text-truncate-4 mt-3">
-                                ${episode.description}
+                                ${episodeMapping.description}
                             </div>
                         </#if>
 

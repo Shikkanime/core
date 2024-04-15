@@ -4,14 +4,10 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeService
-import fr.shikkanime.services.ImageService
-import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -27,16 +23,12 @@ fun main() {
 fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Boolean = true): NettyApplicationEngine {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
+    val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     animeService.preIndex()
 
-    animeService.findAll().forEach {
-        it.status = StringUtils.getStatus(it)
-        animeService.update(it)
-    }
-
-    episodeService.findAll().forEach {
-        it.status = StringUtils.getStatus(it)
-        episodeService.update(it)
+    episodeService.findAll().sortedWith(compareBy({ it.releaseDateTime }, { it.image!!.contains("nc/", true) })).forEach {
+        // Convert to platform episode
+        episodeMappingService.save(it)
     }
 
     ImageService.loadCache()
@@ -61,7 +53,6 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
     JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
     // Every hour
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
-    JobManager.scheduleJob("0 0 * * * ?", FetchDeprecatedEpisodeJob::class.java)
     // Every day at midnight
     JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
     // Every day at 9am

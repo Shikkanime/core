@@ -19,7 +19,7 @@ class Member(
     val username: String? = null,
     @Column(nullable = false, name = "encrypted_password")
     val encryptedPassword: ByteArray? = null,
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
         name = "member_roles",
         joinColumns = [JoinColumn(name = "member_uuid")]

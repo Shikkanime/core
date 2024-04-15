@@ -6,17 +6,18 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.AnimeRepository
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.StringUtils.capitalizeWords
-import fr.shikkanime.utils.withUTC
-import io.ktor.http.*
+import fr.shikkanime.utils.withUTCString
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -31,17 +32,21 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     private lateinit var simulcastService: SimulcastService
 
     @Inject
-    private lateinit var episodeService: EpisodeService
+    private lateinit var episodeMappingService: EpisodeMappingService
+
+    @Inject
+    private lateinit var episodeVariantService: EpisodeVariantService
 
     override fun getRepository() = animeRepository
 
     fun findAllBy(
         countryCode: CountryCode?,
-        simulcast: UUID?,
+        simulcast: Simulcast?,
         sort: List<SortParameter>,
         page: Int,
-        limit: Int
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit)
+        limit: Int,
+        status: Status? = null,
+    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, status)
 
     fun preIndex() = animeRepository.preIndex()
 
@@ -53,41 +58,43 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findBySlug(slug: String) = animeRepository.findBySlug(slug)
 
-    fun findAllUUIDAndImage() = animeRepository.findAllUUIDAndImage()
-
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
-        val start = startOfWeekDay.minusDays(7).atStartOfDay(Constant.utcZoneId)
-        val end = startOfWeekDay.plusDays(7).atTime(23, 59, 59).withUTC()
-        val list = episodeService.findAllByDateRange(countryCode, start, end)
+        val start = startOfWeekDay.minusDays(7).atStartOfDay(zoneId)
+        val end = startOfWeekDay.plusDays(7).atTime(23, 59, 59).atZone(zoneId)
+        val list = episodeVariantService.findAllByDateRange(countryCode, start, end)
         val pattern = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
             val zonedDate = date.atStartOfDay(zoneId)
             val dateTitle = date.format(pattern).capitalizeWords()
-            val episodes =
+            val episodeVariants =
                 list.filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
 
             WeeklyAnimesDto(
                 dateTitle,
-                episodes.distinctBy { episode -> episode.anime?.uuid.toString() + episode.langType.toString() }
-                    .map { distinctEpisode ->
-                        val platforms = episodes.filter { it.anime?.uuid == distinctEpisode.anime?.uuid }
-                            .mapNotNull(Episode::platform)
-                            .distinct()
+                episodeVariants.distinctBy { episodeVariant ->
+                    val anime = episodeVariant.mapping!!.anime!!
+                    anime.uuid.toString() + LangType.fromAudioLocale(anime.countryCode!!, episodeVariant.audioLocale!!)
+                }.map { distinctVariant ->
+                    val anime = distinctVariant.mapping!!.anime!!
+                    val platforms = episodeVariants.filter { it.mapping == distinctVariant.mapping }
+                        .mapNotNull(EpisodeVariant::platform)
+                        .sorted()
+                        .distinct()
 
-                        WeeklyAnimeDto(
-                            AbstractConverter.convert(distinctEpisode.anime, AnimeDto::class.java),
-                            distinctEpisode.releaseDateTime.withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                            distinctEpisode.langType!!,
-                            AbstractConverter.convert(platforms, PlatformDto::class.java)
-                        )
-                    }.sortedBy { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() }
+                    WeeklyAnimeDto(
+                        AbstractConverter.convert(anime, AnimeDto::class.java),
+                        distinctVariant.releaseDateTime.withUTCString(),
+                        LangType.fromAudioLocale(anime.countryCode!!, distinctVariant.audioLocale!!),
+                        AbstractConverter.convert(platforms, PlatformDto::class.java)!!
+                    )
+                }.sortedWith(compareBy({
+                    ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime()
+                }, { it.anime.shortName }))
             )
         }
     }
-
-    fun getAllLangTypes(anime: Anime) = animeRepository.getAllLangTypes(anime)
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720, bypass)
@@ -96,6 +103,16 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun addBanner(uuid: UUID, image: String?, bypass: Boolean = false) {
         if (image.isNullOrBlank()) return
         ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360, bypass)
+    }
+
+    fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast) {
+        if (anime.simulcasts.isEmpty() || anime.simulcasts.none { s -> s.uuid == simulcast.uuid }) {
+            if (simulcast.uuid == null) {
+                simulcastService.save(simulcast)
+            }
+
+            anime.simulcasts.add(simulcast)
+        }
     }
 
     override fun save(entity: Anime): Anime {
@@ -116,27 +133,47 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return savedEntity
     }
 
-    fun update(uuid: UUID, parameters: Parameters): Anime? {
+    fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
         val anime = find(uuid) ?: return null
 
-        parameters["name"]?.takeIf { it.isNotBlank() }?.let { anime.name = it }
-        parameters["slug"]?.takeIf { it.isNotBlank() }?.let { anime.slug = it }
-        parameters["releaseDateTime"]?.takeIf { it.isNotBlank() }
-            ?.let { anime.releaseDateTime = ZonedDateTime.parse("$it:00Z") }
+        if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
+            anime.name = animeDto.name
+        }
 
-        parameters["image"]?.takeIf { it.isNotBlank() }?.let {
-            anime.image = it
+        if (!animeDto.slug.isNullOrBlank() && animeDto.slug != anime.slug) {
+            anime.slug = animeDto.slug
+        }
+
+        if (animeDto.releaseDateTime.isNotBlank() && animeDto.releaseDateTime != anime.releaseDateTime.toString()) {
+            anime.releaseDateTime = ZonedDateTime.parse(animeDto.releaseDateTime)
+        }
+
+        if (!animeDto.image.isNullOrBlank() && animeDto.image != anime.image) {
+            anime.image = animeDto.image
             ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
             addImage(anime.uuid, anime.image!!)
         }
 
-        parameters["banner"]?.takeIf { it.isNotBlank() }?.let {
-            anime.banner = it
+        if (!animeDto.banner.isNullOrBlank() && animeDto.banner != anime.banner) {
+            anime.banner = animeDto.banner
             ImageService.remove(anime.uuid!!, ImageService.Type.BANNER)
             addBanner(anime.uuid, anime.banner)
         }
 
-        parameters["description"]?.takeIf { it.isNotBlank() }?.let { anime.description = it }
+        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) anime.description =
+            animeDto.description
+
+        if (animeDto.simulcasts != null) {
+            anime.simulcasts.clear()
+
+            animeDto.simulcasts.forEach { simulcastDto ->
+                val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
+
+                if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
+                    anime.simulcasts.add(simulcast)
+                }
+            }
+        }
 
         anime.status = StringUtils.getStatus(anime)
         val update = super.update(anime)
@@ -145,7 +182,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     override fun delete(entity: Anime) {
-        episodeService.findAllByAnime(entity.uuid!!).forEach { episodeService.delete(it) }
+        entity.mappings.forEach { episodeMappingService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(Anime::class.java)
     }

@@ -1,7 +1,7 @@
 package fr.shikkanime.entities.enums
 
-enum class CountryCode(val locale: String, val voice: String, val timezone: String) {
-    FR("fr-FR", "VF", "Europe/Paris"),
+enum class CountryCode(val locale: String, val timezone: String) {
+    FR("fr-FR", "Europe/Paris"),
     ;
 
     companion object {

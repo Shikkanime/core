@@ -37,11 +37,6 @@ abstract class AbstractRepository<E : ShikkEntity> {
         return result
     }
 
-    fun <T> createReadOnlyQuery(entityManager: EntityManager, query: String, clazz: Class<T>): TypedQuery<T> {
-        return entityManager.createQuery(query, clazz)
-            .setHint(AvailableHints.HINT_READ_ONLY, true)
-    }
-
     fun <T> createReadOnlyQuery(entityManager: EntityManager, criteriaQuery: CriteriaQuery<T>): TypedQuery<T> {
         return entityManager.createQuery(criteriaQuery)
             .setHint(AvailableHints.HINT_READ_ONLY, true)
@@ -69,17 +64,18 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     open fun findAll(): List<E> {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM ${getEntityClass().simpleName}", getEntityClass())
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            query.from(getEntityClass())
+
+            createReadOnlyQuery(it, query)
                 .resultList
         }
     }
 
     open fun find(uuid: UUID): E? {
         return inTransaction {
-            createReadOnlyQuery(it, "FROM ${getEntityClass().simpleName} WHERE uuid = :uuid", getEntityClass())
-                .setParameter("uuid", uuid)
-                .resultList
-                .firstOrNull()
+            it.find(getEntityClass(), uuid)
         }
     }
 
