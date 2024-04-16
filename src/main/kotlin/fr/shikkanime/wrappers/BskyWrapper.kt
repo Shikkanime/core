@@ -8,6 +8,7 @@ import io.ktor.http.*
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.regex.Pattern
 
 private const val TYPE = "\$type"
 
@@ -128,10 +129,21 @@ object BskyWrapper {
             val link = word.trim()
 
             if (link.startsWith("http")) {
-                val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "")
+                val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "").trim()
                 tmpText = tmpText.replace(link, beautifulLink)
 
-                val start = tmpText.indexOf(beautifulLink)
+                // Count \n before the link
+                val newLineCount = tmpText.substring(0, tmpText.indexOf(beautifulLink)).count { it == '\n' }
+                // Count the number of emojis before the link
+                val p = Pattern.compile("\\p{So}+")
+                val m = p.matcher(tmpText.substring(0, tmpText.indexOf(beautifulLink)))
+                var emojiCount = 0
+
+                while (m.find()) {
+                    emojiCount++
+                }
+
+                val start = tmpText.indexOf(beautifulLink) + (((newLineCount + emojiCount) * 2) - 1)
                 val end = start + beautifulLink.length
                 Facet(link, start, end)
             } else null
