@@ -9,10 +9,18 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+private const val TYPE = "\$type"
+
 object BskyWrapper {
     data class Image(
         val image: JsonObject,
         val alt: String = "",
+    )
+
+    data class Facet(
+        val link: String,
+        val start: Int,
+        val end: Int,
     )
 
     private const val BASE_URL = "https://bsky.social/xrpc"
@@ -58,20 +66,47 @@ object BskyWrapper {
         accessJwt: String,
         did: String,
         text: String,
-        images: List<Image> = emptyList()
+        images: List<Image> = emptyList(),
     ): JsonObject {
         val recordMap = mutableMapOf<String, Any>(
             "text" to text,
-            "\$type" to "app.bsky.feed.post",
+            TYPE to "app.bsky.feed.post",
             "createdAt" to ZonedDateTime.now().withZoneSameInstant(ZoneId.of("UTC"))
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME).replace("+00:00", "Z"),
         )
 
         if (images.isNotEmpty()) {
             recordMap["embed"] = mapOf(
-                "\$type" to "app.bsky.embed.images",
+                TYPE to "app.bsky.embed.images",
                 "images" to images
             )
+        }
+
+        // Get all links in the text, and their start and end indexes
+        val facets = text.split(" ").mapNotNull { word ->
+            val link = word.trim()
+            if (link.startsWith("http")) {
+                val start = text.indexOf(link)
+                val end = start + link.length
+                Facet(link, start, end)
+            } else null
+        }
+
+        if (facets.isNotEmpty()) {
+            recordMap["facets"] = facets.map {
+                mapOf(
+                    "index" to mapOf(
+                        "byteStart" to it.start,
+                        "byteEnd" to it.end
+                    ),
+                    "features" to listOf(
+                        mapOf(
+                            TYPE to "app.bsky.richtext.facet#link",
+                            "uri" to it.link
+                        )
+                    )
+                )
+            }
         }
 
         val response = httpRequest.post(
