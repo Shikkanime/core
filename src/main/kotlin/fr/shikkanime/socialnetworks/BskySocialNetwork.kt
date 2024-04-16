@@ -81,7 +81,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
                 accessJwt!!,
                 did!!,
                 message,
-                listOf(BskyWrapper.Image(imageJson, getShikkanimeUrl(episodeDto)))
+                listOf(BskyWrapper.Image(imageJson))
             )
         }
     }
