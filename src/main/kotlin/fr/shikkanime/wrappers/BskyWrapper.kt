@@ -68,8 +68,10 @@ object BskyWrapper {
         text: String,
         images: List<Image> = emptyList(),
     ): JsonObject {
+        val (finalText, facets) = getFacets(text)
+
         val recordMap = mutableMapOf<String, Any>(
-            "text" to text,
+            "text" to finalText,
             TYPE to "app.bsky.feed.post",
             "createdAt" to ZonedDateTime.now().withZoneSameInstant(ZoneId.of("UTC"))
                 .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME).replace("+00:00", "Z"),
@@ -80,16 +82,6 @@ object BskyWrapper {
                 TYPE to "app.bsky.embed.images",
                 "images" to images
             )
-        }
-
-        // Get all links in the text, and their start and end indexes
-        val facets = text.split(" ").mapNotNull { word ->
-            val link = word.trim()
-            if (link.startsWith("http")) {
-                val start = text.indexOf(link)
-                val end = start + link.length
-                Facet(link, start, end)
-            } else null
         }
 
         if (facets.isNotEmpty()) {
@@ -127,5 +119,24 @@ object BskyWrapper {
 
         require(response.status.value == 200) { "Failed to create record (${response.bodyAsText()})" }
         return ObjectParser.fromJson(response.bodyAsText())
+    }
+
+    private fun getFacets(text: String): Pair<String, List<Facet>> {
+        var tmpText = text
+
+        val facets = text.split(" ").mapNotNull { word ->
+            val link = word.trim()
+
+            if (link.startsWith("http")) {
+                val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "")
+                tmpText = tmpText.replace(link, beautifulLink)
+
+                val start = tmpText.indexOf(beautifulLink)
+                val end = start + beautifulLink.length
+                Facet(link, start, end)
+            } else null
+        }
+
+        return tmpText to facets
     }
 }
