@@ -45,8 +45,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun preIndex() = animeRepository.preIndex()
 
-    fun findAllByLikeName(countryCode: CountryCode, name: String?) =
-        animeRepository.findAllByLikeName(countryCode, name)
+    fun findByName(countryCode: CountryCode, name: String?) =
+        animeRepository.findByName(countryCode, name)
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         animeRepository.findAllByName(name, countryCode, page, limit)

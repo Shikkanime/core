@@ -102,17 +102,18 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllByLikeName(countryCode: CountryCode, name: String?): List<Anime> {
+    fun findByName(countryCode: CountryCode, name: String?): Anime? {
         return inTransaction {
             createReadOnlyQuery(
                 it,
-                "FROM Anime WHERE countryCode = :countryCode AND LOWER(name) LIKE :name",
+                "FROM Anime WHERE countryCode = :countryCode AND LOWER(name) = :name",
                 getEntityClass()
             )
                 .setParameter("countryCode", countryCode)
-                .setParameter("name", "%${name?.lowercase()}%")
+                .setParameter("name", name?.lowercase())
                 .resultList
-                .initialize()
+                .firstOrNull()
+                ?.initialize()
         }
     }
 
