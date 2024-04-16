@@ -46,8 +46,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="anime" class="form-label">Anime</label>
-                        <input type="text" class="form-control" id="anime" name="anime" value="${su.sanitizeXSS(episode.anime.shortName)}"
-                               disabled>
+                        <input type="text" class="form-control" id="anime" name="anime" value="${su.sanitizeXSS(episode.anime.name)}">
                     </div>
                     <div class="col-md-6">
                         <label for="episodeType" class="form-label">Episode type</label>

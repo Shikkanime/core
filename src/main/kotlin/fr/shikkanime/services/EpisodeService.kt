@@ -112,7 +112,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     override fun save(entity: Episode): Episode {
         val copy = entity.anime!!.copy()
         val anime =
-            animeService.findAllByLikeName(copy.countryCode!!, copy.name!!).firstOrNull() ?: animeService.save(copy)
+            animeService.findByName(copy.countryCode!!, copy.name!!) ?: animeService.save(copy)
         entity.anime = anime.copy()
 
         if (anime.banner.isNullOrBlank() && !copy.banner.isNullOrBlank()) {
@@ -161,6 +161,7 @@ class EpisodeService : AbstractService<Episode, EpisodeRepository>() {
     fun update(uuid: UUID, parameters: Parameters): Episode? {
         val episode = find(uuid) ?: return null
 
+        parameters["anime"]?.let { episode.anime = animeService.findByName(episode.anime!!.countryCode!!, it) }
         parameters["episodeType"]?.let { episode.episodeType = EpisodeType.valueOf(it) }
         parameters["langType"]?.let { episode.langType = LangType.valueOf(it) }
         parameters["hash"]?.takeIf { it.isNotBlank() }?.let { episode.hash = it }

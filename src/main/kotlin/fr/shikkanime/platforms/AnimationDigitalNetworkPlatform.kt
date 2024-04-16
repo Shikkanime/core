@@ -125,23 +125,7 @@ class AnimationDigitalNetworkPlatform :
             "Anime is a trailer"
         )
 
-        var number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
-
-        var episodeType = when (numberAsString) {
-            "OAV", "Épisode spécial" -> EpisodeType.SPECIAL
-            "Film" -> EpisodeType.FILM
-            else -> EpisodeType.EPISODE
-        }
-
-        if (numberAsString?.contains(".") == true || showType == "OAV") episodeType =
-            EpisodeType.SPECIAL
-
-        val toRegex = "Épisode spécial (\\d*)".toRegex()
-
-        if (toRegex.containsMatchIn(numberAsString ?: "")) {
-            episodeType = EpisodeType.SPECIAL
-            number = toRegex.find(numberAsString ?: "")?.groupValues?.get(1)?.toIntOrNull() ?: -1
-        }
+        val (number, episodeType) = getNumberAndEpisodeType(numberAsString, showType)
 
         val id = jsonObject.getAsInt("id")
         val title = jsonObject.getAsString("name")?.ifBlank { null }
@@ -178,6 +162,26 @@ class AnimationDigitalNetworkPlatform :
                 description = description
             )
         }
+    }
+
+    private fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
+        val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
+
+        var episodeType = when {
+            numberAsString == "OAV" || numberAsString == "Épisode spécial" || showType == "OAV" || numberAsString?.contains(
+                "."
+            ) == true -> EpisodeType.SPECIAL
+
+            numberAsString == "Film" -> EpisodeType.FILM
+            else -> EpisodeType.EPISODE
+        }
+
+        "Épisode spécial (\\d*)".toRegex().find(numberAsString ?: "")?.let {
+            episodeType = EpisodeType.SPECIAL
+            it.groupValues[1].toIntOrNull()?.let { specialNumber -> return Pair(specialNumber, episodeType) }
+        }
+
+        return Pair(number, episodeType)
     }
 
     private fun getLangTypeAndAudioLocale(it: JsonElement): Pair<LangType, String> {
