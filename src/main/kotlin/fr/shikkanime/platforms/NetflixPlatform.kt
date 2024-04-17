@@ -37,13 +37,13 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val animeDescription = document.selectFirst(".title-info-synopsis")?.text()
         val episodes = document.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptySet()
 
-        return episodes.mapNotNull { episode ->
+        return episodes.mapIndexedNotNull { index, episode ->
             val episodeTitleAndNumber = episode.selectFirst(".episode-title")?.text()
             val episodeTitle = episodeTitleAndNumber?.substringAfter(".")
-            val episodeNumber = episodeTitleAndNumber?.substringBefore(".")?.toIntOrNull() ?: -1
+            val episodeNumber = episodeTitleAndNumber?.substringBefore(".")?.toIntOrNull() ?: (index + 1)
             val duration = episode.selectFirst(".episode-runtime")?.text()
             val durationInSeconds = duration?.substringBefore(" ")?.trim()?.toLongOrNull()?.times(60) ?: -1
-            val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapNotNull null
+            val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapIndexedNotNull null
             val imageWithoutParams = image.substringBefore("?")
             val episodeDescription = episode.selectFirst(".epsiode-synopsis")?.text()
             val computedId = EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
