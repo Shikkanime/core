@@ -161,6 +161,12 @@
                             <template x-for="variant in episode.variants" :id="variant.uuid">
                                 <div class="row g-3 mt-3">
                                     <div class="col-md-auto">
+                                        <button type="button" class="btn btn-outline-danger"
+                                                @click="episode.variants.splice(episode.variants.indexOf(variant), 1)">
+                                            -
+                                        </button>
+                                    </div>
+                                    <div class="col-md-auto">
                                         <label for="variantReleaseDateTime" class="form-label">Release date time</label>
                                         <input type="datetime-local" class="form-control" id="variantReleaseDateTime" name="variantReleaseDateTime"
                                                x-model="variant.releaseDateTime.substring(0, 16)" disabled>

@@ -180,8 +180,8 @@ class AnimationDigitalNetworkPlatform :
 
     private fun getAudioLocale(it: JsonElement): String {
         return when (it.asString) {
-            "vostf" -> "fr-FR"
-            "vf" -> "ja-JP"
+            "vostf" -> "ja-JP"
+            "vf" -> "fr-FR"
             else -> throw Exception("Language is null")
         }
     }
