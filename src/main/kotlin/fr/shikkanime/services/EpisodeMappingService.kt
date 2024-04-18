@@ -3,7 +3,10 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
@@ -51,62 +54,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         MapCache.invalidate(EpisodeMapping::class.java)
         return save
     }
-
-    fun save(entity: Episode): EpisodeMapping {
-        val episodeMapping = findByAnimeEpisodeTypeSeasonNumber(
-            entity.anime!!,
-            entity.episodeType!!,
-            entity.season!!,
-            entity.number!!
-        ) ?: createEpisodeMapping(entity)
-
-        val audioLocale = (if (entity.platform == Platform.CRUN) entity.audioLocale else null) ?: "ja-JP"
-        val id = ".{2}-.{4}-(.*)-.*".toRegex().find(entity.hash!!)!!.groupValues[1]
-        val uncensored = entity.image!!.contains("nc/", true)
-        val identifier = StringUtils.getIdentifier(entity.anime!!.countryCode!!, entity.platform!!, id, audioLocale, uncensored)
-
-        if (episodeMapping.variants.none { it.identifier == identifier }) {
-            episodeVariantRepository.save(getVariant(episodeMapping, entity, audioLocale, identifier, uncensored))
-            episodeMapping.lastReleaseDateTime = entity.releaseDateTime
-            episodeMappingRepository.update(episodeMapping)
-        }
-
-        return episodeMapping
-    }
-
-    private fun createEpisodeMapping(entity: Episode) = episodeMappingRepository.save(
-        EpisodeMapping(
-            anime = entity.anime!!,
-            releaseDateTime = entity.releaseDateTime,
-            lastReleaseDateTime = entity.releaseDateTime,
-            lastUpdateDateTime = entity.releaseDateTime,
-            episodeType = entity.episodeType!!,
-            season = entity.season!!,
-            number = entity.number!!,
-            duration = entity.duration,
-            title = entity.title,
-            description = entity.description,
-            image = entity.image,
-        ).apply {
-            status = StringUtils.getStatus(this)
-        }
-    )
-
-    private fun getVariant(
-        episodeMapping: EpisodeMapping,
-        entity: Episode,
-        audioLocale: String,
-        identifier: String,
-        uncensored: Boolean,
-    ) = EpisodeVariant(
-        mapping = episodeMapping,
-        releaseDateTime = entity.releaseDateTime,
-        platform = entity.platform,
-        audioLocale = audioLocale,
-        identifier = identifier,
-        url = entity.url,
-        uncensored = uncensored,
-    )
 
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {
         val episode = find(uuid) ?: return null
@@ -178,7 +125,23 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
         episode.status = StringUtils.getStatus(episode)
         episode.lastUpdateDateTime = ZonedDateTime.now()
-        val update = super.update(episode)
+        var update = super.update(episode)
+
+        if (!entity.variants.isNullOrEmpty()) {
+            val oldList = mutableSetOf(*episode.variants.toTypedArray())
+            episode.variants.clear()
+
+            entity.variants.forEach { variantDto ->
+                val variant = episodeVariantRepository.find(variantDto.uuid) ?: return@forEach
+                episode.variants.add(variant)
+                oldList.removeIf { it.uuid == variantDto.uuid }
+            }
+
+            oldList.forEach { episodeVariantRepository.delete(it) }
+            MapCache.invalidate(EpisodeVariant::class.java)
+            update = find(uuid)!!
+        }
+
         MapCache.invalidate(EpisodeMapping::class.java)
         return update
     }
