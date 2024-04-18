@@ -4,7 +4,9 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -22,14 +24,7 @@ fun main() {
 
 fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Boolean = true): NettyApplicationEngine {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    val episodeService = Constant.injector.getInstance(EpisodeService::class.java)
-    val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     animeService.preIndex()
-
-    episodeService.findAll().sortedWith(compareBy({ it.releaseDateTime }, { it.image!!.contains("nc/", true) })).forEach {
-        // Convert to platform episode
-        episodeMappingService.save(it)
-    }
 
     ImageService.loadCache()
     ImageService.addAll()
