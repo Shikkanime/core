@@ -1,6 +1,6 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.EpisodeDto
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.Constant
@@ -33,7 +33,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
             val token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.DISCORD_TOKEN))
             if (token.isBlank()) throw Exception("Token is empty")
             val builder = JDABuilder.createDefault(token)
-            builder.setActivity(Activity.playing(Constant.BASE_URL))
+            builder.setActivity(Activity.playing(Constant.baseUrl))
             this.jda = builder.build().awaitReady()
             isInitialized = true
         } catch (e: Exception) {
@@ -59,24 +59,24 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         getTextChannels()?.forEach { it.sendMessage(message).queue() }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeDto, mediaImage: ByteArray) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
         login()
         if (!isInitialized) return
-        if (episodeDto.image.isBlank()) return
+        if (episodeDto.mapping.image.isBlank()) return
 
         val embedMessage = EmbedBuilder()
-        val image = ImageIO.read(URI(episodeDto.image).toURL())
+        val image = ImageIO.read(URI(episodeDto.mapping.image).toURL())
         embedMessage.setColor(ImageService.getDominantColor(image))
         embedMessage.setAuthor(
             episodeDto.platform.name,
             episodeDto.platform.url,
-            "${Constant.BASE_URL}/assets/img/platforms/${episodeDto.platform.image}"
+            "${Constant.baseUrl}/assets/img/platforms/${episodeDto.platform.image}"
         )
-        embedMessage.setTitle(episodeDto.anime.shortName, getShikkanimeUrl(episodeDto))
-        embedMessage.setThumbnail(episodeDto.anime.image)
-        embedMessage.setDescription("**${episodeDto.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
-        embedMessage.setImage(episodeDto.image)
-        embedMessage.setFooter(Constant.NAME, "${Constant.BASE_URL}/assets/img/favicons/favicon-64x64.png")
+        embedMessage.setTitle(episodeDto.mapping.anime.shortName, getShikkanimeUrl(episodeDto))
+        embedMessage.setThumbnail(episodeDto.mapping.anime.image)
+        embedMessage.setDescription("**${episodeDto.mapping.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
+        embedMessage.setImage(episodeDto.mapping.image)
+        embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
         val embed = embedMessage.build()
 

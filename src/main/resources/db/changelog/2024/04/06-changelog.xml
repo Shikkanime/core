@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1713181588710"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="episode_mapping"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="episode_mapping">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_episode_mapping"/>
+            </column>
+            <column name="anime_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="release_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_release_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_update_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="episode_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="season" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(1000)"/>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="image" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="episode_variant"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="episode_variant">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_episode_variant"/>
+            </column>
+            <column name="mapping_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="release_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="platform" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="audio_locale" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="identifier" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="url" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uncensored" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_MAPPING_ON_ANIME_UUID" foreignKeyTableName="episode_mapping"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="anime_uuid" baseTableName="episode_mapping" constraintName="FK_EPISODE_MAPPING_ON_ANIME_UUID" referencedColumnNames="uuid" referencedTableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_VARIANT_ON_MAPPING_UUID" foreignKeyTableName="episode_variant"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="mapping_uuid" baseTableName="episode_variant" constraintName="FK_EPISODE_VARIANT_ON_MAPPING_UUID" referencedColumnNames="uuid" referencedTableName="episode_mapping"/>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions>
+            <not>
+                <indexExists indexName="idx_episode_mapping_anime_episode_type_season_number" tableName="episode_mapping"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_mapping_anime_episode_type_season_number" tableName="episode_mapping" unique="true">
+            <column name="anime_uuid"/>
+            <column name="episode_type"/>
+            <column name="season"/>
+            <column name="number"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <delete tableName="config">
+            <where>property_key IN ('fetch_deprecated_episode_date', 'fetch_old_episode_description_size')</where>
+        </delete>
+    </changeSet>
+</databaseChangeLog>

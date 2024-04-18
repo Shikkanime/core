@@ -15,7 +15,7 @@ val playwrightVersion = "1.43.0"
 val jsoupVersion = "1.17.2"
 val gsonVersion = "2.10.1"
 val openCvVersion = "4.9.0-0"
-val bcprovVersion = "1.78"
+val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.2.0"
 
@@ -25,6 +25,7 @@ val twitter4jV2Version = "1.4.3"
 
 val junitVersion = "5.10.2"
 val h2Version = "2.2.224"
+val mockitoVersion = "5.11.0"
 
 plugins {
     kotlin("jvm") version "2.0.0-RC1"
@@ -104,6 +105,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("com.h2database:h2:$h2Version")
+    testImplementation("org.mockito:mockito-core:$mockitoVersion")
 }
 
 kotlin {
@@ -114,12 +116,6 @@ sonar {
     properties {
         property("sonar.projectKey", "core")
         property("sonar.projectName", "core")
-        property(
-            "sonar.exclusions",
-            "**/fr/shikkanime/socialnetworks/**," +
-                    "**/fr/shikkanime/jobs/FetchCalendarJob.kt," +
-                    "**/fr/shikkanime/utils/FirebaseNotification.kt"
-        )
     }
 }
 

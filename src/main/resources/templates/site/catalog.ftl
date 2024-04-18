@@ -1,5 +1,4 @@
 <#import "_navigation.ftl" as navigation />
-<#import "components/episode.ftl" as episodeComponent />
 <#import "components/anime.ftl" as animeComponent />
 
 <@navigation.display canonicalUrl="https://www.shikkanime.fr/catalog/${selectedSimulcast.slug}">

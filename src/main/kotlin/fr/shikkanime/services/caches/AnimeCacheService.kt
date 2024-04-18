@@ -8,11 +8,14 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
 import java.util.*
@@ -21,10 +24,20 @@ class AnimeCacheService : AbstractCacheService {
     @Inject
     private lateinit var animeService: AnimeService
 
+    @Inject
+    private lateinit var simulcastService: SimulcastService
+
     private val findAllByCache =
         MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
             PageableDto.fromPageable(
-                animeService.findAllBy(it.countryCode, it.uuid, it.sort, it.page, it.limit),
+                animeService.findAllBy(
+                    it.countryCode,
+                    simulcastService.find(it.uuid),
+                    it.sort,
+                    it.page,
+                    it.limit,
+                    it.status
+                ),
                 AnimeDto::class.java
             )
         }
@@ -37,22 +50,27 @@ class AnimeCacheService : AbstractCacheService {
             )
         }
 
-    private val findBySlugCache = MapCache<String, AnimeDto>(classes = listOf(Anime::class.java)) {
-        AbstractConverter.convert(animeService.findBySlug(it), AnimeDto::class.java)
+    private val findBySlugCache = MapCache<String, Anime?>(classes = listOf(Anime::class.java)) {
+        animeService.findBySlug(it)
     }
 
     private val weeklyCache =
-        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(Episode::class.java)) {
+        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java)) {
             animeService.getWeeklyAnimes(it.localDate, it.countryCode)
         }
+
+    private val findByUuidCache = MapCache<UUID, AnimeDto>(classes = listOf(Anime::class.java)) {
+        AbstractConverter.convert(animeService.find(it), AnimeDto::class.java)
+    }
 
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
         sort: List<SortParameter>,
         page: Int,
-        limit: Int
-    ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit)]
+        limit: Int,
+        status: Status? = null,
+    ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, status)]
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit)]
@@ -61,4 +79,6 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode) =
         weeklyCache[CountryCodeLocalDateKeyCache(countryCode, startOfWeekDay)]
+
+    fun findByUuid(uuid: UUID) = findByUuidCache[uuid]
 }

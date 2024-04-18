@@ -8,12 +8,12 @@ function copyToClipboard(content) {
     document.body.removeChild(textarea);
 }
 
-async function callApi(url, abortSignal) {
-    return await fetch(url, {
-        signal: abortSignal,
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }).then(response => response.json())
-        .catch(error => console.error(error));
+async function callApi(url, options = {}) {
+    const {abortSignal, method = 'GET', body = null} = options;
+    const headers = {'Content-Type': 'application/json'};
+    const fetchOptions = {headers, signal: abortSignal, method};
+    if (method !== 'GET') fetchOptions.body = JSON.stringify(body);
+
+    return await fetch(url, fetchOptions)
+        .then(response => response.json());
 }

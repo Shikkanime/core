@@ -3,10 +3,11 @@ package fr.shikkanime.platforms
 import com.google.gson.JsonObject
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeDisneyPlusSimulcastKeyCache
-import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Config
-import fr.shikkanime.entities.Episode
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -14,7 +15,6 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.isEqualOrAfter
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.DisneyPlusWrapper
@@ -102,9 +102,8 @@ class DisneyPlusPlatform :
         val animeDescription = descriptions?.getAsJsonObject("series")
             ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ') ?: ""
 
-        val season = jsonObject.getAsInt("seasonSequenceNumber")
-
-        val number = jsonObject.getAsInt("episodeSequenceNumber")
+        val season = requireNotNull(jsonObject.getAsInt("seasonSequenceNumber")) { "Season is null" }
+        val number = jsonObject.getAsInt("episodeSequenceNumber") ?: -1
 
         val id = jsonObject.getAsString("contentId")
 
@@ -126,34 +125,29 @@ class DisneyPlusPlatform :
         val description = descriptions?.getAsJsonObject("program")
             ?.getAsJsonObject("default")?.getAsString("content")?.replace('\n', ' ')?.ifBlank { null }
 
-        val langType = LangType.SUBTITLES
         val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
         return Episode(
-            platform = getPlatform(),
-            anime = Anime(
-                countryCode = countryCode,
-                name = animeName,
-                releaseDateTime = releaseDateTime,
-                image = animeImage,
-                banner = animeBanner,
-                description = animeDescription,
-                slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
-            ),
-            episodeType = EpisodeType.EPISODE,
-            langType = langType,
-            audioLocale = "ja-JP",
-            hash = StringUtils.getHash(countryCode, getPlatform(), id.toString(), langType),
+            countryCode = countryCode,
+            anime = animeName,
+            animeImage = animeImage,
+            animeBanner = animeBanner,
+            animeDescription = animeDescription,
             releaseDateTime = releaseDateTime,
+            episodeType = EpisodeType.EPISODE,
             season = season,
             number = number,
-            title = title,
-            url = url,
-            image = image,
             duration = duration,
+            title = title,
             description = description,
+            image = image,
+            platform = getPlatform(),
+            audioLocale = "ja-JP",
+            id = id.toString(),
+            url = url,
+            uncensored = false
         )
     }
 }

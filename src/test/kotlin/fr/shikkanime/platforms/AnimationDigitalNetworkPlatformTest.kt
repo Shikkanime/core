@@ -4,7 +4,6 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
@@ -51,9 +50,9 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
-        assertEquals("Paradox Live THE ANIMATION", episodes[0].anime?.name)
+        assertEquals("Paradox Live THE ANIMATION", episodes[0].anime)
         assertNotNull(episodes[0].description)
-        assertEquals("Helck", episodes[1].anime?.name)
+        assertEquals("Helck", episodes[1].anime)
         assertNotNull(episodes[1].description)
     }
 
@@ -64,7 +63,7 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
-        assertEquals("Pon no Michi", episodes[0].anime?.name)
+        assertEquals("Pon no Michi", episodes[0].anime)
         assertNotNull(episodes[0].description)
     }
 
@@ -75,15 +74,15 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(4, episodes.size)
-        assertEquals("One Piece", episodes[0].anime?.name)
+        assertEquals("One Piece", episodes[0].anime)
         assertNotNull(episodes[0].description)
-        assertEquals("Run For Money", episodes[1].anime?.name)
+        assertEquals("Run For Money", episodes[1].anime)
         assertNotNull(episodes[1].description)
 
-        assertEquals("MONSTERS", episodes[2].anime?.name)
-        assertEquals(LangType.SUBTITLES, episodes[2].langType)
+        assertEquals("MONSTERS", episodes[2].anime)
+        assertEquals("fr-FR", episodes[2].audioLocale)
         assertNotNull(episodes[2].description)
-        assertEquals(LangType.VOICE, episodes[3].langType)
+        assertEquals("ja-JP", episodes[3].audioLocale)
         assertNotNull(episodes[3].description)
     }
 
@@ -94,9 +93,9 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
-        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
+        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime)
         assertNotNull(episodes[0].description)
-        assertEquals("My Master Has No Tail", episodes[1].anime?.name)
+        assertEquals("My Master Has No Tail", episodes[1].anime)
         assertNotNull(episodes[1].description)
     }
 
@@ -107,7 +106,7 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
-        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime?.name)
+        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime)
         assertNotNull(episodes[0].description)
     }
 
@@ -118,14 +117,14 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(3, episodes.size)
-        assertEquals("Demon Slave", episodes[0].anime?.name)
+        assertEquals("Demon Slave", episodes[0].anime)
         assertNotNull(episodes[0].description)
         assertEquals(
             "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!",
-            episodes[1].anime?.name
+            episodes[1].anime
         )
         assertNotNull(episodes[1].description)
-        assertEquals("Urusei Yatsura", episodes[2].anime?.name)
+        assertEquals("Urusei Yatsura", episodes[2].anime)
         assertNotNull(episodes[2].description)
     }
 
@@ -168,7 +167,7 @@ class AnimationDigitalNetworkPlatformTest {
         )
 
         assertEquals(true, episodes.isNotEmpty())
-        assertEquals("One Piece", episodes[0].anime?.name)
+        assertEquals("One Piece", episodes[0].anime)
         assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
         assertEquals(13, episodes[0].number)
     }

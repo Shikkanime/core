@@ -12,7 +12,7 @@ class SimulcastCacheService : AbstractCacheService {
     private lateinit var simulcastService: SimulcastService
 
     private val cache = MapCache<String, List<SimulcastDto>>(classes = listOf(Simulcast::class.java)) {
-        AbstractConverter.convert(simulcastService.findAll(), SimulcastDto::class.java)
+        AbstractConverter.convert(simulcastService.findAll(), SimulcastDto::class.java)!!
     }
 
     fun findAll() = cache["all"]

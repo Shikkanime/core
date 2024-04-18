@@ -1,9 +1,9 @@
 package fr.shikkanime.utils
 
-import fr.shikkanime.dtos.EpisodeDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
+import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
@@ -14,8 +14,8 @@ import java.util.*
 import java.util.regex.Pattern
 
 object StringUtils {
-    private val NONLATIN: Pattern = Pattern.compile("[^\\w-]")
-    private val WHITESPACE: Pattern = Pattern.compile("\\s")
+    private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
+    private val whitespacePattern: Pattern = Pattern.compile("\\s")
     private val regex = "([-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ")
 
@@ -51,25 +51,25 @@ object StringUtils {
         }
     }
 
-    fun toEpisodeString(episode: EpisodeDto): String {
-        val etName = when (episode.episodeType) {
+    fun toEpisodeString(episode: EpisodeVariantDto): String {
+        val etName = when (episode.mapping.episodeType) {
             EpisodeType.EPISODE -> "Épisode"
             EpisodeType.SPECIAL -> "Spécial"
             EpisodeType.FILM -> "Film"
         }
 
-        val ltName = when (episode.langType) {
+        val ltName = when (LangType.fromAudioLocale(episode.mapping.anime.countryCode, episode.audioLocale)) {
             LangType.SUBTITLES -> "VOSTFR"
             LangType.VOICE -> "VF"
         }
 
-        return "Saison ${episode.season} • $etName ${episode.number} $ltName"
+        return "Saison ${episode.mapping.season} • $etName ${episode.mapping.number} $ltName"
     }
 
     fun toSlug(input: String): String {
-        val nowhitespace: String = WHITESPACE.matcher(input).replaceAll("-")
+        val nowhitespace: String = whitespacePattern.matcher(input).replaceAll("-")
         val normalized: String = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD)
-        val slug: String = NONLATIN.matcher(normalized).replaceAll("").replace("-+".toRegex(), "-")
+        val slug: String = nonLatinPattern.matcher(normalized).replaceAll("").replace("-+".toRegex(), "-")
         return slug.lowercase()
     }
 
@@ -81,7 +81,13 @@ object StringUtils {
         .replace("&gt;", ">")
         .replace("&quot;", "\"")
 
-    fun getHash(countryCode: CountryCode, platform: Platform, id: String, langType: LangType) = "${countryCode}-${platform}-$id-$langType"
+    fun getIdentifier(
+        countryCode: CountryCode,
+        platform: Platform,
+        id: String,
+        audioLocale: String,
+        uncensored: Boolean = false
+    ) = "${countryCode}-${platform}-$id-${audioLocale.uppercase()}${if (uncensored) "-UNC" else ""}"
 
     private fun isInvalid(
         image: String?,
@@ -102,14 +108,17 @@ object StringUtils {
         ) Status.INVALID else Status.VALID
     }
 
-    fun getStatus(episode: Episode): Status {
+    fun getStatus(episodeMapping: EpisodeMapping): Status {
         val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
 
         return if (
-            isInvalid(episode.image, episode.description, episode.anime!!.countryCode!!, languageCacheService) ||
-            episode.image == Constant.DEFAULT_IMAGE_PREVIEW ||
-            (episode.platform!! == Platform.CRUN && !".*-CRUN-([A-Z0-9]{9})-.*".toRegex().matches(episode.hash!!)) ||
-            episode.audioLocale.isNullOrBlank()
+            isInvalid(
+                episodeMapping.image,
+                episodeMapping.description,
+                episodeMapping.anime!!.countryCode!!,
+                languageCacheService
+            ) ||
+            episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
         ) Status.INVALID else Status.VALID
     }
 }

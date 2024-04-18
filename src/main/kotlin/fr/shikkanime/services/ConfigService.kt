@@ -1,10 +1,10 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.Config
 import fr.shikkanime.repositories.ConfigRepository
 import fr.shikkanime.utils.MapCache
-import io.ktor.http.*
 import java.util.*
 
 class ConfigService : AbstractService<Config, ConfigRepository>() {
@@ -17,10 +17,15 @@ class ConfigService : AbstractService<Config, ConfigRepository>() {
 
     fun findByName(name: String) = configRepository.findByName(name)
 
-    fun update(uuid: UUID, parameters: Parameters): Config? {
+    fun update(uuid: UUID, configDto: ConfigDto): Config? {
         val config = find(uuid) ?: return null
-        parameters["value"]?.takeIf { it.isNotBlank() }?.let { config.propertyValue = it }
-        MapCache.invalidate(Config::class.java)
-        return super.update(config)
+
+        if (config.propertyValue != configDto.propertyValue) {
+            config.propertyValue = configDto.propertyValue
+            MapCache.invalidate(Config::class.java)
+            return super.update(config)
+        }
+
+        return config
     }
 }

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <#assign baseUrl = "https://www.shikkanime.fr">
-    <#if episode??>
+    <#if episodeMapping??>
         <url>
             <loc>${baseUrl}/</loc>
-            <lastmod>${episode.releaseDateTime?replace("Z", "+00:00")}</lastmod>
+            <lastmod>${episodeMapping.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
         </url>
         <url>
             <loc>${baseUrl}/calendar</loc>
-            <lastmod>${episode.releaseDateTime?replace("Z", "+00:00")}</lastmod>
+            <lastmod>${episodeMapping.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
         </url>
     </#if>
     <url>

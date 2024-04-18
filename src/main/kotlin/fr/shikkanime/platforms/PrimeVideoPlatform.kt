@@ -1,15 +1,11 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Episode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.isEqualOrAfter
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.PrimeVideoWrapper
@@ -19,7 +15,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class PrimeVideoPlatform :
-    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, Set<Episode>>() {
+    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, Set<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.PRIM
 
     override fun getConfigurationClass() = PrimeVideoConfiguration::class.java
@@ -36,31 +32,31 @@ class PrimeVideoPlatform :
         val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode.name, key.countryCode.locale, id)
 
         return episodes.map {
-            val animeName = it.getAsJsonObject("show").getAsString("name")!!
+            val animeName = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" }
+            val animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" }
+            val image = requireNotNull(it.getAsString("image")) { "Image is null" }
+            val computedId = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Id is null" }
+            val url = requireNotNull(it.getAsJsonObject("show").getAsString("url")) { "Url is null" }
 
             Episode(
-                platform = getPlatform(),
-                anime = Anime(
-                    countryCode = key.countryCode,
-                    name = animeName,
-                    releaseDateTime = releaseDateTime,
-                    image = key.primeVideoSimulcast.image,
-                    banner = it.getAsJsonObject("show").getAsString("banner"),
-                    description = it.getAsJsonObject("show").getAsString("description"),
-                    slug = StringUtils.toSlug(StringUtils.getShortName(animeName)),
-                ),
-                episodeType = EpisodeType.EPISODE,
-                langType = LangType.SUBTITLES,
-                audioLocale = "ja-JP",
-                hash = StringUtils.getHash(key.countryCode, getPlatform(), it.getAsString("id")!!, LangType.SUBTITLES),
+                countryCode = key.countryCode,
+                anime = animeName,
+                animeImage = key.primeVideoSimulcast.image,
+                animeBanner = animeBanner,
+                animeDescription = it.getAsJsonObject("show").getAsString("description"),
                 releaseDateTime = releaseDateTime,
+                episodeType = EpisodeType.EPISODE,
                 season = it.getAsInt("season")!!,
                 number = it.getAsInt("number")!!,
-                title = it.getAsString("title"),
-                url = it.getAsString("url"),
-                image = it.getAsString("image")!!,
                 duration = it.getAsInt("duration")?.toLong() ?: -1,
+                title = it.getAsString("title"),
                 description = it.getAsString("description"),
+                image = image,
+                platform = getPlatform(),
+                audioLocale = "ja-JP",
+                id = computedId,
+                url = url,
+                uncensored = false
             )
         }.toSet()
     }
