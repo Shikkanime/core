@@ -7,7 +7,7 @@
                    placeholder="Rechercher" autofocus @input="animes = (await search($event.target.value)).data">
         </div>
 
-        <div class="row justify-content-center" style="min-height: 50vh;">
+        <div class="row g-3 justify-content-center" style="min-height: 50vh;">
             <template x-for="anime in animes">
                 <div class="col-md-2 col-6 mt-0">
                     <article x-data="{hover:false}" class="shikk-element">
