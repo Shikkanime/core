@@ -72,7 +72,7 @@
                 return [];
             }
 
-            return await callApi('${apiUrl}/v1/animes?name=' + trimmedQuery + '&limit=12', abortController.signal);
+            return await callApi('/api/v1/animes?name=' + trimmedQuery + '&limit=12', abortController.signal);
         }
     </script>
 </@navigation.display>
