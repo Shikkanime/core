@@ -89,25 +89,12 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Get
-    @OpenAPI(
-        "Get anime details",
-        [
-            OpenAPIResponse(
-                200,
-                "Anime found",
-                AnimeDto::class,
-            ),
-            OpenAPIResponse(
-                404,
-                "Anime not found",
-                MessageDto::class
-            ),
-        ]
-    )
+    @AdminSessionAuthenticated
+    @OpenAPI(hidden = true)
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
-        return Response.ok(animeCacheService.findByUuid(uuid))
+        return Response.ok(animeService.find(uuid))
     }
 
     @Path("/{uuid}")

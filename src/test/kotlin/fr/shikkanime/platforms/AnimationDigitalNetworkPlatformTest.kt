@@ -80,9 +80,9 @@ class AnimationDigitalNetworkPlatformTest {
         assertNotNull(episodes[1].description)
 
         assertEquals("MONSTERS", episodes[2].anime)
-        assertEquals("fr-FR", episodes[2].audioLocale)
+        assertEquals("ja-JP", episodes[2].audioLocale)
         assertNotNull(episodes[2].description)
-        assertEquals("ja-JP", episodes[3].audioLocale)
+        assertEquals("fr-FR", episodes[3].audioLocale)
         assertNotNull(episodes[3].description)
     }
 

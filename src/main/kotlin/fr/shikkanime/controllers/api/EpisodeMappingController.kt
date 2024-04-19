@@ -73,18 +73,10 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Get
-    @OpenAPI(
-        "Get episode mapping by UUID",
-        [
-            OpenAPIResponse(
-                200,
-                "Episode mapping found",
-                EpisodeMappingDto::class,
-            ),
-        ]
-    )
+    @AdminSessionAuthenticated
+    @OpenAPI(hidden = true)
     private fun read(@PathParam("uuid") uuid: UUID): Response {
-        return Response.ok(episodeMappingCacheService.find(uuid))
+        return Response.ok(episodeMappingService.find(uuid))
     }
 
     @Path("/{uuid}")

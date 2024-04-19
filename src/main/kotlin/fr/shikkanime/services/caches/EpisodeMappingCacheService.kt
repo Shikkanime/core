@@ -2,7 +2,6 @@ package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
@@ -42,10 +41,6 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         }
 
-    private val findByUuidCache = MapCache<UUID, EpisodeMappingDto>(classes = listOf(EpisodeMapping::class.java)) {
-        AbstractConverter.convert(episodeMappingService.find(it), EpisodeMappingDto::class.java)
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
         anime: UUID?,
@@ -54,6 +49,4 @@ class EpisodeMappingCacheService : AbstractCacheService {
         limit: Int,
         status: Status? = null
     ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, anime, sort, page, limit, status)]
-
-    fun find(uuid: UUID) = findByUuidCache[uuid]
 }

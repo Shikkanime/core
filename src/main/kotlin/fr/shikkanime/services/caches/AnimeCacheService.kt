@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
@@ -59,10 +58,6 @@ class AnimeCacheService : AbstractCacheService {
             animeService.getWeeklyAnimes(it.localDate, it.countryCode)
         }
 
-    private val findByUuidCache = MapCache<UUID, AnimeDto>(classes = listOf(Anime::class.java)) {
-        AbstractConverter.convert(animeService.find(it), AnimeDto::class.java)
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -79,6 +74,4 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode) =
         weeklyCache[CountryCodeLocalDateKeyCache(countryCode, startOfWeekDay)]
-
-    fun findByUuid(uuid: UUID) = findByUuidCache[uuid]
 }
