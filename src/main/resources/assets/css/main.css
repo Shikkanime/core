@@ -30,9 +30,10 @@ body {
     color: #b9b9b9 !important;
 }
 
-.card {
-    border: 1px solid #FFFFFF14 !important;
-    background-color: #FFFFFF14 !important;
+.shikk-element {
+    border: 1px solid #FFFFFF14;
+    border-radius: 1rem;
+    background-color: #FFFFFF14;
 }
 
 .bg-blur {
