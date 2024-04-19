@@ -58,40 +58,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {
         val episode = find(uuid) ?: return null
 
-        if (entity.anime.name.isNotBlank() && entity.anime.name != episode.anime!!.name) {
-            val oldAnimeId = episode.anime!!.uuid!!
-            val findByName = requireNotNull(
-                animeService.findByName(
-                    episode.anime!!.countryCode!!,
-                    entity.anime.name
-                )
-            ) { "Anime with name ${entity.anime.name} not found" }
-            episode.anime = findByName
-            update(episode)
-
-            if (episode.title.isNullOrBlank()) {
-                episode.title = findByName.name
-            }
-
-            val oldAnime = animeService.find(oldAnimeId)!!
-
-            if (oldAnime.mappings.isEmpty()) {
-                animeService.delete(oldAnime)
-                MapCache.invalidate(Anime::class.java)
-            }
-        }
-
-        if (entity.releaseDateTime.isNotBlank() && entity.releaseDateTime != episode.releaseDateTime.toString()) {
-            episode.releaseDateTime = ZonedDateTime.parse(entity.releaseDateTime)
-        }
-
-        if (entity.lastReleaseDateTime.isNotBlank() && entity.lastReleaseDateTime != episode.lastReleaseDateTime.toString()) {
-            episode.lastReleaseDateTime = ZonedDateTime.parse(entity.lastReleaseDateTime)
-        }
-
-        if (entity.lastUpdateDateTime.isNotBlank() && entity.lastUpdateDateTime != episode.lastUpdateDateTime.toString()) {
-            episode.lastUpdateDateTime = ZonedDateTime.parse(entity.lastUpdateDateTime)
-        }
+        updateEpisodeMappingAnime(entity, episode)
+        updateEpisodeMappingDateTime(entity, episode)
 
         if (entity.episodeType != episode.episodeType) {
             episode.episodeType = entity.episodeType
@@ -127,6 +95,58 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         episode.lastUpdateDateTime = ZonedDateTime.now()
         var update = super.update(episode)
 
+        update = updateEpisodeMappingVariants(entity, episode, update, uuid)
+
+        MapCache.invalidate(EpisodeMapping::class.java)
+        return update
+    }
+
+    private fun updateEpisodeMappingAnime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
+        if (entity.anime.name.isNotBlank() && entity.anime.name != episode.anime!!.name) {
+            val oldAnimeId = episode.anime!!.uuid!!
+            val findByName = requireNotNull(
+                animeService.findByName(
+                    episode.anime!!.countryCode!!,
+                    entity.anime.name
+                )
+            ) { "Anime with name ${entity.anime.name} not found" }
+            episode.anime = findByName
+            update(episode)
+
+            if (episode.title.isNullOrBlank()) {
+                episode.title = findByName.name
+            }
+
+            val oldAnime = animeService.find(oldAnimeId)!!
+
+            if (oldAnime.mappings.isEmpty()) {
+                animeService.delete(oldAnime)
+                MapCache.invalidate(Anime::class.java)
+            }
+        }
+    }
+
+    private fun updateEpisodeMappingDateTime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
+        if (entity.releaseDateTime.isNotBlank() && entity.releaseDateTime != episode.releaseDateTime.toString()) {
+            episode.releaseDateTime = ZonedDateTime.parse(entity.releaseDateTime)
+        }
+
+        if (entity.lastReleaseDateTime.isNotBlank() && entity.lastReleaseDateTime != episode.lastReleaseDateTime.toString()) {
+            episode.lastReleaseDateTime = ZonedDateTime.parse(entity.lastReleaseDateTime)
+        }
+
+        if (entity.lastUpdateDateTime.isNotBlank() && entity.lastUpdateDateTime != episode.lastUpdateDateTime.toString()) {
+            episode.lastUpdateDateTime = ZonedDateTime.parse(entity.lastUpdateDateTime)
+        }
+    }
+
+    private fun updateEpisodeMappingVariants(
+        entity: EpisodeMappingDto,
+        episode: EpisodeMapping,
+        update: EpisodeMapping,
+        uuid: UUID
+    ): EpisodeMapping {
+        var update1 = update
         if (!entity.variants.isNullOrEmpty()) {
             val oldList = mutableSetOf(*episode.variants.toTypedArray())
             episode.variants.clear()
@@ -139,11 +159,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
             oldList.forEach { episodeVariantRepository.delete(it) }
             MapCache.invalidate(EpisodeVariant::class.java)
-            update = find(uuid)!!
+            update1 = find(uuid)!!
         }
-
-        MapCache.invalidate(EpisodeMapping::class.java)
-        return update
+        return update1
     }
 
     override fun delete(entity: EpisodeMapping) {

@@ -160,9 +160,19 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             addBanner(anime.uuid, anime.banner)
         }
 
-        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) anime.description =
-            animeDto.description
+        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
+            anime.description = animeDto.description
+        }
 
+        updateAnimeSimulcast(animeDto, anime)
+
+        anime.status = StringUtils.getStatus(anime)
+        val update = super.update(anime)
+        MapCache.invalidate(Anime::class.java)
+        return update
+    }
+
+    private fun updateAnimeSimulcast(animeDto: AnimeDto, anime: Anime) {
         if (animeDto.simulcasts != null) {
             anime.simulcasts.clear()
 
@@ -174,11 +184,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 }
             }
         }
-
-        anime.status = StringUtils.getStatus(anime)
-        val update = super.update(anime)
-        MapCache.invalidate(Anime::class.java)
-        return update
     }
 
     override fun delete(entity: Anime) {

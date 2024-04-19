@@ -2,7 +2,7 @@
 
 <#macro display anime>
     <div class="col-md-2 col-6 mt-0 mb-4">
-        <article x-data="{ hover: false }" class="rounded-4 card">
+        <article x-data="{ hover: false }" class="shikk-element">
             <a href="/animes/${anime.slug}" class="text-decoration-none text-white" @mouseenter="hover = true"
                @mouseleave="hover = false">
                 <div class="position-relative">

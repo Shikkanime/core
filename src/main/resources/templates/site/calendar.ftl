@@ -18,7 +18,7 @@
                 <#list weeklyAnimes as dailyAnimes>
                     <td class="bg-black border-start border-end border-dark">
                         <#list dailyAnimes.releases as release>
-                            <article x-data="{ hover: false }" class="rounded-4 card mb-3">
+                            <article x-data="{ hover: false }" class="shikk-element mb-3">
                                 <a href="/animes/${release.anime.slug}" class="text-decoration-none text-white"
                                    @mouseenter="hover = true"
                                    @mouseleave="hover = false">
@@ -73,10 +73,7 @@
     </div>
 
     <script>
-        <#-- Get release date and time and convert it to the user's timezone -->
-        const releaseDateTimeElements = document.querySelectorAll('[data-release-date-time]');
-
-        releaseDateTimeElements.forEach(element => {
+        document.querySelectorAll('[data-release-date-time]').forEach(element => {
             const releaseDateTime = new Date(element.getAttribute('data-release-date-time'));
             element.textContent = releaseDateTime.toLocaleTimeString().split(':').slice(0, 2).join(':');
         });

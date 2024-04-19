@@ -17,7 +17,6 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
-import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
@@ -149,15 +148,8 @@ class SiteController {
 
     @Path("search")
     @Get
-    private fun search(
-        @QueryParam("q") query: String?,
-    ): Response {
-        return Response.template(
-            Link.SEARCH,
-            mutableMapOf(
-                "query" to query
-            )
-        )
+    private fun search(): Response {
+        return Response.template(Link.SEARCH)
     }
 
     @Path("calendar")
