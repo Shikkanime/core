@@ -12,7 +12,6 @@ import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
@@ -111,24 +110,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
     }
 
-    private fun parseAPIContent(
-        bypassFileContent: File?,
-        countryCode: CountryCode,
-        zonedDateTime: ZonedDateTime
-    ): List<JsonObject> {
-        return if (bypassFileContent != null && bypassFileContent.exists()) {
-            ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("data").map { it.asJsonObject }
-        } else getApiContent(
-            countryCode,
-            zonedDateTime
-        )
-    }
-
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            val api = parseAPIContent(bypassFileContent, countryCode, zonedDateTime)
+            val api = parseAPIContent(bypassFileContent, countryCode, "data", zonedDateTime)
 
             api.forEach {
                 try {

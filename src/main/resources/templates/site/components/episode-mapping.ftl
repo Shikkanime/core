@@ -14,7 +14,7 @@
 <#macro display episodeMapping desktopColSize mobileColSize cover>
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">
-        <article class="rounded-4 card">
+        <article class="shikk-element">
             <a href="${episodeMapping.variants?first.url}" target="_blank" class="text-decoration-none text-white">
                 <div class="position-relative">
                     <div class="position-relative">
@@ -34,7 +34,7 @@
                     </div>
 
                     <div class="mx-2 mb-1">
-                        <h6 class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</h6>
+                        <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</div>
 
                         <p class="text-muted mb-0">Saison ${episodeMapping.season?c}
                             | ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}</p>

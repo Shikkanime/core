@@ -99,7 +99,12 @@ class FetchEpisodesJob : AbstractJob {
                 typeIdentifiers.add(typeIdentifier)
                 val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
                 sendToSocialNetworks(episodeDto)
-                FirebaseNotification.send(episodeDto)
+
+                try {
+                    FirebaseNotification.send(episodeDto)
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while sending notification for episode ${episodeDto.identifier}", e)
+                }
             }
         }
     }

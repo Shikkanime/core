@@ -12,7 +12,7 @@ data class EpisodeMappingDto(
     val releaseDateTime: String,
     val lastReleaseDateTime: String,
     val lastUpdateDateTime: String,
-    val episodeType: EpisodeType,
+    var episodeType: EpisodeType,
     val season: Int,
     val number: Int,
     val duration: Long,

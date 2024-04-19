@@ -75,14 +75,16 @@ private fun setSecurityHeaders(call: ApplicationCall, configCacheService: Config
             HttpHeaders.StrictTransportSecurity,
             "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
         )
-        context.response.header("Content-Security-Policy", "default-src 'self'; " +
-                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' https://api.shikkanime.fr https://www.shikkanime.fr; " +
-                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
-                "font-src 'self' https://cdn.jsdelivr.net; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
-                configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API)
-                    ?.let { "connect-src 'self' $it; " }
+
+        context.response.header(
+            "Content-Security-Policy",
+            "default-src 'self'; font-src 'self';" +
+                    "style-src 'self' 'unsafe-inline' 'unsafe-eval';" +
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval';" +
+                    "img-src data: 'self' ${Constant.apiUrl} ${Constant.baseUrl};" +
+                    "connect-src 'self' ${Constant.apiUrl} ${configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API) ?: ""};"
         )
+
         context.response.header("X-Frame-Options", "DENY")
         context.response.header("X-Content-Type-Options", "nosniff")
         context.response.header("Referrer-Policy", "no-referrer")
