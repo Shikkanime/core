@@ -38,7 +38,7 @@ object FirebaseNotification {
                         Notification.builder()
                             .setTitle(episodeDto.mapping.anime.shortName)
                             .setBody(StringUtils.toEpisodeString(episodeDto))
-                            .setImage("https://api.shikkanime.fr/v1/attachments?uuid=${episodeDto.uuid}&type=image")
+                            .setImage("${Constant.apiUrl}/v1/attachments?uuid=${episodeDto.mapping.uuid}&type=image")
                             .build()
                     )
                     .setAndroidConfig(
