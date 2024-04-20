@@ -8,7 +8,6 @@ import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.RandomManager
 
-
 class MemberService : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -21,6 +20,9 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
+
+    fun findPrivateMember(identifier: String) =
+        memberRepository.findPrivateMember(EncryptionManager.toSHA512(identifier))
 
     fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRoles(listOf(Role.ADMIN))
@@ -36,4 +38,13 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         )
         return password
     }
+
+    fun savePrivateMember(identifier: String) =
+        save(
+            Member(
+                isPrivate = true,
+                username = EncryptionManager.toSHA512(identifier),
+                encryptedPassword = byteArrayOf()
+            )
+        )
 }

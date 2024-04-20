@@ -1,6 +1,7 @@
 package fr.shikkanime.modules
 
 import fr.shikkanime.utils.routes.openapi.OpenAPI
+import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.github.smiley4.ktorswaggerui.dsl.BodyTypeDescriptor
@@ -23,8 +24,10 @@ fun swagger(
     }
 
     return {
+        securitySchemeName = if (openApi.security) "BearerAuth" else null
         tags = routeTags
         hidden = hiddenRoute || openApi.hidden
+        summary = openApi.description
         description = openApi.description
         swaggerRequest(method)
         swaggerResponse(openApi)
@@ -33,7 +36,7 @@ fun swagger(
 
 private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
     request {
-        method.parameters.filter { it.hasAnnotation<QueryParam>() || it.hasAnnotation<PathParam>() }
+        method.parameters.filter { it.hasAnnotation<QueryParam>() || it.hasAnnotation<PathParam>() || it.hasAnnotation<BodyParam>() }
             .forEach { parameter ->
                 val name = parameter.name!!
                 val type = parameter.type.jvmErasure
@@ -53,6 +56,10 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
                             description = pp.description
                             required = true
                         }
+                    }
+
+                    parameter.hasAnnotation<BodyParam>() -> {
+                        body(type)
                     }
                 }
             }

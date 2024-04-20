@@ -1,10 +1,7 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -36,10 +33,11 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     override fun getRepository() = episodeVariantRepository
 
     fun findAllByDateRange(
+        member: Member?,
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime
-    ) = episodeVariantRepository.findAllByDateRange(countryCode, start, end)
+    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end)
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 

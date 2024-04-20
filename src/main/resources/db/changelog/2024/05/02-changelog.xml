@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1714628848225"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="member" columnName="creation_date_time"/>
+        </preConditions>
+
+        <addNotNullConstraint columnDataType="timestamp" columnName="creation_date_time" tableName="member"
+                              validate="true"/>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="member" columnName="is_private"/>
+                <columnExists tableName="member" columnName="last_update_date_time"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="member">
+            <column name="is_private" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_update_date_time" type="timestamp"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member_follow_anime"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="member_follow_anime">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_member_follow_anime"/>
+            </column>
+            <column name="follow_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="member_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="anime_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member_follow_episode"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="member_follow_episode">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_member_follow_episode"/>
+            </column>
+            <column name="follow_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="member_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="episode_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_MEMBER_FOLLOW_ANIME_ON_ANIME_UUID"
+                                            foreignKeyTableName="member_follow_anime"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="anime_uuid" baseTableName="member_follow_anime"
+                                 constraintName="FK_MEMBER_FOLLOW_ANIME_ON_ANIME_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_MEMBER_FOLLOW_ANIME_ON_MEMBER_UUID"
+                                            foreignKeyTableName="member_follow_anime"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="member_uuid" baseTableName="member_follow_anime"
+                                 constraintName="FK_MEMBER_FOLLOW_ANIME_ON_MEMBER_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="member"/>
+    </changeSet>
+
+    <changeSet id="${id}-7" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_MEMBER_FOLLOW_EPISODE_ON_EPISODE_UUID"
+                                            foreignKeyTableName="member_follow_episode"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="episode_uuid" baseTableName="member_follow_episode"
+                                 constraintName="FK_MEMBER_FOLLOW_EPISODE_ON_EPISODE_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="episode_mapping"/>
+    </changeSet>
+
+    <changeSet id="${id}-8" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_MEMBER_FOLLOW_EPISODE_ON_MEMBER_UUID"
+                                            foreignKeyTableName="member_follow_episode"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="member_uuid" baseTableName="member_follow_episode"
+                                 constraintName="FK_MEMBER_FOLLOW_EPISODE_ON_MEMBER_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="member"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,9 +1,6 @@
 package fr.shikkanime.modules
 
-import fr.shikkanime.dtos.AnimeDto
-import fr.shikkanime.dtos.ConfigDto
-import fr.shikkanime.dtos.EpisodeMappingDto
-import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -242,6 +239,7 @@ private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCal
         ConfigDto::class.java -> call.receive<ConfigDto>()
         AnimeDto::class.java -> call.receive<AnimeDto>()
         EpisodeMappingDto::class.java -> call.receive<EpisodeMappingDto>()
+        GenericDto::class.java -> call.receive<GenericDto>()
         else -> call.receive<String>()
     }
 }

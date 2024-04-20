@@ -9,12 +9,10 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
@@ -26,6 +24,9 @@ class AnimeCacheService : AbstractCacheService {
 
     @Inject
     private lateinit var simulcastService: SimulcastService
+
+    @Inject
+    private lateinit var memberService: MemberService
 
     private val findAllByCache =
         MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
@@ -61,7 +62,18 @@ class AnimeCacheService : AbstractCacheService {
                 EpisodeVariant::class.java
             )
         ) {
-            animeService.getWeeklyAnimes(it.localDate, it.countryCode)
+            animeService.getWeeklyAnimes(null, it.localDate, it.countryCode)
+        }
+
+    private val weeklyMemberCache =
+        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
+            classes = listOf(
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java,
+                MemberFollowAnime::class.java
+            )
+        ) {
+            animeService.getWeeklyAnimes(memberService.find(it.member), it.localDate, it.countryCode)
         }
 
     fun findAllBy(
@@ -79,5 +91,8 @@ class AnimeCacheService : AbstractCacheService {
     fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode) =
-        weeklyCache[CountryCodeLocalDateKeyCache(countryCode, startOfWeekDay)]
+        weeklyCache[CountryCodeLocalDateKeyCache(null, countryCode, startOfWeekDay)]
+
+    fun getWeeklyAnimes(member: UUID, startOfWeekDay: LocalDate, countryCode: CountryCode) =
+        weeklyMemberCache[CountryCodeLocalDateKeyCache(member, countryCode, startOfWeekDay)]
 }

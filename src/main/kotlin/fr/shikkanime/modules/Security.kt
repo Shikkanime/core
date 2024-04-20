@@ -40,6 +40,7 @@ private fun setupJWTVerifier(): JWTVerifier = JWT
     .withAudience(Constant.jwtAudience)
     .withIssuer(Constant.jwtDomain)
     .withClaimPresence("uuid")
+    .withClaimPresence("isPrivate")
     .withClaimPresence("username")
     .withClaimPresence("creationDateTime")
     .withClaimPresence("roles")
@@ -81,7 +82,8 @@ private fun validationSession(jwtVerifier: JWTVerifier, session: TokenDto): Toke
     val jwtPrincipal = jwtVerifier.verify(session.token) ?: return null
     val member = memberCacheService.find(UUID.fromString(jwtPrincipal.getClaim("uuid").asString())) ?: return null
 
-    return if (member.username == jwtPrincipal.getClaim("username").asString() &&
+    return if (member.isPrivate == jwtPrincipal.getClaim("isPrivate").asBoolean() &&
+        member.username == jwtPrincipal.getClaim("username").asString() &&
         member.roles.toTypedArray().contentEquals(jwtPrincipal.getClaim("roles").asArray(Role::class.java)) &&
         member.creationDateTime.toString() == jwtPrincipal.getClaim("creationDateTime").asString() &&
         member.roles.any { it == Role.ADMIN }
