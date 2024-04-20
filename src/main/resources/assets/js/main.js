@@ -9,8 +9,9 @@ function copyToClipboard(content) {
 }
 
 async function callApi(url, options = {}) {
-    const {abortSignal, method = 'GET', body = null} = options;
+    const {abortSignal, method = 'GET', authorization = null, body = null} = options;
     const headers = {'Content-Type': 'application/json'};
+    if (authorization) headers['Authorization'] = 'Bearer ' + authorization;
     const fetchOptions = {headers, signal: abortSignal, method};
     if (method !== 'GET') fetchOptions.body = JSON.stringify(body);
 

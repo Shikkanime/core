@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <div class="row mt-3 justify-content-center">
+            <div class="row g-3 mt-3 justify-content-center">
                 <#list animes as anime>
                     <@animeComponent.display anime=anime />
                 </#list>

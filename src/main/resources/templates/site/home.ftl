@@ -45,7 +45,7 @@
     </div>
 
     <#if animes?? && animes?size != 0>
-        <div class="row">
+        <div class="row g-3">
             <#list animes as anime>
                 <@animeComponent.display anime=anime />
             </#list>
