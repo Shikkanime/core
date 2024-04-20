@@ -73,12 +73,13 @@
                 params = '?name=' + name;
             }
 
-            return await callApi('/api/config' + params);
+            return await callApi('/api/config' + params, {authorization: '${token}'});
         }
 
         async function updateConfig(config) {
             await callApi('/api/config/' + config.uuid, {
                 method: 'PUT',
+                authorization: '${token}',
                 body: config
             })
                 .then(() => {

@@ -23,5 +23,11 @@ services:
       DATABASE_URL: jdbc:postgresql://shikkanime-db:5432/shikkanime
       DATABASE_USERNAME: postgres
       DATABASE_PASSWORD: "mysecretpassword"
+      JWT_SECRET: "mysecretkey"
+      JWT_DOMAIN: "http://localhost:37100"
+      JWT_REALM: "Access to '/admin'"
+      JWT_AUDIENCE: "http://localhost:37100/admin"
+      BASE_URL: "http://localhost:37100"
+      API_URL: "http://localhost:37100/api"
     volumes:
       - ./data:/app/data/
