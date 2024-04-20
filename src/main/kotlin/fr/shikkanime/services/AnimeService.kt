@@ -7,10 +7,7 @@ import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.AnimeRepository
@@ -60,10 +57,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
-    fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
+    fun getWeeklyAnimes(member: Member?, startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
 
         val list = episodeVariantService.findAllByDateRange(
+            member,
             countryCode,
             startOfWeekDay.minusDays(7).atStartOfDay(zoneId),
             startOfWeekDay.plusDays(7).atTime(23, 59, 59).atZone(zoneId)

@@ -14,6 +14,7 @@ class MemberToTokenDtoConverter : AbstractConverter<Member, TokenDto>() {
             .withAudience(Constant.jwtAudience)
             .withIssuer(Constant.jwtDomain)
             .withClaim("uuid", from.uuid.toString())
+            .withClaim("isPrivate", from.isPrivate)
             .withClaim("username", from.username)
             .withClaim("creationDateTime", from.creationDateTime.toString())
             .withClaim("roles", from.roles.map { it.name })

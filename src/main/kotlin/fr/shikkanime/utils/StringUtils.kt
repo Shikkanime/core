@@ -130,4 +130,11 @@ object StringUtils {
             episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
         ) Status.INVALID else Status.VALID
     }
+
+    fun generateRandomString(length: Int): String {
+        val source = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        return (1..length)
+            .map { source.random() }
+            .joinToString("")
+    }
 }

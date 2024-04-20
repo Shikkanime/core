@@ -13,8 +13,12 @@ import java.util.*
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Member(
     override val uuid: UUID? = null,
-    @Column(name = "creation_date_time")
+    @Column(nullable = false, name = "creation_date_time")
     val creationDateTime: ZonedDateTime = ZonedDateTime.now(),
+    @Column(nullable = true, name = "last_update_date_time")
+    var lastUpdateDateTime: ZonedDateTime = ZonedDateTime.now(),
+    @Column(nullable = false, name = "is_private")
+    val isPrivate: Boolean = false,
     @Column(nullable = false, unique = true)
     val username: String? = null,
     @Column(nullable = false, name = "encrypted_password")
