@@ -73,15 +73,13 @@
                 params = '?name=' + name;
             }
 
-            return await callApi('/api/config' + params, {authorization: '${token}'});
+            return await axios.get('/api/config' + params)
+                .then(response => response.data)
+                .catch(() => []);
         }
 
         async function updateConfig(config) {
-            await callApi('/api/config/' + config.uuid, {
-                method: 'PUT',
-                authorization: '${token}',
-                body: config
-            })
+            await axios.put('/api/config/' + config.uuid, config)
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

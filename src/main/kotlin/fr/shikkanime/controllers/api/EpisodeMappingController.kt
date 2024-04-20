@@ -73,7 +73,7 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Get
-    @JWTAuthenticated
+    @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun read(@PathParam("uuid") uuid: UUID): Response {
         return Response.ok(AbstractConverter.convert(episodeMappingService.find(uuid), EpisodeMappingDto::class.java))
@@ -81,7 +81,7 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Put
-    @JWTAuthenticated
+    @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun updateEpisode(
         @PathParam("uuid") uuid: UUID,
@@ -93,7 +93,7 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Delete
-    @JWTAuthenticated
+    @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun deleteEpisode(@PathParam("uuid") uuid: UUID): Response {
         episodeMappingService.delete(episodeMappingService.find(uuid) ?: return Response.notFound())

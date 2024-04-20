@@ -89,7 +89,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Get
-    @JWTAuthenticated
+    @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
@@ -99,7 +99,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Put
-    @JWTAuthenticated
+    @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
         val updated = animeService.update(uuid, animeDto)
@@ -108,7 +108,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Delete
-    @JWTAuthenticated
+    @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun deleteAnime(@PathParam("uuid") uuid: UUID): Response {
         animeService.delete(animeService.find(uuid) ?: return Response.notFound())

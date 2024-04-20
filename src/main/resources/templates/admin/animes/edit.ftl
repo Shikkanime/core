@@ -197,28 +197,29 @@
     </div>
 
     <script>
-        async function getSimulcasts() {
-            return await callApi('/api/v1/simulcasts');
-        }
-
         function getUuid() {
             const url = new URL(window.location.href);
             return url.pathname.split('/').pop();
         }
 
+        async function getSimulcasts() {
+            return await axios.get('/api/v1/simulcasts')
+                .then(response => response.data)
+                .catch(() => []);
+        }
+
         async function loadAnime() {
             const uuid = getUuid();
-            return await callApi('/api/v1/animes/' + uuid, {authorization: '${token}'});
+
+            return await axios.get('/api/v1/animes/' + uuid)
+                .then(response => response.data)
+                .catch(() => ({}));
         }
 
         async function updateAnime(anime) {
             const uuid = getUuid();
 
-            await callApi('/api/v1/animes/' + uuid, {
-                method: 'PUT',
-                authorization: '${token}',
-                body: anime
-            })
+            await axios.put('/api/v1/animes/' + uuid, anime)
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -234,14 +235,12 @@
         async function deleteAnime() {
             const uuid = getUuid();
 
-            await callApi('/api/v1/animes/' + uuid, {
-                method: 'DELETE',
-                authorization: '${token}'
-            }).catch(() => {
-                const toastEl = document.getElementById('errorToast');
-                const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
-                toastBootstrap.show();
-            });
+            await axios.delete('/api/v1/animes/' + uuid)
+                .catch(() => {
+                    const toastEl = document.getElementById('errorToast');
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
+                    toastBootstrap.show();
+                });
         }
 
         function addSimulcast(simulcasts, anime, uuid) {

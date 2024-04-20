@@ -7,14 +7,3 @@ function copyToClipboard(content) {
     document.execCommand("copy");
     document.body.removeChild(textarea);
 }
-
-async function callApi(url, options = {}) {
-    const {abortSignal, method = 'GET', authorization = null, body = null} = options;
-    const headers = {'Content-Type': 'application/json'};
-    if (authorization) headers['Authorization'] = 'Bearer ' + authorization;
-    const fetchOptions = {headers, signal: abortSignal, method};
-    if (method !== 'GET') fetchOptions.body = JSON.stringify(body);
-
-    return await fetch(url, fetchOptions)
-        .then(response => response.json());
-}

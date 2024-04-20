@@ -61,9 +61,9 @@
 
                             <script>
                                 document.addEventListener('DOMContentLoaded', function () {
-                                    callApi('/api/v1/animes?simulcast=${simulcast.uuid}')
-                                        .then(data => {
-                                            document.getElementById('simulcast-${simulcast.uuid}').innerText = data.total;
+                                    axios.get('/api/v1/animes?simulcast=${simulcast.uuid}')
+                                        .then(response => {
+                                            document.getElementById('simulcast-${simulcast.uuid}').innerText = response.data.total;
                                         });
                                 });
                             </script>
