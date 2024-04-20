@@ -78,10 +78,11 @@ private fun setSecurityHeaders(call: ApplicationCall, configCacheService: Config
 
         context.response.header(
             "Content-Security-Policy",
-            "default-src 'self'; font-src 'self';" +
-                    "style-src 'self' 'unsafe-inline' 'unsafe-eval';" +
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval';" +
-                    "img-src data: 'self' ${Constant.apiUrl} ${Constant.baseUrl};" +
+            "default-src 'self';" +
+                    "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;" +
+                    "font-src 'self' https://cdn.jsdelivr.net; " +
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;" +
+                    "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl};" +
                     "connect-src 'self' ${Constant.apiUrl} ${configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API) ?: ""};"
         )
 
@@ -199,6 +200,8 @@ private suspend fun handleTemplateResponse(
     val map = response.data as Map<String, Any> // NOSONAR
     val modelMap = (map["model"] as Map<String, Any?>).toMutableMap() // NOSONAR
     setGlobalAttributes(modelMap, controller, replacedPath, map["title"] as String?)
+    call.principal<TokenDto>()?.token?.let { modelMap["token"] = it }
+
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }
 

@@ -5,8 +5,8 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
+import fr.shikkanime.utils.routes.JWTAuthenticated
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
@@ -24,7 +24,7 @@ class ConfigController {
 
     @Path
     @Get
-    @AdminSessionAuthenticated
+    @JWTAuthenticated
     @OpenAPI(hidden = true)
     private fun getConfigs(
         @QueryParam("name") nameParam: String?,
@@ -40,7 +40,7 @@ class ConfigController {
 
     @Path("/{uuid}")
     @Put
-    @AdminSessionAuthenticated
+    @JWTAuthenticated
     @OpenAPI(hidden = true)
     private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
         configService.update(uuid, configDto)

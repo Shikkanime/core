@@ -217,7 +217,7 @@
 
         async function loadEpisode() {
             const uuid = getUuid();
-            return await callApi('/api/v1/episode-mappings/' + uuid);
+            return await callApi('/api/v1/episode-mappings/' + uuid, {authorization: '${token}'});
         }
 
         async function updateEpisode(episode) {
@@ -225,6 +225,7 @@
 
             await callApi('/api/v1/episode-mappings/' + uuid, {
                 method: 'PUT',
+                authorization: '${token}',
                 body: episode
             })
                 .then(() => {
@@ -243,7 +244,8 @@
             const uuid = getUuid();
 
             await callApi('/api/v1/episode-mappings/' + uuid, {
-                method: 'DELETE'
+                method: 'DELETE',
+                authorization: '${token}'
             }).catch(() => {
                 const toastEl = document.getElementById('errorToast');
                 const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

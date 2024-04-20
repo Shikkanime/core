@@ -208,7 +208,7 @@
 
         async function loadAnime() {
             const uuid = getUuid();
-            return await callApi('/api/v1/animes/' + uuid);
+            return await callApi('/api/v1/animes/' + uuid, {authorization: '${token}'});
         }
 
         async function updateAnime(anime) {
@@ -216,6 +216,7 @@
 
             await callApi('/api/v1/animes/' + uuid, {
                 method: 'PUT',
+                authorization: '${token}',
                 body: anime
             })
                 .then(() => {
@@ -234,7 +235,8 @@
             const uuid = getUuid();
 
             await callApi('/api/v1/animes/' + uuid, {
-                method: 'DELETE'
+                method: 'DELETE',
+                authorization: '${token}'
             }).catch(() => {
                 const toastEl = document.getElementById('errorToast');
                 const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

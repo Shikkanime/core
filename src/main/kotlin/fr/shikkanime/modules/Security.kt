@@ -46,11 +46,17 @@ private fun setupJWTVerifier(): JWTVerifier = JWT
     .build()
 
 private fun AuthenticationConfig.setupJWTAuthentication(jwtVerifier: JWTVerifier) {
-    jwt {
+    jwt("auth-jwt") {
         realm = Constant.jwtRealm
         verifier(jwtVerifier)
         validate { credential ->
             if (credential.payload.audience.contains(Constant.jwtAudience)) JWTPrincipal(credential.payload) else null
+        }
+        challenge { _, _ ->
+            call.respond(
+                HttpStatusCode.Unauthorized,
+                MessageDto(MessageDto.Type.ERROR, "You are not authorized to access this page")
+            )
         }
     }
 }
