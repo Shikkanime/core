@@ -56,6 +56,7 @@
         </div>
     </div>
 
+    <script src="${baseUrl}/assets/js/axios.min.js"></script>
     <script>
         let abortController = null;
 
@@ -72,7 +73,15 @@
                 return [];
             }
 
-            return await callApi('/api/v1/animes?name=' + trimmedQuery + '&limit=12', abortController.signal);
+            return axios.get('/api/v1/animes?name=' + trimmedQuery + '&limit=12', {signal: abortController.signal})
+                .then(response => response.data)
+                .catch(error => {
+                    if (error.name === 'AbortError') {
+                        return [];
+                    }
+
+                    throw error;
+                });
         }
     </script>
 </@navigation.display>

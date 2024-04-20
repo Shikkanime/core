@@ -85,7 +85,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function getMetrics() {
-    return await callApi('/api/metrics?hours=' + hoursElement.value);
+    return await axios.get('/api/metrics?hours=' + hoursElement.value)
+        .then(response => response.data);
 }
 
 async function setChartData() {

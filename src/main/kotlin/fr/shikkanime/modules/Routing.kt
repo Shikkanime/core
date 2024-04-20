@@ -200,8 +200,6 @@ private suspend fun handleTemplateResponse(
     val map = response.data as Map<String, Any> // NOSONAR
     val modelMap = (map["model"] as Map<String, Any?>).toMutableMap() // NOSONAR
     setGlobalAttributes(modelMap, controller, replacedPath, map["title"] as String?)
-    call.principal<TokenDto>()?.token?.let { modelMap["token"] = it }
-
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }
 

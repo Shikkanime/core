@@ -91,7 +91,9 @@
                 params = '?name=' + name;
             }
 
-            return await callApi('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=7');
+            return await axios.get('/api/v1/animes' + params + '&page=' + (page || 1) + '&limit=7')
+                .then(response => response.data)
+                .catch(() => []);
         }
     </script>
 </@navigation.display>

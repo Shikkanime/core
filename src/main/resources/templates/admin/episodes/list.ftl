@@ -99,7 +99,8 @@
                 params = '?anime=' + anime;
             }
 
-            return await callApi('/api/v1/episode-mappings' + params + '&page=' + (page || 1) + '&limit=9');
+            return await axios.get('/api/v1/episode-mappings' + params + '&page=' + (page || 1) + '&limit=9')
+                .then(response => response.data);
         }
     </script>
 </@navigation.display>

@@ -217,17 +217,20 @@
 
         async function loadEpisode() {
             const uuid = getUuid();
-            return await callApi('/api/v1/episode-mappings/' + uuid, {authorization: '${token}'});
+
+            return axios.get('/api/v1/episode-mappings/' + uuid)
+                .then(response => response.data)
+                .catch(() => {
+                    const toastEl = document.getElementById('errorToast');
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
+                    toastBootstrap.show();
+                });
         }
 
         async function updateEpisode(episode) {
             const uuid = getUuid();
 
-            await callApi('/api/v1/episode-mappings/' + uuid, {
-                method: 'PUT',
-                authorization: '${token}',
-                body: episode
-            })
+            await axios.put('/api/v1/episode-mappings/' + uuid, episode)
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -243,14 +246,12 @@
         async function deleteEpisode() {
             const uuid = getUuid();
 
-            await callApi('/api/v1/episode-mappings/' + uuid, {
-                method: 'DELETE',
-                authorization: '${token}'
-            }).catch(() => {
-                const toastEl = document.getElementById('errorToast');
-                const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
-                toastBootstrap.show();
-            });
+            await axios.delete('/api/v1/episode-mappings/' + uuid)
+                .catch(() => {
+                    const toastEl = document.getElementById('errorToast');
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
+                    toastBootstrap.show();
+                });
         }
     </script>
 </@navigation.display>
