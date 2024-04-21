@@ -1,7 +1,7 @@
 <#import "_navigation.ftl" as navigation />
 <#import "components/anime.ftl" as animeComponent />
 
-<@navigation.display canonicalUrl="https://www.shikkanime.fr/catalog/${selectedSimulcast.slug}">
+<@navigation.display canonicalUrl="${baseUrl}/catalog/${selectedSimulcast.slug}">
     <div class="mt-3">
         <#if selectedSimulcast??>
             <div class="d-flex align-items-center">
