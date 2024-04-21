@@ -1,7 +1,7 @@
 <#import "_navigation.ftl" as navigation />
 <#import "components/langType.ftl" as langTypeComponent />
 
-<@navigation.display canonicalUrl="https://www.shikkanime.fr/calendar">
+<@navigation.display canonicalUrl="${baseUrl}/calendar">
     <div class="table-responsive">
         <table class="table table-dark table-borderless my-3">
             <thead>

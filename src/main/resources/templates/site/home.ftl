@@ -2,7 +2,7 @@
 <#import "components/episode-mapping.ftl" as episodeMappingComponent />
 <#import "components/anime.ftl" as animeComponent />
 
-<@navigation.display canonicalUrl="https://www.shikkanime.fr">
+<@navigation.display canonicalUrl="${baseUrl}">
     <h1 class="h3 my-3">Nouveaux épisodes</h1>
 
     <#if episodeMappings?? && episodeMappings?size != 0>

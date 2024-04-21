@@ -61,16 +61,27 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         updateEpisodeMappingAnime(entity, episode)
         updateEpisodeMappingDateTime(entity, episode)
 
-        if (entity.episodeType != episode.episodeType) {
-            episode.episodeType = entity.episodeType
-        }
+        if (!(entity.episodeType == episode.episodeType && entity.season == episode.season && entity.number == episode.number)) {
+            // Find if the episode already exists
+            val existing =
+                findByAnimeEpisodeTypeSeasonNumber(episode.anime!!, entity.episodeType, entity.season, entity.number)
 
-        if (entity.season != episode.season) {
-            episode.season = entity.season
-        }
+            if (existing != null) {
+                // Set the variants of the current episode to the existing episode
+                episode.variants.forEach { variant ->
+                    variant.mapping = existing
+                    episodeVariantRepository.update(variant)
+                }
 
-        if (entity.number != episode.number) {
-            episode.number = entity.number
+                // If the episode already exists, we delete the current episode
+                super.delete(episode)
+                MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+                return find(existing.uuid!!)
+            } else {
+                episode.episodeType = entity.episodeType
+                episode.season = entity.season
+                episode.number = entity.number
+            }
         }
 
         if (entity.title?.isNotBlank() == true && entity.title != episode.title) {
@@ -96,7 +107,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         var update = super.update(episode)
 
         update = updateEpisodeMappingVariants(entity, episode, update, uuid)
-
         MapCache.invalidate(EpisodeMapping::class.java)
         return update
     }
