@@ -1,6 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 
-<@navigation.display canonicalUrl="https://www.shikkanime.fr/presentation">
+<@navigation.display canonicalUrl="${baseUrl}/presentation">
     <div class="container mt-3">
         <h2>Shikkanime : Révolutionnez votre expérience de visionnage d'animés !</h2>
         <p><strong>Qu'est-ce que Shikkanime ?</strong></p>

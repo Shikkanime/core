@@ -11,7 +11,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -52,5 +52,44 @@ class EpisodeMappingServiceTest {
 
         val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)
         assertEquals(EpisodeType.FILM, updated!!.episodeType)
+    }
+
+    @Test
+    fun `update with different identifier`() {
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                name = "Test Anime",
+                image = "test.jpg",
+                slug = "test-anime"
+            )
+        )
+        episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                episodeType = EpisodeType.FILM,
+                season = 1,
+                number = 1,
+                image = "test.jpg",
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                episodeType = EpisodeType.SPECIAL,
+                season = 1,
+                number = 1,
+                image = "test.jpg",
+            )
+        )
+
+        val dto = AbstractConverter.convert(episodeMapping, EpisodeMappingDto::class.java)
+        dto.episodeType = EpisodeType.FILM
+
+        val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)
+        assertNotEquals(updated!!.uuid, episodeMapping.uuid)
+        assertEquals(EpisodeType.FILM, updated.episodeType)
+        assertNull(episodeMappingService.find(episodeMapping.uuid!!))
     }
 }

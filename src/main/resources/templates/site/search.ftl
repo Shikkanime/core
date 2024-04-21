@@ -1,6 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 
-<@navigation.display canonicalUrl="https://www.shikkanime.fr/search">
+<@navigation.display canonicalUrl="${baseUrl}/search">
     <div x-data="{animes: []}">
         <div class="container my-3">
             <input type="text" id="search" class="form-control-lg w-100 bg-dark text-white"
