@@ -54,10 +54,11 @@ class AnimationDigitalNetworkPlatform :
         return list
     }
 
-    private fun convertEpisode(
+    fun convertEpisode(
         countryCode: CountryCode,
         jsonObject: JsonObject,
-        zonedDateTime: ZonedDateTime
+        zonedDateTime: ZonedDateTime,
+        needSimulcast: Boolean = true
     ): List<Episode> {
         val show = requireNotNull(jsonObject.getAsJsonObject("show")) { "Show is null" }
         val season = jsonObject.getAsString("season")?.toIntOrNull() ?: 1
@@ -83,19 +84,21 @@ class AnimationDigitalNetworkPlatform :
                 )
             }) && !contains) throw Exception("Anime is not an animation")
 
-        var isSimulcasted = show.getAsBoolean("simulcast") == true ||
-                show.getAsString("firstReleaseYear") in (0..1).map { (zonedDateTime.year - it).toString() } ||
-                contains
+        if (needSimulcast) {
+            var isSimulcasted = show.getAsBoolean("simulcast") == true ||
+                    show.getAsString("firstReleaseYear") in (0..1).map { (zonedDateTime.year - it).toString() } ||
+                    contains
 
-        val descriptionLowercase = animeDescription.lowercase()
+            val descriptionLowercase = animeDescription.lowercase()
 
-        isSimulcasted = isSimulcasted ||
-                configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)
-                    ?.let {
-                        Regex(it).containsMatchIn(descriptionLowercase)
-                    } == true
+            isSimulcasted = isSimulcasted ||
+                    configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)
+                        ?.let {
+                            Regex(it).containsMatchIn(descriptionLowercase)
+                        } == true
 
-        if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
+            if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
+        }
 
         val releaseDateString = requireNotNull(jsonObject.getAsString("releaseDate")) { "Release date is null" }
         val releaseDate = ZonedDateTime.parse(releaseDateString)

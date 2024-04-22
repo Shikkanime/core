@@ -30,4 +30,6 @@ enum class ConfigPropertyKey(val key: String) {
     DISNEY_PLUS_AUTHORIZATION("disney_plus_authorization"),
     DISNEY_PLUS_REFRESH_TOKEN("disney_plus_refresh_token"),
     TRANSLATE_CALENDAR("translate_calendar"),
+    LAST_FETCH_OLD_EPISODES("last_fetch_old_episodes"),
+    FETCH_OLD_EPISODES_RANGE("fetch_old_episodes_range"),
 }

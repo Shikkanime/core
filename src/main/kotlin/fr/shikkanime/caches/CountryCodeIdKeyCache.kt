@@ -2,7 +2,7 @@ package fr.shikkanime.caches
 
 import fr.shikkanime.entities.enums.CountryCode
 
-data class CountryCodeAnimeIdKeyCache(
+data class CountryCodeIdKeyCache(
     val countryCode: CountryCode,
-    val animeId: String,
+    val id: String,
 )

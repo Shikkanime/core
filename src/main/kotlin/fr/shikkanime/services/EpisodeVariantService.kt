@@ -41,6 +41,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         end: ZonedDateTime
     ) = episodeVariantRepository.findAllByDateRange(countryCode, start, end)
 
+    fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
+
     fun getSimulcast(anime: Anime, entity: EpisodeMapping): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
 
@@ -83,7 +85,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     }
 
     fun save(episode: AbstractPlatform.Episode): EpisodeVariant {
-        val anime = animeService.findByName(episode.countryCode, episode.anime) ?: animeService.save(
+        val anime = animeService.findBySlug(episode.countryCode, StringUtils.toSlug(StringUtils.getShortName(episode.anime))) ?: animeService.save(
             Anime(
                 countryCode = episode.countryCode,
                 name = episode.anime,

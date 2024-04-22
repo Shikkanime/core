@@ -1,7 +1,6 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
-import com.microsoft.playwright.junit.UsePlaywright
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-@UsePlaywright
 class PrimeVideoPlatformTest {
     @Inject
     private lateinit var primeVideoPlatform: PrimeVideoPlatform
