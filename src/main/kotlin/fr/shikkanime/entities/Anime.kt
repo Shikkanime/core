@@ -15,7 +15,7 @@ import java.util.*
     name = "anime",
     indexes = [
         Index(name = "idx_anime_country_code", columnList = "country_code"),
-        Index(name = "idx_anime_slug", columnList = "slug"),
+        Index(name = "idx_anime_country_code_slug", columnList = "country_code, slug", unique = true)
     ]
 )
 @Indexed
@@ -45,7 +45,7 @@ class Anime(
         inverseJoinColumns = [JoinColumn(name = "simulcast_uuid")]
     )
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     var slug: String? = null,
     @Column(nullable = false, name = "last_release_date_time")
     var lastReleaseDateTime: ZonedDateTime = releaseDateTime,

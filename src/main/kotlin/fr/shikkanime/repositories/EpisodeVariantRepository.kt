@@ -30,4 +30,18 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .resultList
         }
     }
+
+    fun findByIdentifier(identifier: String): EpisodeVariant? {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+                .firstOrNull()
+        }
+    }
 }

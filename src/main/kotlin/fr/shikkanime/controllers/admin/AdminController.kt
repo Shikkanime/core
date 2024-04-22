@@ -3,15 +3,9 @@ package fr.shikkanime.controllers.admin
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.SimulcastCacheService
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -114,24 +108,7 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun invalidateSimulcasts(): Response {
-        animeService.findAll().forEach { anime ->
-            anime.simulcasts.clear()
-            animeService.update(anime)
-        }
-
-        episodeMappingService.findAll()
-            .filter { it.variants.any { variant -> variant.audioLocale != CountryCode.FR.locale } && it.episodeType != EpisodeType.FILM }
-            .sortedBy { it.releaseDateTime }
-            .forEach { episodeMapping ->
-                val anime = animeService.find(episodeMapping.anime!!.uuid!!)!!
-                animeService.addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
-
-                if (episodeMapping.anime != anime) {
-                    animeService.update(anime)
-                }
-            }
-
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, Simulcast::class.java)
+        animeService.recalculateSimulcasts()
         return Response.redirect(Link.DASHBOARD.href)
     }
 

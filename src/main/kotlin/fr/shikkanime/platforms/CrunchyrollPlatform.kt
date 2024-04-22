@@ -2,7 +2,7 @@ package fr.shikkanime.platforms
 
 import com.google.gson.JsonObject
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeAnimeIdKeyCache
+import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -64,14 +64,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         return@MapCache simulcastSeries
     }
 
-    val animeInfoCache = MapCache<CountryCodeAnimeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
+    val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
         val (token, cms) = identifiers[it.countryCode]!!
         val `object` = runBlocking {
             CrunchyrollWrapper.getObject(
                 it.countryCode.locale,
                 token,
                 cms,
-                it.animeId
+                it.id
             )
         }[0]
         val postersTall = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
@@ -137,7 +137,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
     }
 
-    private fun convertEpisode(countryCode: CountryCode, jsonObject: JsonObject): Episode {
+    fun convertEpisode(countryCode: CountryCode, jsonObject: JsonObject, needSimulcast: Boolean = true): Episode {
         val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
 
         val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
@@ -181,14 +181,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS, true)
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        if (checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || simulcasts[countryCode]!!.contains(animeName.lowercase())))
+        if (needSimulcast && checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || simulcasts[countryCode]!!.contains(animeName.lowercase())))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         val description = jsonObject.getAsString("description")?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
         val animeId = requireNotNull(episodeMetadata.getAsString("series_id")) { "Anime id is null" }
-        val crunchyrollAnimeContent = animeInfoCache[CountryCodeAnimeIdKeyCache(countryCode, animeId)]!!
+        val crunchyrollAnimeContent = animeInfoCache[CountryCodeIdKeyCache(countryCode, animeId)]!!
 
-        if (!checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
+        if (needSimulcast && !checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         return Episode(
@@ -227,7 +227,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         specialEpisodeRegex.find(episodeString)?.let {
             episodeType = EpisodeType.SPECIAL
-            number = it.groupValues[1].toInt()
+            number = it.groupValues[1].toIntOrNull() ?: -1
         }
 
         return Pair(number, episodeType)
