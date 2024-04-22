@@ -28,7 +28,6 @@ class PrimeVideoPlatform :
         val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.primeVideoSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
-
         val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode.name, key.countryCode.locale, id)
 
         return episodes.map {
