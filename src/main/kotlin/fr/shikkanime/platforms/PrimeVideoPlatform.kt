@@ -35,7 +35,7 @@ class PrimeVideoPlatform :
             val animeName = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" }
             val animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" }
             val image = requireNotNull(it.getAsString("image")) { "Image is null" }
-            val computedId = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Id is null" }
+            val computedId = requireNotNull(it.getAsString("id")) { "Id is null" }
             val url = requireNotNull(it.getAsString("url")) { "Url is null" }
 
             Episode(
