@@ -11,7 +11,7 @@ object PrimeVideoWrapper {
         val showName = document.selectFirst("h1[data-automation-id=\"title\"]")!!.text()
         val showBanner = document.selectFirst("img[data-testid=\"base-image\"]")!!.attr("src")
         val showDescription = document.selectFirst(".dv-dp-node-synopsis")!!.text()
-        val domEpisodes = document.selectFirst("ol.GG33WY")!!.select("li.c5qQpO")
+        val domEpisodes = document.selectFirst("ol.SIGk7D")?.select("li.c5qQpO") ?: return emptyList()
 
         return domEpisodes.mapNotNull { domEpisode ->
             val episodeTitle = domEpisode.selectFirst("span.P1uAb6")!!.text()
