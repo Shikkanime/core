@@ -19,14 +19,14 @@
                 <div class="position-relative">
                     <div class="position-relative">
                         <img src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image"
-                             alt="${su.sanitizeXSS(episodeMapping.anime.shortName)} episode preview image"
+                             alt="${su.sanitizeXSS(episodeMapping.anime.shortName)} episode preview"
                              class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if> rounded-top-4"
                              width="640" height="360">
 
                         <div class="position-absolute top-0 end-0 mt-1 d-flex">
                             <#list episodeMapping.platforms as platform>
                                 <img src="${baseUrl}/assets/img/platforms/${platform.image}"
-                                     alt="${platform.name} platform image"
+                                     alt="${platform.name}"
                                      class="rounded-circle me-1" width="20"
                                      height="20">
                             </#list>

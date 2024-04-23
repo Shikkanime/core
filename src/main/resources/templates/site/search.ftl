@@ -7,15 +7,17 @@
                    placeholder="Rechercher" autofocus @input="animes = (await search($event.target.value)).data">
         </div>
 
-        <div class="row g-3 justify-content-center" style="min-height: 50vh;">
+        <div class="row g-3 mt-3 justify-content-center" style="min-height: 50vh;">
             <template x-for="anime in animes">
-                <div class="col-md-2 col-6 mt-0">
+                <div class="col-md-2 col-6 mt-0 mb-4">
                     <article x-data="{hover:false}" class="shikk-element">
                         <a x-bind:href="'/animes/' + anime.slug" class="text-decoration-none text-white"
                            @mouseenter="hover = true" @mouseleave="hover = false">
                             <div class="position-relative">
                                 <img x-bind:src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=image'"
-                                     x-bind:alt="anime.shortName + ' anime image'" class="img-fluid rounded-top-4"
+                                     x-bind:alt="anime.shortName + ' anime'"
+                                     loading="lazy"
+                                     class="img-fluid rounded-top-4"
                                      width="480"
                                      height="720">
 
@@ -43,7 +45,7 @@
                                 </div>
 
                                 <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-top-4"
-                                     x-show="hover">
+                                     style="display: none;" x-show="hover">
                                     <div class="h6 text-truncate-2 fw-bold" x-text="anime.name.toUpperCase()"></div>
                                     <hr>
                                     <div class="text-truncate-6" x-text="anime.description"></div>
