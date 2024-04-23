@@ -1,13 +1,17 @@
 <#import "_navigation.ftl" as navigation />
 
 <@navigation.display canonicalUrl="${baseUrl}/search">
-    <div x-data="{animes: []}">
+    <div x-data="{
+        animes: [],
+        value: <#if query?? && query?has_content>'${query}'<#else>''</#if>
+    }" <#if query?? && query?has_content>x-init="animes = (await search(value)).data"</#if>>
         <div class="container my-3">
             <input type="text" id="search" class="form-control-lg w-100 bg-dark text-white"
-                   placeholder="Rechercher" autofocus @input="animes = (await search($event.target.value)).data">
+                   placeholder="Rechercher" autofocus
+                   x-model="value" @input="animes = (await search(value)).data">
         </div>
 
-        <div class="row g-3 mt-3 justify-content-center" style="min-height: 50vh;">
+        <div class="row g-3 mt-3 justify-content-center" style="min-height: 60vh;">
             <template x-for="anime in animes">
                 <div class="col-md-2 col-6 mt-0 mb-4">
                     <article x-data="{hover:false}" class="shikk-element">
@@ -72,8 +76,11 @@
             const trimmedQuery = query.trim();
 
             if (trimmedQuery.length === 0) {
+                window.history.pushState({}, '', '/search');
                 return [];
             }
+
+            window.history.pushState({}, '', '/search?q=' + encodeURIComponent(trimmedQuery));
 
             return axios.get('/api/v1/animes?name=' + trimmedQuery + '&limit=12', {signal: abortController.signal})
                 .then(response => response.data)

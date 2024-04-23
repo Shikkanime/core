@@ -1,3 +1,11 @@
+@font-face {
+    font-family: Satoshi;
+    src: url(/assets/fonts/Satoshi-Regular.woff2) format('woff2'),
+    url(/assets/fonts/Satoshi-Regular.woff) format('woff'),
+    url(/assets/fonts/Satoshi-Regular.ttf) format('truetype'),
+    url(/assets/fonts/Satoshi-Regular.eot) format('embedded-opentype');
+}
+
 body {
     background-color: #000;
     font-family: Satoshi, sans-serif;

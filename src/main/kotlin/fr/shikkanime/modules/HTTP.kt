@@ -38,18 +38,8 @@ fun Application.configureHTTP() {
         }
         status(HttpStatusCode.NotFound) { call, _ ->
             val path = call.request.path()
-
-            if (path.contains(".")) {
-                return@status
-            }
-
-            if (path.startsWith("/404")) {
-                return@status
-            }
-
-            if (!path.startsWith("/api") && !path.startsWith("/admin")) {
-                call.respondRedirect("/404")
-            }
+            if (isNotSiteRoute(path, "404")) return@status
+            call.respondRedirect("/404")
         }
     }
     install(ContentNegotiation) {
@@ -76,4 +66,8 @@ fun Application.configureHTTP() {
             url = Constant.baseUrl
         }
     }
+}
+
+private fun isNotSiteRoute(path: String, errorCode: String): Boolean {
+    return path.contains(".") || path.startsWith("/$errorCode") || (path.startsWith("/api") && path.startsWith("/admin"))
 }

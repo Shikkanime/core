@@ -20,6 +20,7 @@
 [#-- @ftlvariable name="seoLinks" type="kotlin.collections.AbstractList<fr.shikkanime.entities.enums.Link>" --]
 [#-- @ftlvariable name="su" type="fr.shikkanime.utils.StringUtils" --]
 [#-- @ftlvariable name="weeklyAnimes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.WeeklyAnimesDto>" --]
+[#-- @ftlvariable name="query" type="java.lang.String" --]
 
 [#-- @ftlvariable name="analyticsDomain" type="java.lang.String" --]
 [#-- @ftlvariable name="analyticsApi" type="java.lang.String" --]
