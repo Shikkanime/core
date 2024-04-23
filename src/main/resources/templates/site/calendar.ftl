@@ -24,8 +24,8 @@
                                    @mouseleave="hover = false">
                                     <div class="position-relative">
                                         <div class="position-relative">
-                                            <img src="${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner"
-                                                 alt="${su.sanitizeXSS(release.anime.shortName)} anime banner"
+                                            <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner"
+                                                 alt="${su.sanitizeXSS(release.anime.shortName)} anime"
                                                  class="img-fluid rounded-top-4" width="640"
                                                  height="360">
 
@@ -33,7 +33,7 @@
                                                 <div class="d-flex">
                                                     <#list release.platforms as platform>
                                                         <img src="${baseUrl}/assets/img/platforms/${platform.image}"
-                                                             alt="${platform.name} platform image"
+                                                             alt="${platform.name}"
                                                              class="rounded-circle me-1" width="20"
                                                              height="20">
                                                     </#list>
@@ -54,7 +54,7 @@
                                         </div>
 
                                         <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-4"
-                                             x-show="hover">
+                                             style="display: none;" x-show="hover">
                                             <#if release.anime.description??>
                                                 <div class="text-truncate-6">
                                                     ${release.anime.description}

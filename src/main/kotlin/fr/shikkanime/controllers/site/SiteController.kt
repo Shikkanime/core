@@ -17,6 +17,7 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
+import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
@@ -39,7 +40,7 @@ class SiteController {
     private fun error404(): Response {
         return Response.template(
             HttpStatusCode.NotFound,
-            "/site/404.ftl",
+            "/site/errors/404.ftl",
             "Page introuvable"
         )
     }
@@ -148,8 +149,15 @@ class SiteController {
 
     @Path("search")
     @Get
-    private fun search(): Response {
-        return Response.template(Link.SEARCH)
+    private fun search(
+        @QueryParam("q") query: String?,
+    ): Response {
+        return Response.template(
+            Link.SEARCH,
+            mutableMapOf(
+                "query" to query
+            )
+        )
     }
 
     @Path("calendar")

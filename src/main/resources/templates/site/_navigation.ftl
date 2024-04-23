@@ -9,7 +9,7 @@
                  style="backdrop-filter: blur(0.5rem);">
                 <div class="container-fluid px-md-5 d-md-flex">
                     <a class="navbar-brand" href="/">
-                        <img src="/assets/img/light_banner.webp" alt="Logo" width="181" height="24"
+                        <img src="/assets/img/light_banner.webp" alt="Shikkanime" width="181" height="24"
                              class="d-inline-block align-text-top">
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -44,7 +44,7 @@
                 <div class="col-md-4 d-flex align-items-center">
                     <div>
                         <a href="/" class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
-                            <img src="/assets/img/favicons/favicon-64x64.png" alt="Logo" width="24" height="24">
+                            <img src="/assets/img/favicons/favicon-64x64.png" alt="Shikkanime" width="24" height="24">
                         </a>
 
                         <#if seoDescription?? && seoDescription?length != 0>
@@ -117,5 +117,7 @@
                 </div>
             </footer>
         </div>
+
+        <script src="/assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     </@layout.main>
 </#macro>

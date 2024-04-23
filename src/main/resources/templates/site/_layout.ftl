@@ -63,8 +63,6 @@
     </head>
     <body>
     <#nested 0>
-
-    <script src="/assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     </body>
     </html>
 </#macro>

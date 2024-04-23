@@ -19,6 +19,9 @@ on:
   schedule:
     - cron: '33 14 * * 5'
 
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false -Dkotlin.incremental=false -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -XX:MaxMetaspaceSize=1024m"
+
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
@@ -41,8 +44,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #- language: java-kotlin
-          #  build-mode: autobuild
+          #          - language: java-kotlin
+          #            build-mode: autobuild
           - language: javascript-typescript
             build-mode: none
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
