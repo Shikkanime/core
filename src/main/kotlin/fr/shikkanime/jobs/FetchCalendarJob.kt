@@ -55,7 +55,7 @@ class FetchCalendarJob : AbstractJob {
                 val episodes = getEpisodes(elements, httpRequest)
 
                 val backgroundImage = getBackgroundImage() ?: return@use
-                val calendarImage = BufferedImage(backgroundImage.width, 800, BufferedImage.TYPE_INT_ARGB)
+                val calendarImage = BufferedImage(backgroundImage.width, 900, BufferedImage.TYPE_INT_ARGB)
                 val graphics = calendarImage.createGraphics()
                 graphics.setRenderingHints()
                 graphics.drawImage(backgroundImage, 0, 0, null)
