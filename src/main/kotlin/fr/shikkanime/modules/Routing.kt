@@ -182,7 +182,7 @@ private suspend fun handleRequest(
         }
     } catch (e: Exception) {
         logger.log(Level.SEVERE, "Error while calling method $method", e)
-        call.respond(HttpStatusCode.BadRequest)
+        call.respond(HttpStatusCode.InternalServerError)
     }
 }
 

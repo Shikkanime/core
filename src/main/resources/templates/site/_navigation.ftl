@@ -117,5 +117,7 @@
                 </div>
             </footer>
         </div>
+
+        <script src="/assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     </@layout.main>
 </#macro>
