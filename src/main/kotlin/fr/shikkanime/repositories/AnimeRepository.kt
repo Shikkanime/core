@@ -81,12 +81,18 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return bool
     }
 
-    fun findBySlug(slug: String): Anime? {
+    fun findBySlug(countryCode: CountryCode, slug: String): Anime? {
         return inTransaction { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
-            query.where(cb.equal(root[Anime_.slug], slug))
+
+            query.where(
+                cb.and(
+                    cb.equal(root[Anime_.countryCode], countryCode),
+                    cb.equal(root[Anime_.slug], slug)
+                )
+            )
 
             createReadOnlyQuery(entityManager, query)
                 .resultList

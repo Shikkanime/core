@@ -12,6 +12,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.MapCache
@@ -56,7 +57,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
         animeRepository.findAllByName(name, countryCode, page, limit)
 
-    fun findBySlug(slug: String) = animeRepository.findBySlug(slug)
+    fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
@@ -113,6 +114,25 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
             anime.simulcasts.add(simulcast)
         }
+    }
+
+    fun recalculateSimulcasts() {
+        findAll().forEach { anime ->
+            anime.simulcasts.clear()
+            update(anime)
+        }
+
+        episodeMappingService.findAll()
+            .filter { it.variants.any { variant -> variant.audioLocale != CountryCode.FR.locale } && it.episodeType != EpisodeType.FILM }
+            .sortedBy { it.releaseDateTime }
+            .forEach { episodeMapping ->
+                val anime = find(episodeMapping.anime!!.uuid!!)!!
+                addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
+
+                if (episodeMapping.anime != anime) {
+                    update(anime)
+                }
+            }
     }
 
     override fun save(entity: Anime): Anime {

@@ -123,7 +123,7 @@ class SiteController {
     @Path("animes/{slug}")
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
-        val anime = animeCacheService.findBySlug(slug) ?: return Response.redirect("/404")
+        val anime = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
         val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
 
         return Response.template(
@@ -136,6 +136,7 @@ class SiteController {
                     CountryCode.FR,
                     anime.uuid,
                     listOf(
+                        SortParameter("releaseDateTime", SortParameter.Order.ASC),
                         SortParameter("season", SortParameter.Order.ASC),
                         SortParameter("episodeType", SortParameter.Order.ASC),
                         SortParameter("number", SortParameter.Order.ASC),
