@@ -2,6 +2,7 @@ package fr.shikkanime.entities
 
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Genre
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -56,4 +57,9 @@ class Anime(
     @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "anime_genre", joinColumns = [JoinColumn(name = "anime_uuid")])
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @Enumerated(EnumType.STRING)
+    var genres: MutableSet<Genre> = mutableSetOf(),
 ) : ShikkEntity(uuid)
