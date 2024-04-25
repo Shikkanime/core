@@ -27,6 +27,8 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     fun findAllFollowedAnimesUUID(member: Member) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(member)
 
+    fun findAllFollowedAnimes(member: Member) = memberFollowAnimeRepository.findAllFollowedAnimes(member)
+
     fun findAllByAnime(anime: Anime) = memberFollowAnimeRepository.findAllByAnime(anime)
 
     fun findAllMissedAnimes(member: Member, page: Int, limit: Int) =

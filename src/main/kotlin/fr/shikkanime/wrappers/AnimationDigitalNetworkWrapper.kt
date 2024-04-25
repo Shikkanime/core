@@ -8,8 +8,9 @@ import java.time.ZonedDateTime
 
 object AnimationDigitalNetworkWrapper {
     data class Show(
-        val shortTitle: String?,
         val title: String,
+        val originalTitle: String?,
+        val shortTitle: String?,
         val image2x: String,
         val imageHorizontal2x: String,
         val summary: String?,

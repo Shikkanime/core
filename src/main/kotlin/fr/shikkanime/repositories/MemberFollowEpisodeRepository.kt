@@ -34,7 +34,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
-            query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.UUID])
+            query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid])
 
             query.where(
                 cb.equal(root[MemberFollowEpisode_.member], member)
@@ -109,6 +109,24 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
+        }
+    }
+
+    fun findAllByMemberAndAnime(member: Member, anime: Anime): List<MemberFollowEpisode> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            val episodeMapping = root.join(MemberFollowEpisode_.episode)
+            val animeMapping = episodeMapping.join(EpisodeMapping_.anime)
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.member], member),
+                cb.equal(animeMapping, anime)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
         }
     }
 

@@ -42,6 +42,21 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         }
     }
 
+    fun findAllFollowedAnimes(member: Member): List<MemberFollowAnime> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[MemberFollowAnime_.member], member)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllMissedAnimes(
         member: Member,
         page: Int,

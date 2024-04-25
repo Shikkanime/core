@@ -55,4 +55,8 @@ class Anime(
     @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "anime_genre", joinColumns = [JoinColumn(name = "anime_uuid")])
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var genres: MutableSet<String> = mutableSetOf(),
 ) : ShikkEntity(uuid)
