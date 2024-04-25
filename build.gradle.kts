@@ -1,6 +1,6 @@
 val ktorVersion = "2.3.10"
 val ktorSwaggerUiVersion = "2.8.0"
-val hibernateCoreVersion = "6.4.5.Final"
+val hibernateCoreVersion = "6.4.6.Final"
 val ehcacheVersion = "3.10.8"
 val glassfishJaxbVersion = "4.0.5"
 val hibernateSearchVersion = "7.1.1.Final"
