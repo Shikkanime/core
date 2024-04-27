@@ -333,6 +333,17 @@ object ImageService {
         animeImage: BufferedImage,
         backgroundImage: BufferedImage
     ) {
+        // Draw a rectangle behind the image
+        color = Color(0, 0, 0, 128)
+        fillRoundRect(
+            (backgroundImage.width - animeImage.width) / 2 - 10,
+            (backgroundImage.height - animeImage.height) / 2 + 115,
+            animeImage.width + 20,
+            animeImage.height + 20,
+            16,
+            16
+        )
+
         drawImage(
             makeRoundedCorner(animeImage, 16),
             (backgroundImage.width - animeImage.width) / 2,
@@ -436,6 +447,8 @@ object ImageService {
 
         color = adjustedTextColor
         font = fontTmp.deriveFont(65f)
+        // Bold
+        font = font.deriveFont(font.style or Font.BOLD)
         val animeName = episode.mapping.anime.shortName
         font = adjustFontSizeToFit(animeName, backgroundImage.width - 200)
         drawString(animeName, (backgroundImage.width - fontMetrics.stringWidth(animeName)) / 2f, 150f)
@@ -478,40 +491,34 @@ object ImageService {
     data class Tuple<A, B, C, D, E>(val a: A, val b: B, val c: C, val d: D, val e: E)
 
     private fun loadResources(episode: EpisodeVariantDto): Tuple<BufferedImage, BufferedImage, Font, BufferedImage, BufferedImage?> {
-        val mediaImageFolder =
-            this.javaClass.classLoader
-                .getResource("media-image")?.file?.let { File(it).takeIf { file -> file.exists() } }
-                ?: File(
-                    Constant.dataFolder,
-                    "media-image"
-                )
+        val mediaImageFolder = File(Constant.dataFolder, "media-image")
         require(mediaImageFolder.exists()) { "Media image folder not found" }
         val backgroundsFolder = File(mediaImageFolder, "backgrounds")
         require(backgroundsFolder.exists()) { "Background folder not found" }
         require(backgroundsFolder.listFiles()!!.isNotEmpty()) { "Backgrounds not found" }
         val bannerFile = File(mediaImageFolder, "banner.png")
         require(bannerFile.exists()) { "Banner image not found" }
-        val fontFile = File(mediaImageFolder, "font.ttf")
-        require(fontFile.exists()) { "Font not found" }
+
+        val font = FileManager.getInputStreamFromResource("assets/fonts/Satoshi-Regular.ttf").run {
+            val font = Font.createFont(Font.TRUETYPE_FONT, this)
+            close()
+            font
+        }
+        requireNotNull(font) { "Font not found" }
 
         val backgroundImage = ImageIO.read(backgroundsFolder.listFiles()!!.random())
         val tmpBannerImage = ImageIO.read(bannerFile)
         val bannerScale = 3
         val bannerImage = tmpBannerImage.resize(tmpBannerImage.width / bannerScale, tmpBannerImage.height / bannerScale)
-        val font = Font.createFont(Font.TRUETYPE_FONT, fontFile)
         val scale = 1.0
-        val animeImage =
-            ImageIO.read(URI(episode.mapping.anime.image!!).toURL()).resize((480 / scale).toInt(), (720 / scale).toInt())
+        val animeImage = ImageIO.read(URI(episode.mapping.anime.image!!).toURL())
+            .resize((480 / scale).toInt(), (720 / scale).toInt())
 
-        val platformImage = try {
-            val resourceAsStream =
-                this.javaClass.classLoader.getResourceAsStream("assets/img/platforms/${episode.platform.image}")
-            val resized = ImageIO.read(resourceAsStream).resize(32, 32)
-            resourceAsStream?.close()
-            resized
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+        val platformImage =
+            FileManager.getInputStreamFromResource("assets/img/platforms/${episode.platform.image}").run {
+                val image = ImageIO.read(this).resize(32, 32)
+                close()
+                image
         }
 
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
