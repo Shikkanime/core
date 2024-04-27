@@ -58,6 +58,15 @@ class FetchCalendarJob : AbstractJob {
                 val calendarImage = BufferedImage(backgroundImage.width, 900, BufferedImage.TYPE_INT_ARGB)
                 val graphics = calendarImage.createGraphics()
                 graphics.setRenderingHints()
+
+                val font = FileManager.getInputStreamFromResource("assets/fonts/Satoshi-Regular.ttf").run {
+                    val font = Font.createFont(Font.TRUETYPE_FONT, this)
+                    close()
+                    font
+                }
+                requireNotNull(font) { "Font not found" }
+                graphics.font = font.deriveFont(22f)
+
                 graphics.drawImage(backgroundImage, 0, 0, null)
                 graphics.color = Color(0xFFFFFF)
                 graphics.font = graphics.font.deriveFont(24f)
@@ -120,6 +129,7 @@ class FetchCalendarJob : AbstractJob {
         episodes.sortedBy { it.platform.lowercase() }.groupBy { it.platform }.forEach { (platformName, episodes) ->
             graphics.color = Color(0xFFFFFF)
             graphics.font = graphics.font.deriveFont(22f)
+            graphics.font = graphics.font.deriveFont(graphics.font.style or Font.BOLD)
             val platform = Platform.findByName(platformName) ?: return@forEach
 
             val platformImage = getPlatformImage(platform)
@@ -161,7 +171,7 @@ class FetchCalendarJob : AbstractJob {
 
         drawAnimeLine(graphics, anime, season, y).also {
             graphics.drawString("Épisodes $min-$max", episodeX, y + 50)
-            episodesString.add("$anime${if (season > 1) " S${season}" else ""} - Épisodes $min-$max")
+            episodesString.add("$anime${if (season > 1) " S${season}" else ""} Épisodes $min-$max")
         }
     }
 
@@ -174,7 +184,7 @@ class FetchCalendarJob : AbstractJob {
         episodesString: MutableList<String>
     ) = drawAnimeLine(graphics, anime, episode.season, y).also {
         graphics.drawString(episode.episode, episodeX, y + 50)
-        episodesString.add("$anime${if (episode.season > 1) " S${episode.season}" else ""} - ${episode.episode}")
+        episodesString.add("$anime${if (episode.season > 1) " S${episode.season}" else ""} ${episode.episode}")
     }
 
     private fun getPlatformImage(platform: Platform): BufferedImage? {
@@ -255,6 +265,8 @@ class FetchCalendarJob : AbstractJob {
     }.flatten()
 
     private fun drawAnimeLine(graphics: Graphics2D, anime: String, season: Int, y: Int): Boolean {
+        val x = 65
+
         val s = "${anime}${if (season > 1) " S${season}" else ""}"
         val width = graphics.fontMetrics.stringWidth(s)
 
@@ -277,12 +289,12 @@ class FetchCalendarJob : AbstractJob {
                 second = secondHalfTry.joinToString(" ") { it.value }
             }
 
-            graphics.drawString(first, 25, y + 50)
-            graphics.drawString(second, 25, y + 80)
+            graphics.drawString(first, x, y + 50)
+            graphics.drawString(second, x, y + 80)
             return true
         }
 
-        graphics.drawString(s, 25, y + 50)
+        graphics.drawString(s, x, y + 50)
         return false
     }
 }
