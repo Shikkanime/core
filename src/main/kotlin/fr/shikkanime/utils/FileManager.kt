@@ -4,6 +4,7 @@ import nu.pattern.OpenCV
 import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
+import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -55,5 +56,15 @@ object FileManager {
         }
 
         zipOutputStream.close()
+    }
+
+    fun getInputStreamFromResource(resource: String): BufferedInputStream {
+        return try {
+            this.javaClass.classLoader.getResourceAsStream(resource)?.buffered()
+                ?: throw Exception("Resource not found")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Failed to get input stream from resource")
+        }
     }
 }
