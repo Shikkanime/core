@@ -75,6 +75,13 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
                 // If the episode already exists, we delete the current episode
                 super.delete(episode)
+
+                if (existing.lastReleaseDateTime.isBefore(episode.lastReleaseDateTime)) {
+                    existing.lastReleaseDateTime = episode.lastReleaseDateTime
+                }
+
+                existing.lastUpdateDateTime = ZonedDateTime.now()
+                update(existing)
                 MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
                 return find(existing.uuid!!)
             } else {

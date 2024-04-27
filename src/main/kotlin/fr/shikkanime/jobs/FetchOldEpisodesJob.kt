@@ -120,7 +120,7 @@ class FetchOldEpisodesJob : AbstractJob {
         animeService.recalculateSimulcasts()
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         logger.info("Updating config to the next fetch date...")
-        config.propertyValue = from.plusDays(1).toString()
+        config.propertyValue = from.toString()
         configService.update(config)
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
     }
