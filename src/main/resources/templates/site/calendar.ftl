@@ -24,7 +24,8 @@
                                    @mouseleave="hover = false">
                                     <div class="position-relative">
                                         <div class="position-relative">
-                                            <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner"
+                                            <img loading="lazy"
+                                                 src="${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner"
                                                  alt="${su.sanitizeXSS(release.anime.shortName)} anime"
                                                  class="img-fluid rounded-top-4" width="640"
                                                  height="360">

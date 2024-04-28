@@ -6,7 +6,8 @@ import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.utils.withUTCString
 
-class EpisodeVariantToEpisodeVariantWithoutMappingDtoConverter : AbstractConverter<EpisodeVariant, EpisodeVariantWithoutMappingDto>() {
+class EpisodeVariantToEpisodeVariantWithoutMappingDtoConverter :
+    AbstractConverter<EpisodeVariant, EpisodeVariantWithoutMappingDto>() {
     override fun convert(from: EpisodeVariant): EpisodeVariantWithoutMappingDto {
         return EpisodeVariantWithoutMappingDto(
             uuid = from.uuid!!,

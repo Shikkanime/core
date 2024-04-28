@@ -74,7 +74,13 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         )
         embedMessage.setTitle(episodeDto.mapping.anime.shortName, getShikkanimeUrl(episodeDto))
         embedMessage.setThumbnail(episodeDto.mapping.anime.image)
-        embedMessage.setDescription("**${episodeDto.mapping.title ?: "Untitled"}**\n${StringUtils.toEpisodeString(episodeDto)}")
+        embedMessage.setDescription(
+            "**${episodeDto.mapping.title ?: "Untitled"}**\n${
+                StringUtils.toEpisodeString(
+                    episodeDto
+                )
+            }"
+        )
         embedMessage.setImage(episodeDto.mapping.image)
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())

@@ -33,7 +33,11 @@ abstract class AbstractSocialNetwork {
 
     fun getEpisodeMessage(episodeDto: EpisodeVariantDto, baseMessage: String): String {
         val uncensored = if (episodeDto.uncensored) " non censuré" else ""
-        val isVoice = if (LangType.fromAudioLocale(episodeDto.mapping.anime.countryCode, episodeDto.audioLocale) == LangType.VOICE) " en VF " else " "
+        val isVoice = if (LangType.fromAudioLocale(
+                episodeDto.mapping.anime.countryCode,
+                episodeDto.audioLocale
+            ) == LangType.VOICE
+        ) " en VF " else " "
 
         var configMessage = baseMessage
         configMessage = configMessage.replace("{SHIKKANIME_URL}", getShikkanimeUrl(episodeDto))

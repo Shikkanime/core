@@ -55,7 +55,12 @@ class AnimeCacheService : AbstractCacheService {
     }
 
     private val weeklyCache =
-        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java)) {
+        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
+            classes = listOf(
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java
+            )
+        ) {
             animeService.getWeeklyAnimes(it.localDate, it.countryCode)
         }
 

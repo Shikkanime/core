@@ -168,22 +168,26 @@
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantReleaseDateTime" class="form-label">Release date time</label>
-                                        <input type="datetime-local" class="form-control" id="variantReleaseDateTime" name="variantReleaseDateTime"
+                                        <input type="datetime-local" class="form-control" id="variantReleaseDateTime"
+                                               name="variantReleaseDateTime"
                                                x-model="variant.releaseDateTime.substring(0, 16)" disabled>
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantPlatform" class="form-label">Platform</label>
-                                        <input type="text" class="form-control" id="variantPlatform" name="variantPlatform"
+                                        <input type="text" class="form-control" id="variantPlatform"
+                                               name="variantPlatform"
                                                x-model="variant.platform.name" disabled>
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantAudioLocale" class="form-label">Audio locale</label>
-                                        <input type="text" class="form-control" id="variantAudioLocale" name="variantAudioLocale"
+                                        <input type="text" class="form-control" id="variantAudioLocale"
+                                               name="variantAudioLocale"
                                                x-model="variant.audioLocale" disabled>
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantIdentifier" class="form-label">Identifier</label>
-                                        <input type="text" class="form-control" id="variantIdentifier" name="variantIdentifier"
+                                        <input type="text" class="form-control" id="variantIdentifier"
+                                               name="variantIdentifier"
                                                x-model="variant.identifier" disabled>
                                     </div>
                                     <div class="col-md-auto">
@@ -192,7 +196,8 @@
                                                x-model="variant.url" disabled>
                                     </div>
                                     <div class="col-md-auto">
-                                        <input type="checkbox" class="form-check-input" id="variantUncensored" name="variantUncensored"
+                                        <input type="checkbox" class="form-check-input" id="variantUncensored"
+                                               name="variantUncensored"
                                                x-model="variant.uncensored" disabled>
                                         <label for="variantUncensored" class="form-label">Uncensored</label>
                                     </div>

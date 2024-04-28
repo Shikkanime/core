@@ -46,7 +46,8 @@
                 <div class="card p-3">
                     <div class="d-flex mb-4">
                         <h4 class="card-title">Simulcasts</h4>
-                        <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
+                        <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate"
+                           class="btn btn-danger ms-auto me-0">Invalidate</a>
                     </div>
 
                     <ul class="list-group list-group-numbered">
@@ -56,7 +57,8 @@
                                     <div class="fw-bold">${simulcast.season} ${simulcast.year?c}</div>
                                 </div>
 
-                                <span class="badge text-bg-primary rounded-pill" id="simulcast-${simulcast.uuid}"></span>
+                                <span class="badge text-bg-primary rounded-pill"
+                                      id="simulcast-${simulcast.uuid}"></span>
                             </li>
 
                             <script>
@@ -83,7 +85,8 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label" for="size">Size</label>
-                            <input id="size" name="size" type="number" class="form-control disabled" value="${size?c}" disabled>
+                            <input id="size" name="size" type="number" class="form-control disabled" value="${size?c}"
+                                   disabled>
                         </div>
 
                         <div class="col-md-4">

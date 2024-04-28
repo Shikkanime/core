@@ -12,7 +12,11 @@ import java.util.*
 @Table(
     name = "episode_mapping",
     indexes = [
-        Index(name = "idx_episode_mapping_anime_episode_type_season_number", columnList = "anime_uuid, episode_type, season, number", unique = true),
+        Index(
+            name = "idx_episode_mapping_anime_episode_type_season_number",
+            columnList = "anime_uuid, episode_type, season, number",
+            unique = true
+        ),
     ]
 )
 @Cacheable

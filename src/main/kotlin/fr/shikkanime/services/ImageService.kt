@@ -519,7 +519,7 @@ object ImageService {
                 val image = ImageIO.read(this).resize(32, 32)
                 close()
                 image
-        }
+            }
 
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }

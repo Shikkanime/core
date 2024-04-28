@@ -68,7 +68,9 @@ class FetchOldEpisodesJob : AbstractJob {
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
         val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).toList().sorted()
-        val simulcasts = dates.map { "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall") }.toSet()
+        val simulcasts = dates.map {
+            "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
+        }.toSet()
         val episodes = mutableListOf<AbstractPlatform.Episode>()
         val start = System.currentTimeMillis()
         logger.info("Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
@@ -118,14 +120,22 @@ class FetchOldEpisodesJob : AbstractJob {
 
         logger.info("Updating simulcasts...")
         animeService.recalculateSimulcasts()
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
+        MapCache.invalidate(
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java,
+            Simulcast::class.java
+        )
         logger.info("Updating config to the next fetch date...")
         config.propertyValue = from.toString()
         configService.update(config)
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
     }
 
-    private fun fetchAnimationDigitalNetwork(countryCode: CountryCode, dates: List<LocalDate>): List<AbstractPlatform.Episode> {
+    private fun fetchAnimationDigitalNetwork(
+        countryCode: CountryCode,
+        dates: List<LocalDate>
+    ): List<AbstractPlatform.Episode> {
         val episodes = mutableListOf<AbstractPlatform.Episode>()
 
         dates.forEachIndexed { _, date ->
@@ -140,14 +150,18 @@ class FetchOldEpisodesJob : AbstractJob {
                 try {
                     episodes.addAll(
                         animationDigitalNetworkPlatform.convertEpisode(
-                        countryCode,
-                        episodeJson.asJsonObject,
-                        zonedDateTime,
-                        false
+                            countryCode,
+                            episodeJson.asJsonObject,
+                            zonedDateTime,
+                            false
                         )
                     )
                 } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while converting episode (Episode ID: ${episodeJson.getAsString("id")})", e)
+                    logger.log(
+                        Level.SEVERE,
+                        "Error while converting episode (Episode ID: ${episodeJson.getAsString("id")})",
+                        e
+                    )
                 }
             }
         }
@@ -181,8 +195,14 @@ class FetchOldEpisodesJob : AbstractJob {
         series.forEach {
             val postersTall = it.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
             val postersWide = it.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
-            val image = postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
-            val banner = postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString("source")!!
+            val image =
+                postersTall?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString(
+                    "source"
+                )!!
+            val banner =
+                postersWide?.maxByOrNull { poster -> poster.asJsonObject.getAsInt("width")!! }?.asJsonObject?.getAsString(
+                    "source"
+                )!!
             val description = it.getAsString("description")
 
             crunchyrollPlatform.animeInfoCache[CountryCodeIdKeyCache(countryCode, it.getAsString("id")!!)] =
@@ -228,7 +248,11 @@ class FetchOldEpisodesJob : AbstractJob {
                         )
                     )
                 } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while converting episode (Episode ID: ${episodeJson.getAsString("id")})", e)
+                    logger.log(
+                        Level.SEVERE,
+                        "Error while converting episode (Episode ID: ${episodeJson.getAsString("id")})",
+                        e
+                    )
                 }
             }
         }
