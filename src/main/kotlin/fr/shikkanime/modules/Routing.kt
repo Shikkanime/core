@@ -260,6 +260,7 @@ private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any
                 null
             }
         }
+
         else -> throw Exception("Unknown type ${kParameter.type}")
     }
 }

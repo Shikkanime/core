@@ -18,7 +18,8 @@
         <insert tableName="config">
             <column name="uuid" valueComputed="gen_random_uuid()"/>
             <column name="property_key" value="animation_digital_network_simulcast_detection_regex"/>
-            <column name="property_value" value="\((premier épisode |diffusion des épisodes |diffusion du premier épisode|diffusion de l'épisode 1 le)"/>
+            <column name="property_value"
+                    value="\((premier épisode |diffusion des épisodes |diffusion du premier épisode|diffusion de l'épisode 1 le)"/>
         </insert>
     </changeSet>
 </databaseChangeLog>

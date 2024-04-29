@@ -243,7 +243,8 @@ class FetchCalendarJob : AbstractJob {
 
         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.TRANSLATE_CALENDAR)) {
             val alternativeTitles =
-                list.find { it.text().contains("Titre alternatif") }?.text()?.replace("Titre alternatif :", "")?.split("/")
+                list.find { it.text().contains("Titre alternatif") }?.text()?.replace("Titre alternatif :", "")
+                    ?.split("/")
                     ?: emptyList()
             val detectedLanguage = languageCacheService.detectLanguage(title)
 

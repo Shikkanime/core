@@ -64,7 +64,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val previousEpisode = animeEpisodes.lastOrNull {
             it.releaseDateTime.isBefore(entity.releaseDateTime) &&
                     it.episodeType == entity.episodeType &&
-                    it.variants.map { variant -> variant.audioLocale }.any { audioLocale -> audioLocale != anime.countryCode!!.locale }
+                    it.variants.map { variant -> variant.audioLocale }
+                        .any { audioLocale -> audioLocale != anime.countryCode!!.locale }
         }
 
         val diff = previousEpisode?.releaseDateTime?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
@@ -81,24 +82,27 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             else -> currentSimulcast
         }
 
-        return simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!) ?: choosenSimulcast
+        return simulcastService.findBySeasonAndYear(choosenSimulcast.season!!, choosenSimulcast.year!!)
+            ?: choosenSimulcast
     }
 
     fun save(episode: AbstractPlatform.Episode): EpisodeVariant {
-        val anime = animeService.findBySlug(episode.countryCode, StringUtils.toSlug(StringUtils.getShortName(episode.anime))) ?: animeService.save(
-            Anime(
-                countryCode = episode.countryCode,
-                name = episode.anime,
-                releaseDateTime = episode.releaseDateTime,
-                lastReleaseDateTime = episode.releaseDateTime,
-                image = episode.animeImage,
-                banner = episode.animeBanner,
-                description = episode.animeDescription,
-                slug = StringUtils.toSlug(StringUtils.getShortName(episode.anime))
-            ).apply {
-                status = StringUtils.getStatus(this)
-            }
-        )
+        val anime =
+            animeService.findBySlug(episode.countryCode, StringUtils.toSlug(StringUtils.getShortName(episode.anime)))
+                ?: animeService.save(
+                    Anime(
+                        countryCode = episode.countryCode,
+                        name = episode.anime,
+                        releaseDateTime = episode.releaseDateTime,
+                        lastReleaseDateTime = episode.releaseDateTime,
+                        image = episode.animeImage,
+                        banner = episode.animeBanner,
+                        description = episode.animeDescription,
+                        slug = StringUtils.toSlug(StringUtils.getShortName(episode.anime))
+                    ).apply {
+                        status = StringUtils.getStatus(this)
+                    }
+                )
 
         val mapping = getEpisodeMapping(anime, episode)
         mapping.lastReleaseDateTime = episode.releaseDateTime

@@ -70,7 +70,15 @@ class FetchEpisodesJob : AbstractJob {
         }
 
         val savedEpisodes = episodes
-            .sortedWith(compareBy({ it.releaseDateTime }, { it.anime }, { it.season }, { it.episodeType }, { it.number }, { it.audioLocale }))
+            .sortedWith(
+                compareBy(
+                    { it.releaseDateTime },
+                    { it.anime },
+                    { it.season },
+                    { it.episodeType },
+                    { it.number },
+                    { it.audioLocale })
+            )
             .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !identifiers.contains(it.getIdentifier()) }
             .mapNotNull {
                 try {

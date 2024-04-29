@@ -3,7 +3,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
     <property global="false" name="id" value="1713181588710"/>
     <property global="false" name="author" value="Ziedelth"/>
 
@@ -89,31 +90,39 @@
     <changeSet id="${id}-3" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
-                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_MAPPING_ON_ANIME_UUID" foreignKeyTableName="episode_mapping"/>
+                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_MAPPING_ON_ANIME_UUID"
+                                            foreignKeyTableName="episode_mapping"/>
             </not>
         </preConditions>
 
-        <addForeignKeyConstraint baseColumnNames="anime_uuid" baseTableName="episode_mapping" constraintName="FK_EPISODE_MAPPING_ON_ANIME_UUID" referencedColumnNames="uuid" referencedTableName="anime"/>
+        <addForeignKeyConstraint baseColumnNames="anime_uuid" baseTableName="episode_mapping"
+                                 constraintName="FK_EPISODE_MAPPING_ON_ANIME_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="anime"/>
     </changeSet>
 
     <changeSet id="${id}-4" author="${author}">
         <preConditions onFail="MARK_RAN">
             <not>
-                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_VARIANT_ON_MAPPING_UUID" foreignKeyTableName="episode_variant"/>
+                <foreignKeyConstraintExists foreignKeyName="FK_EPISODE_VARIANT_ON_MAPPING_UUID"
+                                            foreignKeyTableName="episode_variant"/>
             </not>
         </preConditions>
 
-        <addForeignKeyConstraint baseColumnNames="mapping_uuid" baseTableName="episode_variant" constraintName="FK_EPISODE_VARIANT_ON_MAPPING_UUID" referencedColumnNames="uuid" referencedTableName="episode_mapping"/>
+        <addForeignKeyConstraint baseColumnNames="mapping_uuid" baseTableName="episode_variant"
+                                 constraintName="FK_EPISODE_VARIANT_ON_MAPPING_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="episode_mapping"/>
     </changeSet>
 
     <changeSet id="${id}-5" author="${author}">
         <preConditions>
             <not>
-                <indexExists indexName="idx_episode_mapping_anime_episode_type_season_number" tableName="episode_mapping"/>
+                <indexExists indexName="idx_episode_mapping_anime_episode_type_season_number"
+                             tableName="episode_mapping"/>
             </not>
         </preConditions>
 
-        <createIndex indexName="idx_episode_mapping_anime_episode_type_season_number" tableName="episode_mapping" unique="true">
+        <createIndex indexName="idx_episode_mapping_anime_episode_type_season_number" tableName="episode_mapping"
+                     unique="true">
             <column name="anime_uuid"/>
             <column name="episode_type"/>
             <column name="season"/>

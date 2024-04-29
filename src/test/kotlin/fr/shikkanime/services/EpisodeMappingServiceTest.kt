@@ -36,7 +36,14 @@ class EpisodeMappingServiceTest {
 
     @Test
     fun update() {
-        val anime = animeService.save(Anime(countryCode = CountryCode.FR, name = "Test Anime", image = "test.jpg", slug = "test-anime"))
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                name = "Test Anime",
+                image = "test.jpg",
+                slug = "test-anime"
+            )
+        )
         val episodeMapping = episodeMappingService.save(
             EpisodeMapping(
                 anime = anime,

@@ -35,18 +35,25 @@ class DisneyPlusPlatform :
 
     override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
 
-    private val identifiers = MapCache<CountryCode, String>(Duration.ofHours(3).plusMinutes(30), listOf(Config::class.java)) {
-        return@MapCache runBlocking {
-            DisneyPlusWrapper.getAccessToken(
-                configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION),
-                configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_REFRESH_TOKEN)
-            )
+    private val identifiers =
+        MapCache<CountryCode, String>(Duration.ofHours(3).plusMinutes(30), listOf(Config::class.java)) {
+            return@MapCache runBlocking {
+                DisneyPlusWrapper.getAccessToken(
+                    configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION),
+                    configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_REFRESH_TOKEN)
+                )
+            }
         }
-    }
 
     private val seasons = MapCache<CountryCodeDisneyPlusSimulcastKeyCache, List<String>>(Duration.ofDays(1)) {
         val accessToken = identifiers[it.countryCode]!!
-        return@MapCache runBlocking { DisneyPlusWrapper.getSeasons(accessToken, it.countryCode, it.disneyPlusSimulcast.name) }
+        return@MapCache runBlocking {
+            DisneyPlusWrapper.getSeasons(
+                accessToken,
+                it.countryCode,
+                it.disneyPlusSimulcast.name
+            )
+        }
     }
 
     override suspend fun fetchApiContent(

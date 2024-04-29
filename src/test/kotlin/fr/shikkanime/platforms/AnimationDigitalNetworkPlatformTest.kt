@@ -144,7 +144,8 @@ class AnimationDigitalNetworkPlatformTest {
         val episodes = platform.fetchEpisodes(
             zonedDateTime,
             File(
-                ClassLoader.getSystemClassLoader().getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
+                ClassLoader.getSystemClassLoader()
+                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
         )
