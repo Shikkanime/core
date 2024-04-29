@@ -43,8 +43,8 @@ abstract class AbstractSocialNetwork {
         configMessage = configMessage.replace("{SHIKKANIME_URL}", getShikkanimeUrl(episodeDto))
         configMessage = configMessage.replace("{URL}", episodeDto.url)
         configMessage = configMessage.replace("{PLATFORM_ACCOUNT}", platformAccount(episodeDto.platform))
-        configMessage =
-            configMessage.replace("{ANIME_HASHTAG}", "#${StringUtils.getHashtag(episodeDto.mapping.anime.shortName)}")
+        configMessage = configMessage.replace("{PLATFORM_NAME}", episodeDto.platform.name)
+        configMessage = configMessage.replace("{ANIME_HASHTAG}", "#${StringUtils.getHashtag(episodeDto.mapping.anime.shortName)}")
         configMessage = configMessage.replace("{ANIME_TITLE}", episodeDto.mapping.anime.shortName)
         configMessage = configMessage.replace("{EPISODE_INFORMATION}", "${information(episodeDto)}${uncensored}")
         configMessage = configMessage.replace("{VOICE}", isVoice)
