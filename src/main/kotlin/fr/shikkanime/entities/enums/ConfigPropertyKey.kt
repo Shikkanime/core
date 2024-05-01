@@ -32,4 +32,5 @@ enum class ConfigPropertyKey(val key: String) {
     TRANSLATE_CALENDAR("translate_calendar"),
     LAST_FETCH_OLD_EPISODES("last_fetch_old_episodes"),
     FETCH_OLD_EPISODES_RANGE("fetch_old_episodes_range"),
+    FETCH_OLD_EPISODES_LIMIT("fetch_old_episodes_limit"),
 }

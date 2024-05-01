@@ -3,9 +3,14 @@ package fr.shikkanime.controllers.admin
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -109,6 +114,12 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun invalidateSimulcasts(): Response {
         animeService.recalculateSimulcasts()
+        MapCache.invalidate(
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java,
+            Simulcast::class.java
+        )
         return Response.redirect(Link.DASHBOARD.href)
     }
 
