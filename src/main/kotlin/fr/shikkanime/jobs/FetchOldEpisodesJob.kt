@@ -50,6 +50,9 @@ class FetchOldEpisodesJob : AbstractJob {
     private lateinit var configService: ConfigService
 
     @Inject
+    private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
     private lateinit var episodeCacheService: ConfigCacheService
 
     override fun run() {
@@ -80,9 +83,10 @@ class FetchOldEpisodesJob : AbstractJob {
 
         episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
 
+        val limit = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT, 5)
         episodes.groupBy { it.anime + it.releaseDateTime.toLocalDate().toString() }.forEach { (_, animeDayEpisodes) ->
-            if (animeDayEpisodes.size > 5) {
-                logger.warning("More than 5 episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
+            if (animeDayEpisodes.size > limit) {
+                logger.warning("More than $limit episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
                 episodes.removeAll(animeDayEpisodes)
                 return@forEach
             }
