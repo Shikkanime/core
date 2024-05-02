@@ -11,7 +11,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.EpisodeMappingRepository
-import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
@@ -22,7 +21,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     private lateinit var episodeMappingRepository: EpisodeMappingRepository
 
     @Inject
-    private lateinit var episodeVariantRepository: EpisodeVariantRepository
+    private lateinit var episodeVariantService: EpisodeVariantService
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -39,6 +38,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     ) = episodeMappingRepository.findAllBy(countryCode, anime, sort, page, limit, status)
 
     fun findAllUuidAndImage() = episodeMappingRepository.findAllUuidAndImage()
+
+    fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime)
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
@@ -70,9 +71,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
             if (existing != null) {
                 // Set the variants of the current episode to the existing episode
-                episode.variants.forEach { variant ->
+                episodeVariantService.findAllByMapping(episode).forEach { variant ->
                     variant.mapping = existing
-                    episodeVariantRepository.update(variant)
+                    episodeVariantService.update(variant)
                 }
 
                 // If the episode already exists, we delete the current episode
@@ -113,9 +114,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
         episode.status = StringUtils.getStatus(episode)
         episode.lastUpdateDateTime = ZonedDateTime.now()
-        var update = super.update(episode)
-
-        update = updateEpisodeMappingVariants(entity, episode, update, uuid)
+        val update = super.update(episode)
+        updateEpisodeMappingVariants(entity, episode, update)
         MapCache.invalidate(EpisodeMapping::class.java)
         return update
     }
@@ -138,7 +138,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
             val oldAnime = animeService.find(oldAnimeId)!!
 
-            if (oldAnime.mappings.isEmpty()) {
+            if (findAllByAnime(oldAnime).isEmpty()) {
                 animeService.delete(oldAnime)
                 MapCache.invalidate(Anime::class.java)
             }
@@ -163,28 +163,24 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         entity: EpisodeMappingDto,
         episode: EpisodeMapping,
         update: EpisodeMapping,
-        uuid: UUID
-    ): EpisodeMapping {
-        var update1 = update
+    ) {
         if (!entity.variants.isNullOrEmpty()) {
-            val oldList = mutableSetOf(*episode.variants.toTypedArray())
-            episode.variants.clear()
+            val oldList = mutableSetOf(*episodeVariantService.findAllByMapping(episode).toTypedArray())
 
             entity.variants.forEach { variantDto ->
-                val variant = episodeVariantRepository.find(variantDto.uuid) ?: return@forEach
-                episode.variants.add(variant)
+                val variant = episodeVariantService.find(variantDto.uuid) ?: return@forEach
+                variant.mapping = update
                 oldList.removeIf { it.uuid == variantDto.uuid }
+                episodeVariantService.update(variant)
             }
 
-            oldList.forEach { episodeVariantRepository.delete(it) }
+            oldList.forEach { episodeVariantService.delete(it) }
             MapCache.invalidate(EpisodeVariant::class.java)
-            update1 = find(uuid)!!
         }
-        return update1
     }
 
     override fun delete(entity: EpisodeMapping) {
-        entity.variants.forEach { episodeVariantRepository.delete(it) }
+        episodeVariantService.findAllByMapping(entity).forEach { episodeVariantService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
     }

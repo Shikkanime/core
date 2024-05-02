@@ -43,6 +43,17 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 
+    fun findAllAudioLocalesByAnime(anime: Anime) = episodeVariantRepository.findAllAudioLocalesByAnime(anime)
+
+    private fun findAllAudioLocalesByMapping(mapping: EpisodeMapping) =
+        episodeVariantRepository.findAllAudioLocalesByMapping(mapping)
+
+    fun findAllByAnime(anime: Anime) = episodeVariantRepository.findAllByAnime(anime)
+
+    fun findAllByMapping(mapping: EpisodeMapping) = episodeVariantRepository.findAllByMapping(mapping)
+
+    fun findAllSimulcasted(countryCode: CountryCode) = episodeVariantRepository.findAllSimulcasted(countryCode)
+
     fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
 
     fun getSimulcast(anime: Anime, entity: EpisodeMapping): Simulcast {
@@ -61,13 +72,12 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val nextSimulcast = simulcasts[2]
 
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates[0])
-        val animeEpisodes = anime.mappings.sortedBy { episode -> episode.releaseDateTime }
+        val animeEpisodes = episodeMappingService.findAllByAnime(anime).sortedBy { episode -> episode.releaseDateTime }
 
         val previousEpisode = animeEpisodes.lastOrNull {
             it.releaseDateTime.isBefore(entity.releaseDateTime) &&
                     it.episodeType == entity.episodeType &&
-                    it.variants.map { variant -> variant.audioLocale }
-                        .any { audioLocale -> audioLocale != anime.countryCode!!.locale }
+                    findAllAudioLocalesByMapping(it).any { audioLocale -> audioLocale != anime.countryCode!!.locale }
         }
 
         val diff = previousEpisode?.releaseDateTime?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
@@ -179,7 +189,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
 
             if (newCheck != null) {
-                if (mapping.variants.isEmpty()) {
+                if (findAllByMapping(mapping).isEmpty()) {
                     episodeMappingService.delete(mapping)
                 }
 

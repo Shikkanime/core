@@ -12,7 +12,6 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.MapCache
@@ -63,34 +62,39 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
-        val start = startOfWeekDay.minusDays(7).atStartOfDay(zoneId)
-        val end = startOfWeekDay.plusDays(7).atTime(23, 59, 59).atZone(zoneId)
-        val list = episodeVariantService.findAllByDateRange(countryCode, start, end)
-        val pattern = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
+
+        val list = episodeVariantService.findAllByDateRange(
+            countryCode,
+            startOfWeekDay.minusDays(7).atStartOfDay(zoneId),
+            startOfWeekDay.plusDays(7).atTime(23, 59, 59).atZone(zoneId)
+        )
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
             val zonedDate = date.atStartOfDay(zoneId)
-            val dateTitle = date.format(pattern).capitalizeWords()
-            val episodeVariants =
-                list.filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
+
+            val episodeVariants = list.filter {
+                it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek
+            }
 
             WeeklyAnimesDto(
-                dateTitle,
+                date.format(DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale)))
+                    .capitalizeWords(),
                 episodeVariants.distinctBy { episodeVariant ->
                     val anime = episodeVariant.mapping!!.anime!!
                     anime.uuid.toString() + LangType.fromAudioLocale(anime.countryCode!!, episodeVariant.audioLocale!!)
                 }.map { distinctVariant ->
                     val anime = distinctVariant.mapping!!.anime!!
-                    val platforms = episodeVariants.filter { it.mapping == distinctVariant.mapping }
-                        .mapNotNull(EpisodeVariant::platform)
-                        .sorted()
-                        .distinct()
-
                     WeeklyAnimeDto(
                         AbstractConverter.convert(anime, AnimeDto::class.java),
                         distinctVariant.releaseDateTime.withUTCString(),
                         LangType.fromAudioLocale(anime.countryCode!!, distinctVariant.audioLocale!!),
-                        AbstractConverter.convert(platforms, PlatformDto::class.java)!!
+                        AbstractConverter.convert(
+                            episodeVariants.filter { it.mapping == distinctVariant.mapping }
+                                .mapNotNull(EpisodeVariant::platform)
+                                .sorted()
+                                .distinct(),
+                            PlatformDto::class.java
+                        )!!
                     )
                 }.sortedWith(compareBy({
                     ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime()
@@ -124,9 +128,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             update(anime)
         }
 
-        episodeMappingService.findAll()
-            .filter { it.variants.any { variant -> variant.audioLocale != CountryCode.FR.locale } && it.episodeType != EpisodeType.FILM }
-            .sortedBy { it.releaseDateTime }
+        episodeVariantService.findAllSimulcasted(CountryCode.FR)
             .forEach { episodeMapping ->
                 val anime = find(episodeMapping.anime!!.uuid!!)!!
                 addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
@@ -209,7 +211,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     override fun delete(entity: Anime) {
-        entity.mappings.forEach { episodeMappingService.delete(it) }
+        episodeMappingService.findAllByAnime(entity).forEach { episodeMappingService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(Anime::class.java)
     }

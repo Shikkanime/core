@@ -13,7 +13,8 @@ import java.util.*
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class EpisodeVariant(
     override val uuid: UUID? = null,
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var mapping: EpisodeMapping? = null,
     @Column(nullable = false, name = "release_date_time")
     var releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
