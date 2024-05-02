@@ -41,6 +41,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         end: ZonedDateTime
     ) = episodeVariantRepository.findAllByDateRange(countryCode, start, end)
 
+    fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
+
     fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
 
     fun getSimulcast(anime: Anime, entity: EpisodeMapping): Simulcast {

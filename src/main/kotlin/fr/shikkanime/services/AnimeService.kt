@@ -49,13 +49,15 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         status: Status? = null,
     ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, status)
 
+    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
+        animeRepository.findAllByName(name, countryCode, page, limit)
+
+    fun findAllUuidImageAndBanner() = animeRepository.findAllUuidImageAndBanner()
+
     fun preIndex() = animeRepository.preIndex()
 
     fun findByName(countryCode: CountryCode, name: String?) =
         animeRepository.findByName(countryCode, name)
-
-    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
-        animeRepository.findAllByName(name, countryCode, page, limit)
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 

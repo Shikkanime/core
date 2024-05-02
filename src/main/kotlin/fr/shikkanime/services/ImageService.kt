@@ -247,15 +247,22 @@ object ImageService {
         val animeService = Constant.injector.getInstance(AnimeService::class.java)
         val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
 
-        animeService.findAll().forEach {
-            animeService.addImage(it.uuid!!, it.image!!, bypass)
-            animeService.addBanner(it.uuid, it.banner, bypass)
+        animeService.findAllUuidImageAndBanner().forEach {
+            val uuid = it[0] as UUID
+            val image = it[1] as String
+            val banner = it[2] as String?
+
+            animeService.addImage(uuid, image, bypass)
+            animeService.addBanner(uuid, banner, bypass)
         }
 
-        episodeMappingService.findAll().forEach {
+        episodeMappingService.findAllUuidAndImage().forEach {
+            val uuid = it[0] as UUID
+            val image = it[1] as String
+
             episodeMappingService.addImage(
-                it.uuid as UUID,
-                it.image?.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+                uuid,
+                image.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 bypass
             )
         }

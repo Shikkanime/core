@@ -5,7 +5,9 @@ import fr.shikkanime.entities.EpisodeMapping_
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.EpisodeVariant_
 import fr.shikkanime.entities.enums.CountryCode
+import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
+import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     override fun getEntityClass() = EpisodeVariant::class.java
@@ -25,6 +27,31 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
 
             query.where(cb.and(countryPredicate, datePredicate))
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+        }
+    }
+
+    fun findAllTypeIdentifier(): List<Tuple> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            val episodeMappingPath = root[EpisodeVariant_.mapping]
+            val animePath = episodeMappingPath[EpisodeMapping_.anime]
+
+            query.multiselect(
+                animePath[Anime_.countryCode],
+                animePath.get<UUID>(Anime_.UUID),
+                root[EpisodeVariant_.platform],
+                episodeMappingPath[EpisodeMapping_.episodeType],
+                episodeMappingPath[EpisodeMapping_.season],
+                episodeMappingPath[EpisodeMapping_.number],
+                root[EpisodeVariant_.audioLocale],
+                root[EpisodeVariant_.identifier]
+            )
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
