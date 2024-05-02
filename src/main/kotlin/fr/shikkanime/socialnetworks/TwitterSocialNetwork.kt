@@ -62,14 +62,6 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendMessage(message: String) {
-        login()
-        if (!isInitialized) return
-        if (twitter == null) return
-
-        twitter!!.v2.createTweet(text = message)
-    }
-
     override fun platformAccount(platform: PlatformDto): String {
         return when (platform.id) {
             "ANIM" -> "@ADNanime"
