@@ -3,16 +3,17 @@ package fr.shikkanime.jobs
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import jakarta.inject.Inject
+import jakarta.persistence.Tuple
 import java.io.ByteArrayOutputStream
 import java.time.ZonedDateTime
+import java.util.*
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
@@ -47,8 +48,8 @@ class FetchEpisodesJob : AbstractJob {
         isRunning = true
 
         if (!isInitialized) {
-            val variants = episodeVariantService.findAll()
-            identifiers.addAll(variants.mapNotNull { it.identifier }.toSet())
+            val variants = episodeVariantService.findAllTypeIdentifier()
+            identifiers.addAll(variants.map { it[7] as String }.toSet())
 
             // COMPARE COUNTRY, ANIME, PLATFORM, EPISODE TYPE, SEASON, NUMBER, AND LANG TYPE
             variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
@@ -115,6 +116,20 @@ class FetchEpisodesJob : AbstractJob {
                 }
             }
         }
+    }
+
+    private fun getTypeIdentifier(tuple: Tuple): String {
+        val country = tuple[0] as CountryCode
+        val anime = tuple[1] as UUID
+        val platform = tuple[2] as Platform
+        val episodeType = tuple[3] as EpisodeType
+        val season = tuple[4] as Int
+        val number = tuple[5] as Int
+        val audioLocale = tuple[6] as String
+
+        val langType = LangType.fromAudioLocale(country, audioLocale)
+        val typeIdentifier = "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
+        return typeIdentifier
     }
 
     private fun getTypeIdentifier(episodeVariant: EpisodeVariant): String {

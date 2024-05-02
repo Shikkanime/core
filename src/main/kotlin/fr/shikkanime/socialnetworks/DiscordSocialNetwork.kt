@@ -52,13 +52,6 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendMessage(message: String) {
-        login()
-        if (!isInitialized) return
-
-        getTextChannels()?.forEach { it.sendMessage(message).queue() }
-    }
-
     override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
         login()
         if (!isInitialized) return

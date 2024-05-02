@@ -3,11 +3,13 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
 import org.hibernate.search.mapper.orm.Search
+import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
@@ -79,6 +81,16 @@ class AnimeRepository : AbstractRepository<Anime>() {
         bool.must(searchPredicateFactory.match().field(Anime_.NAME).matching(name))
         countryCode?.let { bool.must(searchPredicateFactory.match().field(Anime_.COUNTRY_CODE).matching(it)) }
         return bool
+    }
+
+    fun findAllUuidImageAndBanner(): List<Tuple> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            query.multiselect(root.get<UUID>(Anime_.UUID), root[Anime_.image], root[Anime_.banner])
+            entityManager.createQuery(query).resultList
+        }
     }
 
     fun findBySlug(countryCode: CountryCode, slug: String): Anime? {

@@ -5,7 +5,9 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
+import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
@@ -47,6 +49,16 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.orderBy(orders)
             buildPageableQuery(entityManager.createQuery(query), page, limit)
+        }
+    }
+
+    fun findAllUuidAndImage(): List<Tuple> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            query.multiselect(root.get<UUID>(EpisodeMapping_.UUID), root[EpisodeMapping_.image])
+            entityManager.createQuery(query).resultList
         }
     }
 

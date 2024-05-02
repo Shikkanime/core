@@ -17,8 +17,6 @@ abstract class AbstractSocialNetwork {
     abstract fun login()
     abstract fun logout()
 
-    abstract fun sendMessage(message: String)
-
     open fun platformAccount(platform: PlatformDto): String {
         return platform.name
     }

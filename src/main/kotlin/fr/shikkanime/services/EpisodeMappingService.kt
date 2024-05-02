@@ -38,6 +38,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         status: Status? = null
     ) = episodeMappingRepository.findAllBy(countryCode, anime, sort, page, limit, status)
 
+    fun findAllUuidAndImage() = episodeMappingRepository.findAllUuidAndImage()
+
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 

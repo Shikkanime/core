@@ -66,12 +66,6 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendMessage(message: String) {
-        checkSession()
-        if (!isInitialized) return
-        runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message) }
-    }
-
     override fun platformAccount(platform: PlatformDto): String {
         return when (platform.id) {
             "CRUN" -> "@crunchyroll_fr"

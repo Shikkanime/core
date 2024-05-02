@@ -62,12 +62,6 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendMessage(message: String) {
-        checkSession()
-        if (!isInitialized) return
-        runBlocking { BskyWrapper.createRecord(accessJwt!!, did!!, message) }
-    }
-
     override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
