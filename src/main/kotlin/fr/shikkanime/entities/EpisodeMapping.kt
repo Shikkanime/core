@@ -23,7 +23,8 @@ import java.util.*
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class EpisodeMapping(
     override val uuid: UUID? = null,
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var anime: Anime? = null,
     @Column(nullable = false, name = "release_date_time")
     var releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
@@ -46,8 +47,6 @@ class EpisodeMapping(
     var description: String? = null,
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
-    @OneToMany(mappedBy = "mapping", fetch = FetchType.EAGER)
-    var variants: MutableSet<EpisodeVariant> = mutableSetOf(),
     @Column(nullable = true, name = "status")
     @Enumerated(EnumType.STRING)
     var status: Status = Status.VALID,

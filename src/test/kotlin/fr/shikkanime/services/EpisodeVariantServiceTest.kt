@@ -5,6 +5,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
@@ -18,6 +19,9 @@ import java.time.ZonedDateTime
 class EpisodeVariantServiceTest {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeMappingService: EpisodeMappingService
 
     @Inject
     private lateinit var configService: ConfigService
@@ -34,6 +38,8 @@ class EpisodeVariantServiceTest {
 
     @AfterEach
     fun tearDown() {
+        episodeVariantService.deleteAll()
+        episodeMappingService.deleteAll()
         configService.deleteAll()
         animeService.deleteAll()
         MapCache.invalidate(Config::class.java, Anime::class.java)
@@ -62,23 +68,35 @@ class EpisodeVariantServiceTest {
 
         anime.releaseDateTime = finalRelease.minusWeeks(12)
         anime.simulcasts.add(Simulcast(season = "AUTUMN", year = 2023))
+        animeService.save(anime)
 
-        anime.mappings.addAll((1..<12).map { i ->
-            EpisodeMapping(
+        (1..<12).map { i ->
+            episodeMappingService.save(
+                EpisodeMapping(
                 anime = anime,
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = i,
                 releaseDateTime = anime.releaseDateTime.plusWeeks(i.toLong()),
-                variants = mutableSetOf(EpisodeVariant(audioLocale = "ja-JP"))
-            )
-        })
+                    image = "test.jpg",
+                )
+            ).apply {
+                episodeVariantService.save(
+                    EpisodeVariant(
+                        mapping = this,
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "test-episode-$i",
+                        url = "https://test.com/episode-$i",
+                    )
+                )
+            }
+        }
 
         `when`(episode.releaseDateTime).thenReturn(finalRelease)
         `when`(episode.episodeType).thenReturn(EpisodeType.EPISODE)
         `when`(episode.number).thenReturn(12)
 
-        animeService.save(anime)
         val simulcast = episodeVariantService.getSimulcast(anime, episode)
 
         assertEquals("AUTUMN", simulcast.season)

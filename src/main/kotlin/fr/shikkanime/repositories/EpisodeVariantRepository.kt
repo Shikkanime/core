@@ -1,10 +1,8 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Anime_
-import fr.shikkanime.entities.EpisodeMapping_
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.EpisodeVariant_
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
 import java.util.*
@@ -52,6 +50,83 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 root[EpisodeVariant_.audioLocale],
                 root[EpisodeVariant_.identifier]
             )
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+        }
+    }
+
+    fun findAllAudioLocalesByAnime(anime: Anime): List<String> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(String::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(root[EpisodeVariant_.audioLocale])
+                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
+                .distinct(true)
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+        }
+    }
+
+    fun findAllAudioLocalesByMapping(mapping: EpisodeMapping): List<String> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(String::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(root[EpisodeVariant_.audioLocale])
+                .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+                .distinct(true)
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+        }
+    }
+
+    fun findAllByAnime(anime: Anime): List<EpisodeVariant> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+        }
+    }
+
+    fun findAllByMapping(mapping: EpisodeMapping): List<EpisodeVariant> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+        }
+    }
+
+    fun findAllSimulcasted(countryCode: CountryCode): List<EpisodeMapping> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(EpisodeMapping::class.java)
+            val root = query.from(getEntityClass())
+
+            query.distinct(true)
+                .select(root[EpisodeVariant_.mapping])
+                .where(
+                    cb.and(
+                        cb.notEqual(root[EpisodeVariant_.audioLocale], countryCode.locale),
+                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM)
+                    )
+                )
+                .orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]))
 
             createReadOnlyQuery(entityManager, query)
                 .resultList

@@ -56,8 +56,7 @@ class FetchOldEpisodesJobTest {
 
         val animes = animeService.findAll()
         assertTrue(animes.isNotEmpty())
-        assertTrue(animes.all { it.mappings.isNotEmpty() })
-        val mappings = animes.flatMap { it.mappings }
-        assertTrue(mappings.all { it.variants.isNotEmpty() })
+        assertTrue(animes.all { episodeMappingService.findAllByAnime(it).isNotEmpty() })
+        assertTrue(animes.all { episodeVariantService.findAllByAnime(it).isNotEmpty() })
     }
 }

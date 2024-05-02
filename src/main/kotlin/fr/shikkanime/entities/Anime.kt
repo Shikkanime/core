@@ -44,6 +44,7 @@ class Anime(
         joinColumns = [JoinColumn(name = "anime_uuid")],
         inverseJoinColumns = [JoinColumn(name = "simulcast_uuid")]
     )
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
     @Column(nullable = false)
     var slug: String? = null,
@@ -52,6 +53,4 @@ class Anime(
     @Column(nullable = true, name = "status")
     @Enumerated(EnumType.STRING)
     var status: Status = Status.VALID,
-    @OneToMany(mappedBy = "anime", fetch = FetchType.EAGER)
-    var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
 ) : ShikkEntity(uuid)

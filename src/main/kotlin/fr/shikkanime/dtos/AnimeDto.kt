@@ -18,6 +18,6 @@ data class AnimeDto(
     val description: String?,
     val simulcasts: List<SimulcastDto>?,
     val audioLocales: List<String>? = null,
-    val langTypes: Set<LangType>? = null,
+    val langTypes: List<LangType>? = null,
     val status: Status? = null,
 )
