@@ -38,6 +38,7 @@ class StringUtilsTest {
             "Mushoku Tensei: Jobless Reincarnation" to "Mushoku Tensei: Jobless Reincarnation",
             "Yuru Camp" to "Yuru Camp – Au grand air",
             "Studio Apartment, Good Lighting, Angel Included" to "Studio Apartment, Good Lighting, Angel Included",
+            "Je survivrai grâce aux potions !" to "Je survivrai grâce aux potions !",
         )
 
         list.forEach { (expected, input) ->
@@ -52,6 +53,7 @@ class StringUtilsTest {
             "Moi, quand je me réincarne en Slime" to "moi-quand-je-me-reincarne-en-slime",
             "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability" to "i-was-reincarnated-as-the-7th-prince",
             "Studio Apartment, Good Lighting, Angel Included" to "studio-apartment-good-lighting-angel-included",
+            "Je survivrai grâce aux potions !" to "je-survivrai-grace-aux-potions",
         )
 
         list.forEach { (input, expected) ->
