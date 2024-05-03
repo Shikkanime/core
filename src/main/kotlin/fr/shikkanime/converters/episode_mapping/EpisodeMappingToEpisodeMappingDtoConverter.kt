@@ -35,10 +35,10 @@ class EpisodeMappingToEpisodeMappingDtoConverter : AbstractConverter<EpisodeMapp
             platforms = convert(
                 variants.mapNotNull { it.platform }.sortedBy { it.name }.toSet(),
                 PlatformDto::class.java
-            ),
+            )?.toList(),
             langTypes = variants.map { LangType.fromAudioLocale(from.anime!!.countryCode!!, it.audioLocale!!) }
-                .sorted()
-                .toSet(),
+                .distinct()
+                .sorted(),
             status = from.status
         )
     }

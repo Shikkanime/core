@@ -8,6 +8,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
@@ -81,7 +82,7 @@ class FetchOldEpisodesJob : AbstractJob {
         episodes.addAll(fetchAnimationDigitalNetwork(CountryCode.FR, dates))
         episodes.addAll(fetchCrunchyroll(CountryCode.FR, simulcasts))
 
-        episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
+        episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates || it.episodeType == EpisodeType.FILM }
 
         val limit = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT, 5)
         episodes.groupBy { it.anime + it.releaseDateTime.toLocalDate().toString() }.forEach { (_, animeDayEpisodes) ->

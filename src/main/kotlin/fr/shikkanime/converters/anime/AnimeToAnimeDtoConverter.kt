@@ -34,7 +34,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
                 SimulcastDto::class.java
             )?.toList(),
             audioLocales = audioLocales,
-            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.sorted(),
+            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted(),
             status = from.status,
         )
     }
