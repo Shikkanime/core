@@ -185,7 +185,7 @@ class FetchOldEpisodesJob : AbstractJob {
                     accessToken,
                     sortBy = CrunchyrollWrapper.SortType.POPULARITY,
                     type = CrunchyrollWrapper.MediaType.SERIES,
-                    100,
+                    200,
                     simulcast = simulcastId
                 )
             }
@@ -213,7 +213,7 @@ class FetchOldEpisodesJob : AbstractJob {
                 CrunchyrollPlatform.CrunchyrollAnimeContent(image = image, banner = banner, description = description)
         }
 
-        val episodeIds = ids.parallelStream().map { seriesId ->
+        val episodeIds = ids.flatMap { seriesId ->
             runBlocking { CrunchyrollWrapper.getSeasons(countryCode.locale, accessToken, cms, seriesId) }
                 .filter { jsonObject ->
                     jsonObject.getAsJsonArray("subtitle_locales").map { it.asString }.contains(countryCode.locale)
@@ -230,9 +230,9 @@ class FetchOldEpisodesJob : AbstractJob {
                     }
                 }
                 .map { jsonObject -> jsonObject.getAsString("id")!! }
-        }.toList().flatten().toSet()
+        }.toSet()
 
-        episodeIds.chunked(25).parallelStream().forEach { episodeIdsChunked ->
+        episodeIds.chunked(25).forEach { episodeIdsChunked ->
             val `object` = runBlocking {
                 CrunchyrollWrapper.getObject(
                     countryCode.locale,
