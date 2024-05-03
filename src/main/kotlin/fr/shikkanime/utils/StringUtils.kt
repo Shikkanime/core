@@ -126,6 +126,7 @@ object StringUtils {
                 episodeMapping.anime!!.countryCode!!,
                 languageCacheService
             ) ||
+            episodeMapping.title.isNullOrBlank() ||
             episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
         ) Status.INVALID else Status.VALID
     }
