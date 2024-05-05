@@ -1,16 +1,22 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
+import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
+    @Inject
+    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+
     override fun getEntityClass() = EpisodeVariant::class.java
 
     fun findAllByDateRange(
+        member: Member?,
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
@@ -23,8 +29,16 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val countryPredicate =
                 cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
             val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
+            val predicates = mutableListOf(countryPredicate, datePredicate)
 
-            query.where(cb.and(countryPredicate, datePredicate))
+            member?.let {
+                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime].`in`(
+                    memberFollowAnimeService.getAllFollowedAnimes(it)
+                )
+                predicates.add(animePredicate)
+            }
+
+            query.where(cb.and(*predicates.toTypedArray()))
 
             createReadOnlyQuery(entityManager, query)
                 .resultList

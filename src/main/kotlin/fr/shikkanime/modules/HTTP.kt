@@ -1,8 +1,11 @@
 package fr.shikkanime.modules
 
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import freemarker.cache.ClassTemplateLoader
 import io.github.smiley4.ktorswaggerui.SwaggerUI
+import io.github.smiley4.ktorswaggerui.data.AuthScheme
+import io.github.smiley4.ktorswaggerui.data.AuthType
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
@@ -14,6 +17,9 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import java.util.logging.Level
+
+private val logger = LoggerFactory.getLogger("HTTP")
 
 fun Application.configureHTTP() {
     install(Compression) {
@@ -34,6 +40,7 @@ fun Application.configureHTTP() {
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            logger.log(Level.SEVERE, "Internal server error", cause)
             call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
         }
         status(HttpStatusCode.NotFound) { call, _ ->
@@ -53,6 +60,11 @@ fun Application.configureHTTP() {
     install(CachingHeaders) {
     }
     install(SwaggerUI) {
+        securityScheme("BearerAuth") {
+            type = AuthType.HTTP
+            scheme = AuthScheme.BEARER
+            bearerFormat = "jwt"
+        }
         swagger {
             swaggerUrl = "api/swagger"
             forwardRoot = false
@@ -69,5 +81,5 @@ fun Application.configureHTTP() {
 }
 
 private fun isNotSiteRoute(path: String, errorCode: String): Boolean {
-    return path.contains(".") || path.startsWith("/$errorCode") || (path.startsWith("/api") && path.startsWith("/admin"))
+    return path.contains(".") || path.startsWith("/$errorCode") || path.startsWith("/api") || path.startsWith("/admin")
 }
