@@ -52,6 +52,8 @@ fun Application.configureRouting() {
 
     environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
+        // If call is completed, the headers are already set
+        if (call.response.status()?.value != null) return@subscribe
         setSecurityHeaders(call, configCacheService)
     }
 
