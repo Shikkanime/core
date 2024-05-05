@@ -21,18 +21,6 @@ class CrunchyrollWrapperTest {
     }
 
     @Test
-    fun getCMS() {
-        assertNotNull(cms)
-    }
-
-    @Test
-    fun getCMSError() {
-        assertThrows<Exception> {
-            runBlocking { CrunchyrollWrapper.getCMS(OLD_TOKEN) }
-        }
-    }
-
-    @Test
     fun getBrowse() {
         val newlyAdded = runBlocking { CrunchyrollWrapper.getBrowse(locale, token!!) }
         assertNotNull(newlyAdded)
@@ -44,12 +32,6 @@ class CrunchyrollWrapperTest {
         assertThrows<Exception> {
             runBlocking { CrunchyrollWrapper.getBrowse(locale, OLD_TOKEN) }
         }
-    }
-
-    @Test
-    fun getObject() {
-        val `object` = runBlocking { CrunchyrollWrapper.getObject(locale, token!!, cms!!, "G9DUEM48Z") }
-        assertNotNull(`object`)
     }
 
     @Test
@@ -86,13 +68,11 @@ class CrunchyrollWrapperTest {
 
     companion object {
         private var token: String? = null
-        private var cms: CrunchyrollWrapper.CMS? = null
 
         @JvmStatic
         @BeforeAll
         fun setUp() {
             token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-            cms = runBlocking { CrunchyrollWrapper.getCMS(token!!) }
         }
     }
 }
