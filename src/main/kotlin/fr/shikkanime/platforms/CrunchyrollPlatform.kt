@@ -34,15 +34,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
-    private val identifiers = MapCache<CountryCode, Pair<String, CrunchyrollWrapper.CMS>>(Duration.ofMinutes(30)) {
+    private val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
         val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val cms = runBlocking { CrunchyrollWrapper.getCMS(token) }
-        return@MapCache token to cms
+        return@MapCache token
     }
 
     val simulcasts = MapCache<CountryCode, Set<String>>(Duration.ofHours(1)) {
         val simulcastSeries = mutableSetOf<String>()
-        val accessToken = identifiers[it]!!.first
+        val accessToken = identifiers[it]!!
         val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2)
             .map { simulcast -> simulcast.getAsString("id") }
 
@@ -65,15 +64,15 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     }
 
     val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
-        val (token, cms) = identifiers[it.countryCode]!!
+        val token = identifiers[it.countryCode]!!
         val `object` = runBlocking {
-            CrunchyrollWrapper.getObject(
+            CrunchyrollWrapper.getSeries(
                 it.countryCode.locale,
                 token,
-                cms,
                 it.id
             )
         }[0]
+
         val postersTall = `object`.getAsJsonObject("images").getAsJsonArray("poster_tall")[0].asJsonArray
         val postersWide = `object`.getAsJsonObject("images").getAsJsonArray("poster_wide")[0].asJsonArray
         val image =
@@ -85,7 +84,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 "source"
             )
         val description = `object`.getAsString("description")
-        val simulcast = `object`.getAsJsonObject("series_metadata").getAsBoolean("is_simulcast") ?: false
+        val simulcast = `object`.getAsBoolean("is_simulcast") ?: false
 
         if (image.isNullOrEmpty()) {
             throw Exception("Image is null or empty")
@@ -105,7 +104,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): List<JsonObject> {
         return CrunchyrollWrapper.getBrowse(
             key.locale,
-            identifiers[key]!!.first,
+            identifiers[key]!!,
             size = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
         )
     }
@@ -147,15 +146,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             requireNotNull(episodeMetadata.getAsString("eligible_region")) { "Eligible region is null" }
         if (!eligibleRegion.contains(countryCode.name)) throw EpisodeNotAvailableInCountryException("Episode of $animeName is not available in ${countryCode.name}")
 
-        val audio = episodeMetadata.getAsString("audio_locale")?.takeIf { it.isNotBlank() }
-        val isDubbed = audio == countryCode.locale
+        val audioLocale = requireNotNull(episodeMetadata.getAsString("audio_locale")) { "Audio locale is null" }
+        val isDubbed = audioLocale == countryCode.locale
         val subtitles = episodeMetadata.getAsJsonArray("subtitle_locales").map { it.asString!! }
 
         if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale))) throw EpisodeNoSubtitlesOrVoiceException(
             "Episode is not available in ${countryCode.name} with subtitles or voice"
         )
 
-        val audioLocale = requireNotNull(episodeMetadata.getAsString("audio_locale")) { "Audio locale is null" }
         val id = requireNotNull(jsonObject.getAsString("id")) { "Id is null" }
 
         val releaseDate =
