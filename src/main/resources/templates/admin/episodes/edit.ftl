@@ -146,7 +146,7 @@
                                        aria-describedby="basic-addon">
 
                                 <a class="input-group-text" id="basic-addon"
-                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="episode.image">
+                                   style="cursor: pointer" target="_blank" :href="episode.image">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>
@@ -170,7 +170,8 @@
                                         <label for="variantReleaseDateTime" class="form-label">Release date time</label>
                                         <input type="datetime-local" class="form-control" id="variantReleaseDateTime"
                                                name="variantReleaseDateTime"
-                                               x-model="variant.releaseDateTime.substring(0, 16)" disabled>
+                                               :value="variant.releaseDateTime.substring(0, 16)"
+                                               @input="variant.releaseDateTime = $event.target.value + ':00Z'">
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantPlatform" class="form-label">Platform</label>
@@ -192,8 +193,17 @@
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantUrl" class="form-label">URL</label>
-                                        <input type="text" class="form-control" id="variantUrl" name="variantUrl"
-                                               x-model="variant.url" disabled>
+
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="variantUrl" name="variantUrl"
+                                                   x-model="variant.url" aria-label="Image"
+                                                   aria-describedby="basic-addon" disabled>
+
+                                            <a class="input-group-text" id="basic-addon" style="cursor: pointer"
+                                               target="_blank" :href="variant.url">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        </div>
                                     </div>
                                     <div class="col-md-auto">
                                         <input type="checkbox" class="form-check-input" id="variantUncensored"
@@ -202,7 +212,7 @@
                                         <label for="variantUncensored" class="form-label">Uncensored</label>
                                     </div>
                                     <div class="col-md-auto">
-                                        <img x-bind:src="'/api/v1/episode-mappings/' + variant.uuid + '/media-image'"
+                                        <img :src="'/api/v1/episode-mappings/' + variant.uuid + '/media-image'"
                                              class="rounded-4 w-25" alt="Variant image">
                                     </div>
                                 </div>
