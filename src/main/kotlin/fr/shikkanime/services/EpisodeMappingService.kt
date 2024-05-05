@@ -172,6 +172,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             entity.variants.forEach { variantDto ->
                 val variant = episodeVariantService.find(variantDto.uuid) ?: return@forEach
                 variant.mapping = update
+
+                if (variantDto.releaseDateTime.isNotBlank() && variantDto.releaseDateTime != variant.releaseDateTime.toString()) {
+                    variant.releaseDateTime = ZonedDateTime.parse(variantDto.releaseDateTime)
+                }
+
                 oldList.removeIf { it.uuid == variantDto.uuid }
                 episodeVariantService.update(variant)
             }

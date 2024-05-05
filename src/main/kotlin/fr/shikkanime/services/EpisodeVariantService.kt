@@ -139,7 +139,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
         )
 
-        MapCache.invalidate(EpisodeVariant::class.java)
+        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
         return savedEntity
     }
 
