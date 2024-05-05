@@ -7,6 +7,7 @@ import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
@@ -19,6 +20,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoField
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
@@ -70,9 +72,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
             val zonedDate = date.atStartOfDay(zoneId)
 
-            val episodeVariants = list.filter {
-                it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek
-            }
+            val episodeVariants = list.sortedByDescending { it.releaseDateTime }
+                .filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
 
             WeeklyAnimesDto(
                 date.format(DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale)))
@@ -92,7 +93,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                                 .sorted()
                                 .distinct(),
                             PlatformDto::class.java
-                        )!!
+                        )!!,
+                        // If variant is same week as startOfWeekDay, return it
+                        if (distinctVariant.releaseDateTime.withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]) {
+                            AbstractConverter.convert(distinctVariant, EpisodeVariantWithoutMappingDto::class.java)
+                        } else {
+                            null
+                        }
                     )
                 }.sortedWith(compareBy({
                     ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime()
