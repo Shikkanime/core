@@ -3,6 +3,7 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
@@ -15,9 +16,14 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
+import io.ktor.utils.io.*
+import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.util.*
+import javax.imageio.ImageIO
 
 @Controller("/api/v1/members")
 class MemberController {
@@ -193,5 +199,45 @@ class MemberController {
     )
     private fun unfollowEpisode(@JWTUser uuidUser: UUID, @BodyParam episode: GenericDto): Response {
         return memberFollowEpisodeService.unfollow(uuidUser, episode)
+    }
+
+    @Path("/image")
+    @Post
+    @JWTAuthenticated
+    @OpenAPI(
+        description = "Upload an profile image",
+        responses = [
+            OpenAPIResponse(200, "Profile image uploaded successfully"),
+            OpenAPIResponse(400, "Invalid file format"),
+            OpenAPIResponse(401, "Unauthorized")
+        ],
+        security = true
+    )
+    private fun uploadProfileImage(@JWTUser uuidUser: UUID, @BodyParam byteReadChannel: ByteReadChannel): Response {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        runBlocking { byteReadChannel.copyTo(byteArrayOutputStream) }
+        val bytes = byteArrayOutputStream.toByteArray()
+
+        try {
+            val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
+            val imageReaders = ImageIO.getImageReaders(imageInputStream)
+            require(imageReaders.hasNext()) { "Invalid file format" }
+            val imageReader = imageReaders.next()
+            val authorizedFormats = setOf("png", "jpeg", "jpg", "jpe")
+            require(imageReader.formatName.lowercase() in authorizedFormats) { "Invalid file format, only png and jpeg are allowed. Received ${imageReader.formatName}" }
+        } catch (e: Exception) {
+            return Response.badRequest(e.message ?: "Invalid file format")
+        }
+
+        ImageService.add(
+            uuidUser,
+            ImageService.Type.IMAGE,
+            bytes,
+            128,
+            128,
+            true
+        )
+
+        return Response.ok()
     }
 }
