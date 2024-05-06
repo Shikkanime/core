@@ -104,39 +104,38 @@ class FetchOldEpisodesJob : AbstractJob {
             }
         }
 
-        if (realSaved == 0) {
-            logger.info("No new episodes found")
-            return
-        }
-
         logger.info("Saved $realSaved episodes")
-        logger.info("Updating mappings...")
 
-        variants.groupBy { it.mapping!!.uuid }.forEach { (mappingUuid, variants) ->
-            val mapping = episodeMappingService.find(mappingUuid) ?: return@forEach
-            mapping.releaseDateTime = variants.minOf { it.releaseDateTime }
-            mapping.lastReleaseDateTime = variants.maxOf { it.releaseDateTime }
-            episodeMappingService.update(mapping)
+        if (realSaved > 0) {
+            logger.info("Updating mappings...")
+
+            variants.groupBy { it.mapping!!.uuid }.forEach { (mappingUuid, variants) ->
+                val mapping = episodeMappingService.find(mappingUuid) ?: return@forEach
+                mapping.releaseDateTime = variants.minOf { it.releaseDateTime }
+                mapping.lastReleaseDateTime = variants.maxOf { it.releaseDateTime }
+                episodeMappingService.update(mapping)
+            }
+
+            logger.info("Updating animes...")
+
+            variants.groupBy { it.mapping!!.anime!!.uuid }.forEach { (animeUuid, variants) ->
+                val anime = animeService.find(animeUuid) ?: return@forEach
+                logger.info("Updating ${StringUtils.getShortName(anime.name!!)}...")
+                anime.releaseDateTime = variants.minOf { it.releaseDateTime }
+                anime.lastReleaseDateTime = variants.maxOf { it.releaseDateTime }
+                animeService.update(anime)
+            }
+
+            logger.info("Updating simulcasts...")
+            animeService.recalculateSimulcasts()
+            MapCache.invalidate(
+                Anime::class.java,
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java,
+                Simulcast::class.java
+            )
         }
 
-        logger.info("Updating animes...")
-
-        variants.groupBy { it.mapping!!.anime!!.uuid }.forEach { (animeUuid, variants) ->
-            val anime = animeService.find(animeUuid) ?: return@forEach
-            logger.info("Updating ${StringUtils.getShortName(anime.name!!)}...")
-            anime.releaseDateTime = variants.minOf { it.releaseDateTime }
-            anime.lastReleaseDateTime = variants.maxOf { it.releaseDateTime }
-            animeService.update(anime)
-        }
-
-        logger.info("Updating simulcasts...")
-        animeService.recalculateSimulcasts()
-        MapCache.invalidate(
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java,
-            Simulcast::class.java
-        )
         logger.info("Updating config to the next fetch date...")
         config.propertyValue = from.toString()
         configService.update(config)
