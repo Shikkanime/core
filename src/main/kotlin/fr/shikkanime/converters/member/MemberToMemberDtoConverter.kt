@@ -18,7 +18,6 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
 
     override fun convert(from: Member): MemberDto {
         val tokenDto = convert(from, TokenDto::class.java)
-        val followedEpisodes = memberFollowEpisodeService.getAllFollowedEpisodes(from)
 
         return MemberDto(
             uuid = from.uuid!!,
@@ -26,9 +25,9 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
             creationDateTime = from.creationDateTime.withUTCString(),
             lastUpdateDateTime = from.lastUpdateDateTime.withUTCString(),
             isPrivate = from.isPrivate,
-            followedAnimes = memberFollowAnimeService.getAllFollowedAnimes(from).mapNotNull { it.uuid },
-            followedEpisodes = followedEpisodes.mapNotNull { it.uuid },
-            totalDuration = followedEpisodes.sumOf { it.duration }
+            followedAnimes = memberFollowAnimeService.getAllFollowedAnimesUUID(from),
+            followedEpisodes = memberFollowEpisodeService.getAllFollowedEpisodesUUID(from),
+            totalDuration = memberFollowEpisodeService.getTotalDuration(from),
         )
     }
 }
