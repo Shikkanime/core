@@ -228,7 +228,7 @@ object ImageService {
         cache.removeIf { it.uuid == uuid.toString() && it.type == type }
     }
 
-    operator fun get(uuid: UUID, type: Type): Image? = cache.find { it.uuid == uuid.toString() && it.type == type }
+    operator fun get(uuid: UUID, type: Type): Image? = cache.toList().find { it.uuid == uuid.toString() && it.type == type }
 
     val size: Int
         get() = cache.size

@@ -84,6 +84,13 @@ private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, an
             return@forEach
         }
 
+        val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
+
+        if (toSlug != it.slug) {
+            it.slug = toSlug
+            logger.info("Updating slug for anime ${it.name} to $toSlug")
+        }
+
         it.status = StringUtils.getStatus(it)
         animeService.update(it)
     }
