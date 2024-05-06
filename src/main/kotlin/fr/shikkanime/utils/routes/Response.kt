@@ -77,5 +77,8 @@ open class Response(
 
         fun conflict(data: Any? = null, session: TokenDto? = null): Response =
             Response(HttpStatusCode.Conflict, data = data, session = session)
+
+        fun internalServerError(): Response =
+            Response(HttpStatusCode.InternalServerError)
     }
 }

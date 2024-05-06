@@ -48,16 +48,7 @@ class AttachmentController {
             )
         }
 
-        val type = ImageService.Type.entries.find { it.name.equals(typeString, true) }
-
-        if (type == null) {
-            return Response.badRequest(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "Type is required"
-                )
-            )
-        }
+        val type = ImageService.Type.entries.find { it.name.equals(typeString, true) } ?: ImageService.Type.IMAGE
 
         val image = ImageService[uuid, type] ?: return Response.notFound(
             MessageDto(
