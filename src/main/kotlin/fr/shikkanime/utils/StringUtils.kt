@@ -16,7 +16,7 @@ import java.util.regex.Pattern
 object StringUtils {
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s")
-    private val regex = "([-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
+    private val regex = "( [-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ")
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>, limit: Int): Boolean {
