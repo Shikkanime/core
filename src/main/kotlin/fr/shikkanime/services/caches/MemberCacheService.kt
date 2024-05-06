@@ -8,6 +8,7 @@ import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.MemberFollowEpisode
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.MapCache
+import java.time.Duration
 import java.util.*
 
 class MemberCacheService : AbstractCacheService {
@@ -19,7 +20,10 @@ class MemberCacheService : AbstractCacheService {
     }
 
     private val findPrivateMemberCache =
-        MapCache<String, MemberDto?>(classes = listOf(Member::class.java, MemberFollowAnime::class.java, MemberFollowEpisode::class.java)) {
+        MapCache<String, MemberDto?>(
+            duration = Duration.ofHours(1),
+            classes = listOf(Member::class.java, MemberFollowAnime::class.java, MemberFollowEpisode::class.java),
+        ) {
             memberService.findPrivateMember(it)
                 ?.let { member -> AbstractConverter.convert(member, MemberDto::class.java) }
         }
