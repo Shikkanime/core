@@ -1,9 +1,7 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Member
-import fr.shikkanime.entities.MemberFollowAnime
-import fr.shikkanime.entities.MemberFollowAnime_
+import fr.shikkanime.entities.*
+import java.util.*
 
 class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     override fun getEntityClass() = MemberFollowAnime::class.java
@@ -25,12 +23,12 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         }
     }
 
-    fun getAllFollowedAnimes(member: Member): List<Anime> {
+    fun getAllFollowedAnimesUUID(member: Member): List<UUID> {
         return inTransaction {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(Anime::class.java)
+            val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
-            query.select(root[MemberFollowAnime_.anime])
+            query.select(root[MemberFollowAnime_.anime][Anime_.UUID])
 
             query.where(
                 cb.equal(root[MemberFollowAnime_.member], member)

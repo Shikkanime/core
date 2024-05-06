@@ -104,6 +104,11 @@ class FetchOldEpisodesJob : AbstractJob {
             }
         }
 
+        if (realSaved == 0) {
+            logger.info("No new episodes found")
+            return
+        }
+
         logger.info("Saved $realSaved episodes")
         logger.info("Updating mappings...")
 

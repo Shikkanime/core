@@ -1,7 +1,7 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.*
 import com.google.inject.Inject
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.MemberFollowAnimeService
@@ -32,8 +32,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val predicates = mutableListOf(countryPredicate, datePredicate)
 
             member?.let {
-                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime].`in`(
-                    memberFollowAnimeService.getAllFollowedAnimes(it)
+                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime].get<UUID>(Anime_.UUID).`in`(
+                    memberFollowAnimeService.getAllFollowedAnimesUUID(it)
                 )
                 predicates.add(animePredicate)
             }

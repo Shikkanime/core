@@ -1,13 +1,12 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.MemberDto
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -22,6 +21,9 @@ import java.util.*
 class MemberController {
     @Inject
     private lateinit var memberService: MemberService
+
+    @Inject
+    private lateinit var memberCacheService: MemberCacheService
 
     @Inject
     private lateinit var memberFollowAnimeService: MemberFollowAnimeService
@@ -42,7 +44,7 @@ class MemberController {
 
         do {
             identifier = StringUtils.generateRandomString(12)
-        } while (memberService.findPrivateMember(identifier) != null)
+        } while (memberCacheService.findPrivateMember(identifier) != null)
 
         memberService.savePrivateMember(identifier)
         return Response.created(mapOf("identifier" to identifier))
@@ -57,8 +59,7 @@ class MemberController {
         ]
     )
     private fun loginPrivateMember(@BodyParam identifier: String): Response {
-        val privateMember = memberService.findPrivateMember(identifier) ?: return Response.notFound()
-        return Response.ok(AbstractConverter.convert(privateMember, MemberDto::class.java))
+        return Response.ok(memberCacheService.findPrivateMember(identifier) ?: return Response.notFound())
     }
 
     @Path("/animes")
