@@ -26,7 +26,9 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     override fun getRepository() = memberFollowEpisodeRepository
 
-    fun getAllFollowedEpisodes(member: Member) = memberFollowEpisodeRepository.getAllFollowedEpisodes(member)
+    fun getAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.getAllFollowedEpisodesUUID(member)
+
+    fun getTotalDuration(member: Member) = memberFollowEpisodeRepository.getTotalDuration(member)
 
     fun followAll(uuidUser: UUID, anime: GenericDto): Response {
         val member = memberService.find(uuidUser) ?: return Response.notFound()

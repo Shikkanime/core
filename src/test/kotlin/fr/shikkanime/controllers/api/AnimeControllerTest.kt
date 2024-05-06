@@ -158,10 +158,10 @@ class AnimeControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedAnimes = memberFollowAnimeService.getAllFollowedAnimes(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.getAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
-                assertEquals(1, followedAnimes.size)
-                assertEquals(anime1.uuid, followedAnimes.first().uuid)
+                assertEquals(1, followedAnimesUUID.size)
+                assertEquals(anime1.uuid, followedAnimesUUID.first())
             }
 
             client.get("/api/v1/animes/weekly") {
