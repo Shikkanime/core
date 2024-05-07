@@ -13,9 +13,13 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "master","dev" ]
+    branches:
+      - master
+      - dev
   pull_request:
-    branches: [ "master","dev" ]
+    branches:
+      - master
+      - dev
   schedule:
     - cron: '33 14 * * 5'
 
@@ -44,8 +48,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #          - language: java-kotlin
-          #            build-mode: autobuild
+          - language: java-kotlin
+            build-mode: autobuild
           - language: javascript-typescript
             build-mode: none
         # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
