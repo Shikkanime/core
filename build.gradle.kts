@@ -29,7 +29,7 @@ val mockitoVersion = "5.11.0"
 
 plugins {
     kotlin("jvm") version "2.0.0-RC2"
-    kotlin("kapt") version "1.9.23"
+    kotlin("kapt") version "1.9.24"
     id("io.ktor.plugin") version "2.3.10"
     jacoco
     id("org.sonarqube") version "5.0.0.4638"
