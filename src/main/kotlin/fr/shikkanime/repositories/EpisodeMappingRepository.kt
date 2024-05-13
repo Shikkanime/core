@@ -48,7 +48,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             }
 
             query.orderBy(orders)
-            buildPageableQuery(entityManager.createQuery(query), page, limit)
+            buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
         }
     }
 
