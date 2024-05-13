@@ -6,6 +6,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MissedAnimeDto
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.MemberFollowEpisode
 import fr.shikkanime.services.MemberFollowAnimeService
@@ -27,7 +28,8 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
         MapCache<UUIDPaginationKeyCache, PageableDto<MissedAnimeDto>>(
             classes = listOf(
                 MemberFollowAnime::class.java,
-                MemberFollowEpisode::class.java
+                MemberFollowEpisode::class.java,
+                EpisodeMapping::class.java,
             ),
         ) {
             val member = memberCacheService.find(it.uuid) ?: return@MapCache PageableDto.empty()
