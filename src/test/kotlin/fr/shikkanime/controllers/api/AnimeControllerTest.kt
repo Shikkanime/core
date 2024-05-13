@@ -1,9 +1,8 @@
 package fr.shikkanime.controllers.api
 
+import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.MemberDto
-import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.*
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -158,7 +157,7 @@ class AnimeControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.getAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
                 assertEquals(anime1.uuid, followedAnimesUUID.first())
@@ -182,6 +181,77 @@ class AnimeControllerTest {
                     ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java).flatMap { it.releases }
                 assertEquals(1, weeklyAnimesDto.size)
                 assertEquals(anime1.uuid, weeklyAnimesDto.first().anime.uuid)
+            }
+        }
+    }
+
+    @Test
+    fun getMissedAnimes() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (identifier, token) = registerAndLogin()
+
+            val anime = animeService.save(
+                Anime(
+                    countryCode = CountryCode.FR,
+                    name = "Test Anime 1",
+                    image = "test.jpg",
+                    slug = "test-anime-1",
+                    banner = "test-banner.jpg",
+                    description = "Test description",
+                )
+            )
+
+            val episodes = (1..12).map {
+                episodeMappingService.save(
+                    EpisodeMapping(
+                        anime = anime,
+                        episodeType = EpisodeType.EPISODE,
+                        season = 1,
+                        number = it,
+                        image = "test.jpg",
+                    )
+                )
+            }
+
+            client.put("/api/v1/members/animes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(anime.uuid!!)))
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val findPrivateMember = memberService.findPrivateMember(identifier)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
+                assertNotNull(findPrivateMember)
+                assertEquals(1, followedAnimesUUID.size)
+                assertEquals(anime.uuid, followedAnimesUUID.first())
+            }
+
+            client.put("/api/v1/members/episodes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(episodes.first().uuid!!)))
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val findPrivateMember = memberService.findPrivateMember(identifier)
+                val followedEpisodesUUID = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
+                assertNotNull(findPrivateMember)
+                assertEquals(1, followedEpisodesUUID.size)
+                assertEquals(episodes.first().uuid, followedEpisodesUUID.first())
+            }
+
+            client.get("/api/v1/animes/missed?page=1&limit=8") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val missedAnimes =
+                    ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<MissedAnimeDto>>() {})
+                assertEquals(1, missedAnimes.data.size)
+                assertEquals(11, missedAnimes.data.first().episodeMissed)
             }
         }
     }

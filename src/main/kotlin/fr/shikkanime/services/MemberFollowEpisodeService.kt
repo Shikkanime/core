@@ -26,7 +26,9 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     override fun getRepository() = memberFollowEpisodeRepository
 
-    fun getAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.getAllFollowedEpisodesUUID(member)
+    fun findAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(member)
+
+    fun findAllFollowedEpisodes(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodes(member)
 
     fun getTotalDuration(member: Member) = memberFollowEpisodeRepository.getTotalDuration(member)
 

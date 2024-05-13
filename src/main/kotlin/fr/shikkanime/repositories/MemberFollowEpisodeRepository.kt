@@ -6,6 +6,38 @@ import java.util.*
 class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() {
     override fun getEntityClass() = MemberFollowEpisode::class.java
 
+    fun findAllFollowedEpisodesUUID(member: Member): List<UUID> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(UUID::class.java)
+            val root = query.from(getEntityClass())
+            query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.UUID])
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.member], member)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllFollowedEpisodes(member: Member): List<EpisodeMapping> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(EpisodeMapping::class.java)
+            val root = query.from(getEntityClass())
+            query.select(root[MemberFollowEpisode_.episode])
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.member], member)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByMemberAndEpisode(member: Member, episode: EpisodeMapping): MemberFollowEpisode? {
         return inTransaction {
             val cb = it.criteriaBuilder
@@ -20,22 +52,6 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
-        }
-    }
-
-    fun getAllFollowedEpisodesUUID(member: Member): List<UUID> {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
-            query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.UUID])
-
-            query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member)
-            )
-
-            createReadOnlyQuery(it, query)
-                .resultList
         }
     }
 

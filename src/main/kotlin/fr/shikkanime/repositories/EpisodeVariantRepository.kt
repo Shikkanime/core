@@ -33,7 +33,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             member?.let {
                 val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime].get<UUID>(Anime_.UUID).`in`(
-                    memberFollowAnimeService.getAllFollowedAnimesUUID(it)
+                    memberFollowAnimeService.findAllFollowedAnimesUUID(it)
                 )
                 predicates.add(animePredicate)
             }
