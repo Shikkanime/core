@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.10"
+val ktorVersion = "2.3.11"
 val ktorSwaggerUiVersion = "2.9.0"
 val hibernateCoreVersion = "6.5.0.Final"
 val ehcacheVersion = "3.10.8"
@@ -19,20 +19,24 @@ val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.2.0"
 
-val jdaVersion = "5.0.0-beta.23"
+val jdaVersion = "5.0.0-beta.24"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.3"
 
 val junitVersion = "5.10.2"
 val h2Version = "2.2.224"
-val mockitoVersion = "5.11.0"
+val mockitoVersion = "5.12.0"
 
 plugins {
-    kotlin("jvm") version "2.0.0-RC2"
-    kotlin("kapt") version "1.9.23"
-    id("io.ktor.plugin") version "2.3.10"
-    jacoco
+    val kotlinVersion = "1.9.24"
+
+    kotlin("jvm") version kotlinVersion
+    kotlin("kapt") version kotlinVersion
+
+    id("io.ktor.plugin") version "2.3.11"
     id("org.sonarqube") version "5.0.0.4638"
+
+    jacoco
 }
 
 group = "fr.shikkanime"

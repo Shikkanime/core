@@ -146,7 +146,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.getAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
                 assertEquals(anime.uuid, followedAnimesUUID.first())
@@ -200,7 +200,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.getAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
                 assertEquals(anime.uuid, followedAnimesUUID.first())
@@ -213,7 +213,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.getAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(0, followedAnimesUUID.size)
             }
@@ -257,7 +257,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedEpisodesUUID = memberFollowEpisodeService.getAllFollowedEpisodesUUID(findPrivateMember!!)
+                val followedEpisodesUUID = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedEpisodesUUID.size)
                 assertEquals(episode.uuid, followedEpisodesUUID.first())
@@ -321,7 +321,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedEpisodesUUID = memberFollowEpisodeService.getAllFollowedEpisodesUUID(findPrivateMember!!)
+                val followedEpisodesUUID = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedEpisodesUUID.size)
                 assertEquals(episode.uuid, followedEpisodesUUID.first())
@@ -334,7 +334,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedEpisodes = memberFollowEpisodeService.getAllFollowedEpisodesUUID(findPrivateMember!!)
+                val followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(0, followedEpisodes.size)
             }
@@ -380,7 +380,7 @@ class MemberControllerTest {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findPrivateMember(identifier)
-                val followedEpisodes = memberFollowEpisodeService.getAllFollowedEpisodesUUID(findPrivateMember!!)
+                val followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(12, followedEpisodes.size)
             }

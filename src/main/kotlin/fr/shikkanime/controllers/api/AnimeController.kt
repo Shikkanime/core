@@ -2,14 +2,12 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
-import fr.shikkanime.dtos.MessageDto
-import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
+import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -30,6 +28,9 @@ class AnimeController : HasPageableRoute() {
 
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var memberFollowAnimeCacheService: MemberFollowAnimeCacheService
 
     @Path
     @Get
@@ -209,6 +210,33 @@ class AnimeController : HasPageableRoute() {
                 parsedDate!!.minusDays(parsedDate.dayOfWeek.value.toLong() - 1),
                 CountryCode.fromNullable(countryParam) ?: CountryCode.FR
             )
+        )
+    }
+
+    @Path("/missed")
+    @Get
+    @JWTAuthenticated
+    @OpenAPI(
+        "Get missed animes",
+        [
+            OpenAPIResponse(
+                200,
+                "Get missed animes",
+                PageableDto::class,
+            ),
+            OpenAPIResponse(401, "Unauthorized")
+        ],
+        security = true
+    )
+    private fun getMissedAnimes(
+        @JWTUser uuid: UUID,
+        @QueryParam("page") pageParam: Int?,
+        @QueryParam("limit") limitParam: Int?,
+    ): Response {
+        val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
+
+        return Response.ok(
+            memberFollowAnimeCacheService.getMissedAnimes(uuid, page, limit) ?: return Response.notFound()
         )
     }
 }

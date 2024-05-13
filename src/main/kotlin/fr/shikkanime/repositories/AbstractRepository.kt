@@ -42,18 +42,18 @@ abstract class AbstractRepository<E : ShikkEntity> {
             .setHint(AvailableHints.HINT_READ_ONLY, true)
     }
 
-    fun buildPageableQuery(query: TypedQuery<E>, page: Int, limit: Int): Pageable<E> {
+    fun <C> buildPageableQuery(query: TypedQuery<C>, page: Int, limit: Int): Pageable<C> {
         val scrollableResults = query.unwrap(Query::class.java)
             .setReadOnly(true)
             .setFetchSize(limit)
             .scroll(ScrollMode.SCROLL_SENSITIVE)
 
-        val list = mutableListOf<E>()
+        val list = mutableListOf<C>()
         var total = 0L
 
         if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
             for (i in 0 until limit) {
-                list.add(scrollableResults.get() as E) // NOSONAR
+                list.add(scrollableResults.get() as C) // NOSONAR
                 if (!scrollableResults.next()) break
             }
             total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0

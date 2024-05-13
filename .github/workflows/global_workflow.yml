@@ -140,11 +140,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Clear build cache
-        uses: prantlf/delete-cache-action@v2
+        uses: prantlf/delete-cache-action@v3
         with:
           key: ${{ runner.os }}-build-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
 
       - name: Clear gradle cache
-        uses: prantlf/delete-cache-action@v2
+        uses: prantlf/delete-cache-action@v3
         with:
           key: ${{ runner.os }}-dev-dependencies-${{ hashFiles('**/build.gradle.kts') }}-${{ github.sha }}
