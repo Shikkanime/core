@@ -7,7 +7,6 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
-import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     @Inject
@@ -32,7 +31,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val predicates = mutableListOf(countryPredicate, datePredicate)
 
             member?.let {
-                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime].get<UUID>(Anime_.UUID).`in`(
+                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid].`in`(
                     memberFollowAnimeService.findAllFollowedAnimesUUID(it)
                 )
                 predicates.add(animePredicate)
@@ -56,7 +55,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             query.multiselect(
                 animePath[Anime_.countryCode],
-                animePath.get<UUID>(Anime_.UUID),
+                animePath[Anime_.uuid],
                 root[EpisodeVariant_.platform],
                 episodeMappingPath[EpisodeMapping_.episodeType],
                 episodeMappingPath[EpisodeMapping_.season],

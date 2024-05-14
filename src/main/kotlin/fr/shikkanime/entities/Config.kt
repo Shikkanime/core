@@ -13,7 +13,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Config(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @Column(nullable = false, name = "property_key", unique = true)
     val propertyKey: String? = null,
     @Column(nullable = false, name = "property_value", length = 5000)

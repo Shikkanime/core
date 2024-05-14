@@ -16,7 +16,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Metric(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @Column(name = "cpu_load")
     val cpuLoad: Double = 0.0,
     @Column(name = "memory_usage")

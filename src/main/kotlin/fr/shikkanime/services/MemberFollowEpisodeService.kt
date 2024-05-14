@@ -28,8 +28,6 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     fun findAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(member)
 
-    fun findAllFollowedEpisodes(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodes(member)
-
     fun getTotalDuration(member: Member) = memberFollowEpisodeRepository.getTotalDuration(member)
 
     fun followAll(uuidUser: UUID, anime: GenericDto): Response {

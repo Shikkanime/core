@@ -7,7 +7,6 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
-import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
@@ -57,7 +56,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             val cb = entityManager.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
-            query.multiselect(root.get<UUID>(EpisodeMapping_.UUID), root[EpisodeMapping_.image])
+            query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
             entityManager.createQuery(query).resultList
         }
     }

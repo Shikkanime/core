@@ -9,7 +9,6 @@ import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesS
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
 import org.hibernate.search.mapper.orm.Search
-import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
@@ -88,7 +87,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val cb = entityManager.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
-            query.multiselect(root.get<UUID>(Anime_.UUID), root[Anime_.image], root[Anime_.banner])
+            query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
             entityManager.createQuery(query).resultList
         }
     }

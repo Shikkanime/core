@@ -17,7 +17,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Simulcast(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @Column(nullable = false)
     val season: String? = null,
     @Column(nullable = false, name = "year_")

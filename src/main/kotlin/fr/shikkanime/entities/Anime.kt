@@ -22,7 +22,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Anime(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @Column(nullable = false, name = "country_code")
     @Enumerated(EnumType.STRING)
     @FullTextField
@@ -53,4 +53,7 @@ class Anime(
     @Column(nullable = true, name = "status")
     @Enumerated(EnumType.STRING)
     var status: Status = Status.VALID,
+    @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
 ) : ShikkEntity(uuid)
