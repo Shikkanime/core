@@ -12,7 +12,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class EpisodeVariant(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var mapping: EpisodeMapping? = null,

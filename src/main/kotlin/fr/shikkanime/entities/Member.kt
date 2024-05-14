@@ -12,7 +12,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Member(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @Column(nullable = false, name = "creation_date_time")
     val creationDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = true, name = "last_update_date_time")

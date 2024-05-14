@@ -9,40 +9,41 @@ class StringUtilsTest {
     fun getShortName() {
         val list = listOf(
             "High Card" to "High Card",
-            "Banished from the Hero's Party" to "Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside",
-            "7th Time Loop" to "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!",
+            "Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside" to "Banished from the Hero's Party",
+            "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!" to "7th Time Loop",
             "Shangri-La Frontier" to "Shangri-La Frontier",
-            "Captain Tsubasa" to "Captain Tsubasa Saison 2, Junior Youth Arc",
+            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa",
             "SPY x FAMILY" to "SPY x FAMILY",
-            "The Strongest Tank's Labyrinth Raids" to "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-",
-            "Firefighter Daigo" to "Firefighter Daigo: Rescuer in Orange",
-            "MASHLE" to "MASHLE: MAGIC AND MUSCLES",
-            "My Instant Death Ability Is So Overpowered" to "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!",
+            "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "The Strongest Tank's Labyrinth Raids",
+            "Firefighter Daigo: Rescuer in Orange" to "Firefighter Daigo",
+            "MASHLE: MAGIC AND MUSCLES" to "MASHLE",
+            "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!" to "My Instant Death Ability Is So Overpowered",
             "Bottom-Tier Character Tomozaki" to "Bottom-Tier Character Tomozaki",
             "Classroom of the Elite" to "Classroom of the Elite",
             "Gloutons & Dragons" to "Gloutons & Dragons",
             "Protocol: Rain" to "Protocol: Rain",
             "B-PROJECT Passion*Love Call" to "B-PROJECT Passion*Love Call",
-            "Butareba" to "Butareba -The Story of a Man Turned into a Pig-",
-            "Our Dating Story" to "Our Dating Story: The Experienced You and The Inexperienced Me",
-            "HYPNOSISMIC Rhyme Anima" to "HYPNOSISMIC -Division Rap Battle- Rhyme Anima",
-            "Fate/strange Fake" to "Fate/strange Fake -Whispers of Dawn-",
+            "Butareba -The Story of a Man Turned into a Pig-" to "Butareba",
+            "Our Dating Story: The Experienced You and The Inexperienced Me" to "Our Dating Story",
+            "HYPNOSISMIC -Division Rap Battle- Rhyme Anima" to "HYPNOSISMIC Rhyme Anima",
+            "Fate/strange Fake -Whispers of Dawn-" to "Fate/strange Fake",
             "NieR:Automata Ver1.1a" to "NieR:Automata Ver1.1a",
-            "Reborn as a Vending Machine" to "Reborn as a Vending Machine, I Now Wander the Dungeon",
-            "BIRDIE WING" to "BIRDIE WING -Golf Girls' Story-",
-            "Urusei Yatsura" to "Urusei Yatsura (2022)",
-            "Cherry Magic" to "Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!",
-            "KONOSUBA" to "KONOSUBA -God's blessing on this wonderful world!",
+            "Reborn as a Vending Machine, I Now Wander the Dungeon" to "Reborn as a Vending Machine",
+            "BIRDIE WING -Golf Girls' Story-" to "BIRDIE WING",
+            "Urusei Yatsura (2022)" to "Urusei Yatsura",
+            "Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!" to "Cherry Magic",
+            "KONOSUBA -God's blessing on this wonderful world!" to "KONOSUBA",
             "Moi, quand je me réincarne en Slime" to "Moi, quand je me réincarne en Slime",
-            "I Was Reincarnated as the 7th Prince" to "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability",
+            "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability" to "I Was Reincarnated as the 7th Prince",
             "Mushoku Tensei: Jobless Reincarnation" to "Mushoku Tensei: Jobless Reincarnation",
-            "Yuru Camp" to "Yuru Camp – Au grand air",
+            "Yuru Camp – Au grand air" to "Yuru Camp",
             "Studio Apartment, Good Lighting, Angel Included" to "Studio Apartment, Good Lighting, Angel Included",
             "Je survivrai grâce aux potions !" to "Je survivrai grâce aux potions !",
             "Rent-a-Girlfriend" to "Rent-a-Girlfriend",
+            "After-school Hanako-kun" to "After-school Hanako-kun"
         )
 
-        list.forEach { (expected, input) ->
+        list.forEach { (input, expected) ->
             assertEquals(expected, StringUtils.getShortName(input))
         }
     }
@@ -56,6 +57,16 @@ class StringUtilsTest {
             "Studio Apartment, Good Lighting, Angel Included" to "studio-apartment-good-lighting-angel-included",
             "Je survivrai grâce aux potions !" to "je-survivrai-grace-aux-potions",
             "Rent-a-Girlfriend" to "rent-a-girlfriend",
+            "Re:Monster" to "re-monster",
+            "NieR:Automata Ver1.1a" to "nier-automata-ver1-1a",
+            "An Archdemon's Dilemma: How to Love Your Elf Bride" to "an-archdemons-dilemma",
+            "Protocol: Rain" to "protocol-rain",
+            "Spice and Wolf: MERCHANT MEETS THE WISE WOLF" to "spice-and-wolf",
+            "KONOSUBA -God's blessing on this wonderful world!" to "konosuba",
+            "Fate/strange Fake -Whispers of Dawn-" to "fate-strange-fake",
+            "After-school Hanako-kun" to "after-school-hanako-kun",
+            "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "the-strongest-tanks-labyrinth-raids",
+            "'Tis Time for \"Torture,\" Princess" to "tis-time-for-torture-princess",
         )
 
         list.forEach { (input, expected) ->
