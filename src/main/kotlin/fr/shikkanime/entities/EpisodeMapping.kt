@@ -22,7 +22,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class EpisodeMapping(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var anime: Anime? = null,

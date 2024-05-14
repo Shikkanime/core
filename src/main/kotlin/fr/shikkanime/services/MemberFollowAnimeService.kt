@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.repositories.MemberFollowAnimeRepository
@@ -25,7 +24,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     fun findAllFollowedAnimesUUID(member: Member) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(member)
 
-    fun findAllMissedAnimes(member: Member, watchedEpisodes: List<EpisodeMapping>, page: Int, limit: Int) =
+    fun findAllMissedAnimes(member: Member, watchedEpisodes: List<UUID>, page: Int, limit: Int) =
         memberFollowAnimeRepository.findAllMissedAnimes(member, watchedEpisodes, page, limit)
 
     fun follow(uuidUser: UUID, anime: GenericDto): Response {

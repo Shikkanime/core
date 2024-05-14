@@ -11,7 +11,7 @@ import java.util.*
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class MemberFollowAnime(
-    override val uuid: UUID? = null,
+    uuid: UUID? = null,
     @Column(nullable = false, name = "follow_date_time")
     val followDateTime: ZonedDateTime = ZonedDateTime.now(),
     @ManyToOne(optional = false)
