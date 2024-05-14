@@ -1,6 +1,5 @@
 package fr.shikkanime
 
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
@@ -71,10 +70,6 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
 }
 
 private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, animeService: AnimeService) {
-    episodeMappingService.findAllByEpisodeType(EpisodeType.FILM).forEach {
-        episodeMappingService.delete(it)
-    }
-
     animeService.findAll().forEach {
         val mappings = episodeMappingService.findAllByAnime(it)
 

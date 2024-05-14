@@ -121,7 +121,15 @@ fun Routing.createControllerRoutes(controller: Any) {
             val routeHandler: Route.() -> Unit = { handleMethods(method, prefix, controller, path) }
 
             when {
-                method.hasAnnotation<JWTAuthenticated>() -> authenticate("auth-jwt", build = routeHandler)
+                method.hasAnnotation<JWTAuthenticated>() -> {
+                    val optional = method.findAnnotation<JWTAuthenticated>()!!.optional
+
+                    authenticate(
+                        "auth-jwt",
+                        optional = optional,
+                        build = routeHandler
+                    )
+                }
                 method.hasAnnotation<AdminSessionAuthenticated>() -> authenticate(
                     "auth-admin-session",
                     build = routeHandler
@@ -216,10 +224,7 @@ private suspend fun callMethodWithParameters(
     val methodParams = method.parameters.associateWith { kParameter ->
         when {
             kParameter.name.isNullOrBlank() -> controller
-            kParameter.hasAnnotation<JWTUser>() -> UUID.fromString(
-                call.principal<JWTPrincipal>()!!.payload.getClaim("uuid").asString()
-            )
-
+            kParameter.hasAnnotation<JWTUser>() -> call.principal<JWTPrincipal>()?.payload?.getClaim("uuid")?.asString()?.let { UUID.fromString(it) }
             kParameter.hasAnnotation<AdminSessionUser>() -> call.principal<TokenDto>()
             kParameter.hasAnnotation<BodyParam>() -> handleBodyParam(kParameter, call)
             kParameter.hasAnnotation<QueryParam>() -> handleQueryParam(kParameter, call)
