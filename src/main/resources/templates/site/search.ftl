@@ -4,11 +4,10 @@
     <div x-data="{
         animes: [],
         value: <#if query?? && query?has_content>'${query}'<#else>''</#if>
-    }" <#if query?? && query?has_content>x-init="animes = (await search(value)).data"</#if>>
+    }"<#if query?? && query?has_content> x-init="animes = (await search(value)).data"</#if>>
         <div class="container my-3">
             <input type="text" id="search" class="form-control-lg w-100 bg-dark text-white"
-                   placeholder="Rechercher" autofocus
-                   x-model="value" @input="animes = (await search(value)).data">
+                   placeholder="Rechercher" x-model="value" @input="animes = (await search(value)).data" autofocus>
         </div>
 
         <div class="row g-3 mt-3 justify-content-center" style="min-height: 60vh;">
@@ -33,14 +32,14 @@
                                             <template x-if="langType === 'SUBTITLES'">
                                                 <span>
                                                     <img src="${baseUrl}/assets/img/icons/subtitles.svg" alt="Subtitles"
-                                                         class="me-1">
+                                                         class="me-2">
                                                     Sous-titrage
                                                 </span>
                                             </template>
                                             <template x-if="langType === 'VOICE'">
                                                 <span>
                                                     <img src="${baseUrl}/assets/img/icons/voice.svg" alt="Voice"
-                                                         class="me-1">
+                                                         class="me-2">
                                                     Doublage
                                                 </span>
                                             </template>
