@@ -55,16 +55,6 @@ class AnimeCacheService : AbstractCacheService {
         animeService.findBySlug(it.countryCode, it.id)
     }
 
-    private val weeklyCache =
-        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
-            classes = listOf(
-                EpisodeMapping::class.java,
-                EpisodeVariant::class.java
-            )
-        ) {
-            animeService.getWeeklyAnimes(null, it.localDate, it.countryCode)
-        }
-
     private val weeklyMemberCache =
         MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
             classes = listOf(
@@ -73,7 +63,7 @@ class AnimeCacheService : AbstractCacheService {
                 MemberFollowAnime::class.java
             )
         ) {
-            animeService.getWeeklyAnimes(memberService.find(it.member), it.localDate, it.countryCode)
+            animeService.getWeeklyAnimes(it.member?.let { uuid -> memberService.find(uuid) }, it.localDate, it.countryCode)
         }
 
     fun findAllBy(
@@ -90,9 +80,6 @@ class AnimeCacheService : AbstractCacheService {
 
     fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
 
-    fun getWeeklyAnimes(startOfWeekDay: LocalDate, countryCode: CountryCode) =
-        weeklyCache[CountryCodeLocalDateKeyCache(null, countryCode, startOfWeekDay)]
-
-    fun getWeeklyAnimes(member: UUID, startOfWeekDay: LocalDate, countryCode: CountryCode) =
+    fun getWeeklyAnimes(member: UUID?, startOfWeekDay: LocalDate, countryCode: CountryCode) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(member, countryCode, startOfWeekDay)]
 }

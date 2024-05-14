@@ -172,7 +172,7 @@ class AnimeControllerTest {
                 assertEquals(2, weeklyAnimesDto.size)
             }
 
-            client.get("/api/v1/animes/member-weekly") {
+            client.get("/api/v1/animes/weekly") {
                 header(HttpHeaders.Authorization, "Bearer $token")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }.apply {

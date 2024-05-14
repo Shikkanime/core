@@ -118,6 +118,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/weekly")
     @Get
+    @JWTAuthenticated(optional = true)
     @OpenAPI(
         "Get weekly anime",
         [
@@ -131,59 +132,12 @@ class AnimeController : HasPageableRoute() {
                 "Invalid week format",
                 MessageDto::class
             ),
-        ]
-    )
-    private fun getWeekly(
-        @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
-        @QueryParam("date", description = "By default: today", type = String::class) dateParam: String?,
-    ): Response {
-        val parsedDate = if (dateParam != null) {
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-            try {
-                LocalDate.parse(dateParam, formatter)
-            } catch (e: Exception) {
-                return Response.badRequest(
-                    MessageDto(
-                        MessageDto.Type.ERROR,
-                        "Invalid week format",
-                    )
-                )
-            }
-        } else {
-            LocalDate.now()
-        }
-
-        return Response.ok(
-            animeCacheService.getWeeklyAnimes(
-                parsedDate!!.minusDays(parsedDate.dayOfWeek.value.toLong() - 1),
-                CountryCode.fromNullable(countryParam) ?: CountryCode.FR
-            )
-        )
-    }
-
-    @Path("/member-weekly")
-    @Get
-    @JWTAuthenticated
-    @OpenAPI(
-        "Get member weekly anime",
-        [
-            OpenAPIResponse(
-                200,
-                "Member weekly anime found",
-                Array<WeeklyAnimesDto>::class,
-            ),
-            OpenAPIResponse(
-                400,
-                "Invalid week format",
-                MessageDto::class
-            ),
             OpenAPIResponse(401, "Unauthorized")
         ],
         security = true
     )
-    private fun getMemberWeekly(
-        @JWTUser uuid: UUID,
+    private fun getWeekly(
+        @JWTUser uuid: UUID?,
         @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
         @QueryParam("date", description = "By default: today", type = String::class) dateParam: String?,
     ): Response {
