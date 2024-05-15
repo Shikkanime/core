@@ -3,8 +3,8 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService

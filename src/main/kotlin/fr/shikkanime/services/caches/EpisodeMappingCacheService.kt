@@ -4,11 +4,11 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache

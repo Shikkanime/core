@@ -151,6 +151,13 @@ class AdminController {
         return Response.template("admin/episodes/edit.ftl", "Edit episode")
     }
 
+    @Path("/calendar")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getCalendar(): Response {
+        return Response.template(Link.CALENDAR_RELEASES)
+    }
+
     @Path("/config")
     @Get
     @AdminSessionAuthenticated

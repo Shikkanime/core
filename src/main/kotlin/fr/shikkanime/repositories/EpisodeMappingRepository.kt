@@ -1,10 +1,10 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.Status
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 

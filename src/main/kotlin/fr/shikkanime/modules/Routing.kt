@@ -1,10 +1,10 @@
 package fr.shikkanime.modules
 
 import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory

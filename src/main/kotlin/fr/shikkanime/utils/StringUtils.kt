@@ -1,13 +1,9 @@
 package fr.shikkanime.utils
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.services.caches.LanguageCacheService
 import java.text.Normalizer
 import java.util.*

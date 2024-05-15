@@ -1,9 +1,9 @@
 package fr.shikkanime.dtos
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Status
 import java.util.*
 
 data class EpisodeMappingDto(

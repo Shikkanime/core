@@ -1,7 +1,7 @@
 package fr.shikkanime.entities
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy

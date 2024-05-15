@@ -4,9 +4,9 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.ImageService

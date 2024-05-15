@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.EpisodeMappingDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -10,6 +9,7 @@ import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils

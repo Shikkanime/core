@@ -8,9 +8,9 @@ import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.SimulcastService

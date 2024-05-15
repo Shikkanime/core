@@ -6,11 +6,11 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Status
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
