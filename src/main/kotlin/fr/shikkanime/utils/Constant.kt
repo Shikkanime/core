@@ -19,13 +19,15 @@ object Constant {
     val seasons = listOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
     val dataFolder: File
         get() {
-            val dataFolder = File("data")
-
-            if (!dataFolder.exists()) {
-                dataFolder.mkdirs()
-            }
-
-            return dataFolder
+            val folder = File("data")
+            if (!folder.exists()) folder.mkdirs()
+            return folder
+        }
+    val configFolder: File
+        get() {
+            val folder = File(dataFolder, "config")
+            if (!folder.exists()) folder.mkdirs()
+            return folder
         }
     val abstractSocialNetworks =
         reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
