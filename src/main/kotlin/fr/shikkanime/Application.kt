@@ -8,6 +8,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -15,16 +16,11 @@ import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import java.util.concurrent.atomic.AtomicReference
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
 fun main() {
     logger.info("Starting ${Constant.NAME}...")
-    initAll(AtomicReference())
-}
-
-fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Boolean = true): NettyApplicationEngine {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     animeService.preIndex()
@@ -34,14 +30,10 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
     ImageService.loadCache()
     ImageService.addAll()
 
-    if (adminPassword != null) {
-        val memberService = Constant.injector.getInstance(MemberService::class.java)
-
-        try {
-            adminPassword.set(memberService.initDefaultAdminUser())
-        } catch (e: IllegalStateException) {
-            logger.info("Admin user already exists")
-        }
+    try {
+        Constant.injector.getInstance(MemberService::class.java).initDefaultAdminUser()
+    } catch (e: IllegalStateException) {
+        logger.info("Admin user already exists")
     }
 
     logger.info("Starting jobs...")
@@ -60,25 +52,19 @@ fun initAll(adminPassword: AtomicReference<String>?, port: Int = 37100, wait: Bo
     JobManager.scheduleJob("0 0 9 * * ?", FetchCalendarJob::class.java)
     JobManager.start()
 
+    Constant.injector.getInstance(DiscordSocialNetwork::class.java).login()
+
     logger.info("Starting server...")
-    return embeddedServer(
+    embeddedServer(
         Netty,
-        port = port,
+        port = 37100,
         host = "0.0.0.0",
         module = Application::module
-    ).start(wait = wait)
+    ).start(wait = true)
 }
 
 private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, animeService: AnimeService) {
     animeService.findAll().forEach {
-        val mappings = episodeMappingService.findAllByAnime(it)
-
-        if (mappings.isEmpty()) {
-            logger.info("Deleting anime ${StringUtils.getShortName(it.name!!)} because it has no episodes")
-            animeService.delete(it)
-            return@forEach
-        }
-
         val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
 
         if (toSlug != it.slug) {
