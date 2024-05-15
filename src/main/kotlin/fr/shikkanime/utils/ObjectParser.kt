@@ -1,6 +1,7 @@
 package fr.shikkanime.utils
 
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 
@@ -17,6 +18,10 @@ object ObjectParser {
 
     fun <T> fromJson(json: String, typeToken: TypeToken<T>): T {
         return gson.fromJson(json, typeToken.type)
+    }
+
+    fun <T> fromJson(jsonElement: JsonElement, clazz: Class<T>): T {
+        return gson.fromJson(jsonElement, clazz)
     }
 
     fun <T> toJson(obj: T): String {
