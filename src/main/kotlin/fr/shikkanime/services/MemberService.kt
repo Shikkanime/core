@@ -2,17 +2,22 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Member
+import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.RandomManager
+import java.util.*
 
 class MemberService : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject
     private lateinit var memberRepository: MemberRepository
+
+    @Inject
+    private lateinit var memberActionService: MemberActionService
 
     override fun getRepository() = memberRepository
 
@@ -21,8 +26,10 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
-    fun findPrivateMember(identifier: String) =
-        memberRepository.findPrivateMember(EncryptionManager.toSHA512(identifier))
+    fun findByIdentifier(identifier: String) =
+        memberRepository.findByIdentifier(EncryptionManager.toSHA512(identifier))
+
+    fun findByEmail(email: String) = memberRepository.findByEmail(email)
 
     fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRoles(listOf(Role.ADMIN))
@@ -39,7 +46,13 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         return password
     }
 
-    fun savePrivateMember(identifier: String) =
+    fun associateEmail(uuid: UUID, email: String): UUID {
+        val member = requireNotNull(find(uuid))
+        // Creation member action
+        return memberActionService.save(Action.VALIDATE_EMAIL, member, email)
+    }
+
+    fun save(identifier: String) =
         save(
             Member(
                 isPrivate = true,

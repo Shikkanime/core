@@ -19,16 +19,16 @@ class MemberCacheService : AbstractCacheService {
         memberService.find(it)
     }
 
-    private val findPrivateMemberCache =
+    private val findByIdentifierCache =
         MapCache<String, MemberDto?>(
             duration = Duration.ofHours(1),
             classes = listOf(Member::class.java, MemberFollowAnime::class.java, MemberFollowEpisode::class.java),
         ) {
-            memberService.findPrivateMember(it)
+            memberService.findByIdentifier(it)
                 ?.let { member -> AbstractConverter.convert(member, MemberDto::class.java) }
         }
 
     fun find(uuid: UUID) = cache[uuid]
 
-    fun findPrivateMember(identifier: String) = findPrivateMemberCache[identifier]
+    fun findByIdentifier(identifier: String) = findByIdentifierCache[identifier]
 }

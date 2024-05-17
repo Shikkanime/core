@@ -32,3 +32,5 @@
 [#-- @ftlvariable name="episodeMapping" type="fr.shikkanime.dtos.EpisodeMappingDto" --]
 [#-- @ftlvariable name="episodeVariants" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.variants.EpisodeVariantDto>" --]
 [#-- @ftlvariable name="episodeVariant" type="fr.shikkanime.dtos.variants.EpisodeVariantDto" --]
+
+[#-- @ftlvariable name="code" type="java.lang.String" --]
