@@ -15,6 +15,8 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.util.*
 
 @Controller("/api/v1/members")
@@ -37,16 +39,30 @@ class MemberController {
         description = "Register a private member",
         responses = [
             OpenAPIResponse(201, "Private member registered", Map::class),
+        ],
+        deprecated = true
+    )
+    @Deprecated("You should use /register instead", ReplaceWith("/register"))
+    private fun registerPrivateMember(): Response {
+        return registerMember()
+    }
+
+    @Path("/register")
+    @Post
+    @OpenAPI(
+        description = "Register member",
+        responses = [
+            OpenAPIResponse(201, "Member registered", Map::class),
         ]
     )
-    private fun registerPrivateMember(): Response {
+    private fun registerMember(): Response {
         var identifier: String
 
         do {
             identifier = StringUtils.generateRandomString(12)
-        } while (memberCacheService.findPrivateMember(identifier) != null)
+        } while (memberCacheService.findByIdentifier(identifier) != null)
 
-        memberService.savePrivateMember(identifier)
+        memberService.save(identifier)
         return Response.created(mapOf("identifier" to identifier))
     }
 
@@ -56,11 +72,53 @@ class MemberController {
         description = "Login a private member",
         responses = [
             OpenAPIResponse(200, "Private member logged in"),
+        ],
+        deprecated = true
+    )
+    @Deprecated("You should use /login instead", ReplaceWith("/login"))
+    private fun loginPrivateMember(@BodyParam identifier: String): Response {
+        return loginMember(identifier)
+    }
+
+    @Path("/login")
+    @Post
+    @OpenAPI(
+        description = "Login member",
+        responses = [
+            OpenAPIResponse(200, "Member logged in"),
         ]
     )
-    private fun loginPrivateMember(@BodyParam identifier: String): Response {
-        return Response.ok(memberCacheService.findPrivateMember(identifier) ?: return Response.notFound())
+    private fun loginMember(@BodyParam identifier: String): Response {
+        return Response.ok(memberCacheService.findByIdentifier(identifier) ?: return runBlocking {
+            delay(1000)
+            Response.notFound()
+        })
     }
+
+    @Path("/associate-email")
+    @Post
+    @JWTAuthenticated
+    @OpenAPI(
+        description = "Associate email to member",
+        responses = [
+            OpenAPIResponse(201, "Member action created", GenericDto::class),
+            OpenAPIResponse(401, "Unauthorized"),
+        ],
+        security = true
+    )
+    private fun associateEmail(@JWTUser uuidUser: UUID, @BodyParam email: String): Response {
+        // Verify email
+        if (!StringUtils.isValidEmail(email)) {
+            return Response.badRequest("Invalid email")
+        }
+
+        if (memberService.findByEmail(email) != null) {
+            return Response.conflict("Email already associated to an account")
+        }
+
+        return Response.created(GenericDto(memberService.associateEmail(uuidUser, email)))
+    }
+
 
     @Path("/animes")
     @Put

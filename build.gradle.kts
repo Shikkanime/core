@@ -18,6 +18,7 @@ val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.2.0"
+val angusMailVersion = "2.0.3"
 
 val jdaVersion = "5.0.0-beta.24"
 val twitter4jVersion = "4.0.7"
@@ -95,6 +96,7 @@ dependencies {
     implementation("org.apache.tika:tika-core:$tikaVersion")
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
+    implementation("org.eclipse.angus:angus-mail:$angusMailVersion")
 
     // Social networks
     implementation("net.dv8tion:JDA:$jdaVersion")

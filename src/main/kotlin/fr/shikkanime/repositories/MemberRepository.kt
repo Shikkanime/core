@@ -36,16 +36,25 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findPrivateMember(identifier: String): Member? {
+    fun findByIdentifier(identifier: String): Member? {
         return inTransaction {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
+            query.where(cb.equal(root[Member_.username], identifier))
 
-            query.where(
-                cb.equal(root[Member_.username], identifier),
-                cb.isTrue(root[Member_.isPrivate])
-            )
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
+    }
+
+    fun findByEmail(email: String): Member? {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            query.where(cb.equal(root[Member_.email], email))
 
             createReadOnlyQuery(it, query)
                 .resultList

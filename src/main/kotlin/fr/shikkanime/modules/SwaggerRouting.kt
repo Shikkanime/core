@@ -29,6 +29,7 @@ fun swagger(
         hidden = hiddenRoute || openApi.hidden
         summary = openApi.description
         description = openApi.description
+        deprecated = openApi.deprecated
         swaggerRequest(method)
         swaggerResponse(openApi)
     }
