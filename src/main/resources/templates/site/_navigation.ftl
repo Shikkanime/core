@@ -2,7 +2,7 @@
 
 <#macro display canonicalUrl="" openGraphImage="">
     <@layout.main canonicalUrl="${canonicalUrl}" openGraphImage="${openGraphImage}">
-        <#assign margin = "mx-md-2">
+        <#assign margin = "ms-md-2">
 
         <header class="position-fixed" style="z-index: 1000; width: 100%;">
             <nav class="navbar navbar-expand-lg bg-black bg-opacity-75" data-bs-theme="dark" style="backdrop-filter: blur(0.5rem);">

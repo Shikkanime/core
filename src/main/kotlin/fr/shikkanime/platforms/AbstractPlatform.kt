@@ -98,9 +98,6 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         file.writeText(ObjectParser.toJson(configuration))
     }
 
-    private fun getConfigurationFile(): File {
-        val folder = File(Constant.dataFolder, "config")
-        if (!folder.exists()) folder.mkdirs()
-        return File(folder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
-    }
+    private fun getConfigurationFile() =
+        File(Constant.configFolder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
 }
