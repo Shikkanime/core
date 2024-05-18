@@ -26,7 +26,8 @@
                 <#if (anime.simulcasts?size > 0)>
                     <div class="mt-3 d-inline">
                         <#list anime.simulcasts as simulcast>
-                            <a href="/catalog/${simulcast.slug}" class="btn btn-outline-light">${simulcast.label}</a>
+                            <a href="/catalog/${simulcast.slug}"
+                               class="btn btn-outline-light me-2">${simulcast.label}</a>
                         </#list>
                     </div>
                 </#if>
