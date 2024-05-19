@@ -195,9 +195,9 @@ class FetchOldEpisodesJob : AbstractJob {
                             season.id
                         )
                     }
-                        .flatMap { it.versions ?: emptyList() }
+                        .flatMap { it.versions ?: listOf(CrunchyrollWrapper.Version(it.id)) }
                         .distinctBy { it.guid }
-                        .map { version ->
+                        .parallelStream().map { version ->
                             runBlocking {
                                 CrunchyrollWrapper.getEpisode(
                                     it.countryCode.locale,
@@ -205,7 +205,7 @@ class FetchOldEpisodesJob : AbstractJob {
                                     version.guid
                                 )
                             }
-                        }
+                        }.toList()
                 }
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
