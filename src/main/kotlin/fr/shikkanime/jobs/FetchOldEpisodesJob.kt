@@ -179,7 +179,7 @@ class FetchOldEpisodesJob : AbstractJob {
         return episodes
     }
 
-    private val crunchyrollEpisodesCache =
+    val crunchyrollEpisodesCache =
         MapCache<CountryCodeIdKeyCache, List<CrunchyrollWrapper.Episode>>(duration = Duration.ofDays(7)) {
             try {
                 val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
