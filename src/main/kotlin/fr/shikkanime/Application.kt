@@ -4,10 +4,7 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeMappingService
-import fr.shikkanime.services.ImageService
-import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.*
 import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
@@ -64,7 +61,13 @@ fun main() {
 }
 
 private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, animeService: AnimeService) {
+    val episodeVariantService = Constant.injector.getInstance(EpisodeVariantService::class.java)
+
     animeService.findAll().forEach {
+        val mappingVariants = episodeVariantService.findAllByAnime(it)
+        it.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
+        it.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
+
         val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
 
         if (toSlug != it.slug) {
@@ -77,6 +80,10 @@ private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, an
     }
 
     episodeMappingService.findAll().forEach {
+        val mappingVariants = episodeVariantService.findAllByMapping(it)
+        it.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
+        it.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
+
         it.status = StringUtils.getStatus(it)
         episodeMappingService.update(it)
     }
