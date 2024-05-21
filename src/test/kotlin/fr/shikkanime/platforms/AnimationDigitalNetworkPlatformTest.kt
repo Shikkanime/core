@@ -172,4 +172,21 @@ class AnimationDigitalNetworkPlatformTest {
         assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
         assertEquals(13, episodes[0].number)
     }
+
+    @Test
+    fun `fetchEpisodes for 2023-07-11`() {
+        val s = "2023-07-11T23:59:59Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader()
+                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isEmpty())
+    }
 }
