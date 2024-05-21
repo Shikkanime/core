@@ -1,7 +1,6 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.utils.EncryptionManager
@@ -56,7 +55,7 @@ class NetflixPlatform :
                 animeBanner = animeBanner,
                 animeDescription = animeDescription,
                 releaseDateTime = releaseDateTime,
-                episodeType = EpisodeType.EPISODE,
+                episodeType = key.netflixSimulcast.episodeType,
                 season = season,
                 number = episodeNumber,
                 duration = durationInSeconds,

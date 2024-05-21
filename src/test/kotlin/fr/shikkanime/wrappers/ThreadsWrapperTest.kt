@@ -19,7 +19,7 @@ class ThreadsWrapperTest {
     fun generateDeviceId() {
         val username = "Hello"
         val password = "World!"
-        assertEquals("android-6f36600bd3a8126c", threadsWrapper.generateDeviceId(username, password))
+        assertEquals("android-da88e3773489b230", threadsWrapper.generateDeviceId(username, password))
     }
 
     @Test

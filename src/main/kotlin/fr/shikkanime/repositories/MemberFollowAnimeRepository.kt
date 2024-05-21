@@ -43,7 +43,6 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
 
     fun findAllMissedAnimes(
         member: Member,
-        watchedEpisodes: List<UUID>,
         page: Int,
         limit: Int,
     ): Pageable<Tuple> {
@@ -53,12 +52,14 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             val root = query.from(getEntityClass())
             val anime = root.join(MemberFollowAnime_.anime)
             val episodeMapping = anime.join(Anime_.mappings, JoinType.LEFT)
+            val memberFollowEpisode = episodeMapping.join(EpisodeMapping_.memberFollowEpisodes, JoinType.LEFT)
+            memberFollowEpisode.on(cb.equal(memberFollowEpisode[MemberFollowEpisode_.member], member))
 
-            val watchedEpisodesPredicate = episodeMapping[EpisodeMapping_.uuid].`in`(watchedEpisodes)
             val memberPredicate = cb.equal(root[MemberFollowAnime_.member], member)
+            val memberFollowEpisodePredicate = cb.and(cb.isNull(memberFollowEpisode[MemberFollowEpisode_.episode]))
 
             query.multiselect(anime, cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]).`as`(Long::class.java))
-            query.where(memberPredicate, cb.not(watchedEpisodesPredicate))
+            query.where(memberPredicate, memberFollowEpisodePredicate)
             query.groupBy(anime)
             query.having(cb.greaterThan(cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]), 0))
             query.orderBy(cb.desc(anime[Anime_.lastReleaseDateTime]))
