@@ -28,7 +28,7 @@ val h2Version = "2.2.224"
 val mockitoVersion = "5.12.0"
 
 plugins {
-    val kotlinVersion = "1.9.24"
+    val kotlinVersion = "2.0.0"
 
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
