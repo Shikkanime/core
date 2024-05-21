@@ -67,6 +67,7 @@ class StringUtilsTest {
             "After-school Hanako-kun" to "after-school-hanako-kun",
             "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "the-strongest-tanks-labyrinth-raids",
             "'Tis Time for \"Torture,\" Princess" to "tis-time-for-torture-princess",
+            "X&Y" to "x-y",
         )
 
         list.forEach { (input, expected) ->
