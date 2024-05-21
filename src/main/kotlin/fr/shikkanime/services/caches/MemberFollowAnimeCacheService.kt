@@ -10,7 +10,6 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.MemberFollowEpisode
 import fr.shikkanime.services.MemberFollowAnimeService
-import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
@@ -20,9 +19,6 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
 
     @Inject
     private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
     private val cache =
         MapCache<UUIDPaginationKeyCache, PageableDto<MissedAnimeDto>?>(
@@ -36,7 +32,6 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
 
             val pageable = memberFollowAnimeService.findAllMissedAnimes(
                 member,
-                memberFollowEpisodeService.findAllFollowedEpisodesUUID(member),
                 it.page,
                 it.limit
             )

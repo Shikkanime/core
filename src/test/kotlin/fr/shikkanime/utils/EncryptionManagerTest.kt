@@ -11,12 +11,4 @@ class EncryptionManagerTest {
             EncryptionManager.toSHA512("Hello, World!")
         )
     }
-
-    @Test
-    fun toMD5() {
-        assertEquals(
-            "65a8e27d8879283831b664bd8b7f0ad4",
-            EncryptionManager.toMD5("Hello, World!")
-        )
-    }
 }

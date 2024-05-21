@@ -24,8 +24,8 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     fun findAllFollowedAnimesUUID(member: Member) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(member)
 
-    fun findAllMissedAnimes(member: Member, watchedEpisodes: List<UUID>, page: Int, limit: Int) =
-        memberFollowAnimeRepository.findAllMissedAnimes(member, watchedEpisodes, page, limit)
+    fun findAllMissedAnimes(member: Member, page: Int, limit: Int) =
+        memberFollowAnimeRepository.findAllMissedAnimes(member, page, limit)
 
     fun follow(uuidUser: UUID, anime: GenericDto): Response {
         val member = memberService.find(uuidUser) ?: return Response.notFound()
