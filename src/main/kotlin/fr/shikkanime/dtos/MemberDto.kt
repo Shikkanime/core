@@ -8,6 +8,7 @@ data class MemberDto(
     val creationDateTime: String,
     val lastUpdateDateTime: String,
     val isPrivate: Boolean,
+    val email: String?,
     val followedAnimes: List<UUID>,
     val followedEpisodes: List<UUID>,
     val totalDuration: Long,

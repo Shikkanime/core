@@ -1,0 +1,66 @@
+package fr.shikkanime.controllers.api
+
+import com.google.inject.Inject
+import fr.shikkanime.dtos.MessageDto
+import fr.shikkanime.services.MemberActionService
+import fr.shikkanime.utils.routes.Controller
+import fr.shikkanime.utils.routes.JWTAuthenticated
+import fr.shikkanime.utils.routes.Path
+import fr.shikkanime.utils.routes.Response
+import fr.shikkanime.utils.routes.method.Post
+import fr.shikkanime.utils.routes.openapi.OpenAPI
+import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
+import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.QueryParam
+import java.util.*
+
+@Controller("/api/v1/member-actions")
+class MemberActionController {
+    @Inject
+    private lateinit var memberActionService: MemberActionService
+
+    @Path("/validate")
+    @Post
+    @JWTAuthenticated
+    @OpenAPI(
+        "Validate an action",
+        [
+            OpenAPIResponse(
+                200,
+                "Action validated",
+                Response::class
+            ),
+            OpenAPIResponse(
+                400,
+                "UUID is required OR Action is required",
+                MessageDto::class
+            ),
+        ],
+        security = true
+    )
+    fun validateAction(
+        @QueryParam("uuid", required = true) uuid: UUID?,
+        @BodyParam action: String?
+    ): Response {
+        if (uuid == null) {
+            return Response.badRequest(
+                MessageDto(
+                    MessageDto.Type.ERROR,
+                    "UUID is required"
+                )
+            )
+        }
+
+        if (action.isNullOrEmpty()) {
+            return Response.badRequest(
+                MessageDto(
+                    MessageDto.Type.ERROR,
+                    "Action is required"
+                )
+            )
+        }
+
+        memberActionService.validateAction(uuid, action)
+        return Response.ok()
+    }
+}

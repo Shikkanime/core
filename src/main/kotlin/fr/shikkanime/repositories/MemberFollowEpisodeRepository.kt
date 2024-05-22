@@ -22,6 +22,21 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
+    fun findAllByEpisode(episode: EpisodeMapping): List<MemberFollowEpisode> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.episode], episode)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByMemberAndEpisode(member: Member, episode: EpisodeMapping): MemberFollowEpisode? {
         return inTransaction {
             val cb = it.criteriaBuilder

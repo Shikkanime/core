@@ -15,7 +15,7 @@ import java.util.regex.Pattern
 
 object StringUtils {
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
-    private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b")
+    private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
     private val regex = "( [-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ")
 
@@ -136,5 +136,10 @@ object StringUtils {
         return (1..length)
             .map { source.random() }
             .joinToString("")
+    }
+
+    fun isValidEmail(email: String): Boolean {
+        val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$".toRegex()
+        return emailRegex.matches(email)
     }
 }

@@ -1,6 +1,6 @@
 val ktorVersion = "2.3.11"
 val ktorSwaggerUiVersion = "2.10.0"
-val hibernateCoreVersion = "6.5.1.Final"
+val hibernateCoreVersion = "6.5.2.Final"
 val ehcacheVersion = "3.10.8"
 val glassfishJaxbVersion = "4.0.5"
 val hibernateSearchVersion = "7.1.1.Final"
@@ -8,7 +8,7 @@ val tikaVersion = "3.0.0-BETA"
 val postgresqlVersion = "42.7.3"
 val reflectionsVersion = "0.10.2"
 val guiceVersion = "7.0.0"
-val liquibaseCoreVersion = "4.27.0"
+val liquibaseCoreVersion = "4.28.0"
 val quartzVersion = "2.5.0-rc1"
 val guavaVersion = "33.2.0-jre"
 val playwrightVersion = "1.44.0"
@@ -17,7 +17,8 @@ val gsonVersion = "2.11.0"
 val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
-val firebaseVersion = "9.2.0"
+val firebaseVersion = "9.3.0"
+val angusMailVersion = "2.0.3"
 
 val jdaVersion = "5.0.0-beta.24"
 val twitter4jVersion = "4.0.7"
@@ -28,7 +29,7 @@ val h2Version = "2.2.224"
 val mockitoVersion = "5.12.0"
 
 plugins {
-    val kotlinVersion = "1.9.24"
+    val kotlinVersion = "2.0.0"
 
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
@@ -95,6 +96,7 @@ dependencies {
     implementation("org.apache.tika:tika-core:$tikaVersion")
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
+    implementation("org.eclipse.angus:angus-mail:$angusMailVersion")
 
     // Social networks
     implementation("net.dv8tion:JDA:$jdaVersion")

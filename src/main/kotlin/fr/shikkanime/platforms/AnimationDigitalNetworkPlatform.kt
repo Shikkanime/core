@@ -104,15 +104,14 @@ class AnimationDigitalNetworkPlatform :
         val releaseDate = ZonedDateTime.parse(releaseDateString)
 
         val numberAsString = jsonObject.getAsString("shortNumber")
-        val showType = show.getAsString("type")
+        val showType = jsonObject.getAsString("type")
 
-        if (numberAsString?.startsWith("Bande-annonce") == true ||
-            numberAsString?.startsWith("Bande annonce") == true ||
-            numberAsString?.startsWith("Court-métrage") == true ||
-            showType == "PV"
-        ) throw Exception(
-            "Anime is a trailer"
-        )
+        val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
+        val specialShowTypes = listOf("PV", "BONUS")
+
+        if (trailerIndicators.any { numberAsString?.startsWith(it) == true } || specialShowTypes.contains(showType)) {
+            throw Exception("Anime is not an episode")
+        }
 
         val (number, episodeType) = getNumberAndEpisodeType(numberAsString, showType)
 

@@ -1,0 +1,268 @@
+{
+  "videos": [
+    {
+      "id": 23303,
+      "title": "Le Collège Noir - Teaser",
+      "name": "",
+      "number": "Teaser",
+      "shortNumber": "Teaser",
+      "season": null,
+      "reference": "collegenoir_pv_0001",
+      "type": "PV",
+      "order": 2,
+      "image": "https://image.animationdigitalnetwork.fr/license/collegenoir/pv/web/pv1_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/collegenoir/pv/web/pv1_640x360.jpg",
+      "summary": "Découvrez le teaser de « Collège Noir », la nouvelle coproduction originale entre ADN, le Studio La Cachette et Toei Animation. Adaptation de la célèbre bande dessinée d’Ulysse Malassagne, les deux premiers épisodes sont prévus en exclusivité sur la plateforme le 31 octobre 2023. Les contes et légendes du folklore auvergnat n’attendent que vous.",
+      "releaseDate": "2023-07-11T14:00:00Z",
+      "duration": 43,
+      "url": "https://animationdigitalnetwork.fr/video/le-college-noir/23303-teaser",
+      "urlPath": "/video/le-college-noir/23303-teaser",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/le-college-noir/23303",
+      "languages": [
+        "vf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 5,
+      "ratingsCount": 9,
+      "commentsCount": 2,
+      "available": true,
+      "download": false,
+      "free": true,
+      "freeWithAds": false,
+      "show": {
+        "id": 1084,
+        "title": "Le Collège Noir",
+        "type": "EPS",
+        "originalTitle": "Le Collège Noir - Complainte d'Auvergne",
+        "shortTitle": "Le Collège Noir",
+        "reference": "lecollegenoir_tv",
+        "age": "12+",
+        "languages": [
+          "vf"
+        ],
+        "summary": "Dans un collège perdu au milieu des montagnes du Cantal, cinq jeunes collégiens passent les vacances de la Toussaint sous la surveillance de Léna, une pionne mal lunée. Mais lorsque l’âme de leur camarade disparu leur apparaît en pleine nuit, les ados se retrouvent confrontés à la malédiction d’une terrible sorcière et aux créatures les plus terrifiantes du folklore français…",
+        "image": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/le-college-noir",
+        "urlPath": "/video/le-college-noir",
+        "episodeCount": 6,
+        "genres": [
+          "Animation franco-belge",
+          "Aventure",
+          "Comédie",
+          "Fantastique"
+        ],
+        "copyright": "© 2023 Studio La Cachette - ADN - TOEI Animation Co., Ltd.",
+        "rating": 4.9,
+        "ratingsCount": 394,
+        "commentsCount": 33,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "simulcast": false,
+        "free": true,
+        "available": true,
+        "download": false,
+        "basedOn": "Oeuvre Originale",
+        "tagline": "Plongez dans le folkore du Cantal à travers la nouvelle coproduction entre ADN, le Studio La Cachette et Toei Animation.",
+        "firstReleaseYear": "2023",
+        "productionStudio": "La Cachette",
+        "countryOfOrigin": "France",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Ulysse Malassagne"
+          }
+        ],
+        "nextVideoReleaseDate": null,
+        "indexable": true
+      },
+      "indexable": false
+    },
+    {
+      "id": 23304,
+      "title": "Le Collège Noir - Opening",
+      "name": "",
+      "number": "Opening",
+      "shortNumber": "Opening",
+      "season": null,
+      "reference": "collegenoir_pv_0002",
+      "type": "BONUS",
+      "order": 3,
+      "image": "https://image.animationdigitalnetwork.fr/license/collegenoir/pv/web/bonus2_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/collegenoir/pv/web/bonus2_640x360.jpg",
+      "summary": "Composé par Didier François et interprété par Gabriel Yacoub, découvrez l’opening officiel de la nouvelle production franco-japonaise, « Le Collège Noir », entre ADN, le Studio La Cachette et Toei Animation.",
+      "releaseDate": "2023-07-11T14:00:00Z",
+      "duration": 55,
+      "url": "https://animationdigitalnetwork.fr/video/le-college-noir/23304-opening",
+      "urlPath": "/video/le-college-noir/23304-opening",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/le-college-noir/23304",
+      "languages": [
+        "vf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 5,
+      "ratingsCount": 8,
+      "commentsCount": 1,
+      "available": true,
+      "download": false,
+      "free": true,
+      "freeWithAds": false,
+      "show": {
+        "id": 1084,
+        "title": "Le Collège Noir",
+        "type": "EPS",
+        "originalTitle": "Le Collège Noir - Complainte d'Auvergne",
+        "shortTitle": "Le Collège Noir",
+        "reference": "lecollegenoir_tv",
+        "age": "12+",
+        "languages": [
+          "vf"
+        ],
+        "summary": "Dans un collège perdu au milieu des montagnes du Cantal, cinq jeunes collégiens passent les vacances de la Toussaint sous la surveillance de Léna, une pionne mal lunée. Mais lorsque l’âme de leur camarade disparu leur apparaît en pleine nuit, les ados se retrouvent confrontés à la malédiction d’une terrible sorcière et aux créatures les plus terrifiantes du folklore français…",
+        "image": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/le-college-noir",
+        "urlPath": "/video/le-college-noir",
+        "episodeCount": 6,
+        "genres": [
+          "Animation franco-belge",
+          "Aventure",
+          "Comédie",
+          "Fantastique"
+        ],
+        "copyright": "© 2023 Studio La Cachette - ADN - TOEI Animation Co., Ltd.",
+        "rating": 4.9,
+        "ratingsCount": 394,
+        "commentsCount": 33,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "simulcast": false,
+        "free": true,
+        "available": true,
+        "download": false,
+        "basedOn": "Oeuvre Originale",
+        "tagline": "Plongez dans le folkore du Cantal à travers la nouvelle coproduction entre ADN, le Studio La Cachette et Toei Animation.",
+        "firstReleaseYear": "2023",
+        "productionStudio": "La Cachette",
+        "countryOfOrigin": "France",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Ulysse Malassagne"
+          }
+        ],
+        "nextVideoReleaseDate": null,
+        "indexable": true
+      },
+      "indexable": false
+    },
+    {
+      "id": 23305,
+      "title": "Le Collège Noir - Making-of",
+      "name": "",
+      "number": "Making-of",
+      "shortNumber": "Making-of",
+      "season": null,
+      "reference": "collegenoir_pv_0003",
+      "type": "BONUS",
+      "order": 4,
+      "image": "https://image.animationdigitalnetwork.fr/license/collegenoir/pv/web/bonus3_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/collegenoir/pv/web/bonus3_640x360.jpg",
+      "summary": "Découvrez les coulisses derrière la création et l’adaptation de la bande dessinée éponyme « Le Collège Noir » par Ulysse Massalagne, auteur et réalisateur. Travaillant main dans la main avec ADN et Toei Animation, le Studio La Cachette nous offre une œuvre onirique et horrifique, puisant ses origines dans le folklore auvergnat, à découvrir en exclusivité sur Animation Digital Network le 31 octobre 2023.",
+      "releaseDate": "2023-07-11T14:00:00Z",
+      "duration": 197,
+      "url": "https://animationdigitalnetwork.fr/video/le-college-noir/23305-making-of",
+      "urlPath": "/video/le-college-noir/23305-making-of",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/le-college-noir/23305",
+      "languages": [
+        "vf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 4.9,
+      "ratingsCount": 15,
+      "commentsCount": 3,
+      "available": true,
+      "download": false,
+      "free": true,
+      "freeWithAds": false,
+      "show": {
+        "id": 1084,
+        "title": "Le Collège Noir",
+        "type": "EPS",
+        "originalTitle": "Le Collège Noir - Complainte d'Auvergne",
+        "shortTitle": "Le Collège Noir",
+        "reference": "lecollegenoir_tv",
+        "age": "12+",
+        "languages": [
+          "vf"
+        ],
+        "summary": "Dans un collège perdu au milieu des montagnes du Cantal, cinq jeunes collégiens passent les vacances de la Toussaint sous la surveillance de Léna, une pionne mal lunée. Mais lorsque l’âme de leur camarade disparu leur apparaît en pleine nuit, les ados se retrouvent confrontés à la malédiction d’une terrible sorcière et aux créatures les plus terrifiantes du folklore français…",
+        "image": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/lecollegenoir/tv/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/le-college-noir",
+        "urlPath": "/video/le-college-noir",
+        "episodeCount": 6,
+        "genres": [
+          "Animation franco-belge",
+          "Aventure",
+          "Comédie",
+          "Fantastique"
+        ],
+        "copyright": "© 2023 Studio La Cachette - ADN - TOEI Animation Co., Ltd.",
+        "rating": 4.9,
+        "ratingsCount": 394,
+        "commentsCount": 33,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "simulcast": false,
+        "free": true,
+        "available": true,
+        "download": false,
+        "basedOn": "Oeuvre Originale",
+        "tagline": "Plongez dans le folkore du Cantal à travers la nouvelle coproduction entre ADN, le Studio La Cachette et Toei Animation.",
+        "firstReleaseYear": "2023",
+        "productionStudio": "La Cachette",
+        "countryOfOrigin": "France",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Ulysse Malassagne"
+          }
+        ],
+        "nextVideoReleaseDate": null,
+        "indexable": true
+      },
+      "indexable": false
+    }
+  ]
+}

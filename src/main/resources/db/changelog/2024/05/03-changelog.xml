@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1715947254036"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'email_host'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="email_host"/>
+            <column name="property_value" value=""/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'email_port'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="email_port"/>
+            <column name="property_value" value="587"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'email_username'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="email_username"/>
+            <column name="property_value" value=""/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'email_password'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="email_password"/>
+            <column name="property_value" value=""/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member_action"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="member_action">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_member_action"/>
+            </column>
+            <column name="member_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creation_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="update_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="validated" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="member" columnName="email"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="member">
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="true" unique="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="${id}-7" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_MEMBER_ACTION_ON_MEMBER_UUID"
+                                            foreignKeyTableName="member_action"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="member_uuid" baseTableName="member_action" constraintName="FK_MEMBER_ACTION_ON_MEMBER_UUID" referencedColumnNames="uuid" referencedTableName="member"/>
+    </changeSet>
+</databaseChangeLog>

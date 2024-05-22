@@ -21,6 +21,8 @@ class Member(
     val isPrivate: Boolean = false,
     @Column(nullable = false, unique = true)
     val username: String? = null,
+    @Column(nullable = true, unique = true)
+    var email: String? = null,
     @Column(nullable = false, name = "encrypted_password")
     val encryptedPassword: ByteArray? = null,
     @ElementCollection(fetch = FetchType.EAGER)

@@ -4,7 +4,9 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.MemberService
 import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
@@ -19,10 +21,9 @@ private val logger = LoggerFactory.getLogger(Constant.NAME)
 fun main() {
     logger.info("Starting ${Constant.NAME}...")
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     animeService.preIndex()
 
-    updateAndDeleteData(episodeMappingService, animeService)
+    updateAndDeleteData(animeService)
 
     ImageService.loadCache()
     ImageService.addAll()
@@ -60,14 +61,8 @@ fun main() {
     ).start(wait = true)
 }
 
-private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, animeService: AnimeService) {
-    val episodeVariantService = Constant.injector.getInstance(EpisodeVariantService::class.java)
-
+private fun updateAndDeleteData(animeService: AnimeService) {
     animeService.findAll().forEach {
-        val mappingVariants = episodeVariantService.findAllByAnime(it)
-        it.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
-        it.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
-
         val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
 
         if (toSlug != it.slug) {
@@ -77,15 +72,6 @@ private fun updateAndDeleteData(episodeMappingService: EpisodeMappingService, an
 
         it.status = StringUtils.getStatus(it)
         animeService.update(it)
-    }
-
-    episodeMappingService.findAll().forEach {
-        val mappingVariants = episodeVariantService.findAllByMapping(it)
-        it.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
-        it.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
-
-        it.status = StringUtils.getStatus(it)
-        episodeMappingService.update(it)
     }
 }
 

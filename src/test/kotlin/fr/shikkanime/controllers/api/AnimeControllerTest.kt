@@ -59,15 +59,15 @@ class AnimeControllerTest {
     private suspend fun ApplicationTestBuilder.registerAndLogin(): Pair<String, String> {
         var identifier: String?
 
-        client.post("/api/v1/members/private-register").apply {
+        client.post("/api/v1/members/register").apply {
             assertEquals(HttpStatusCode.Created, status)
             identifier = ObjectParser.fromJson(bodyAsText(), Map::class.java)["identifier"].toString()
-            val findPrivateMember = memberService.findPrivateMember(identifier!!)
+            val findPrivateMember = memberService.findByIdentifier(identifier!!)
             assertNotNull(findPrivateMember)
             assertTrue(findPrivateMember!!.isPrivate)
         }
 
-        client.post("/api/v1/members/private-login") {
+        client.post("/api/v1/members/login") {
             setBody(identifier!!)
         }.apply {
             assertEquals(HttpStatusCode.OK, status)
@@ -156,7 +156,7 @@ class AnimeControllerTest {
                 setBody(ObjectParser.toJson(GenericDto(anime1.uuid!!)))
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
-                val findPrivateMember = memberService.findPrivateMember(identifier)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
                 val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
@@ -223,7 +223,7 @@ class AnimeControllerTest {
                 setBody(ObjectParser.toJson(GenericDto(anime.uuid!!)))
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
-                val findPrivateMember = memberService.findPrivateMember(identifier)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
                 val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
@@ -236,7 +236,7 @@ class AnimeControllerTest {
                 setBody(ObjectParser.toJson(GenericDto(episodes.first().uuid!!)))
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
-                val findPrivateMember = memberService.findPrivateMember(identifier)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
                 val followedEpisodesUUID = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedEpisodesUUID.size)
