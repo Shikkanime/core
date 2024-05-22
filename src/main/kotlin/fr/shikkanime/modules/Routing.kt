@@ -95,13 +95,14 @@ private fun setSecurityHeaders(call: ApplicationCall, configCacheService: Config
 
 private fun logCallDetails(call: ApplicationCall) {
     val startTime = call.attributes[callStartTime]
+    val httpMethod = call.request.httpMethod.value
+    val status = call.response.status()?.value ?: 0
     val duration = ZonedDateTime.now().toInstant().toEpochMilli() - startTime.toInstant().toEpochMilli()
     val path = call.request.path()
-    val httpMethod = call.request.httpMethod.value
-    val userAgent = call.request.userAgent()
-    val status = call.response.status()?.value ?: 0
+    val ipAddress = call.request.origin.remoteHost
+    val userAgent = call.request.userAgent() ?: "Unknown"
 
-    logger.info("$httpMethod ${call.request.origin.uri} [$status - $duration ms] -> $path${if (userAgent != null) " ($userAgent)" else ""}")
+    logger.info("[$ipAddress - $userAgent] ($status - $duration ms) $httpMethod ${call.request.origin.uri} -> $path")
 }
 
 private fun Routing.createRoutes() {
