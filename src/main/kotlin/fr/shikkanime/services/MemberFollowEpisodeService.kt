@@ -3,6 +3,7 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowEpisode
 import fr.shikkanime.repositories.MemberFollowEpisodeRepository
@@ -27,6 +28,9 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
     override fun getRepository() = memberFollowEpisodeRepository
 
     fun findAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(member)
+
+    fun findAllByEpisode(episodeMapping: EpisodeMapping) =
+        memberFollowEpisodeRepository.findAllByEpisode(episodeMapping)
 
     fun getTotalDuration(member: Member) = memberFollowEpisodeRepository.getTotalDuration(member)
 

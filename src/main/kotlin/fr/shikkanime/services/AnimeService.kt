@@ -36,6 +36,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
+    @Inject
+    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+
     override fun getRepository() = animeRepository
 
     fun findAllBy(
@@ -217,6 +220,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     override fun delete(entity: Anime) {
         episodeMappingService.findAllByAnime(entity).forEach { episodeMappingService.delete(it) }
+        memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(Anime::class.java)
     }

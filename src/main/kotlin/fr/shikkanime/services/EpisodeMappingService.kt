@@ -26,6 +26,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     @Inject
     private lateinit var animeService: AnimeService
 
+    @Inject
+    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+
     override fun getRepository() = episodeMappingRepository
 
     fun findAllBy(
@@ -188,6 +191,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun delete(entity: EpisodeMapping) {
         episodeVariantService.findAllByMapping(entity).forEach { episodeVariantService.delete(it) }
+        memberFollowEpisodeService.findAllByEpisode(entity).forEach { memberFollowEpisodeService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
     }

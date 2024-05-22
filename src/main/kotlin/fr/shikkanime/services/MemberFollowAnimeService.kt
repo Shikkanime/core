@@ -2,6 +2,7 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.repositories.MemberFollowAnimeRepository
@@ -23,6 +24,8 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
     override fun getRepository() = memberFollowAnimeRepository
 
     fun findAllFollowedAnimesUUID(member: Member) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(member)
+
+    fun findAllByAnime(anime: Anime) = memberFollowAnimeRepository.findAllByAnime(anime)
 
     fun findAllMissedAnimes(member: Member, page: Int, limit: Int) =
         memberFollowAnimeRepository.findAllMissedAnimes(member, page, limit)

@@ -8,23 +8,6 @@ import java.util.*
 class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     override fun getEntityClass() = MemberFollowAnime::class.java
 
-    fun findByMemberAndAnime(member: Member, anime: Anime): MemberFollowAnime? {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-
-            query.where(
-                cb.equal(root[MemberFollowAnime_.member], member),
-                cb.equal(root[MemberFollowAnime_.anime], anime)
-            )
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
-        }
-    }
-
     fun findAllFollowedAnimesUUID(member: Member): List<UUID> {
         return inTransaction {
             val cb = it.criteriaBuilder
@@ -65,6 +48,38 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             query.orderBy(cb.desc(anime[Anime_.lastReleaseDateTime]))
 
             buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
+        }
+    }
+
+    fun findAllByAnime(anime: Anime): List<MemberFollowAnime> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[MemberFollowAnime_.anime], anime)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findByMemberAndAnime(member: Member, anime: Anime): MemberFollowAnime? {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[MemberFollowAnime_.member], member),
+                cb.equal(root[MemberFollowAnime_.anime], anime)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
         }
     }
 }
