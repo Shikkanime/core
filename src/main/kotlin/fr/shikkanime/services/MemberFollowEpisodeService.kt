@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowEpisode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.repositories.MemberFollowEpisodeRepository
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.Response
@@ -39,13 +40,14 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
         val list = mutableListOf<MemberFollowEpisode>()
 
-        elements.forEach { element ->
-            if (memberFollowEpisodeRepository.findByMemberAndEpisode(member, element) != null) {
-                return@forEach
-            }
+        elements.filter { it.episodeType != EpisodeType.SUMMARY }
+            .forEach { element ->
+                if (memberFollowEpisodeRepository.findByMemberAndEpisode(member, element) != null) {
+                    return@forEach
+                }
 
-            list.add(save(MemberFollowEpisode(member = member, episode = element)))
-        }
+                list.add(save(MemberFollowEpisode(member = member, episode = element)))
+            }
 
         member.lastUpdateDateTime = ZonedDateTime.now()
         memberService.update(member)

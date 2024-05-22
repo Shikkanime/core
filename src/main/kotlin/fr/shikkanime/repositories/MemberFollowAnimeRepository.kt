@@ -1,6 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
+import fr.shikkanime.entities.enums.EpisodeType
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.util.*
@@ -35,6 +36,8 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             val root = query.from(getEntityClass())
             val anime = root.join(MemberFollowAnime_.anime)
             val episodeMapping = anime.join(Anime_.mappings, JoinType.LEFT)
+            // And episode type is not SUMMARY
+            episodeMapping.on(cb.notEqual(episodeMapping[EpisodeMapping_.episodeType], EpisodeType.SUMMARY))
             val memberFollowEpisode = episodeMapping.join(EpisodeMapping_.memberFollowEpisodes, JoinType.LEFT)
             memberFollowEpisode.on(cb.equal(memberFollowEpisode[MemberFollowEpisode_.member], member))
 
