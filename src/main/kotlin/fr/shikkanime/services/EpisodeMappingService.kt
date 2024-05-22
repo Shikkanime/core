@@ -82,6 +82,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
                 }
 
                 // If the episode already exists, we delete the current episode
+                memberFollowEpisodeService.findAllByEpisode(episode).forEach { memberFollowEpisodeService.delete(it) }
                 super.delete(episode)
 
                 if (existing.lastReleaseDateTime.isBefore(episode.lastReleaseDateTime)) {
