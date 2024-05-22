@@ -99,7 +99,7 @@ private fun logCallDetails(call: ApplicationCall) {
     val status = call.response.status()?.value ?: 0
     val duration = ZonedDateTime.now().toInstant().toEpochMilli() - startTime.toInstant().toEpochMilli()
     val path = call.request.path()
-    val ipAddress = call.request.origin.remoteHost
+    val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
     val userAgent = call.request.userAgent() ?: "Unknown"
 
     logger.info("[$ipAddress - $userAgent] ($status - $duration ms) $httpMethod ${call.request.origin.uri} -> $path")
