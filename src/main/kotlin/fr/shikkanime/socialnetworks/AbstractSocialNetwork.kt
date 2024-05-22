@@ -25,6 +25,7 @@ abstract class AbstractSocialNetwork {
         return when (episodeDto.mapping.episodeType) {
             EpisodeType.SPECIAL -> "L'épisode spécial"
             EpisodeType.FILM -> "Le film"
+            EpisodeType.SUMMARY -> "L'épisode récapitulatif"
             else -> "L'épisode ${episodeDto.mapping.number}"
         }
     }

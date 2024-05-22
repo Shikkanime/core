@@ -8,6 +8,8 @@
             <#return "Film">
         <#case "SPECIAL">
             <#return "Spécial">
+        <#case "SUMMARY">
+            <#return "Épisode récapitulatif">
     </#switch>
 </#function>
 

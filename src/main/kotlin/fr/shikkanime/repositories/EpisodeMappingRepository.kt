@@ -74,19 +74,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllByEpisodeType(episodeType: EpisodeType): List<EpisodeMapping> {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-
-            query.where(cb.equal(root[EpisodeMapping_.episodeType], episodeType))
-
-            it.createQuery(query)
-                .resultList
-        }
-    }
-
     fun findByAnimeEpisodeTypeSeasonNumber(
         anime: Anime,
         episodeType: EpisodeType,

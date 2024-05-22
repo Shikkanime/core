@@ -4,5 +4,6 @@ enum class EpisodeType {
     EPISODE,
     FILM,
     SPECIAL,
+    SUMMARY,
     ;
 }
