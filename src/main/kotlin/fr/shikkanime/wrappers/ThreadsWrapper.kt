@@ -110,9 +110,9 @@ class ThreadsWrapper(
     }
 
     fun generateDeviceId(username: String, password: String): String {
-        val seed: String = EncryptionManager.toSHA512(username + password)
+        val seed: String = EncryptionManager.toMD5(username + password)
         val volatileSeed = "12345"
-        return "android-" + EncryptionManager.toSHA512(seed + volatileSeed).substring(0, 16)
+        return "android-" + EncryptionManager.toMD5(seed + volatileSeed).substring(0, 16)
     }
 
     suspend fun login(deviceId: String, username: String, password: String): Pair<String, String> {

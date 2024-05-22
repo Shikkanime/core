@@ -35,4 +35,10 @@ object EncryptionManager {
         val hash = digest.digest(source.toByteArray(StandardCharsets.UTF_8))
         return hash.fold("") { str, it -> str + "%02x".format(it) }
     }
+
+    fun toMD5(source: String): String {
+        val digest = MessageDigest.getInstance("MD5") // NOSONAR
+        val hash = digest.digest(source.toByteArray(StandardCharsets.UTF_8))
+        return hash.fold("") { str, it -> str + "%02x".format(it) }
+    }
 }
