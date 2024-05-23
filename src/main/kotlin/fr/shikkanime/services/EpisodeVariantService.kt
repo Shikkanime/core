@@ -9,12 +9,15 @@ import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @Inject
     private lateinit var episodeVariantRepository: EpisodeVariantRepository
 
@@ -50,7 +53,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllByMapping(mapping: EpisodeMapping) = episodeVariantRepository.findAllByMapping(mapping)
 
-    fun findAllSimulcasted(countryCode: CountryCode) = episodeVariantRepository.findAllSimulcasted(countryCode)
+    fun findAllSimulcastedByAnime(anime: Anime) = episodeVariantRepository.findAllSimulcastedByAnime(anime)
 
     fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
 
