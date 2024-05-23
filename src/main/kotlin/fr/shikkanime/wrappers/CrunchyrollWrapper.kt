@@ -84,7 +84,7 @@ object CrunchyrollWrapper {
             "${BASE_URL}auth/v1/token",
             headers = mapOf(
                 "Content-Type" to "application/x-www-form-urlencoded",
-                "Authorization" to "Basic Y3Jfd2ViOg==",
+                "Authorization" to "Basic YWNmYWZtNTE3aGtpZWt4Yl93bWU6MDluclZfejBUNWxVdjRyRHp5ZlJYZk0wVmlIRHQyQV8=",
                 "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
             ),
             body = "grant_type=client_id&client_id=offline_access"
