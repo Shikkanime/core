@@ -279,6 +279,7 @@ private fun handlePathParam(kParameter: KParameter, parameters: Map<String, List
         UUID::class.java -> pathParamValue?.let { UUID.fromString(it) }
         Platform::class.java -> pathParamValue?.let { Platform.valueOf(it) }
         String::class.java -> pathParamValue
+        Int::class.java -> pathParamValue?.toIntOrNull()
         else -> throw Exception("Unknown type ${kParameter.type}")
     }
 }

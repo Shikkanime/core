@@ -14,6 +14,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     fun findAllBy(
         countryCode: CountryCode?,
         anime: Anime?,
+        season: Int?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
@@ -26,6 +27,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             val predicates = mutableListOf<Predicate>()
             anime?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime], it)) }
+            season?.let { predicates.add(cb.equal(root[EpisodeMapping_.season], it)) }
             countryCode?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it)) }
             status?.let { predicates.add(cb.equal(root[EpisodeMapping_.status], it)) }
             query.where(*predicates.toTypedArray())
@@ -52,12 +54,13 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     }
 
     fun findAllUuidAndImage(): List<Tuple> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
+        return inTransaction {
+            val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
             query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
-            entityManager.createQuery(query).resultList
+            createReadOnlyQuery(it, query)
+                .resultList
         }
     }
 
@@ -69,7 +72,24 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.where(cb.equal(root[EpisodeMapping_.anime], anime))
 
-            it.createQuery(query)
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllSeasonsByAnime(anime: Anime): List<Tuple> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            query.multiselect(root[EpisodeMapping_.season], cb.greatest(root[EpisodeMapping_.lastReleaseDateTime]))
+            query.groupBy(root[EpisodeMapping_.season])
+            query.where(cb.equal(root[EpisodeMapping_.anime], anime))
+            query.orderBy(cb.asc(root[EpisodeMapping_.season]))
+            query.distinct(true)
+
+            createReadOnlyQuery(it, query)
                 .resultList
         }
     }
@@ -94,7 +114,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 )
             )
 
-            it.createQuery(query)
+            createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
         }
@@ -125,7 +145,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             )
 
             query.orderBy(cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]))
-            it.createQuery(query)
+            createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull() ?: 0
         }

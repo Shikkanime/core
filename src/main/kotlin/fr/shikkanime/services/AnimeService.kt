@@ -133,18 +133,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun recalculateSimulcasts() {
         findAll().forEach { anime ->
             anime.simulcasts.clear()
+
+            episodeVariantService.findAllSimulcastedByAnime(anime).forEach { episodeMapping ->
+                addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
+            }
+
             update(anime)
         }
-
-        episodeVariantService.findAllSimulcasted(CountryCode.FR)
-            .forEach { episodeMapping ->
-                val anime = find(episodeMapping.anime!!.uuid!!)!!
-                addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
-
-                if (episodeMapping.anime != anime) {
-                    update(anime)
-                }
-            }
     }
 
     override fun save(entity: Anime): Anime {

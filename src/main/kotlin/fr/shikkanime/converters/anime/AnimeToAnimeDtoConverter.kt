@@ -3,17 +3,23 @@ package fr.shikkanime.converters.anime
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTCString
+import java.time.ZonedDateTime
 
 class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     @Inject
     private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+
+    @Inject
+    private lateinit var episodeMappingService: EpisodeMappingService
 
     override fun convert(from: Anime): AnimeDto {
         val audioLocales = episodeVariantCacheService.findAllAudioLocalesByAnime(from)!!
@@ -35,6 +41,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             )?.toList(),
             audioLocales = audioLocales,
             langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted(),
+            seasons = episodeMappingService.findAllSeasonsByAnime(from)
+                .map { SeasonDto(it[0] as Int, (it[1] as ZonedDateTime).withUTCString()) },
             status = from.status,
         )
     }

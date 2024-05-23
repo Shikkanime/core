@@ -19,7 +19,8 @@
                     <td class="bg-black border-start border-end border-dark">
                         <#list dailyAnimes.releases as release>
                             <article x-data="{ hover: false }" class="shikk-element mb-3">
-                                <a href="/animes/${release.anime.slug}" class="text-decoration-none text-white"
+                                <a href="/animes/${release.anime.slug}/season-${release.anime.seasons?first.number}"
+                                   class="text-decoration-none text-white"
                                    @mouseenter="hover = true"
                                    @mouseleave="hover = false">
                                     <div class="position-relative">

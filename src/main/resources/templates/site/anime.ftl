@@ -2,8 +2,8 @@
 <#import "components/episode-mapping.ftl" as episodeMappingComponent />
 <#import "components/langType.ftl" as langTypeComponent />
 
-<@navigation.display canonicalUrl="${baseUrl}/animes/${anime.slug}" openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
-    <div class="container">
+<@navigation.display canonicalUrl="${baseUrl}/animes/${anime.slug}/season-${season.number}" openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
+    <div class="container mb-3">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
                 <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
@@ -33,11 +33,22 @@
                 </#if>
 
                 <span class="mt-3">${anime.description}</span>
+
+                <button class="btn btn-dark dropdown-toggle mt-3" data-bs-toggle="dropdown" aria-expanded="false">
+                    Saison <#if season??>${season.number}<#else>${anime.seasons?first.number}</#if>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
+                    <#list anime.seasons as season>
+                        <li><a class="dropdown-item"
+                               href="/animes/${anime.slug}/season-${season.number}">Saison ${season.number}</a></li>
+                    </#list>
+                </ul>
             </div>
         </div>
     </div>
 
-    <div class="row g-3 mt-4 justify-content-center">
+    <div class="row g-3 justify-content-center">
         <#list episodeMappings as episodeMapping>
             <@episodeMappingComponent.display episodeMapping=episodeMapping cover=false desktopColSize="col-md-2" mobileColSize="col-6" />
         </#list>
