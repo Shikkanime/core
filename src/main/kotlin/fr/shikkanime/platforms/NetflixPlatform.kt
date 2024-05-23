@@ -51,7 +51,7 @@ class NetflixPlatform :
             Episode(
                 countryCode = key.countryCode,
                 anime = animeName,
-                animeImage = imageWithoutParams,
+                animeImage = key.netflixSimulcast.image,
                 animeBanner = animeBanner,
                 animeDescription = animeDescription,
                 releaseDateTime = releaseDateTime,
