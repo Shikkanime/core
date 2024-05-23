@@ -105,13 +105,13 @@
         }
 
         async function getEpisodes(anime, page, invalid) {
-            let params = '?sort=lastReleaseDateTime,animeName,season,episodeType,number&desc=lastReleaseDateTime,animeName,season,episodeType,number' + (invalid ? '&status=INVALID' : '');
+            let params = 'sort=lastReleaseDateTime,animeName,season,episodeType,number&desc=lastReleaseDateTime,animeName,season,episodeType,number' + (invalid ? '&status=INVALID' : '');
 
             if (anime) {
-                params = '?anime=' + anime;
+                params = 'anime=' + anime + '&' + params;
             }
 
-            return await axios.get('/api/v1/episode-mappings' + params + '&page=' + (page || 1) + '&limit=9')
+            return await axios.get('/api/v1/episode-mappings?' + params + '&page=' + (page || 1) + '&limit=9')
                 .then(response => response.data);
         }
     </script>
