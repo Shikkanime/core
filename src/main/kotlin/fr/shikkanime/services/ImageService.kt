@@ -9,9 +9,7 @@ import kotlinx.coroutines.runBlocking
 import java.awt.*
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
+import java.io.*
 import java.net.URI
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -38,13 +36,13 @@ object ImageService {
         var bytes: ByteArray = byteArrayOf(),
         var originalSize: Long = 0,
         var size: Long = 0,
-    )
+    ) : Serializable
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val threadPool = Executors.newFixedThreadPool(2)
+    private val threadPool = Executors.newFixedThreadPool(4)
     val cache = mutableListOf<Image>()
     private val change = AtomicBoolean(false)
-    private const val CACHE_FILE_NUMBER = 5
+    private const val CACHE_FILE_NUMBER = 4
 
     private fun toHumanReadable(bytes: Long): String {
         val kiloByte = 1024L
@@ -85,13 +83,32 @@ object ImageService {
         val cache = mutableListOf<Image>()
 
         val take = measureTimeMillis {
-            val json = String(FileManager.fromGzip(file.readBytes()))
-            val map = ObjectParser.fromJson(json, Array<Image>::class.java).toMutableList()
-            cache.addAll(map)
+            val deserializedCache = ByteArrayInputStream(file.readBytes()).use { bais ->
+                ObjectInputStream(bais).use {
+                    it.readObject() as List<Image>
+                }
+            }
+
+            cache.addAll(deserializedCache)
         }
 
         logger.info("Loaded images cache part in $take ms (${cache.size} images)")
         return cache
+    }
+
+    private fun distributeImages(images: List<Image>, numberOfLists: Int): List<List<Image>> {
+        // Sort images by size in descending order for a more balanced distribution
+        val sortedImages = images.sortedByDescending { it.size }
+
+        // Initialize lists to hold the distributed images
+        val resultLists = MutableList(numberOfLists) { mutableListOf<Image>() }
+
+        // Distribute images using round-robin approach
+        sortedImages.forEachIndexed { index, image ->
+            resultLists[index % numberOfLists].add(image)
+        }
+
+        return resultLists
     }
 
     fun saveCache() {
@@ -102,9 +119,7 @@ object ImageService {
 
         change.set(false)
 
-        val cacheSize = cache.size
-        val partSize = (cacheSize / CACHE_FILE_NUMBER) + 1
-        val parts = cache.toList().chunked(partSize + 1)
+        val parts = distributeImages(cache, CACHE_FILE_NUMBER)
 
         logger.info("Saving images cache...")
 
@@ -131,7 +146,12 @@ object ImageService {
 
         logger.info("Saving images cache part...")
         val take = measureTimeMillis {
-            file.writeBytes(FileManager.toGzip(ObjectParser.toJson(cache).toByteArray()))
+            ByteArrayOutputStream().use { baos ->
+                ObjectOutputStream(baos).use { oos ->
+                    oos.writeObject(cache)
+                    file.writeBytes(baos.toByteArray())
+                }
+            }
         }
 
         logger.info(

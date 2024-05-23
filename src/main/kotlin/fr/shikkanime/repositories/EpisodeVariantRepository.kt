@@ -136,7 +136,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .where(
                     cb.and(
                         cb.notEqual(root[EpisodeVariant_.audioLocale], countryCode.locale),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM)
+                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
+                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
                     )
                 )
                 .orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]))

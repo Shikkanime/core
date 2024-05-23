@@ -64,6 +64,7 @@ object StringUtils {
             EpisodeType.EPISODE -> "Épisode"
             EpisodeType.SPECIAL -> "Spécial"
             EpisodeType.FILM -> "Film"
+            EpisodeType.SUMMARY -> "Épisode récapitulatif"
         }
 
         val ltName = when (LangType.fromAudioLocale(episode.mapping.anime.countryCode, episode.audioLocale)) {

@@ -44,8 +44,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime)
 
-    fun findAllByEpisodeType(episodeType: EpisodeType) = episodeMappingRepository.findAllByEpisodeType(episodeType)
-
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 

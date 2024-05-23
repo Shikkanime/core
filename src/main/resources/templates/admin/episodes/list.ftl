@@ -48,6 +48,7 @@
                         <span x-show="episode.episodeType === 'EPISODE'">EP</span>
                         <span x-show="episode.episodeType === 'FILM'">MOV</span>
                         <span x-show="episode.episodeType === 'SPECIAL'">SP</span>
+                        <span x-show="episode.episodeType === 'SUMMARY'">SUM</span>
                         <span x-text="episode.number"></span>
                     </td>
                     <td x-text="episode.description"></td>
@@ -72,8 +73,7 @@
                             &laquo;
                         </a>
                     </li>
-                    <template
-                            x-for="i in Array.from({length: 7}, (_, index) => page + index - 3).filter(i => i >= 1 && i <= maxPage)">
+                    <template x-for="i in generatePageNumbers(page, maxPage)">
                         <li class="page-item" x-bind:class="{active: page === i}">
                             <a class="page-link" @click="setPageable(i, await getEpisodes(anime, i, invalid))"
                                x-text="i"></a>
@@ -92,14 +92,26 @@
     </div>
 
     <script>
-        async function getEpisodes(anime, page, invalid) {
-            let params = '?sort=lastReleaseDateTime,animeName,season,episodeType,number&desc=lastReleaseDateTime,animeName,season,episodeType,number' + (invalid ? '&status=INVALID' : '');
+        function generatePageNumbers(currentPage, maxPage) {
+            const startPage = Math.max(1, currentPage - 3);
+            const endPage = Math.min(maxPage, currentPage + 3);
+            const pages = [];
 
-            if (anime) {
-                params = '?anime=' + anime;
+            for (let i = startPage; i <= endPage; i++) {
+                pages.push(i);
             }
 
-            return await axios.get('/api/v1/episode-mappings' + params + '&page=' + (page || 1) + '&limit=9')
+            return pages;
+        }
+
+        async function getEpisodes(anime, page, invalid) {
+            let params = 'sort=lastReleaseDateTime,animeName,season,episodeType,number&desc=lastReleaseDateTime,animeName,season,episodeType,number' + (invalid ? '&status=INVALID' : '');
+
+            if (anime) {
+                params = 'anime=' + anime + '&' + params;
+            }
+
+            return await axios.get('/api/v1/episode-mappings?' + params + '&page=' + (page || 1) + '&limit=9')
                 .then(response => response.data);
         }
     </script>

@@ -20,6 +20,8 @@ import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
 private const val ADMIN = "/admin"
 
@@ -65,8 +67,10 @@ class AdminController {
     private fun login(@BodyParam parameters: Parameters): Response {
         val username = parameters["username"] ?: return Response.redirect(ADMIN)
         val password = parameters["password"] ?: return Response.redirect(ADMIN)
-        val user =
-            memberService.findByUsernameAndPassword(username, password) ?: return Response.redirect("$ADMIN?error=1")
+        val user = memberService.findByUsernameAndPassword(username, password) ?: return runBlocking {
+            delay(1000)
+            Response.redirect("$ADMIN?error=1")
+        }
 
         return Response.redirect(Link.DASHBOARD.href, AbstractConverter.convert(user, TokenDto::class.java))
     }
