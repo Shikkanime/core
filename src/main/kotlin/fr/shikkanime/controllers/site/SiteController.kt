@@ -1,7 +1,6 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -83,6 +82,7 @@ class SiteController {
                 "episodeMappings" to episodeMappingCacheService.findAllBy(
                     CountryCode.FR,
                     null,
+                    null,
                     listOf(
                         SortParameter("lastReleaseDateTime", SortParameter.Order.DESC),
                         SortParameter("animeName", SortParameter.Order.DESC),
@@ -123,8 +123,18 @@ class SiteController {
     @Path("animes/{slug}")
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
-        val anime = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
-        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
+        return Response.redirect("/animes/${dto.slug}/season-${dto.seasons.first().number}")
+    }
+
+    @Path("animes/{slug}/season-{season}")
+    @Get
+    private fun animeDetailBySeason(
+        @PathParam("slug") slug: String,
+        @PathParam("season") season: Int
+    ): Response {
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
+        val seasonDto = dto.seasons.firstOrNull { it.number == season } ?: return Response.redirect("/404")
 
         return Response.template(
             "/site/anime.ftl",
@@ -132,9 +142,11 @@ class SiteController {
             mutableMapOf(
                 "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
                 "anime" to dto,
+                "season" to seasonDto,
                 "episodeMappings" to episodeMappingCacheService.findAllBy(
                     CountryCode.FR,
-                    anime.uuid,
+                    dto.uuid,
+                    season,
                     listOf(
                         SortParameter("releaseDateTime", SortParameter.Order.ASC),
                         SortParameter("season", SortParameter.Order.ASC),

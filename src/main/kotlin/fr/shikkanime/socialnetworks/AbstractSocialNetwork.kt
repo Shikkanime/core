@@ -53,7 +53,7 @@ abstract class AbstractSocialNetwork {
     }
 
     protected fun getShikkanimeUrl(episodeDto: EpisodeVariantDto) =
-        "${Constant.baseUrl}/animes/${episodeDto.mapping.anime.slug}?utm_campaign=episode_post&utm_medium=social&utm_source=${utmSource()}&utm_content=${episodeDto.uuid}"
+        "${Constant.baseUrl}/animes/${episodeDto.mapping.anime.slug}/season-${episodeDto.mapping.season}?utm_campaign=episode_post&utm_medium=social&utm_source=${utmSource()}&utm_content=${episodeDto.uuid}"
 
     abstract fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray)
 

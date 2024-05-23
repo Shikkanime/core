@@ -14,7 +14,8 @@
             <template x-for="anime in animes">
                 <div class="col-md-2 col-6 mt-0 mb-4">
                     <article x-data="{hover:false}" class="shikk-element">
-                        <a x-bind:href="'/animes/' + anime.slug" class="text-decoration-none text-white"
+                        <a x-bind:href="'/animes/' + anime.slug + '/season-' + anime.seasons[0].number"
+                           class="text-decoration-none text-white"
                            @mouseenter="hover = true" @mouseleave="hover = false">
                             <div class="position-relative">
                                 <img x-bind:src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=image'"

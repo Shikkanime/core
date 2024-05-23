@@ -125,7 +125,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllSimulcasted(countryCode: CountryCode): List<EpisodeMapping> {
+    fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeMapping> {
         return inTransaction { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(EpisodeMapping::class.java)
@@ -135,12 +135,18 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .select(root[EpisodeVariant_.mapping])
                 .where(
                     cb.and(
-                        cb.notEqual(root[EpisodeVariant_.audioLocale], countryCode.locale),
+                        cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
                         cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
                         cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
+                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
                     )
                 )
-                .orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]))
+                .orderBy(
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
+                )
 
             createReadOnlyQuery(entityManager, query)
                 .resultList

@@ -51,6 +51,7 @@ class EpisodeMappingController : HasPageableRoute() {
     private fun getAll(
         @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
         @QueryParam("anime") animeParam: UUID?,
+        @QueryParam("season") seasonParam: Int?,
         @QueryParam("page") pageParam: Int?,
         @QueryParam("limit") limitParam: Int?,
         @QueryParam("sort") sortParam: String?,
@@ -63,6 +64,7 @@ class EpisodeMappingController : HasPageableRoute() {
             episodeMappingCacheService.findAllBy(
                 CountryCode.fromNullable(countryParam) ?: CountryCode.FR,
                 animeParam,
+                seasonParam,
                 sortParameters,
                 page,
                 limit,

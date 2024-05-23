@@ -5,6 +5,7 @@ import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
@@ -51,8 +52,9 @@ class AnimeCacheService : AbstractCacheService {
             )
         }
 
-    private val findBySlugCache = MapCache<CountryCodeIdKeyCache, Anime?>(classes = listOf(Anime::class.java)) {
+    private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(classes = listOf(Anime::class.java)) {
         animeService.findBySlug(it.countryCode, it.id)
+            .let { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
     }
 
     private val weeklyMemberCache =

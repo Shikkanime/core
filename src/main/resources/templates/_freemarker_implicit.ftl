@@ -21,6 +21,7 @@
 [#-- @ftlvariable name="su" type="fr.shikkanime.utils.StringUtils" --]
 [#-- @ftlvariable name="weeklyAnimes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.WeeklyAnimesDto>" --]
 [#-- @ftlvariable name="query" type="java.lang.String" --]
+[#-- @ftlvariable name="season" type="fr.shikkanime.dtos.SeasonDto" --]
 
 [#-- @ftlvariable name="analyticsDomain" type="java.lang.String" --]
 [#-- @ftlvariable name="analyticsApi" type="java.lang.String" --]

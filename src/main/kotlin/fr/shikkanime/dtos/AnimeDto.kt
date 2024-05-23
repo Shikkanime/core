@@ -19,5 +19,6 @@ data class AnimeDto(
     val simulcasts: List<SimulcastDto>?,
     val audioLocales: List<String>? = null,
     val langTypes: List<LangType>? = null,
+    val seasons: List<SeasonDto> = emptyList(),
     val status: Status? = null,
 )

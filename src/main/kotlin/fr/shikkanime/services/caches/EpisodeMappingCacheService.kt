@@ -1,7 +1,7 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
+import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
 import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
@@ -22,7 +22,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
     private lateinit var animeService: AnimeService
 
     private val findAllByCache =
-        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<EpisodeMappingDto>>(
+        MapCache<CountryCodeUUIDSeasonSortPaginationKeyCache, PageableDto<EpisodeMappingDto>>(
             classes = listOf(
                 EpisodeMapping::class.java,
                 EpisodeVariant::class.java
@@ -32,6 +32,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
                 episodeMappingService.findAllBy(
                     it.countryCode,
                     animeService.find(it.uuid),
+                    it.season,
                     it.sort,
                     it.page,
                     it.limit,
@@ -44,9 +45,10 @@ class EpisodeMappingCacheService : AbstractCacheService {
     fun findAllBy(
         countryCode: CountryCode?,
         anime: UUID?,
+        season: Int?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
         status: Status? = null
-    ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, anime, sort, page, limit, status)]
+    ) = findAllByCache[CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit, status)]
 }

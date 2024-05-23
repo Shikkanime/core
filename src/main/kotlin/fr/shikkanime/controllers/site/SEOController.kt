@@ -57,7 +57,8 @@ class SEOController {
         val episodeMapping = episodeMappingCacheService.findAllBy(
             CountryCode.FR,
             null,
-            listOf(SortParameter("releaseDateTime", SortParameter.Order.DESC)),
+            null,
+            listOf(SortParameter("lastReleaseDateTime", SortParameter.Order.DESC)),
             1,
             1
         )!!.data.firstOrNull()
