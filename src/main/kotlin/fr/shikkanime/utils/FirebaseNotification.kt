@@ -5,7 +5,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.AndroidConfig
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.MulticastMessage
+import com.google.firebase.messaging.Message
 import com.google.firebase.messaging.Notification
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.services.MemberService
@@ -44,19 +44,21 @@ object FirebaseNotification {
             .setPriority(AndroidConfig.Priority.HIGH)
             .build()
 
-        val tokens = mutableSetOf("global")
-        memberService.findAllByAnimeUUID(episodeDto.mapping.anime.uuid!!).forEach { tokens.add(it.uuid!!.toString()) }
-        // Chunked tokens to avoid the 500 tokens limit (due to the limit of the Firebase API)
-        val chunkedTokens = tokens.chunked(500)
+        val topics = mutableSetOf("global")
+        memberService.findAllByAnimeUUID(episodeDto.mapping.anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
+        // Chunked topics to avoid the 500 topics limit (due to the limit of the Firebase API)
+        val chunkedTopics = topics.chunked(500)
 
-        chunkedTokens.forEach {
+        chunkedTopics.forEach {
             FirebaseMessaging.getInstance()
-                .sendEachForMulticast(
-                    MulticastMessage.builder()
-                        .addAllTokens(it)
-                        .setNotification(notification)
-                        .setAndroidConfig(androidConfig)
-                        .build()
+                .sendEach(
+                    it.map { topic ->
+                        Message.builder()
+                            .setTopic(topic)
+                            .setNotification(notification)
+                            .setAndroidConfig(androidConfig)
+                            .build()
+                    }
                 )
         }
     }
