@@ -63,7 +63,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         return@MapCache simulcastSeries
     }
 
-    val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
+    private val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
         val token = identifiers[it.countryCode]!!
         val `object` = runBlocking {
             CrunchyrollWrapper.getSeries(
@@ -136,7 +136,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
     }
 
-    fun convertEpisode(countryCode: CountryCode, jsonObject: JsonObject, needSimulcast: Boolean = true): Episode {
+    private fun convertEpisode(
+        countryCode: CountryCode,
+        jsonObject: JsonObject,
+        needSimulcast: Boolean = true
+    ): Episode {
         val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
 
         val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
