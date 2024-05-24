@@ -1,8 +1,8 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Member
-import fr.shikkanime.entities.Member_
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.Role
+import java.util.*
 
 class MemberRepository : AbstractRepository<Member>() {
     override fun getEntityClass() = Member::class.java
@@ -13,6 +13,21 @@ class MemberRepository : AbstractRepository<Member>() {
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
             query.where(root.join(Member_.roles).`in`(roles))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllByAnimeUUID(animeUuid: UUID): List<Member> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(MemberFollowAnime::class.java)
+
+            query.select(root[MemberFollowAnime_.member])
+            query.distinct(true)
+            query.where(cb.equal(root[MemberFollowAnime_.anime][Anime_.uuid], animeUuid))
 
             createReadOnlyQuery(it, query)
                 .resultList
