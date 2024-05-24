@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.44.0-jammy
+FROM mcr.microsoft.com/playwright:v1.44.1-jammy
 ARG version=21.0.3.9-1
 ENV LANG C.UTF-8
 ENV JAVA_HOME /usr/lib/jvm/java-21-amazon-corretto
