@@ -23,6 +23,8 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     private fun findAllByRoles(roles: List<Role>) = memberRepository.findAllByRoles(roles)
 
+    fun findAllByAnimeUUID(animeUuid: UUID) = memberRepository.findAllByAnimeUUID(animeUuid)
+
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 

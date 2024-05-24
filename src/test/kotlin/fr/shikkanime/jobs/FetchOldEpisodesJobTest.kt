@@ -26,4 +26,14 @@ class FetchOldEpisodesJobTest {
         assertNotNull(episodes)
         assertTrue(episodes!!.any { it.seasonNumber == 1 && it.number == 1 })
     }
+
+    @Test
+    fun `fetch Black Clover`() {
+        val episodes = fetchOldEpisodesJob.crunchyrollEpisodesCache[CountryCodeIdKeyCache(CountryCode.FR, "GRE50KV36")]
+
+        assertNotNull(episodes)
+        assertTrue(episodes!!.any { it.seasonNumber == 1 && it.number == 1 })
+        assertTrue(episodes.any { it.seasonNumber == 1 && it.number == 170 })
+        assertTrue(episodes.size >= 170)
+    }
 }

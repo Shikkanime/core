@@ -184,31 +184,29 @@ class FetchOldEpisodesJob : AbstractJob {
     val crunchyrollEpisodesCache =
         MapCache<CountryCodeIdKeyCache, List<CrunchyrollWrapper.Episode>>(duration = Duration.ofDays(7)) {
             try {
-                val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-                val seasons =
-                    runBlocking { CrunchyrollWrapper.getSeasonsBySeriesId(it.countryCode.locale, accessToken, it.id) }
-                        .filter { season -> season.subtitleLocales.contains(it.countryCode.locale) }
+                val episodes = mutableListOf<CrunchyrollWrapper.Episode>()
 
-                return@MapCache seasons.flatMap { season ->
-                    runBlocking {
-                        CrunchyrollWrapper.getEpisodesBySeasonId(
-                            it.countryCode.locale,
-                            accessToken,
-                            season.id
-                        )
-                    }
-                        .flatMap { it.versions ?: listOf(CrunchyrollWrapper.Version(it.id)) }
-                        .distinctBy { it.guid }
-                        .parallelStream().map { version ->
-                            runBlocking {
-                                CrunchyrollWrapper.getEpisode(
-                                    it.countryCode.locale,
-                                    accessToken,
-                                    version.guid
-                                )
-                            }
-                        }.toList()
+                val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+                val seasons = runBlocking { CrunchyrollWrapper.getSeasonsBySeriesId(it.countryCode.locale, accessToken, it.id) }
+                    .filter { season -> season.subtitleLocales.contains(it.countryCode.locale) }
+
+                // Add original episodes
+                seasons.parallelStream().forEach { season ->
+                    runBlocking { episodes.addAll(CrunchyrollWrapper.getEpisodesBySeasonId(it.countryCode.locale, accessToken, season.id)) }
                 }
+
+                // Need to list all available variants
+                val variants = mutableSetOf<CrunchyrollWrapper.Version>()
+                episodes.forEach { episode -> variants.addAll(episode.versions ?: listOf(CrunchyrollWrapper.Version(episode.id))) }
+                // Remove duplicates and already fetched episodes
+                val missingVariants = variants.distinctBy { variant -> variant.guid }
+                    .filter { variant -> episodes.none { it.id == variant.guid } }
+
+                missingVariants.parallelStream().forEach { variant ->
+                    runBlocking { episodes.add(CrunchyrollWrapper.getEpisode(it.countryCode.locale, accessToken, variant.guid)) }
+                }
+
+                return@MapCache episodes
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
                 return@MapCache emptyList()

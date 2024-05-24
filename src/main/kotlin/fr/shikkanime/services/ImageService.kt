@@ -85,7 +85,7 @@ object ImageService {
         val take = measureTimeMillis {
             val deserializedCache = ByteArrayInputStream(file.readBytes()).use { bais ->
                 ObjectInputStream(bais).use {
-                    it.readObject() as List<Image>
+                    it.readObject() as List<Image> // NOSONAR
                 }
             }
 
