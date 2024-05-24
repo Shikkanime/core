@@ -77,15 +77,22 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         login()
         if (!isInitialized) return
         if (twitter == null) return
-        val message =
-            getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_MESSAGE) ?: "")
 
-        val uploadMedia = twitter!!.tweets().uploadMedia(
-            UUID.randomUUID().toString(),
-            ByteArrayInputStream(mediaImage)
+        val uploadMedia = twitter!!.tweets().uploadMedia(UUID.randomUUID().toString(), ByteArrayInputStream(mediaImage))
+        val firstMessage = getEpisodeMessage(
+            episodeDto,
+            configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: ""
         )
+        val firstTweet = twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = firstMessage)
 
-        twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = message)
+        val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)
+
+        if (!secondMessage.isNullOrBlank()) {
+            twitter!!.v2.createTweet(
+                inReplyToTweetId = firstTweet.id,
+                text = getEpisodeMessage(episodeDto, secondMessage)
+            )
+        }
     }
 
     override fun sendCalendar(message: String, calendarImage: ByteArray) {
