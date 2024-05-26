@@ -3,7 +3,7 @@
 <#macro display anime>
     <div class="col-md-2 col-6 mt-0 mb-4">
         <article x-data="{ hover: false }" class="shikk-element">
-            <a href="/animes/${anime.slug}/season-${anime.seasons?first.number}" class="text-decoration-none text-white"
+            <a href="/animes/${anime.slug}" class="text-decoration-none text-white"
                @mouseenter="hover = true" @mouseleave="hover = false">
                 <div class="position-relative">
                     <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image" alt="${su.sanitizeXSS(anime.shortName)} anime"
