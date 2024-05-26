@@ -124,7 +124,29 @@ class SiteController {
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
-        return Response.redirect("/animes/${dto.slug}/season-${dto.seasons.first().number}")
+        val seasonDto = dto.seasons.firstOrNull() ?: return Response.redirect("/404")
+
+        return Response.template(
+            "/site/anime.ftl",
+            dto.shortName,
+            mutableMapOf(
+                "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
+                "anime" to dto,
+                "episodeMappings" to episodeMappingCacheService.findAllBy(
+                    CountryCode.FR,
+                    dto.uuid,
+                    seasonDto.number,
+                    listOf(
+                        SortParameter("releaseDateTime", SortParameter.Order.ASC),
+                        SortParameter("season", SortParameter.Order.ASC),
+                        SortParameter("episodeType", SortParameter.Order.ASC),
+                        SortParameter("number", SortParameter.Order.ASC),
+                    ),
+                    1,
+                    configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
+                )!!.data,
+            )
+        )
     }
 
     @Path("animes/{slug}/season-{season}")
@@ -138,7 +160,7 @@ class SiteController {
 
         return Response.template(
             "/site/anime.ftl",
-            dto.shortName,
+            "${dto.shortName} - Saison $season",
             mutableMapOf(
                 "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
                 "anime" to dto,

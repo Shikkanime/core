@@ -2,7 +2,13 @@
 <#import "components/episode-mapping.ftl" as episodeMappingComponent />
 <#import "components/langType.ftl" as langTypeComponent />
 
-<@navigation.display canonicalUrl="${baseUrl}/animes/${anime.slug}/season-${season.number}" openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
+<#assign canonicalUrl = baseUrl + "/animes/" + anime.slug>
+
+<#if season??>
+    <#assign canonicalUrl = canonicalUrl + "/season-" + season.number>
+</#if>
+
+<@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
     <div class="container mb-3">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
@@ -13,7 +19,7 @@
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-5 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0">${anime.shortName?upper_case}</h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${anime.shortName}<#if season??> - Saison ${season.number}</#if></h1>
 
                 <div class="mt-1">
                     <#list anime.langTypes as langType>
@@ -50,7 +56,7 @@
 
     <div class="row g-3 justify-content-center">
         <#list episodeMappings as episodeMapping>
-            <@episodeMappingComponent.display episodeMapping=episodeMapping cover=false desktopColSize="col-md-2" mobileColSize="col-6" />
+            <@episodeMappingComponent.display episodeMapping=episodeMapping cover=false desktopColSize="col-md-2" mobileColSize="col-6" showAnime=false showSeason=false />
         </#list>
     </div>
 </@navigation.display>
