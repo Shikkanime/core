@@ -13,7 +13,7 @@
     </#switch>
 </#function>
 
-<#macro display episodeMapping desktopColSize mobileColSize cover>
+<#macro display episodeMapping desktopColSize mobileColSize cover showAnime=true showSeason=true>
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">
         <article class="shikk-element">
@@ -36,11 +36,17 @@
                     </div>
 
                     <div class="mx-2 mb-1">
-                        <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</div>
+                        <#if showAnime>
+                            <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</div>
 
-                        <p class="text-muted mb-0">
-                            Saison ${episodeMapping.season?c} | ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
-                        </p>
+                            <p class="text-muted mb-0">
+                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if>${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                            </p>
+                        <#else>
+                            <div class="h6 mt-2 mb-0 text-truncate-2 fw-bold">
+                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if>${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                            </div>
+                        </#if>
 
                         <#list episodeMapping.langTypes as langTypes>
                             <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=langTypes /></p>
@@ -65,12 +71,12 @@
                         </span>
 
                         <#if episodeMapping.description??>
-                            <div class="text-truncate-4 mt-3">
+                            <div class="text-truncate-4 my-2 m-0">
                                 ${episodeMapping.description}
                             </div>
                         </#if>
 
-                        <div class="mt-3 text-warning fw-bold">
+                        <div class="text-warning fw-bold">
                             <i class="me-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                      class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
