@@ -73,9 +73,8 @@ class FetchOldEpisodesJob : AbstractJob {
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
         val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).toList().sorted()
-        val simulcasts = dates.map {
-            "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
-        }.toSet()
+        val simulcasts = getSimulcasts(dates)
+
         val episodes = mutableListOf<Episode>()
         val start = System.currentTimeMillis()
         logger.info("Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
@@ -142,6 +141,20 @@ class FetchOldEpisodesJob : AbstractJob {
         config.propertyValue = from.toString()
         configService.update(config)
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
+    }
+
+    fun getSimulcasts(dates: List<LocalDate>): Set<String> {
+        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
+        val simulcastDates = dates.toMutableSet()
+
+        for (i in 1..simulcastRange) {
+            simulcastDates.addAll(dates.map { it.plusDays(i.toLong()) })
+            simulcastDates.addAll(dates.map { it.minusDays(i.toLong()) })
+        }
+
+        return simulcastDates.sorted().map {
+            "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
+        }.toSet()
     }
 
     private fun fetchAnimationDigitalNetwork(
