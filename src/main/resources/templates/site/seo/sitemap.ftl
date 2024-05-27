@@ -22,6 +22,10 @@
         </url>
     </#list>
     <#list animes as anime>
+        <url>
+            <loc>${baseUrl}/animes/${anime.slug}</loc>
+            <lastmod>${anime.seasons?first.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
+        </url>
         <#list anime.seasons as season>
             <url>
                 <loc>${baseUrl}/animes/${anime.slug}/season-${season.number}</loc>
