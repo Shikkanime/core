@@ -253,7 +253,7 @@ private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCal
         AnimeDto::class.java -> call.receive<AnimeDto>()
         EpisodeMappingDto::class.java -> call.receive<EpisodeMappingDto>()
         GenericDto::class.java -> call.receive<GenericDto>()
-        ByteReadChannel::class.java -> call.receiveChannel()
+        MultiPartData::class.java -> call.receiveMultipart()
         else -> call.receive<String>()
     }
 }

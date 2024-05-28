@@ -16,12 +16,10 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
-import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
+import io.ktor.http.content.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
 
@@ -213,10 +211,10 @@ class MemberController {
         ],
         security = true
     )
-    private fun uploadProfileImage(@JWTUser uuidUser: UUID, @BodyParam byteReadChannel: ByteReadChannel): Response {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        runBlocking { byteReadChannel.copyTo(byteArrayOutputStream) }
-        val bytes = byteArrayOutputStream.toByteArray()
+    private fun uploadProfileImage(@JWTUser uuidUser: UUID, @BodyParam multiPartData: MultiPartData): Response {
+        val file = runBlocking { multiPartData.readAllParts().filterIsInstance<PartData.FileItem>().firstOrNull() }
+            ?: return Response.badRequest("No file provided")
+        val bytes = file.streamProvider().readBytes()
 
         try {
             val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(bytes))

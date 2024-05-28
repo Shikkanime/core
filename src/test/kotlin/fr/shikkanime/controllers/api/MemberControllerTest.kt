@@ -17,6 +17,7 @@ import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
@@ -451,13 +452,20 @@ class MemberControllerTest {
                 module()
             }
 
+            val fromResource = FileManager.getInputStreamFromResource("avatar.jpg")
             val (identifier, token) = registerAndLogin()
             val member = memberService.findByIdentifier(identifier)
 
-            client.post("/api/v1/members/image") {
+            client.submitFormWithBinaryData(
+                "/api/v1/members/image",
+                formData {
+                    append("file", fromResource.readBytes(), Headers.build {
+                        append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                        append(HttpHeaders.ContentDisposition, "filename=avatar.jpg")
+                    })
+                }
+            ) {
                 header(HttpHeaders.Authorization, "Bearer $token")
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(FileManager.getInputStreamFromResource("avatar.jpg").readBytes())
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
             }
