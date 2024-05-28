@@ -20,7 +20,15 @@ class ImageServiceTest {
     fun add() {
         val uuid = UUID.randomUUID()
         ImageService.add(uuid, ImageService.Type.IMAGE, "https://www.shikkanime.fr/assets/img/dark_logo.png", 128, 128)
-        runBlocking { delay(1000) }
+        var i = 0
+
+        while (ImageService[uuid, ImageService.Type.IMAGE] == null || ImageService[uuid, ImageService.Type.IMAGE]?.bytes?.isEmpty() == true) {
+            runBlocking { delay(1000) }
+
+            if (i++ > 10) {
+                throw Exception("Image not found")
+            }
+        }
 
         testApplication {
             application {
