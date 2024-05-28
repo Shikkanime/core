@@ -60,7 +60,16 @@ class MemberActionController {
             )
         }
 
-        memberActionService.validateAction(uuid, action)
-        return Response.ok()
+        try {
+            memberActionService.validateAction(uuid, action)
+            return Response.ok()
+        } catch (e: Exception) {
+            return Response.badRequest(
+                MessageDto(
+                    MessageDto.Type.ERROR,
+                    e.message ?: "An error occurred"
+                )
+            )
+        }
     }
 }
