@@ -8,9 +8,12 @@ import io.github.smiley4.ktorswaggerui.dsl.BodyTypeDescriptor
 import io.github.smiley4.ktorswaggerui.dsl.OpenApiRoute
 import io.github.smiley4.ktorswaggerui.dsl.OpenApiSimpleBody
 import io.ktor.http.*
+import io.ktor.http.content.*
+import java.io.File
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmErasure
 
 fun swagger(
@@ -60,7 +63,17 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
                     }
 
                     parameter.hasAnnotation<BodyParam>() -> {
-                        body(type)
+                        if (parameter.type.javaType == MultiPartData::class.java) {
+                            multipartBody {
+                                description = "Multipart data"
+                                mediaType(ContentType.MultiPart.FormData)
+                                part<File>("file") {
+                                    mediaTypes = listOf(ContentType.Image.PNG, ContentType.Image.JPEG)
+                                }
+                            }
+                        } else {
+                            body(type)
+                        }
                     }
                 }
             }

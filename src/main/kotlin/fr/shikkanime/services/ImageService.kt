@@ -23,6 +23,8 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.system.measureTimeMillis
 
+private const val FAILED_TO_ENCODE_MESSAGE = "Failed to encode image to WebP"
+
 object ImageService {
     enum class Type {
         IMAGE,
@@ -32,7 +34,7 @@ object ImageService {
     data class Image(
         val uuid: String,
         val type: Type,
-        val url: String,
+        val url: String? = null,
         var bytes: ByteArray = byteArrayOf(),
         var originalSize: Long = 0,
         var size: Long = 0,
@@ -182,6 +184,26 @@ object ImageService {
         threadPool.submit { encodeImage(url, uuid, type, width, height, image) }
     }
 
+    fun add(uuid: UUID, type: Type, bytes: ByteArray, width: Int, height: Int, bypass: Boolean = false) {
+        if (!bypass && (get(uuid, type) != null || bytes.isEmpty())) {
+            return
+        }
+
+        val image = if (!bypass) {
+            val image = Image(uuid.toString(), type)
+            cache.add(image)
+            image
+        } else {
+            get(uuid, type) ?: run {
+                val image = Image(uuid.toString(), type)
+                cache.add(image)
+                image
+            }
+        }
+
+        threadPool.submit { encodeImage(bytes, uuid, type, width, height, image) }
+    }
+
     private fun encodeImage(
         url: String,
         uuid: UUID,
@@ -190,13 +212,37 @@ object ImageService {
         height: Int,
         image: Image
     ) {
+        val httpResponse = runBlocking { HttpRequest().get(url) }
+        val bytes = runBlocking { httpResponse.readBytes() }
+
+        if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
+            logger.warning("Failed to load image $url")
+            remove(uuid, type)
+            return
+        }
+
+        encodeImage(
+            bytes,
+            uuid,
+            type,
+            width,
+            height,
+            image
+        )
+    }
+
+    private fun encodeImage(
+        bytes: ByteArray,
+        uuid: UUID,
+        type: Type,
+        width: Int,
+        height: Int,
+        image: Image
+    ) {
         val take = measureTimeMillis {
             try {
-                val httpResponse = runBlocking { HttpRequest().get(url) }
-                val bytes = runBlocking { httpResponse.readBytes() }
-
-                if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
-                    logger.warning("Failed to load image $url")
+                if (bytes.isEmpty()) {
+                    logger.warning(FAILED_TO_ENCODE_MESSAGE)
                     remove(uuid, type)
                     return@measureTimeMillis
                 }
@@ -211,7 +257,7 @@ object ImageService {
                     logger.warning("Can not delete tmp file image")
 
                 if (webp.isEmpty()) {
-                    logger.warning("Failed to encode image to WebP")
+                    logger.warning(FAILED_TO_ENCODE_MESSAGE)
                     remove(uuid, type)
                     return@measureTimeMillis
                 }
@@ -230,7 +276,7 @@ object ImageService {
                 cache[indexOf] = image
                 change.set(true)
             } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Failed to load image $url", e)
+                logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
                 remove(uuid, type)
             }
         }

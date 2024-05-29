@@ -13,16 +13,22 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.module
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
+import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 class MemberControllerTest {
@@ -435,6 +441,43 @@ class MemberControllerTest {
                 val followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(12, followedEpisodes.size)
+            }
+        }
+    }
+
+    @Test
+    fun uploadProfileImage() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val fromResource = FileManager.getInputStreamFromResource("avatar.jpg")
+            val (identifier, token) = registerAndLogin()
+            val member = memberService.findByIdentifier(identifier)
+
+            client.submitFormWithBinaryData(
+                "/api/v1/members/image",
+                formData {
+                    append("file", fromResource.readBytes(), Headers.build {
+                        append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                        append(HttpHeaders.ContentDisposition, "filename=avatar.jpg")
+                    })
+                }
+            ) {
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+            }
+
+            delay(1000)
+
+            client.get("/api/v1/attachments?uuid=${member!!.uuid}").apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                runBlocking { bodyAsChannel().copyTo(byteArrayOutputStream) }
+                val image = byteArrayOutputStream.toByteArray()
+                assertTrue(image.isNotEmpty())
             }
         }
     }

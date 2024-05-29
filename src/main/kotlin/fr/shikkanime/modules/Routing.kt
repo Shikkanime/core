@@ -32,6 +32,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
+import io.ktor.utils.io.*
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
@@ -235,7 +236,13 @@ private suspend fun callMethodWithParameters(
     }
 
     method.isAccessible = true
-    return method.callBy(methodParams) as Response
+
+    try {
+        return method.callBy(methodParams) as Response
+    } catch (e: Exception) {
+        logger.log(Level.SEVERE, "Error while calling method $method", e)
+        return Response.internalServerError()
+    }
 }
 
 private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCall): Any {
@@ -246,6 +253,7 @@ private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCal
         AnimeDto::class.java -> call.receive<AnimeDto>()
         EpisodeMappingDto::class.java -> call.receive<EpisodeMappingDto>()
         GenericDto::class.java -> call.receive<GenericDto>()
+        MultiPartData::class.java -> call.receiveMultipart()
         else -> call.receive<String>()
     }
 }

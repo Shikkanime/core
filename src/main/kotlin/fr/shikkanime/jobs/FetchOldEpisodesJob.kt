@@ -95,15 +95,18 @@ class FetchOldEpisodesJob : AbstractJob {
 
         logger.info("Found ${episodes.size} episodes, saving...")
         var realSaved = 0
+        val realSavedAnimes = mutableSetOf<String>()
 
         val variants = episodes.sortedBy { it.releaseDateTime }.map { episode ->
             episodeVariantService.findByIdentifier(episode.getIdentifier()) ?: run {
+                realSavedAnimes.add(episode.anime)
                 realSaved++
                 episodeVariantService.save(episode)
             }
         }
 
         logger.info("Saved $realSaved episodes")
+        realSavedAnimes.forEach { logger.info("Updating ${StringUtils.getShortName(it)}...") }
 
         if (realSaved > 0) {
             logger.info("Updating mappings...")
@@ -121,7 +124,6 @@ class FetchOldEpisodesJob : AbstractJob {
             variants.groupBy { it.mapping!!.anime!!.uuid }.forEach { (animeUuid, _) ->
                 val anime = animeService.find(animeUuid) ?: return@forEach
                 val mappingVariants = episodeVariantService.findAllByAnime(anime)
-                logger.info("Updating ${StringUtils.getShortName(anime.name!!)}...")
                 anime.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
                 anime.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
                 animeService.update(anime)

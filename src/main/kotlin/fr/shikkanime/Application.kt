@@ -55,7 +55,7 @@ fun main() {
     logger.info("Starting server...")
     embeddedServer(
         Netty,
-        port = 37100,
+        port = Constant.PORT,
         host = "0.0.0.0",
         module = Application::module
     ).start(wait = true)
