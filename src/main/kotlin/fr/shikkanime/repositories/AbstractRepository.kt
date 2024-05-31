@@ -40,6 +40,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
     fun <T> createReadOnlyQuery(entityManager: EntityManager, criteriaQuery: CriteriaQuery<T>): TypedQuery<T> {
         return entityManager.createQuery(criteriaQuery)
             .setHint(AvailableHints.HINT_READ_ONLY, true)
+            .setHint(AvailableHints.HINT_CACHEABLE, true)
     }
 
     fun <C> buildPageableQuery(query: TypedQuery<C>, page: Int, limit: Int): Pageable<C> {
