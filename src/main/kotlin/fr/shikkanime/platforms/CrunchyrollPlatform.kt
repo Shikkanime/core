@@ -142,8 +142,16 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         needSimulcast: Boolean = true
     ): Episode {
         val episodeMetadata = jsonObject.getAsJsonObject("episode_metadata")
+        val seasonRegex = " Saison (\\d)".toRegex()
 
-        val animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
+        var animeName = requireNotNull(episodeMetadata.getAsString("series_title")) { "Anime name is null" }
+        var forcedSeason: Int? = null
+
+        if (animeName.contains(seasonRegex)) {
+            forcedSeason = seasonRegex.find(animeName)!!.groupValues[1].toIntOrNull()
+            animeName = animeName.replace(seasonRegex, "")
+        }
+
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
         val eligibleRegion =
@@ -165,7 +173,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 episodeMetadata.getAsString("premium_available_date")
                     ?.let { ZonedDateTime.parse(it) }) { "Release date is null" }
 
-        val season = episodeMetadata.getAsInt("season_number") ?: 1
+        val season = forcedSeason ?: (episodeMetadata.getAsInt("season_number") ?: 1)
         val (number, episodeType) = getNumberAndEpisodeType(episodeMetadata)
 
         val title = jsonObject.getAsString("title")

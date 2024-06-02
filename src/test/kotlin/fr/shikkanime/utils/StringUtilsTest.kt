@@ -12,11 +12,11 @@ class StringUtilsTest {
             "Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside" to "Banished from the Hero's Party",
             "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!" to "7th Time Loop",
             "Shangri-La Frontier" to "Shangri-La Frontier",
-            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa",
+            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa, Junior Youth Arc",
             "SPY x FAMILY" to "SPY x FAMILY",
             "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "The Strongest Tank's Labyrinth Raids",
-            "Firefighter Daigo: Rescuer in Orange" to "Firefighter Daigo",
-            "MASHLE: MAGIC AND MUSCLES" to "MASHLE",
+            "Firefighter Daigo: Rescuer in Orange" to "Firefighter Daigo: Rescuer in Orange",
+            "MASHLE: MAGIC AND MUSCLES" to "MASHLE: MAGIC AND MUSCLES",
             "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!" to "My Instant Death Ability Is So Overpowered",
             "Bottom-Tier Character Tomozaki" to "Bottom-Tier Character Tomozaki",
             "Classroom of the Elite" to "Classroom of the Elite",
@@ -36,11 +36,12 @@ class StringUtilsTest {
             "Moi, quand je me réincarne en Slime" to "Moi, quand je me réincarne en Slime",
             "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability" to "I Was Reincarnated as the 7th Prince",
             "Mushoku Tensei: Jobless Reincarnation" to "Mushoku Tensei: Jobless Reincarnation",
-            "Yuru Camp – Au grand air" to "Yuru Camp",
+            "Yuru Camp – Au grand air" to "Yuru Camp – Au grand air",
             "Studio Apartment, Good Lighting, Angel Included" to "Studio Apartment, Good Lighting, Angel Included",
             "Je survivrai grâce aux potions !" to "Je survivrai grâce aux potions !",
             "Rent-a-Girlfriend" to "Rent-a-Girlfriend",
-            "After-school Hanako-kun" to "After-school Hanako-kun"
+            "After-school Hanako-kun" to "After-school Hanako-kun",
+            "Kaguya-sama: Love Is War" to "Kaguya-sama: Love Is War",
         )
 
         list.forEach { (input, expected) ->
@@ -72,6 +73,36 @@ class StringUtilsTest {
 
         list.forEach { (input, expected) ->
             assertEquals(expected, StringUtils.toSlug(StringUtils.getShortName(input)))
+        }
+    }
+
+    @Test
+    fun getHashtag() {
+        val list = listOf(
+            "Gloutons & Dragons" to "GloutonsDragons",
+            "Moi, quand je me réincarne en Slime" to "MoiQuandJeMeRéincarneEnSlime",
+            "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability" to "IWasReincarnatedAsThe7thPrince",
+            "Studio Apartment, Good Lighting, Angel Included" to "StudioApartmentGoodLightingAngelIncluded",
+            "Je survivrai grâce aux potions !" to "JeSurvivraiGrâceAuxPotions",
+            "Rent-a-Girlfriend" to "RentAGirlfriend",
+            "Re:Monster" to "ReMonster",
+            "NieR:Automata Ver1.1a" to "NierAutomataVer11a",
+            "An Archdemon's Dilemma: How to Love Your Elf Bride" to "AnArchdemonsDilemma",
+            "Protocol: Rain" to "ProtocolRain",
+            "Spice and Wolf: MERCHANT MEETS THE WISE WOLF" to "SpiceAndWolf",
+            "KONOSUBA -God's blessing on this wonderful world!" to "Konosuba",
+            "Fate/strange Fake -Whispers of Dawn-" to "FateStrangeFake",
+            "After-school Hanako-kun" to "AfterSchoolHanakoKun",
+            "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "TheStrongestTanksLabyrinthRaids",
+            "'Tis Time for \"Torture,\" Princess" to "TisTimeForTorturePrincess",
+            "X&Y" to "XY",
+            "Kaguya-sama: Love Is War" to "KaguyaSamaLoveIsWar",
+            "MASHLE: MAGIC AND MUSCLES" to "MashleMagicAndMuscles",
+            "Yuru Camp – Au grand air" to "YuruCampAuGrandAir"
+        )
+
+        list.forEach { (input, expected) ->
+            assertEquals(expected, StringUtils.getHashtag(StringUtils.getShortName(input)))
         }
     }
 }

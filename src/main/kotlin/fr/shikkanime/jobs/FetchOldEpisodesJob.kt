@@ -244,7 +244,16 @@ class FetchOldEpisodesJob : AbstractJob {
         }.distinctBy { it.getAsString("id") }
 
         series.forEach { serie ->
-            val animeName = requireNotNull(serie.getAsString("title")) { "Anime name is null" }
+            val seasonRegex = " Saison (\\d)".toRegex()
+
+            var animeName = requireNotNull(serie.getAsString("title")) { "Anime name is null" }
+            var forcedSeason: Int? = null
+
+            if (animeName.contains(seasonRegex)) {
+                forcedSeason = seasonRegex.find(animeName)!!.groupValues[1].toIntOrNull()
+                animeName = animeName.replace(seasonRegex, "")
+            }
+
             val images = serie.getAsJsonObject("images")
             val postersTall = images.getAsJsonArray("poster_tall")[0].asJsonArray
             val postersWide = images.getAsJsonArray("poster_wide")[0].asJsonArray
@@ -272,7 +281,7 @@ class FetchOldEpisodesJob : AbstractJob {
                 try {
                     val isDubbed = episode.audioLocale == countryCode.locale
                     val releaseDate = ZonedDateTime.parse(episode.premiumAvailableDate)
-                    val season = episode.seasonNumber ?: 1
+                    val season = forcedSeason ?: (episode.seasonNumber ?: 1)
                     val (number, episodeType) = getNumberAndEpisodeType(episode)
                     val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
                     val thumbnails = episode.images?.thumbnail

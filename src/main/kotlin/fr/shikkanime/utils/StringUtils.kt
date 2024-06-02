@@ -16,7 +16,7 @@ import java.util.regex.Pattern
 object StringUtils {
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
-    private val regex = "( [-|!].*[-|!])|(Saison \\d*)|\\(\\d*\\)".toRegex()
+    private val regex = "( [-|!].*[-|!])|( Saison \\d*)|\\(\\d*\\)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ")
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>, limit: Int): Boolean {
@@ -33,7 +33,7 @@ object StringUtils {
                 val firstPart = split[0].trim()
                 val lastPart = split.subList(1, split.size).joinToString(" ").trim()
 
-                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(
+                if (lastPart.count { it == ' ' } >= 3 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(
                         split,
                         2
                     )) {
@@ -45,10 +45,12 @@ object StringUtils {
         return shortName.replace(" +".toRegex(), " ").trim()
     }
 
-    fun getHashtag(fullName: String) = getShortName(fullName).capitalizeWords().filter { it.isLetterOrDigit() }
+    fun getHashtag(fullName: String) = getShortName(fullName).lowercase().capitalizeWords()
+        .replace(" S ", " s ")
+        .filter { it.isLetterOrDigit() }
 
     fun String.capitalizeWords(): String {
-        val delimiters = arrayOf(" ", ",")
+        val delimiters = arrayOf(" ", ",", "-", ":", "/", "'", "\"", "&")
 
         return this.split(*delimiters).joinToString(" ") {
             it.replaceFirstChar { char ->
