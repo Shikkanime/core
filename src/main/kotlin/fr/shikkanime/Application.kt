@@ -5,6 +5,7 @@ import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.socialnetworks.DiscordSocialNetwork
@@ -22,7 +23,6 @@ fun main() {
     logger.info("Starting ${Constant.NAME}...")
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     animeService.preIndex()
-
     updateAndDeleteData(animeService)
 
     ImageService.loadCache()
@@ -62,7 +62,22 @@ fun main() {
 }
 
 private fun updateAndDeleteData(animeService: AnimeService) {
+    val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
+    val seasonRegex = " Saison (\\d)".toRegex()
+
     animeService.findAll().forEach {
+        if (it.name!!.contains(seasonRegex)) {
+            val season = seasonRegex.find(it.name!!)!!.groupValues[1]
+            it.name = it.name!!.replace(seasonRegex, "")
+            logger.info("Updating name for anime ${it.name} to ${it.name}")
+            logger.warning("Replacing all season episodes for anime ${it.name} to season $season")
+
+            episodeMappingService.findAllByAnime(it).forEach { episodeMapping ->
+                episodeMapping.season = season.toInt()
+                episodeMappingService.update(episodeMapping)
+            }
+        }
+
         val toSlug = StringUtils.toSlug(StringUtils.getShortName(it.name!!))
 
         if (toSlug != it.slug) {

@@ -50,7 +50,8 @@
 
                                 <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-top-4"
                                      style="display: none;" x-show="hover">
-                                    <div class="h6 text-truncate-2 fw-bold" x-text="anime.name.toUpperCase()"></div>
+                                    <div class="h6 text-truncate-2 fw-bold"
+                                         x-text="anime.shortName.toUpperCase()"></div>
                                     <hr>
                                     <div class="text-truncate-6" x-text="anime.description"></div>
                                 </div>
