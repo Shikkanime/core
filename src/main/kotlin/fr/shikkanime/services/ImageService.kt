@@ -297,13 +297,13 @@ object ImageService {
     operator fun get(uuid: UUID, type: Type): Image? = cache.toList().find { it.uuid == uuid.toString() && it.type == type }
 
     val size: Int
-        get() = cache.size
+        get() = cache.toList().size
 
     val originalSize: String
-        get() = toHumanReadable(cache.sumOf { it.originalSize })
+        get() = toHumanReadable(cache.toList().sumOf { it.originalSize })
 
     val compressedSize: String
-        get() = toHumanReadable(cache.sumOf { it.size })
+        get() = toHumanReadable(cache.toList().sumOf { it.size })
 
     fun invalidate() {
         addAll(true)
