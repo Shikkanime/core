@@ -8,7 +8,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -54,7 +53,7 @@ class FetchOldEpisodesJobTest {
 
         // If episodes contains the episode 1, it means that the job has worked
         assertNotNull(episodes)
-        assertTrue(episodes!!.any { it.seasonNumber == 1 && it.number == 1 })
+        assertTrue(episodes!!.any { it.episodeMetadata!!.seasonNumber == 1 && it.episodeMetadata!!.number == 1 })
     }
 
     @Test
@@ -62,8 +61,10 @@ class FetchOldEpisodesJobTest {
         val episodes = fetchOldEpisodesJob.crunchyrollEpisodesCache[CountryCodeIdKeyCache(CountryCode.FR, "GRE50KV36")]
 
         assertNotNull(episodes)
-        assertTrue(episodes!!.any { it.seasonNumber == 1 && it.number == 1 })
-        assertTrue(episodes.any { it.seasonNumber == 1 && it.number == 170 })
+        assertTrue(episodes!!.any { it.episodeMetadata!!.seasonNumber == 1 && it.episodeMetadata!!.number == 1 && it.episodeMetadata!!.audioLocale == "ja-JP" })
+        assertTrue(episodes.any { it.episodeMetadata!!.seasonNumber == 1 && it.episodeMetadata!!.number == 1 && it.episodeMetadata!!.audioLocale == "fr-FR" })
+        assertTrue(episodes.any { it.episodeMetadata!!.seasonNumber == 1 && it.episodeMetadata!!.number == 170 && it.episodeMetadata!!.audioLocale == "ja-JP" })
+        assertTrue(episodes.any { it.episodeMetadata!!.seasonNumber == 1 && it.episodeMetadata!!.number == 102 && it.episodeMetadata!!.audioLocale == "fr-FR" })
         assertTrue(episodes.size >= 170)
     }
 
@@ -97,7 +98,7 @@ class FetchOldEpisodesJobTest {
 
         val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
         val series = runBlocking { fetchOldEpisodesJob.getSeries(CountryCode.FR, accessToken, simulcasts) }
-        assertTrue(series.any { it.getAsString("id") == "GXJHM3NJ5" })
+        assertTrue(series.any { it.id == "GXJHM3NJ5" })
         fetchOldEpisodesJob.run()
 
         val animes = animeService.findAll()

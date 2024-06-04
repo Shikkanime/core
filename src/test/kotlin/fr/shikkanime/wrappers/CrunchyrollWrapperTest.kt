@@ -1,7 +1,6 @@
 package fr.shikkanime.wrappers
 
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.utils.ObjectParser.getAsString
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -62,7 +61,7 @@ class CrunchyrollWrapperTest {
         assertEquals(true, series.isNotEmpty())
 
         series.forEach {
-            println(it.getAsString("title"))
+            println(it.title)
         }
     }
 

@@ -1,6 +1,5 @@
 package fr.shikkanime.platforms
 
-import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
@@ -57,19 +56,6 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         }
 
         return apiCache.entries.firstOrNull { it.key.first == key }!!.value
-    }
-
-    protected fun parseAPIContent(
-        bypassFileContent: File?,
-        key: K,
-        arrayKey: String,
-        zonedDateTime: ZonedDateTime
-    ): List<JsonObject> {
-        return if (bypassFileContent != null && bypassFileContent.exists()) {
-            ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray(arrayKey).map { it.asJsonObject }
-        } else {
-            getApiContent(key, zonedDateTime) as List<JsonObject> // NOSONAR
-        }
     }
 
     fun loadConfiguration(): C {
