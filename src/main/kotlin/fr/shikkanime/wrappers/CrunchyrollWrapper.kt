@@ -7,6 +7,7 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
+import java.time.ZonedDateTime
 import java.util.*
 
 /**
@@ -33,11 +34,24 @@ object CrunchyrollWrapper {
     )
 
     data class Image(
-        val thumbnail: List<List<MediaImage>>,
+        val thumbnail: List<List<MediaImage>> = emptyList(),
+        @SerializedName("poster_tall")
+        val posterTall: List<List<MediaImage>> = emptyList(),
+        @SerializedName("poster_wide")
+        val posterWide: List<List<MediaImage>> = emptyList(),
     )
 
     data class Version(
         val guid: String,
+    )
+
+    data class Series(
+        val id: String,
+        val images: Image,
+        val title: String,
+        val description: String?,
+        @SerializedName("is_simulcast")
+        val isSimulcast: Boolean,
     )
 
     data class Season(
@@ -47,15 +61,17 @@ object CrunchyrollWrapper {
     )
 
     data class Episode(
-        val id: String,
-        @SerializedName("eligible_region")
-        val eligibleRegion: String,
+        val id: String?,
+        @SerializedName("series_id")
+        val seriesId: String,
+        @SerializedName("series_title")
+        val seriesTitle: String,
         @SerializedName("audio_locale")
         val audioLocale: String,
         @SerializedName("subtitle_locales")
         val subtitleLocales: List<String>,
         @SerializedName("premium_available_date")
-        val premiumAvailableDate: String,
+        val premiumAvailableDate: ZonedDateTime,
         @SerializedName("season_number")
         val seasonNumber: Int?,
         @SerializedName("season_slug_title")
@@ -64,16 +80,25 @@ object CrunchyrollWrapper {
         val numberString: String,
         @SerializedName("episode_number")
         val number: Int?,
-        @SerializedName("title")
         val title: String?,
         @SerializedName("slug_title")
         val slugTitle: String?,
         val images: Image?,
         @SerializedName("duration_ms")
         val durationMs: Long,
-        @SerializedName("description")
         val description: String?,
         val versions: List<Version>?,
+    )
+
+    data class BrowseObject(
+        val id: String,
+        val images: Image?,
+        val description: String?,
+        val title: String?,
+        @SerializedName("episode_metadata")
+        val episodeMetadata: Episode?,
+        @SerializedName("slug_title")
+        val slugTitle: String?,
     )
 
     private const val BASE_URL = "https://www.crunchyroll.com/"
@@ -103,7 +128,7 @@ object CrunchyrollWrapper {
         size: Int = 25,
         start: Int = 0,
         simulcast: String? = null,
-    ): List<JsonObject> {
+    ): Array<BrowseObject> {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else ""}",
             headers = mapOf(
@@ -113,11 +138,13 @@ object CrunchyrollWrapper {
 
         require(response.status.value == 200) { "Failed to get media list (${response.status.value})" }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")?.map { it.asJsonObject }
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get media list")
+
+        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
     }
 
-    suspend fun getSeries(locale: String, accessToken: String, vararg ids: String): List<JsonObject> {
+    suspend fun getSeries(locale: String, accessToken: String, vararg ids: String): Series {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/series/${ids.joinToString(",")}?locale=$locale",
             headers = mapOf(
@@ -127,8 +154,9 @@ object CrunchyrollWrapper {
 
         require(response.status.value == 200) { "Failed to get series" }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")?.map { it.asJsonObject }
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get series")
+        return ObjectParser.fromJson(asJsonArray.first(), Series::class.java)
     }
 
     suspend fun getSeasonsBySeriesId(locale: String, accessToken: String, seriesId: String): Array<Season> {
@@ -175,6 +203,21 @@ object CrunchyrollWrapper {
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get episode")
         return ObjectParser.fromJson(asJsonArray.first(), Episode::class.java)
+    }
+
+    suspend fun getObjects(locale: String, accessToken: String, vararg ids: String): Array<BrowseObject> {
+        val response = httpRequest.get(
+            "${BASE_URL}content/v2/cms/objects/${ids.joinToString(",")}?locale=$locale",
+            headers = mapOf(
+                "Authorization" to "Bearer $accessToken",
+            ),
+        )
+
+        require(response.status.value == 200) { "Failed to get objects" }
+
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
+            ?: throw Exception("Failed to get objects")
+        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
     }
 
     suspend fun getSimulcasts(locale: String, accessToken: String): List<JsonObject> {

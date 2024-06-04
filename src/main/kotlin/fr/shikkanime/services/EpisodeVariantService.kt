@@ -9,15 +9,12 @@ import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     @Inject
     private lateinit var episodeVariantRepository: EpisodeVariantRepository
 
@@ -99,7 +96,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             ?: choosenSimulcast
     }
 
-    fun save(episode: AbstractPlatform.Episode): EpisodeVariant {
+    fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
         val anime =
             animeService.findBySlug(episode.countryCode, StringUtils.toSlug(StringUtils.getShortName(episode.anime)))
                 ?: animeService.save(
@@ -117,10 +114,13 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     }
                 )
 
-        val mapping = getEpisodeMapping(anime, episode)
-        mapping.lastReleaseDateTime = episode.releaseDateTime
-        mapping.lastUpdateDateTime = episode.releaseDateTime
-        episodeMappingService.update(mapping)
+        val mapping = episodeMapping ?: getEpisodeMapping(anime, episode)
+
+        if (updateMappingDateTime) {
+            mapping.lastReleaseDateTime = episode.releaseDateTime
+            mapping.lastUpdateDateTime = episode.releaseDateTime
+            episodeMappingService.update(mapping)
+        }
 
         updateAnime(anime, episode, mapping)
 
