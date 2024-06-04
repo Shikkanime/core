@@ -41,7 +41,7 @@ object ImageService {
     ) : Serializable
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val threadPool = Executors.newFixedThreadPool(4)
+    private var threadPool = Executors.newFixedThreadPool(4)
     val cache = mutableListOf<Image>()
     private val change = AtomicBoolean(false)
     private const val CACHE_FILE_NUMBER = 4
@@ -307,6 +307,11 @@ object ImageService {
 
     fun invalidate() {
         addAll(true)
+    }
+
+    fun clearPool() {
+        threadPool.shutdown()
+        threadPool = Executors.newFixedThreadPool(4)
     }
 
     fun addAll(bypass: Boolean = false) {

@@ -19,7 +19,13 @@ class ImageServiceTest {
     @Test
     fun add() {
         val uuid = UUID.randomUUID()
-        ImageService.add(uuid, ImageService.Type.IMAGE, "https://www.shikkanime.fr/assets/img/dark_logo.png", 128, 128)
+        ImageService.add(
+            uuid,
+            ImageService.Type.IMAGE,
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8bfa5ecce45d2d497f88f0b1a0f511df.jpe",
+            128,
+            128
+        )
         var i = 0
 
         while (ImageService[uuid, ImageService.Type.IMAGE] == null || ImageService[uuid, ImageService.Type.IMAGE]?.bytes?.isEmpty() == true) {
