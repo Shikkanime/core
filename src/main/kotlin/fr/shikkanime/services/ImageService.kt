@@ -310,7 +310,7 @@ object ImageService {
     }
 
     fun clearPool() {
-        threadPool.shutdown()
+        threadPool.shutdownNow()
         threadPool = Executors.newFixedThreadPool(4)
     }
 

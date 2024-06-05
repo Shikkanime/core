@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.caches.LanguageCacheService
 import java.text.Normalizer
 import java.util.*
@@ -131,6 +132,21 @@ object StringUtils {
             ) ||
             episodeMapping.title.isNullOrBlank() ||
             episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
+        ) Status.INVALID else Status.VALID
+    }
+
+    fun getStatus(episode: AbstractPlatform.Episode): Status {
+        val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
+
+        return if (
+            isInvalid(
+                episode.image,
+                episode.description,
+                episode.countryCode,
+                languageCacheService
+            ) ||
+            episode.title.isNullOrBlank() ||
+            episode.image == Constant.DEFAULT_IMAGE_PREVIEW
         ) Status.INVALID else Status.VALID
     }
 

@@ -1,45 +1,65 @@
 package fr.shikkanime.wrappers
 
-import com.google.gson.JsonObject
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.statement.*
 import java.time.LocalDate
+import java.time.ZonedDateTime
 
 object AnimationDigitalNetworkWrapper {
+    data class Show(
+        val shortTitle: String?,
+        val title: String,
+        val image2x: String,
+        val imageHorizontal2x: String,
+        val summary: String?,
+        val genres: List<String> = emptyList(),
+        val simulcast: Boolean,
+        val firstReleaseYear: String,
+    )
+
+    data class Video(
+        val id: Int,
+        val title: String,
+        val season: String?,
+        val releaseDate: ZonedDateTime,
+        val shortNumber: String?,
+        val type: String,
+        val name: String?,
+        val summary: String?,
+        val image2x: String,
+        val url: String,
+        val duration: Long,
+        val languages: List<String> = emptyList(),
+        val show: Show,
+    )
+
     private const val BASE_URL = "https://gw.api.animationdigitalnetwork.fr/"
     private val httpRequest = HttpRequest()
 
-    suspend fun getLatestVideos(dateString: LocalDate): List<JsonObject> {
+    suspend fun getLatestVideos(dateString: LocalDate): Array<Video> {
         val response = httpRequest.get("${BASE_URL}video/calendar?date=$dateString")
 
         if (response.status.value != 200) {
             throw Exception("Failed to get media list")
         }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("videos")?.map { it.asJsonObject }
+        val videos = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("videos")
             ?: throw Exception("Failed to get media list")
+
+        return ObjectParser.fromJson(videos, Array<Video>::class.java)
     }
 
-    suspend fun getShow(animeName: String): JsonObject {
-        val response = httpRequest.get("${BASE_URL}show/$animeName?withMicrodata=true&withSeo=true")
-
-        if (response.status.value != 200) {
-            throw Exception("Failed to get show id")
-        }
-
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("show")
-            ?: throw Exception("Failed to get show id")
-    }
-
-    suspend fun getShowVideo(videoId: Int): JsonObject {
-        val response = httpRequest.get("${BASE_URL}video/$videoId/public?withMicrodata=true&withSeo=true")
+    suspend fun getShowVideo(videoId: String): Video {
+        val response = httpRequest.get("${BASE_URL}video/$videoId/public")
 
         if (response.status.value != 200) {
             throw Exception("Failed to get video")
         }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("video")
+        val videoJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("video")
             ?: throw Exception("Failed to get video")
+
+        return ObjectParser.fromJson(videoJson, Video::class.java)
     }
 }
