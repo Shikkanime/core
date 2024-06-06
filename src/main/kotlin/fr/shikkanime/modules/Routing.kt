@@ -200,7 +200,7 @@ private suspend fun handleMultipartResponse(call: ApplicationCall, response: Res
     call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
 }
 
-private suspend fun handleTemplateResponse(
+suspend fun handleTemplateResponse(
     call: ApplicationCall,
     controller: Any,
     replacedPath: String,

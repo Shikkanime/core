@@ -34,7 +34,7 @@ object StringUtils {
                 val firstPart = split[0].trim()
                 val lastPart = split.subList(1, split.size).joinToString(" ").trim()
 
-                if (lastPart.count { it == ' ' } >= 3 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(
+                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(
                         split,
                         2
                     )) {

@@ -35,3 +35,6 @@
 [#-- @ftlvariable name="episodeVariant" type="fr.shikkanime.dtos.variants.EpisodeVariantDto" --]
 
 [#-- @ftlvariable name="code" type="java.lang.String" --]
+[#-- @ftlvariable name="showMore" type="java.lang.Boolean" --]
+[#-- @ftlvariable name="showLess" type="java.lang.Boolean" --]
+[#-- @ftlvariable name="page" type="java.lang.Integer" --]

@@ -101,7 +101,7 @@ class SiteController {
     @Get
     private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.redirect("/404")
+        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
 
         return Response.template(
             Link.CATALOG.template,
@@ -123,8 +123,24 @@ class SiteController {
     @Path("animes/{slug}")
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
-        val seasonDto = dto.seasons.firstOrNull() ?: return Response.redirect("/404")
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val seasonDto = dto.seasons.firstOrNull() ?: return Response.notFound()
+
+        val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
+
+        val findAllBy = episodeMappingCacheService.findAllBy(
+            CountryCode.FR,
+            dto.uuid,
+            seasonDto.number,
+            listOf(
+                SortParameter("releaseDateTime", SortParameter.Order.ASC),
+                SortParameter("season", SortParameter.Order.ASC),
+                SortParameter("episodeType", SortParameter.Order.ASC),
+                SortParameter("number", SortParameter.Order.ASC),
+            ),
+            1,
+            limit
+        )
 
         return Response.template(
             "/site/anime.ftl",
@@ -132,19 +148,9 @@ class SiteController {
             mutableMapOf(
                 "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
                 "anime" to dto,
-                "episodeMappings" to episodeMappingCacheService.findAllBy(
-                    CountryCode.FR,
-                    dto.uuid,
-                    seasonDto.number,
-                    listOf(
-                        SortParameter("releaseDateTime", SortParameter.Order.ASC),
-                        SortParameter("season", SortParameter.Order.ASC),
-                        SortParameter("episodeType", SortParameter.Order.ASC),
-                        SortParameter("number", SortParameter.Order.ASC),
-                    ),
-                    1,
-                    configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
-                )!!.data,
+                "episodeMappings" to findAllBy!!.data,
+                "showMore" to (findAllBy.data.size < findAllBy.total.toInt()),
+                "showLess" to false,
             )
         )
     }
@@ -155,8 +161,24 @@ class SiteController {
         @PathParam("slug") slug: String,
         @PathParam("season") season: Int
     ): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
-        val seasonDto = dto.seasons.firstOrNull { it.number == season } ?: return Response.redirect("/404")
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val seasonDto = dto.seasons.firstOrNull { it.number == season } ?: return Response.notFound()
+
+        val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
+
+        val findAllBy = episodeMappingCacheService.findAllBy(
+            CountryCode.FR,
+            dto.uuid,
+            season,
+            listOf(
+                SortParameter("releaseDateTime", SortParameter.Order.ASC),
+                SortParameter("season", SortParameter.Order.ASC),
+                SortParameter("episodeType", SortParameter.Order.ASC),
+                SortParameter("number", SortParameter.Order.ASC),
+            ),
+            1,
+            limit
+        )
 
         return Response.template(
             "/site/anime.ftl",
@@ -165,19 +187,49 @@ class SiteController {
                 "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
                 "anime" to dto,
                 "season" to seasonDto,
-                "episodeMappings" to episodeMappingCacheService.findAllBy(
-                    CountryCode.FR,
-                    dto.uuid,
-                    season,
-                    listOf(
-                        SortParameter("releaseDateTime", SortParameter.Order.ASC),
-                        SortParameter("season", SortParameter.Order.ASC),
-                        SortParameter("episodeType", SortParameter.Order.ASC),
-                        SortParameter("number", SortParameter.Order.ASC),
-                    ),
-                    1,
-                    configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
-                )!!.data,
+                "episodeMappings" to findAllBy!!.data,
+                "showMore" to (findAllBy.data.size < findAllBy.total.toInt()),
+                "showLess" to false,
+            )
+        )
+    }
+
+    @Path("animes/{slug}/season-{season}/page-{page}")
+    @Get
+    private fun animeDetailBySeasonAndPage(
+        @PathParam("slug") slug: String,
+        @PathParam("season") season: Int,
+        @PathParam("page") page: Int
+    ): Response {
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val seasonDto = dto.seasons.firstOrNull { it.number == season } ?: return Response.notFound()
+
+        val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
+        val findAllBy = episodeMappingCacheService.findAllBy(
+            CountryCode.FR,
+            dto.uuid,
+            season,
+            listOf(
+                SortParameter("releaseDateTime", SortParameter.Order.ASC),
+                SortParameter("season", SortParameter.Order.ASC),
+                SortParameter("episodeType", SortParameter.Order.ASC),
+                SortParameter("number", SortParameter.Order.ASC),
+            ),
+            page,
+            limit
+        )
+
+        return Response.template(
+            "/site/anime.ftl",
+            "${dto.shortName} - Saison $season",
+            mutableMapOf(
+                "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
+                "anime" to dto,
+                "season" to seasonDto,
+                "episodeMappings" to findAllBy!!.data,
+                "showMore" to (((page - 1) * limit) + findAllBy.data.size < findAllBy.total.toInt()),
+                "showLess" to (page > 1),
+                "page" to page,
             )
         )
     }

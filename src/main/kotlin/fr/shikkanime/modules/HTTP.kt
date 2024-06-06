@@ -1,7 +1,9 @@
 package fr.shikkanime.modules
 
+import fr.shikkanime.controllers.site.SiteController
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.routes.Response
 import freemarker.cache.ClassTemplateLoader
 import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.github.smiley4.ktorswaggerui.data.AuthScheme
@@ -46,6 +48,18 @@ fun Application.configureHTTP() {
         status(HttpStatusCode.NotFound) { call, _ ->
             val path = call.request.path()
             if (isNotSiteRoute(path, "404")) return@status
+
+            if (call.response.status() == HttpStatusCode.NotFound) {
+                val siteController = Constant.injector.getInstance(SiteController::class.java)
+                handleTemplateResponse(
+                    call,
+                    siteController,
+                    "/404",
+                    Response.template(HttpStatusCode.NotFound, "/site/errors/404.ftl", "Page introuvable")
+                )
+                return@status
+            }
+
             call.respondRedirect("/404")
         }
     }
