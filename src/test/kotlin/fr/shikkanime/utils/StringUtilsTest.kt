@@ -12,11 +12,11 @@ class StringUtilsTest {
             "Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside" to "Banished from the Hero's Party",
             "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!" to "7th Time Loop",
             "Shangri-La Frontier" to "Shangri-La Frontier",
-            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa, Junior Youth Arc",
+            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa",
             "SPY x FAMILY" to "SPY x FAMILY",
             "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "The Strongest Tank's Labyrinth Raids",
-            "Firefighter Daigo: Rescuer in Orange" to "Firefighter Daigo: Rescuer in Orange",
-            "MASHLE: MAGIC AND MUSCLES" to "MASHLE: MAGIC AND MUSCLES",
+            "Firefighter Daigo: Rescuer in Orange" to "Firefighter Daigo",
+            "MASHLE: MAGIC AND MUSCLES" to "MASHLE",
             "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!" to "My Instant Death Ability Is So Overpowered",
             "Bottom-Tier Character Tomozaki" to "Bottom-Tier Character Tomozaki",
             "Classroom of the Elite" to "Classroom of the Elite",
@@ -36,12 +36,12 @@ class StringUtilsTest {
             "Moi, quand je me réincarne en Slime" to "Moi, quand je me réincarne en Slime",
             "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability" to "I Was Reincarnated as the 7th Prince",
             "Mushoku Tensei: Jobless Reincarnation" to "Mushoku Tensei: Jobless Reincarnation",
-            "Yuru Camp – Au grand air" to "Yuru Camp – Au grand air",
+            "Yuru Camp – Au grand air" to "Yuru Camp",
             "Studio Apartment, Good Lighting, Angel Included" to "Studio Apartment, Good Lighting, Angel Included",
             "Je survivrai grâce aux potions !" to "Je survivrai grâce aux potions !",
             "Rent-a-Girlfriend" to "Rent-a-Girlfriend",
             "After-school Hanako-kun" to "After-school Hanako-kun",
-            "Kaguya-sama: Love Is War" to "Kaguya-sama: Love Is War",
+            "Kaguya-sama: Love Is War" to "Kaguya-sama",
         )
 
         list.forEach { (input, expected) ->
@@ -96,9 +96,9 @@ class StringUtilsTest {
             "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "TheStrongestTanksLabyrinthRaids",
             "'Tis Time for \"Torture,\" Princess" to "TisTimeForTorturePrincess",
             "X&Y" to "XY",
-            "Kaguya-sama: Love Is War" to "KaguyaSamaLoveIsWar",
-            "MASHLE: MAGIC AND MUSCLES" to "MashleMagicAndMuscles",
-            "Yuru Camp – Au grand air" to "YuruCampAuGrandAir"
+            "Kaguya-sama: Love Is War" to "KaguyaSama",
+            "MASHLE: MAGIC AND MUSCLES" to "Mashle",
+            "Yuru Camp – Au grand air" to "YuruCamp"
         )
 
         list.forEach { (input, expected) ->

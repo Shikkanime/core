@@ -101,7 +101,7 @@ class SiteController {
     @Get
     private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
         val findAll = simulcastCacheService.findAll()!!
-        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.redirect("/404")
+        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
 
         return Response.template(
             Link.CATALOG.template,
@@ -123,8 +123,8 @@ class SiteController {
     @Path("animes/{slug}")
     @Get
     private fun animeDetail(@PathParam("slug") slug: String): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
-        val seasonDto = dto.seasons.firstOrNull() ?: return Response.redirect("/404")
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val seasonDto = dto.seasons.firstOrNull() ?: return Response.notFound()
 
         return Response.template(
             "/site/anime.ftl",
@@ -155,8 +155,8 @@ class SiteController {
         @PathParam("slug") slug: String,
         @PathParam("season") season: Int
     ): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.redirect("/404")
-        val seasonDto = dto.seasons.firstOrNull { it.number == season } ?: return Response.redirect("/404")
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val seasonDto = dto.seasons.firstOrNull { it.number == season } ?: return Response.notFound()
 
         return Response.template(
             "/site/anime.ftl",
