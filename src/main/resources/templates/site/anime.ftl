@@ -8,6 +8,10 @@
     <#assign canonicalUrl = canonicalUrl + "/season-" + season.number>
 </#if>
 
+<#if page??>
+    <#assign canonicalUrl = canonicalUrl + "/page-" + page>
+</#if>
+
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
     <div class="container mb-3">
         <div class="row g-3 mt-3">
@@ -59,4 +63,29 @@
             <@episodeMappingComponent.display episodeMapping=episodeMapping cover=false desktopColSize="col-md-2" mobileColSize="col-6" showAnime=false showSeason=false />
         </#list>
     </div>
+
+    <#if (showMore?? && showMore) || (showLess?? && showLess)>
+        <#assign currentSeason = anime.seasons?first.number>
+        <#assign currentPage = 1>
+
+        <#if season??>
+            <#assign currentSeason = season.number>
+        </#if>
+
+        <#if page??>
+            <#assign currentPage = page>
+        </#if>
+
+        <div class="d-flex justify-content-center mt-3">
+            <#if showLess?? && showLess>
+                <a href="/animes/${anime.slug}/season-${currentSeason}/page-${currentPage - 1}"
+                   class="btn btn-light ms-0 me-auto">Page précédente</a>
+            </#if>
+
+            <#if showMore?? && showMore>
+                <a href="/animes/${anime.slug}/season-${currentSeason}/page-${currentPage + 1}"
+                   class="btn btn-light ms-auto me-0">Page suivante</a>
+            </#if>
+        </div>
+    </#if>
 </@navigation.display>
