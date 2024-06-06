@@ -34,7 +34,7 @@
                                             <div class="position-absolute top-0 end-0 p-1">
                                                 <div class="d-flex">
                                                     <#list release.platforms as platform>
-                                                        <img src="${baseUrl}/assets/img/platforms/${platform.image}"
+                                                        <img loading="lazy" src="${baseUrl}/assets/img/platforms/${platform.image}"
                                                              alt="${platform.name}"
                                                              class="rounded-circle me-1" width="20"
                                                              height="20">

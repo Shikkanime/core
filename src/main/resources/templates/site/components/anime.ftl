@@ -6,7 +6,7 @@
             <a href="/animes/${anime.slug}" class="text-decoration-none text-white"
                @mouseenter="hover = true" @mouseleave="hover = false">
                 <div class="position-relative">
-                    <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image" alt="${su.sanitizeXSS(anime.shortName)} anime"
+                    <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image" alt="${su.sanitizeXSS(anime.shortName)} anime"
                          class="img-fluid rounded-top-4" width="480" height="720">
 
                     <div class="mt-2 mx-2 mb-1">
