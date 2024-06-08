@@ -81,4 +81,26 @@ class CrunchyrollPlatformTest {
         assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
         assertEquals(13, episodes[0].number)
     }
+
+    @Test
+    fun `fetchEpisodes for 2024-06-08`() {
+        val s = "2024-06-08T12:45:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        platform.simulcasts[CountryCode.FR] = setOf("kaiju no. 8")
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals("Kaiju No. 8", episodes[0].anime)
+        assertEquals(EpisodeType.EPISODE, episodes[0].episodeType)
+        assertEquals(9, episodes[0].number)
+        assertEquals(Constant.DEFAULT_IMAGE_PREVIEW, episodes[0].image)
+    }
 }
