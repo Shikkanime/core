@@ -186,7 +186,7 @@ class CrunchyrollPlatform :
             duration = browseObject.episodeMetadata.durationMs / 1000,
             title = browseObject.title,
             description = browseObject.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() },
-            image = browseObject.images?.thumbnail?.first()
+            image = browseObject.images?.thumbnail?.firstOrNull()
                 ?.maxByOrNull { it.width }?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW,
             platform = getPlatform(),
             audioLocale = browseObject.episodeMetadata.audioLocale,
