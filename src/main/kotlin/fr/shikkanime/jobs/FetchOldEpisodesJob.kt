@@ -283,7 +283,7 @@ class FetchOldEpisodesJob : AbstractJob {
                     val season = forcedSeason ?: (episode.episodeMetadata.seasonNumber ?: 1)
                     val (number, episodeType) = getNumberAndEpisodeType(episode.episodeMetadata)
                     val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
-                    val biggestImage = episode.images?.thumbnail?.first()?.maxByOrNull { it.width }
+                    val biggestImage = episode.images?.thumbnail?.firstOrNull()?.maxByOrNull { it.width }
                     val image = biggestImage?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
                     val duration = episode.episodeMetadata.durationMs / 1000
                     val description = episode.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
