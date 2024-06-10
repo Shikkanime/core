@@ -4,17 +4,16 @@ import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.github.smiley4.ktorswaggerui.dsl.BodyTypeDescriptor
-import io.github.smiley4.ktorswaggerui.dsl.OpenApiRoute
-import io.github.smiley4.ktorswaggerui.dsl.OpenApiSimpleBody
+import io.github.smiley4.ktorswaggerui.dsl.routes.OpenApiRoute
+import io.github.smiley4.ktorswaggerui.dsl.routes.OpenApiSimpleBody
 import io.ktor.http.*
 import io.ktor.http.content.*
 import java.io.File
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
+import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.jvm.javaType
-import kotlin.reflect.jvm.jvmErasure
 
 fun swagger(
     method: KFunction<*>,
@@ -27,7 +26,7 @@ fun swagger(
     }
 
     return {
-        securitySchemeName = if (openApi.security) "BearerAuth" else null
+        securitySchemeNames = if (openApi.security) listOf("BearerAuth") else null
         tags = routeTags
         hidden = hiddenRoute || openApi.hidden
         summary = openApi.description
@@ -43,7 +42,7 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
         method.parameters.filter { it.hasAnnotation<QueryParam>() || it.hasAnnotation<PathParam>() || it.hasAnnotation<BodyParam>() }
             .forEach { parameter ->
                 val name = parameter.name!!
-                val type = parameter.type.jvmErasure
+                val type = parameter.type
 
                 when {
                     parameter.hasAnnotation<QueryParam>() -> {
@@ -66,7 +65,7 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
                         if (parameter.type.javaType == MultiPartData::class.java) {
                             multipartBody {
                                 description = "Multipart data"
-                                mediaType(ContentType.MultiPart.FormData)
+                                mediaTypes = listOf(ContentType.MultiPart.FormData)
                                 part<File>("file") {
                                     mediaTypes = listOf(ContentType.Image.PNG, ContentType.Image.JPEG)
                                 }
@@ -85,16 +84,8 @@ private fun OpenApiRoute.swaggerResponse(openApi: OpenAPI) {
         openApi.responses.forEach { response ->
             HttpStatusCode.fromValue(response.status) to {
                 description = response.description
-                val block: OpenApiSimpleBody.() -> Unit = { mediaType(ContentType.parse(response.contentType)) }
-
-                when {
-                    response.type.java.isArray -> body(
-                        BodyTypeDescriptor.multipleOf(response.type.java.componentType.kotlin),
-                        block
-                    )
-
-                    else -> body(response.type, block)
-                }
+                val block: OpenApiSimpleBody.() -> Unit = { mediaTypes = listOf(ContentType.parse(response.contentType)) }
+                body(response.type.starProjectedType, block)
             }
         }
     }

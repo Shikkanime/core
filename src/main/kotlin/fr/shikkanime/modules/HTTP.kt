@@ -74,14 +74,12 @@ fun Application.configureHTTP() {
     install(CachingHeaders) {
     }
     install(SwaggerUI) {
-        securityScheme("BearerAuth") {
-            type = AuthType.HTTP
-            scheme = AuthScheme.BEARER
-            bearerFormat = "jwt"
-        }
-        swagger {
-            swaggerUrl = "api/swagger"
-            forwardRoot = false
+        security {
+            securityScheme("BearerAuth") {
+                type = AuthType.HTTP
+                scheme = AuthScheme.BEARER
+                bearerFormat = "jwt"
+            }
         }
         info {
             title = "${Constant.NAME} API"

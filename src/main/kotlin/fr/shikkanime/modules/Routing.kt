@@ -17,6 +17,12 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.github.smiley4.ktorswaggerui.dsl.*
+import io.github.smiley4.ktorswaggerui.dsl.routing.delete
+import io.github.smiley4.ktorswaggerui.dsl.routing.get
+import io.github.smiley4.ktorswaggerui.dsl.routing.post
+import io.github.smiley4.ktorswaggerui.dsl.routing.put
+import io.github.smiley4.ktorswaggerui.routing.openApiSpec
+import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -110,6 +116,14 @@ private fun Routing.createRoutes() {
     Constant.reflections.getTypesAnnotatedWith(Controller::class.java).forEach { controllerClass ->
         val controller = Constant.injector.getInstance(controllerClass)
         createControllerRoutes(controller)
+    }
+
+    route("/api/swagger/api.json") {
+        openApiSpec()
+    }
+
+    route("/api/swagger") {
+        swaggerUI("/api/swagger/api.json")
     }
 }
 
