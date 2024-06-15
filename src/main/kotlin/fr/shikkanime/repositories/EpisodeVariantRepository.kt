@@ -166,4 +166,44 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .firstOrNull()
         }
     }
+
+    fun findMinAndMaxReleaseDateTimeByMapping(mapping: EpisodeMapping): Pair<ZonedDateTime, ZonedDateTime> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(Tuple::class.java)
+            val root = query.from(getEntityClass())
+
+            query.multiselect(
+                cb.least(root[EpisodeVariant_.releaseDateTime]),
+                cb.greatest(root[EpisodeVariant_.releaseDateTime]),
+            )
+                .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+
+            createReadOnlyQuery(entityManager, query)
+                .singleResult
+                .let { tuple ->
+                    Pair(tuple.get(0, ZonedDateTime::class.java), tuple.get(1, ZonedDateTime::class.java))
+                }
+        }
+    }
+
+    fun findMinAndMaxReleaseDateTimeByAnime(anime: Anime): Pair<ZonedDateTime, ZonedDateTime> {
+        return inTransaction { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(Tuple::class.java)
+            val root = query.from(getEntityClass())
+
+            query.multiselect(
+                cb.least(root[EpisodeVariant_.releaseDateTime]),
+                cb.greatest(root[EpisodeVariant_.releaseDateTime]),
+            )
+                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
+
+            createReadOnlyQuery(entityManager, query)
+                .singleResult
+                .let { tuple ->
+                    Pair(tuple.get(0, ZonedDateTime::class.java), tuple.get(1, ZonedDateTime::class.java))
+                }
+        }
+    }
 }
