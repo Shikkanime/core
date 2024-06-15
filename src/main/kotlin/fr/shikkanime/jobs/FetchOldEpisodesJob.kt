@@ -15,7 +15,6 @@ import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ConfigService
-import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
@@ -34,9 +33,6 @@ class FetchOldEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
@@ -93,8 +89,10 @@ class FetchOldEpisodesJob : AbstractJob {
         var realSaved = 0
         val realSavedAnimes = mutableSetOf<String>()
 
-        val variants = episodes.sortedBy { it.releaseDateTime }.map { episode ->
-            episodeVariantService.findByIdentifier(episode.getIdentifier()) ?: run {
+        episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
+            val findByIdentifier = episodeVariantService.findByIdentifier(episode.getIdentifier())
+
+            if (findByIdentifier == null) {
                 realSavedAnimes.add(episode.anime)
                 realSaved++
                 episodeVariantService.save(episode, false)
@@ -105,28 +103,9 @@ class FetchOldEpisodesJob : AbstractJob {
         realSavedAnimes.forEach { logger.info("Updating ${StringUtils.getShortName(it)}...") }
 
         if (realSaved > 0) {
-            logger.info("Updating mappings...")
-
-            variants.groupBy { it.mapping!!.uuid }.forEach { (mappingUuid, _) ->
-                val mapping = episodeMappingService.find(mappingUuid) ?: return@forEach
-                val mappingVariants = episodeVariantService.findAllByMapping(mapping)
-                mapping.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
-                mapping.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
-                episodeMappingService.update(mapping)
-            }
-
-            logger.info("Updating animes...")
-
-            variants.groupBy { it.mapping!!.anime!!.uuid }.forEach { (animeUuid, _) ->
-                val anime = animeService.find(animeUuid) ?: return@forEach
-                val mappingVariants = episodeVariantService.findAllByAnime(anime)
-                anime.releaseDateTime = mappingVariants.minOf { it.releaseDateTime }
-                anime.lastReleaseDateTime = mappingVariants.maxOf { it.releaseDateTime }
-                animeService.update(anime)
-            }
-
-            logger.info("Updating simulcasts...")
+            logger.info("Recalculating simulcasts...")
             animeService.recalculateSimulcasts()
+
             MapCache.invalidate(
                 Anime::class.java,
                 EpisodeMapping::class.java,

@@ -54,6 +54,12 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
 
+    fun findMinAndMaxReleaseDateTimeByMapping(mapping: EpisodeMapping) =
+        episodeVariantRepository.findMinAndMaxReleaseDateTimeByMapping(mapping)
+
+    fun findMinAndMaxReleaseDateTimeByAnime(anime: Anime) =
+        episodeVariantRepository.findMinAndMaxReleaseDateTimeByAnime(anime)
+
     fun getSimulcast(anime: Anime, entity: EpisodeMapping): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
 

@@ -98,7 +98,8 @@ class StringUtilsTest {
             "X&Y" to "XY",
             "Kaguya-sama: Love Is War" to "KaguyaSama",
             "MASHLE: MAGIC AND MUSCLES" to "Mashle",
-            "Yuru Camp – Au grand air" to "YuruCamp"
+            "Yuru Camp – Au grand air" to "YuruCamp",
+            "Jellyfish Can't Swim in the Night" to "JellyfishCantSwimInTheNight",
         )
 
         list.forEach { (input, expected) ->

@@ -48,6 +48,7 @@ object StringUtils {
 
     fun getHashtag(fullName: String) = getShortName(fullName).lowercase().capitalizeWords()
         .replace(" S ", " s ")
+        .replace(" T ", " t ")
         .filter { it.isLetterOrDigit() }
 
     fun String.capitalizeWords(): String {

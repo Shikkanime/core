@@ -57,6 +57,10 @@ class AnimeCacheService : AbstractCacheService {
             .let { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
     }
 
+    private val findAllCache = MapCache<String, List<AnimeDto>>(classes = listOf(Anime::class.java)) {
+        animeService.findAll().map { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
+    }
+
     private val weeklyMemberCache =
         MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
             classes = listOf(
@@ -84,4 +88,6 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(member: UUID?, startOfWeekDay: LocalDate, countryCode: CountryCode) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(member, countryCode, startOfWeekDay)]
+
+    fun findAll() = findAllCache["all"]
 }
