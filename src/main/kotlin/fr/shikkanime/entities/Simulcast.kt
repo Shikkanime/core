@@ -22,4 +22,7 @@ class Simulcast(
     val season: String? = null,
     @Column(nullable = false, name = "year_")
     val year: Int? = null,
+    @ManyToMany(mappedBy = "simulcasts", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var animes: MutableSet<Anime> = mutableSetOf(),
 ) : ShikkEntity(uuid)

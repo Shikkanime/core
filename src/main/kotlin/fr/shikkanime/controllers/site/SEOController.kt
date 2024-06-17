@@ -38,15 +38,17 @@ class SEOController {
     @Path("sitemap.xml")
     @Get
     private fun sitemap(): Response {
-        val simulcasts = simulcastCacheService.findAll()!!
+        val simulcasts = simulcastCacheService.findAll()!!.toMutableList()
         val animes = animeCacheService.findAll()!!
             .sortedBy { it.shortName.lowercase() }
 
         simulcasts.forEach { simulcast ->
             simulcast.lastReleaseDateTime =
                 animes.filter { anime -> anime.simulcasts!!.size == 1 && anime.simulcasts.any { it.uuid == simulcast.uuid } }
-                    .maxBy { d -> ZonedDateTime.parse(d.releaseDateTime) }.releaseDateTime
+                    .maxByOrNull { d -> ZonedDateTime.parse(d.releaseDateTime) }?.releaseDateTime
         }
+
+        simulcasts.removeIf { simulcast -> simulcast.lastReleaseDateTime == null }
 
         val episodeMapping = episodeMappingCacheService.findAllBy(
             CountryCode.FR,
