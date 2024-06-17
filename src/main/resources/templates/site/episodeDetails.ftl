@@ -48,8 +48,8 @@
                     </#list>
                 </div>
 
-                <h2 class="mt-3 h6 fw-bold mb-0">${episodeMapping.title}</h2>
-                <span class="mt-2">${episodeMapping.description}</span>
+                <h2 class="mt-3 h6 fw-bold mb-0">${episodeMapping.title!"＞︿＜"}</h2>
+                <span class="mt-2">${episodeMapping.description!"Aucune description pour le moment..."}</span>
 
                 <div class="d-flex justify-content-center mt-3">
                     <#if previousEpisode??>

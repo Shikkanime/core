@@ -20,186 +20,166 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         start: ZonedDateTime,
         end: ZonedDateTime,
     ): List<EpisodeVariant> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
 
-            val countryPredicate =
-                cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
-            val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
-            val predicates = mutableListOf(countryPredicate, datePredicate)
+        val countryPredicate =
+            cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
+        val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
+        val predicates = mutableListOf(countryPredicate, datePredicate)
 
-            member?.let {
-                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid].`in`(
-                    memberFollowAnimeService.findAllFollowedAnimesUUID(it)
-                )
-                predicates.add(animePredicate)
-            }
-
-            query.where(cb.and(*predicates.toTypedArray()))
-
-            createReadOnlyQuery(entityManager, query)
-                .resultList
+        member?.let {
+            val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid].`in`(
+                memberFollowAnimeService.findAllFollowedAnimesUUID(it)
+            )
+            predicates.add(animePredicate)
         }
+
+        query.where(cb.and(*predicates.toTypedArray()))
+
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findAllTypeIdentifier(): List<Tuple> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createTupleQuery()
+        val root = query.from(getEntityClass())
 
-            val episodeMappingPath = root[EpisodeVariant_.mapping]
-            val animePath = episodeMappingPath[EpisodeMapping_.anime]
+        val episodeMappingPath = root[EpisodeVariant_.mapping]
+        val animePath = episodeMappingPath[EpisodeMapping_.anime]
 
-            query.multiselect(
-                animePath[Anime_.countryCode],
-                animePath[Anime_.uuid],
-                root[EpisodeVariant_.platform],
-                episodeMappingPath[EpisodeMapping_.episodeType],
-                episodeMappingPath[EpisodeMapping_.season],
-                episodeMappingPath[EpisodeMapping_.number],
-                root[EpisodeVariant_.audioLocale],
-                root[EpisodeVariant_.identifier]
-            )
+        query.multiselect(
+            animePath[Anime_.countryCode],
+            animePath[Anime_.uuid],
+            root[EpisodeVariant_.platform],
+            episodeMappingPath[EpisodeMapping_.episodeType],
+            episodeMappingPath[EpisodeMapping_.season],
+            episodeMappingPath[EpisodeMapping_.number],
+            root[EpisodeVariant_.audioLocale],
+            root[EpisodeVariant_.identifier]
+        )
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findAllAudioLocalesByAnime(anime: Anime): List<String> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(String::class.java)
+        val root = query.from(getEntityClass())
 
-            query.select(root[EpisodeVariant_.audioLocale])
-                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
-                .distinct(true)
+        query.select(root[EpisodeVariant_.audioLocale])
+            .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
+            .distinct(true)
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findAllAudioLocalesByMapping(mapping: EpisodeMapping): List<String> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(String::class.java)
+        val root = query.from(getEntityClass())
 
-            query.select(root[EpisodeVariant_.audioLocale])
-                .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
-                .distinct(true)
+        query.select(root[EpisodeVariant_.audioLocale])
+            .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+            .distinct(true)
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findAllByAnime(anime: Anime): List<EpisodeVariant> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
 
-            query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
+        query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findAllByMapping(mapping: EpisodeMapping): List<EpisodeVariant> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
 
-            query.where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+        query.where(cb.equal(root[EpisodeVariant_.mapping], mapping))
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeMapping> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(EpisodeMapping::class.java)
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(EpisodeMapping::class.java)
+        val root = query.from(getEntityClass())
 
-            query.distinct(true)
-                .select(root[EpisodeVariant_.mapping])
-                .where(
-                    cb.and(
-                        cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
-                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
-                    )
+        query.distinct(true)
+            .select(root[EpisodeVariant_.mapping])
+            .where(
+                cb.and(
+                    cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
+                    cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
+                    cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
+                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
                 )
-                .orderBy(
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
-                )
+            )
+            .orderBy(
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
+            )
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findByIdentifier(identifier: String): EpisodeVariant? {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
 
-            query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
+        query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
 
-            createReadOnlyQuery(entityManager, query)
-                .resultList
-                .firstOrNull()
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
+            .firstOrNull()
     }
 
     fun findMinAndMaxReleaseDateTimeByMapping(mapping: EpisodeMapping): Pair<ZonedDateTime, ZonedDateTime> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(Tuple::class.java)
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(Tuple::class.java)
+        val root = query.from(getEntityClass())
 
-            query.multiselect(
-                cb.least(root[EpisodeVariant_.releaseDateTime]),
-                cb.greatest(root[EpisodeVariant_.releaseDateTime]),
-            )
-                .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+        query.multiselect(
+            cb.least(root[EpisodeVariant_.releaseDateTime]),
+            cb.greatest(root[EpisodeVariant_.releaseDateTime]),
+        )
+            .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
 
-            createReadOnlyQuery(entityManager, query)
-                .singleResult
-                .let { Pair(it[0] as ZonedDateTime, it[1] as ZonedDateTime) }
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .singleResult
+            .let { it[0] as ZonedDateTime to it[1] as ZonedDateTime }
     }
 
     fun findMinAndMaxReleaseDateTimeByAnime(anime: Anime): Pair<ZonedDateTime, ZonedDateTime> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(Tuple::class.java)
-            val root = query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(Tuple::class.java)
+        val root = query.from(getEntityClass())
 
-            query.multiselect(
-                cb.least(root[EpisodeVariant_.releaseDateTime]),
-                cb.greatest(root[EpisodeVariant_.releaseDateTime]),
-            )
-                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
+        query.multiselect(
+            cb.least(root[EpisodeVariant_.releaseDateTime]),
+            cb.greatest(root[EpisodeVariant_.releaseDateTime]),
+        )
+            .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
 
-            createReadOnlyQuery(entityManager, query)
-                .singleResult
-                .let { Pair(it[0] as ZonedDateTime, it[1] as ZonedDateTime) }
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .singleResult
+            .let { it[0] as ZonedDateTime to it[1] as ZonedDateTime }
     }
 }

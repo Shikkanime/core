@@ -8,21 +8,19 @@ class MetricRepository : AbstractRepository<Metric>() {
     override fun getEntityClass() = Metric::class.java
 
     fun findAllAfter(date: ZonedDateTime): List<Metric> {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            query.where(cb.greaterThan(root[Metric_.date], date))
-            query.orderBy(cb.asc(root[Metric_.date]))
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
+        query.where(cb.greaterThan(root[Metric_.date], date))
+        query.orderBy(cb.asc(root[Metric_.date]))
 
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun deleteAllBefore(date: ZonedDateTime) {
         inTransaction {
-            it.createQuery("DELETE FROM Metric WHERE date < :date")
+            database.entityManager.createQuery("DELETE FROM Metric WHERE date < :date")
                 .setParameter("date", date)
                 .executeUpdate()
         }
