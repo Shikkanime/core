@@ -34,8 +34,7 @@
         </#list>
         <#list anime.episodes as episode>
             <url>
-                <loc>${baseUrl}/animes/${anime.slug}/season-${episode.season?c}/${episode.episodeType.slug}
-                    -${episode.number?c}</loc>
+                <loc>${baseUrl}/animes/${anime.slug}/season-${episode.season?c}/${episode.episodeType.slug}-${episode.number?c}</loc>
                 <lastmod>${episode.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
             </url>
         </#list>

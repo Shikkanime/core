@@ -2,6 +2,7 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.entities.ShikkEntity
 import jakarta.persistence.EntityManager
+import jakarta.persistence.FlushModeType
 import liquibase.command.CommandScope
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -12,6 +13,7 @@ import kotlin.system.exitProcess
 class Database {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val sessionFactory: SessionFactory
+    var entityManager: EntityManager
 
     constructor(file: File) {
         if (!file.exists()) {
@@ -64,6 +66,9 @@ class Database {
             logger.log(Level.SEVERE, "Error while validating database", e)
             exitProcess(1)
         }
+
+        entityManager = sessionFactory.createEntityManager()
+        entityManager.flushMode = FlushModeType.COMMIT
     }
 
     constructor() : this(
@@ -71,7 +76,4 @@ class Database {
             ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
         )
     )
-
-    val entityManager: EntityManager
-        get() = sessionFactory.createEntityManager()
 }

@@ -18,20 +18,20 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     protected abstract fun getEntityClass(): Class<E>
 
-    protected fun <T> inTransaction(block: (EntityManager) -> T): T {
-        val entityManager = database.entityManager
-        val transaction = entityManager.transaction
+    protected fun <T> inTransaction(block: () -> T): T {
+        val transaction = database.entityManager.transaction
         transaction.begin()
         val result: T
 
         try {
-            result = block(entityManager)
+            result = block()
+            database.entityManager.flush()
             transaction.commit()
         } catch (e: Exception) {
             transaction.rollback()
             throw e
         } finally {
-            entityManager.close()
+            database.entityManager.clear()
         }
 
         return result
@@ -64,45 +64,41 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     open fun findAll(): List<E> {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            query.from(getEntityClass())
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        query.from(getEntityClass())
 
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     open fun find(uuid: UUID): E? {
-        return inTransaction {
-            it.find(getEntityClass(), uuid)
-        }
+        return database.entityManager.find(getEntityClass(), uuid)
     }
 
     fun save(entity: E): E {
         return inTransaction {
-            it.persist(entity)
+            database.entityManager.persist(entity)
             entity
         }
     }
 
     fun update(entity: E): E {
         return inTransaction {
-            it.merge(entity)
+            database.entityManager.merge(entity)
             entity
         }
     }
 
     fun delete(entity: E) {
         inTransaction {
-            it.remove(entity)
+            database.entityManager.remove(entity)
         }
     }
 
     fun deleteAll() {
         inTransaction {
-            it.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
+            database.entityManager.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
         }
     }
 }

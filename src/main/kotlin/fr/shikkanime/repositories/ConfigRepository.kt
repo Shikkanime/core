@@ -7,27 +7,23 @@ class ConfigRepository : AbstractRepository<Config>() {
     override fun getEntityClass() = Config::class.java
 
     fun findAllByName(name: String): List<Config> {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            query.where(cb.like(cb.lower(root[Config_.propertyKey]), "%${name.lowercase()}%"))
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
+        query.where(cb.like(cb.lower(root[Config_.propertyKey]), "%${name.lowercase()}%"))
 
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
     }
 
     fun findByName(name: String): Config? {
-        return inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            query.where(cb.equal(cb.lower(root[Config_.propertyKey]), name.lowercase()))
+        val cb = database.entityManager.criteriaBuilder
+        val query = cb.createQuery(getEntityClass())
+        val root = query.from(getEntityClass())
+        query.where(cb.equal(cb.lower(root[Config_.propertyKey]), name.lowercase()))
 
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
-        }
+        return createReadOnlyQuery(database.entityManager, query)
+            .resultList
+            .firstOrNull()
     }
 }

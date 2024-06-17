@@ -8,7 +8,19 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(name = "episode_variant")
+@Table(
+    name = "episode_variant",
+    indexes = [
+        Index(
+            name = "idx_episode_variant_mapping_uuid",
+            columnList = "mapping_uuid"
+        ),
+        Index(
+            name = "idx_episode_variant_release_date_mapping_uuid",
+            columnList = "release_date_time, mapping_uuid"
+        ),
+    ]
+)
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class EpisodeVariant(
