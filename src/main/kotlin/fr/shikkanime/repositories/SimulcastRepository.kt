@@ -6,6 +6,20 @@ import fr.shikkanime.entities.Simulcast_
 class SimulcastRepository : AbstractRepository<Simulcast>() {
     override fun getEntityClass() = Simulcast::class.java
 
+    override fun findAll(): List<Simulcast> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            // Query where the animes are not empty
+            query.where(cb.isNotEmpty(root.get(Simulcast_.animes)))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findBySeasonAndYear(season: String, year: Int): Simulcast? {
         return inTransaction {
             val cb = it.criteriaBuilder
