@@ -18,7 +18,7 @@ object StringUtils {
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
     private val regex = "( [-|!].*[-|!])|( Saison \\d*)|\\(\\d*\\)".toRegex()
-    private val separators = listOf(":", ",", "!", "–", " so ")
+    private val separators = listOf(":", ",", "!", "–", " so ", " - ")
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>, limit: Int): Boolean {
         val words = parts.map { it.trim().split(" ").size }
