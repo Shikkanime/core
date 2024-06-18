@@ -42,6 +42,8 @@ class StringUtilsTest {
             "Rent-a-Girlfriend" to "Rent-a-Girlfriend",
             "After-school Hanako-kun" to "After-school Hanako-kun",
             "Kaguya-sama: Love Is War" to "Kaguya-sama",
+            "DanMachi - La Légende des Familias" to "DanMachi",
+            "Demon Slayer - Le village des forgerons" to "Demon Slayer",
         )
 
         list.forEach { (input, expected) ->
@@ -69,6 +71,8 @@ class StringUtilsTest {
             "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "the-strongest-tanks-labyrinth-raids",
             "'Tis Time for \"Torture,\" Princess" to "tis-time-for-torture-princess",
             "X&Y" to "x-y",
+            "DanMachi - La Légende des Familias" to "danmachi",
+            "Demon Slayer - Le village des forgerons" to "demon-slayer",
         )
 
         list.forEach { (input, expected) ->
