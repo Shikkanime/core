@@ -35,7 +35,21 @@ class NetflixPlatform :
             document.selectXpath("//*[@id=\"section-hero\"]/div[1]/div[2]/picture/source[2]").attr("srcset")
                 .substringBefore("?")
         val animeDescription = document.selectFirst(".title-info-synopsis")?.text()
-        val episodes = document.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptySet()
+
+        val seasonsOption = document.select("#season-selector-container").select("option")
+        val seasons = document.select(".season")
+
+        // Group episodes by season
+        val episodesBySeason = seasons.mapIndexed { index, seasonElement ->
+            val seasonName = seasonsOption.getOrNull(index)?.text()
+            val seasonEpisodes = seasonElement.select("li.episode")
+            seasonName to seasonEpisodes
+        }.toMap()
+
+        val episodes = episodesBySeason[key.netflixSimulcast.seasonName] ?: run {
+            logger.warning("Season name is blank or not found, fetching all episodes from all seasons and ignoring season number")
+            document.select("li.episode")
+        }
 
         return episodes.mapIndexedNotNull { index, episode ->
             val episodeTitleAndNumber = episode.selectFirst(".episode-title")?.text()
@@ -59,13 +73,13 @@ class NetflixPlatform :
                 season = season,
                 number = episodeNumber,
                 duration = durationInSeconds,
-                title = episodeTitle,
+                title = episodeTitle?.trim(),
                 description = episodeDescription,
                 image = imageWithoutParams,
                 platform = getPlatform(),
                 audioLocale = "ja-JP",
                 id = computedId,
-                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$computedId",
+                url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id",
                 uncensored = false,
             )
         }.toSet()
