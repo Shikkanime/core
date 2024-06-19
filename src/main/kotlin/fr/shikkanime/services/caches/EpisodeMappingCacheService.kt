@@ -1,14 +1,17 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.CountryCodeSlugSeasonEpisodeTypeNumberKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
-import fr.shikkanime.dtos.EpisodeMappingDto
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
@@ -42,6 +45,30 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         }
 
+    private val findByAnimeSeasonEpisodeTypeNumberCache =
+        MapCache<CountryCodeSlugSeasonEpisodeTypeNumberKeyCache, Triple<EpisodeMappingDto?, EpisodeMappingDto, EpisodeMappingDto?>>(
+            classes = listOf(
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java
+            )
+        ) {
+            val current = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+                animeService.findBySlug(it.countryCode, it.slug) ?: throw Exception("Anime not found"),
+                it.season,
+                it.episodeType,
+                it.number
+            ) ?: throw Exception("Episode not found")
+
+            val previous = episodeMappingService.findPreviousEpisode(current)
+            val next = episodeMappingService.findNextEpisode(current)
+
+            Triple(
+                previous?.let { p -> AbstractConverter.convert(p, EpisodeMappingDto::class.java) },
+                AbstractConverter.convert(current, EpisodeMappingDto::class.java),
+                next?.let { n -> AbstractConverter.convert(n, EpisodeMappingDto::class.java) }
+            )
+        }
+
     fun findAllBy(
         countryCode: CountryCode?,
         anime: UUID?,
@@ -51,4 +78,18 @@ class EpisodeMappingCacheService : AbstractCacheService {
         limit: Int,
         status: Status? = null
     ) = findAllByCache[CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit, status)]
+
+    fun findByAnimeSeasonEpisodeTypeNumber(
+        countryCode: CountryCode,
+        anime: String,
+        season: Int,
+        episodeType: EpisodeType,
+        number: Int
+    ) = findByAnimeSeasonEpisodeTypeNumberCache[CountryCodeSlugSeasonEpisodeTypeNumberKeyCache(
+        countryCode,
+        anime,
+        season,
+        episodeType,
+        number
+    )]
 }

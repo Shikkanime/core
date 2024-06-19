@@ -1,7 +1,7 @@
 package fr.shikkanime.dtos.variants
 
-import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import java.util.*
 
 data class EpisodeVariantDto(

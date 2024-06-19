@@ -13,7 +13,7 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
             val root = query.from(getEntityClass())
 
             // Query where the animes are not empty
-            query.where(cb.isNotEmpty(root.get(Simulcast_.animes)))
+            query.where(cb.isNotEmpty(root[Simulcast_.animes]))
 
             createReadOnlyQuery(it, query)
                 .resultList

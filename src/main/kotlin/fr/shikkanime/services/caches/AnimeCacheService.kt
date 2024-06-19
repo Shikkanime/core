@@ -57,8 +57,14 @@ class AnimeCacheService : AbstractCacheService {
             .let { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
     }
 
-    private val findAllCache = MapCache<String, List<AnimeDto>>(classes = listOf(Anime::class.java)) {
-        animeService.findAll().map { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
+    private val findAllCache = MapCache<String, List<AnimeDto>>(
+        classes = listOf(
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java
+        )
+    ) {
+        AbstractConverter.convert(animeService.findAll(), AnimeDto::class.java)!!
     }
 
     private val weeklyMemberCache =

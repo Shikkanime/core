@@ -47,3 +47,17 @@ body {
 .bg-blur {
     backdrop-filter: blur(0.25rem);
 }
+
+@media (min-width: 576px) {
+    .anime-infos {
+        position: relative;
+        margin-top: -100px;
+    }
+}
+
+@media (max-width: 575px) {
+    .anime-infos {
+        position: relative;
+        margin-top: -22.5rem;
+    }
+}

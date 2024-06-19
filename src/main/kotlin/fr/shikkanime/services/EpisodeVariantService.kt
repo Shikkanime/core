@@ -156,10 +156,10 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         anime: Anime,
         episode: AbstractPlatform.Episode
     ): EpisodeMapping {
-        var mapping = episodeMappingService.findByAnimeEpisodeTypeSeasonNumber(
+        var mapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             anime,
-            episode.episodeType,
             episode.season,
+            episode.episodeType,
             episode.number
         ) ?: episodeMappingService.save(
             EpisodeMapping(
@@ -188,10 +188,10 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 episode.audioLocale
             ) + 1
 
-            val newCheck = episodeMappingService.findByAnimeEpisodeTypeSeasonNumber(
+            val newCheck = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
                 anime,
-                episode.episodeType,
                 episode.season,
+                episode.episodeType,
                 number
             )
 
