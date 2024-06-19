@@ -1,8 +1,8 @@
 package fr.shikkanime.converters.episode_variant
 
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.utils.withUTCString

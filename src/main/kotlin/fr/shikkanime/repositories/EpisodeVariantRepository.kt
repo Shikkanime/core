@@ -181,9 +181,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(entityManager, query)
                 .singleResult
-                .let { tuple ->
-                    Pair(tuple.get(0, ZonedDateTime::class.java), tuple.get(1, ZonedDateTime::class.java))
-                }
+                .let { Pair(it[0] as ZonedDateTime, it[1] as ZonedDateTime) }
         }
     }
 
@@ -201,9 +199,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(entityManager, query)
                 .singleResult
-                .let { tuple ->
-                    Pair(tuple.get(0, ZonedDateTime::class.java), tuple.get(1, ZonedDateTime::class.java))
-                }
+                .let { Pair(it[0] as ZonedDateTime, it[1] as ZonedDateTime) }
         }
     }
 }

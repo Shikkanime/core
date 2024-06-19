@@ -13,7 +13,14 @@
 </#if>
 
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
-    <div class="container mb-3">
+    <div class="position-relative">
+        <#-- Bottom to top background gradient -->
+        <div class="position-absolute w-100"
+             style="background: linear-gradient(0deg, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)); height: 400px;"></div>
+        <div style="background-image: url('${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner'); background-size: cover; background-position: center; height: 400px;"></div>
+    </div>
+
+    <div class="container mb-3 anime-infos">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
                 <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
@@ -22,8 +29,8 @@
                      height="720">
             </div>
 
-            <div class="col-md-8 col-12 text-start mt-md-0 mt-5 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${anime.shortName}<#if season??> - Saison ${season.number}</#if></h1>
+            <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${anime.shortName}<#if season??> - Saison ${season.number?c}</#if></h1>
 
                 <div class="mt-1">
                     <#list anime.langTypes as langType>

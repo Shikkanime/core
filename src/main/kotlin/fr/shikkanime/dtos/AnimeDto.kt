@@ -1,6 +1,7 @@
 package fr.shikkanime.dtos
 
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import java.util.*
@@ -20,5 +21,6 @@ data class AnimeDto(
     val audioLocales: List<String>? = null,
     val langTypes: List<LangType>? = null,
     val seasons: List<SeasonDto> = emptyList(),
+    var episodes: List<EpisodeMappingWithoutAnimeDto>? = null,
     val status: Status? = null,
 )

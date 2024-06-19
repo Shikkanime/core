@@ -37,20 +37,6 @@ class MemberController {
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
-    @Path("/private-register")
-    @Post
-    @OpenAPI(
-        description = "Register a private member",
-        responses = [
-            OpenAPIResponse(201, "Private member registered", Map::class),
-        ],
-        deprecated = true
-    )
-    @Deprecated("You should use /register instead", ReplaceWith("/register"))
-    private fun registerPrivateMember(): Response {
-        return registerMember()
-    }
-
     @Path("/register")
     @Post
     @OpenAPI(
@@ -68,20 +54,6 @@ class MemberController {
 
         memberService.save(identifier)
         return Response.created(mapOf("identifier" to identifier))
-    }
-
-    @Path("/private-login")
-    @Post
-    @OpenAPI(
-        description = "Login a private member",
-        responses = [
-            OpenAPIResponse(200, "Private member logged in"),
-        ],
-        deprecated = true
-    )
-    @Deprecated("You should use /login instead", ReplaceWith("/login"))
-    private fun loginPrivateMember(@BodyParam identifier: String): Response {
-        return loginMember(identifier)
     }
 
     @Path("/login")

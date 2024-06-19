@@ -5,6 +5,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
+import org.hibernate.Hibernate
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
@@ -18,6 +19,18 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val searchSession = Search.session(it)
             val indexer = searchSession.massIndexer(getEntityClass())
             indexer.startAndWait()
+        }
+    }
+
+    override fun findAll(): List<Anime> {
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            query.from(getEntityClass())
+
+            val list = it.createQuery(query).resultList
+            list.forEach { anime -> Hibernate.initialize(anime.mappings) }
+            list
         }
     }
 

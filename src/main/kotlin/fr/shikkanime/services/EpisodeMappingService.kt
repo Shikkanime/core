@@ -1,8 +1,8 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.EpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -53,8 +53,12 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
-    fun findByAnimeEpisodeTypeSeasonNumber(anime: Anime, episodeType: EpisodeType, season: Int, number: Int) =
-        episodeMappingRepository.findByAnimeEpisodeTypeSeasonNumber(anime, episodeType, season, number)
+    fun findByAnimeSeasonEpisodeTypeNumber(anime: Anime, season: Int, episodeType: EpisodeType, number: Int) =
+        episodeMappingRepository.findByAnimeSeasonEpisodeTypeNumber(anime, season, episodeType, number)
+
+    fun findPreviousEpisode(episode: EpisodeMapping) = episodeMappingRepository.findPreviousEpisode(episode)
+
+    fun findNextEpisode(episode: EpisodeMapping) = episodeMappingRepository.findNextEpisode(episode)
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360, bypass)
@@ -76,7 +80,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         if (!(entity.episodeType == episode.episodeType && entity.season == episode.season && entity.number == episode.number)) {
             // Find if the episode already exists
             val existing =
-                findByAnimeEpisodeTypeSeasonNumber(episode.anime!!, entity.episodeType, entity.season, entity.number)
+                findByAnimeSeasonEpisodeTypeNumber(episode.anime!!, entity.season, entity.episodeType, entity.number)
 
             if (existing != null) {
                 // Set the variants of the current episode to the existing episode

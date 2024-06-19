@@ -64,12 +64,7 @@ object StringUtils {
     }
 
     fun toEpisodeString(episode: EpisodeVariantDto): String {
-        val etName = when (episode.mapping.episodeType) {
-            EpisodeType.EPISODE -> "Épisode"
-            EpisodeType.SPECIAL -> "Spécial"
-            EpisodeType.FILM -> "Film"
-            EpisodeType.SUMMARY -> "Épisode récapitulatif"
-        }
+        val etName = getEpisodeTypeLabel(episode.mapping.episodeType)
 
         val ltName = when (LangType.fromAudioLocale(episode.mapping.anime.countryCode, episode.audioLocale)) {
             LangType.SUBTITLES -> "VOSTFR"
@@ -77,6 +72,15 @@ object StringUtils {
         }
 
         return "Saison ${episode.mapping.season} • $etName ${episode.mapping.number} $ltName"
+    }
+
+    fun getEpisodeTypeLabel(episodeType: EpisodeType): String {
+        return when (episodeType) {
+            EpisodeType.EPISODE -> "Épisode"
+            EpisodeType.SPECIAL -> "Spécial"
+            EpisodeType.FILM -> "Film"
+            EpisodeType.SUMMARY -> "Épisode récapitulatif"
+        }
     }
 
     fun toSlug(input: String): String {

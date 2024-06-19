@@ -131,10 +131,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findByAnimeEpisodeTypeSeasonNumber(
+    fun findByAnimeSeasonEpisodeTypeNumber(
         anime: Anime,
-        episodeType: EpisodeType,
         season: Int,
+        episodeType: EpisodeType,
         number: Int
     ): EpisodeMapping? {
         return inTransaction {
@@ -185,6 +185,78 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull() ?: 0
+        }
+    }
+
+    fun findPreviousEpisode(
+        episodeMapping: EpisodeMapping,
+    ): EpisodeMapping? {
+        // Sort on release date time to get the previous episode
+        // If the release date time is the same, sort on the number
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeMapping_.anime], episodeMapping.anime),
+                    cb.equal(root[EpisodeMapping_.season], episodeMapping.season),
+                    cb.or(
+                        cb.lessThan(root[EpisodeMapping_.releaseDateTime], episodeMapping.releaseDateTime),
+                        cb.and(
+                            cb.equal(root[EpisodeMapping_.episodeType], episodeMapping.episodeType),
+                            cb.lessThan(root[EpisodeMapping_.number], episodeMapping.number!!),
+                        )
+                    ),
+                    cb.notEqual(root[EpisodeMapping_.uuid], episodeMapping.uuid)
+                )
+            )
+
+            query.orderBy(
+                cb.desc(root[EpisodeMapping_.releaseDateTime]),
+                cb.desc(root[EpisodeMapping_.number])
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
+    }
+
+    fun findNextEpisode(
+        episodeMapping: EpisodeMapping,
+    ): EpisodeMapping? {
+        // Sort on release date time to get the next episode
+        // If the release date time is the same, sort on the number
+        return inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeMapping_.anime], episodeMapping.anime),
+                    cb.equal(root[EpisodeMapping_.season], episodeMapping.season),
+                    cb.or(
+                        cb.greaterThan(root[EpisodeMapping_.releaseDateTime], episodeMapping.releaseDateTime),
+                        cb.and(
+                            cb.equal(root[EpisodeMapping_.episodeType], episodeMapping.episodeType),
+                            cb.greaterThan(root[EpisodeMapping_.number], episodeMapping.number!!),
+                        ),
+                    ),
+                    cb.notEqual(root[EpisodeMapping_.uuid], episodeMapping.uuid)
+                )
+            )
+
+            query.orderBy(
+                cb.asc(root[EpisodeMapping_.releaseDateTime]),
+                cb.asc(root[EpisodeMapping_.number])
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
         }
     }
 }
