@@ -1,7 +1,6 @@
 package fr.shikkanime.wrappers
 
 import com.google.gson.JsonObject
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -38,38 +37,49 @@ object DisneyPlusWrapper {
             .getAsString("accessToken")!!
     }
 
-    suspend fun getSeasons(accessToken: String, countryCode: CountryCode, id: String): List<String> {
+    suspend fun getAnimeDetailsWithSeasons(accessToken: String, id: String): Pair<JsonObject, List<String>> {
         val seasonsResponse = HttpRequest().get(
-            "https://disney.content.edge.bamgrid.com/svc/content/DmcSeriesBundle/version/5.1/region/${countryCode.name}/audience/k-false,l-true/maturity/1850/language/${countryCode.locale}/encodedSeriesId/$id",
+            "https://disney.api.edge.bamgrid.com/explore/v1.4/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15",
             mapOf("Authorization" to "Bearer $accessToken")
         )
 
         require(seasonsResponse.status.value == 200) { "Failed to fetch Disney+ content" }
-        val seasonsJson = ObjectParser.fromJson(seasonsResponse.bodyAsText(), JsonObject::class.java)
-        return seasonsJson.getAsJsonObject("data")
-            .getAsJsonObject("DmcSeriesBundle")
-            .getAsJsonObject("seasons")
-            .getAsJsonArray("seasons")
-            .mapNotNull { it.asJsonObject.getAsString("seasonId") }
+        val jsonObject = ObjectParser.fromJson(seasonsResponse.bodyAsText(), JsonObject::class.java)
+        val pageObject = jsonObject.getAsJsonObject("data").getAsJsonObject("page")
+
+        val seasons = pageObject.getAsJsonArray("containers")
+            .filter { it.asJsonObject.getAsString("type") == "episodes" }
+            .map { it.asJsonObject }
+            .getOrNull(0)
+            ?.getAsJsonArray("seasons")
+            ?.filter { it.asJsonObject.getAsString("type") == "season" }
+            ?.mapNotNull { it.asJsonObject.getAsString("id") } ?: emptyList()
+
+        return pageObject.getAsJsonObject("visuals") to seasons
     }
 
-    suspend fun getEpisodes(accessToken: String, countryCode: CountryCode, seasonId: String): List<JsonObject> {
+    suspend fun getEpisodes(accessToken: String, seasonId: String): List<JsonObject> {
         val episodes = mutableListOf<JsonObject>()
         var page = 1
         var hasMore: Boolean
 
         do {
             val url =
-                "https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/${countryCode.name}/audience/k-false,l-true/maturity/1850/language/${countryCode.locale}/seasonId/$seasonId/pageSize/15/page/${page++}"
+                "https://disney.api.edge.bamgrid.com/explore/v1.4/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}"
             val response = HttpRequest().get(url, mapOf("Authorization" to "Bearer $accessToken"))
             require(response.status.value == 200) { "Failed to fetch Disney+ content" }
             val json = ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java)
 
-            val dmcEpisodesMeta = json.getAsJsonObject("data").getAsJsonObject("DmcEpisodes")
-            hasMore = dmcEpisodesMeta.getAsJsonObject("meta").getAsBoolean("hasMore") ?: false
-            dmcEpisodesMeta.getAsJsonArray("videos").forEach { episodes.add(it.asJsonObject) }
+            val jsonObject = json.getAsJsonObject("data").getAsJsonObject("season")
+            hasMore = jsonObject.getAsJsonObject("pagination").getAsBoolean("hasMore") ?: false
+
+            jsonObject.getAsJsonArray("items")
+                .filter { it.asJsonObject.getAsString("type") == "view" }
+                .forEach { episodes.add(it.asJsonObject.getAsJsonObject("visuals")) }
         } while (hasMore)
 
         return episodes
     }
+
+    fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
 }
