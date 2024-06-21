@@ -1,5 +1,5 @@
-val ktorVersion = "2.3.11"
-val ktorSwaggerUiVersion = "2.10.0"
+val ktorVersion = "2.3.12"
+val ktorSwaggerUiVersion = "3.0.0"
 val hibernateCoreVersion = "6.5.2.Final"
 val ehcacheVersion = "3.10.8"
 val glassfishJaxbVersion = "4.0.5"
@@ -34,7 +34,7 @@ plugins {
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
 
-    id("io.ktor.plugin") version "2.3.11"
+    id("io.ktor.plugin") version "2.3.12"
     id("org.sonarqube") version "5.0.0.4638"
 
     jacoco
