@@ -50,4 +50,11 @@ class ImageServiceTest {
             }
         }
     }
+
+    @Test
+    fun getLongTimeoutImage() {
+        ImageService.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/fcaab22f-cc08-463e-8cc8-bf4367fb1027/compose")
+        ImageService.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/1d043ddd-5295-40bb-8e65-0aa3ec34b301/compose")
+        ImageService.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/bf85d6d3-d182-4570-adff-1261b843c864/compose")
+    }
 }

@@ -10,7 +10,6 @@ import java.awt.*
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
 import java.io.*
-import java.net.URI
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -589,8 +588,8 @@ object ImageService {
         val bannerScale = 3
         val bannerImage = tmpBannerImage.resize(tmpBannerImage.width / bannerScale, tmpBannerImage.height / bannerScale)
         val scale = 1.0
-        val animeImage = ImageIO.read(URI(episode.mapping.anime.image!!).toURL())
-            .resize((480 / scale).toInt(), (720 / scale).toInt())
+
+        val animeImage = getLongTimeoutImage(episode.mapping.anime.image!!).resize((480 / scale).toInt(), (720 / scale).toInt())
 
         val platformImage =
             FileManager.getInputStreamFromResource("assets/img/platforms/${episode.platform.image}").run {
@@ -601,6 +600,8 @@ object ImageService {
 
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }
+
+    fun getLongTimeoutImage(url: String) = ByteArrayInputStream(runBlocking { HttpRequest().get(url).readBytes() }).use { ImageIO.read(it) }
 
     fun toEpisodeImage(episode: EpisodeVariantDto, adjustColor: Boolean = true): BufferedImage {
         val (backgroundImage, bannerImage, font, animeImage, platformImage) = loadResources(episode)
