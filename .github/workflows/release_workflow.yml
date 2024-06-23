@@ -46,7 +46,7 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: registry.ziedelth.fr:5000
+          registry: registry.shikkanime.fr:5000
           username: ziedelth
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
@@ -55,7 +55,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: registry.ziedelth.fr:5000/shikkanime-core:latest
+          tags: registry.shikkanime.fr:5000/shikkanime-core:latest
           platforms: linux/arm64/v8
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new

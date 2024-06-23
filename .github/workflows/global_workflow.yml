@@ -126,7 +126,7 @@ jobs:
         with:
           context: .
           push: false
-          tags: registry.ziedelth.fr:5000/shikkanime-core:dev
+          tags: registry.shikkanime.fr:5000/shikkanime-core:dev
           platforms: ${{ matrix.platform }}
 
   clear_cache:
