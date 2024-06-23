@@ -189,7 +189,7 @@
                                         <label for="variantIdentifier" class="form-label">Identifier</label>
                                         <input type="text" class="form-control" id="variantIdentifier"
                                                name="variantIdentifier"
-                                               x-model="variant.identifier" disabled>
+                                               x-model="variant.identifier">
                                     </div>
                                     <div class="col-md-auto">
                                         <label for="variantUrl" class="form-label">URL</label>
@@ -197,7 +197,7 @@
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="variantUrl" name="variantUrl"
                                                    x-model="variant.url" aria-label="Image"
-                                                   aria-describedby="basic-addon" disabled>
+                                                   aria-describedby="basic-addon">
 
                                             <a class="input-group-text" id="basic-addon" style="cursor: pointer"
                                                target="_blank" :href="variant.url">
@@ -208,7 +208,7 @@
                                     <div class="col-md-auto">
                                         <input type="checkbox" class="form-check-input" id="variantUncensored"
                                                name="variantUncensored"
-                                               x-model="variant.uncensored" disabled>
+                                               x-model="variant.uncensored">
                                         <label for="variantUncensored" class="form-label">Uncensored</label>
                                     </div>
                                     <div class="col-md-auto">

@@ -185,6 +185,18 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
                     variant.releaseDateTime = ZonedDateTime.parse(variantDto.releaseDateTime)
                 }
 
+                if (variantDto.identifier.isNotBlank() && variantDto.identifier != variant.identifier.toString()) {
+                    variant.identifier = variantDto.identifier
+                }
+
+                if (variantDto.url.isNotBlank() && variantDto.url != variant.url.toString()) {
+                    variant.url = variantDto.url
+                }
+
+                if (variantDto.uncensored != variant.uncensored) {
+                    variant.uncensored = variantDto.uncensored
+                }
+
                 oldList.removeIf { it.uuid == variantDto.uuid }
                 episodeVariantService.update(variant)
             }
