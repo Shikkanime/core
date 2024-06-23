@@ -49,7 +49,17 @@ class FetchEpisodesJob : AbstractJob {
 
         if (!isInitialized) {
             val variants = episodeVariantService.findAllTypeIdentifier()
-            identifiers.addAll(variants.map { it[7] as String }.toSet())
+            val elements = variants.map { it[7] as String }.toSet()
+            identifiers.addAll(elements)
+
+            Constant.abstractPlatforms.forEach {
+                it.hashCache.addAll(
+                    variants.filter { variant -> (variant[2] as Platform) == it.getPlatform() }
+                        .map { variant ->
+                            ".{2}-.{4}-(.*)-.{2}-.{2}".toRegex().find(variant[7] as String)!!.groupValues[1]
+                        }
+                )
+            }
 
             // COMPARE COUNTRY, ANIME, PLATFORM, EPISODE TYPE, SEASON, NUMBER, AND LANG TYPE
             variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
