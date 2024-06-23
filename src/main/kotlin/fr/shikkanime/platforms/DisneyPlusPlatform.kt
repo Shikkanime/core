@@ -107,22 +107,25 @@ class DisneyPlusPlatform :
         val animeDescription =
             animeDetails.getAsJsonObject("description")?.getAsString("full")?.replace('\n', ' ') ?: ""
 
-        val season = requireNotNull(jsonObject.getAsInt("seasonNumber")) { "Season is null" }
-        val number = jsonObject.getAsInt("episodeNumber") ?: -1
-        val id = jsonObject.getAsString("id")
-        val title = jsonObject.getAsString("episodeTitle")?.ifBlank { null }
-        val url = "https://www.disneyplus.com/${countryCode.locale.lowercase()}/video/$id"
-        val imageId = jsonObject.getAsJsonObject("artwork")?.getAsJsonObject("standard")?.getAsJsonObject("thumbnail")
+        val visualsObject = jsonObject.getAsJsonObject("visuals")
+
+        val season = requireNotNull(visualsObject.getAsInt("seasonNumber")) { "Season is null" }
+        val number = visualsObject.getAsInt("episodeNumber") ?: -1
+        val id = jsonObject.getAsString("id") ?: throw Exception("Id is null")
+        val title = visualsObject.getAsString("episodeTitle")?.ifBlank { null }
+        val url = "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id"
+        val imageId =
+            visualsObject.getAsJsonObject("artwork")?.getAsJsonObject("standard")?.getAsJsonObject("thumbnail")
             ?.getAsJsonObject("1.78")?.getAsString("imageId") ?: throw Exception("Image is null")
         val image = DisneyPlusWrapper.getImageUrl(imageId)
-        var duration = jsonObject.getAsLong("durationMs", -1)
+        var duration = visualsObject.getAsLong("durationMs", -1)
 
         if (duration != -1L) {
             duration /= 1000
         }
 
         val description =
-            jsonObject.getAsJsonObject("description")?.getAsString("medium")?.replace('\n', ' ')?.ifBlank { null }
+            visualsObject.getAsJsonObject("description")?.getAsString("medium")?.replace('\n', ' ')?.ifBlank { null }
         val releaseDateTimeUTC =
             zonedDateTime.withUTC().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
@@ -143,7 +146,7 @@ class DisneyPlusPlatform :
             image = image,
             platform = getPlatform(),
             audioLocale = "ja-JP",
-            id = id.toString(),
+            id = id,
             url = url,
             uncensored = false
         )

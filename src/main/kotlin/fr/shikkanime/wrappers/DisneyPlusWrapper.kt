@@ -75,7 +75,7 @@ object DisneyPlusWrapper {
 
             jsonObject.getAsJsonArray("items")
                 .filter { it.asJsonObject.getAsString("type") == "view" }
-                .forEach { episodes.add(it.asJsonObject.getAsJsonObject("visuals")) }
+                .forEach { episodes.add(it.asJsonObject) }
         } while (hasMore)
 
         return episodes
