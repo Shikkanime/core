@@ -111,6 +111,8 @@ class DisneyPlusPlatform :
 
         val season = requireNotNull(visualsObject.getAsInt("seasonNumber")) { "Season is null" }
         val number = visualsObject.getAsInt("episodeNumber") ?: -1
+        val oldId = jsonObject.getAsJsonArray("actions")[0].asJsonObject
+            .getAsJsonObject("legacyPartnerFeed").getAsString("dmcContentId") ?: throw Exception("Old id is null")
         val id = jsonObject.getAsString("id") ?: throw Exception("Id is null")
         val title = visualsObject.getAsString("episodeTitle")?.ifBlank { null }
         val url = "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id"
@@ -129,6 +131,12 @@ class DisneyPlusPlatform :
         val releaseDateTimeUTC =
             zonedDateTime.withUTC().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
+
+        if (hashCache.contains(oldId) || hashCache.contains(id)) {
+            throw AnimeException("Episode already exists")
+        }
+
+        hashCache.addAll(mutableListOf(oldId, id))
 
         return Episode(
             countryCode = countryCode,

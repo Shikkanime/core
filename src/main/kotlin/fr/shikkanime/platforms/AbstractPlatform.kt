@@ -37,6 +37,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     val logger = LoggerFactory.getLogger(javaClass)
     var configuration: C? = null
     private val apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
+    val hashCache = mutableSetOf<String>()
 
     abstract fun getPlatform(): Platform
     abstract fun getConfigurationClass(): Class<C>
