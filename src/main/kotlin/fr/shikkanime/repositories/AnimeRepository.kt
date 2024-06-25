@@ -15,19 +15,23 @@ class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
 
     fun preIndex() {
-        val searchSession = Search.session(entityManager)
-        val indexer = searchSession.massIndexer(getEntityClass())
-        indexer.startAndWait()
+        database.entityManager.use {
+            val searchSession = Search.session(it)
+            val indexer = searchSession.massIndexer(getEntityClass())
+            indexer.startAndWait()
+        }
     }
 
     override fun findAll(): List<Anime> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(getEntityClass())
-        query.from(getEntityClass())
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            query.from(getEntityClass())
 
-        val list = createReadOnlyQuery(entityManager, query).resultList
-        list.forEach { anime -> Hibernate.initialize(anime.mappings) }
-        return list
+            val list = createReadOnlyQuery(it, query).resultList
+            list.forEach { anime -> Hibernate.initialize(anime.mappings) }
+            list
+        }
     }
 
     fun findAllBy(
@@ -38,42 +42,46 @@ class AnimeRepository : AbstractRepository<Anime>() {
         limit: Int,
         status: Status? = null
     ): Pageable<Anime> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(getEntityClass())
-        val root = query.from(getEntityClass())
+        return database.entityManager.use { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
-        val predicates = mutableListOf<Predicate>()
-        simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
-        countryCode?.let { predicates.add(cb.equal(root[Anime_.countryCode], it)) }
-        status?.let { predicates.add(cb.equal(root[Anime_.status], it)) }
-        query.where(*predicates.toTypedArray())
+            val predicates = mutableListOf<Predicate>()
+            simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
+            countryCode?.let { predicates.add(cb.equal(root[Anime_.countryCode], it)) }
+            status?.let { predicates.add(cb.equal(root[Anime_.status], it)) }
+            query.where(*predicates.toTypedArray())
 
-        val orders = sort.mapNotNull { sortParameter ->
-            val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc
+            val orders = sort.mapNotNull { sortParameter ->
+                val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc
 
-            val field = when (sortParameter.field) {
-                "name" -> root[Anime_.name]
-                "releaseDateTime" -> root[Anime_.releaseDateTime]
-                "lastReleaseDateTime" -> root[Anime_.lastReleaseDateTime]
-                else -> null
+                val field = when (sortParameter.field) {
+                    "name" -> root[Anime_.name]
+                    "releaseDateTime" -> root[Anime_.releaseDateTime]
+                    "lastReleaseDateTime" -> root[Anime_.lastReleaseDateTime]
+                    else -> null
+                }
+
+                field?.let { order(it) }
             }
 
-            field?.let { order(it) }
+            query.orderBy(orders)
+            buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
         }
-
-        query.orderBy(orders)
-        return buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
     }
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
-        val searchSession = Search.session(entityManager)
+        return database.entityManager.use {
+            val searchSession = Search.session(it)
 
-        @Suppress("UNCHECKED_CAST")
-        val searchResult = searchSession.search(getEntityClass())
-            .where { w -> findWhere(w, name, countryCode) }
-            .fetch((limit * page) - limit, limit) as SearchResult<Anime>
+            @Suppress("UNCHECKED_CAST")
+            val searchResult = searchSession.search(getEntityClass())
+                .where { w -> findWhere(w, name, countryCode) }
+                .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
-        return Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount())
+            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount())
+        }
     }
 
     private fun findWhere(
@@ -88,45 +96,52 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun findAllUuidImageAndBanner(): List<Tuple> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createTupleQuery()
-        val root = query.from(getEntityClass())
-        query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
-        return createReadOnlyQuery(entityManager, query)
-            .resultList
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
     }
 
     fun findBySlug(countryCode: CountryCode, slug: String): Anime? {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(getEntityClass())
-        val root = query.from(getEntityClass())
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
-        query.where(
-            cb.and(
-                cb.equal(root[Anime_.countryCode], countryCode),
-                cb.equal(root[Anime_.slug], slug)
+            query.where(
+                cb.and(
+                    cb.equal(root[Anime_.countryCode], countryCode),
+                    cb.equal(root[Anime_.slug], slug)
+                )
             )
-        )
 
-        return createReadOnlyQuery(entityManager, query)
-            .resultList
-            .firstOrNull()
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
     }
 
     fun findByName(countryCode: CountryCode, name: String?): Anime? {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(getEntityClass())
-        val root = query.from(getEntityClass())
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
-        query.where(
-            cb.and(
-                cb.equal(root[Anime_.countryCode], countryCode),
-                cb.equal(cb.lower(root[Anime_.name]), name?.lowercase())
+            query.where(
+                cb.and(
+                    cb.equal(root[Anime_.countryCode], countryCode),
+                    cb.equal(cb.lower(root[Anime_.name]), name?.lowercase())
+                )
             )
-        )
 
-        return entityManager.createQuery(query)
-            .resultList
-            .firstOrNull()
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
     }
 }

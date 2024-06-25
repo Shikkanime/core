@@ -3,8 +3,8 @@ package fr.shikkanime.repositories
 import com.google.inject.Inject
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.ShikkEntity
+import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import jakarta.persistence.TypedQuery
 import jakarta.persistence.criteria.CriteriaQuery
 import org.hibernate.ScrollMode
@@ -14,28 +14,26 @@ import java.util.*
 
 abstract class AbstractRepository<E : ShikkEntity> {
     @Inject
-    @PersistenceContext
-    protected lateinit var entityManager: EntityManager
+    protected lateinit var database: Database
 
     protected abstract fun getEntityClass(): Class<E>
 
-    protected fun <T> inTransaction(block: () -> T): T {
-        val transaction = entityManager.transaction
-        transaction.begin()
-        val result: T
+    protected fun <T> inTransaction(block: (EntityManager) -> T): T {
+        return database.entityManager.use {
+            val transaction = it.transaction
+            transaction.begin()
+            val result: T
 
-        try {
-            result = block()
-            entityManager.flush()
-            transaction.commit()
-        } catch (e: Exception) {
-            transaction.rollback()
-            throw e
-        } finally {
-            entityManager.clear()
+            try {
+                result = block(it)
+                transaction.commit()
+            } catch (e: Exception) {
+                transaction.rollback()
+                throw e
+            }
+
+            result
         }
-
-        return result
     }
 
     fun <T> createReadOnlyQuery(entityManager: EntityManager, criteriaQuery: CriteriaQuery<T>): TypedQuery<T> {
@@ -58,6 +56,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
                 list.add(scrollableResults.get() as C) // NOSONAR
                 if (!scrollableResults.next()) break
             }
+
             total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0
         }
 
@@ -65,41 +64,43 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     open fun findAll(): List<E> {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(getEntityClass())
-        query.from(getEntityClass())
-
-        return createReadOnlyQuery(entityManager, query)
-            .resultList
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            query.from(getEntityClass())
+            createReadOnlyQuery(it, query).resultList
+        }
     }
 
     open fun find(uuid: UUID): E? {
-        return entityManager.find(getEntityClass(), uuid)
+        return database.entityManager.use {
+            it.find(getEntityClass(), uuid)
+        }
     }
 
     fun save(entity: E): E {
         return inTransaction {
-            entityManager.persist(entity)
+            it.persist(entity)
             entity
         }
     }
 
     fun update(entity: E): E {
         return inTransaction {
-            entityManager.merge(entity)
+            it.merge(entity)
             entity
         }
     }
 
     fun delete(entity: E) {
         inTransaction {
-            entityManager.remove(entity)
+            it.remove(entity)
         }
     }
 
     fun deleteAll() {
         inTransaction {
-            entityManager.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
+            it.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
         }
     }
 }

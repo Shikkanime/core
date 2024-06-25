@@ -2,7 +2,6 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.entities.ShikkEntity
 import jakarta.persistence.EntityManager
-import jakarta.persistence.FlushModeType
 import liquibase.command.CommandScope
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -75,9 +74,4 @@ class Database {
 
     val entityManager: EntityManager
         get() = sessionFactory.createEntityManager()
-            .apply { flushMode = FlushModeType.COMMIT }
-
-    companion object {
-        val instance: Database by lazy { Database() }
-    }
 }
