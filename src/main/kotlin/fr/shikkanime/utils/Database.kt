@@ -13,7 +13,6 @@ import kotlin.system.exitProcess
 class Database {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val sessionFactory: SessionFactory
-    var entityManager: EntityManager
 
     constructor(file: File) {
         if (!file.exists()) {
@@ -66,9 +65,6 @@ class Database {
             logger.log(Level.SEVERE, "Error while validating database", e)
             exitProcess(1)
         }
-
-        entityManager = sessionFactory.createEntityManager()
-        entityManager.flushMode = FlushModeType.COMMIT
     }
 
     constructor() : this(
@@ -76,4 +72,12 @@ class Database {
             ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
         )
     )
+
+    val entityManager: EntityManager
+        get() = sessionFactory.createEntityManager()
+            .apply { flushMode = FlushModeType.COMMIT }
+
+    companion object {
+        val instance: Database by lazy { Database() }
+    }
 }

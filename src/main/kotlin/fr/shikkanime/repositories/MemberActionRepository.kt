@@ -8,7 +8,7 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
     override fun getEntityClass() = MemberAction::class.java
 
     fun findByUuidAndCode(uuid: UUID, code: String): MemberAction? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -18,7 +18,7 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
             cb.isFalse(root[MemberAction_.validated])
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }

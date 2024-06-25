@@ -3,8 +3,8 @@ package fr.shikkanime.repositories
 import com.google.inject.Inject
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.ShikkEntity
-import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import jakarta.persistence.TypedQuery
 import jakarta.persistence.criteria.CriteriaQuery
 import org.hibernate.ScrollMode
@@ -14,24 +14,25 @@ import java.util.*
 
 abstract class AbstractRepository<E : ShikkEntity> {
     @Inject
-    protected lateinit var database: Database
+    @PersistenceContext
+    protected lateinit var entityManager: EntityManager
 
     protected abstract fun getEntityClass(): Class<E>
 
     protected fun <T> inTransaction(block: () -> T): T {
-        val transaction = database.entityManager.transaction
+        val transaction = entityManager.transaction
         transaction.begin()
         val result: T
 
         try {
             result = block()
-            database.entityManager.flush()
+            entityManager.flush()
             transaction.commit()
         } catch (e: Exception) {
             transaction.rollback()
             throw e
         } finally {
-            database.entityManager.clear()
+            entityManager.clear()
         }
 
         return result
@@ -64,41 +65,41 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     open fun findAll(): List<E> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         query.from(getEntityClass())
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     open fun find(uuid: UUID): E? {
-        return database.entityManager.find(getEntityClass(), uuid)
+        return entityManager.find(getEntityClass(), uuid)
     }
 
     fun save(entity: E): E {
         return inTransaction {
-            database.entityManager.persist(entity)
+            entityManager.persist(entity)
             entity
         }
     }
 
     fun update(entity: E): E {
         return inTransaction {
-            database.entityManager.merge(entity)
+            entityManager.merge(entity)
             entity
         }
     }
 
     fun delete(entity: E) {
         inTransaction {
-            database.entityManager.remove(entity)
+            entityManager.remove(entity)
         }
     }
 
     fun deleteAll() {
         inTransaction {
-            database.entityManager.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
+            entityManager.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
         }
     }
 }

@@ -10,10 +10,11 @@ import fr.shikkanime.socialnetworks.AbstractSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.routes.Controller
+import jakarta.persistence.EntityManager
 
 class DefaultModule : AbstractModule() {
     override fun configure() {
-        bind(Database::class.java).asEagerSingleton()
+        bind(EntityManager::class.java).toInstance(Database.instance.entityManager)
 
         setOf(
             Constant.reflections.getSubTypesOf(AbstractRepository::class.java),

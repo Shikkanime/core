@@ -20,7 +20,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         start: ZonedDateTime,
         end: ZonedDateTime,
     ): List<EpisodeVariant> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -38,12 +38,12 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
         query.where(cb.and(*predicates.toTypedArray()))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllTypeIdentifier(): List<Tuple> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createTupleQuery()
         val root = query.from(getEntityClass())
 
@@ -61,12 +61,12 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             root[EpisodeVariant_.identifier]
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllAudioLocalesByAnime(anime: Anime): List<String> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(String::class.java)
         val root = query.from(getEntityClass())
 
@@ -74,12 +74,12 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
             .distinct(true)
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllAudioLocalesByMapping(mapping: EpisodeMapping): List<String> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(String::class.java)
         val root = query.from(getEntityClass())
 
@@ -87,34 +87,34 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
             .distinct(true)
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllByAnime(anime: Anime): List<EpisodeVariant> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
         query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllByMapping(mapping: EpisodeMapping): List<EpisodeVariant> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
         query.where(cb.equal(root[EpisodeVariant_.mapping], mapping))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeMapping> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(EpisodeMapping::class.java)
         val root = query.from(getEntityClass())
 
@@ -135,24 +135,24 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
             )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findByIdentifier(identifier: String): EpisodeVariant? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
         query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }
 
     fun findMinAndMaxReleaseDateTimeByMapping(mapping: EpisodeMapping): Pair<ZonedDateTime, ZonedDateTime> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(Tuple::class.java)
         val root = query.from(getEntityClass())
 
@@ -162,13 +162,13 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         )
             .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .singleResult
             .let { it[0] as ZonedDateTime to it[1] as ZonedDateTime }
     }
 
     fun findMinAndMaxReleaseDateTimeByAnime(anime: Anime): Pair<ZonedDateTime, ZonedDateTime> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(Tuple::class.java)
         val root = query.from(getEntityClass())
 
@@ -178,7 +178,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         )
             .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .singleResult
             .let { it[0] as ZonedDateTime to it[1] as ZonedDateTime }
     }

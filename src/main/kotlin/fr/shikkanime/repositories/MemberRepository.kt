@@ -8,17 +8,17 @@ class MemberRepository : AbstractRepository<Member>() {
     override fun getEntityClass() = Member::class.java
 
     fun findAllByRoles(roles: List<Role>): List<Member> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
         query.where(root.join(Member_.roles).`in`(roles))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllByAnimeUUID(animeUuid: UUID): List<Member> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(MemberFollowAnime::class.java)
 
@@ -26,12 +26,12 @@ class MemberRepository : AbstractRepository<Member>() {
         query.distinct(true)
         query.where(cb.equal(root[MemberFollowAnime_.anime][Anime_.uuid], animeUuid))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findByUsernameAndPassword(username: String, password: ByteArray): Member? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -40,29 +40,29 @@ class MemberRepository : AbstractRepository<Member>() {
             cb.equal(root[Member_.encryptedPassword], password)
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }
 
     fun findByIdentifier(identifier: String): Member? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
         query.where(cb.equal(root[Member_.username], identifier))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }
 
     fun findByEmail(email: String): Member? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
         query.where(cb.equal(root[Member_.email], email))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }

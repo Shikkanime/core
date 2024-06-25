@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.repositories.MemberActionRepository
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import freemarker.cache.ClassTemplateLoader
@@ -14,8 +15,11 @@ import freemarker.template.Configuration
 import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.logging.Level
 
 class MemberActionService : AbstractService<MemberAction, MemberActionRepository>() {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @Inject
     private lateinit var memberActionRepository: MemberActionRepository
 
@@ -58,8 +62,28 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
             )
         )
 
+        try {
+            doAction(action, code, email)
+        } catch (e: Exception) {
+            logger.log(Level.WARNING, "Failed to send action email", e)
+        }
+
+        println("Action saved with code $code: ${savedAction.uuid}")
+        return savedAction.uuid!!
+    }
+
+    private fun doAction(action: Action, code: String, email: String) {
         when (action) {
             Action.VALIDATE_EMAIL -> {
+                val emailHost =
+                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_HOST)) { "Email host config not found" }
+                val emailPort = configCacheService.getValueAsInt(ConfigPropertyKey.EMAIL_PORT)
+                require(emailPort != -1) { "Email port config not found" }
+                val emailUsername =
+                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_USERNAME)) { "Email username config not found" }
+                val emailPassword =
+                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_PASSWORD)) { "Email password config not found" }
+
                 val stringWriter = StringWriter()
                 val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
                 configuration.templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
@@ -68,14 +92,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
                 Thread {
                     try {
-                        val emailHost = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_HOST)) { "Email host config not found" }
-                        val emailPort = configCacheService.getValueAsInt(ConfigPropertyKey.EMAIL_PORT)
-                        require(emailPort != -1) { "Email port config not found" }
-                        val emailUsername =
-                            requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_USERNAME)) { "Email username config not found" }
-                        val emailPassword =
-                            requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_PASSWORD)) { "Email password config not found" }
-
                         MailService.sendEmail(
                             emailHost,
                             emailPort,
@@ -91,7 +107,5 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                 }.start()
             }
         }
-
-        return savedAction.uuid!!
     }
 }

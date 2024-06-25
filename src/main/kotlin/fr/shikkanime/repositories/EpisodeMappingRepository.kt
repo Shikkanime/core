@@ -21,7 +21,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         limit: Int,
         status: Status? = null
     ): Pageable<EpisodeMapping> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -49,31 +49,31 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
 
         query.orderBy(orders)
-        return buildPageableQuery(createReadOnlyQuery(database.entityManager, query), page, limit)
+        return buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
     }
 
     fun findAllUuidAndImage(): List<Tuple> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createTupleQuery()
         val root = query.from(getEntityClass())
         query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllByAnime(anime: Anime): List<EpisodeMapping> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
         query.where(cb.equal(root[EpisodeMapping_.anime], anime))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllSeasonsByAnime(anime: Anime): List<Tuple> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createTupleQuery()
         val root = query.from(getEntityClass())
 
@@ -83,12 +83,12 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         query.orderBy(cb.asc(root[EpisodeMapping_.season]))
         query.distinct(true)
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime): List<EpisodeMapping> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -117,7 +117,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
         query.orderBy(cb.asc(root[EpisodeMapping_.lastUpdateDateTime]))
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
@@ -127,7 +127,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         episodeType: EpisodeType,
         number: Int
     ): EpisodeMapping? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -140,7 +140,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             )
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }
@@ -152,7 +152,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         platform: Platform,
         audioLocale: String
     ): Int {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(Int::class.java)
         val root = query.from(EpisodeVariant::class.java)
 
@@ -169,7 +169,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         )
 
         query.orderBy(cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]))
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull() ?: 0
     }
@@ -179,7 +179,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     ): EpisodeMapping? {
         // Sort on release date time to get the previous episode
         // If the release date time is the same, sort on the number
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -203,7 +203,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             cb.desc(root[EpisodeMapping_.number])
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }
@@ -213,7 +213,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     ): EpisodeMapping? {
         // Sort on release date time to get the next episode
         // If the release date time is the same, sort on the number
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -237,7 +237,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             cb.asc(root[EpisodeMapping_.number])
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }

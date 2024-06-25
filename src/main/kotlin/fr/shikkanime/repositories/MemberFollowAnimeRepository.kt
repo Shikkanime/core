@@ -10,7 +10,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     override fun getEntityClass() = MemberFollowAnime::class.java
 
     fun findAllFollowedAnimesUUID(member: Member): List<UUID> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(UUID::class.java)
         val root = query.from(getEntityClass())
         query.select(root[MemberFollowAnime_.anime][Anime_.UUID])
@@ -19,7 +19,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             cb.equal(root[MemberFollowAnime_.member], member)
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
@@ -28,7 +28,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         page: Int,
         limit: Int,
     ): Pageable<Tuple> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createTupleQuery()
         val root = query.from(getEntityClass())
         val anime = root.join(MemberFollowAnime_.anime)
@@ -47,11 +47,11 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         query.having(cb.greaterThan(cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]), 0))
         query.orderBy(cb.desc(anime[Anime_.lastReleaseDateTime]))
 
-        return buildPageableQuery(createReadOnlyQuery(database.entityManager, query), page, limit)
+        return buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
     }
 
     fun findAllByAnime(anime: Anime): List<MemberFollowAnime> {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -59,12 +59,12 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             cb.equal(root[MemberFollowAnime_.anime], anime)
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
     }
 
     fun findByMemberAndAnime(member: Member, anime: Anime): MemberFollowAnime? {
-        val cb = database.entityManager.criteriaBuilder
+        val cb = entityManager.criteriaBuilder
         val query = cb.createQuery(getEntityClass())
         val root = query.from(getEntityClass())
 
@@ -73,7 +73,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             cb.equal(root[MemberFollowAnime_.anime], anime)
         )
 
-        return createReadOnlyQuery(database.entityManager, query)
+        return createReadOnlyQuery(entityManager, query)
             .resultList
             .firstOrNull()
     }
