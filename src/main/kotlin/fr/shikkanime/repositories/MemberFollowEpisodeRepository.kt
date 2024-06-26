@@ -7,7 +7,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     override fun getEntityClass() = MemberFollowEpisode::class.java
 
     fun findAllFollowedEpisodesUUID(member: Member): List<UUID> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
@@ -23,7 +23,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     }
 
     fun findAllByEpisode(episode: EpisodeMapping): List<MemberFollowEpisode> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -38,7 +38,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     }
 
     fun findByMemberAndEpisode(member: Member, episode: EpisodeMapping): MemberFollowEpisode? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -55,7 +55,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     }
 
     fun getTotalDuration(member: Member): Long {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
             val root = query.from(getEntityClass())

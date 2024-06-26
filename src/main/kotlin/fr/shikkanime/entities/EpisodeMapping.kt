@@ -17,6 +17,10 @@ import java.util.*
             columnList = "anime_uuid, episode_type, season, number",
             unique = true
         ),
+        Index(
+            name = "idx_episode_mapping_anime_uuid",
+            columnList = "anime_uuid"
+        ),
     ]
 )
 @Cacheable

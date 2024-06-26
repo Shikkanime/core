@@ -8,7 +8,7 @@ class MemberRepository : AbstractRepository<Member>() {
     override fun getEntityClass() = Member::class.java
 
     fun findAllByRoles(roles: List<Role>): List<Member> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -20,7 +20,7 @@ class MemberRepository : AbstractRepository<Member>() {
     }
 
     fun findAllByAnimeUUID(animeUuid: UUID): List<Member> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(MemberFollowAnime::class.java)
@@ -35,7 +35,7 @@ class MemberRepository : AbstractRepository<Member>() {
     }
 
     fun findByUsernameAndPassword(username: String, password: ByteArray): Member? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -52,7 +52,7 @@ class MemberRepository : AbstractRepository<Member>() {
     }
 
     fun findByIdentifier(identifier: String): Member? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -65,7 +65,7 @@ class MemberRepository : AbstractRepository<Member>() {
     }
 
     fun findByEmail(email: String): Member? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

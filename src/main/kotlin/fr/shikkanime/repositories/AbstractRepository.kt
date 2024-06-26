@@ -19,22 +19,21 @@ abstract class AbstractRepository<E : ShikkEntity> {
     protected abstract fun getEntityClass(): Class<E>
 
     protected fun <T> inTransaction(block: (EntityManager) -> T): T {
-        val entityManager = database.entityManager
-        val transaction = entityManager.transaction
-        transaction.begin()
-        val result: T
+        return database.entityManager.use {
+            val transaction = it.transaction
+            transaction.begin()
+            val result: T
 
-        try {
-            result = block(entityManager)
-            transaction.commit()
-        } catch (e: Exception) {
-            transaction.rollback()
-            throw e
-        } finally {
-            entityManager.close()
+            try {
+                result = block(it)
+                transaction.commit()
+            } catch (e: Exception) {
+                transaction.rollback()
+                throw e
+            }
+
+            result
         }
-
-        return result
     }
 
     fun <T> createReadOnlyQuery(entityManager: EntityManager, criteriaQuery: CriteriaQuery<T>): TypedQuery<T> {
@@ -57,6 +56,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
                 list.add(scrollableResults.get() as C) // NOSONAR
                 if (!scrollableResults.next()) break
             }
+
             total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0
         }
 
@@ -64,18 +64,16 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     open fun findAll(): List<E> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             query.from(getEntityClass())
-
-            createReadOnlyQuery(it, query)
-                .resultList
+            createReadOnlyQuery(it, query).resultList
         }
     }
 
     open fun find(uuid: UUID): E? {
-        return inTransaction {
+        return database.entityManager.use {
             it.find(getEntityClass(), uuid)
         }
     }

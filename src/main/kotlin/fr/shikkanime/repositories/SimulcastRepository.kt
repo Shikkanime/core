@@ -7,13 +7,13 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
     override fun getEntityClass() = Simulcast::class.java
 
     override fun findAll(): List<Simulcast> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
             // Query where the animes are not empty
-            query.where(cb.isNotEmpty(root.get(Simulcast_.animes)))
+            query.where(cb.isNotEmpty(root[Simulcast_.animes]))
 
             createReadOnlyQuery(it, query)
                 .resultList
@@ -21,7 +21,7 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
     }
 
     fun findBySeasonAndYear(season: String, year: Int): Simulcast? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

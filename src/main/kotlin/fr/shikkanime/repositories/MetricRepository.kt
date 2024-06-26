@@ -8,7 +8,7 @@ class MetricRepository : AbstractRepository<Metric>() {
     override fun getEntityClass() = Metric::class.java
 
     fun findAllAfter(date: ZonedDateTime): List<Metric> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

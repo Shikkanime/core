@@ -5,6 +5,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
+import org.hibernate.Hibernate
 import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
@@ -14,10 +15,22 @@ class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
 
     fun preIndex() {
-        inTransaction {
+        database.entityManager.use {
             val searchSession = Search.session(it)
             val indexer = searchSession.massIndexer(getEntityClass())
             indexer.startAndWait()
+        }
+    }
+
+    override fun findAll(): List<Anime> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            query.from(getEntityClass())
+
+            val list = createReadOnlyQuery(it, query).resultList
+            list.forEach { anime -> Hibernate.initialize(anime.mappings) }
+            list
         }
     }
 
@@ -29,7 +42,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         limit: Int,
         status: Status? = null
     ): Pageable<Anime> {
-        return inTransaction { entityManager ->
+        return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -59,14 +72,14 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
-        val searchSession = Search.session(database.entityManager)
+        return database.entityManager.use {
+            val searchSession = Search.session(it)
 
-        @Suppress("UNCHECKED_CAST")
-        val searchResult = searchSession.search(getEntityClass())
-            .where { w -> findWhere(w, name, countryCode) }
-            .fetch((limit * page) - limit, limit) as SearchResult<Anime>
+            @Suppress("UNCHECKED_CAST")
+            val searchResult = searchSession.search(getEntityClass())
+                .where { w -> findWhere(w, name, countryCode) }
+                .fetch((limit * page) - limit, limit) as SearchResult<Anime>
 
-        return inTransaction {
             Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount())
         }
     }
@@ -83,18 +96,20 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun findAllUuidImageAndBanner(): List<Tuple> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
             query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
-            entityManager.createQuery(query).resultList
+
+            createReadOnlyQuery(it, query)
+                .resultList
         }
     }
 
     fun findBySlug(countryCode: CountryCode, slug: String): Anime? {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
@@ -105,14 +120,14 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 )
             )
 
-            createReadOnlyQuery(entityManager, query)
+            createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
         }
     }
 
     fun findByName(countryCode: CountryCode, name: String?): Anime? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -124,7 +139,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 )
             )
 
-            it.createQuery(query)
+            createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
         }

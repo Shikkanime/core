@@ -29,10 +29,12 @@
 [#-- @ftlvariable name="baseUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="apiUrl" type="java.lang.String" --]
 
-[#-- @ftlvariable name="episodeMappings" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.EpisodeMappingDto>" --]
-[#-- @ftlvariable name="episodeMapping" type="fr.shikkanime.dtos.EpisodeMappingDto" --]
+[#-- @ftlvariable name="episodeMappings" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.mappings.EpisodeMappingDto>" --]
+[#-- @ftlvariable name="episodeMapping" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
 [#-- @ftlvariable name="episodeVariants" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.variants.EpisodeVariantDto>" --]
 [#-- @ftlvariable name="episodeVariant" type="fr.shikkanime.dtos.variants.EpisodeVariantDto" --]
+[#-- @ftlvariable name="previousEpisode" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
+[#-- @ftlvariable name="nextEpisode" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
 
 [#-- @ftlvariable name="code" type="java.lang.String" --]
 [#-- @ftlvariable name="showMore" type="java.lang.Boolean" --]

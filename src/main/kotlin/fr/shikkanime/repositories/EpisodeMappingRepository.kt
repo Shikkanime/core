@@ -21,7 +21,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         limit: Int,
         status: Status? = null
     ): Pageable<EpisodeMapping> {
-        return inTransaction { entityManager ->
+        return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -55,18 +55,19 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     }
 
     fun findAllUuidAndImage(): List<Tuple> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
             query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
+
             createReadOnlyQuery(it, query)
                 .resultList
         }
     }
 
     fun findAllByAnime(anime: Anime): List<EpisodeMapping> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -79,7 +80,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     }
 
     fun findAllSeasonsByAnime(anime: Anime): List<Tuple> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -96,7 +97,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     }
 
     fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime): List<EpisodeMapping> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -131,13 +132,13 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findByAnimeEpisodeTypeSeasonNumber(
+    fun findByAnimeSeasonEpisodeTypeNumber(
         anime: Anime,
-        episodeType: EpisodeType,
         season: Int,
+        episodeType: EpisodeType,
         number: Int
     ): EpisodeMapping? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -164,7 +165,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         platform: Platform,
         audioLocale: String
     ): Int {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Int::class.java)
             val root = query.from(EpisodeVariant::class.java)
@@ -182,9 +183,82 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             )
 
             query.orderBy(cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]))
+
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull() ?: 0
+        }
+    }
+
+    fun findPreviousEpisode(
+        episodeMapping: EpisodeMapping,
+    ): EpisodeMapping? {
+        return database.entityManager.use {
+            // Sort on release date time to get the previous episode
+            // If the release date time is the same, sort on the number
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeMapping_.anime], episodeMapping.anime),
+                    cb.equal(root[EpisodeMapping_.season], episodeMapping.season),
+                    cb.or(
+                        cb.lessThan(root[EpisodeMapping_.releaseDateTime], episodeMapping.releaseDateTime),
+                        cb.and(
+                            cb.equal(root[EpisodeMapping_.episodeType], episodeMapping.episodeType),
+                            cb.lessThan(root[EpisodeMapping_.number], episodeMapping.number!!),
+                        )
+                    ),
+                    cb.notEqual(root[EpisodeMapping_.uuid], episodeMapping.uuid)
+                )
+            )
+
+            query.orderBy(
+                cb.desc(root[EpisodeMapping_.releaseDateTime]),
+                cb.desc(root[EpisodeMapping_.number])
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
+    }
+
+    fun findNextEpisode(
+        episodeMapping: EpisodeMapping,
+    ): EpisodeMapping? {
+        return database.entityManager.use {
+            // Sort on release date time to get the next episode
+            // If the release date time is the same, sort on the number
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeMapping_.anime], episodeMapping.anime),
+                    cb.equal(root[EpisodeMapping_.season], episodeMapping.season),
+                    cb.or(
+                        cb.greaterThan(root[EpisodeMapping_.releaseDateTime], episodeMapping.releaseDateTime),
+                        cb.and(
+                            cb.equal(root[EpisodeMapping_.episodeType], episodeMapping.episodeType),
+                            cb.greaterThan(root[EpisodeMapping_.number], episodeMapping.number!!),
+                        ),
+                    ),
+                    cb.notEqual(root[EpisodeMapping_.uuid], episodeMapping.uuid)
+                )
+            )
+
+            query.orderBy(
+                cb.asc(root[EpisodeMapping_.releaseDateTime]),
+                cb.asc(root[EpisodeMapping_.number])
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
         }
     }
 }

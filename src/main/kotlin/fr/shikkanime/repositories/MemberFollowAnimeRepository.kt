@@ -10,7 +10,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     override fun getEntityClass() = MemberFollowAnime::class.java
 
     fun findAllFollowedAnimesUUID(member: Member): List<UUID> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
@@ -30,8 +30,8 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         page: Int,
         limit: Int,
     ): Pageable<Tuple> {
-        return inTransaction { entityManager ->
-            val cb = entityManager.criteriaBuilder
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
             val anime = root.join(MemberFollowAnime_.anime)
@@ -50,12 +50,12 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             query.having(cb.greaterThan(cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]), 0))
             query.orderBy(cb.desc(anime[Anime_.lastReleaseDateTime]))
 
-            buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
+            buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
         }
     }
 
     fun findAllByAnime(anime: Anime): List<MemberFollowAnime> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -70,7 +70,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     }
 
     fun findByMemberAndAnime(member: Member, anime: Anime): MemberFollowAnime? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

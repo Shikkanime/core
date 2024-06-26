@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <#assign baseUrl = "https://www.shikkanime.fr">
     <#if episodeMapping??>
         <url>
             <loc>${baseUrl}/</loc>
@@ -30,6 +29,12 @@
             <url>
                 <loc>${baseUrl}/animes/${anime.slug}/season-${season.number}</loc>
                 <lastmod>${season.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
+            </url>
+        </#list>
+        <#list anime.episodes as episode>
+            <url>
+                <loc>${baseUrl}/animes/${anime.slug}/season-${episode.season?c}/${episode.episodeType.slug}-${episode.number?c}</loc>
+                <lastmod>${episode.lastReleaseDateTime?replace("Z", "+00:00")}</lastmod>
             </url>
         </#list>
     </#list>

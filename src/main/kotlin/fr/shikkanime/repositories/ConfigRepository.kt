@@ -7,7 +7,7 @@ class ConfigRepository : AbstractRepository<Config>() {
     override fun getEntityClass() = Config::class.java
 
     fun findAllByName(name: String): List<Config> {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -19,7 +19,7 @@ class ConfigRepository : AbstractRepository<Config>() {
     }
 
     fun findByName(name: String): Config? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

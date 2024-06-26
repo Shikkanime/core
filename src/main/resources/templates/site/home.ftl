@@ -33,10 +33,11 @@
         <h1 class="h3 ms-0 me-auto">Simulcast en cours</h1>
 
         <#if currentSimulcast??>
-            <a href="/catalog/${currentSimulcast.slug}" class="btn btn-outline-light ms-auto me-0 rounded-pill px-4">
+            <a href="/catalog/${currentSimulcast.slug}"
+               class="btn btn-outline-light ms-auto me-0 rounded-pill px-4 d-flex align-items-center">
                 PLUS
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                     class="bi bi-chevron-right" viewBox="0 0 16 16">
+                     class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
                     <path fill-rule="evenodd"
                           d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
                 </svg>

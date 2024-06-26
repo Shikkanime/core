@@ -2,13 +2,13 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.MemberAction_
-import java.util.UUID
+import java.util.*
 
 class MemberActionRepository : AbstractRepository<MemberAction>() {
     override fun getEntityClass() = MemberAction::class.java
 
     fun findByUuidAndCode(uuid: UUID, code: String): MemberAction? {
-        return inTransaction {
+        return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

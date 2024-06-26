@@ -1,5 +1,7 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.mappings
 
+import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.enums.EpisodeType
