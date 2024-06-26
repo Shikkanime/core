@@ -185,7 +185,7 @@ class SiteController {
         @PathParam("season") season: Int,
         @PathParam("episodeSlug") episodeSlug: String
     ): Response {
-        val regex = Regex("(${EpisodeType.entries.joinToString("|") { it.slug }})-(\\d+)")
+        val regex = Regex("(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)")
         val match = regex.find(episodeSlug) ?: return Response.notFound()
         val episodeType = EpisodeType.fromSlug(match.groupValues[1])
         val episodeNumber = match.groupValues[2].toInt()
