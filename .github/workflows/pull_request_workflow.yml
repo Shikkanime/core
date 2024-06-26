@@ -25,5 +25,5 @@ jobs:
         run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} -Dsonar.qualitygate.wait=true
 
       - name: Analyse pull request
-        if: github.event.pull_request.base.ref != 'master' && github.actor == 'dependabot[bot]'
+        if: github.event.pull_request.base.ref == 'master' || github.actor == 'dependabot[bot]'
         run: ./gradlew clean test --info
