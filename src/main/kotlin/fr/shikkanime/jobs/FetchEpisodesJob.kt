@@ -107,15 +107,21 @@ class FetchEpisodesJob : AbstractJob {
     }
 
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
-        if (savedEpisodes.isNotEmpty() && savedEpisodes.size < configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
-            for (episode in savedEpisodes) {
-                val typeIdentifier = getTypeIdentifier(episode)
+        if (savedEpisodes.isEmpty()) {
+            return
+        }
 
-                if (typeIdentifiers.contains(typeIdentifier)) {
-                    continue
-                }
+        val animeMap = savedEpisodes.groupBy { it.mapping!!.anime!!.uuid!! }
 
-                typeIdentifiers.add(typeIdentifier)
+        for ((_, episodes) in animeMap) {
+            val nonSavedEpisodes = episodes.filter { !typeIdentifiers.contains(getTypeIdentifier(it)) }
+
+            if (nonSavedEpisodes.size >= configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
+                continue
+            }
+
+            for (episode in nonSavedEpisodes) {
+                typeIdentifiers.add(getTypeIdentifier(episode))
                 val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
                 sendToSocialNetworks(episodeDto)
 
