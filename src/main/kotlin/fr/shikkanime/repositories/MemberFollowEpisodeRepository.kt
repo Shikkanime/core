@@ -37,6 +37,41 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
+    fun existsByMemberAndEpisode(member: Member, episode: EpisodeMapping): Boolean {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(Long::class.java)
+            val root = query.from(getEntityClass())
+            query.select(cb.literal(1))
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.member], member),
+                cb.equal(root[MemberFollowEpisode_.episode], episode)
+            )
+
+            createReadOnlyQuery(it.createQuery(query).setMaxResults(1))
+                .resultList
+                .isNotEmpty()
+        }
+    }
+
+    fun findAllFollowedEpisodesByMemberAndEpisodes(member: Member, episodes: List<EpisodeMapping>): List<UUID> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(UUID::class.java)
+            val root = query.from(getEntityClass())
+            query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid])
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.member], member),
+                root[MemberFollowEpisode_.episode].`in`(episodes)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByMemberAndEpisode(member: Member, episode: EpisodeMapping): MemberFollowEpisode? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
