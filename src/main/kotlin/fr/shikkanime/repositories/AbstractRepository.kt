@@ -36,9 +36,10 @@ abstract class AbstractRepository<E : ShikkEntity> {
         }
     }
 
-    fun <T> createReadOnlyQuery(entityManager: EntityManager, criteriaQuery: CriteriaQuery<T>): TypedQuery<T> {
-        return entityManager.createQuery(criteriaQuery)
-            .setHint(AvailableHints.HINT_READ_ONLY, true)
+    fun <T> createReadOnlyQuery(entityManager: EntityManager, query: CriteriaQuery<T>) = createReadOnlyQuery(entityManager.createQuery(query))
+
+    fun <T> createReadOnlyQuery(query: TypedQuery<T>): TypedQuery<T> {
+        return query.setHint(AvailableHints.HINT_READ_ONLY, true)
             .setHint(AvailableHints.HINT_CACHEABLE, true)
     }
 
@@ -82,6 +83,12 @@ abstract class AbstractRepository<E : ShikkEntity> {
         return inTransaction {
             it.persist(entity)
             entity
+        }
+    }
+
+    fun saveAll(entities: List<E>) {
+        return inTransaction { entityManager ->
+            entities.forEach { entityManager.persist(it) }
         }
     }
 
