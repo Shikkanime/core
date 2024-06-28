@@ -32,12 +32,14 @@ class AnimationDigitalNetworkPlatformTest {
         platform.loadConfiguration()
         platform.configuration!!.availableCountries.add(CountryCode.FR)
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Pon no Michi"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "One Piece"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Urusei Yatsura"))
     }
 
     @AfterEach
     fun tearDown() {
-        platform.configuration!!.availableCountries.remove(CountryCode.FR)
-        platform.configuration!!.simulcasts.removeIf { it.name == "Pon no Michi" }
+        platform.configuration!!.availableCountries.clear()
+        platform.configuration!!.simulcasts.clear()
         platform.reset()
         configService.deleteAll()
         MapCache.invalidate(Config::class.java)
@@ -71,6 +73,7 @@ class AnimationDigitalNetworkPlatformTest {
     fun `fetchEpisodes for 2024-01-21`() {
         val zonedDateTime = ZonedDateTime.parse("2024-01-21T21:59:59Z")
         val episodes = platform.fetchEpisodes(zonedDateTime)
+        println(episodes)
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(4, episodes.size)
@@ -114,6 +117,7 @@ class AnimationDigitalNetworkPlatformTest {
     fun `fetchEpisodes for 2024-02-01`() {
         val zonedDateTime = ZonedDateTime.parse("2024-02-01T23:59:59Z")
         val episodes = platform.fetchEpisodes(zonedDateTime)
+        println(episodes)
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(3, episodes.size)
