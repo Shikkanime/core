@@ -38,29 +38,28 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
     fun followAll(uuidUser: UUID, anime: GenericDto): Response {
         val member = memberService.find(uuidUser) ?: return Response.notFound()
         val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
-        val list = mutableListOf<MemberFollowEpisode>()
+            .filter { it.episodeType != EpisodeType.SUMMARY }
+        val followed = memberFollowEpisodeRepository.findAllFollowedEpisodesByMemberAndEpisodes(member, elements)
 
-        elements.filter { it.episodeType != EpisodeType.SUMMARY }
-            .forEach { element ->
-                if (memberFollowEpisodeRepository.findByMemberAndEpisode(member, element) != null) {
-                    return@forEach
-                }
+        val filtered = elements.mapNotNull { element ->
+            if (element.uuid in followed) return@mapNotNull null
+            MemberFollowEpisode(member = member, episode = element)
+        }
 
-                list.add(save(MemberFollowEpisode(member = member, episode = element)))
-            }
+        memberFollowEpisodeRepository.saveAll(filtered)
 
         member.lastUpdateDateTime = ZonedDateTime.now()
         memberService.update(member)
         MapCache.invalidate(MemberFollowEpisode::class.java)
 
-        return Response.ok(AllFollowedEpisodeDto(data = list.mapNotNull { it.episode?.uuid }.toSet(), duration = list.sumOf { it.episode!!.duration }))
+        return Response.ok(AllFollowedEpisodeDto(data = filtered.mapNotNull { it.episode?.uuid }.toSet(), duration = filtered.sumOf { it.episode!!.duration }))
     }
 
     fun follow(uuidUser: UUID, episode: GenericDto): Response {
         val member = memberService.find(uuidUser) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
-        if (memberFollowEpisodeRepository.findByMemberAndEpisode(member, element) != null) {
+        if (memberFollowEpisodeRepository.existsByMemberAndEpisode(member, element)) {
             return Response.conflict()
         }
 

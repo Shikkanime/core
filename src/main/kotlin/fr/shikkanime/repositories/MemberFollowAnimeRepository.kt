@@ -69,6 +69,24 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         }
     }
 
+    fun existsByMemberAndAnime(member: Member, anime: Anime): Boolean {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(Long::class.java)
+            val root = query.from(getEntityClass())
+            query.select(cb.literal(1))
+
+            query.where(
+                cb.equal(root[MemberFollowAnime_.member], member),
+                cb.equal(root[MemberFollowAnime_.anime], anime)
+            )
+
+            createReadOnlyQuery(it.createQuery(query).setMaxResults(1))
+                .resultList
+                .isNotEmpty()
+        }
+    }
+
     fun findByMemberAndAnime(member: Member, anime: Anime): MemberFollowAnime? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

@@ -34,7 +34,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
         val member = memberService.find(uuidUser) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
-        if (memberFollowAnimeRepository.findByMemberAndAnime(member, element) != null) {
+        if (memberFollowAnimeRepository.existsByMemberAndAnime(member, element)) {
             return Response.conflict()
         }
 
