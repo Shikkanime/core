@@ -45,8 +45,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime)
 
-    fun findAllSeasonsByAnime(anime: Anime) = episodeMappingRepository.findAllSeasonsByAnime(anime)
-
     fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime) =
         episodeMappingRepository.findAllNeedUpdateByPlatform(platform, lastDateTime)
 
