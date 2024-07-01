@@ -69,18 +69,39 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllAudioLocalesByAnime(anime: Anime): List<String> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+    fun findAudioLocalesAndSeasonsByAnime(anime: Anime): Pair<List<String>, List<Pair<Int, ZonedDateTime>>> {
+        return database.entityManager.use { em ->
+            val cb = em.criteriaBuilder
+            val query = cb.createTupleQuery()
 
-            query.select(root[EpisodeVariant_.audioLocale])
-                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
-                .distinct(true)
+            val variantRoot = query.from(getEntityClass())
+            val mappingJoin = variantRoot.join(EpisodeVariant_.mapping)
 
-            createReadOnlyQuery(it, query)
-                .resultList
+            query.multiselect(
+                variantRoot[EpisodeVariant_.audioLocale],
+                mappingJoin[EpisodeMapping_.season],
+                cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
+            )
+
+            query.where(cb.equal(mappingJoin[EpisodeMapping_.anime], anime))
+            query.groupBy(
+                variantRoot[EpisodeVariant_.audioLocale],
+                mappingJoin[EpisodeMapping_.season]
+            )
+            query.orderBy(cb.asc(mappingJoin[EpisodeMapping_.season]))
+
+            val results = createReadOnlyQuery(em, query).resultList
+
+            // Process results
+            val audioLocales = mutableSetOf<String>()
+            val seasons = mutableListOf<Pair<Int, ZonedDateTime>>()
+
+            results.forEach { tuple ->
+                audioLocales.add(tuple[0] as String)
+                seasons.add(tuple[1] as Int to tuple[2] as ZonedDateTime)
+            }
+
+            Pair(audioLocales.toList(), seasons.distinctBy { it.first })
         }
     }
 

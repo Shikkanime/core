@@ -41,7 +41,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 
-    fun findAllAudioLocalesByAnime(anime: Anime) = episodeVariantRepository.findAllAudioLocalesByAnime(anime)
+    fun findAudioLocalesAndSeasonsByAnime(anime: Anime) = episodeVariantRepository.findAudioLocalesAndSeasonsByAnime(anime)
 
     private fun findAllAudioLocalesByMapping(mapping: EpisodeMapping) =
         episodeVariantRepository.findAllAudioLocalesByMapping(mapping)

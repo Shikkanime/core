@@ -22,14 +22,19 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    override fun findAll(): List<Anime> {
+    fun findAllLoaded(): List<Anime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             query.from(getEntityClass())
 
             val list = createReadOnlyQuery(it, query).resultList
-            list.forEach { anime -> Hibernate.initialize(anime.mappings) }
+
+            list.forEach { anime ->
+                Hibernate.initialize(anime.simulcasts)
+                Hibernate.initialize(anime.mappings)
+            }
+
             list
         }
     }
@@ -123,6 +128,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
+                ?.apply { Hibernate.initialize(simulcasts) }
         }
     }
 

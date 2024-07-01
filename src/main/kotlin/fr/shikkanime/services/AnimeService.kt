@@ -41,6 +41,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     override fun getRepository() = animeRepository
 
+    private fun findAllLoaded() = animeRepository.findAllLoaded()
+
     fun findAllBy(
         countryCode: CountryCode?,
         simulcast: Simulcast?,
@@ -138,7 +140,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             episodeMappingService.update(mapping)
         }
 
-        findAll().forEach { anime ->
+        findAllLoaded().forEach { anime ->
             val (minReleaseDate, maxReleaseDate) = episodeVariantService.findMinAndMaxReleaseDateTimeByAnime(anime)
             anime.releaseDateTime = minReleaseDate
             anime.lastReleaseDateTime = maxReleaseDate

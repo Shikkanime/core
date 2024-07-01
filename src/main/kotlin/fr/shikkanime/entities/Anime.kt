@@ -38,7 +38,7 @@ class Anime(
     var banner: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(2000)")
     var description: String? = null,
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "anime_simulcast",
         joinColumns = [JoinColumn(name = "anime_uuid")],
