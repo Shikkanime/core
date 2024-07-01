@@ -185,14 +185,17 @@ class SiteController {
         @PathParam("season") season: Int,
         @PathParam("episodeSlug") episodeSlug: String
     ): Response {
-        val regex = Regex("(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)")
-        val match = regex.find(episodeSlug) ?: return Response.notFound()
+        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+
+        if (dto.seasons.isEmpty()) return Response.notFound()
+        if (dto.seasons.none { it.number == season }) return Response.redirect("/animes/$slug/season-${dto.seasons.last().number}/$episodeSlug")
+
+        val match = "(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)".toRegex().find(episodeSlug) ?: return Response.notFound()
         val episodeType = EpisodeType.fromSlug(match.groupValues[1])
         val episodeNumber = match.groupValues[2].toInt()
 
         val (previousDto, currentDto, nextDto) = episodeMappingCacheService.findByAnimeSeasonEpisodeTypeNumber(
-            CountryCode.FR,
-            slug,
+            dto.uuid!!,
             season,
             episodeType,
             episodeNumber

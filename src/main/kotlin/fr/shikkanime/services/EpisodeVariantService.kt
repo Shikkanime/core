@@ -157,7 +157,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         episode: AbstractPlatform.Episode
     ): EpisodeMapping {
         var mapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
-            anime,
+            anime.uuid!!,
             episode.season,
             episode.episodeType,
             episode.number
@@ -189,7 +189,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             ) + 1
 
             val newCheck = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
-                anime,
+                anime.uuid,
                 episode.season,
                 episode.episodeType,
                 number

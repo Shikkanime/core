@@ -53,7 +53,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         ) {
             val current = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
-                animeService.findBySlug(it.countryCode, it.slug) ?: throw Exception("Anime not found"),
+                it.animeUuid,
                 it.season,
                 it.episodeType,
                 it.number
@@ -80,14 +80,12 @@ class EpisodeMappingCacheService : AbstractCacheService {
     ) = findAllByCache[CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit, status)]
 
     fun findByAnimeSeasonEpisodeTypeNumber(
-        countryCode: CountryCode,
-        anime: String,
+        animeUuid: UUID,
         season: Int,
         episodeType: EpisodeType,
         number: Int
     ) = findByAnimeSeasonEpisodeTypeNumberCache[CountryCodeSlugSeasonEpisodeTypeNumberKeyCache(
-        countryCode,
-        anime,
+        animeUuid,
         season,
         episodeType,
         number

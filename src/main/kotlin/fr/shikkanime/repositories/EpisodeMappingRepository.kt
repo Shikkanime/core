@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
+import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
@@ -133,7 +134,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     }
 
     fun findByAnimeSeasonEpisodeTypeNumber(
-        anime: Anime,
+        animeUuid: UUID,
         season: Int,
         episodeType: EpisodeType,
         number: Int
@@ -145,7 +146,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.where(
                 cb.and(
-                    cb.equal(root[EpisodeMapping_.anime], anime),
+                    cb.equal(root[EpisodeMapping_.anime][Anime_.uuid], animeUuid),
                     cb.equal(root[EpisodeMapping_.episodeType], episodeType),
                     cb.equal(root[EpisodeMapping_.season], season),
                     cb.equal(root[EpisodeMapping_.number], number)

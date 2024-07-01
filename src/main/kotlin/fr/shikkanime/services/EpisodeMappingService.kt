@@ -53,8 +53,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
-    fun findByAnimeSeasonEpisodeTypeNumber(anime: Anime, season: Int, episodeType: EpisodeType, number: Int) =
-        episodeMappingRepository.findByAnimeSeasonEpisodeTypeNumber(anime, season, episodeType, number)
+    fun findByAnimeSeasonEpisodeTypeNumber(animeUuid: UUID, season: Int, episodeType: EpisodeType, number: Int) =
+        episodeMappingRepository.findByAnimeSeasonEpisodeTypeNumber(animeUuid, season, episodeType, number)
 
     fun findPreviousEpisode(episode: EpisodeMapping) = episodeMappingRepository.findPreviousEpisode(episode)
 
@@ -80,7 +80,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         if (!(entity.episodeType == episode.episodeType && entity.season == episode.season && entity.number == episode.number)) {
             // Find if the episode already exists
             val existing =
-                findByAnimeSeasonEpisodeTypeNumber(episode.anime!!, entity.season, entity.episodeType, entity.number)
+                findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, entity.season, entity.episodeType, entity.number)
 
             if (existing != null) {
                 // Set the variants of the current episode to the existing episode
