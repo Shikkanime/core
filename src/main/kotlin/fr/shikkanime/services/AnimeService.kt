@@ -180,6 +180,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }
 
         if (!animeDto.slug.isNullOrBlank() && animeDto.slug != anime.slug) {
+            val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug!!)
+
+            if (findBySlug != null && findBySlug.uuid != anime.uuid) {
+                merge(anime, findBySlug)
+            }
+
             anime.slug = animeDto.slug
         }
 
@@ -230,5 +236,40 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(Anime::class.java)
+    }
+
+    private fun merge(anime: Anime, findBySlug: Anime) {
+        episodeMappingService.findAllByAnime(findBySlug).forEach { episodeMapping ->
+            val findByAnimeSeasonEpisodeTypeNumber = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+                anime.uuid!!,
+                episodeMapping.season!!,
+                episodeMapping.episodeType!!,
+                episodeMapping.number!!
+            )
+
+            if (findByAnimeSeasonEpisodeTypeNumber != null) {
+                episodeVariantService.findAllByMapping(episodeMapping).forEach { episodeVariant ->
+                    episodeVariant.mapping = findByAnimeSeasonEpisodeTypeNumber
+                    episodeVariantService.update(episodeVariant)
+                }
+
+                episodeMappingService.delete(episodeMapping)
+                return@forEach
+            }
+
+            episodeMapping.anime = anime
+            episodeMappingService.update(episodeMapping)
+        }
+
+        memberFollowAnimeService.findAllByAnime(findBySlug).forEach { memberFollowAnime ->
+            if (memberFollowAnimeService.existsByMemberAndAnime(memberFollowAnime.member!!, anime)) {
+                memberFollowAnimeService.delete(memberFollowAnime)
+            } else {
+                memberFollowAnime.anime = anime
+                memberFollowAnimeService.update(memberFollowAnime)
+            }
+        }
+
+        delete(findBySlug)
     }
 }
