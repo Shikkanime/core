@@ -63,15 +63,15 @@ class AnimationDigitalNetworkPlatform :
     ): List<Episode> {
         val season = video.season?.toIntOrNull() ?: 1
 
-        var animeName = requireNotNull(video.show.shortTitle ?: video.show.title) { "Anime name is null" }
+        var animeName = video.show.shortTitle ?: video.show.title
         animeName = animeName.replace(Regex("Saison \\d"), "").trim()
         animeName = animeName.replace(season.toString(), "").trim()
-        animeName = animeName.replace(Regex(" -.*"), "").trim()
+        animeName = animeName.replace(Regex(" -$"), "").trim()
         animeName = animeName.replace(Regex(" Part.*"), "").trim()
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
-        val animeImage = requireNotNull(video.show.image2x) { "Anime image is null" }
-        val animeBanner = requireNotNull(video.show.imageHorizontal2x) { "Anime banner is null" }
+        val animeImage = video.show.image2x
+        val animeBanner = video.show.imageHorizontal2x
         val animeDescription = video.show.summary?.replace('\n', ' ') ?: ""
         val genres = video.show.genres
 
@@ -104,8 +104,6 @@ class AnimationDigitalNetworkPlatform :
 
         val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
 
-        val url = requireNotNull(video.url) { "Url is null" }
-        val image = requireNotNull(video.image2x) { "Image is null" }
         val description = video.summary?.replace('\n', ' ')?.ifBlank { null }
 
         return video.languages.map {
@@ -122,11 +120,11 @@ class AnimationDigitalNetworkPlatform :
                 duration = video.duration,
                 title = video.name?.ifBlank { null },
                 description = description,
-                image = image,
+                image = video.image2x,
                 platform = getPlatform(),
                 audioLocale = getAudioLocale(it),
                 id = video.id.toString(),
-                url = url,
+                url = video.url,
                 uncensored = video.title.contains("(NC)"),
             )
         }

@@ -1,0 +1,210 @@
+{
+  "videos": [
+    {
+      "id": 20087,
+      "title": "Dragon Quest • The Adventure of Dai - Épisode 89",
+      "name": "L'Arcane de gel du temps",
+      "number": "Épisode 89",
+      "shortNumber": "89",
+      "season": "1",
+      "reference": "dragonquest_tv2_0089",
+      "type": "EPS",
+      "order": 91,
+      "image": "https://image.animationdigitalnetwork.fr/license/dragonquest/tv2/web/eps89_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/dragonquest/tv2/web/eps89_640x360.jpg",
+      "summary": "Brokeena a percé l’énigme du véritable visage de Mystvearn. Tandis qu’il redouble de finesse pour désorienter son adversaire, Popp attend l’occasion de lancer Medroa. Quel est donc le secret de leur ennemi dont parle Brokeena ? Le Medroa de Popp les mènera-t-il à la victoire ?",
+      "releaseDate": "2022-08-06T07:00:00Z",
+      "duration": 1443,
+      "url": "https://animationdigitalnetwork.fr/video/dragon-quest-the-adventure-of-dai-fly-daibouken/20087-episode-89-l-arcane-de-gel-du-temps",
+      "urlPath": "/video/dragon-quest-the-adventure-of-dai-fly-daibouken/20087-episode-89-l-arcane-de-gel-du-temps",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/dragon-quest-the-adventure-of-dai-fly-daibouken/20087",
+      "languages": [
+        "vostf",
+        "vf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 4.8,
+      "ratingsCount": 25,
+      "commentsCount": 8,
+      "available": true,
+      "download": false,
+      "free": false,
+      "freeWithAds": true,
+      "show": {
+        "id": 647,
+        "title": "Dragon Quest • The Adventure of Dai",
+        "type": "EPS",
+        "originalTitle": "Dragon Quest Dai no Daibôken",
+        "shortTitle": "Dragon Quest - The Adventures of Dai",
+        "reference": "dragonquest_tv2",
+        "age": "10+",
+        "languages": [
+          "vostf",
+          "vf"
+        ],
+        "summary": "Daï vit sur l'île de Dermline, et malgré son admiration pour les héros, il suit un entraînement pour devenir mage auprès de son père adoptif, le magimol Brass.\nUn jour, l'arrivée d'une bande de compagnons menée par un héros à bord d'un bateau remplit Daï d'excitation, mais il s'agissait malheureusement d'un faussaire.\nSon objectif ? S'emparer d'une créature mythique unique en son genre, le gluant de métal doré, Goméchan.\nAfin de récupérer son meilleur ami, Dai part à la poursuite du faux héros et de sa bande, armé des tubes magiques que lui a donnés Brass.\nPendant ce temps, sur le navire, Dérolin se vante de la capture de Goméchan au roi de Romos, mais Daï le rattrape et parvient à récupérer Goméchan avec l'aide des monstres enfermés dans les tubes magiques.\nÉmu par le courage de Daï au combat, le roi de Romos félicite ce dernier et lui confère la Tiare du conquérant, mais il doit bien vite revenir à son entraînement de magie.\nC'est alors qu'un autre navire arrive sur l'île, avec à son bord l'évêque Temjin, Baron le sage et la princesse Léona.",
+        "image": "https://image.animationdigitalnetwork.fr/license/dragonquest/tv2/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/dragonquest/tv2/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/dragonquest/tv2/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/dragonquest/tv2/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/dragon-quest-the-adventure-of-dai-fly-daibouken",
+        "urlPath": "/video/dragon-quest-the-adventure-of-dai-fly-daibouken",
+        "episodeCount": 101,
+        "genres": [
+          "Animation japonaise",
+          "Jeunesse",
+          "Action",
+          "Aventure",
+          "Fantastique",
+          "Heroic Fantasy",
+          "Shônen"
+        ],
+        "copyright": "© SANJO RIKU, INADA KOJI/ SHUEISHA, The Adventure of Dai Project © SQUARE ENIX., CO LTD.",
+        "rating": 4.9,
+        "ratingsCount": 4820,
+        "commentsCount": 94,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "distributions": "fr",
+        "simulcast": false,
+        "free": true,
+        "available": true,
+        "download": false,
+        "basedOn": "Jeu Vidéo",
+        "tagline": null,
+        "firstReleaseYear": "2020",
+        "productionStudio": "Toei Animation",
+        "countryOfOrigin": "Japon",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Kazuya Karasawa"
+          },
+          {
+            "role": "Auteur",
+            "name": "Yuji Horii"
+          },
+          {
+            "role": "Scénariste",
+            "name": "Katsuhiko Chiba"
+          },
+          {
+            "role": "Character designer",
+            "name": "Emiko Miyamoto"
+          },
+          {
+            "role": "Compositeur",
+            "name": "Yuki Hayashi"
+          }
+        ],
+        "nextVideoReleaseDate": null,
+        "indexable": true
+      },
+      "indexable": true
+    },
+    {
+      "id": 19869,
+      "title": "Kingdom - Saison 4 - Épisode 18",
+      "name": "La Bataille sur la rivière",
+      "number": "Épisode 18",
+      "shortNumber": "18",
+      "season": "4",
+      "reference": "kingdom_tv4_0018",
+      "type": "EPS",
+      "order": 18,
+      "image": "https://image.animationdigitalnetwork.fr/license/kingdom/tv4/web/eps18_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/kingdom/tv4/web/eps18_640x360.jpg",
+      "summary": "Tandis qu'Ei Sei poursuit sa cérémonie de majorité et de couronnement, Shin et ses hommes accourent vers Kanyou pour intercepter l'armée rebelle. Cette dernière envoie un détachement pour tuer la menace dans l'œuf…",
+      "releaseDate": "2022-08-06T16:00:00Z",
+      "duration": 1496,
+      "url": "https://animationdigitalnetwork.fr/video/kingdom-saison-4/19869-episode-18-la-bataille-sur-la-riviere",
+      "urlPath": "/video/kingdom-saison-4/19869-episode-18-la-bataille-sur-la-riviere",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/kingdom-saison-4/19869",
+      "languages": [
+        "vostf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 5,
+      "ratingsCount": 62,
+      "commentsCount": 23,
+      "available": true,
+      "download": false,
+      "free": false,
+      "freeWithAds": true,
+      "show": {
+        "id": 862,
+        "title": "Kingdom - Saison 4",
+        "type": "EPS",
+        "originalTitle": "Kingdom 4",
+        "shortTitle": "Kingdom - Saison 4",
+        "reference": "kingdom_tv4",
+        "age": "12+",
+        "languages": [
+          "vostf"
+        ],
+        "summary": "Vous êtes en Chine. 245 av JC, la période des Royaumes combattants. Sept royaumes sont en guerre depuis bien plus de 200 ans.\n\nDans ce contexte, deux orphelins, Shin et Hyô, habitant le royaume de Qin et promis à une vie d’esclave, ne rêvent que d’une chose : échapper à leur destin en rejoignant l’armée et pouvoir un jour faire leurs preuves sur le champ de bataille. L’ambition qui dévore Shin est de devenir le plus grand général de tous les temps.\n\nUn jour, leurs vies basculent : Hyô est emmené au Palais par un ministre. On l’a confondu avec un autre ! Il réussit à s’extraire d’une guerre de palais particulièrement rude et à rejoindre, plus mort que vif, son village. De son côté, Shin rencontre Ei Sei, le sosie de Hyô. Pour le moment, c’est lui le roi de Qin mais bientôt il sera l’empereur Shi Huangdi.",
+        "image": "https://image.animationdigitalnetwork.fr/license/kingdom/tv4/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/kingdom/tv4/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/kingdom/tv4/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/kingdom/tv4/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/kingdom-saison-4",
+        "urlPath": "/video/kingdom-saison-4",
+        "episodeCount": 26,
+        "genres": [
+          "Animation japonaise",
+          "Action",
+          "Historique"
+        ],
+        "copyright": "©Yasuhisa Hara/Shueisha,Kingdom Project",
+        "rating": 4.9,
+        "ratingsCount": 1901,
+        "commentsCount": 72,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "distributions": "fr",
+        "simulcast": false,
+        "free": true,
+        "available": true,
+        "download": false,
+        "basedOn": "Manga",
+        "tagline": null,
+        "firstReleaseYear": "2022",
+        "productionStudio": null,
+        "countryOfOrigin": "Japon",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Kenichi Imaizumi"
+          },
+          {
+            "role": "Mangaka",
+            "name": "Yasuhisa Hara"
+          },
+          {
+            "role": "Character designer",
+            "name": "Hisashi Abe"
+          }
+        ],
+        "nextVideoReleaseDate": null,
+        "indexable": true
+      },
+      "indexable": true
+    }
+  ]
+}

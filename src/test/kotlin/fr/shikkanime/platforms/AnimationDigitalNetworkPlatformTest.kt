@@ -10,8 +10,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -34,6 +33,8 @@ class AnimationDigitalNetworkPlatformTest {
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Pon no Michi"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "One Piece"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Urusei Yatsura"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Dragon Quest - The Adventures of Dai"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Kingdom"))
     }
 
     @AfterEach
@@ -192,5 +193,26 @@ class AnimationDigitalNetworkPlatformTest {
         )
 
         assertEquals(true, episodes.isEmpty())
+    }
+
+    @Test
+    fun `fetchEpisodes for 2022-08-06`() {
+        val s = "2022-08-06T23:59:59Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader()
+                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        println(episodes)
+
+        assertTrue(episodes.isNotEmpty())
+        assertTrue(episodes.any { it.anime == "Dragon Quest - The Adventures of Dai" })
+        assertTrue(episodes.any { it.anime == "Kingdom" })
     }
 }
