@@ -11,7 +11,7 @@ data class AnimeDto(
     val countryCode: CountryCode,
     var name: String,
     var shortName: String,
-    val slug: String? = null,
+    var slug: String? = null,
     var releaseDateTime: String,
     val lastReleaseDateTime: String? = null,
     val image: String? = null,

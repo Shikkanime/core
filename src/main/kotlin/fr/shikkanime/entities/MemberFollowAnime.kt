@@ -17,5 +17,5 @@ class MemberFollowAnime(
     @ManyToOne(optional = false)
     val member: Member? = null,
     @ManyToOne(optional = false)
-    val anime: Anime? = null,
+    var anime: Anime? = null,
 ) : ShikkEntity(uuid)

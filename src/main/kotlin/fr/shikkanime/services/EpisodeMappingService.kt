@@ -176,36 +176,38 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         episode: EpisodeMapping,
         update: EpisodeMapping,
     ) {
-        if (!entity.variants.isNullOrEmpty()) {
-            val oldList = mutableSetOf(*episodeVariantService.findAllByMapping(episode).toTypedArray())
+        if (entity.variants.isNullOrEmpty()) {
+            return
+        }
 
-            entity.variants.forEach { variantDto ->
-                val variant = episodeVariantService.find(variantDto.uuid) ?: return@forEach
-                variant.mapping = update
+        val oldList = mutableSetOf(*episodeVariantService.findAllByMapping(episode).toTypedArray())
 
-                if (variantDto.releaseDateTime.isNotBlank() && variantDto.releaseDateTime != variant.releaseDateTime.toString()) {
-                    variant.releaseDateTime = ZonedDateTime.parse(variantDto.releaseDateTime)
-                }
+        entity.variants.forEach { variantDto ->
+            val variant = episodeVariantService.find(variantDto.uuid) ?: return@forEach
+            variant.mapping = update
 
-                if (variantDto.identifier.isNotBlank() && variantDto.identifier != variant.identifier.toString()) {
-                    variant.identifier = variantDto.identifier
-                }
-
-                if (variantDto.url.isNotBlank() && variantDto.url != variant.url.toString()) {
-                    variant.url = variantDto.url
-                }
-
-                if (variantDto.uncensored != variant.uncensored) {
-                    variant.uncensored = variantDto.uncensored
-                }
-
-                oldList.removeIf { it.uuid == variantDto.uuid }
-                episodeVariantService.update(variant)
+            if (variantDto.releaseDateTime.isNotBlank() && variantDto.releaseDateTime != variant.releaseDateTime.toString()) {
+                variant.releaseDateTime = ZonedDateTime.parse(variantDto.releaseDateTime)
             }
 
-            oldList.forEach { episodeVariantService.delete(it) }
-            MapCache.invalidate(EpisodeVariant::class.java)
+            if (variantDto.identifier.isNotBlank() && variantDto.identifier != variant.identifier.toString()) {
+                variant.identifier = variantDto.identifier
+            }
+
+            if (variantDto.url.isNotBlank() && variantDto.url != variant.url.toString()) {
+                variant.url = variantDto.url
+            }
+
+            if (variantDto.uncensored != variant.uncensored) {
+                variant.uncensored = variantDto.uncensored
+            }
+
+            oldList.removeIf { it.uuid == variantDto.uuid }
+            episodeVariantService.update(variant)
         }
+
+        oldList.forEach { episodeVariantService.delete(it) }
+        MapCache.invalidate(EpisodeVariant::class.java)
     }
 
     override fun delete(entity: EpisodeMapping) {
