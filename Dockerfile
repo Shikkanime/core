@@ -1,17 +1,14 @@
+FROM amazoncorretto:21 AS build
 FROM mcr.microsoft.com/playwright:v1.45.0-jammy
-ARG version=21.0.3.9-1
-ENV LANG=C.UTF-8
-ENV JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
-ENV TZ=Europe/Paris
+COPY --from=build /usr/lib/jvm/java-21-amazon-corretto /usr/lib/jvm/java-21-amazon-corretto
 
-# Install Java and necessary packages
+ENV LANG=C.UTF-8 \
+    JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto \
+    TZ=Europe/Paris
+
+# Install necessary packages and set timezone
 RUN set -eux \
-    && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates gnupg software-properties-common fontconfig java-common tzdata libopencv-dev fonts-dejavu \
-    && curl -fL https://apt.corretto.aws/corretto.key | apt-key add - \
-    && add-apt-repository 'deb https://apt.corretto.aws stable main' \
-    && mkdir -p /usr/share/man/man1 || true \
-    && apt-get update; apt-get install -y java-21-amazon-corretto-jdk=1:$version \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false curl gnupg software-properties-common \
+    && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata libopencv-dev fonts-dejavu \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
 
