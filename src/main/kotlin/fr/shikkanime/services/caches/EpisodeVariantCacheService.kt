@@ -6,21 +6,22 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
+import java.time.ZonedDateTime
 
 class EpisodeVariantCacheService : AbstractCacheService {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
-    private val findAllAudioLocalesCache =
-        MapCache<Anime, List<String>>(
+    private val findAudioLocalesAndSeasonsByAnimeCache =
+        MapCache<Anime, Pair<List<String>, List<Pair<Int, ZonedDateTime>>>>(
             log = false,
             classes = listOf(
                 EpisodeMapping::class.java,
                 EpisodeVariant::class.java
             )
         ) {
-            episodeVariantService.findAllAudioLocalesByAnime(it)
+            episodeVariantService.findAudioLocalesAndSeasonsByAnime(it)
         }
 
-    fun findAllAudioLocalesByAnime(anime: Anime) = findAllAudioLocalesCache[anime]
+    fun findAudioLocalesAndSeasonsByAnimeCache(anime: Anime) = findAudioLocalesAndSeasonsByAnimeCache[anime]
 }

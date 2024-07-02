@@ -187,7 +187,7 @@ private suspend fun handleRequest(
         when (response.type) {
             ResponseType.MULTIPART -> handleMultipartResponse(call, response)
             ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
-            ResponseType.REDIRECT -> call.respondRedirect(response.data as String, true)
+            ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith("/admin"))
             else -> call.respond(response.status, response.data ?: "")
         }
     } catch (e: Exception) {

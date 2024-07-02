@@ -13,6 +13,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
+import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.EpisodeVariantService
@@ -32,13 +33,16 @@ class FetchOldEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject
+    private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
+
+    @Inject
+    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+
+    @Inject
     private lateinit var animeService: AnimeService
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
 
     @Inject
     private lateinit var configService: ConfigService
@@ -46,8 +50,9 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
-    @Inject
-    private lateinit var episodeCacheService: ConfigCacheService
+    private val crunchyrollAccessTokenCache = MapCache<CountryCode, String>(duration = Duration.ofMinutes(30)) {
+        runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+    }
 
     override fun run() {
         val config = configService.findByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key) ?: run {
@@ -55,7 +60,7 @@ class FetchOldEpisodesJob : AbstractJob {
             return
         }
 
-        val range = episodeCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE)
+        val range = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE)
 
         if (range == -1) {
             logger.warning("Config ${ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key} not found")
@@ -71,8 +76,17 @@ class FetchOldEpisodesJob : AbstractJob {
         val start = System.currentTimeMillis()
         logger.info("Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
 
-        episodes.addAll(fetchAnimationDigitalNetwork(CountryCode.FR, dates))
-        episodes.addAll(runBlocking { fetchCrunchyroll(CountryCode.FR, simulcasts) })
+        episodes.addAll(
+            animationDigitalNetworkPlatform.configuration?.availableCountries?.flatMap {
+                fetchAnimationDigitalNetwork(it, dates)
+            } ?: emptyList()
+        )
+
+        episodes.addAll(
+            crunchyrollPlatform.configuration?.availableCountries?.flatMap {
+                runBlocking { fetchCrunchyroll(it, simulcasts) }
+            } ?: emptyList()
+        )
 
         episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates || it.episodeType == EpisodeType.FILM }
 
@@ -176,16 +190,15 @@ class FetchOldEpisodesJob : AbstractJob {
             runBlocking {
                 try {
                     val episodes = mutableListOf<CrunchyrollWrapper.BrowseObject>()
-                    val accessToken = CrunchyrollWrapper.getAnonymousAccessToken()
 
-                    val crEpisodes = CrunchyrollWrapper.getSeasonsBySeriesId(it.countryCode.locale, accessToken, it.id)
+                    val crEpisodes = CrunchyrollWrapper.getSeasonsBySeriesId(it.countryCode.locale, crunchyrollAccessTokenCache[it.countryCode]!!, it.id)
                         .filter { season -> season.subtitleLocales.contains(it.countryCode.locale) }
                         .parallelStream().map { season ->
                             try {
                                 runBlocking {
                                     CrunchyrollWrapper.getEpisodesBySeasonId(
                                         it.countryCode.locale,
-                                        accessToken,
+                                        crunchyrollAccessTokenCache[it.countryCode]!!,
                                         season.id
                                     ).toList()
                                 }
@@ -210,7 +223,7 @@ class FetchOldEpisodesJob : AbstractJob {
                                 episodes.addAll(
                                     CrunchyrollWrapper.getObjects(
                                         it.countryCode.locale,
-                                        accessToken,
+                                        crunchyrollAccessTokenCache[it.countryCode]!!,
                                         *chunkedVariants.map { it.guid }.toTypedArray()
                                     ).toList()
                                 )
@@ -229,10 +242,9 @@ class FetchOldEpisodesJob : AbstractJob {
         }
 
     private suspend fun fetchCrunchyroll(countryCode: CountryCode, simulcasts: Set<String>): List<Episode> {
-        val accessToken = CrunchyrollWrapper.getAnonymousAccessToken()
         val platformEpisodes = mutableListOf<Episode>()
 
-        val series = getSeries(countryCode, accessToken, simulcasts)
+        val series = getSeries(countryCode, simulcasts)
 
         series.forEach { serie ->
             val seasonRegex = " Saison (\\d)".toRegex()
@@ -306,13 +318,12 @@ class FetchOldEpisodesJob : AbstractJob {
 
     suspend fun getSeries(
         countryCode: CountryCode,
-        accessToken: String,
         simulcasts: Set<String>,
     ): List<CrunchyrollWrapper.BrowseObject> {
         return simulcasts.flatMap { simulcastId ->
             CrunchyrollWrapper.getBrowse(
                 countryCode.locale,
-                accessToken,
+                crunchyrollAccessTokenCache[countryCode]!!,
                 sortBy = CrunchyrollWrapper.SortType.POPULARITY,
                 type = CrunchyrollWrapper.MediaType.SERIES,
                 200,

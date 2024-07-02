@@ -44,6 +44,7 @@ class StringUtilsTest {
             "Kaguya-sama: Love Is War" to "Kaguya-sama",
             "DanMachi - La Légende des Familias" to "DanMachi",
             "Demon Slayer - Le village des forgerons" to "Demon Slayer",
+            "Dragon Quest - The Adventures of Dai" to "Dragon Quest",
         )
 
         list.forEach { (input, expected) ->
@@ -73,6 +74,7 @@ class StringUtilsTest {
             "X&Y" to "x-y",
             "DanMachi - La Légende des Familias" to "danmachi",
             "Demon Slayer - Le village des forgerons" to "demon-slayer",
+            "Dragon Quest - The Adventures of Dai" to "dragon-quest",
         )
 
         list.forEach { (input, expected) ->

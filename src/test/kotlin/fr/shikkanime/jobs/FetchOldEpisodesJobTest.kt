@@ -5,10 +5,10 @@ import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
-import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -31,6 +31,9 @@ class FetchOldEpisodesJobTest {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
 
     @BeforeEach
     fun setUp() {
@@ -89,6 +92,7 @@ class FetchOldEpisodesJobTest {
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key, propertyValue = "14"))
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT.key, propertyValue = "8"))
         MapCache.invalidate(Config::class.java)
+        crunchyrollPlatform.configuration?.availableCountries?.add(CountryCode.FR)
         val simulcasts = fetchOldEpisodesJob.getSimulcasts(dates)
 
         assertTrue(simulcasts.isNotEmpty())
@@ -96,8 +100,7 @@ class FetchOldEpisodesJobTest {
         assertEquals("summer-2023", simulcasts.first())
         assertEquals("fall-2023", simulcasts.last())
 
-        val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        val series = runBlocking { fetchOldEpisodesJob.getSeries(CountryCode.FR, accessToken, simulcasts) }
+        val series = runBlocking { fetchOldEpisodesJob.getSeries(CountryCode.FR, simulcasts) }
         assertTrue(series.any { it.id == "GXJHM3NJ5" })
         fetchOldEpisodesJob.run()
 

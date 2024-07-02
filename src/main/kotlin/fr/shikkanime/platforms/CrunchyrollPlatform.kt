@@ -61,26 +61,31 @@ class CrunchyrollPlatform :
         return@MapCache simulcastSeries
     }
 
-    private val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent>(Duration.ofDays(1)) {
-        val token = identifiers[it.countryCode]!!
-        val series = runBlocking {
-            CrunchyrollWrapper.getSeries(
-                it.countryCode.locale,
-                token,
-                it.id
-            )
+    private val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent?>(Duration.ofDays(1)) {
+        try {
+            val token = identifiers[it.countryCode]!!
+            val series = runBlocking {
+                CrunchyrollWrapper.getSeries(
+                    it.countryCode.locale,
+                    token,
+                    it.id
+                )
+            }
+
+            val image = series.images.posterTall.first().maxByOrNull { poster -> poster.width }?.source
+            val banner = series.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source
+
+            if (image.isNullOrEmpty())
+                throw Exception("Image is null or empty")
+
+            if (banner.isNullOrEmpty())
+                throw Exception("Banner is null or empty")
+
+            return@MapCache CrunchyrollAnimeContent(image, banner, series.description, series.isSimulcast)
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error on fetching anime info", e)
+            return@MapCache null
         }
-
-        val image = series.images.posterTall.first().maxByOrNull { poster -> poster.width }?.source
-        val banner = series.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source
-
-        if (image.isNullOrEmpty())
-            throw Exception("Image is null or empty")
-
-        if (banner.isNullOrEmpty())
-            throw Exception("Banner is null or empty")
-
-        return@MapCache CrunchyrollAnimeContent(image, banner, series.description, series.isSimulcast)
     }
 
     override fun getPlatform(): Platform = Platform.CRUN
@@ -166,7 +171,7 @@ class CrunchyrollPlatform :
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         val crunchyrollAnimeContent =
-            animeInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seriesId)]!!
+            animeInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seriesId)] ?: throw AnimeException("Anime not found")
 
         if (needSimulcast && !checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
