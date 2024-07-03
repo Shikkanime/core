@@ -5,7 +5,6 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
-import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
@@ -42,13 +41,6 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             audioLocales = audioLocales,
             langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted(),
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) },
-            episodes = if (Hibernate.isInitialized(from.mappings))
-                convert(
-                    from.mappings.sortedBy { it.releaseDateTime },
-                    EpisodeMappingWithoutAnimeDto::class.java
-                )?.toList()
-            else
-                null,
             status = from.status,
         )
     }
