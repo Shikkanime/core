@@ -93,7 +93,7 @@ class FetchCalendarJob : AbstractJob {
 
                 val message = "\uD83C\uDF05 Voici les sorties animés du ${date.lowercase()} : \n" +
                         "\n" +
-                        "${episodesString.shuffled().take(4).joinToString("\n") { "- $it" }}\n" +
+                        "${episodesString.shuffled().take(4).joinToString("\n") { "• $it" }}\n" +
                         "\n" +
                         "Bonne journée à tous !"
 
@@ -184,7 +184,14 @@ class FetchCalendarJob : AbstractJob {
         episodesString: MutableList<String>
     ) = drawAnimeLine(graphics, anime, episode.season, y).also {
         graphics.drawString(episode.episode, episodeX, y + 50)
-        episodesString.add("$anime${if (episode.season > 1) " S${episode.season}" else ""} ${episode.episode}")
+        episodesString.add(
+            "$anime${if (episode.season > 1) " S${episode.season}" else ""} ${
+                episode.episode.replace(
+                    "Épisode ",
+                    "EP"
+                )
+            }"
+        )
     }
 
     private fun getPlatformImage(platform: Platform): BufferedImage? {
