@@ -32,7 +32,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             list.forEach { anime ->
                 Hibernate.initialize(anime.simulcasts)
-                Hibernate.initialize(anime.mappings)
             }
 
             list

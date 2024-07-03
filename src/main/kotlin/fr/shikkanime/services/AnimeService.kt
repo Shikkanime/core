@@ -41,7 +41,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     override fun getRepository() = animeRepository
 
-    private fun findAllLoaded() = animeRepository.findAllLoaded()
+    fun findAllLoaded() = animeRepository.findAllLoaded()
 
     fun findAllBy(
         countryCode: CountryCode?,

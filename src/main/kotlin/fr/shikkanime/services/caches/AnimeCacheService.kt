@@ -10,9 +10,11 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
@@ -28,6 +30,9 @@ class AnimeCacheService : AbstractCacheService {
 
     @Inject
     private lateinit var memberService: MemberService
+
+    @Inject
+    private lateinit var episodeMappingService: EpisodeMappingService
 
     private val findAllByCache =
         MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
@@ -64,7 +69,17 @@ class AnimeCacheService : AbstractCacheService {
             EpisodeVariant::class.java
         )
     ) {
-        AbstractConverter.convert(animeService.findAll(), AnimeDto::class.java)!!
+        val list = animeService.findAllLoaded()
+        val dtos = list.associateWith { AbstractConverter.convert(it, AnimeDto::class.java) }
+
+        dtos.forEach { (anime, dto) ->
+            dto.episodes = AbstractConverter.convert(
+                episodeMappingService.findAllByAnime(anime),
+                EpisodeMappingWithoutAnimeDto::class.java
+            )
+        }
+
+        dtos.values.toList()
     }
 
     private val weeklyMemberCache =
