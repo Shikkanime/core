@@ -1,9 +1,9 @@
 FROM amazoncorretto:22 AS build
 FROM mcr.microsoft.com/playwright:v1.45.1-jammy
-COPY --from=build /usr/lib/jvm/java-22-amazon-corretto /usr/lib/jvm/java-22-amazon-corretto
+COPY --from=build /usr/lib/jvm/java-21-amazon-corretto /usr/lib/jvm/java-21-amazon-corretto
 
 ENV LANG=C.UTF-8 \
-    JAVA_HOME=/usr/lib/jvm/java-22-amazon-corretto \
+    JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto \
     TZ=Europe/Paris
 
 # Install necessary packages and set timezone
