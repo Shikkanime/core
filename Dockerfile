@@ -1,4 +1,4 @@
-FROM amazoncorretto:22 AS build
+FROM amazoncorretto:21 AS build
 FROM mcr.microsoft.com/playwright:v1.45.1-jammy
 COPY --from=build /usr/lib/jvm/java-21-amazon-corretto /usr/lib/jvm/java-21-amazon-corretto
 
