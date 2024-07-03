@@ -1,5 +1,5 @@
 FROM amazoncorretto:21 AS build
-FROM mcr.microsoft.com/playwright:v1.45.0-jammy
+FROM mcr.microsoft.com/playwright:v1.45.1-jammy
 COPY --from=build /usr/lib/jvm/java-21-amazon-corretto /usr/lib/jvm/java-21-amazon-corretto
 
 ENV LANG=C.UTF-8 \
