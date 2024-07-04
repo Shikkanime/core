@@ -1,9 +1,12 @@
-FROM amazoncorretto:21 AS build
+ARG JAVA_VERSION=21
+
+FROM amazoncorretto:${JAVA_VERSION} AS build
 FROM mcr.microsoft.com/playwright:v1.45.1-jammy
-COPY --from=build /usr/lib/jvm/java-21-amazon-corretto /usr/lib/jvm/java-21-amazon-corretto
+ARG JAVA_VERSION
+COPY --from=build /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 
 ENV LANG=C.UTF-8 \
-    JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto \
+    JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto \
     TZ=Europe/Paris
 
 # Install necessary packages and set timezone
