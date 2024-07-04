@@ -2,18 +2,22 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
+import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
+import fr.shikkanime.platforms.CrunchyrollPlatform
+import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
@@ -25,6 +29,9 @@ class UpdateEpisodeJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject
+    private lateinit var animeService: AnimeService
+
+    @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
 
     @Inject
@@ -32,6 +39,12 @@ class UpdateEpisodeJob : AbstractJob {
 
     @Inject
     private lateinit var languageCacheService: LanguageCacheService
+
+    @Inject
+    private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
+
+    @Inject
+    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
 
     override fun run() {
         // Take 15 episodes of a platform, and if the lastUpdate is older than 30 days, or if the episode mapping is valid
@@ -44,19 +57,30 @@ class UpdateEpisodeJob : AbstractJob {
         val needUpdateEpisodes = (adnEpisodes + crunchyrollEpisodes).distinctBy { it.uuid }
             .shuffled()
             .take(15)
+
+        if (needUpdateEpisodes.isEmpty()) {
+            logger.info("No episode to update")
+            return
+        }
+
         val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
+        var needRecalculate = false
 
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
-            val episodes = variants.flatMap { variant -> runBlocking { a(accessToken, mapping, variant) } }
+            val episodes =
+                variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(accessToken, mapping, variant) } }
             val list = variants.map { it.identifier }
 
             episodes.filter { it.getIdentifier() !in list }.takeIf { it.isNotEmpty() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
                 ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
-                ?.also { logger.info("Added ${it.size} episodes for $mappingIdentifier") }
+                ?.also {
+                    logger.info("Added ${it.size} episodes for $mappingIdentifier")
+                    needRecalculate = true
+                }
 
             val episode =
                 episodes.sortedWith(compareBy({ it.releaseDateTime }, { it.uncensored })).firstOrNull { StringUtils.getStatus(it) == Status.VALID } ?: run {
@@ -85,9 +109,21 @@ class UpdateEpisodeJob : AbstractJob {
             episodeMappingService.update(mapping)
             logger.info("Episode $mappingIdentifier updated")
         }
+
+        if (needRecalculate) {
+            logger.info("Recalculating simulcasts...")
+            animeService.recalculateSimulcasts()
+        }
+
+        logger.info("Episodes updated")
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
     }
 
-    suspend fun a(accessToken: String, episodeMapping: EpisodeMapping, episodeVariant: EpisodeVariant): List<Episode> {
+    private suspend fun retrievePlatformEpisode(
+        accessToken: String,
+        episodeMapping: EpisodeMapping,
+        episodeVariant: EpisodeVariant
+    ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
 
@@ -127,7 +163,7 @@ class UpdateEpisodeJob : AbstractJob {
 
                 val isDubbed = episode.audioLocale == countryCode.locale
                 val season = episode.seasonNumber ?: 1
-                val (number, episodeType) = getNumberAndEpisodeTypeByCrunchyrollEpisode(episode)
+                val (number, episodeType) = crunchyrollPlatform.getNumberAndEpisodeType(episode)
                 val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id!!, episode.slugTitle)
                 val image = episode.images?.thumbnail?.get(0)?.maxByOrNull { it.width }?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
                 val duration = episode.durationMs / 1000
@@ -166,109 +202,17 @@ class UpdateEpisodeJob : AbstractJob {
         return episodes
     }
 
-    private fun getNumberAndEpisodeTypeByCrunchyrollEpisode(episode: CrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
-        var number = episode.number ?: -1
-        val specialEpisodeRegex = "SP(\\d*)".toRegex()
-
-        var episodeType = when {
-            episode.seasonSlugTitle?.contains("movie", true) == true -> EpisodeType.FILM
-            number == -1 -> EpisodeType.SPECIAL
-            else -> EpisodeType.EPISODE
-        }
-
-        specialEpisodeRegex.find(episode.numberString)?.let {
-            episodeType = EpisodeType.SPECIAL
-            number = it.groupValues[1].toIntOrNull() ?: -1
-        }
-
-        return Pair(number, episodeType)
-    }
-
     private suspend fun getADNEpisodeAndVariants(
         countryCode: CountryCode,
         adnId: String,
     ): List<Episode> {
         val video = AnimationDigitalNetworkWrapper.getShowVideo(adnId)
 
-        try {
-            val season = video.season?.toIntOrNull() ?: 1
-
-            var animeName = video.show.shortTitle ?: video.show.title
-            animeName = animeName.replace(Regex("Saison \\d"), "").trim()
-            animeName = animeName.replace(season.toString(), "").trim()
-            animeName = animeName.replace(Regex(" -.*"), "").trim()
-            animeName = animeName.replace(Regex(" Part.*"), "").trim()
-
-            val animeDescription = video.show.summary?.replace('\n', ' ') ?: ""
-            val genres = video.show.genres
-
-            if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }))
-                throw Exception("Anime is not an animation")
-
-            val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
-            val specialShowTypes = listOf("PV", "BONUS")
-
-            if (trailerIndicators.any { video.shortNumber?.startsWith(it) == true } || specialShowTypes.contains(video.type)) {
-                throw Exception("Anime is not an episode")
-            }
-
-            val (number, episodeType) = getNumberAndEpisodeTypeByADNEpisode(video.shortNumber, video.type)
-
-            val description = video.summary?.replace('\n', ' ')?.ifBlank { null }
-
-            return video.languages.map {
-                Episode(
-                    countryCode = countryCode,
-                    anime = animeName,
-                    animeImage = video.show.image2x,
-                    animeBanner = video.show.imageHorizontal2x,
-                    animeDescription = animeDescription,
-                    releaseDateTime = video.releaseDate,
-                    episodeType = episodeType,
-                    season = season,
-                    number = number,
-                    duration = video.duration,
-                    title = video.name?.ifBlank { null },
-                    description = description,
-                    image = video.image2x,
-                    platform = Platform.ANIM,
-                    audioLocale = getAudioLocale(it),
-                    id = video.id.toString(),
-                    url = video.url,
-                    uncensored = video.title.contains("(NC)"),
-                )
-            }
+        return try {
+            animationDigitalNetworkPlatform.convertEpisode(countryCode, video, ZonedDateTime.now(), false)
         } catch (e: Exception) {
             logger.warning("Error while getting ADN episode $adnId : ${e.message}")
-            return emptyList()
-        }
-    }
-
-    private fun getNumberAndEpisodeTypeByADNEpisode(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
-        val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
-
-        var episodeType = when {
-            numberAsString == "OAV" || numberAsString == "Épisode spécial" || showType == "OAV" || numberAsString?.contains(
-                "."
-            ) == true -> EpisodeType.SPECIAL
-
-            numberAsString == "Film" -> EpisodeType.FILM
-            else -> EpisodeType.EPISODE
-        }
-
-        "Épisode spécial (\\d*)".toRegex().find(numberAsString ?: "")?.let {
-            episodeType = EpisodeType.SPECIAL
-            it.groupValues[1].toIntOrNull()?.let { specialNumber -> return Pair(specialNumber, episodeType) }
-        }
-
-        return Pair(number, episodeType)
-    }
-
-    private fun getAudioLocale(string: String): String {
-        return when (string) {
-            "vostf" -> "ja-JP"
-            "vf" -> "fr-FR"
-            else -> throw Exception("Language is null")
+            emptyList()
         }
     }
 }
