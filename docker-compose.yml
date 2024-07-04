@@ -11,7 +11,7 @@ services:
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
   shikkanime-core:
-    image: shikkanime-core:latest
+    build: .
     ports:
       - "37100:37100"
     restart: on-failure
@@ -31,3 +31,8 @@ services:
       API_URL: "http://localhost:37100/api"
     volumes:
       - ./data:/app/data/
+    healthcheck:
+      test: curl --fail http://localhost:37100/ || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
