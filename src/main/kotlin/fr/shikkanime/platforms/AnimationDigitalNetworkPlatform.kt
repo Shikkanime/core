@@ -130,7 +130,7 @@ class AnimationDigitalNetworkPlatform :
         }
     }
 
-    private fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
+    fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
         val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
         var episodeType = when {
@@ -150,7 +150,7 @@ class AnimationDigitalNetworkPlatform :
         return Pair(number, episodeType)
     }
 
-    private fun getAudioLocale(string: String): String {
+    fun getAudioLocale(string: String): String {
         return when (string) {
             "vostf" -> "ja-JP"
             "vf" -> "fr-FR"

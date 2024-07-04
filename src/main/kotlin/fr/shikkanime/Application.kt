@@ -41,6 +41,7 @@ fun main() {
     JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
     // Every 10 minutes
     JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java)
+    JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeJob::class.java)
     // Every hour
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
     // Every day at midnight
