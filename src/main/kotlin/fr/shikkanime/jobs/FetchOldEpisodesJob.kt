@@ -244,7 +244,12 @@ class FetchOldEpisodesJob : AbstractJob {
     private suspend fun fetchCrunchyroll(countryCode: CountryCode, simulcasts: Set<String>): List<Episode> {
         val platformEpisodes = mutableListOf<Episode>()
 
-        val series = getSeries(countryCode, simulcasts)
+        var count = 0
+        var series: List<CrunchyrollWrapper.BrowseObject>
+
+        do {
+            series = getSeries(countryCode, simulcasts)
+        } while (series.isEmpty() && count++ < 3)
 
         series.forEach { serie ->
             val seasonRegex = " Saison (\\d)".toRegex()
