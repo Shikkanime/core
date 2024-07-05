@@ -10,6 +10,7 @@ import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesS
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
 import org.hibernate.search.mapper.orm.Search
+import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
     override fun getEntityClass() = Anime::class.java
@@ -108,6 +109,21 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
+        }
+    }
+
+    fun findLoaded(uuid: UUID): Anime? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[Anime_.uuid], uuid))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+                ?.apply { Hibernate.initialize(simulcasts) }
         }
     }
 

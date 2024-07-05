@@ -59,6 +59,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun preIndex() = animeRepository.preIndex()
 
+    fun findLoaded(uuid: UUID) = animeRepository.findLoaded(uuid)
+
     fun findByName(countryCode: CountryCode, name: String?) =
         animeRepository.findByName(countryCode, name)
 
