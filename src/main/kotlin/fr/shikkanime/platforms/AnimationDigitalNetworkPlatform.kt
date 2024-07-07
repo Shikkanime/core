@@ -65,7 +65,7 @@ class AnimationDigitalNetworkPlatform :
 
         var animeName = video.show.shortTitle ?: video.show.title
         animeName = animeName.replace(Regex("Saison \\d"), "").trim()
-        animeName = animeName.replace(season.toString(), "").trim()
+        animeName = animeName.replace(Regex(" $season$"), "").trim()
         animeName = animeName.replace(Regex(" -$"), "").trim()
         animeName = animeName.replace(Regex(" Part.*"), "").trim()
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
