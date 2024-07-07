@@ -149,10 +149,26 @@ class UpdateEpisodeJob : AbstractJob {
         val crunchyrollEpisode = CrunchyrollWrapper.getEpisode(countryCode.locale, accessToken, crunchyrollId)
         val series = CrunchyrollWrapper.getSeries(countryCode.locale, accessToken, crunchyrollEpisode.seriesId)
 
-        val crunchyrollEpisodes = (crunchyrollEpisode.versions ?: emptyList())
-            .map { runBlocking { CrunchyrollWrapper.getEpisode(countryCode.locale, accessToken, it.guid) } }
-            .plus(crunchyrollEpisode)
-            .distinctBy { it.id }
+        val crunchyrollEpisodes =
+            (crunchyrollEpisode.versions ?: listOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id!!)))
+                .asSequence()
+                .distinctBy { variant -> variant.guid }
+                .chunked(50)
+                .flatMap { chunk ->
+                    try {
+                        runBlocking {
+                            CrunchyrollWrapper.getObjects(
+                                countryCode.locale,
+                                accessToken,
+                                *chunk.map { it.guid }.toTypedArray()
+                            ).toList()
+                        }
+                    } catch (e: Exception) {
+                        logger.warning("Error while fetching Crunchyroll chunked variants: ${e.message}")
+                        emptyList()
+                    }
+                }
+                .toList()
 
         crunchyrollEpisodes.forEach { episode ->
             try {
@@ -161,15 +177,18 @@ class UpdateEpisodeJob : AbstractJob {
                 val animeBanner = series.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source?.takeIf { it.isNotBlank() }
                     ?: throw Exception("Banner is null or empty")
 
-                val isDubbed = episode.audioLocale == countryCode.locale
-                val season = episode.seasonNumber ?: 1
-                val (number, episodeType) = crunchyrollPlatform.getNumberAndEpisodeType(episode)
-                val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id!!, episode.slugTitle)
+                val isDubbed = episode.episodeMetadata!!.audioLocale == countryCode.locale
+                val season = episode.episodeMetadata.seasonNumber ?: 1
+                val (number, episodeType) = crunchyrollPlatform.getNumberAndEpisodeType(episode.episodeMetadata)
+                val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
                 val image = episode.images?.thumbnail?.get(0)?.maxByOrNull { it.width }?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
-                val duration = episode.durationMs / 1000
+                val duration = episode.episodeMetadata.durationMs / 1000
                 val description = episode.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
 
-                if (!isDubbed && (episode.subtitleLocales.isEmpty() || !episode.subtitleLocales.contains(countryCode.locale)))
+                if (!isDubbed && (episode.episodeMetadata.subtitleLocales.isEmpty() || !episode.episodeMetadata.subtitleLocales.contains(
+                        countryCode.locale
+                    ))
+                )
                     throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
                 episodes.add(
@@ -179,7 +198,7 @@ class UpdateEpisodeJob : AbstractJob {
                         animeImage = animeImage,
                         animeBanner = animeBanner,
                         animeDescription = series.description,
-                        releaseDateTime = episode.premiumAvailableDate,
+                        releaseDateTime = episode.episodeMetadata.premiumAvailableDate,
                         episodeType = episodeType,
                         season = season,
                         number = number,
@@ -188,7 +207,7 @@ class UpdateEpisodeJob : AbstractJob {
                         description = description,
                         image = image,
                         platform = Platform.CRUN,
-                        audioLocale = episode.audioLocale,
+                        audioLocale = episode.episodeMetadata.audioLocale,
                         id = episode.id,
                         url = url,
                         uncensored = false,

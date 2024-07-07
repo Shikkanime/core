@@ -175,7 +175,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
-        val anime = find(uuid) ?: return null
+        val anime = findLoaded(uuid) ?: return null
 
         if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
             anime.name = animeDto.name
