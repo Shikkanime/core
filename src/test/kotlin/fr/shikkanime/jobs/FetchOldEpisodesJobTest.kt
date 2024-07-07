@@ -101,6 +101,8 @@ class FetchOldEpisodesJobTest {
         assertEquals("fall-2023", simulcasts.last())
 
         val series = runBlocking { fetchOldEpisodesJob.getSeries(CountryCode.FR, simulcasts) }
+        series.forEach { println("${it.id} - ${it.title}") }
+
         assertTrue(series.any { it.id == "GXJHM3NJ5" })
         fetchOldEpisodesJob.run()
 
