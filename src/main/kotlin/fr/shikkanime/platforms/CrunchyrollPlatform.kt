@@ -13,6 +13,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.withUTCString
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -153,6 +154,12 @@ class CrunchyrollPlatform :
 
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase()))
             throw AnimeException("\"$animeName\" is blacklisted")
+
+        val isTeaser = browseObject.slugTitle?.contains("teaser", true) == true &&
+                browseObject.episodeMetadata.premiumAvailableDate.withUTCString() == "1970-01-01T00:00:00Z"
+
+        if (isTeaser)
+            throw EpisodeException("Episode is a teaser")
 
         val isDubbed = browseObject.episodeMetadata.audioLocale == countryCode.locale
         val subtitles = browseObject.episodeMetadata.subtitleLocales
