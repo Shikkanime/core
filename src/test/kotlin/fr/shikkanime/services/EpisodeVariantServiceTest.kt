@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
@@ -101,5 +102,39 @@ class EpisodeVariantServiceTest {
 
         assertEquals("AUTUMN", simulcast.season)
         assertEquals(2023, simulcast.year)
+    }
+
+    @Test
+    fun `save platform episode`() {
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "Shikimori n’est pas juste mignonne",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/57da95e93614672250ff0312b4c8194c.jpe",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/c1aa33105d2acdcf7807310743b01948.jpe",
+                "Izumi est un lycéen maladroit et malchanceux. Pourtant, c’est ce qui fait son charme et lui a permis de sortir avec Shikimori. Cette camarade de classe est très jolie, elle a un beau sourire et semble toujours heureuse en compagnie d’Izumi. Pourtant, le garçon ne peut s’empêcher de complexer ! Il fait tout pour continuer de la séduire, même si ses actions ne l’aident pas vraiment dans sa tâche…",
+                ZonedDateTime.parse("2021-05-21T18:15:00Z"),
+                EpisodeType.SPECIAL,
+                1,
+                -1,
+                1404,
+                "Commentaire audio",
+                "Les interprètes de Shikimori, d’Izumi et de Hachimitsu commentent le premier épisode.",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/4dfb75a0af21c5ca84014d47f67ad176.jpe",
+                Platform.CRUN,
+                "ja-JP",
+                "GVWU0Q0J9",
+                "https://www.crunchyroll.com/fr/watch/GVWU0Q0J9/special",
+                false
+            ),
+            updateMappingDateTime = false
+        )
+
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        val mapping = mappings.first()
+        assertEquals(EpisodeType.SPECIAL, mapping.episodeType)
+        assertEquals(1, mapping.season)
+        assertEquals(1, mapping.number)
     }
 }

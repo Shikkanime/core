@@ -203,6 +203,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 mapping = newCheck
             } else {
                 mapping.number = number
+                episodeMappingService.update(mapping)
             }
 
             episode.number = mapping.number!!
