@@ -14,6 +14,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -132,5 +133,56 @@ class UpdateEpisodeJobTest {
         assertEquals(1, mappings.size)
         val variants = episodeVariantService.findAll()
         assertEquals(2, variants.size)
+    }
+
+    @Test
+    fun `run old ADN episodes Pon No Michi`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Pon no Michi",
+                slug = "pon-no-michi",
+                image = "https://image.animationdigitalnetwork.fr/license/ponnomichi/tv/web/affiche_350x500.jpg",
+                banner = "https://image.animationdigitalnetwork.fr/license/ponnomichi/tv/web/license_640x360.jpg"
+            )
+        )
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 5,
+                image = "https://image.animationdigitalnetwork.fr/license/ponnomichi/tv/web/eps5_640x360.jpg",
+                title = "Une arrivée inattendue",
+                description = "Nashiko et ses amies reçoivent la visite de la personne contre qui elles jouaient en ligne : Haneru Emi. Cette dernière est déterminée à jouer à nouveau contre Riche pour la battre, mais avant ça, elle fait la connaissance des quatre filles. Et quoi de mieux pour cela qu’un barbecue sous le ciel bleu ?"
+            )
+        )
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.ANIM,
+                audioLocale = "ja-JP",
+                identifier = "FR-ANIM-24026-JA-JP",
+                url = "https://animationdigitalnetwork.fr/video/pon-no-michi/24026-episode-5-une-arrivee-inattendue"
+            )
+        )
+
+        val now = ZonedDateTime.now()
+        updateEpisodeJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertTrue(mappings.first().lastUpdateDateTime.isAfter(now))
+        val variants = episodeVariantService.findAll()
+        assertEquals(1, variants.size)
     }
 }

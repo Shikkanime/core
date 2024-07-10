@@ -59,7 +59,8 @@ class AnimationDigitalNetworkPlatform :
         countryCode: CountryCode,
         video: AnimationDigitalNetworkWrapper.Video,
         zonedDateTime: ZonedDateTime,
-        needSimulcast: Boolean = true
+        needSimulcast: Boolean = true,
+        checkAnimation: Boolean = true
     ): List<Episode> {
         val season = video.season?.toIntOrNull() ?: 1
 
@@ -76,7 +77,7 @@ class AnimationDigitalNetworkPlatform :
         val genres = video.show.genres
 
         val contains = configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
-        if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !contains)
+        if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !contains && checkAnimation)
             throw Exception("Anime is not an animation")
 
         if (needSimulcast) {
