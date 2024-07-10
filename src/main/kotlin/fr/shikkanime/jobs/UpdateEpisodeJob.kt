@@ -228,7 +228,13 @@ class UpdateEpisodeJob : AbstractJob {
         val video = AnimationDigitalNetworkWrapper.getShowVideo(adnId)
 
         return try {
-            animationDigitalNetworkPlatform.convertEpisode(countryCode, video, ZonedDateTime.now(), false)
+            animationDigitalNetworkPlatform.convertEpisode(
+                countryCode,
+                video,
+                ZonedDateTime.now(),
+                needSimulcast = false,
+                checkAnimation = false
+            )
         } catch (e: Exception) {
             logger.warning("Error while getting ADN episode $adnId : ${e.message}")
             emptyList()
