@@ -52,6 +52,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllSimulcastedByAnime(anime: Anime) = episodeVariantRepository.findAllSimulcastedByAnime(anime)
 
+    fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
+
     fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
 
     fun findMinAndMaxReleaseDateTimeByMapping(mapping: EpisodeMapping) =
