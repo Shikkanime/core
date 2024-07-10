@@ -85,6 +85,8 @@ class UpdateEpisodeJob : AbstractJob {
             val episode =
                 episodes.sortedWith(compareBy({ it.releaseDateTime }, { it.uncensored })).firstOrNull { StringUtils.getStatus(it) == Status.VALID } ?: run {
                     logger.log(Level.WARNING, "No valid episode found for $mappingIdentifier")
+                    mapping.lastUpdateDateTime = ZonedDateTime.now()
+                    episodeMappingService.update(mapping)
                     return@forEach
                 }
 
