@@ -35,6 +35,7 @@ class AnimationDigitalNetworkPlatformTest {
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Urusei Yatsura"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Dragon Quest - The Adventures of Dai"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Kingdom"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Demon Slave"))
     }
 
     @AfterEach
@@ -121,7 +122,7 @@ class AnimationDigitalNetworkPlatformTest {
         println(episodes)
 
         assertEquals(true, episodes.isNotEmpty())
-        assertEquals(3, episodes.size)
+        assertEquals(4, episodes.size)
         assertEquals("Demon Slave", episodes[0].anime)
         assertNotNull(episodes[0].description)
         assertEquals(

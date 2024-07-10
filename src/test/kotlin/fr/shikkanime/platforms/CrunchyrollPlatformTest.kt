@@ -103,4 +103,27 @@ class CrunchyrollPlatformTest {
         assertEquals(9, episodes[0].number)
         assertEquals(Constant.DEFAULT_IMAGE_PREVIEW, episodes[0].image)
     }
+
+    @Test
+    fun `fetchEpisodes for 2024-07-08`() {
+        val s = "2024-07-08T07:30:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        platform.simulcasts[CountryCode.FR] = setOf("days with my stepsister", "mayonaka punch")
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(1, episodes.size)
+        assertEquals("Days with My Stepsister", episodes[0].anime)
+        assertEquals(EpisodeType.EPISODE, episodes[0].episodeType)
+        assertEquals(1, episodes[0].season)
+        assertEquals(1, episodes[0].number)
+    }
 }

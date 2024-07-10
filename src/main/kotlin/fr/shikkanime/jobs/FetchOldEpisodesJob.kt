@@ -10,6 +10,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.exceptions.EpisodeException
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
@@ -18,10 +19,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
@@ -194,17 +192,17 @@ class FetchOldEpisodesJob : AbstractJob {
                     val crEpisodes = CrunchyrollWrapper.getSeasonsBySeriesId(it.countryCode.locale, crunchyrollAccessTokenCache[it.countryCode]!!, it.id)
                         .filter { season -> season.subtitleLocales.contains(it.countryCode.locale) }
                         .parallelStream().map { season ->
-                            try {
-                                runBlocking {
+                            runBlocking {
+                                try {
                                     CrunchyrollWrapper.getEpisodesBySeasonId(
                                         it.countryCode.locale,
                                         crunchyrollAccessTokenCache[it.countryCode]!!,
                                         season.id
                                     ).toList()
+                                } catch (e: Exception) {
+                                    logger.warning("Error while fetching Crunchyroll episodes by season (Season ID: ${season.id}) : ${e.message}")
+                                    emptyList()
                                 }
-                            } catch (e: Exception) {
-                                logger.warning("Error while fetching Crunchyroll episodes by season (Season ID: ${season.id}) : ${e.message}")
-                                emptyList()
                             }
                         }.toList()
                         .flatten()
@@ -275,41 +273,13 @@ class FetchOldEpisodesJob : AbstractJob {
 
             crunchyrollEpisodesCache[CountryCodeIdKeyCache(countryCode, serie.id)]?.forEach { episode ->
                 try {
-                    val isDubbed = episode.episodeMetadata!!.audioLocale == countryCode.locale
-                    val season = forcedSeason ?: (episode.episodeMetadata.seasonNumber ?: 1)
-                    val (number, episodeType) = getNumberAndEpisodeType(episode.episodeMetadata)
-                    val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
-                    val biggestImage = episode.images?.thumbnail?.firstOrNull()?.maxByOrNull { it.width }
-                    val image = biggestImage?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
-                    val duration = episode.episodeMetadata.durationMs / 1000
-                    val description = episode.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
-
-                    if (!isDubbed && (episode.episodeMetadata.subtitleLocales.isEmpty() || !episode.episodeMetadata.subtitleLocales.contains(
-                            countryCode.locale
-                        ))
-                    )
-                        throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
-
                     platformEpisodes.add(
-                        Episode(
-                            countryCode = countryCode,
-                            anime = animeName,
-                            animeImage = animeImage,
-                            animeBanner = animeBanner,
-                            animeDescription = animeDescription,
-                            releaseDateTime = episode.episodeMetadata.premiumAvailableDate,
-                            episodeType = episodeType,
-                            season = season,
-                            number = number,
-                            duration = duration,
-                            title = episode.title,
-                            description = description,
-                            image = image,
-                            platform = Platform.CRUN,
-                            audioLocale = episode.episodeMetadata.audioLocale,
-                            id = episode.id,
-                            url = url,
-                            uncensored = false,
+                        extractEpisode(
+                            episode,
+                            countryCode,
+                            forcedSeason,
+                            episode.episodeMetadata!!,
+                            Series(animeName, animeImage, animeBanner, animeDescription)
                         )
                     )
                 } catch (e: Exception) {
@@ -319,6 +289,63 @@ class FetchOldEpisodesJob : AbstractJob {
         }
 
         return platformEpisodes
+    }
+
+    data class Series(
+        val name: String,
+        val image: String,
+        val banner: String,
+        val description: String?,
+    )
+
+    private fun extractEpisode(
+        episode: CrunchyrollWrapper.BrowseObject,
+        countryCode: CountryCode,
+        forcedSeason: Int?,
+        episodeMetadata: CrunchyrollWrapper.Episode,
+        series: Series,
+    ): Episode {
+        val isDubbed = episode.episodeMetadata!!.audioLocale == countryCode.locale
+        val season = forcedSeason ?: (episodeMetadata.seasonNumber ?: 1)
+        val (number, episodeType) = crunchyrollPlatform.getNumberAndEpisodeType(episode.episodeMetadata)
+        val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
+        val biggestImage = episode.images?.thumbnail?.firstOrNull()?.maxByOrNull { it.width }
+        val image = biggestImage?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
+        val duration = episodeMetadata.durationMs / 1000
+        val description = episode.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
+
+        if (!isDubbed && (episodeMetadata.subtitleLocales.isEmpty() || !episodeMetadata.subtitleLocales.contains(
+                countryCode.locale
+            ))
+        )
+            throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
+
+        val isTeaser = episode.slugTitle?.contains("teaser", true) == true &&
+                episodeMetadata.premiumAvailableDate.withUTCString() == "1970-01-01T00:00:00Z"
+
+        if (isTeaser)
+            throw EpisodeException("Episode is a teaser")
+
+        return Episode(
+            countryCode = countryCode,
+            anime = series.name,
+            animeImage = series.image,
+            animeBanner = series.banner,
+            animeDescription = series.description,
+            releaseDateTime = episodeMetadata.premiumAvailableDate,
+            episodeType = episodeType,
+            season = season,
+            number = number,
+            duration = duration,
+            title = episode.title,
+            description = description,
+            image = image,
+            platform = Platform.CRUN,
+            audioLocale = episodeMetadata.audioLocale,
+            id = episode.id,
+            url = url,
+            uncensored = false,
+        )
     }
 
     suspend fun getSeries(
@@ -335,23 +362,5 @@ class FetchOldEpisodesJob : AbstractJob {
                 simulcast = simulcastId
             ).toList()
         }.distinctBy { it.id }
-    }
-
-    private fun getNumberAndEpisodeType(episode: CrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
-        var number = episode.number ?: -1
-        val specialEpisodeRegex = "SP(\\d*)".toRegex()
-
-        var episodeType = when {
-            episode.seasonSlugTitle?.contains("movie", true) == true -> EpisodeType.FILM
-            number == -1 -> EpisodeType.SPECIAL
-            else -> EpisodeType.EPISODE
-        }
-
-        specialEpisodeRegex.find(episode.numberString)?.let {
-            episodeType = EpisodeType.SPECIAL
-            number = it.groupValues[1].toIntOrNull() ?: -1
-        }
-
-        return Pair(number, episodeType)
     }
 }

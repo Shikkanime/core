@@ -65,6 +65,7 @@ class UpdateEpisodeJob : AbstractJob {
 
         val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
         var needRecalculate = false
+        val identifiers = episodeVariantService.findAllIdentifiers()
 
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
@@ -72,9 +73,8 @@ class UpdateEpisodeJob : AbstractJob {
             logger.info("Updating episode $mappingIdentifier...")
             val episodes =
                 variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(accessToken, mapping, variant) } }
-            val list = variants.map { it.identifier }
 
-            episodes.filter { it.getIdentifier() !in list }.takeIf { it.isNotEmpty() }
+            episodes.filter { it.getIdentifier() !in identifiers }.takeIf { it.isNotEmpty() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
                 ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
                 ?.also {

@@ -69,6 +69,20 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
+    fun findAllIdentifiers(): List<String> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(String::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(root[EpisodeVariant_.identifier])
+                .distinct(true)
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAudioLocalesAndSeasonsByAnime(anime: Anime): Pair<List<String>, List<Pair<Int, ZonedDateTime>>> {
         return database.entityManager.use { em ->
             val cb = em.criteriaBuilder
