@@ -156,7 +156,8 @@ class DisneyPlusPlatform :
             audioLocale = "ja-JP",
             id = id,
             url = url,
-            uncensored = false
+            uncensored = false,
+            original = true,
         )
     }
 }

@@ -88,6 +88,16 @@ class UpdateEpisodeJobTest {
         assertEquals(1, mappings.size)
         val variants = episodeVariantService.findAll()
         assertEquals(2, variants.size)
+
+        assertEquals(
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/97ab10f90157c828a591cd4ec66e851c.jpg",
+            mappings.first().image
+        )
+        assertEquals("Petite amie à louer", mappings.first().title)
+        assertEquals(
+            "Kazuya Kinoshita est un jeune étudiant qui vient de se faire plaquer par sa copine. Alors qu'il déprime complètement, il décide de télécharger une application permettant de louer une petite amie pour une journée.",
+            mappings.first().description
+        )
     }
 
     @Test

@@ -127,11 +127,12 @@ class AnimationDigitalNetworkPlatform :
                 id = video.id.toString(),
                 url = video.url,
                 uncensored = video.title.contains("(NC)"),
+                original = video.languages.size == 1 || video.languages.indexOf(it) == 0
             )
         }
     }
 
-    fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
+    private fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
         val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
         var episodeType = when {

@@ -1,7 +1,6 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -23,7 +22,6 @@ import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
-import java.util.logging.Level
 
 class UpdateEpisodeJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -82,28 +80,25 @@ class UpdateEpisodeJob : AbstractJob {
                     needRecalculate = true
                 }
 
-            val episode =
-                episodes.sortedWith(compareBy({ it.releaseDateTime }, { it.uncensored })).firstOrNull { StringUtils.getStatus(it) == Status.VALID } ?: run {
-                    logger.log(Level.WARNING, "No valid episode found for $mappingIdentifier")
-                    mapping.lastUpdateDateTime = ZonedDateTime.now()
-                    episodeMappingService.update(mapping)
-                    return@forEach
-                }
+            val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.firstOrNull() ?: return@forEach
 
-            if (episode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image !in episodes.map { it.image }) {
-                mapping.image = episode.image
-                episodeMappingService.addImage(mapping.uuid!!, episode.image, true)
-                logger.info("Image updated for $mappingIdentifier to ${episode.image}")
+            if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
+                mapping.image = originalEpisode.image
+                episodeMappingService.addImage(mapping.uuid!!, originalEpisode.image, true)
+                logger.info("Image updated for $mappingIdentifier to ${originalEpisode.image}")
             }
 
-            if (episode.title != mapping.title && !episode.title.isNullOrBlank()) {
-                mapping.title = episode.title
-                logger.info("Title updated for $mappingIdentifier to ${episode.title}")
+            if (originalEpisode.title != mapping.title && !originalEpisode.title.isNullOrBlank()) {
+                mapping.title = originalEpisode.title
+                logger.info("Title updated for $mappingIdentifier to ${originalEpisode.title}")
             }
 
-            if (episode.description != mapping.description && !episode.description.isNullOrBlank() && languageCacheService.detectLanguage(episode.description) == mapping.anime!!.countryCode!!.name.lowercase()) {
-                mapping.description = episode.description
-                logger.info("Description updated for $mappingIdentifier to ${episode.description}")
+            if (originalEpisode.description != mapping.description && !originalEpisode.description.isNullOrBlank() && languageCacheService.detectLanguage(
+                    originalEpisode.description
+                ) == mapping.anime!!.countryCode!!.name.lowercase()
+            ) {
+                mapping.description = originalEpisode.description
+                logger.info("Description updated for $mappingIdentifier to ${originalEpisode.description}")
             }
 
             mapping.status = StringUtils.getStatus(mapping)
@@ -152,7 +147,7 @@ class UpdateEpisodeJob : AbstractJob {
         val series = CrunchyrollWrapper.getSeries(countryCode.locale, accessToken, crunchyrollEpisode.seriesId)
 
         val crunchyrollEpisodes =
-            (crunchyrollEpisode.versions ?: listOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id!!)))
+            (crunchyrollEpisode.versions ?: listOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id!!, true)))
                 .asSequence()
                 .distinctBy { variant -> variant.guid }
                 .chunked(50)
@@ -193,6 +188,13 @@ class UpdateEpisodeJob : AbstractJob {
                 )
                     throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
+                var original = true
+
+                if (!episode.episodeMetadata.versions.isNullOrEmpty()) {
+                    val currentVersion = episode.episodeMetadata.versions.firstOrNull { it.guid == episode.id }
+                    original = currentVersion?.original ?: true
+                }
+
                 episodes.add(
                     Episode(
                         countryCode = countryCode,
@@ -213,6 +215,7 @@ class UpdateEpisodeJob : AbstractJob {
                         id = episode.id,
                         url = url,
                         uncensored = false,
+                        original = original
                     )
                 )
             } catch (e: Exception) {

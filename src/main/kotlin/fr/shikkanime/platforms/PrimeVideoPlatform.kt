@@ -55,7 +55,8 @@ class PrimeVideoPlatform :
                 audioLocale = "ja-JP",
                 id = computedId,
                 url = url,
-                uncensored = false
+                uncensored = false,
+                original = true,
             )
         }.toSet()
     }

@@ -81,6 +81,7 @@ class NetflixPlatform :
                 id = computedId,
                 url = "https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id",
                 uncensored = false,
+                original = true,
             )
         }.toSet()
     }

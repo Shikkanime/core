@@ -43,6 +43,7 @@ object CrunchyrollWrapper {
 
     data class Version(
         val guid: String,
+        val original: Boolean,
     )
 
     data class Series(

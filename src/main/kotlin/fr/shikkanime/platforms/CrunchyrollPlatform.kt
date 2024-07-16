@@ -185,6 +185,13 @@ class CrunchyrollPlatform :
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata)
 
+        var original = true
+
+        if (!browseObject.episodeMetadata.versions.isNullOrEmpty()) {
+            val currentVersion = browseObject.episodeMetadata.versions.firstOrNull { it.guid == browseObject.id }
+            original = currentVersion?.original ?: true
+        }
+
         return Episode(
             countryCode = countryCode,
             anime = animeName,
@@ -205,6 +212,7 @@ class CrunchyrollPlatform :
             id = browseObject.id,
             url = CrunchyrollWrapper.buildUrl(countryCode, browseObject.id, browseObject.slugTitle),
             uncensored = false,
+            original = original
         )
     }
 
