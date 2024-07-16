@@ -43,6 +43,7 @@ object CrunchyrollWrapper {
 
     data class Version(
         val guid: String,
+        val original: Boolean,
     )
 
     data class Series(
@@ -109,7 +110,7 @@ object CrunchyrollWrapper {
             "${BASE_URL}auth/v1/token",
             headers = mapOf(
                 "Content-Type" to "application/x-www-form-urlencoded",
-                "Authorization" to "Basic YWNmYWZtNTE3aGtpZWt4Yl93bWU6MDluclZfejBUNWxVdjRyRHp5ZlJYZk0wVmlIRHQyQV8=",
+                "Authorization" to "Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=",
                 "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
             ),
             body = "grant_type=client_id&client_id=offline_access"

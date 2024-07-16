@@ -88,7 +88,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             // Platform is in the episode variant list
             // Subquery to get the episode mapping with the platform
-            val subQuery = query.subquery(EpisodeMapping::class.java)
+            val subQuery = query.subquery(getEntityClass())
             val subRoot = subQuery.from(EpisodeVariant::class.java)
             subQuery.select(subRoot[EpisodeVariant_.mapping])
 
@@ -101,10 +101,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.where(
                 cb.and(
-                    cb.or(
-                        cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], lastDateTime),
-                        cb.equal(root[EpisodeMapping_.status], Status.INVALID),
-                    ),
+                    cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], lastDateTime),
                     cb.exists(subQuery)
                 ),
             )

@@ -209,7 +209,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
                     // Need to list all available variants
                     val variants = mutableSetOf<CrunchyrollWrapper.Version>()
-                    variants.addAll(crEpisodes.flatMap { it.versions ?: listOf(CrunchyrollWrapper.Version(it.id!!)) })
+                    variants.addAll(crEpisodes.flatMap { it.versions ?: listOf(CrunchyrollWrapper.Version(it.id!!, true)) })
 
                     // Remove duplicates and already fetched episodes
                     val chunked = variants.distinctBy { variant -> variant.guid }
@@ -326,6 +326,13 @@ class FetchOldEpisodesJob : AbstractJob {
         if (isTeaser)
             throw EpisodeException("Episode is a teaser")
 
+        var original = true
+
+        if (!episode.episodeMetadata.versions.isNullOrEmpty()) {
+            val currentVersion = episode.episodeMetadata.versions.firstOrNull { it.guid == episode.id }
+            original = currentVersion?.original ?: true
+        }
+
         return Episode(
             countryCode = countryCode,
             anime = series.name,
@@ -345,6 +352,7 @@ class FetchOldEpisodesJob : AbstractJob {
             id = episode.id,
             url = url,
             uncensored = false,
+            original = original
         )
     }
 

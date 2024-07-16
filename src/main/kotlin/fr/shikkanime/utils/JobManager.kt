@@ -8,17 +8,19 @@ import java.util.logging.Level
 object JobManager {
     private val scheduler = StdSchedulerFactory().scheduler
 
-    fun scheduleJob(cronExpression: String, jobClass: Class<out AbstractJob>) {
-        val jobDetail = JobBuilder.newJob(JobExecutor::class.java)
-            .withIdentity(jobClass.name)
-            .build()
+    fun scheduleJob(cronExpression: String, vararg jobClasses: Class<out AbstractJob>) {
+        jobClasses.forEach { jobClass ->
+            val jobDetail = JobBuilder.newJob(JobExecutor::class.java)
+                .withIdentity(jobClass.name)
+                .build()
 
-        val trigger = TriggerBuilder.newTrigger()
-            .withIdentity(jobClass.name)
-            .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
-            .build()
+            val trigger = TriggerBuilder.newTrigger()
+                .withIdentity(jobClass.name)
+                .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                .build()
 
-        scheduler.scheduleJob(jobDetail, trigger)
+            scheduler.scheduleJob(jobDetail, trigger)
+        }
     }
 
     fun start() {

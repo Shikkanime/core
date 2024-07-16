@@ -125,7 +125,8 @@ class EpisodeVariantServiceTest {
                 "ja-JP",
                 "GVWU0Q0J9",
                 "https://www.crunchyroll.com/fr/watch/GVWU0Q0J9/special",
-                false
+                uncensored = false,
+                original = true,
             ),
             updateMappingDateTime = false
         )

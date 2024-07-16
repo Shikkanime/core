@@ -4,7 +4,7 @@ val hibernateCoreVersion = "6.5.2.Final"
 val ehcacheVersion = "3.10.8"
 val glassfishJaxbVersion = "4.0.5"
 val hibernateSearchVersion = "7.1.1.Final"
-val tikaVersion = "3.0.0-BETA"
+val tikaVersion = "3.0.0-BETA2"
 val postgresqlVersion = "42.7.3"
 val reflectionsVersion = "0.10.2"
 val guiceVersion = "7.0.0"
@@ -20,12 +20,12 @@ val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.3.0"
 val angusMailVersion = "2.0.3"
 
-val jdaVersion = "5.0.0"
+val jdaVersion = "5.0.1"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.3"
 
 val junitVersion = "5.10.3"
-val h2Version = "2.2.224"
+val h2Version = "2.3.230"
 val mockitoVersion = "5.12.0"
 
 plugins {
