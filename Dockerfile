@@ -1,7 +1,7 @@
 ARG JAVA_VERSION=21
 
 FROM amazoncorretto:${JAVA_VERSION} AS build
-FROM mcr.microsoft.com/playwright:v1.45.1-jammy
+FROM mcr.microsoft.com/playwright:v1.45.2-jammy
 ARG JAVA_VERSION
 COPY --from=build /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 
