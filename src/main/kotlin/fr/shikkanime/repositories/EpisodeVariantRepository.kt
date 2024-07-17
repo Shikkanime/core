@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
@@ -19,6 +20,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
+        platform: Platform? = null
     ): List<EpisodeVariant> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
@@ -35,6 +37,11 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                     memberFollowAnimeService.findAllFollowedAnimesUUID(it)
                 )
                 predicates.add(animePredicate)
+            }
+
+            platform?.let {
+                val platformPredicate = cb.equal(root[EpisodeVariant_.platform], platform)
+                predicates.add(platformPredicate)
             }
 
             query.where(cb.and(*predicates.toTypedArray()))
