@@ -73,6 +73,8 @@ object CrunchyrollWrapper {
         val subtitleLocales: List<String>,
         @SerializedName("premium_available_date")
         val premiumAvailableDate: ZonedDateTime,
+        @SerializedName("season_id")
+        val seasonId: String,
         @SerializedName("season_number")
         val seasonNumber: Int?,
         @SerializedName("season_slug_title")
@@ -89,6 +91,8 @@ object CrunchyrollWrapper {
         val durationMs: Long,
         val description: String?,
         val versions: List<Version>?,
+        @SerializedName("next_episode_id")
+        val nextEpisodeId: String?,
     )
 
     data class BrowseObject(

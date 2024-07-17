@@ -1,12 +1,19 @@
 package fr.shikkanime.platforms
 
+import com.google.inject.Inject
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Config
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ConfigService
+import fr.shikkanime.services.EpisodeMappingService
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
-import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -22,6 +29,15 @@ class CrunchyrollPlatformTest {
     @Inject
     lateinit var configService: ConfigService
 
+    @Inject
+    private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeMappingService: EpisodeMappingService
+
+    @Inject
+    private lateinit var animeService: AnimeService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -32,8 +48,16 @@ class CrunchyrollPlatformTest {
 
     @AfterEach
     fun tearDown() {
+        episodeVariantService.deleteAll()
+        episodeMappingService.deleteAll()
         configService.deleteAll()
-        MapCache.invalidate(Config::class.java)
+        animeService.deleteAll()
+        MapCache.invalidate(
+            Config::class.java,
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java
+        )
     }
 
     @Test
@@ -125,5 +149,53 @@ class CrunchyrollPlatformTest {
         assertEquals(EpisodeType.EPISODE, episodes[0].episodeType)
         assertEquals(1, episodes[0].season)
         assertEquals(1, episodes[0].number)
+    }
+
+    @Test
+    fun `fetchEpisodes for 2024-07-17`() {
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "Alya Sometimes Hides Her Feelings in Russian",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b0bdcf73a7e00f9bc75131088970288d.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2db2c99a90bc322a2fe8a2fa07810fd5.jpg",
+                "Dans sa nouvelle école, Alya, étudiante au comportement glacial, fait tourner les têtes. Malgré ses excellents résultats en classe, elle garde ses distances avec tout le monde, en particulier avec l'intello Masachika Kuze. Jusqu'à ce qu'elle lui fasse un compliment en... russe ! À l'insu d'Alya, Kuze la comprend parfaitement, mais joue le jeu. Leurs malentendus hilarants se transformeront-ils en amour ?",
+                ZonedDateTime.parse("2024-07-10T15:00:00Z"),
+                EpisodeType.EPISODE,
+                1,
+                2,
+                1479,
+                "Amis d'enfance ?",
+                "Alors que les élections approchent, Masachika ne montre aucun intérêt pour celles-ci, malgré les suggestions de ses camarades. Il décidé alors d'accompagner Yuki, qui est en réalité sa sœur, lors d'une sortie.",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/6deef00e3ccbf856cdddb2b75a614fc2.jpg",
+                Platform.CRUN,
+                "ja-JP",
+                "G9DUE0QNJ",
+                "https://www.crunchyroll.com/fr/watch/G9DUE0QNJ/so-much-for-childhood-friends",
+                uncensored = false,
+                original = true,
+            ),
+            updateMappingDateTime = false
+        )
+
+        val s = "2024-07-17T15:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        platform.simulcasts[CountryCode.FR] = setOf("alya sometimes hides her feelings in russian")
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(1, episodes.size)
+        assertEquals("Alya Sometimes Hides Her Feelings in Russian", episodes[0].anime)
+        assertEquals(EpisodeType.EPISODE, episodes[0].episodeType)
+        assertEquals(1, episodes[0].season)
+        assertEquals(3, episodes[0].number)
     }
 }

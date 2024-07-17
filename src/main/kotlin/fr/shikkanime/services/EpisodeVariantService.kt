@@ -5,6 +5,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -36,8 +37,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         member: Member?,
         countryCode: CountryCode,
         start: ZonedDateTime,
-        end: ZonedDateTime
-    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end)
+        end: ZonedDateTime,
+        platform: Platform? = null
+    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end, platform)
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 

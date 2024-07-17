@@ -2,12 +2,15 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeIdKeyCache
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
+import fr.shikkanime.services.EpisodeMappingService
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
@@ -33,9 +36,14 @@ class CrunchyrollPlatform :
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
+    @Inject
+    private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeMappingService: EpisodeMappingService
+
     private val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
-        val token = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-        return@MapCache token
+        return@MapCache runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
     }
 
     val simulcasts = MapCache<CountryCode, Set<String>>(Duration.ofHours(1)) {
@@ -115,7 +123,7 @@ class CrunchyrollPlatform :
                 )
             } else {
                 getApiContent(countryCode, zonedDateTime) // NOSONAR
-            }
+            }.toMutableList()
 
             api.forEach {
                 try {
@@ -128,6 +136,8 @@ class CrunchyrollPlatform :
                     logger.log(Level.SEVERE, "Error on converting episode", e)
                 }
             }
+
+            runBlocking { list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, list)) }
         }
 
         return list
@@ -136,6 +146,58 @@ class CrunchyrollPlatform :
     override fun saveConfiguration() {
         super.saveConfiguration()
         simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
+    }
+
+    private suspend fun predictFutureEpisodes(
+        countryCode: CountryCode,
+        zonedDateTime: ZonedDateTime,
+        alreadyFetched: List<Episode>
+    ): List<Episode> {
+        val list = mutableListOf<Episode>()
+        val lastWeekStartOfTheDay = zonedDateTime.minusWeeks(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
+
+        episodeVariantService.findAllByDateRange(
+            null,
+            countryCode,
+            lastWeekStartOfTheDay,
+            zonedDateTime.minusWeeks(1),
+            getPlatform()
+        ).forEach { episodeVariant ->
+            episodeMappingService.findNextEpisode(episodeVariant.mapping!!)?.let {
+                logger.warning("Next episode already exists for ${episodeVariant.identifier}")
+                return@forEach
+            }
+
+            val crunchyrollId = getCrunchyrollId(episodeVariant) ?: run {
+                logger.warning("Crunchyroll ID not found in ${episodeVariant.identifier}")
+                return@forEach
+            }
+
+            CrunchyrollWrapper.getEpisode(
+                countryCode.locale,
+                identifiers[countryCode]!!,
+                crunchyrollId
+            ).nextEpisodeId?.let { nextEpisodeId ->
+                if (alreadyFetched.none { it.id == nextEpisodeId }) {
+                    CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
+                        .forEach { browseObject ->
+                            try {
+                                list.add(convertEpisode(countryCode, browseObject))
+                            } catch (e: Exception) {
+                                logger.log(Level.SEVERE, "Error on converting episode", e)
+                            }
+                        }
+                } else {
+                    logger.warning("Episode $nextEpisodeId already fetched")
+                }
+            } ?: logger.warning("Next episode ID not found in $crunchyrollId")
+        }
+
+        return list
+    }
+
+    private fun getCrunchyrollId(it: EpisodeVariant): String? {
+        return "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(it.identifier!!)?.groupValues?.get(1)
     }
 
     private fun convertEpisode(
