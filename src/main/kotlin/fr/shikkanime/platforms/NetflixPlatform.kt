@@ -46,8 +46,11 @@ class NetflixPlatform :
             seasonName to seasonEpisodes
         }.toMap()
 
+        var useAllSeasons = false
+
         val episodes = episodesBySeason[key.netflixSimulcast.seasonName] ?: run {
             logger.warning("Season name is blank or not found, fetching all episodes from all seasons and ignoring season number")
+            useAllSeasons = true
             document.select("li.episode")
         }
 
@@ -60,7 +63,9 @@ class NetflixPlatform :
             val image = episode.selectFirst(".episode-thumbnail-image")?.attr("src") ?: return@mapIndexedNotNull null
             val imageWithoutParams = image.substringBefore("?")
             val episodeDescription = episode.selectFirst(".epsiode-synopsis")?.text()
-            val computedId = EncryptionManager.toSHA512("$id-${season}-$episodeNumber").substring(0..<8)
+
+            val episodeSeason = if (useAllSeasons) seasons.indexOf(episode.closest(".season")!!) + 1 else season
+            val computedId = EncryptionManager.toSHA512("$id-$episodeSeason-$episodeNumber").substring(0..<8)
 
             Episode(
                 countryCode = key.countryCode,
@@ -70,7 +75,7 @@ class NetflixPlatform :
                 animeDescription = animeDescription,
                 releaseDateTime = releaseDateTime,
                 episodeType = key.netflixSimulcast.episodeType,
-                season = season,
+                season = episodeSeason,
                 number = episodeNumber,
                 duration = durationInSeconds,
                 title = episodeTitle?.trim(),
