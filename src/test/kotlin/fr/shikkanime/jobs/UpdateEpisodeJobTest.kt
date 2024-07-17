@@ -195,4 +195,55 @@ class UpdateEpisodeJobTest {
         val variants = episodeVariantService.findAll()
         assertEquals(1, variants.size)
     }
+
+    @Test
+    fun `run old Crunchyroll episodes Demon Slayer`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Demon Slayer: Kimetsu no Yaiba",
+                slug = "demon-slayer",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/765ee047befcfb677d169f5de4c82d5c.jpe",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/6b17182a3518d7406f0e69687f773f4f.jpe"
+            )
+        )
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 2,
+                episodeType = EpisodeType.EPISODE,
+                number = 11,
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/4ad7006be1e71909f942ef870410db58.jpg",
+                title = "À chaque réincarnation",
+                description = "Tanjirô se réveille au milieu d’un quartier ravagé, sans comprendre comment il a survécu. À son grand désarroi, ses camarades ne semblent pas avoir cette même chance."
+            )
+        )
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.CRUN,
+                audioLocale = "ja-JP",
+                identifier = "FR-CRUN-GD9UVWE05-JA-JP",
+                url = "https://www.crunchyroll.com/fr/watch/GD9UVWE05/no-matter-how-many-lives"
+            )
+        )
+
+        val now = ZonedDateTime.now()
+        updateEpisodeJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertTrue(mappings.first().lastUpdateDateTime.isAfter(now))
+        val variants = episodeVariantService.findAll()
+        assertEquals(2, variants.size)
+    }
 }
