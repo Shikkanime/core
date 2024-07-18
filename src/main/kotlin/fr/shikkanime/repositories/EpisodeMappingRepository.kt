@@ -5,6 +5,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.Constant
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
@@ -101,7 +102,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.where(
                 cb.and(
-                    cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], lastDateTime),
+                    cb.or(
+                        cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], lastDateTime),
+                        cb.equal(root[EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
+                    ),
                     cb.exists(subQuery)
                 ),
             )
