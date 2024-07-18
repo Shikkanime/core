@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+env:
+  REGISTRY_IMAGE: registry.shikkanime.fr:5000/shikkanime-core
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -39,5 +42,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: registry.shikkanime.fr:5000/shikkanime-core:latest
+          tags: ${{ env.REGISTRY_IMAGE }}:latest
           platforms: linux/arm64/v8
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache

@@ -2,16 +2,15 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeIdKeyCache
-import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
-import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
@@ -40,7 +39,7 @@ class CrunchyrollPlatform :
     private lateinit var episodeVariantService: EpisodeVariantService
 
     @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
+    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     private val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
         return@MapCache runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
@@ -154,21 +153,23 @@ class CrunchyrollPlatform :
         alreadyFetched: List<Episode>
     ): List<Episode> {
         val list = mutableListOf<Episode>()
-        val lastWeekStartOfTheDay = zonedDateTime.minusWeeks(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
+
+        val lastWeek = zonedDateTime.minusWeeks(1)
+        val lastWeekStartOfTheDay = lastWeek.withHour(0).withMinute(0).withSecond(0).withNano(0)
 
         episodeVariantService.findAllByDateRange(
             null,
             countryCode,
             lastWeekStartOfTheDay,
-            zonedDateTime.minusWeeks(1),
+            lastWeek.plusSeconds(1),
             getPlatform()
         ).forEach { episodeVariant ->
-            episodeMappingService.findNextEpisode(episodeVariant.mapping!!)?.let {
+            episodeMappingCacheService.findNextEpisode(episodeVariant.mapping!!)?.let {
                 logger.warning("Next episode already exists for ${episodeVariant.identifier}")
                 return@forEach
             }
 
-            val crunchyrollId = getCrunchyrollId(episodeVariant) ?: run {
+            val crunchyrollId = getCrunchyrollId(episodeVariant.identifier!!) ?: run {
                 logger.warning("Crunchyroll ID not found in ${episodeVariant.identifier}")
                 return@forEach
             }
@@ -196,9 +197,7 @@ class CrunchyrollPlatform :
         return list
     }
 
-    private fun getCrunchyrollId(it: EpisodeVariant): String? {
-        return "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(it.identifier!!)?.groupValues?.get(1)
-    }
+    private fun getCrunchyrollId(identifier: String) = "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
 
     private fun convertEpisode(
         countryCode: CountryCode,

@@ -104,7 +104,6 @@ dependencies {
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
-    compileOnly("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
