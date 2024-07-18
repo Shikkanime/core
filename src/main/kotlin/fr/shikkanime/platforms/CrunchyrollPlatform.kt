@@ -157,20 +157,19 @@ class CrunchyrollPlatform :
         val lastWeek = zonedDateTime.minusWeeks(1)
         val lastWeekStartOfTheDay = lastWeek.withHour(0).withMinute(0).withSecond(0).withNano(0)
 
-        episodeVariantService.findAllByDateRange(
-            null,
+        episodeVariantService.findAllMappingUuidAndIdentifierByDateRange(
             countryCode,
             lastWeekStartOfTheDay,
             lastWeek.plusSeconds(1),
             getPlatform()
-        ).forEach { episodeVariant ->
-            episodeMappingCacheService.findNextEpisode(episodeVariant.mapping!!)?.let {
-                logger.warning("Next episode already exists for ${episodeVariant.identifier}")
+        ).forEach { pair ->
+            episodeMappingCacheService.findNextEpisode(pair.first)?.let {
+                logger.warning("Next episode already exists for ${pair.second}")
                 return@forEach
             }
 
-            val crunchyrollId = getCrunchyrollId(episodeVariant.identifier!!) ?: run {
-                logger.warning("Crunchyroll ID not found in ${episodeVariant.identifier}")
+            val crunchyrollId = getCrunchyrollId(pair.second) ?: run {
+                logger.warning("Crunchyroll ID not found in ${pair.second}")
                 return@forEach
             }
 
