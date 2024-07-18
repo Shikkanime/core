@@ -183,6 +183,10 @@ class CrunchyrollPlatform :
                         .forEach { browseObject ->
                             try {
                                 list.add(convertEpisode(countryCode, browseObject))
+                            } catch (_: EpisodeException) {
+                                // Ignore
+                            } catch (_: AnimeException) {
+                                // Ignore
                             } catch (e: Exception) {
                                 logger.log(Level.SEVERE, "Error on converting episode", e)
                             }
