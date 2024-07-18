@@ -38,8 +38,14 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
-        platform: Platform? = null
-    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end, platform)
+    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end)
+
+    fun findAllMappingUuidAndIdentifierByDateRange(
+        countryCode: CountryCode,
+        start: ZonedDateTime,
+        end: ZonedDateTime,
+        platform: Platform
+    ) = episodeVariantRepository.findAllMappingUuidAndIdentifierByDateRange(countryCode, start, end, platform)
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 

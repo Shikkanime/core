@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
+import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     @Inject
@@ -20,7 +21,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
-        platform: Platform? = null
     ): List<EpisodeVariant> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
@@ -39,15 +39,40 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 predicates.add(animePredicate)
             }
 
-            platform?.let {
-                val platformPredicate = cb.equal(root[EpisodeVariant_.platform], platform)
-                predicates.add(platformPredicate)
-            }
-
             query.where(cb.and(*predicates.toTypedArray()))
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
+        }
+    }
+
+    fun findAllMappingUuidAndIdentifierByDateRange(
+        countryCode: CountryCode,
+        start: ZonedDateTime,
+        end: ZonedDateTime,
+        platform: Platform
+    ): List<Pair<UUID, String>> {
+        return database.entityManager.use { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            query.multiselect(
+                root[EpisodeVariant_.mapping][EpisodeMapping_.uuid],
+                root[EpisodeVariant_.identifier]
+            )
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode),
+                    cb.between(root[EpisodeVariant_.releaseDateTime], start, end),
+                    cb.equal(root[EpisodeVariant_.platform], platform)
+                )
+            )
+
+            createReadOnlyQuery(entityManager, query)
+                .resultList
+                .map { it[0] as UUID to it[1] as String }
         }
     }
 

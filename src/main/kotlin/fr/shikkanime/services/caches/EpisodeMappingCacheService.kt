@@ -69,8 +69,8 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         }
 
-    private val findNextEpisodeCache = MapCache<EpisodeMapping, EpisodeMapping?>(classes = listOf(EpisodeMapping::class.java)) {
-        episodeMappingService.findNextEpisode(it)
+    private val findNextEpisodeCache = MapCache<UUID, EpisodeMapping?>(classes = listOf(EpisodeMapping::class.java)) {
+        episodeMappingService.find(it)?.let { em -> episodeMappingService.findNextEpisode(em) }
     }
 
     fun findAllBy(
@@ -95,5 +95,5 @@ class EpisodeMappingCacheService : AbstractCacheService {
         number
     )]
 
-    fun findNextEpisode(episode: EpisodeMapping) = findNextEpisodeCache[episode]
+    fun findNextEpisode(uuid: UUID) = findNextEpisodeCache[uuid]
 }
