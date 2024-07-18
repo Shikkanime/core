@@ -144,11 +144,6 @@ class UpdateEpisodeJob : AbstractJob {
     ): List<Episode> {
         val episodes = mutableListOf<Episode>()
         val crunchyrollEpisode = CrunchyrollWrapper.getEpisode(countryCode.locale, accessToken, crunchyrollId)
-
-        crunchyrollEpisode.versions?.forEach {
-            logger.info(it.toString())
-        }
-
         val series = CrunchyrollWrapper.getSeries(countryCode.locale, accessToken, crunchyrollEpisode.seriesId)
 
         val crunchyrollEpisodes =
