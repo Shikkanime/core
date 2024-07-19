@@ -178,22 +178,23 @@ class CrunchyrollPlatform :
                 identifiers[countryCode]!!,
                 crunchyrollId
             ).nextEpisodeId?.let { nextEpisodeId ->
-                if (alreadyFetched.none { it.id == nextEpisodeId }) {
-                    CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
-                        .forEach { browseObject ->
-                            try {
-                                list.add(convertEpisode(countryCode, browseObject))
-                            } catch (_: EpisodeException) {
-                                // Ignore
-                            } catch (_: AnimeException) {
-                                // Ignore
-                            } catch (e: Exception) {
-                                logger.log(Level.SEVERE, "Error on converting episode", e)
-                            }
-                        }
-                } else {
+                if (alreadyFetched.any { it.id == nextEpisodeId }) {
                     logger.warning("Episode $nextEpisodeId already fetched")
+                    return@forEach
                 }
+
+                CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
+                    .forEach { browseObject ->
+                        try {
+                            list.add(convertEpisode(countryCode, browseObject))
+                        } catch (_: EpisodeException) {
+                            // Ignore
+                        } catch (_: AnimeException) {
+                            // Ignore
+                        } catch (e: Exception) {
+                            logger.log(Level.SEVERE, "Error on converting episode", e)
+                        }
+                    }
             } ?: logger.warning("Next episode ID not found in $crunchyrollId")
         }
 

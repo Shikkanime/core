@@ -79,7 +79,9 @@ class UpdateEpisodeJob : AbstractJob {
                     needRecalculate = true
                 }
 
-            val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.firstOrNull() ?: return@forEach
+            val originalEpisode = episodes.firstOrNull { it.original }
+                ?: episodes.firstOrNull()
+                ?: return@forEach
 
             if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
                 mapping.image = originalEpisode.image
