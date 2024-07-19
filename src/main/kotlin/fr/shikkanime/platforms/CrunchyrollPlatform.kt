@@ -200,9 +200,10 @@ class CrunchyrollPlatform :
         return list
     }
 
-    private fun getCrunchyrollId(identifier: String) = "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
+    fun getCrunchyrollId(identifier: String) =
+        "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
 
-    private fun convertEpisode(
+    fun convertEpisode(
         countryCode: CountryCode,
         browseObject: CrunchyrollWrapper.BrowseObject,
         needSimulcast: Boolean = true
