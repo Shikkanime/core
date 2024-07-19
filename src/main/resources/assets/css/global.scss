@@ -1,0 +1,79 @@
+@font-face {
+  font-family: Satoshi;
+  src: url(/assets/fonts/Satoshi-Regular.woff2) format('woff2'),
+  url(/assets/fonts/Satoshi-Regular.woff) format('woff'),
+  url(/assets/fonts/Satoshi-Regular.ttf) format('truetype'),
+  url(/assets/fonts/Satoshi-Regular.eot) format('embedded-opentype');
+}
+
+body {
+  background-color: #000;
+  font-family: Satoshi, sans-serif;
+}
+
+@mixin text-truncate($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-truncate-2 {
+  @include text-truncate(2);
+}
+
+.text-truncate-4 {
+  @include text-truncate(4);
+}
+
+.text-truncate-6 {
+  @include text-truncate(6);
+}
+
+.text-muted {
+  color: #b9b9b9 !important;
+}
+
+.shikk-element {
+  border-radius: 1rem;
+  background-color: #FFFFFF28;
+}
+
+@mixin bg-blur($blur) {
+  backdrop-filter: blur(($blur) rem);
+}
+
+.bg-blur-1 {
+  @include bg-blur(0.25);
+}
+
+.bg-blur-2 {
+  @include bg-blur(0.5);
+}
+
+.anime-infos {
+  position: relative;
+  margin-top: -100px;
+
+  @media (max-width: 768px) {
+    margin-top: -22.5rem;
+  }
+}
+
+header {
+  position: fixed;
+  z-index: 1000;
+  width: 100%;
+}
+
+main {
+  padding-top: 55px;
+}
+
+.callout {
+  padding: 1.25rem;
+  color: #fff;
+  background-color: #202020;
+  border-left: 0.25rem solid #5a5a5a;
+}
