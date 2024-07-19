@@ -6,7 +6,6 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
@@ -80,7 +79,9 @@ class UpdateEpisodeJob : AbstractJob {
                     needRecalculate = true
                 }
 
-            val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.firstOrNull() ?: return@forEach
+            val originalEpisode = episodes.firstOrNull { it.original }
+                ?: episodes.firstOrNull()
+                ?: return@forEach
 
             if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
                 mapping.image = originalEpisode.image
@@ -130,8 +131,13 @@ class UpdateEpisodeJob : AbstractJob {
         }
 
         if (episodeVariant.platform == Platform.CRUN) {
-            val crunchyrollId = "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(episodeVariant.identifier!!)?.groupValues?.get(1)
-            episodes.addAll(getCrunchyrollEpisodeAndVariants(countryCode, accessToken, crunchyrollId!!))
+            episodes.addAll(
+                getCrunchyrollEpisodeAndVariants(
+                    countryCode,
+                    accessToken,
+                    crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+                )
+            )
         }
 
         return episodes
@@ -142,9 +148,7 @@ class UpdateEpisodeJob : AbstractJob {
         accessToken: String,
         crunchyrollId: String,
     ): List<Episode> {
-        val episodes = mutableListOf<Episode>()
         val crunchyrollEpisode = CrunchyrollWrapper.getEpisode(countryCode.locale, accessToken, crunchyrollId)
-        val series = CrunchyrollWrapper.getSeries(countryCode.locale, accessToken, crunchyrollEpisode.seriesId)
 
         val crunchyrollEpisodes =
             (crunchyrollEpisode.versions ?: listOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id!!, true)))
@@ -167,63 +171,18 @@ class UpdateEpisodeJob : AbstractJob {
                 }
                 .toList()
 
-        crunchyrollEpisodes.forEach { episode ->
+        return crunchyrollEpisodes.mapNotNull { browseObject ->
             try {
-                val animeImage = series.images.posterTall.first().maxByOrNull { poster -> poster.width }?.source?.takeIf { it.isNotBlank() }
-                    ?: throw Exception("Image is null or empty")
-                val animeBanner = series.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source?.takeIf { it.isNotBlank() }
-                    ?: throw Exception("Banner is null or empty")
-
-                val isDubbed = episode.episodeMetadata!!.audioLocale == countryCode.locale
-                val season = episode.episodeMetadata.seasonNumber ?: 1
-                val (number, episodeType) = crunchyrollPlatform.getNumberAndEpisodeType(episode.episodeMetadata)
-                val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
-                val image = episode.images?.thumbnail?.get(0)?.maxByOrNull { it.width }?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
-                val duration = episode.episodeMetadata.durationMs / 1000
-                val description = episode.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
-
-                if (!isDubbed && (episode.episodeMetadata.subtitleLocales.isEmpty() || !episode.episodeMetadata.subtitleLocales.contains(
-                        countryCode.locale
-                    ))
-                )
-                    throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
-
-                var original = true
-
-                if (!episode.episodeMetadata.versions.isNullOrEmpty()) {
-                    val currentVersion = episode.episodeMetadata.versions.firstOrNull { it.guid == episode.id }
-                    original = currentVersion?.original ?: true
-                }
-
-                episodes.add(
-                    Episode(
-                        countryCode = countryCode,
-                        anime = series.title,
-                        animeImage = animeImage,
-                        animeBanner = animeBanner,
-                        animeDescription = series.description,
-                        releaseDateTime = episode.episodeMetadata.premiumAvailableDate,
-                        episodeType = episodeType,
-                        season = season,
-                        number = number,
-                        duration = duration,
-                        title = episode.title,
-                        description = description,
-                        image = image,
-                        platform = Platform.CRUN,
-                        audioLocale = episode.episodeMetadata.audioLocale,
-                        id = episode.id,
-                        url = url,
-                        uncensored = false,
-                        original = original
-                    )
+                crunchyrollPlatform.convertEpisode(
+                    countryCode,
+                    browseObject,
+                    needSimulcast = false,
                 )
             } catch (e: Exception) {
-                logger.warning("Error while getting Crunchyroll episode ${episode.id} : ${e.message}")
+                logger.warning("Error while getting Crunchyroll episode ${browseObject.id} : ${e.message}")
+                return@mapNotNull null
             }
         }
-
-        return episodes
     }
 
     private suspend fun getADNEpisodeAndVariants(

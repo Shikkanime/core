@@ -178,31 +178,33 @@ class CrunchyrollPlatform :
                 identifiers[countryCode]!!,
                 crunchyrollId
             ).nextEpisodeId?.let { nextEpisodeId ->
-                if (alreadyFetched.none { it.id == nextEpisodeId }) {
-                    CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
-                        .forEach { browseObject ->
-                            try {
-                                list.add(convertEpisode(countryCode, browseObject))
-                            } catch (_: EpisodeException) {
-                                // Ignore
-                            } catch (_: AnimeException) {
-                                // Ignore
-                            } catch (e: Exception) {
-                                logger.log(Level.SEVERE, "Error on converting episode", e)
-                            }
-                        }
-                } else {
+                if (alreadyFetched.any { it.id == nextEpisodeId }) {
                     logger.warning("Episode $nextEpisodeId already fetched")
+                    return@forEach
                 }
+
+                CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
+                    .forEach { browseObject ->
+                        try {
+                            list.add(convertEpisode(countryCode, browseObject))
+                        } catch (_: EpisodeException) {
+                            // Ignore
+                        } catch (_: AnimeException) {
+                            // Ignore
+                        } catch (e: Exception) {
+                            logger.log(Level.SEVERE, "Error on converting episode", e)
+                        }
+                    }
             } ?: logger.warning("Next episode ID not found in $crunchyrollId")
         }
 
         return list
     }
 
-    private fun getCrunchyrollId(identifier: String) = "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
+    fun getCrunchyrollId(identifier: String) =
+        "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
 
-    private fun convertEpisode(
+    fun convertEpisode(
         countryCode: CountryCode,
         browseObject: CrunchyrollWrapper.BrowseObject,
         needSimulcast: Boolean = true

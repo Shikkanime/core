@@ -46,7 +46,7 @@ object StringUtils {
         return shortName.replace(" +".toRegex(), " ").trim()
     }
 
-    fun getHashtag(fullName: String) = getShortName(fullName).lowercase().capitalizeWords()
+    fun getHashtag(fullName: String) = getShortName(normalized(fullName)).lowercase().capitalizeWords()
         .replace(" S ", " s ")
         .replace(" T ", " t ")
         .filter { it.isLetterOrDigit() }
@@ -84,11 +84,13 @@ object StringUtils {
     }
 
     fun toSlug(input: String): String {
-        val nowhitespace: String = whitespacePattern.matcher(input).replaceAll("-")
+        val nowhitespace: String = whitespacePattern.matcher(normalized(input)).replaceAll("-")
         val normalized: String = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD)
         val slug: String = nonLatinPattern.matcher(normalized).replaceAll("").replace("-+".toRegex(), "-").trim('-')
         return slug.lowercase()
     }
+
+    private fun normalized(input: String) = input.replace("œ", "oe").replace("@", "a")
 
     fun sanitizeXSS(input: String): String = input.replace("<", "&lt;")
         .replace(">", "&gt;")

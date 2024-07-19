@@ -75,6 +75,8 @@ class StringUtilsTest {
             "DanMachi - La Légende des Familias" to "danmachi",
             "Demon Slayer - Le village des forgerons" to "demon-slayer",
             "Dragon Quest - The Adventures of Dai" to "dragon-quest",
+            "Au Cœur du Donjon" to "au-coeur-du-donjon",
+            "THE IDOLM@STER Million Live!" to "the-idolmaster-million-live",
         )
 
         list.forEach { (input, expected) ->
@@ -106,6 +108,8 @@ class StringUtilsTest {
             "MASHLE: MAGIC AND MUSCLES" to "Mashle",
             "Yuru Camp – Au grand air" to "YuruCamp",
             "Jellyfish Can't Swim in the Night" to "JellyfishCantSwimInTheNight",
+            "Au Cœur du Donjon" to "AuCoeurDuDonjon",
+            "THE IDOLM@STER Million Live!" to "TheIdolmasterMillionLive",
         )
 
         list.forEach { (input, expected) ->
