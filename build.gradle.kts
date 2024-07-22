@@ -14,7 +14,7 @@ val guavaVersion = "33.2.1-jre"
 val playwrightVersion = "1.45.0"
 val jsoupVersion = "1.18.1"
 val gsonVersion = "2.11.0"
-val openCvVersion = "4.9.0-0"
+val webpImageioVersion = "0.8.0"
 val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.3.0"
@@ -90,19 +90,17 @@ dependencies {
     implementation("com.microsoft.playwright:playwright:$playwrightVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("org.openpnp:opencv:$openCvVersion")
     implementation("org.bouncycastle:bcprov-jdk18on:$bcprovVersion")
     implementation("com.mortennobel:java-image-scaling:$javaImageScalingVersion")
     implementation("org.apache.tika:tika-core:$tikaVersion")
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.eclipse.angus:angus-mail:$angusMailVersion")
-
-    // Social networks
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
 
+    runtimeOnly("com.github.usefulness:webp-imageio:$webpImageioVersion")
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
