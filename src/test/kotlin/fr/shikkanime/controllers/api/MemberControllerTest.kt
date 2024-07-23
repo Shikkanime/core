@@ -1,11 +1,13 @@
 package fr.shikkanime.controllers.api
 
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.module
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.FileManager
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -106,6 +108,60 @@ class MemberControllerTest : AbstractControllerTest() {
                 assertEquals(memberAction!!.validated, true)
                 assertNotNull(memberAction!!.code)
                 assertEquals(member!!.email, "contact@shikkanime.fr")
+            }
+        }
+    }
+
+    @Test
+    fun forgotIdentifier() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (_, token1) = registerAndLogin()
+            val (identifier2, _) = registerAndLogin()
+            val findPrivateMember2 = memberService.findByIdentifier(identifier2)!!
+            findPrivateMember2.email = "contact@shikkanime.fr"
+            memberService.update(findPrivateMember2)
+            MapCache.invalidate(Member::class.java)
+
+            var memberAction: MemberAction?
+
+            client.post("/api/v1/members/forgot-identifier") {
+                header(HttpHeaders.Authorization, "Bearer $token1")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody("contact@shikkanime.fr")
+            }.apply {
+                assertEquals(HttpStatusCode.Created, status)
+                val dto = ObjectParser.fromJson(bodyAsText(), GenericDto::class.java)
+                memberAction = memberActionService.find(dto.uuid)
+                assertNotNull(memberAction)
+                assertEquals(findPrivateMember2.uuid, memberAction!!.member!!.uuid)
+                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
+                assertEquals(memberAction!!.action, Action.FORGOT_IDENTIFIER)
+                assertEquals(memberAction!!.validated, false)
+                assertNotNull(memberAction!!.code)
+            }
+
+            client.post("/api/v1/member-actions/validate?uuid=${memberAction!!.uuid}") {
+                header(HttpHeaders.Authorization, "Bearer $token1")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(memberAction!!.code!!)
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                memberAction = memberActionService.find(memberAction!!.uuid)
+                val member = memberService.findByIdentifier(identifier2)
+                assertNotNull(memberAction)
+                assertNull(member)
+
+                assertEquals(findPrivateMember2.uuid, memberAction!!.member!!.uuid)
+                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
+                assertEquals(memberAction!!.action, Action.FORGOT_IDENTIFIER)
+                assertEquals(memberAction!!.validated, true)
+                assertNotNull(memberAction!!.code)
+
+                assertNotEquals(memberAction!!.member!!.username, findPrivateMember2.username)
             }
         }
     }

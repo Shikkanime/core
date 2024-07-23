@@ -20,7 +20,7 @@ class Member(
     @Column(nullable = false, name = "is_private")
     val isPrivate: Boolean = false,
     @Column(nullable = false, unique = true)
-    val username: String? = null,
+    var username: String? = null,
     @Column(nullable = true, unique = true)
     var email: String? = null,
     @Column(nullable = false, name = "encrypted_password")

@@ -54,6 +54,12 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         return memberActionService.save(Action.VALIDATE_EMAIL, member, email)
     }
 
+    fun forgotIdentifier(member: Member): UUID {
+        requireNotNull(member.email)
+        // Creation member action
+        return memberActionService.save(Action.FORGOT_IDENTIFIER, member, member.email!!)
+    }
+
     fun save(identifier: String) =
         save(
             Member(
