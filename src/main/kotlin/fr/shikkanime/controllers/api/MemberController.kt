@@ -95,6 +95,37 @@ class MemberController {
         return Response.created(GenericDto(memberService.associateEmail(uuidUser, email)))
     }
 
+    @Path("/forgot-identifier")
+    @Post
+    @JWTAuthenticated
+    @OpenAPI(
+        description = "Forgot identifier",
+        responses = [
+            OpenAPIResponse(200, "Code to reset identifier sent", GenericDto::class),
+            OpenAPIResponse(401, "Unauthorized"),
+        ],
+        security = true
+    )
+    private fun forgotIdentifier(@JWTUser uuidUser: UUID, @BodyParam email: String): Response {
+        // Verify email
+        if (!StringUtils.isValidEmail(email)) {
+            return Response.badRequest("Invalid email")
+        }
+
+        if (memberCacheService.find(uuidUser)!!.email == email) {
+            return Response.badRequest("Email already associated to your account")
+        }
+
+        val findByEmail = memberService.findByEmail(email)
+
+        if (findByEmail == null) {
+            runBlocking { delay(1000) }
+            return Response.badRequest("Email not associated to any account")
+        }
+
+        return Response.created(GenericDto(memberService.forgotIdentifier(findByEmail)))
+    }
+
 
     @Path("/animes")
     @Put

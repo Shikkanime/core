@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.repositories.MemberActionRepository
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
@@ -36,13 +37,42 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         checkNotNull(memberAction) { "Invalid action" }
         require(ZonedDateTime.now().isBefore(memberAction.creationDateTime.plusMinutes(15))) { "Action expired" }
 
-        when (memberAction.action) {
-            Action.VALIDATE_EMAIL -> {
-                memberAction.member!!.email = memberAction.email
-                memberService.update(memberAction.member!!)
-                MapCache.invalidate(Member::class.java)
+        try {
+            when (memberAction.action) {
+                Action.VALIDATE_EMAIL -> {
+                    memberAction.member!!.email = memberAction.email
+                    memberService.update(memberAction.member!!)
+                    MapCache.invalidate(Member::class.java)
+
+                    sendEmail(
+                        memberAction.email!!,
+                        "Shikkanime - Adresse email validée",
+                        getFreemarkerContent("/mail/email-associated.ftl").toString()
+                    )
+                }
+
+                Action.FORGOT_IDENTIFIER -> {
+                    var identifier: String
+
+                    do {
+                        identifier = StringUtils.generateRandomString(12)
+                    } while (memberService.findByIdentifier(identifier) != null)
+
+                    memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
+                    memberService.update(memberAction.member!!)
+                    MapCache.invalidate(Member::class.java)
+
+                    sendEmail(
+                        memberAction.email!!,
+                        "Shikkanime - Votre nouvel identifiant",
+                        getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
+                    )
+                }
+
+                else -> TODO("Action not implemented")
             }
-            else -> TODO("Action not implemented")
+        } catch (e: Exception) {
+            logger.log(Level.WARNING, "Failed to validate action", e)
         }
 
         memberAction.validated = true
@@ -65,46 +95,56 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         try {
             doAction(action, code, email)
         } catch (e: Exception) {
-            logger.log(Level.WARNING, "Failed to send action email", e)
+            logger.log(Level.WARNING, "Failed to do action", e)
         }
 
-        println("Action saved with code $code: ${savedAction.uuid}")
+        logger.info("Action saved with code $code: ${savedAction.uuid}")
         return savedAction.uuid!!
+    }
+
+    private fun sendEmail(email: String, title: String, content: String) {
+        val emailHost = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_HOST)) { "Email host config not found" }
+        val emailPort = configCacheService.getValueAsInt(ConfigPropertyKey.EMAIL_PORT)
+        require(emailPort != -1) { "Email port config not found" }
+        val emailUsername = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_USERNAME)) { "Email username config not found" }
+        val emailPassword = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_PASSWORD)) { "Email password config not found" }
+
+        Thread {
+            try {
+                MailService.sendEmail(
+                    emailHost,
+                    emailPort,
+                    emailUsername,
+                    emailPassword,
+                    email,
+                    title,
+                    content
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
+    }
+
+    private fun getFreemarkerContent(template: String, code: String? = null): StringWriter {
+        val stringWriter = StringWriter()
+        val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
+        configuration.templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
+        configuration.defaultEncoding = "UTF-8"
+        configuration.getTemplate(template).process(mapOf("code" to code), stringWriter)
+        return stringWriter
     }
 
     private fun doAction(action: Action, code: String, email: String) {
         when (action) {
             Action.VALIDATE_EMAIL -> {
-                val emailHost =
-                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_HOST)) { "Email host config not found" }
-                val emailPort = configCacheService.getValueAsInt(ConfigPropertyKey.EMAIL_PORT)
-                require(emailPort != -1) { "Email port config not found" }
-                val emailUsername =
-                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_USERNAME)) { "Email username config not found" }
-                val emailPassword =
-                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_PASSWORD)) { "Email password config not found" }
+                val stringWriter = getFreemarkerContent("/mail/associate-email.ftl", code)
+                sendEmail(email, "Shikkanime - Vérification d'adresse email", stringWriter.toString())
+            }
 
-                val stringWriter = StringWriter()
-                val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
-                configuration.templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
-                configuration.defaultEncoding = "UTF-8"
-                configuration.getTemplate("/mail/associate-email.ftl").process(mapOf("code" to code), stringWriter)
-
-                Thread {
-                    try {
-                        MailService.sendEmail(
-                            emailHost,
-                            emailPort,
-                            emailUsername,
-                            emailPassword,
-                            email,
-                            "Shikkanime - Vérification d'adresse email",
-                            stringWriter.toString()
-                        )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }.start()
+            Action.FORGOT_IDENTIFIER -> {
+                val stringWriter = getFreemarkerContent("/mail/forgot-identifier.ftl", code)
+                sendEmail(email, "Shikkanime - Récupération d'identifiant", stringWriter.toString())
             }
         }
     }
