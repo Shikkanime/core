@@ -1,20 +1,11 @@
 package fr.shikkanime.controllers.api
 
-import com.google.inject.Inject
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.MemberDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.enums.Action
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.module
-import fr.shikkanime.services.*
-import fr.shikkanime.utils.Constant
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.FileManager
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -24,48 +15,12 @@ import io.ktor.server.testing.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.util.*
 
-class MemberControllerTest {
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    private lateinit var memberActionService: MemberActionService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        memberFollowEpisodeService.deleteAll()
-        memberFollowAnimeService.deleteAll()
-        memberActionService.deleteAll()
-        memberService.deleteAll()
-        episodeMappingService.deleteAll()
-        animeService.deleteAll()
-        MapCache.invalidate(Member::class.java)
-    }
-
+class MemberControllerTest : AbstractControllerTest() {
     @Test
     fun registerPrivateMember() {
         testApplication {
@@ -76,32 +31,10 @@ class MemberControllerTest {
             client.post("/api/v1/members/register").apply {
                 assertEquals(HttpStatusCode.Created, status)
                 val identifier = ObjectParser.fromJson(bodyAsText(), Map::class.java)["identifier"].toString()
-                println(identifier)
                 val findPrivateMember = memberService.findByIdentifier(identifier)
                 assertNotNull(findPrivateMember)
                 assertTrue(findPrivateMember!!.isPrivate)
             }
-        }
-    }
-
-    private suspend fun ApplicationTestBuilder.registerAndLogin(): Pair<String, String> {
-        var identifier: String?
-
-        client.post("/api/v1/members/register").apply {
-            assertEquals(HttpStatusCode.Created, status)
-            identifier = ObjectParser.fromJson(bodyAsText(), Map::class.java)["identifier"].toString()
-            val findPrivateMember = memberService.findByIdentifier(identifier!!)
-            assertNotNull(findPrivateMember)
-            assertTrue(findPrivateMember!!.isPrivate)
-        }
-
-        client.post("/api/v1/members/login") {
-            setBody(identifier!!)
-        }.apply {
-            assertEquals(HttpStatusCode.OK, status)
-            val tokenDto = ObjectParser.fromJson(bodyAsText(), MemberDto::class.java)
-            assertTrue(tokenDto.token.isNotBlank())
-            return identifier!! to tokenDto.token
         }
     }
 
@@ -185,17 +118,7 @@ class MemberControllerTest {
             }
 
             val (identifier, token) = registerAndLogin()
-
-            val anime = animeService.save(
-                Anime(
-                    countryCode = CountryCode.FR,
-                    name = "Test Anime",
-                    image = "test.jpg",
-                    slug = "test-anime",
-                    banner = "test-banner.jpg",
-                    description = "Test description",
-                )
-            )
+            val anime = animeService.findAll().first()
 
             client.put("/api/v1/members/animes") {
                 header(HttpHeaders.Authorization, "Bearer $token")
@@ -239,17 +162,7 @@ class MemberControllerTest {
             }
 
             val (identifier, token) = registerAndLogin()
-
-            val anime = animeService.save(
-                Anime(
-                    countryCode = CountryCode.FR,
-                    name = "Test Anime",
-                    image = "test.jpg",
-                    slug = "test-anime",
-                    banner = "test-banner.jpg",
-                    description = "Test description",
-                )
-            )
+            val anime = animeService.findAll().first()
 
             client.put("/api/v1/members/animes") {
                 header(HttpHeaders.Authorization, "Bearer $token")
@@ -286,27 +199,8 @@ class MemberControllerTest {
             }
 
             val (identifier, token) = registerAndLogin()
-
-            val anime = animeService.save(
-                Anime(
-                    countryCode = CountryCode.FR,
-                    name = "Test Anime",
-                    image = "test.jpg",
-                    slug = "test-anime",
-                    banner = "test-banner.jpg",
-                    description = "Test description",
-                )
-            )
-
-            val episode = episodeMappingService.save(
-                EpisodeMapping(
-                    anime = anime,
-                    episodeType = EpisodeType.FILM,
-                    season = 1,
-                    number = 1,
-                    image = "test.jpg",
-                )
-            )
+            val anime = animeService.findAll().first()
+            val episode = episodeMappingService.findAllByAnime(anime).first()
 
             client.put("/api/v1/members/episodes") {
                 header(HttpHeaders.Authorization, "Bearer $token")
@@ -350,27 +244,8 @@ class MemberControllerTest {
             }
 
             val (identifier, token) = registerAndLogin()
-
-            val anime = animeService.save(
-                Anime(
-                    countryCode = CountryCode.FR,
-                    name = "Test Anime",
-                    image = "test.jpg",
-                    slug = "test-anime",
-                    banner = "test-banner.jpg",
-                    description = "Test description",
-                )
-            )
-
-            val episode = episodeMappingService.save(
-                EpisodeMapping(
-                    anime = anime,
-                    episodeType = EpisodeType.FILM,
-                    season = 1,
-                    number = 1,
-                    image = "test.jpg",
-                )
-            )
+            val anime = animeService.findAll().first()
+            val episode = episodeMappingService.findAllByAnime(anime).first()
 
             client.put("/api/v1/members/episodes") {
                 header(HttpHeaders.Authorization, "Bearer $token")
@@ -407,29 +282,7 @@ class MemberControllerTest {
             }
 
             val (identifier, token) = registerAndLogin()
-
-            val anime = animeService.save(
-                Anime(
-                    countryCode = CountryCode.FR,
-                    name = "Test Anime",
-                    image = "test.jpg",
-                    slug = "test-anime",
-                    banner = "test-banner.jpg",
-                    description = "Test description",
-                )
-            )
-
-            (1..12).forEach {
-                episodeMappingService.save(
-                    EpisodeMapping(
-                        anime = anime,
-                        episodeType = EpisodeType.EPISODE,
-                        season = 1,
-                        number = it,
-                        image = "test.jpg",
-                    )
-                )
-            }
+            val anime = animeService.findAll().first()
 
             client.put("/api/v1/members/follow-all-episodes") {
                 header(HttpHeaders.Authorization, "Bearer $token")
@@ -440,13 +293,15 @@ class MemberControllerTest {
                 val findPrivateMember = memberService.findByIdentifier(identifier)
                 val followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
                 assertNotNull(findPrivateMember)
-                assertEquals(12, followedEpisodes.size)
+                assertEquals(116, followedEpisodes.size)
             }
         }
     }
 
     @Test
     fun uploadProfileImage() {
+        ImageService.clearPool()
+
         testApplication {
             application {
                 module()
