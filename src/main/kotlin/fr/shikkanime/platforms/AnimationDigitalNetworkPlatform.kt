@@ -128,7 +128,7 @@ class AnimationDigitalNetworkPlatform :
                 audioLocale = getAudioLocale(it),
                 id = video.id.toString(),
                 url = video.url,
-                uncensored = video.title.contains("(NC)"),
+                uncensored = video.title.contains("(NC)", true) || video.title.contains("Non censuré", true),
                 original = video.languages.size == 1 || video.languages.indexOf(it) == 0
             )
         }
