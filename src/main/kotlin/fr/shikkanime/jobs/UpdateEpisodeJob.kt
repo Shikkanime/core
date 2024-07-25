@@ -126,8 +126,15 @@ class UpdateEpisodeJob : AbstractJob {
         val episodes = mutableListOf<Episode>()
 
         if (episodeVariant.platform == Platform.ANIM) {
-            val adnId = "[A-Z]{2}-ANIM-([0-9]{5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex().find(episodeVariant.identifier!!)?.groupValues?.get(1)
-            episodes.addAll(getADNEpisodeAndVariants(countryCode, adnId!!))
+            val adnId = "[A-Z]{2}-ANIM-([0-9]{1,5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex()
+                .find(episodeVariant.identifier!!)?.groupValues?.get(1)
+
+            if (adnId.isNullOrBlank()) {
+                logger.warning("Error while getting ADN episode $adnId : Invalid ADN ID")
+                return emptyList()
+            }
+
+            episodes.addAll(getADNEpisodeAndVariants(countryCode, adnId))
         }
 
         if (episodeVariant.platform == Platform.CRUN) {
