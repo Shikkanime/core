@@ -14,7 +14,6 @@ import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.withUTCString
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
@@ -49,9 +48,8 @@ class CrunchyrollPlatform :
         val simulcastSeries = mutableSetOf<String>()
         val accessToken = identifiers[it]!!
         val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2)
-            .map { simulcast -> simulcast.getAsString("id") }
 
-        val series = simulcasts.flatMap { simulcastId ->
+        val series = simulcasts.flatMap { simulcast ->
             runBlocking {
                 CrunchyrollWrapper.getBrowse(
                     it.locale,
@@ -59,7 +57,7 @@ class CrunchyrollPlatform :
                     sortBy = CrunchyrollWrapper.SortType.POPULARITY,
                     type = CrunchyrollWrapper.MediaType.SERIES,
                     100,
-                    simulcast = simulcastId
+                    simulcast = simulcast.id
                 ).toList()
             }
         }.map { serie -> serie.title!!.lowercase() }.toSet()
