@@ -100,7 +100,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
                 cb.equal(root[MemberFollowEpisode_.member], member)
             )
 
-            createReadOnlyQuery(it, query)
+            it.createQuery(query)
                 .resultList
                 .firstOrNull() ?: 0L
         }

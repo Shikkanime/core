@@ -7,10 +7,7 @@ import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.repositories.MemberActionRepository
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import freemarker.cache.ClassTemplateLoader
 import freemarker.template.Configuration
 import java.io.StringWriter
@@ -131,7 +128,14 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
         configuration.templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
         configuration.defaultEncoding = "UTF-8"
-        configuration.getTemplate(template).process(mapOf("code" to code), stringWriter)
+
+        configuration.getTemplate(template).process(
+            mapOf(
+                "baseUrl" to Constant.baseUrl,
+                "code" to code,
+            ), stringWriter
+        )
+
         return stringWriter
     }
 
