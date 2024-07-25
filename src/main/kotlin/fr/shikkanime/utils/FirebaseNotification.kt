@@ -3,10 +3,7 @@ package fr.shikkanime.utils
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
-import com.google.firebase.messaging.AndroidConfig
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.Message
-import com.google.firebase.messaging.Notification
+import com.google.firebase.messaging.*
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.services.MemberService
 import java.io.File
@@ -44,6 +41,10 @@ object FirebaseNotification {
             .setPriority(AndroidConfig.Priority.HIGH)
             .build()
 
+        val apnsConfig = ApnsConfig.builder()
+            .setAps(Aps.builder().setBadge(1).build())
+            .build()
+
         val topics = mutableSetOf("global")
         memberService.findAllByAnimeUUID(episodeDto.mapping.anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
         // Chunked topics to avoid the 500 topics limit (due to the limit of the Firebase API)
@@ -57,6 +58,7 @@ object FirebaseNotification {
                             .setTopic(topic)
                             .setNotification(notification)
                             .setAndroidConfig(androidConfig)
+                            .setApnsConfig(apnsConfig)
                             .build()
                     }
                 )

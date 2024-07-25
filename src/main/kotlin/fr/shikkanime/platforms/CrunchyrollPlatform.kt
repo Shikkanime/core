@@ -14,7 +14,6 @@ import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.withUTCString
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
@@ -49,9 +48,8 @@ class CrunchyrollPlatform :
         val simulcastSeries = mutableSetOf<String>()
         val accessToken = identifiers[it]!!
         val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2)
-            .map { simulcast -> simulcast.getAsString("id") }
 
-        val series = simulcasts.flatMap { simulcastId ->
+        val series = simulcasts.flatMap { simulcast ->
             runBlocking {
                 CrunchyrollWrapper.getBrowse(
                     it.locale,
@@ -59,7 +57,7 @@ class CrunchyrollPlatform :
                     sortBy = CrunchyrollWrapper.SortType.POPULARITY,
                     type = CrunchyrollWrapper.MediaType.SERIES,
                     100,
-                    simulcast = simulcastId
+                    simulcast = simulcast.id
                 ).toList()
             }
         }.map { serie -> serie.title!!.lowercase() }.toSet()
@@ -124,22 +122,30 @@ class CrunchyrollPlatform :
                 getApiContent(countryCode, zonedDateTime) // NOSONAR
             }.toMutableList()
 
-            api.forEach {
-                try {
-                    list.add(convertEpisode(countryCode, it))
-                } catch (_: EpisodeException) {
-                    // Ignore
-                } catch (_: AnimeException) {
-                    // Ignore
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error on converting episode", e)
-                }
-            }
+            api.forEach { addToList(list, countryCode, it) }
 
             runBlocking { list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, list)) }
         }
 
         return list
+    }
+
+    private fun addToList(
+        list: MutableList<Episode>,
+        countryCode: CountryCode,
+        browseObject: CrunchyrollWrapper.BrowseObject
+    ) {
+        try {
+            list.add(convertEpisode(countryCode, browseObject))
+        } catch (_: EpisodeException) {
+            // Ignore
+        } catch (_: AnimeException) {
+            // Ignore
+        } catch (_: NotSimulcastedMediaException) {
+            // Ignore
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error on converting episode", e)
+        }
     }
 
     override fun saveConfiguration() {
@@ -185,15 +191,7 @@ class CrunchyrollPlatform :
 
                 CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
                     .forEach { browseObject ->
-                        try {
-                            list.add(convertEpisode(countryCode, browseObject))
-                        } catch (_: EpisodeException) {
-                            // Ignore
-                        } catch (_: AnimeException) {
-                            // Ignore
-                        } catch (e: Exception) {
-                            logger.log(Level.SEVERE, "Error on converting episode", e)
-                        }
+                        addToList(list, countryCode, browseObject)
                     }
             } ?: logger.warning("Next episode ID not found in $crunchyrollId")
         }
@@ -225,7 +223,7 @@ class CrunchyrollPlatform :
                 browseObject.episodeMetadata.premiumAvailableDate.withUTCString() == "1970-01-01T00:00:00Z"
 
         if (isTeaser)
-            throw EpisodeException("Episode is a teaser")
+            throw NotSimulcastedMediaException("Teaser is not simulcasted")
 
         val isDubbed = browseObject.episodeMetadata.audioLocale == countryCode.locale
         val subtitles = browseObject.episodeMetadata.subtitleLocales
