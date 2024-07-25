@@ -1,6 +1,5 @@
 package fr.shikkanime.wrappers
 
-import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
@@ -104,6 +103,16 @@ object CrunchyrollWrapper {
         val episodeMetadata: Episode?,
         @SerializedName("slug_title")
         val slugTitle: String?,
+    )
+
+    data class Localization(
+        val title: String,
+        val description: String,
+    )
+
+    data class Simulcast(
+        val id: String,
+        val localization: Localization,
     )
 
     private const val BASE_URL = "https://www.crunchyroll.com/"
@@ -222,10 +231,11 @@ object CrunchyrollWrapper {
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get objects")
+
         return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
     }
 
-    suspend fun getSimulcasts(locale: String, accessToken: String): List<JsonObject> {
+    suspend fun getSimulcasts(locale: String, accessToken: String): List<Simulcast> {
         val response = httpRequest.get(
             "${BASE_URL}content/v1/season_list?locale=$locale",
             headers = mapOf(
@@ -235,8 +245,10 @@ object CrunchyrollWrapper {
 
         require(response.status.value == 200) { "Failed to get simulcasts" }
 
-        return ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")?.map { it.asJsonObject }
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")
             ?: throw Exception("Failed to get simulcasts")
+
+        return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java).toList()
     }
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =

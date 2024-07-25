@@ -26,6 +26,8 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.Period
 import java.util.logging.Level
+import kotlin.math.max
+import kotlin.math.min
 
 class FetchOldEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -68,7 +70,6 @@ class FetchOldEpisodesJob : AbstractJob {
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
         val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).toList().sorted()
-        val simulcasts = getSimulcasts(dates)
 
         val episodes = mutableListOf<Episode>()
         val start = System.currentTimeMillis()
@@ -82,6 +83,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
         episodes.addAll(
             crunchyrollPlatform.configuration?.availableCountries?.flatMap {
+                val simulcasts = runBlocking { getSimulcasts(it, dates) }
                 runBlocking { fetchCrunchyroll(it, simulcasts) }
             } ?: emptyList()
         )
@@ -132,18 +134,28 @@ class FetchOldEpisodesJob : AbstractJob {
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
     }
 
-    fun getSimulcasts(dates: List<LocalDate>): Set<String> {
-        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
-        val simulcastDates = dates.toMutableSet()
+    suspend fun getSimulcasts(countryCode: CountryCode, dates: List<LocalDate>): Set<String> {
+        val list = dates.sorted().map {
+            "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
+        }.toMutableSet()
 
-        for (i in 1..simulcastRange) {
-            simulcastDates.addAll(dates.map { it.plusDays(i.toLong()) })
-            simulcastDates.addAll(dates.map { it.minusDays(i.toLong()) })
+        val crunchyrollSimulcasts =
+            CrunchyrollWrapper.getSimulcasts(countryCode.locale, crunchyrollAccessTokenCache[countryCode]!!)
+        // Get the min and the max index of the simulcasts in the crunchyrollSimulcasts list
+        val minIndex = crunchyrollSimulcasts.indexOfFirst { simulcast -> simulcast.id in list }
+        val maxIndex = crunchyrollSimulcasts.indexOfLast { simulcast -> simulcast.id in list }
+
+        // 0 is the latest simulcast added
+        // In the list, added the previous and the next simulcast of the min and max index
+
+        if (minIndex < 0 || maxIndex < 0) {
+            return list
         }
 
-        return simulcastDates.sorted().map {
-            "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
-        }.toSet()
+        list.add(crunchyrollSimulcasts[max(minIndex - 1, 0)].id)
+        list.add(crunchyrollSimulcasts[min(maxIndex + 1, crunchyrollSimulcasts.size - 1)].id)
+
+        return list
     }
 
     private fun fetchAnimationDigitalNetwork(

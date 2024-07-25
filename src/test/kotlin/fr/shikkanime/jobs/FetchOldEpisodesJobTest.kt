@@ -75,31 +75,41 @@ class FetchOldEpisodesJobTest {
     @Test
     fun getSimulcasts() {
         val dates = LocalDate.of(2023, 4, 10).datesUntil(LocalDate.of(2023, 4, 25)).toList()
-        configService.save(Config(propertyKey = ConfigPropertyKey.SIMULCAST_RANGE.key, propertyValue = "20"))
-        MapCache.invalidate(Config::class.java)
-        val simulcasts = fetchOldEpisodesJob.getSimulcasts(dates)
+        val simulcasts = runBlocking { fetchOldEpisodesJob.getSimulcasts(CountryCode.FR, dates) }
 
         assertTrue(simulcasts.isNotEmpty())
-        assertEquals(2, simulcasts.size)
-        assertEquals("winter-2023", simulcasts.first())
-        assertEquals("spring-2023", simulcasts.last())
+        assertEquals(3, simulcasts.size)
+        assertTrue(simulcasts.contains("winter-2023"))
+        assertTrue(simulcasts.contains("spring-2023"))
+    }
+
+    @Test
+    fun `getSimulcasts for one date`() {
+        val dates = listOf(LocalDate.of(2023, 4, 10))
+        val simulcasts = runBlocking { fetchOldEpisodesJob.getSimulcasts(CountryCode.FR, dates) }
+        println(simulcasts)
+
+        assertTrue(simulcasts.isNotEmpty())
+        assertEquals(3, simulcasts.size)
+        assertTrue(simulcasts.contains("winter-2023"))
+        assertTrue(simulcasts.contains("spring-2023"))
+        assertTrue(simulcasts.contains("summer-2023"))
     }
 
     @Test
     fun `fix issue #503`() {
         val dates = LocalDate.of(2023, 10, 4).datesUntil(LocalDate.of(2023, 10, 14)).toList()
-        configService.save(Config(propertyKey = ConfigPropertyKey.SIMULCAST_RANGE.key, propertyValue = "20"))
         configService.save(Config(propertyKey = ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key, propertyValue = "2023-10-14"))
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key, propertyValue = "14"))
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT.key, propertyValue = "8"))
         MapCache.invalidate(Config::class.java)
         crunchyrollPlatform.configuration?.availableCountries?.add(CountryCode.FR)
-        val simulcasts = fetchOldEpisodesJob.getSimulcasts(dates)
+        val simulcasts = runBlocking { fetchOldEpisodesJob.getSimulcasts(CountryCode.FR, dates) }
 
         assertTrue(simulcasts.isNotEmpty())
-        assertEquals(2, simulcasts.size)
-        assertEquals("summer-2023", simulcasts.first())
-        assertEquals("fall-2023", simulcasts.last())
+        assertEquals(3, simulcasts.size)
+        assertTrue(simulcasts.contains("fall-2023"))
+        assertTrue(simulcasts.contains("summer-2023"))
 
         val series = runBlocking { fetchOldEpisodesJob.getSeries(CountryCode.FR, simulcasts) }
         series.forEach { println("${it.id} - ${it.title}") }
