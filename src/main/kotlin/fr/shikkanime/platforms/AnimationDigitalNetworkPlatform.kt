@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
+import fr.shikkanime.exceptions.NotSimulcastedMediaException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.ObjectParser
@@ -45,6 +46,8 @@ class AnimationDigitalNetworkPlatform :
                 try {
                     list.addAll(convertEpisode(countryCode, it, zonedDateTime))
                 } catch (_: AnimeException) {
+                    // Ignore
+                } catch (_: NotSimulcastedMediaException) {
                     // Ignore
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error on converting episode", e)
@@ -99,9 +102,8 @@ class AnimationDigitalNetworkPlatform :
         val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
         val specialShowTypes = listOf("PV", "BONUS")
 
-        if (trailerIndicators.any { video.shortNumber?.startsWith(it) == true } || specialShowTypes.contains(video.type)) {
-            throw Exception("Anime is not an episode")
-        }
+        if (trailerIndicators.any { video.shortNumber?.startsWith(it) == true } || specialShowTypes.contains(video.type))
+            throw NotSimulcastedMediaException("Trailer or special show type")
 
         val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
 
