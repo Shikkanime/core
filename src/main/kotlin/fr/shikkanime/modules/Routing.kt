@@ -1,11 +1,10 @@
 package fr.shikkanime.modules
 
 import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
@@ -32,17 +31,20 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import io.ktor.server.util.*
 import io.ktor.util.*
 import io.ktor.util.pipeline.*
 import io.ktor.utils.io.*
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
+import kotlin.reflect.KType
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
-import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 private val logger = LoggerFactory.getLogger("Routing")
 private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
@@ -176,7 +178,7 @@ private suspend fun handleRequest(
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
     try {
-        val response = callMethodWithParameters(method, controller, call, parameters)
+        val response = callMethodWithParameters(method, controller, call)
 
         if (method.hasAnnotation<Cached>()) {
             val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
@@ -219,20 +221,15 @@ private fun replacePathWithParameters(path: String, parameters: Map<String, List
         acc.replace("{$param}", values.joinToString(", "))
     }
 
-private suspend fun callMethodWithParameters(
-    method: KFunction<*>,
-    controller: Any,
-    call: ApplicationCall,
-    parameters: Map<String, List<String>>
-): Response {
+private suspend fun callMethodWithParameters(method: KFunction<*>, controller: Any, call: ApplicationCall): Response {
     val methodParams = method.parameters.associateWith { kParameter ->
         when {
             kParameter.name.isNullOrBlank() -> controller
             kParameter.hasAnnotation<JWTUser>() -> call.principal<JWTPrincipal>()?.payload?.getClaim("uuid")?.asString()?.let { UUID.fromString(it) }
             kParameter.hasAnnotation<AdminSessionUser>() -> call.principal<TokenDto>()
-            kParameter.hasAnnotation<BodyParam>() -> handleBodyParam(kParameter, call)
+            kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, call)
             kParameter.hasAnnotation<QueryParam>() -> handleQueryParam(kParameter, call)
-            kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, parameters)
+            kParameter.hasAnnotation<BodyParam>() -> handleBodyParam(kParameter, call)
             else -> throw Exception("Unknown parameter ${kParameter.name}")
         }
     }
@@ -247,49 +244,45 @@ private suspend fun callMethodWithParameters(
     }
 }
 
-private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCall): Any {
-    return when (kParameter.type.javaType) {
-        Array<UUID>::class.java -> call.receive<Array<UUID>>()
-        Parameters::class.java -> call.receiveParameters()
-        ConfigDto::class.java -> call.receive<ConfigDto>()
-        AnimeDto::class.java -> call.receive<AnimeDto>()
-        EpisodeMappingDto::class.java -> call.receive<EpisodeMappingDto>()
-        GenericDto::class.java -> call.receive<GenericDto>()
-        MultiPartData::class.java -> call.receiveMultipart()
-        else -> call.receive<String>()
+private fun fromString(value: String?, type: KType): Any? {
+    if (type.jvmErasure == Array<LangType>::class) {
+        return value?.takeIf { it.isNotBlank() }
+            ?.split(",")
+            ?.map(LangType::valueOf)
+            ?.toTypedArray()
     }
+
+    val converters: Map<KClass<*>, (String?) -> Any?> = mapOf(
+        UUID::class to { it?.let(UUID::fromString) },
+        CountryCode::class to { CountryCode.fromNullable(it) },
+        Platform::class to { Platform.fromNullable(it) },
+        Status::class to { Status.fromNullable(it) },
+        String::class to { it },
+        Int::class to { it?.toIntOrNull() },
+    )
+
+    return converters.entries.firstOrNull { (kClass, _) ->
+        kClass.starProjectedType.withNullability(true) == type || kClass.starProjectedType == type
+    }?.value?.invoke(value)
+}
+
+private fun handlePathParam(kParameter: KParameter, call: ApplicationCall): Any? {
+    val name = kParameter.findAnnotation<PathParam>()?.name ?: kParameter.name
+    val value = name?.let { call.parameters[name] }
+    return fromString(value, kParameter.type)
 }
 
 private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any? {
     val name = kParameter.findAnnotation<QueryParam>()?.name ?: kParameter.name
-    val queryParamValue = name?.let { call.request.queryParameters[it] }
-
-    return when (kParameter.type) {
-        Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
-        String::class.starProjectedType.withNullability(true) -> queryParamValue
-        CountryCode::class.starProjectedType.withNullability(true) -> CountryCode.fromNullable(queryParamValue)
-        UUID::class.starProjectedType.withNullability(true) -> queryParamValue?.let { UUID.fromString(it) }
-        Status::class.starProjectedType.withNullability(true) -> queryParamValue?.let {
-            try {
-                Status.valueOf(it)
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-        else -> throw Exception("Unknown type ${kParameter.type}")
-    }
+    val value = name?.let { call.request.queryParameters[it] }
+    return fromString(value, kParameter.type)
 }
 
-private fun handlePathParam(kParameter: KParameter, parameters: Map<String, List<String>>): Any? {
-    val name = kParameter.findAnnotation<PathParam>()?.name ?: kParameter.name
-    val pathParamValue = parameters[name]?.firstOrNull()
+private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCall): Any {
+    val type = kParameter.type
 
-    return when (kParameter.type.javaType) {
-        UUID::class.java -> pathParamValue?.let { UUID.fromString(it) }
-        Platform::class.java -> pathParamValue?.let { Platform.valueOf(it) }
-        String::class.java -> pathParamValue
-        Int::class.java -> pathParamValue?.toIntOrNull()
-        else -> throw Exception("Unknown type ${kParameter.type}")
-    }
+    return if (type.isSubtypeOf(MultiPartData::class.starProjectedType))
+        call.receiveMultipart()
+    else
+        call.receive(type.jvmErasure)
 }

@@ -25,7 +25,6 @@ class Anime(
     uuid: UUID? = null,
     @Column(nullable = false, name = "country_code")
     @Enumerated(EnumType.STRING)
-    @FullTextField
     val countryCode: CountryCode? = null,
     @Column(nullable = false)
     @FullTextField(analyzer = "shikkanime_analyzer")

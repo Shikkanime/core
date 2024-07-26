@@ -223,11 +223,13 @@ class SiteController {
     @Get
     private fun search(
         @QueryParam("q") query: String?,
+        @QueryParam("page") pageParam: Int?,
     ): Response {
         return Response.template(
             Link.SEARCH,
             mutableMapOf(
-                "query" to query
+                "query" to query,
+                "page" to pageParam,
             )
         )
     }
@@ -246,7 +248,7 @@ class SiteController {
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(null, startOfWeekDay, CountryCode.FR),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay),
                 "previousWeek" to startOfWeekDay.minusDays(7),
                 "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )

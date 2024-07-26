@@ -6,13 +6,14 @@ import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.MemberService
@@ -51,10 +52,15 @@ class AnimeCacheService : AbstractCacheService {
 
     private val findAllByNameCache =
         MapCache<CountryCodeNamePaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
-            PageableDto.fromPageable(
-                animeService.findAllByName(it.name, it.countryCode, it.page, it.limit),
-                AnimeDto::class.java
-            )
+            try {
+                PageableDto.fromPageable(
+                    animeService.findAllByName(it.countryCode, it.name, it.page, it.limit, it.searchTypes),
+                    AnimeDto::class.java
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                PageableDto.empty()
+            }
         }
 
     private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(classes = listOf(Anime::class.java, EpisodeMapping::class.java)) {
@@ -90,7 +96,11 @@ class AnimeCacheService : AbstractCacheService {
                 MemberFollowAnime::class.java
             )
         ) {
-            animeService.getWeeklyAnimes(it.member?.let { uuid -> memberService.find(uuid) }, it.localDate, it.countryCode)
+            animeService.getWeeklyAnimes(
+                it.countryCode,
+                it.member?.let { uuid -> memberService.find(uuid) },
+                it.localDate
+            )
         }
 
     fun findAllBy(
@@ -102,12 +112,12 @@ class AnimeCacheService : AbstractCacheService {
         status: Status? = null,
     ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, status)]
 
-    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
-        findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit)]
+    fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: List<LangType>?) =
+        findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes)]
 
     fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
 
-    fun getWeeklyAnimes(member: UUID?, startOfWeekDay: LocalDate, countryCode: CountryCode) =
+    fun getWeeklyAnimes(countryCode: CountryCode, member: UUID?, startOfWeekDay: LocalDate) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(member, countryCode, startOfWeekDay)]
 
     fun findAll() = findAllCache["all"]

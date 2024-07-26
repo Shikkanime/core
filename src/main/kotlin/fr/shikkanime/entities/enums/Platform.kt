@@ -16,5 +16,13 @@ enum class Platform(
         fun findByName(name: String): Platform? {
             return entries.find { it.platformName == name }
         }
+
+        fun fromNullable(string: String?): Platform? {
+            return if (string == null) null else try {
+                Platform.valueOf(string.uppercase())
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
     }
 }

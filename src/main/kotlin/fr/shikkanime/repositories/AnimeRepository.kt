@@ -3,12 +3,13 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import jakarta.persistence.Tuple
+import jakarta.persistence.criteria.CriteriaBuilder
+import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
+import jakarta.persistence.criteria.Root
 import org.hibernate.Hibernate
-import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep
-import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
-import org.hibernate.search.engine.search.query.SearchResult
 import org.hibernate.search.mapper.orm.Search
 import java.time.ZonedDateTime
 import java.util.*
@@ -77,28 +78,120 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int): Pageable<Anime> {
+    private fun predicates(
+        countryCode: CountryCode?,
+        predicates: MutableList<Predicate>,
+        cb: CriteriaBuilder,
+        root: Root<Anime>,
+        searchTypes: List<LangType>?
+    ): MutableList<Predicate> {
+        val orPredicate = mutableListOf<Predicate>()
+
+        countryCode?.let { cc ->
+            predicates.add(cb.equal(root[Anime_.countryCode], cc))
+
+            searchTypes?.let { st ->
+                val mappingJoin = root.join(Anime_.mappings, JoinType.LEFT)
+                val variantJoin = mappingJoin.join(EpisodeMapping_.variants, JoinType.LEFT)
+
+                st.forEach { langType ->
+                    when (langType) {
+                        LangType.SUBTITLES -> orPredicate.add(
+                            cb.notEqual(
+                                variantJoin[EpisodeVariant_.audioLocale],
+                                cc.locale
+                            )
+                        )
+
+                        LangType.VOICE -> orPredicate.add(cb.equal(variantJoin[EpisodeVariant_.audioLocale], cc.locale))
+                    }
+                }
+            }
+        }
+
+        return orPredicate
+    }
+
+    fun findAllByName(
+        countryCode: CountryCode?,
+        name: String,
+        page: Int,
+        limit: Int,
+        searchTypes: List<LangType>?
+    ): Pageable<Anime> {
         return database.entityManager.use {
-            val searchSession = Search.session(it)
-
             @Suppress("UNCHECKED_CAST")
-            val searchResult = searchSession.search(getEntityClass())
-                .where { w -> findWhere(w, name, countryCode) }
-                .fetch((limit * page) - limit, limit) as SearchResult<Anime>
+            val ids = (Search.session(it).search(getEntityClass())
+                // Select id and score
+                .select { s -> s.composite(s.id(), s.score()) }
+                .where { w -> w.bool().must(w.match().field(Anime_.NAME).matching(name)) }
+                .fetchAll().hits() as List<List<Any>>)
+                .map { array -> Pair(array[0] as UUID, array[1] as Float) }
 
-            Pageable(searchResult.hits(), page, limit, searchResult.total().hitCount())
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            val predicates = mutableListOf<Predicate>(root[Anime_.uuid].`in`(ids.map { pair -> pair.first }))
+            val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
+
+            query.where(
+                *predicates.toTypedArray(),
+                cb.or(*orPredicate.toTypedArray())
+            )
+
+            val list = createReadOnlyQuery(it, query)
+                .resultList
+                .sortedByDescending { anime -> ids.first { pair -> pair.first == anime.uuid }.second }
+
+            Pageable(
+                list.subList(
+                    (page - 1) * limit,
+                    (page * limit).coerceAtMost(list.size)
+                ),
+                page,
+                limit,
+                list.size.toLong()
+            )
         }
     }
 
-    private fun findWhere(
-        searchPredicateFactory: SearchPredicateFactory,
-        name: String,
-        countryCode: CountryCode?
-    ): BooleanPredicateClausesStep<*>? {
-        val bool = searchPredicateFactory.bool()
-        bool.must(searchPredicateFactory.match().field(Anime_.NAME).matching(name))
-        countryCode?.let { bool.must(searchPredicateFactory.match().field(Anime_.COUNTRY_CODE).matching(it)) }
-        return bool
+    fun findAllByFirstLetterCategory(
+        countryCode: CountryCode?,
+        firstLetter: String,
+        page: Int,
+        limit: Int,
+        searchTypes: List<LangType>?
+    ): Pageable<Anime> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            query.distinct(true).select(root)
+
+            val predicates = mutableListOf<Predicate>(
+                cb.equal(
+                    cb.upper(
+                        cb.function(
+                            "REGEXP_REPLACE", String::class.java,
+                            cb.upper(cb.substring(root[Anime_.name], 1, 1)),
+                            cb.literal("[^A-Z]"),
+                            cb.literal("#"),
+                        )
+                    ),
+                    firstLetter
+                )
+            )
+            val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
+
+            query.where(
+                *predicates.toTypedArray(),
+                cb.or(*orPredicate.toTypedArray())
+            )
+
+            query.orderBy(cb.asc(root[Anime_.name]))
+
+            buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
+        }
     }
 
     fun findAllUuidImageAndBanner(): List<Tuple> {
