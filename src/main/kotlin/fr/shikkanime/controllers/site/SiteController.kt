@@ -220,11 +220,13 @@ class SiteController {
     @Get
     private fun search(
         @QueryParam("q") query: String?,
+        @QueryParam("page") pageParam: Int?,
     ): Response {
         return Response.template(
             Link.SEARCH,
             mutableMapOf(
-                "query" to query
+                "query" to query,
+                "page" to pageParam,
             )
         )
     }
@@ -238,9 +240,9 @@ class SiteController {
             Link.CALENDAR,
             mutableMapOf(
                 "weeklyAnimes" to animeCacheService.getWeeklyAnimes(
+                    CountryCode.FR,
                     null,
                     now.minusDays(now.dayOfWeek.value.toLong() - 1),
-                    CountryCode.FR
                 ),
             )
         )

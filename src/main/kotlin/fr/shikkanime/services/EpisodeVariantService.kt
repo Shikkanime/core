@@ -34,11 +34,11 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     override fun getRepository() = episodeVariantRepository
 
     fun findAllByDateRange(
-        member: Member?,
         countryCode: CountryCode,
+        member: Member?,
         start: ZonedDateTime,
         end: ZonedDateTime,
-    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end)
+    ) = episodeVariantRepository.findAllByDateRange(countryCode, member, start, end)
 
     fun findAllMappingUuidAndIdentifierByDateRange(
         countryCode: CountryCode,

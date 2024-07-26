@@ -52,8 +52,19 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         status: Status? = null,
     ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, status)
 
-    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
-        animeRepository.findAllByName(name, countryCode, page, limit)
+    fun findAllByName(
+        countryCode: CountryCode?,
+        name: String,
+        page: Int,
+        limit: Int,
+        searchTypes: List<LangType>?
+    ): Pageable<Anime> {
+        return if (name.length == 1) {
+            animeRepository.findAllByFirstLetterCategory(countryCode, name, page, limit, searchTypes)
+        } else {
+            animeRepository.findAllByName(countryCode, name, page, limit, searchTypes)
+        }
+    }
 
     fun findAllUuidImageAndBanner() = animeRepository.findAllUuidImageAndBanner()
 
@@ -66,12 +77,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
-    fun getWeeklyAnimes(member: Member?, startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
+    fun getWeeklyAnimes(countryCode: CountryCode, member: Member?, startOfWeekDay: LocalDate): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
 
         val list = episodeVariantService.findAllByDateRange(
-            member,
             countryCode,
+            member,
             startOfWeekDay.minusDays(7).atStartOfDay(zoneId),
             startOfWeekDay.plusDays(7).atTime(23, 59, 59).atZone(zoneId)
         )

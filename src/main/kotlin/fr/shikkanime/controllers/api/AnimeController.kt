@@ -5,6 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
@@ -58,6 +59,7 @@ class AnimeController : HasPageableRoute() {
         @QueryParam("sort") sortParam: String?,
         @QueryParam("desc") descParam: String?,
         @QueryParam("status") statusParam: Status?,
+        @QueryParam("searchTypes") searchTypes: Array<LangType>?,
     ): Response {
         if (simulcastParam != null && name != null) {
             return Response.conflict(
@@ -81,7 +83,7 @@ class AnimeController : HasPageableRoute() {
 
         return Response.ok(
             if (!name.isNullOrBlank()) {
-                animeCacheService.findAllByName(name, countryParam, page, limit)
+                animeCacheService.findAllByName(countryParam, name, page, limit, searchTypes?.toList())
             } else {
                 animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit, statusParam)
             }
@@ -160,9 +162,9 @@ class AnimeController : HasPageableRoute() {
 
         return Response.ok(
             animeCacheService.getWeeklyAnimes(
+                CountryCode.fromNullable(countryParam) ?: CountryCode.FR,
                 uuid,
                 parsedDate!!.minusDays(parsedDate.dayOfWeek.value.toLong() - 1),
-                CountryCode.fromNullable(countryParam) ?: CountryCode.FR
             )
         )
     }

@@ -17,8 +17,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     override fun getEntityClass() = EpisodeVariant::class.java
 
     fun findAllByDateRange(
-        member: Member?,
         countryCode: CountryCode,
+        member: Member?,
         start: ZonedDateTime,
         end: ZonedDateTime,
     ): List<EpisodeVariant> {

@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
@@ -42,6 +43,7 @@ import kotlin.reflect.KParameter
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.jvmErasure
 
 private val logger = LoggerFactory.getLogger("Routing")
 private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
@@ -263,6 +265,12 @@ private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any
     val name = kParameter.findAnnotation<QueryParam>()?.name ?: kParameter.name
     val queryParamValue = name?.let { call.request.queryParameters[it] }
 
+    // If kParameter.type is Array<LangType> then it will be null
+    if (kParameter.type.jvmErasure.javaObjectType == Array<LangType>::class.javaObjectType) {
+        if (queryParamValue.isNullOrBlank()) return null
+        return queryParamValue.split(",").map { LangType.valueOf(it) }.toTypedArray()
+    }
+
     return when (kParameter.type) {
         Int::class.starProjectedType.withNullability(true) -> queryParamValue?.toIntOrNull()
         String::class.starProjectedType.withNullability(true) -> queryParamValue
@@ -275,7 +283,6 @@ private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any
                 null
             }
         }
-
         else -> throw Exception("Unknown type ${kParameter.type}")
     }
 }
