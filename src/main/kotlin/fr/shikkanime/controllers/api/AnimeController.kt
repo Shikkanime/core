@@ -3,9 +3,9 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
@@ -80,6 +80,8 @@ class AnimeController : HasPageableRoute() {
         descParam: String?,
         @QueryParam("status", description = "Status to filter by", type = Status::class)
         statusParam: Status?,
+        @QueryParam("searchTypes", description = "Search types to filter by", type = LangType::class)
+        searchTypes: Array<LangType>?,
     ): Response {
         if (simulcastParam != null && name != null) {
             return Response.conflict(
@@ -103,7 +105,7 @@ class AnimeController : HasPageableRoute() {
 
         return Response.ok(
             if (!name.isNullOrBlank()) {
-                animeCacheService.findAllByName(name, countryParam, page, limit)
+                animeCacheService.findAllByName(countryParam, name, page, limit, searchTypes?.toList())
             } else {
                 animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit, statusParam)
             }
@@ -154,7 +156,7 @@ class AnimeController : HasPageableRoute() {
         @JWTUser
         uuid: UUID?,
         @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
-        countryParam: String?,
+        countryParam: CountryCode?,
         @QueryParam(
             "date",
             description = "Date to filter by. Format: yyyy-MM-dd",
@@ -168,10 +170,13 @@ class AnimeController : HasPageableRoute() {
             return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
         }
 
-        val startOfWeekDay = parsedDate.with(DayOfWeek.MONDAY)
-        val countryCode = CountryCode.fromNullable(countryParam) ?: CountryCode.FR
-
-        return Response.ok(animeCacheService.getWeeklyAnimes(uuid, startOfWeekDay, countryCode))
+        return Response.ok(
+            animeCacheService.getWeeklyAnimes(
+                countryParam ?: CountryCode.FR,
+                uuid,
+                parsedDate.with(DayOfWeek.MONDAY),
+            )
+        )
     }
 
     @Path("/missed")

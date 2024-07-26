@@ -140,7 +140,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     }
 
     private fun updateEpisodeMappingAnime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
-        println(entity)
         if (entity.anime.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
             val oldAnimeId = episode.anime!!.uuid!!
             val findByName = requireNotNull(

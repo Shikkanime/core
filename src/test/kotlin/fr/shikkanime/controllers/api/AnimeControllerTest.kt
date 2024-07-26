@@ -2,6 +2,8 @@ package fr.shikkanime.controllers.api
 
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.dtos.*
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.module
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.ObjectParser
@@ -11,6 +13,8 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class AnimeControllerTest : AbstractControllerTest() {
     @Test
@@ -105,6 +109,45 @@ class AnimeControllerTest : AbstractControllerTest() {
                     ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<MissedAnimeDto>>() {})
                 assertEquals(1, missedAnimes.data.size)
                 assertEquals(115, missedAnimes.data.first().episodeMissed)
+            }
+        }
+    }
+
+    @Test
+    fun advancedSearch() {
+        testApplication {
+            application {
+                module()
+            }
+
+            client.get(
+                "/api/v1/animes?country=${CountryCode.FR}&name=${
+                    URLEncoder.encode(
+                        "#",
+                        StandardCharsets.UTF_8
+                    )
+                }&searchTypes=${LangType.entries.joinToString(",")}"
+            ) {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val animes = ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<AnimeDto>>() {})
+                animes.data.forEach(::println)
+                assertEquals(1, animes.data.size)
+                assertEquals(
+                    "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!",
+                    animes.data.first().name
+                )
+            }
+
+            client.get("/api/v1/animes?country=${CountryCode.FR}&name=O&searchTypes=${LangType.VOICE}") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val animes = ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<AnimeDto>>() {})
+                animes.data.forEach(::println)
+                assertEquals(1, animes.data.size)
+                assertEquals("One Piece", animes.data.first().name)
             }
         }
     }

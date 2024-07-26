@@ -2,10 +2,10 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
@@ -53,8 +53,19 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         status: Status? = null,
     ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, status)
 
-    fun findAllByName(name: String, countryCode: CountryCode?, page: Int, limit: Int) =
-        animeRepository.findAllByName(name, countryCode, page, limit)
+    fun findAllByName(
+        countryCode: CountryCode?,
+        name: String,
+        page: Int,
+        limit: Int,
+        searchTypes: List<LangType>?
+    ): Pageable<Anime> {
+        return if (name.length == 1) {
+            animeRepository.findAllByFirstLetterCategory(countryCode, name, page, limit, searchTypes)
+        } else {
+            animeRepository.findAllByName(countryCode, name, page, limit, searchTypes)
+        }
+    }
 
     fun findAllUuidImageAndBanner() = animeRepository.findAllUuidImageAndBanner()
 
@@ -67,13 +78,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
-    fun getWeeklyAnimes(member: Member?, startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
+    fun getWeeklyAnimes(countryCode: CountryCode, member: Member?, startOfWeekDay: LocalDate): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
         val startOfPreviousWeek = startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId)
         val endOfWeek = startOfWeekDay.with(DayOfWeek.SUNDAY).atTime(23, 59, 59).atZone(zoneId)
 
         val tuples = episodeVariantService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
-            member, countryCode, startOfPreviousWeek, endOfWeek
+            countryCode, member, startOfPreviousWeek, endOfWeek
         )
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->

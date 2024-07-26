@@ -2,8 +2,8 @@ package fr.shikkanime.converters.anime
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
