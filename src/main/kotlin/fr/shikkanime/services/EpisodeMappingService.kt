@@ -48,6 +48,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime) =
         episodeMappingRepository.findAllNeedUpdateByPlatform(platform, lastDateTime)
 
+    fun findAllSimulcastedByAnime(anime: Anime) = episodeMappingRepository.findAllSimulcastedByAnime(anime)
+
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
@@ -57,6 +59,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findPreviousEpisode(episode: EpisodeMapping) = episodeMappingRepository.findPreviousEpisode(episode)
 
     fun findNextEpisode(episode: EpisodeMapping) = episodeMappingRepository.findNextEpisode(episode)
+
+    fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeMapping) =
+        episodeMappingRepository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)
+
+    fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360, bypass)

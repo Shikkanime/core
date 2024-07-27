@@ -135,20 +135,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     fun recalculateSimulcasts() {
-        episodeMappingService.findAll().forEach { mapping ->
-            val (minReleaseDate, maxReleaseDate) = episodeVariantService.findMinAndMaxReleaseDateTimeByMapping(mapping)
-            mapping.releaseDateTime = minReleaseDate
-            mapping.lastReleaseDateTime = maxReleaseDate
-            episodeMappingService.update(mapping)
-        }
+        episodeMappingService.updateAllReleaseDate()
+        animeRepository.updateAllReleaseDate()
 
         findAllLoaded().forEach { anime ->
-            val (minReleaseDate, maxReleaseDate) = episodeVariantService.findMinAndMaxReleaseDateTimeByAnime(anime)
-            anime.releaseDateTime = minReleaseDate
-            anime.lastReleaseDateTime = maxReleaseDate
             anime.simulcasts.clear()
 
-            episodeVariantService.findAllSimulcastedByAnime(anime).forEach { episodeMapping ->
+            episodeMappingService.findAllSimulcastedByAnime(anime).forEach { episodeMapping ->
                 addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
             }
 

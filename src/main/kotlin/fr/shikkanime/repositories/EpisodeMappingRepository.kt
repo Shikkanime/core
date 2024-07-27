@@ -117,6 +117,34 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
+    fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeMapping> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(EpisodeVariant::class.java)
+
+            query.distinct(true)
+                .select(root[EpisodeVariant_.mapping])
+                .where(
+                    cb.and(
+                        cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
+                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
+                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
+                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
+                    )
+                )
+                .orderBy(
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
+                )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByAnimeSeasonEpisodeTypeNumber(
         animeUuid: UUID,
         season: Int,
@@ -244,6 +272,60 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
+        }
+    }
+
+    fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(
+        anime: Anime,
+        episodeMapping: EpisodeMapping
+    ): ZonedDateTime? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(ZonedDateTime::class.java)
+            val root = query.from(EpisodeVariant::class.java)
+            query.select(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime])
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime),
+                    cb.lessThan(
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime],
+                        episodeMapping.releaseDateTime
+                    ),
+                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], episodeMapping.episodeType),
+                    cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
+                )
+            )
+
+            query.orderBy(cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]))
+
+            createReadOnlyQuery(it, query)
+                .setMaxResults(1)
+                .resultList
+                .firstOrNull()
+        }
+    }
+
+    fun updateAllReleaseDate() {
+        inTransaction {
+            val cb = it.criteriaBuilder
+            val update = cb.createCriteriaUpdate(getEntityClass())
+            val root = update.from(getEntityClass())
+
+            val subQueryMin = update.subquery(ZonedDateTime::class.java)
+            val subRootMin = subQueryMin.from(EpisodeVariant::class.java)
+            subQueryMin.select(cb.least(subRootMin[EpisodeVariant_.releaseDateTime]))
+            subQueryMin.where(cb.equal(subRootMin[EpisodeVariant_.mapping], root))
+
+            val subQueryMax = update.subquery(ZonedDateTime::class.java)
+            val subRootMax = subQueryMax.from(EpisodeVariant::class.java)
+            subQueryMax.select(cb.greatest(subRootMax[EpisodeVariant_.releaseDateTime]))
+            subQueryMax.where(cb.equal(subRootMax[EpisodeVariant_.mapping], root))
+
+            update[root[EpisodeMapping_.releaseDateTime]] = subQueryMin
+            update[root[EpisodeMapping_.lastReleaseDateTime]] = subQueryMax
+
+            it.createQuery(update).executeUpdate()
         }
     }
 }
