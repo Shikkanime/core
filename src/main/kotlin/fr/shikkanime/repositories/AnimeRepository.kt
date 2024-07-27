@@ -10,6 +10,7 @@ import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesS
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory
 import org.hibernate.search.engine.search.query.SearchResult
 import org.hibernate.search.mapper.orm.Search
+import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
@@ -163,6 +164,29 @@ class AnimeRepository : AbstractRepository<Anime>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
+        }
+    }
+
+    fun updateAllReleaseDate() {
+        inTransaction {
+            val cb = it.criteriaBuilder
+            val update = cb.createCriteriaUpdate(getEntityClass())
+            val root = update.from(getEntityClass())
+
+            val subQueryMin = update.subquery(ZonedDateTime::class.java)
+            val subRootMin = subQueryMin.from(EpisodeMapping::class.java)
+            subQueryMin.select(cb.least(subRootMin[EpisodeMapping_.releaseDateTime]))
+            subQueryMin.where(cb.equal(subRootMin[EpisodeMapping_.anime], root))
+
+            val subQueryMax = update.subquery(ZonedDateTime::class.java)
+            val subRootMax = subQueryMax.from(EpisodeMapping::class.java)
+            subQueryMax.select(cb.greatest(subRootMax[EpisodeMapping_.releaseDateTime]))
+            subQueryMax.where(cb.equal(subRootMax[EpisodeMapping_.anime], root))
+
+            update[root[Anime_.releaseDateTime]] = subQueryMin
+            update[root[Anime_.lastReleaseDateTime]] = subQueryMax
+
+            it.createQuery(update).executeUpdate()
         }
     }
 }

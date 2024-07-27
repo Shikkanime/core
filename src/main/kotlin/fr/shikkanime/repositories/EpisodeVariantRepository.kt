@@ -3,7 +3,6 @@ package fr.shikkanime.repositories
 import com.google.inject.Inject
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
@@ -151,21 +150,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllAudioLocalesByMapping(mapping: EpisodeMapping): List<String> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
-
-            query.select(root[EpisodeVariant_.audioLocale])
-                .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
-                .distinct(true)
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
     fun findAllByAnime(anime: Anime): List<EpisodeVariant> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
@@ -192,34 +176,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeMapping> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(EpisodeMapping::class.java)
-            val root = query.from(getEntityClass())
-
-            query.distinct(true)
-                .select(root[EpisodeVariant_.mapping])
-                .where(
-                    cb.and(
-                        cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
-                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
-                    )
-                )
-                .orderBy(
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
-                )
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
     fun findByIdentifier(identifier: String): EpisodeVariant? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
@@ -231,42 +187,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
-        }
-    }
-
-    fun findMinAndMaxReleaseDateTimeByMapping(mapping: EpisodeMapping): Pair<ZonedDateTime, ZonedDateTime> {
-        return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(Tuple::class.java)
-            val root = query.from(getEntityClass())
-
-            query.multiselect(
-                cb.least(root[EpisodeVariant_.releaseDateTime]),
-                cb.greatest(root[EpisodeVariant_.releaseDateTime]),
-            )
-                .where(cb.equal(root[EpisodeVariant_.mapping], mapping))
-
-            createReadOnlyQuery(entityManager, query)
-                .singleResult
-                .let { it[0] as ZonedDateTime to it[1] as ZonedDateTime }
-        }
-    }
-
-    fun findMinAndMaxReleaseDateTimeByAnime(anime: Anime): Pair<ZonedDateTime, ZonedDateTime> {
-        return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(Tuple::class.java)
-            val root = query.from(getEntityClass())
-
-            query.multiselect(
-                cb.least(root[EpisodeVariant_.releaseDateTime]),
-                cb.greatest(root[EpisodeVariant_.releaseDateTime]),
-            )
-                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
-
-            createReadOnlyQuery(entityManager, query)
-                .singleResult
-                .let { it[0] as ZonedDateTime to it[1] as ZonedDateTime }
         }
     }
 }
