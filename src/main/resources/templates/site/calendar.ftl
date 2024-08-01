@@ -2,12 +2,16 @@
 <#import "components/langType.ftl" as langTypeComponent />
 
 <@navigation.display canonicalUrl="${baseUrl}/calendar">
+<#-- Get now day of week -->
+    <#assign now = .now?string("EEEE")>
+    <#assign nowActive = "bg-secondary bg-opacity-50">
+
     <div class="table-responsive">
         <table class="table table-dark table-borderless my-3">
             <thead>
             <tr>
                 <#list weeklyAnimes as dailyAnimes>
-                    <th scope="col" class="text-center" style="width: 14.28%">
+                    <th scope="col" style="width: 14.28%" class="text-center<#if dailyAnimes.dayOfWeek?lower_case == now?lower_case> ${nowActive}</#if>">
                         ${dailyAnimes.dayOfWeek}
                     </th>
                 </#list>
@@ -16,7 +20,7 @@
             <tbody>
             <tr>
                 <#list weeklyAnimes as dailyAnimes>
-                    <td class="bg-black border-start border-end border-dark">
+                    <td class="border-start border-end border-dark  <#if dailyAnimes.dayOfWeek?lower_case == now?lower_case>${nowActive}<#else>bg-black</#if>">
                         <#list dailyAnimes.releases as release>
                             <article x-data="{ hover: false }" class="shikk-element mb-3">
                                 <a href="/animes/${release.anime.slug}/season-${release.anime.seasons?last.number}"
