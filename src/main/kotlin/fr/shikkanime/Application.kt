@@ -40,13 +40,13 @@ fun main() {
     // Every minute
     JobManager.scheduleJob("0 * * * * ?", FetchEpisodesJob::class.java)
     // Every 10 minutes
-    JobManager.scheduleJob("0 */10 * * * ?", GarbageCollectorJob::class.java, UpdateEpisodeJob::class.java)
+    JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeJob::class.java)
     // Every hour
     JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java)
     // Every day at midnight
     JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
     // Every day at 3pm
-    JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
+    // JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
     // Every day at 9am
     JobManager.scheduleJob("0 0 9 * * ?", FetchCalendarJob::class.java)
     JobManager.start()
