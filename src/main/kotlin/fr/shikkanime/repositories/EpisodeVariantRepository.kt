@@ -45,33 +45,57 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllMappingUuidAndIdentifierByDateRange(
+    fun findAllIdentifierByDateRangeWithoutNextEpisode(
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
         platform: Platform
-    ): List<Pair<UUID, String>> {
+    ): List<String> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(String::class.java)
             val root = query.from(getEntityClass())
 
-            query.multiselect(
-                root[EpisodeVariant_.mapping][EpisodeMapping_.uuid],
-                root[EpisodeVariant_.identifier]
+            val mappingJoin = root.join(EpisodeVariant_.mapping)
+            val animeJoin = mappingJoin.join(EpisodeMapping_.anime)
+
+            query.select(root[EpisodeVariant_.identifier])
+
+            val countryPredicate = cb.equal(animeJoin[Anime_.countryCode], countryCode)
+            val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
+            val platformPredicate = cb.equal(root[EpisodeVariant_.platform], platform)
+
+            val subQuery = query.subquery(UUID::class.java)
+            val subRoot = subQuery.from(getEntityClass())
+            val subMappingJoin = subRoot.join(EpisodeVariant_.mapping)
+
+            subQuery.select(subMappingJoin[EpisodeMapping_.uuid])
+            subQuery.where(
+                cb.and(
+                    cb.equal(subMappingJoin[EpisodeMapping_.anime], mappingJoin[EpisodeMapping_.anime]),
+                    cb.equal(subMappingJoin[EpisodeMapping_.season], mappingJoin[EpisodeMapping_.season]),
+                    cb.or(
+                        cb.greaterThan(subMappingJoin[EpisodeMapping_.lastReleaseDateTime], mappingJoin[EpisodeMapping_.lastReleaseDateTime]),
+                        cb.and(
+                            cb.equal(subMappingJoin[EpisodeMapping_.episodeType], mappingJoin[EpisodeMapping_.episodeType]),
+                            cb.greaterThan(subMappingJoin[EpisodeMapping_.number], mappingJoin[EpisodeMapping_.number])
+                        )
+                    ),
+                    cb.notEqual(subMappingJoin[EpisodeMapping_.uuid], mappingJoin[EpisodeMapping_.uuid])
+                )
             )
 
             query.where(
                 cb.and(
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode),
-                    cb.between(root[EpisodeVariant_.releaseDateTime], start, end),
-                    cb.equal(root[EpisodeVariant_.platform], platform)
+                    countryPredicate,
+                    datePredicate,
+                    platformPredicate,
+                    cb.not(cb.exists(subQuery))
                 )
             )
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
-                .map { it[0] as UUID to it[1] as String }
         }
     }
 
