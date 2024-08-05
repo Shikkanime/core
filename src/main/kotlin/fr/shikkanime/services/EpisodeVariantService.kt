@@ -33,12 +33,17 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     override fun getRepository() = episodeVariantRepository
 
-    fun findAllByDateRange(
+    fun findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
         member: Member?,
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
-    ) = episodeVariantRepository.findAllByDateRange(member, countryCode, start, end)
+    ) = episodeVariantRepository.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
+        member,
+        countryCode,
+        start,
+        end
+    )
 
     fun findAllIdentifierByDateRangeWithoutNextEpisode(
         countryCode: CountryCode,

@@ -2,20 +2,22 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
+import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.DetailedAnimeDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import fr.shikkanime.utils.withUTCString
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -68,49 +70,50 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun getWeeklyAnimes(member: Member?, startOfWeekDay: LocalDate, countryCode: CountryCode): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
+        val startOfPreviousWeek = startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId)
+        val endOfWeek = startOfWeekDay.with(DayOfWeek.SUNDAY).atTime(23, 59, 59).atZone(zoneId)
 
-        val list = episodeVariantService.findAllByDateRange(
-            member,
-            countryCode,
-            startOfWeekDay.minusDays(7).atStartOfDay(zoneId),
-            startOfWeekDay.plusDays(7).atTime(23, 59, 59).atZone(zoneId)
+        val tuples = episodeVariantService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
+            member, countryCode, startOfPreviousWeek, endOfWeek
         )
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
             val zonedDate = date.atStartOfDay(zoneId)
-
-            val episodeVariants = list.sortedByDescending { it.releaseDateTime }
-                .filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
+            val tuplesDay = tuples.filter { (it[2] as ZonedDateTime).withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
 
             WeeklyAnimesDto(
-                date.format(DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale)))
-                    .capitalizeWords(),
-                episodeVariants.distinctBy { episodeVariant ->
-                    val anime = episodeVariant.mapping!!.anime!!
-                    anime.uuid.toString() + LangType.fromAudioLocale(anime.countryCode!!, episodeVariant.audioLocale!!)
-                }.map { distinctVariant ->
-                    val anime = distinctVariant.mapping!!.anime!!
+                date.format(DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))).capitalizeWords(),
+                tuplesDay.groupBy { triple ->
+                    val anime = triple[0] as Anime
+                    Triple(anime, (triple[1] as EpisodeMapping).episodeType!!, LangType.fromAudioLocale(anime.countryCode!!, triple[4] as String))
+                }.map { (triple, values) ->
+                    val anime = triple.first
+                    val releaseDateTime = (values.first()[2] as ZonedDateTime).withZoneSameInstant(zoneId)
+
+                    val mappings = values.filter {
+                        (it[2] as ZonedDateTime).withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
+                    }.map { it[1] as EpisodeMapping }
+                        .distinctBy { it.uuid }
+                        .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+
                     WeeklyAnimeDto(
                         AbstractConverter.convert(anime, AnimeDto::class.java),
-                        distinctVariant.releaseDateTime.withUTCString(),
-                        LangType.fromAudioLocale(anime.countryCode!!, distinctVariant.audioLocale!!),
-                        AbstractConverter.convert(
-                            episodeVariants.filter { it.mapping == distinctVariant.mapping }
-                                .mapNotNull(EpisodeVariant::platform)
-                                .sorted()
-                                .distinct(),
-                            PlatformDto::class.java
-                        )!!,
-                        // If variant is same week as startOfWeekDay, return it
-                        if (distinctVariant.releaseDateTime.withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]) {
-                            AbstractConverter.convert(distinctVariant, EpisodeVariantWithoutMappingDto::class.java)
-                        } else {
-                            null
-                        }
+                        AbstractConverter.convert(values.map { it[3] as Platform }.distinct(), PlatformDto::class.java)!!,
+                        releaseDateTime.withUTCString(),
+                        "/animes/${anime.slug}${
+                            mappings.firstOrNull()
+                                ?.let { "/season-${it.season}" + ("/${it.episodeType!!.slug}-${it.number}".takeIf { mappings.size <= 1 } ?: "") } ?: ""
+                        }",
+                        triple.third,
+                        mappings.isNotEmpty(),
+                        mappings.size > 1,
+                        mappings.map { it.uuid!! },
+                        mappings.firstOrNull()?.episodeType,
+                        mappings.minOfOrNull { it.number!! },
+                        mappings.maxOfOrNull { it.number!! },
+                        mappings.firstOrNull()?.number
                     )
-                }.sortedWith(compareBy({
-                    ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime()
-                }, { it.anime.shortName }))
+                }.sortedWith(compareBy({ ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() }, { it.anime.shortName }))
             )
         }
     }
@@ -167,44 +170,44 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return savedEntity
     }
 
-    fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
+    fun update(uuid: UUID, detailedAnimeDto: DetailedAnimeDto): Anime? {
         val anime = findLoaded(uuid) ?: return null
 
-        if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
-            anime.name = animeDto.name
+        if (detailedAnimeDto.name.isNotBlank() && detailedAnimeDto.name != anime.name) {
+            anime.name = detailedAnimeDto.name
         }
 
-        if (!animeDto.slug.isNullOrBlank() && animeDto.slug != anime.slug) {
-            val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug!!)
+        if (!detailedAnimeDto.slug.isNullOrBlank() && detailedAnimeDto.slug != anime.slug) {
+            val findBySlug = findBySlug(anime.countryCode!!, detailedAnimeDto.slug!!)
 
             if (findBySlug != null && findBySlug.uuid != anime.uuid) {
                 merge(anime, findBySlug)
             }
 
-            anime.slug = animeDto.slug
+            anime.slug = detailedAnimeDto.slug
         }
 
-        if (animeDto.releaseDateTime.isNotBlank() && animeDto.releaseDateTime != anime.releaseDateTime.toString()) {
-            anime.releaseDateTime = ZonedDateTime.parse(animeDto.releaseDateTime)
+        if (detailedAnimeDto.releaseDateTime.isNotBlank() && detailedAnimeDto.releaseDateTime != anime.releaseDateTime.toString()) {
+            anime.releaseDateTime = ZonedDateTime.parse(detailedAnimeDto.releaseDateTime)
         }
 
-        if (!animeDto.image.isNullOrBlank() && animeDto.image != anime.image) {
-            anime.image = animeDto.image
+        if (!detailedAnimeDto.image.isNullOrBlank() && detailedAnimeDto.image != anime.image) {
+            anime.image = detailedAnimeDto.image
             ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
             addImage(anime.uuid, anime.image!!)
         }
 
-        if (!animeDto.banner.isNullOrBlank() && animeDto.banner != anime.banner) {
-            anime.banner = animeDto.banner
+        if (!detailedAnimeDto.banner.isNullOrBlank() && detailedAnimeDto.banner != anime.banner) {
+            anime.banner = detailedAnimeDto.banner
             ImageService.remove(anime.uuid!!, ImageService.Type.BANNER)
             addBanner(anime.uuid, anime.banner)
         }
 
-        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
-            anime.description = animeDto.description
+        if (!detailedAnimeDto.description.isNullOrBlank() && detailedAnimeDto.description != anime.description) {
+            anime.description = detailedAnimeDto.description
         }
 
-        updateAnimeSimulcast(animeDto, anime)
+        updateAnimeSimulcast(detailedAnimeDto, anime)
 
         anime.status = StringUtils.getStatus(anime)
         val update = super.update(anime)
@@ -212,11 +215,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return update
     }
 
-    private fun updateAnimeSimulcast(animeDto: AnimeDto, anime: Anime) {
-        if (animeDto.simulcasts != null) {
+    private fun updateAnimeSimulcast(detailedAnimeDto: DetailedAnimeDto, anime: Anime) {
+        if (detailedAnimeDto.simulcasts != null) {
             anime.simulcasts.clear()
 
-            animeDto.simulcasts.forEach { simulcastDto ->
+            detailedAnimeDto.simulcasts.forEach { simulcastDto ->
                 val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
 
                 if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
