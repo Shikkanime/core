@@ -65,6 +65,20 @@ class CrunchyrollWrapperTest {
         }
     }
 
+    @Test
+    fun getPreviousEpisode() {
+        val previousEpisode = runBlocking { CrunchyrollWrapper.getPreviousEpisode(locale, token!!, "G14U47QGQ") }
+        assertNotNull(previousEpisode)
+        assertEquals("G4VUQ5K25", previousEpisode.id)
+    }
+
+    @Test
+    fun getNextEpisode() {
+        val nextEpisode = runBlocking { CrunchyrollWrapper.getNextEpisode(locale, token!!, "G14U47QGQ") }
+        assertNotNull(nextEpisode)
+        assertEquals("GJWU2WNE7", nextEpisode.id)
+    }
+
     companion object {
         private var token: String? = null
 

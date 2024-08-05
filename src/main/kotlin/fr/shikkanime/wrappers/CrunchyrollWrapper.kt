@@ -90,8 +90,6 @@ object CrunchyrollWrapper {
         val durationMs: Long,
         val description: String?,
         val versions: List<Version>?,
-        @SerializedName("next_episode_id")
-        val nextEpisodeId: String?,
     )
 
     data class BrowseObject(
@@ -217,6 +215,29 @@ object CrunchyrollWrapper {
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get episode")
         return ObjectParser.fromJson(asJsonArray.first(), Episode::class.java)
+    }
+
+    private suspend fun getEpisodeByType(locale: String, accessToken: String, id: String, type: String): BrowseObject {
+        val response = httpRequest.get(
+            "${BASE_URL}content/v2/discover/$type/$id?locale=$locale",
+            headers = mapOf(
+                "Authorization" to "Bearer $accessToken",
+            ),
+        )
+
+        require(response.status.value == 200) { "Failed to get $type episode" }
+
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
+            ?: throw Exception("Failed to get $type episode")
+        return ObjectParser.fromJson(asJsonArray.first().asJsonObject["panel"].asJsonObject, BrowseObject::class.java)
+    }
+
+    suspend fun getPreviousEpisode(locale: String, accessToken: String, id: String): BrowseObject {
+        return getEpisodeByType(locale, accessToken, id, "previous_episode")
+    }
+
+    suspend fun getNextEpisode(locale: String, accessToken: String, id: String): BrowseObject {
+        return getEpisodeByType(locale, accessToken, id, "up_next")
     }
 
     suspend fun getObjects(locale: String, accessToken: String, vararg ids: String): Array<BrowseObject> {
