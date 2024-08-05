@@ -10,7 +10,6 @@ import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
@@ -36,9 +35,6 @@ class CrunchyrollPlatform :
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     private val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
         return@MapCache runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
@@ -163,37 +159,34 @@ class CrunchyrollPlatform :
         val lastWeek = zonedDateTime.minusWeeks(1)
         val lastWeekStartOfTheDay = lastWeek.withHour(0).withMinute(0).withSecond(0).withNano(0)
 
-        episodeVariantService.findAllMappingUuidAndIdentifierByDateRange(
+        episodeVariantService.findAllIdentifierByDateRangeWithoutNextEpisode(
             countryCode,
             lastWeekStartOfTheDay,
             lastWeek.plusSeconds(1),
             getPlatform()
-        ).forEach { pair ->
-            episodeMappingCacheService.findNextEpisode(pair.first)?.let {
-                logger.warning("Next episode already exists for ${pair.second}")
+        ).forEach { identifier ->
+            val crunchyrollId = getCrunchyrollId(identifier) ?: run {
+                logger.warning("Crunchyroll ID not found in $identifier")
                 return@forEach
             }
 
-            val crunchyrollId = getCrunchyrollId(pair.second) ?: run {
-                logger.warning("Crunchyroll ID not found in ${pair.second}")
+            val nextEpisode = try {
+                CrunchyrollWrapper.getNextEpisode(
+                    countryCode.locale,
+                    identifiers[countryCode]!!,
+                    crunchyrollId
+                )
+            } catch (e: Exception) {
+                logger.warning("Can not fetch next episode for $crunchyrollId")
                 return@forEach
             }
 
-            CrunchyrollWrapper.getEpisode(
-                countryCode.locale,
-                identifiers[countryCode]!!,
-                crunchyrollId
-            ).nextEpisodeId?.let { nextEpisodeId ->
-                if (alreadyFetched.any { it.id == nextEpisodeId }) {
-                    logger.warning("Episode $nextEpisodeId already fetched")
-                    return@forEach
-                }
+            if (alreadyFetched.any { it.id == nextEpisode.id }) {
+                logger.warning("Episode ${nextEpisode.id} already fetched")
+                return@forEach
+            }
 
-                CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, nextEpisodeId)
-                    .forEach { browseObject ->
-                        addToList(list, countryCode, browseObject)
-                    }
-            } ?: logger.warning("Next episode ID not found in $crunchyrollId")
+            addToList(list, countryCode, nextEpisode)
         }
 
         return list
