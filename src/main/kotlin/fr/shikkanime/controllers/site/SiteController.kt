@@ -1,7 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.DetailedAnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -19,7 +19,10 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
+import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @Controller("/")
 class SiteController {
@@ -45,7 +48,7 @@ class SiteController {
         )
     }
 
-    private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
+    private fun getFullAnimesSimulcast(): MutableList<DetailedAnimeDto> {
         val animeSimulcastLimit = 6
 
         val animes = animeCacheService.findAllBy(
@@ -231,17 +234,21 @@ class SiteController {
 
     @Path("calendar")
     @Get
-    private fun calendar(): Response {
-        val now = ZonedDateTime.now().toLocalDate()
+    private fun calendar(@QueryParam("date") date: String?): Response {
+        val now = try {
+            date?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
+        } catch (e: Exception) {
+            LocalDate.now()
+        }
+
+        val startOfWeekDay = now.with(DayOfWeek.MONDAY)
 
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(
-                    null,
-                    now.minusDays(now.dayOfWeek.value.toLong() - 1),
-                    CountryCode.FR
-                ),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(null, startOfWeekDay, CountryCode.FR),
+                "previousWeek" to startOfWeekDay.minusDays(7),
+                "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )
         )
     }

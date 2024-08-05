@@ -340,33 +340,23 @@ object ImageService {
 
     fun getDominantColor(image: BufferedImage): Color {
         val pixels = IntArray(image.width * image.height).apply {
-            image.getRGB(
-                0,
-                0,
-                image.width,
-                image.height,
-                this,
-                0,
-                image.width
-            )
+            image.getRGB(0, 0, image.width, image.height, this, 0, image.width)
         }
+
         val red = IntArray(256)
         val green = IntArray(256)
         val blue = IntArray(256)
 
         pixels.forEach { rgb ->
-            val curRed = rgb shr 16 and 0xFF
-            val curGreen = rgb shr 8 and 0xFF
-            val curBlue = rgb and 0xFF
-            red[curRed]++
-            green[curGreen]++
-            blue[curBlue]++
+            red[rgb shr 16 and 0xFF]++
+            green[rgb shr 8 and 0xFF]++
+            blue[rgb and 0xFF]++
         }
 
         val total = pixels.size
-        val redAverage = (0..255).sumOf { i -> i * red[i] } / total.toFloat()
-        val greenAverage = (0..255).sumOf { i -> i * green[i] } / total.toFloat()
-        val blueAverage = (0..255).sumOf { i -> i * blue[i] } / total.toFloat()
+        val redAverage = red.indices.sumOf { it * red[it] } / total.toFloat()
+        val greenAverage = green.indices.sumOf { it * green[it] } / total.toFloat()
+        val blueAverage = blue.indices.sumOf { it * blue[it] } / total.toFloat()
 
         return Color(redAverage.toInt(), greenAverage.toInt(), blueAverage.toInt())
     }

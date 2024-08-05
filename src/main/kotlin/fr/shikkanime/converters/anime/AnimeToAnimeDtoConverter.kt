@@ -1,25 +1,16 @@
 package fr.shikkanime.converters.anime
 
-import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
-import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTCString
 import org.hibernate.Hibernate
 
 class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
     override fun convert(from: Anime): AnimeDto {
-        val (audioLocales, seasons) = episodeVariantCacheService.findAudioLocalesAndSeasonsByAnimeCache(from)!!
-
         return AnimeDto(
             uuid = from.uuid,
             countryCode = from.countryCode!!,
@@ -38,10 +29,6 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
                 )?.toList()
             else
                 null,
-            audioLocales = audioLocales,
-            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted(),
-            seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) },
-            status = from.status,
         )
     }
 }

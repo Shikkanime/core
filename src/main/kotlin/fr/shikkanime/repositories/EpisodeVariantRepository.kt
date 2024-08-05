@@ -15,16 +15,24 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
     override fun getEntityClass() = EpisodeVariant::class.java
 
-    fun findAllByDateRange(
+    fun findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
         member: Member?,
         countryCode: CountryCode,
         start: ZonedDateTime,
         end: ZonedDateTime,
-    ): List<EpisodeVariant> {
+    ): List<Tuple> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
+            val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
+
+            query.multiselect(
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime],
+                    root[EpisodeVariant_.mapping],
+                    root[EpisodeVariant_.releaseDateTime],
+                    root[EpisodeVariant_.platform],
+                    root[EpisodeVariant_.audioLocale],
+                )
 
             val countryPredicate =
                 cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
@@ -39,6 +47,13 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             }
 
             query.where(cb.and(*predicates.toTypedArray()))
+
+            query.orderBy(
+                cb.asc(root[EpisodeVariant_.releaseDateTime]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number])
+            )
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
