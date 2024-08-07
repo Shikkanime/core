@@ -38,4 +38,5 @@ enum class ConfigPropertyKey(val key: String) {
     EMAIL_PORT("email_port"),
     EMAIL_USERNAME("email_username"),
     EMAIL_PASSWORD("email_password"),
+    USE_SECURITY_HEADERS("use_security_headers"),
 }
