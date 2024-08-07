@@ -196,7 +196,12 @@ class UpdateEpisodeJob : AbstractJob {
         countryCode: CountryCode,
         adnId: String,
     ): List<Episode> {
-        val video = AnimationDigitalNetworkWrapper.getShowVideo(adnId)
+        val video = try {
+            AnimationDigitalNetworkWrapper.getShowVideo(adnId)
+        } catch (e: Exception) {
+            logger.severe("Impossible to get ADN video $adnId : ${e.message} (Maybe the video is not available anymore)")
+            return emptyList()
+        }
 
         return try {
             animationDigitalNetworkPlatform.convertEpisode(
