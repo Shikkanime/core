@@ -55,4 +55,7 @@
     <!-- June 2024 -->
     <include file="/db/changelog/2024/06/01-changelog.xml"/>
     <include file="/db/changelog/2024/06/02-changelog.xml"/>
+    <!-- July 2024 -->
+    <!-- August 2024 -->
+    <include file="/db/changelog/2024/08/01-changelog.xml"/>
 </databaseChangeLog>

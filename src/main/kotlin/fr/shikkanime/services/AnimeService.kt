@@ -88,7 +88,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     Triple(anime, (triple[1] as EpisodeMapping).episodeType!!, LangType.fromAudioLocale(anime.countryCode!!, triple[4] as String))
                 }.map { (triple, values) ->
                     val anime = triple.first
-                    val releaseDateTime = (values.first()[2] as ZonedDateTime).withZoneSameInstant(zoneId)
+                    val releaseDateTime = values.maxOf { it[2] as ZonedDateTime }
 
                     val mappings = values.filter {
                         (it[2] as ZonedDateTime).withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
