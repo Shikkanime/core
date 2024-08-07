@@ -44,6 +44,27 @@ body {
     background-color: #FFFFFF14;
 }
 
+.shikk-element-collection-1 {
+    position: absolute;
+    top: -4px;
+    width: calc(100% - 12px);
+    height: 10%;
+    left: 6px;
+    right: 6px;
+    border-radius: 1rem;
+}
+
+.shikk-element-collection-2 {
+    position: absolute;
+    opacity: 50%;
+    top: -8px;
+    width: calc(100% - 24px);
+    height: 10%;
+    left: 12px;
+    right: 12px;
+    border-radius: 1rem;
+}
+
 .bg-blur {
     backdrop-filter: blur(0.25rem);
 }

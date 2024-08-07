@@ -3,6 +3,7 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
+import fr.shikkanime.dtos.animes.DetailedAnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
@@ -17,6 +18,7 @@ import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -95,16 +97,16 @@ class AnimeController : HasPageableRoute() {
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
-        return Response.ok(AbstractConverter.convert(animeService.findLoaded(uuid), AnimeDto::class.java))
+        return Response.ok(AbstractConverter.convert(animeService.findLoaded(uuid), DetailedAnimeDto::class.java))
     }
 
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
-    private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
-        val updated = animeService.update(uuid, animeDto)
-        return Response.ok(AbstractConverter.convert(updated, AnimeDto::class.java))
+    private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam detailedAnimeDto: DetailedAnimeDto): Response {
+        val updated = animeService.update(uuid, detailedAnimeDto)
+        return Response.ok(AbstractConverter.convert(updated, DetailedAnimeDto::class.java))
     }
 
     @Path("/{uuid}")
@@ -122,16 +124,8 @@ class AnimeController : HasPageableRoute() {
     @OpenAPI(
         "Get weekly anime",
         [
-            OpenAPIResponse(
-                200,
-                "Weekly anime found",
-                Array<WeeklyAnimesDto>::class,
-            ),
-            OpenAPIResponse(
-                400,
-                "Invalid week format",
-                MessageDto::class
-            ),
+            OpenAPIResponse(200, "Weekly anime found", Array<WeeklyAnimesDto>::class),
+            OpenAPIResponse(400, "Invalid week format", MessageDto::class),
             OpenAPIResponse(401, "Unauthorized")
         ],
         security = true
@@ -141,30 +135,16 @@ class AnimeController : HasPageableRoute() {
         @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
         @QueryParam("date", description = "By default: today", type = String::class) dateParam: String?,
     ): Response {
-        val parsedDate = if (dateParam != null) {
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-            try {
-                LocalDate.parse(dateParam, formatter)
-            } catch (e: Exception) {
-                return Response.badRequest(
-                    MessageDto(
-                        MessageDto.Type.ERROR,
-                        "Invalid week format",
-                    )
-                )
-            }
-        } else {
-            LocalDate.now()
+        val parsedDate = try {
+            dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
+        } catch (e: Exception) {
+            return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
         }
 
-        return Response.ok(
-            animeCacheService.getWeeklyAnimes(
-                uuid,
-                parsedDate!!.minusDays(parsedDate.dayOfWeek.value.toLong() - 1),
-                CountryCode.fromNullable(countryParam) ?: CountryCode.FR
-            )
-        )
+        val startOfWeekDay = parsedDate.with(DayOfWeek.MONDAY)
+        val countryCode = CountryCode.fromNullable(countryParam) ?: CountryCode.FR
+
+        return Response.ok(animeCacheService.getWeeklyAnimes(uuid, startOfWeekDay, countryCode))
     }
 
     @Path("/missed")

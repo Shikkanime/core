@@ -14,7 +14,7 @@ val guavaVersion = "33.2.1-jre"
 val playwrightVersion = "1.45.1"
 val jsoupVersion = "1.18.1"
 val gsonVersion = "2.11.0"
-val webpImageioVersion = "0.8.0"
+val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.3.0"
@@ -29,7 +29,7 @@ val h2Version = "2.3.230"
 val mockitoVersion = "5.12.0"
 
 plugins {
-    val kotlinVersion = "2.0.0"
+    val kotlinVersion = "2.0.10"
 
     kotlin("jvm") version kotlinVersion
     kotlin("kapt") version kotlinVersion
@@ -90,6 +90,7 @@ dependencies {
     implementation("com.microsoft.playwright:playwright:$playwrightVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.gson:gson:$gsonVersion")
+    implementation("org.openpnp:opencv:$openCvVersion")
     implementation("org.bouncycastle:bcprov-jdk18on:$bcprovVersion")
     implementation("com.mortennobel:java-image-scaling:$javaImageScalingVersion")
     implementation("org.apache.tika:tika-core:$tikaVersion")
@@ -100,7 +101,6 @@ dependencies {
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
 
-    runtimeOnly("com.github.usefulness:webp-imageio:$webpImageioVersion")
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")

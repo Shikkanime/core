@@ -12,7 +12,7 @@ ENV LANG=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
 
 # Install necessary packages and set timezone
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata fonts-dejavu \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates tzdata libopencv-dev fonts-dejavu \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
     && ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
 
