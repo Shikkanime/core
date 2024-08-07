@@ -1,18 +1,16 @@
 package fr.shikkanime.utils
 
-import com.google.gson.*
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
-import java.lang.reflect.Type
+import fr.shikkanime.modules.ZonedDateTimeAdapter
 import java.time.ZonedDateTime
 
 object ObjectParser {
-    class ZonedDateTimeAdapter : JsonDeserializer<ZonedDateTime> {
-        override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ZonedDateTime {
-            return ZonedDateTime.parse(json.asJsonPrimitive.asString)
-        }
-    }
-
-    private val gson = GsonBuilder().registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapter()).create()
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapter())
+        .create()
 
     fun fromJson(json: String): JsonObject {
         return gson.fromJson(json, JsonObject::class.java)
