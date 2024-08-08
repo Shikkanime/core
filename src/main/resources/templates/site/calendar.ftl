@@ -150,6 +150,8 @@
         });
 
         document.querySelectorAll('.img-fluid').forEach(img => {
+            img.crossOrigin = 'Anonymous';
+
             img.onload = function () {
                 const rgb = getAverageRGB(img);
 
@@ -178,6 +180,7 @@
             try {
                 data = context.getImageData(0, 0, width, height);
             } catch (e) {
+                console.error(e);
                 return defaultRGB;
             }
 

@@ -9,4 +9,5 @@ annotation class QueryParam(
     val type: KClass<*> = Unit::class,
     val description: String = "",
     val required: Boolean = false,
+    val example: String = "",
 )

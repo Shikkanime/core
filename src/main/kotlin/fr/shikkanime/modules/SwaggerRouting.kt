@@ -51,6 +51,7 @@ private fun OpenApiRoute.swaggerRequest(method: KFunction<*>) {
                         queryParameter(qp.name.ifBlank { name }, type) {
                             description = qp.description
                             required = qp.required
+                            example = qp.example.takeIf { it.isNotBlank() }
                         }
                     }
 
@@ -92,7 +93,6 @@ private fun OpenApiRoute.swaggerResponse(openApi: OpenAPI) {
                         BodyTypeDescriptor.multipleOf(response.type.java.componentType.kotlin),
                         block
                     )
-
                     else -> body(response.type, block)
                 }
             }

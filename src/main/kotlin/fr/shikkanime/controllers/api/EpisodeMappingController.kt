@@ -49,14 +49,38 @@ class EpisodeMappingController : HasPageableRoute() {
         ]
     )
     private fun getAll(
-        @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
-        @QueryParam("anime") animeParam: UUID?,
-        @QueryParam("season") seasonParam: Int?,
-        @QueryParam("page") pageParam: Int?,
-        @QueryParam("limit") limitParam: Int?,
-        @QueryParam("sort") sortParam: String?,
-        @QueryParam("desc") descParam: String?,
-        @QueryParam("status") statusParam: Status?,
+        @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
+        countryParam: String?,
+        @QueryParam("anime", description = "UUID of the anime to filter by")
+        animeParam: UUID?,
+        @QueryParam("season", description = "Season number to filter by")
+        seasonParam: Int?,
+        @QueryParam("page", description = "Page number for pagination")
+        pageParam: Int?,
+        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        limitParam: Int?,
+        @QueryParam(
+            "sort",
+            description = "Comma separated list of fields\n" +
+                    "\n" +
+                    "Possible values:\n" +
+                    "- episodeType\n" +
+                    "- releaseDateTime\n" +
+                    "- lastReleaseDateTime\n" +
+                    "- season\n" +
+                    "- number\n" +
+                    "- animeName",
+            example = "lastReleaseDateTime,animeName,season,episodeType,number"
+        )
+        sortParam: String?,
+        @QueryParam(
+            "desc",
+            description = "A comma-separated list of fields to sort in descending order",
+            example = "lastReleaseDateTime,animeName,season,episodeType,number"
+        )
+        descParam: String?,
+        @QueryParam("status", description = "Status to filter by", type = Status::class)
+        statusParam: Status?,
     ): Response {
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
 
