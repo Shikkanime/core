@@ -52,14 +52,34 @@ class AnimeController : HasPageableRoute() {
         ]
     )
     private fun getAll(
-        @QueryParam("name") name: String?,
-        @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: CountryCode?,
-        @QueryParam("simulcast") simulcastParam: UUID?,
-        @QueryParam("page") pageParam: Int?,
-        @QueryParam("limit") limitParam: Int?,
-        @QueryParam("sort") sortParam: String?,
-        @QueryParam("desc") descParam: String?,
-        @QueryParam("status") statusParam: Status?,
+        @QueryParam("name", description = "Name to filter by")
+        name: String?,
+        @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
+        countryParam: CountryCode?,
+        @QueryParam("simulcast", description = "UUID of the simulcast to filter by", type = UUID::class)
+        simulcastParam: UUID?,
+        @QueryParam("page", description = "Page number for pagination")
+        pageParam: Int?,
+        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        limitParam: Int?,
+        @QueryParam(
+            "sort",
+            description = "Comma separated list of fields\n" +
+                    "\n" +
+                    "Possible values:\n" +
+                    "- name\n" +
+                    "- releaseDateTime\n" +
+                    "- lastReleaseDateTime",
+            example = "name"
+        )
+        sortParam: String?,
+        @QueryParam(
+            "desc",
+            description = "A comma-separated list of fields to sort in descending order",
+        )
+        descParam: String?,
+        @QueryParam("status", description = "Status to filter by", type = Status::class)
+        statusParam: Status?,
     ): Response {
         if (simulcastParam != null && name != null) {
             return Response.conflict(
@@ -131,9 +151,16 @@ class AnimeController : HasPageableRoute() {
         security = true
     )
     private fun getWeekly(
-        @JWTUser uuid: UUID?,
-        @QueryParam("country", description = "By default: FR", type = CountryCode::class) countryParam: String?,
-        @QueryParam("date", description = "By default: today", type = String::class) dateParam: String?,
+        @JWTUser
+        uuid: UUID?,
+        @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
+        countryParam: String?,
+        @QueryParam(
+            "date",
+            description = "Date to filter by. Format: yyyy-MM-dd",
+            example = "2021-01-01"
+        )
+        dateParam: String?,
     ): Response {
         val parsedDate = try {
             dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
@@ -164,8 +191,10 @@ class AnimeController : HasPageableRoute() {
     )
     private fun getMissedAnimes(
         @JWTUser uuid: UUID,
-        @QueryParam("page") pageParam: Int?,
-        @QueryParam("limit") limitParam: Int?,
+        @QueryParam("page", description = "Page number for pagination")
+        pageParam: Int?,
+        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
 
