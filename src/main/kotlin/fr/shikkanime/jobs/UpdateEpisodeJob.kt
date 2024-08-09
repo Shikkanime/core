@@ -81,7 +81,12 @@ class UpdateEpisodeJob : AbstractJob {
 
             val originalEpisode = episodes.firstOrNull { it.original }
                 ?: episodes.firstOrNull()
-                ?: return@forEach
+                ?: return@forEach run {
+                    logger.warning("No episode found for $mappingIdentifier")
+                    mapping.lastUpdateDateTime = ZonedDateTime.now()
+                    episodeMappingService.update(mapping)
+                    logger.info("Episode $mappingIdentifier updated")
+                }
 
             if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
                 mapping.image = originalEpisode.image
