@@ -113,7 +113,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                         mappings.maxOfOrNull { it.number!! },
                         mappings.firstOrNull()?.number
                     )
-                }.sortedWith(compareBy({ ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() }, { it.anime.shortName }))
+                }.sortedWith(
+                    compareBy(
+                        { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
+                        { it.anime.shortName },
+                        { it.langType }
+                    )
+                )
             )
         }
     }
