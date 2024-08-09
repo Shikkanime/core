@@ -63,7 +63,7 @@
 
                             <article x-data="{ hover: false }" class="shikk-element mb-3 position-relative<#if release.isMultipleReleased()> mt-2</#if>">
                                 <#if release.isMultipleReleased()>
-                                    <div>
+                                    <div data-multiple-released>
                                         <div class="shikk-element-collection-2"></div>
                                         <div class="shikk-element-collection-1"></div>
                                     </div>
@@ -150,19 +150,20 @@
         });
 
         document.querySelectorAll('.img-fluid').forEach(img => {
+            const closest = img.closest('.shikk-element');
+            if (!closest.querySelector('[data-multiple-released]')) return;
+
             img.crossOrigin = 'Anonymous';
 
-            img.onload = function () {
+            const processImage = () => {
                 const rgb = getAverageRGB(img);
-
-                img.closest('.shikk-element').querySelectorAll('.shikk-element-collection-1, .shikk-element-collection-2').forEach(collection => {
-                    collection.style.backgroundColor = 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
-                });
+                closest.querySelectorAll('.shikk-element-collection-1, .shikk-element-collection-2')
+                    .forEach(collection => {
+                        collection.style.backgroundColor = 'rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')';
+                    });
             };
 
-            if (img.complete) {
-                img.onload();
-            }
+            img.complete ? processImage() : img.onload = processImage;
         });
 
         function getAverageRGB(imgEl) {
