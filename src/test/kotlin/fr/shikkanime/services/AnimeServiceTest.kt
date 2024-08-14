@@ -3,7 +3,7 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -79,7 +79,7 @@ class AnimeServiceTest {
         )
 
         val anime = animeService.findByName(CountryCode.FR, "DRAGON QUEST The Adventure of Dai")
-        val dto = AbstractConverter.convert(anime, DetailedAnimeDto::class.java)
+        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
         dto.slug = "dragon-quest"
 
         animeService.update(anime!!.uuid!!, dto)
@@ -158,7 +158,7 @@ class AnimeServiceTest {
         )
 
         val anime = animeService.findByName(CountryCode.FR, "DRAGON QUEST The Adventure of Dai")
-        val dto = AbstractConverter.convert(anime, DetailedAnimeDto::class.java)
+        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
         dto.slug = "dragon-quest"
 
         animeService.update(anime!!.uuid!!, dto)
@@ -268,7 +268,7 @@ class AnimeServiceTest {
         assertEquals(3, episodeVariantService.findAll().size)
 
         val anime = animeService.findByName(CountryCode.FR, "DRAGON QUEST The Adventure of Dai")
-        val dto = AbstractConverter.convert(anime, DetailedAnimeDto::class.java)
+        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
         dto.slug = "dragon-quest"
 
         animeService.update(anime!!.uuid!!, dto)
