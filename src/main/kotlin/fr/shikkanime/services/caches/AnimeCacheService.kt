@@ -8,7 +8,7 @@ import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.*
@@ -35,7 +35,7 @@ class AnimeCacheService : AbstractCacheService {
     private lateinit var episodeMappingService: EpisodeMappingService
 
     private val findAllByCache =
-        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<DetailedAnimeDto>>(classes = listOf(Anime::class.java)) {
+        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
             PageableDto.fromPageable(
                 animeService.findAllBy(
                     it.countryCode,
@@ -45,24 +45,24 @@ class AnimeCacheService : AbstractCacheService {
                     it.limit,
                     it.status
                 ),
-                DetailedAnimeDto::class.java
+                AnimeDto::class.java
             )
         }
 
     private val findAllByNameCache =
-        MapCache<CountryCodeNamePaginationKeyCache, PageableDto<DetailedAnimeDto>>(classes = listOf(Anime::class.java)) {
+        MapCache<CountryCodeNamePaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
             PageableDto.fromPageable(
                 animeService.findAllByName(it.name, it.countryCode, it.page, it.limit),
-                DetailedAnimeDto::class.java
+                AnimeDto::class.java
             )
         }
 
-    private val findBySlugCache = MapCache<CountryCodeIdKeyCache, DetailedAnimeDto?>(classes = listOf(Anime::class.java, EpisodeMapping::class.java)) {
+    private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(classes = listOf(Anime::class.java, EpisodeMapping::class.java)) {
         animeService.findBySlug(it.countryCode, it.id)
-            .let { anime -> AbstractConverter.convert(anime, DetailedAnimeDto::class.java) }
+            .let { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
     }
 
-    private val findAllCache = MapCache<String, List<DetailedAnimeDto>>(
+    private val findAllCache = MapCache<String, List<AnimeDto>>(
         classes = listOf(
             Anime::class.java,
             EpisodeMapping::class.java,
@@ -70,7 +70,7 @@ class AnimeCacheService : AbstractCacheService {
         )
     ) {
         val list = animeService.findAllLoaded()
-        val dtos = list.associateWith { AbstractConverter.convert(it, DetailedAnimeDto::class.java) }
+        val dtos = list.associateWith { AbstractConverter.convert(it, AnimeDto::class.java) }
 
         dtos.forEach { (anime, dto) ->
             dto.episodes = AbstractConverter.convert(

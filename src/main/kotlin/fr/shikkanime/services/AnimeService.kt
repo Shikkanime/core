@@ -5,8 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.WeeklyAnimeDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
@@ -176,44 +175,44 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return savedEntity
     }
 
-    fun update(uuid: UUID, detailedAnimeDto: DetailedAnimeDto): Anime? {
+    fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
         val anime = findLoaded(uuid) ?: return null
 
-        if (detailedAnimeDto.name.isNotBlank() && detailedAnimeDto.name != anime.name) {
-            anime.name = detailedAnimeDto.name
+        if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
+            anime.name = animeDto.name
         }
 
-        if (!detailedAnimeDto.slug.isNullOrBlank() && detailedAnimeDto.slug != anime.slug) {
-            val findBySlug = findBySlug(anime.countryCode!!, detailedAnimeDto.slug!!)
+        if (!animeDto.slug.isNullOrBlank() && animeDto.slug != anime.slug) {
+            val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug!!)
 
             if (findBySlug != null && findBySlug.uuid != anime.uuid) {
                 merge(anime, findBySlug)
             }
 
-            anime.slug = detailedAnimeDto.slug
+            anime.slug = animeDto.slug
         }
 
-        if (detailedAnimeDto.releaseDateTime.isNotBlank() && detailedAnimeDto.releaseDateTime != anime.releaseDateTime.toString()) {
-            anime.releaseDateTime = ZonedDateTime.parse(detailedAnimeDto.releaseDateTime)
+        if (animeDto.releaseDateTime.isNotBlank() && animeDto.releaseDateTime != anime.releaseDateTime.toString()) {
+            anime.releaseDateTime = ZonedDateTime.parse(animeDto.releaseDateTime)
         }
 
-        if (!detailedAnimeDto.image.isNullOrBlank() && detailedAnimeDto.image != anime.image) {
-            anime.image = detailedAnimeDto.image
+        if (!animeDto.image.isNullOrBlank() && animeDto.image != anime.image) {
+            anime.image = animeDto.image
             ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
             addImage(anime.uuid, anime.image!!)
         }
 
-        if (!detailedAnimeDto.banner.isNullOrBlank() && detailedAnimeDto.banner != anime.banner) {
-            anime.banner = detailedAnimeDto.banner
+        if (!animeDto.banner.isNullOrBlank() && animeDto.banner != anime.banner) {
+            anime.banner = animeDto.banner
             ImageService.remove(anime.uuid!!, ImageService.Type.BANNER)
             addBanner(anime.uuid, anime.banner)
         }
 
-        if (!detailedAnimeDto.description.isNullOrBlank() && detailedAnimeDto.description != anime.description) {
-            anime.description = detailedAnimeDto.description
+        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
+            anime.description = animeDto.description
         }
 
-        updateAnimeSimulcast(detailedAnimeDto, anime)
+        updateAnimeSimulcast(animeDto, anime)
 
         anime.status = StringUtils.getStatus(anime)
         val update = super.update(anime)
@@ -221,11 +220,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return update
     }
 
-    private fun updateAnimeSimulcast(detailedAnimeDto: DetailedAnimeDto, anime: Anime) {
-        if (detailedAnimeDto.simulcasts != null) {
+    private fun updateAnimeSimulcast(animeDto: AnimeDto, anime: Anime) {
+        if (animeDto.simulcasts != null) {
             anime.simulcasts.clear()
 
-            detailedAnimeDto.simulcasts.forEach { simulcastDto ->
+            animeDto.simulcasts.forEach { simulcastDto ->
                 val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
 
                 if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
