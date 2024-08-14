@@ -25,7 +25,8 @@ class FetchEpisodesJob : AbstractJob {
     private val maxLock = 5
 
     private val identifiers = mutableSetOf<String>()
-    private val typeIdentifiers = mutableSetOf<String>()
+    private val typeIdentifiersWithPlatforms = mutableSetOf<String>()
+    private val typeIdentifiersWithoutPlatforms = mutableSetOf<String>()
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
@@ -62,7 +63,10 @@ class FetchEpisodesJob : AbstractJob {
             }
 
             // COMPARE COUNTRY, ANIME, PLATFORM, EPISODE TYPE, SEASON, NUMBER, AND LANG TYPE
-            variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
+            variants.forEach {
+                typeIdentifiersWithPlatforms.add(getTypeIdentifierWithPlatform(it))
+                typeIdentifiersWithoutPlatforms.add(getTypeIdentifierWithoutPlatform(it))
+            }
 
             isInitialized = true
         }
@@ -114,27 +118,41 @@ class FetchEpisodesJob : AbstractJob {
         val animeMap = savedEpisodes.groupBy { it.mapping!!.anime!!.uuid!! }
 
         for ((_, episodes) in animeMap) {
-            val nonSavedEpisodes = episodes.filter { !typeIdentifiers.contains(getTypeIdentifier(it)) }
+            val nonSavedEpisodes = episodes.filter { !typeIdentifiersWithPlatforms.contains(getTypeIdentifierWithPlatform(it)) }
 
             if (nonSavedEpisodes.size >= configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
                 continue
             }
 
             for (episode in nonSavedEpisodes) {
-                typeIdentifiers.add(getTypeIdentifier(episode))
+                typeIdentifiersWithPlatforms.add(getTypeIdentifierWithPlatform(episode))
                 val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
                 sendToSocialNetworks(episodeDto)
-
-                try {
-                    FirebaseNotification.send(episodeDto)
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while sending notification for episode ${episodeDto.identifier}", e)
-                }
+                sendEpisodeNotification(episode, episodeDto)
             }
         }
     }
 
-    private fun getTypeIdentifier(tuple: Tuple): String {
+    private fun sendEpisodeNotification(
+        episode: EpisodeVariant,
+        episodeDto: EpisodeVariantDto
+    ) {
+        val typeIdentifierWithoutPlatform = getTypeIdentifierWithoutPlatform(episode)
+
+        if (typeIdentifiersWithoutPlatforms.contains(typeIdentifierWithoutPlatform)) {
+            return
+        }
+
+        typeIdentifiersWithoutPlatforms.add(typeIdentifierWithoutPlatform)
+
+        try {
+            FirebaseNotification.send(episodeDto)
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error while sending notification for episode ${episodeDto.identifier}", e)
+        }
+    }
+
+    private fun getTypeIdentifierWithPlatform(tuple: Tuple): String {
         val country = tuple[0] as CountryCode
         val anime = tuple[1] as UUID
         val platform = tuple[2] as Platform
@@ -144,11 +162,22 @@ class FetchEpisodesJob : AbstractJob {
         val audioLocale = tuple[6] as String
 
         val langType = LangType.fromAudioLocale(country, audioLocale)
-        val typeIdentifier = "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
-        return typeIdentifier
+        return "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
     }
 
-    private fun getTypeIdentifier(episodeVariant: EpisodeVariant): String {
+    private fun getTypeIdentifierWithoutPlatform(tuple: Tuple): String {
+        val country = tuple[0] as CountryCode
+        val anime = tuple[1] as UUID
+        val episodeType = tuple[3] as EpisodeType
+        val season = tuple[4] as Int
+        val number = tuple[5] as Int
+        val audioLocale = tuple[6] as String
+
+        val langType = LangType.fromAudioLocale(country, audioLocale)
+        return "${country}_${anime}_${episodeType}_${season}_${number}_${langType}"
+    }
+
+    private fun getTypeIdentifierWithPlatform(episodeVariant: EpisodeVariant): String {
         val country = episodeVariant.mapping!!.anime!!.countryCode!!
         val anime = episodeVariant.mapping!!.anime!!.uuid!!
         val platform = episodeVariant.platform!!
@@ -158,8 +187,20 @@ class FetchEpisodesJob : AbstractJob {
         val audioLocale = episodeVariant.audioLocale!!
 
         val langType = LangType.fromAudioLocale(country, audioLocale)
-        val typeIdentifier = "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
-        return typeIdentifier
+        return "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
+    }
+
+
+    private fun getTypeIdentifierWithoutPlatform(episodeVariant: EpisodeVariant): String {
+        val country = episodeVariant.mapping!!.anime!!.countryCode!!
+        val anime = episodeVariant.mapping!!.anime!!.uuid!!
+        val episodeType = episodeVariant.mapping!!.episodeType!!
+        val season = episodeVariant.mapping!!.season!!
+        val number = episodeVariant.mapping!!.number!!
+        val audioLocale = episodeVariant.audioLocale!!
+
+        val langType = LangType.fromAudioLocale(country, audioLocale)
+        return "${country}_${anime}_${episodeType}_${season}_${number}_${langType}"
     }
 
     private fun sendToSocialNetworks(dto: EpisodeVariantDto) {
