@@ -43,6 +43,7 @@ class AnimeControllerTest : AbstractControllerTest() {
                 assertEquals(HttpStatusCode.OK, status)
                 val weeklyAnimesDto = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java).flatMap { it.releases }
                 assertEquals(3, weeklyAnimesDto.size)
+                assertTrue(weeklyAnimesDto.all { it.anime.seasons.isNotEmpty() })
             }
 
             client.get("/api/v1/animes/weekly?date=2024-01-01") {
@@ -53,6 +54,7 @@ class AnimeControllerTest : AbstractControllerTest() {
                 val weeklyAnimesDto = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java).flatMap { it.releases }
                 assertEquals(2, weeklyAnimesDto.size)
                 assertEquals(anime.uuid, weeklyAnimesDto.first().anime.uuid)
+                assertTrue(weeklyAnimesDto.all { it.anime.seasons.isNotEmpty() })
             }
         }
     }

@@ -3,7 +3,7 @@ package fr.shikkanime.converters.episode_mapping
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PlatformDto
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.EpisodeMapping
@@ -20,7 +20,7 @@ class EpisodeMappingToEpisodeMappingDtoConverter : AbstractConverter<EpisodeMapp
 
         return EpisodeMappingDto(
             uuid = from.uuid!!,
-            anime = convert(from.anime, DetailedAnimeDto::class.java),
+            anime = convert(from.anime, AnimeDto::class.java),
             releaseDateTime = from.releaseDateTime.withUTCString(),
             lastReleaseDateTime = from.lastReleaseDateTime.withUTCString(),
             lastUpdateDateTime = from.lastUpdateDateTime.withUTCString(),

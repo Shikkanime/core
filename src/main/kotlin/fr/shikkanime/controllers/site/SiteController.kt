@@ -1,7 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -48,7 +48,7 @@ class SiteController {
         )
     }
 
-    private fun getFullAnimesSimulcast(): MutableList<DetailedAnimeDto> {
+    private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
         val animeSimulcastLimit = 6
 
         val animes = animeCacheService.findAllBy(

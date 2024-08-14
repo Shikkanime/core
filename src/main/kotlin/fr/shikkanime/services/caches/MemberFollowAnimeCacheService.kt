@@ -5,7 +5,7 @@ import fr.shikkanime.caches.UUIDPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.MissedAnimeDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.MemberFollowEpisode
@@ -38,7 +38,7 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
 
             val dtos = pageable.data.map { tuple ->
                 MissedAnimeDto(
-                    AbstractConverter.convert(tuple[0], DetailedAnimeDto::class.java),
+                    AbstractConverter.convert(tuple[0], AnimeDto::class.java),
                     tuple[1] as Long
                 )
             }

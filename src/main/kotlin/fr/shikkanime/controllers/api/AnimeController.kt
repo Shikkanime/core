@@ -3,7 +3,7 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
+import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.AnimeService
@@ -117,16 +117,16 @@ class AnimeController : HasPageableRoute() {
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
-        return Response.ok(AbstractConverter.convert(animeService.findLoaded(uuid), DetailedAnimeDto::class.java))
+        return Response.ok(AbstractConverter.convert(animeService.findLoaded(uuid), AnimeDto::class.java))
     }
 
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
-    private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam detailedAnimeDto: DetailedAnimeDto): Response {
-        val updated = animeService.update(uuid, detailedAnimeDto)
-        return Response.ok(AbstractConverter.convert(updated, DetailedAnimeDto::class.java))
+    private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
+        val updated = animeService.update(uuid, animeDto)
+        return Response.ok(AbstractConverter.convert(updated, AnimeDto::class.java))
     }
 
     @Path("/{uuid}")

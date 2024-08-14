@@ -1,8 +1,6 @@
 package fr.shikkanime.dtos
 
-import fr.shikkanime.dtos.animes.DetailedAnimeDto
-
 data class MissedAnimeDto(
-    val anime: DetailedAnimeDto,
+    val anime: AnimeDto,
     val episodeMissed: Long,
 )
