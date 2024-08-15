@@ -24,7 +24,7 @@ val jdaVersion = "5.0.2"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.3"
 
-val junitVersion = "5.10.3"
+val junitVersion = "5.11.0"
 val h2Version = "2.3.232"
 val mockitoVersion = "5.12.0"
 
