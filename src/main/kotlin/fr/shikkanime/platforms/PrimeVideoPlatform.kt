@@ -7,6 +7,7 @@ import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.normalize
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.PrimeVideoWrapper
 import java.io.File
@@ -42,14 +43,14 @@ class PrimeVideoPlatform :
                 anime = animeName,
                 animeImage = key.primeVideoSimulcast.image,
                 animeBanner = animeBanner,
-                animeDescription = it.getAsJsonObject("show").getAsString("description"),
+                animeDescription = it.getAsJsonObject("show").getAsString("description").normalize(),
                 releaseDateTime = releaseDateTime,
                 episodeType = EpisodeType.EPISODE,
                 season = it.getAsInt("season")!!,
                 number = it.getAsInt("number")!!,
                 duration = it.getAsInt("duration")?.toLong() ?: -1,
-                title = it.getAsString("title"),
-                description = it.getAsString("description"),
+                title = it.getAsString("title").normalize(),
+                description = it.getAsString("description").normalize(),
                 image = image,
                 platform = getPlatform(),
                 audioLocale = "ja-JP",
