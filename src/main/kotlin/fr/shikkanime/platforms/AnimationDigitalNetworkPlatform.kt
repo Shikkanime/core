@@ -11,6 +11,7 @@ import fr.shikkanime.exceptions.NotSimulcastedMediaException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import java.io.File
 import java.time.ZonedDateTime
@@ -67,16 +68,12 @@ class AnimationDigitalNetworkPlatform :
     ): List<Episode> {
         val season = video.season?.toIntOrNull() ?: 1
 
-        var animeName = video.show.shortTitle ?: video.show.title
-        animeName = animeName.replace(Regex("Saison \\d"), "").trim()
-        animeName = animeName.replace(Regex(" $season$"), "").trim()
-        animeName = animeName.replace(Regex(" -$"), "").trim()
-        animeName = animeName.replace(Regex(" Part.*"), "").trim()
+        val animeName = (video.show.shortTitle ?: video.show.title)
+            .replace("(?: -)? Saison \\d|Part.*|$season$".toRegex(), "")
+            .trim()
+
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
-        val animeImage = video.show.image2x
-        val animeBanner = video.show.imageHorizontal2x
-        val animeDescription = video.show.summary?.replace('\n', ' ') ?: ""
         val genres = video.show.genres
 
         val contains = configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
@@ -84,17 +81,11 @@ class AnimationDigitalNetworkPlatform :
             throw Exception("Anime is not an animation")
 
         if (needSimulcast) {
-            var isSimulcasted = video.show.simulcast ||
+            val isSimulcasted = video.show.simulcast ||
                     video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } ||
-                    contains
-
-            val descriptionLowercase = animeDescription.lowercase()
-
-            isSimulcasted = isSimulcasted ||
+                    contains ||
                     configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)
-                        ?.let {
-                            Regex(it).containsMatchIn(descriptionLowercase)
-                        } == true
+                        ?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: "").lowercase()) } == true
 
             if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
         }
@@ -107,22 +98,20 @@ class AnimationDigitalNetworkPlatform :
 
         val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
 
-        val description = video.summary?.replace('\n', ' ')?.ifBlank { null }
-
         return video.languages.map {
             Episode(
                 countryCode = countryCode,
                 anime = animeName,
-                animeImage = animeImage,
-                animeBanner = animeBanner,
-                animeDescription = animeDescription,
+                animeImage = video.show.image2x,
+                animeBanner = video.show.imageHorizontal2x,
+                animeDescription = video.show.summary.normalize(),
                 releaseDateTime = video.releaseDate,
                 episodeType = episodeType,
                 season = season,
                 number = number,
                 duration = video.duration,
-                title = video.name?.ifBlank { null },
-                description = description,
+                title = video.name.normalize(),
+                description = video.summary.normalize(),
                 image = video.image2x,
                 platform = getPlatform(),
                 audioLocale = getAudioLocale(it),
@@ -137,24 +126,24 @@ class AnimationDigitalNetworkPlatform :
     private fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
         val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
 
-        var episodeType = when {
-            numberAsString == "OAV" || numberAsString == "Épisode spécial" || showType == "OAV" || numberAsString?.contains(
-                "."
-            ) == true -> EpisodeType.SPECIAL
-
+        val episodeType = when {
             numberAsString == "Film" -> EpisodeType.FILM
+            numberAsString == "OAV" || numberAsString == "Épisode spécial" ||
+                    showType == "OAV" || numberAsString?.contains(".") == true -> EpisodeType.SPECIAL
             else -> EpisodeType.EPISODE
         }
 
-        "Épisode spécial (\\d*)".toRegex().find(numberAsString ?: "")?.let {
-            episodeType = EpisodeType.SPECIAL
-            it.groupValues[1].toIntOrNull()?.let { specialNumber -> return Pair(specialNumber, episodeType) }
+        val specialMatch = "Épisode spécial (\\d*)".toRegex().find(numberAsString ?: "")
+
+        if (specialMatch != null) {
+            val specialNumber = specialMatch.groupValues[1].toIntOrNull()
+            return (specialNumber ?: number) to EpisodeType.SPECIAL
         }
 
-        return Pair(number, episodeType)
+        return number to episodeType
     }
 
-    fun getAudioLocale(string: String): String {
+    private fun getAudioLocale(string: String): String {
         return when (string) {
             "vostf" -> "ja-JP"
             "vf" -> "fr-FR"

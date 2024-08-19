@@ -10,10 +10,7 @@ import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.withUTCString
+import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -254,14 +251,14 @@ class CrunchyrollPlatform :
             anime = animeName,
             animeImage = crunchyrollAnimeContent.image,
             animeBanner = crunchyrollAnimeContent.banner,
-            animeDescription = crunchyrollAnimeContent.description,
+            animeDescription = crunchyrollAnimeContent.description.normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
             season = forcedSeason ?: (browseObject.episodeMetadata.seasonNumber ?: 1),
             number = number,
             duration = browseObject.episodeMetadata.durationMs / 1000,
-            title = browseObject.title,
-            description = browseObject.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() },
+            title = browseObject.title.normalize(),
+            description = browseObject.description.normalize(),
             image = browseObject.images?.thumbnail?.firstOrNull()
                 ?.maxByOrNull { it.width }?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW,
             platform = getPlatform(),
@@ -288,6 +285,6 @@ class CrunchyrollPlatform :
             number = it.groupValues[1].toIntOrNull() ?: -1
         }
 
-        return Pair(number, episodeType)
+        return number to episodeType
     }
 }

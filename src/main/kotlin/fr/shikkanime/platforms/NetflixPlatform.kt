@@ -3,10 +3,7 @@ package fr.shikkanime.platforms
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.withUTC
+import fr.shikkanime.utils.*
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -72,14 +69,14 @@ class NetflixPlatform :
                 anime = animeName,
                 animeImage = key.netflixSimulcast.image,
                 animeBanner = animeBanner,
-                animeDescription = animeDescription,
+                animeDescription = animeDescription.normalize(),
                 releaseDateTime = releaseDateTime,
                 episodeType = key.netflixSimulcast.episodeType,
                 season = episodeSeason,
                 number = episodeNumber,
                 duration = durationInSeconds,
-                title = episodeTitle?.trim(),
-                description = episodeDescription,
+                title = episodeTitle.normalize(),
+                description = episodeDescription.normalize(),
                 image = imageWithoutParams,
                 platform = getPlatform(),
                 audioLocale = "ja-JP",
