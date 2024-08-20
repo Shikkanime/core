@@ -23,5 +23,6 @@ enum class Link(
     CALENDAR("/calendar", "/site/calendar.ftl", "", "Calendrier"),
     SEARCH("/search", "/site/search.ftl", "", "Recherche"),
     PRESENTATION("/presentation", "/site/presentation.ftl", "", "Présentation", footer = true),
+    PRIVACY("/privacy", "/site/privacy.ftl", "", "Politique de confidentialité", footer = true),
     ;
 }

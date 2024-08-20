@@ -210,7 +210,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
         )
 
-        println(episodes)
+        episodes.forEach(::println)
 
         assertTrue(episodes.isNotEmpty())
         assertTrue(episodes.any { it.anime == "Dragon Quest - The Adventures of Dai" })

@@ -16,6 +16,7 @@ import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.normalize
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.DisneyPlusWrapper
 import kotlinx.coroutines.runBlocking
@@ -105,7 +106,7 @@ class DisneyPlusPlatform :
             tileObject.getAsJsonObject("1.33")?.getAsString("imageId") ?: throw Exception("Anime image is null")
         val animeBanner = DisneyPlusWrapper.getImageUrl(animeBannerId)
         val animeDescription =
-            animeDetails.getAsJsonObject("description")?.getAsString("full")?.replace('\n', ' ') ?: ""
+            animeDetails.getAsJsonObject("description")?.getAsString("full")
 
         val visualsObject = jsonObject.getAsJsonObject("visuals")
 
@@ -114,7 +115,7 @@ class DisneyPlusPlatform :
         val oldId = jsonObject.getAsJsonArray("actions")[0].asJsonObject
             .getAsJsonObject("legacyPartnerFeed").getAsString("dmcContentId") ?: throw Exception("Old id is null")
         val id = jsonObject.getAsString("id") ?: throw Exception("Id is null")
-        val title = visualsObject.getAsString("episodeTitle")?.ifBlank { null }
+        val title = visualsObject.getAsString("episodeTitle")
         val url = "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id"
         val imageId =
             visualsObject.getAsJsonObject("artwork")?.getAsJsonObject("standard")?.getAsJsonObject("thumbnail")
@@ -127,7 +128,7 @@ class DisneyPlusPlatform :
         }
 
         val description =
-            visualsObject.getAsJsonObject("description")?.getAsString("medium")?.replace('\n', ' ')?.ifBlank { null }
+            visualsObject.getAsJsonObject("description")?.getAsString("medium")
         val releaseDateTimeUTC =
             zonedDateTime.withUTC().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
@@ -143,14 +144,14 @@ class DisneyPlusPlatform :
             anime = animeName,
             animeImage = animeImage,
             animeBanner = animeBanner,
-            animeDescription = animeDescription,
+            animeDescription = animeDescription.normalize(),
             releaseDateTime = releaseDateTime,
             episodeType = EpisodeType.EPISODE,
             season = season,
             number = number,
             duration = duration,
-            title = title,
-            description = description,
+            title = title.normalize(),
+            description = description.normalize(),
             image = image,
             platform = getPlatform(),
             audioLocale = "ja-JP",

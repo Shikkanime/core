@@ -16,8 +16,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     override fun getEntityClass() = EpisodeVariant::class.java
 
     fun findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
-        member: Member?,
         countryCode: CountryCode,
+        member: Member?,
         start: ZonedDateTime,
         end: ZonedDateTime,
     ): List<Tuple> {

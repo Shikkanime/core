@@ -3,10 +3,7 @@ package fr.shikkanime.controllers.site
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
@@ -223,11 +220,15 @@ class SiteController {
     @Get
     private fun search(
         @QueryParam("q") query: String?,
+        @QueryParam("searchTypes") searchTypes: String?,
+        @QueryParam("page") pageParam: Int?,
     ): Response {
         return Response.template(
             Link.SEARCH,
             mutableMapOf(
-                "query" to query
+                "query" to query,
+                "searchTypes" to searchTypes,
+                "page" to pageParam,
             )
         )
     }
@@ -246,7 +247,7 @@ class SiteController {
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(null, startOfWeekDay, CountryCode.FR),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay),
                 "previousWeek" to startOfWeekDay.minusDays(7),
                 "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )
@@ -257,5 +258,11 @@ class SiteController {
     @Get
     private fun presentation(): Response {
         return Response.template(Link.PRESENTATION)
+    }
+
+    @Path("privacy")
+    @Get
+    private fun privacy(): Response {
+        return Response.template(Link.PRIVACY)
     }
 }
