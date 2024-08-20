@@ -258,4 +258,10 @@ class SiteController {
     private fun presentation(): Response {
         return Response.template(Link.PRESENTATION)
     }
+
+    @Path("privacy")
+    @Get
+    private fun privacy(): Response {
+        return Response.template(Link.PRIVACY)
+    }
 }
