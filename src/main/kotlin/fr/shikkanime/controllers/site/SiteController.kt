@@ -3,10 +3,7 @@ package fr.shikkanime.controllers.site
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.entities.SortParameter
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
@@ -223,12 +220,14 @@ class SiteController {
     @Get
     private fun search(
         @QueryParam("q") query: String?,
+        @QueryParam("searchTypes") searchTypes: String?,
         @QueryParam("page") pageParam: Int?,
     ): Response {
         return Response.template(
             Link.SEARCH,
             mutableMapOf(
                 "query" to query,
+                "searchTypes" to searchTypes,
                 "page" to pageParam,
             )
         )
