@@ -21,6 +21,7 @@ import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.LocalDate
 import java.time.Period
+import java.util.concurrent.TimeoutException
 import java.util.logging.Level
 
 class FetchOldEpisodesJob : AbstractJob {
@@ -80,7 +81,12 @@ class FetchOldEpisodesJob : AbstractJob {
 
         episodes.addAll(
             crunchyrollPlatform.configuration?.availableCountries?.flatMap {
-                fetchCrunchyroll(it, dates)
+                try {
+                    fetchCrunchyroll(it, dates)
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
+                    return
+                }
             } ?: emptyList()
         )
 
@@ -179,31 +185,56 @@ class FetchOldEpisodesJob : AbstractJob {
         dates.map { it.atStartOfWeek() }
             .distinct()
             .forEachIndexed { _, date ->
-                runBlocking {
+                try {
+                    tryFetchCrunchyrollCalendar(countryCode, date)
+                        .forEach { browseObject ->
+                            try {
+                                episodes.add(
+                                    crunchyrollPlatform.convertEpisode(
+                                        countryCode,
+                                        browseObject,
+                                        false
+                                    )
+                                )
+                            } catch (e: Exception) {
+                                logger.log(
+                                    Level.SEVERE,
+                                    "Error while converting episode (Episode ID: ${browseObject.id})",
+                                    e
+                                )
+                            }
+                        }
+                } catch (e: Exception) {
+                    throw e
+                }
+            }
+
+        return episodes
+    }
+
+    private fun tryFetchCrunchyrollCalendar(
+        countryCode: CountryCode,
+        date: LocalDate
+    ): Array<CrunchyrollWrapper.BrowseObject> {
+        var retry = 0
+
+        while (true) {
+            try {
+                return runBlocking {
                     CrunchyrollWrapper.getSimulcastCalendar(
                         countryCode,
                         crunchyrollAccessTokenCache[countryCode]!!,
                         date
                     )
-                }.forEach { browseObject ->
-                    try {
-                        episodes.add(
-                            crunchyrollPlatform.convertEpisode(
-                                countryCode,
-                                browseObject,
-                                false
-                            )
-                        )
-                    } catch (e: Exception) {
-                        logger.log(
-                            Level.SEVERE,
-                            "Error while converting episode (Episode ID: ${browseObject.id})",
-                            e
-                        )
-                    }
                 }
-            }
+            } catch (e: Exception) {
+                if (++retry > 3) {
+                    logger.log(Level.SEVERE, "Error while fetching Crunchyroll calendar", e)
+                    throw TimeoutException("Error while fetching Crunchyroll calendar")
+                }
 
-        return episodes
+                logger.log(Level.WARNING, "Error while fetching Crunchyroll calendar, retrying... (Retry: $retry/3)")
+            }
+        }
     }
 }
