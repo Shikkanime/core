@@ -2,10 +2,13 @@ package fr.shikkanime.wrappers
 
 import com.google.gson.annotations.SerializedName
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
+import org.jsoup.Jsoup
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -114,6 +117,8 @@ object CrunchyrollWrapper {
     )
 
     private const val BASE_URL = "https://www.crunchyroll.com/"
+    private val seriesRegex = "/series/([A-Z0-9]{9})/".toRegex()
+    private val episodeRegex = "/watch/([A-Z0-9]{9})".toRegex()
     private val httpRequest = HttpRequest()
 
     suspend fun getAnonymousAccessToken(): String {
@@ -171,7 +176,7 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray.first(), Series::class.java)
     }
 
-    suspend fun getSeasonsBySeriesId(locale: String, accessToken: String, seriesId: String): Array<Season> {
+    private suspend fun getSeasonsBySeriesId(locale: String, accessToken: String, seriesId: String): Array<Season> {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/series/$seriesId/seasons?locale=$locale",
             headers = mapOf(
@@ -187,7 +192,7 @@ object CrunchyrollWrapper {
 
     }
 
-    suspend fun getEpisodesBySeasonId(locale: String, accessToken: String, seasonId: String): Array<Episode> {
+    private suspend fun getEpisodesBySeasonId(locale: String, accessToken: String, seasonId: String): Array<Episode> {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/seasons/$seasonId/episodes?locale=$locale",
             headers = mapOf(
@@ -270,6 +275,51 @@ object CrunchyrollWrapper {
             ?: throw Exception("Failed to get simulcasts")
 
         return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java).toList()
+    }
+
+    suspend fun getSimulcastCalendar(countryCode: CountryCode, accessToken: String, date: LocalDate): Array<BrowseObject> {
+        val response = httpRequest.get("$BASE_URL${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=${date.atStartOfWeek()}")
+        require(response.status == HttpStatusCode.OK)
+        val document = Jsoup.parse(response.bodyAsText())
+
+        val cache = MapCache<String, List<String>> {
+            runBlocking {
+                getSeasonsBySeriesId(countryCode.locale, accessToken, it)
+                    .flatMap { season ->
+                        getEpisodesBySeasonId(countryCode.locale, accessToken, season.id)
+                            .flatMap { episode -> episode.versions?.map { it.guid } ?: listOf(episode.id!!) }
+                    }.distinct()
+            }
+        }
+
+        val alreadyChecked = mutableMapOf<String, BrowseObject>()
+
+        val episodeIds = document.select("article.release").flatMap { element ->
+            val isMultipleRelease = element.attr("data-episode-num").contains("-")
+            val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
+            val seriesId = seriesRegex.find(element.select("a").first { seriesRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1]
+
+            if (isMultipleRelease) {
+                cache[seriesId].orEmpty()
+                    .chunked(50)
+                    .flatMap { chunk ->
+                        getObjects(countryCode.locale, accessToken, *chunk.toTypedArray())
+                            .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() == releaseDateTime }
+                            .onEach { alreadyChecked[it.id] = it }
+                            .map { it.id }
+                    }
+            } else {
+                listOf(episodeRegex.find(element.select("a").first { episodeRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1])
+            }
+        }.distinct()
+
+        val objects = alreadyChecked.values.toMutableList()
+
+        episodeIds.subtract(alreadyChecked.keys).chunked(50).forEach { chunk ->
+            objects.addAll(getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()))
+        }
+
+        return objects.toTypedArray()
     }
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =

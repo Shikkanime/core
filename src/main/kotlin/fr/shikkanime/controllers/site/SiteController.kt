@@ -9,6 +9,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
@@ -16,7 +17,6 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -236,13 +236,11 @@ class SiteController {
     @Path("calendar")
     @Get
     private fun calendar(@QueryParam("date") date: String?): Response {
-        val now = try {
+        val startOfWeekDay = try {
             date?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
         } catch (e: Exception) {
             LocalDate.now()
-        }
-
-        val startOfWeekDay = now.with(DayOfWeek.MONDAY)
+        }.atStartOfWeek()
 
         return Response.template(
             Link.CALENDAR,

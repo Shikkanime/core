@@ -37,8 +37,8 @@ object AnimationDigitalNetworkWrapper {
     private const val BASE_URL = "https://gw.api.animationdigitalnetwork.fr/"
     private val httpRequest = HttpRequest()
 
-    suspend fun getLatestVideos(dateString: LocalDate): Array<Video> {
-        val response = httpRequest.get("${BASE_URL}video/calendar?date=$dateString")
+    suspend fun getLatestVideos(date: LocalDate): Array<Video> {
+        val response = httpRequest.get("${BASE_URL}video/calendar?date=$date")
 
         if (response.status.value != 200) {
             throw Exception("Failed to get media list")
