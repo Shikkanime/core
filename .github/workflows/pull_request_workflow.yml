@@ -2,9 +2,17 @@ name: Pull request workflow
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened ]
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Conventional Commit Validation
+        uses: ytanikin/PRConventionalCommits@1.2.0
+        with:
+          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+
   test:
     runs-on: ubuntu-latest
 
