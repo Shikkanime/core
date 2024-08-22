@@ -47,6 +47,7 @@ class FetchEpisodesJob : AbstractJob {
         }
 
         isRunning = true
+        lock = 0
 
         if (!isInitialized) {
             val variants = episodeVariantService.findAllTypeIdentifier()
