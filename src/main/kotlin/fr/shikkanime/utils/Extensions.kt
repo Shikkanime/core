@@ -2,8 +2,7 @@ package fr.shikkanime.utils
 
 import com.mortennobel.imagescaling.ResampleOp
 import java.awt.image.BufferedImage
-import java.time.LocalTime
-import java.time.ZonedDateTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 
 fun ZonedDateTime.isEqualOrAfter(other: ZonedDateTime): Boolean {
@@ -20,6 +19,10 @@ fun ZonedDateTime.withUTCString(): String {
 
 fun LocalTime.isEqualOrAfter(other: LocalTime): Boolean {
     return this == other || this.isAfter(other)
+}
+
+fun LocalDate.atStartOfWeek(): LocalDate {
+    return this.with(DayOfWeek.MONDAY)
 }
 
 fun BufferedImage.resize(width: Int, height: Int): BufferedImage {
