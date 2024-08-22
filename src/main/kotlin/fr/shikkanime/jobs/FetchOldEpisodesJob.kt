@@ -1,7 +1,6 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -9,9 +8,6 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.exceptions.EpisodeException
-import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
@@ -26,8 +22,6 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.Period
 import java.util.logging.Level
-import kotlin.math.max
-import kotlin.math.min
 
 class FetchOldEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -55,15 +49,18 @@ class FetchOldEpisodesJob : AbstractJob {
     }
 
     override fun run() {
-        val config = configService.findByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key) ?: run {
-            logger.warning("Config ${ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key} not found")
+        val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
+            logger.warning("Config ${ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key} not found")
             return
         }
 
-        val range = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE)
-
         if (range == -1) {
-            logger.warning("Config ${ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key} not found")
+            logger.warning("FetchOldEpisodesJob is disabled")
+            return
+        }
+
+        val config = configService.findByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key) ?: run {
+            logger.warning("Config ${ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key} not found")
             return
         }
 
@@ -83,19 +80,21 @@ class FetchOldEpisodesJob : AbstractJob {
 
         episodes.addAll(
             crunchyrollPlatform.configuration?.availableCountries?.flatMap {
-                val simulcasts = runBlocking { getSimulcasts(it, dates) }
-                runBlocking { fetchCrunchyroll(it, simulcasts) }
+                fetchCrunchyroll(it, dates)
             } ?: emptyList()
         )
 
         episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates || it.episodeType == EpisodeType.FILM }
 
         val limit = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT, 5)
-        episodes.groupBy { it.anime + it.releaseDateTime.toLocalDate().toString() }.forEach { (_, animeDayEpisodes) ->
-            if (animeDayEpisodes.size > limit) {
-                logger.warning("More than $limit episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
-                episodes.removeAll(animeDayEpisodes)
-                return@forEach
+
+        if (limit != -1) {
+            episodes.groupBy { it.anime + it.releaseDateTime.toLocalDate().toString() }.forEach { (_, animeDayEpisodes) ->
+                if (animeDayEpisodes.size > limit) {
+                    logger.warning("More than $limit episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
+                    episodes.removeAll(animeDayEpisodes)
+                    return@forEach
+                }
             }
         }
 
@@ -132,30 +131,6 @@ class FetchOldEpisodesJob : AbstractJob {
         config.propertyValue = from.toString()
         configService.update(config)
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
-    }
-
-    suspend fun getSimulcasts(countryCode: CountryCode, dates: List<LocalDate>): Set<String> {
-        val list = dates.sorted().map {
-            "${Constant.seasons[(it.monthValue - 1) / 3]}-${it.year}".lowercase().replace("autumn", "fall")
-        }.toMutableSet()
-
-        val crunchyrollSimulcasts =
-            CrunchyrollWrapper.getSimulcasts(countryCode.locale, crunchyrollAccessTokenCache[countryCode]!!)
-        // Get the min and the max index of the simulcasts in the crunchyrollSimulcasts list
-        val minIndex = crunchyrollSimulcasts.indexOfFirst { simulcast -> simulcast.id in list }
-        val maxIndex = crunchyrollSimulcasts.indexOfLast { simulcast -> simulcast.id in list }
-
-        // 0 is the latest simulcast added
-        // In the list, added the previous and the next simulcast of the min and max index
-
-        if (minIndex < 0 || maxIndex < 0) {
-            return list
-        }
-
-        list.add(crunchyrollSimulcasts[max(minIndex - 1, 0)].id)
-        list.add(crunchyrollSimulcasts[min(maxIndex + 1, crunchyrollSimulcasts.size - 1)].id)
-
-        return list
     }
 
     private fun fetchAnimationDigitalNetwork(
@@ -195,192 +170,40 @@ class FetchOldEpisodesJob : AbstractJob {
         return episodes
     }
 
-    val crunchyrollEpisodesCache =
-        MapCache<CountryCodeIdKeyCache, List<CrunchyrollWrapper.BrowseObject>>(duration = Duration.ofDays(7)) {
-            runBlocking {
-                try {
-                    val episodes = mutableListOf<CrunchyrollWrapper.BrowseObject>()
+    private fun fetchCrunchyroll(
+        countryCode: CountryCode,
+        dates: List<LocalDate>
+    ): List<Episode> {
+        val episodes = mutableListOf<Episode>()
 
-                    val crEpisodes = CrunchyrollWrapper.getSeasonsBySeriesId(it.countryCode.locale, crunchyrollAccessTokenCache[it.countryCode]!!, it.id)
-                        .filter { season -> season.subtitleLocales.contains(it.countryCode.locale) }
-                        .parallelStream().map { season ->
-                            runBlocking {
-                                try {
-                                    CrunchyrollWrapper.getEpisodesBySeasonId(
-                                        it.countryCode.locale,
-                                        crunchyrollAccessTokenCache[it.countryCode]!!,
-                                        season.id
-                                    ).toList()
-                                } catch (e: Exception) {
-                                    logger.warning("Error while fetching Crunchyroll episodes by season (Season ID: ${season.id}) : ${e.message}")
-                                    emptyList()
-                                }
-                            }
-                        }.toList()
-                        .flatten()
-
-                    // Need to list all available variants
-                    val variants = mutableSetOf<CrunchyrollWrapper.Version>()
-                    variants.addAll(crEpisodes.flatMap { it.versions ?: listOf(CrunchyrollWrapper.Version(it.id!!, true)) })
-
-                    // Remove duplicates and already fetched episodes
-                    val chunked = variants.distinctBy { variant -> variant.guid }
-                        .chunked(50)
-
-                    chunked.parallelStream().forEach { chunkedVariants ->
-                        try {
-                            runBlocking {
-                                episodes.addAll(
-                                    CrunchyrollWrapper.getObjects(
-                                        it.countryCode.locale,
-                                        crunchyrollAccessTokenCache[it.countryCode]!!,
-                                        *chunkedVariants.map { it.guid }.toTypedArray()
-                                    ).toList()
-                                )
-                            }
-                        } catch (e: Exception) {
-                            logger.warning("Error while fetching Crunchyroll chunked variants: ${e.message}")
-                        }
-                    }
-
-                    return@runBlocking episodes
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
-                    return@runBlocking emptyList()
-                }
-            }
-        }
-
-    private suspend fun fetchCrunchyroll(countryCode: CountryCode, simulcasts: Set<String>): List<Episode> {
-        val platformEpisodes = mutableListOf<Episode>()
-
-        var count = 0
-        var series: List<CrunchyrollWrapper.BrowseObject>
-
-        do {
-            series = getSeries(countryCode, simulcasts)
-        } while (series.isEmpty() && count++ < 3)
-
-        series.forEach { serie ->
-            val seasonRegex = " Saison (\\d)".toRegex()
-
-            var animeName = requireNotNull(serie.title) { "Anime name is null" }
-            var forcedSeason: Int? = null
-
-            if (animeName.contains(seasonRegex)) {
-                forcedSeason = seasonRegex.find(animeName)!!.groupValues[1].toIntOrNull()
-                animeName = animeName.replace(seasonRegex, "")
-            }
-
-            val animeImage = serie.images!!.posterTall.first().maxByOrNull { poster -> poster.width }?.source
-            val animeBanner = serie.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source
-            val animeDescription = serie.description
-
-            if (animeImage.isNullOrEmpty()) {
-                throw Exception("Image is null or empty")
-            }
-            if (animeBanner.isNullOrEmpty()) {
-                throw Exception("Banner is null or empty")
-            }
-
-            crunchyrollEpisodesCache[CountryCodeIdKeyCache(countryCode, serie.id)]?.forEach { episode ->
-                try {
-                    platformEpisodes.add(
-                        extractEpisode(
-                            episode,
-                            countryCode,
-                            forcedSeason,
-                            episode.episodeMetadata!!,
-                            Series(animeName, animeImage, animeBanner, animeDescription)
-                        )
+        dates.map { it.atStartOfWeek() }
+            .distinct()
+            .forEachIndexed { _, date ->
+                runBlocking {
+                    CrunchyrollWrapper.getSimulcastCalendar(
+                        countryCode,
+                        crunchyrollAccessTokenCache[countryCode]!!,
+                        date
                     )
-                } catch (e: Exception) {
-                    logger.warning("Error while converting episode (Episode ID: ${episode.id}) : ${e.message}")
+                }.forEach { browseObject ->
+                    try {
+                        episodes.add(
+                            crunchyrollPlatform.convertEpisode(
+                                countryCode,
+                                browseObject,
+                                false
+                            )
+                        )
+                    } catch (e: Exception) {
+                        logger.log(
+                            Level.SEVERE,
+                            "Error while converting episode (Episode ID: ${browseObject.id})",
+                            e
+                        )
+                    }
                 }
             }
-        }
 
-        return platformEpisodes
-    }
-
-    data class Series(
-        val name: String,
-        val image: String,
-        val banner: String,
-        val description: String?,
-    )
-
-    private fun extractEpisode(
-        episode: CrunchyrollWrapper.BrowseObject,
-        countryCode: CountryCode,
-        forcedSeason: Int?,
-        episodeMetadata: CrunchyrollWrapper.Episode,
-        series: Series,
-    ): Episode {
-        val isDubbed = episode.episodeMetadata!!.audioLocale == countryCode.locale
-        val season = forcedSeason ?: (episodeMetadata.seasonNumber ?: 1)
-        val (number, episodeType) = crunchyrollPlatform.getNumberAndEpisodeType(episode.episodeMetadata)
-        val url = CrunchyrollWrapper.buildUrl(countryCode, episode.id, episode.slugTitle)
-        val biggestImage = episode.images?.thumbnail?.firstOrNull()?.maxByOrNull { it.width }
-        val image = biggestImage?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW
-        val duration = episodeMetadata.durationMs / 1000
-        val description = episode.description?.replace('\n', ' ')?.takeIf { it.isNotBlank() }
-
-        if (!isDubbed && (episodeMetadata.subtitleLocales.isEmpty() || !episodeMetadata.subtitleLocales.contains(
-                countryCode.locale
-            ))
-        )
-            throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
-
-        val isTeaser = episode.slugTitle?.contains("teaser", true) == true &&
-                episodeMetadata.premiumAvailableDate.withUTCString() == "1970-01-01T00:00:00Z"
-
-        if (isTeaser)
-            throw EpisodeException("Episode is a teaser")
-
-        var original = true
-
-        if (!episode.episodeMetadata.versions.isNullOrEmpty()) {
-            val currentVersion = episode.episodeMetadata.versions.firstOrNull { it.guid == episode.id }
-            original = currentVersion?.original ?: true
-        }
-
-        return Episode(
-            countryCode = countryCode,
-            anime = series.name,
-            animeImage = series.image,
-            animeBanner = series.banner,
-            animeDescription = series.description,
-            releaseDateTime = episodeMetadata.premiumAvailableDate,
-            episodeType = episodeType,
-            season = season,
-            number = number,
-            duration = duration,
-            title = episode.title,
-            description = description,
-            image = image,
-            platform = Platform.CRUN,
-            audioLocale = episodeMetadata.audioLocale,
-            id = episode.id,
-            url = url,
-            uncensored = false,
-            original = original
-        )
-    }
-
-    suspend fun getSeries(
-        countryCode: CountryCode,
-        simulcasts: Set<String>,
-    ): List<CrunchyrollWrapper.BrowseObject> {
-        return simulcasts.flatMap { simulcastId ->
-            CrunchyrollWrapper.getBrowse(
-                countryCode.locale,
-                crunchyrollAccessTokenCache[countryCode]!!,
-                sortBy = CrunchyrollWrapper.SortType.POPULARITY,
-                type = CrunchyrollWrapper.MediaType.SERIES,
-                200,
-                simulcast = simulcastId
-            ).toList()
-        }.distinctBy { it.id }
+        return episodes
     }
 }

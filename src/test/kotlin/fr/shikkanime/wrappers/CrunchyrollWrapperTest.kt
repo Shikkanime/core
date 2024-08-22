@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
 
 private const val OLD_TOKEN =
     "eyJhbGciOiJSUzI1NiIsImtpZCI6IkFDNG5YM0JIaW5hbFRoV0pHajY2aEEiLCJ0eXAiOiJKV1QifQ.eyJhbm9ueW1vdXNfaWQiOiIiLCJjbGllbnRfaWQiOiJjcl93ZWIiLCJjbGllbnRfdGFnIjoiKiIsImNvdW50cnkiOiJGUiIsImV4cCI6MTcwNTk0NTA0NSwianRpIjoiZDNjMDU1M2QtOGU2MC00ZTc2LWIyZDgtMmNlYjY4NDcwNzlmIiwibWF0dXJpdHkiOiJNMiIsIm9hdXRoX3Njb3BlcyI6ImFjY291bnQgY29udGVudCBvZmZsaW5lX2FjY2VzcyIsInN0YXR1cyI6IkFOT05ZTU9VUyIsInRudCI6ImNyIn0.QisvFs4k0_TdQHSOQsOJjprM9Vu4DYUcmLlRW-S51iGUgY2oiZTjwNFvNLevl4JKPFqP0zCkW7UB45nOsxnKrLNc7XZKC_Z0soJoIKEXJomI_A_wlutX9TO2a_GIZ4T1ElZpK5PocpcA7ZihDt2_M84IZD0G0o0EBE1lVo56YjcEvDzWCHwvA6XJu14ZO8MIpiyQIMeKt8atFVQJTkULFhwqH-umujsJK_dclwAYA5jgq-q-lFw5q76ZkJ7BpAxnmQqQuxVD3fpmOT2QWVsnzIqBFVerTTO4QWTX1_DvtARv31HD_6wyq7-Xhx-IzQWUm5JbxsNBtYLL614G5rQEMw"
@@ -77,6 +78,12 @@ class CrunchyrollWrapperTest {
         val nextEpisode = runBlocking { CrunchyrollWrapper.getNextEpisode(locale, token!!, "G14U47QGQ") }
         assertNotNull(nextEpisode)
         assertEquals("GJWU2WNE7", nextEpisode.id)
+    }
+
+    @Test
+    fun getSimulcastCalendar() {
+        val episodes = runBlocking { CrunchyrollWrapper.getSimulcastCalendar(CountryCode.FR, token!!, LocalDate.parse("2024-01-01")) }
+        assertEquals(true, episodes.isNotEmpty())
     }
 
     companion object {

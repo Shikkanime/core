@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
+import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -18,7 +19,6 @@ import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -164,17 +164,17 @@ class AnimeController : HasPageableRoute() {
         )
         dateParam: String?,
     ): Response {
-        val parsedDate = try {
+        val startOfWeekDay = try {
             dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
         } catch (e: Exception) {
             return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
-        }
+        }.atStartOfWeek()
 
         return Response.ok(
             animeCacheService.getWeeklyAnimes(
                 countryParam ?: CountryCode.FR,
                 uuid,
-                parsedDate.with(DayOfWeek.MONDAY),
+                startOfWeekDay,
             )
         )
     }

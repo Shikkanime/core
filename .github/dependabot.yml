@@ -16,6 +16,8 @@ updates:
       ktor:
         patterns:
           - "*ktor*"
+    commit-message:
+      prefix: "chore"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -28,6 +30,8 @@ updates:
       - "Ziedelth"
     reviewers:
       - "Ziedelth"
+    commit-message:
+      prefix: "chore"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -40,3 +44,5 @@ updates:
       - "Ziedelth"
     reviewers:
       - "Ziedelth"
+    commit-message:
+      prefix: "chore"
