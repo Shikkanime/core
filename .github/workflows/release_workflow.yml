@@ -37,6 +37,12 @@ jobs:
           username: ziedelth
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
+      - name: Get next version
+        uses: reecetech/version-increment@2024.4.4
+        id: version
+        with:
+          scheme: conventional_commits
+
       - name: Build docker file
         uses: docker/build-push-action@v6
         with:
@@ -46,12 +52,6 @@ jobs:
           platforms: linux/arm64/v8
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
-
-      - name: Get next version
-        uses: reecetech/version-increment@2024.4.4
-        id: version
-        with:
-          scheme: conventional_commits
 
       - name: Generate Git Tag
         id: generate_tag
@@ -71,3 +71,4 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
+          automatic_release_tag: ${{ steps.generate_tag.outputs.NEW_TAG }}
