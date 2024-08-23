@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
   push:
-    branches: [dev]
+    branches: [master]
 
 env:
   JAVA_VERSION: 21
@@ -29,19 +29,19 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
       - name: Analyze push
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        if: github.event_name == 'push'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: ./gradlew sonar --info
       - name: Analyse pull request
-        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref != 'master' && github.actor != 'dependabot[bot]'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} -Dsonar.qualitygate.wait=true
-      - name: Analyse pull request
-        if: github.event_name == 'pull_request' && (github.event.pull_request.base.ref == 'master' || github.actor == 'dependabot[bot]')
+      - name: Build and test
+        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
         run: ./gradlew clean test --info
 
   test-compose:

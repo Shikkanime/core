@@ -19,5 +19,3 @@ jobs:
         uses: gradle-update/update-gradle-wrapper-action@v1.0.20
         with:
           reviewers: Ziedelth
-          base-branch: dev
-          target-branch: dev

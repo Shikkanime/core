@@ -1,11 +1,10 @@
 name: Release workflow
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:  # Allows manual triggering
 
 env:
+  JAVA_VERSION: 21
   REGISTRY_IMAGE: registry.shikkanime.fr:5000/shikkanime-core
 
 jobs:
@@ -15,10 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          java-version: 21
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
 
       - name: Build
@@ -53,22 +52,15 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
 
-      - name: Generate Git Tag
-        id: generate_tag
-        run: |
-          NEW_TAG="${{ steps.version.outputs.v-version }}"
-          echo "Generated new tag: $NEW_TAG"
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
-
       - name: Push Git Tag
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag $NEW_TAG
-          git push origin $NEW_TAG
+          git tag ${{ steps.version.outputs.v-version }}
+          git push origin ${{ steps.version.outputs.v-version }}
 
       - uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: ${{ steps.generate_tag.outputs.NEW_TAG }}
+          automatic_release_tag: ${{ steps.version.outputs.v-version }}
