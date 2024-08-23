@@ -8,20 +8,81 @@ env:
   REGISTRY_IMAGE: registry.shikkanime.fr:5000/shikkanime-core
 
 jobs:
-  docker:
+  upgrade-version:
     runs-on: ubuntu-latest
+
+    outputs:
+      v-version: ${{ steps.version.outputs.v-version }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Get next version
+        uses: reecetech/version-increment@2024.4.4
+        id: version
+        with:
+          scheme: conventional_commits
+
+      - name: Update version in build.gradle.kts
+        run: |
+          #!/bin/bash
+          PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
+          
+          # Update the file
+          sed -i "s|$PROJECT_VERSION|${{ steps.version.outputs.version }}|g" build.gradle.kts
+          
+          # Set up Git
+          git config user.name Ziedelth
+          git config user.email ${{ secrets.USER_EMAIL }}
+
+          # Commit the changes
+          git add build.gradle.kts
+          git commit -m "Update version to ${{ steps.version.outputs.version }}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.8.0
+        with:
+          github_token: ${{ secrets.USER_TOKEN }}
+          branch: ${{ github.ref }}
+          force: true
+
+  push-tag:
+    runs-on: ubuntu-latest
+    needs: upgrade-version
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pull the latest commits
+      - name: Pull latest commits
+        run: git pull
+
+      - name: Push Git Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{ needs.upgrade-version.outputs.v-version }}
+          git push origin ${{ needs.upgrade-version.outputs.v-version }}
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [upgrade-version,push-tag]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pull the latest commits
+      - name: Pull latest commits
+        run: git pull
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
-
-      - name: Build
-        run: gradle clean installDist
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -36,31 +97,15 @@ jobs:
           username: ziedelth
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Get next version
-        uses: reecetech/version-increment@2024.4.4
-        id: version
-        with:
-          scheme: conventional_commits
+      - name: Build
+        run: gradle clean installDist
 
       - name: Build docker file
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY_IMAGE }}:latest,${{ env.REGISTRY_IMAGE }}:${{ steps.version.outputs.v-version }}
+          tags: ${{ env.REGISTRY_IMAGE }}:latest,${{ env.REGISTRY_IMAGE }}:${{ needs.upgrade-version.outputs.v-version }}
           platforms: linux/arm64/v8
           cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
-
-      - name: Push Git Tag
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.v-version }}
-          git push origin ${{ steps.version.outputs.v-version }}
-
-      - uses: marvinpinto/action-automatic-releases@v1.2.1
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          automatic_release_tag: ${{ steps.version.outputs.v-version }}
