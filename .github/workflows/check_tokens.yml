@@ -10,15 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: dev
 
       - name: Check tokens and update if necessary
         run: |
           #!/bin/bash
           
           CRUNCHYROLL_RS_TOKEN=$(curl 'https://raw.githubusercontent.com/crunchy-labs/crunchyroll-rs/master/src/crunchyroll.rs' | grep -oP 'Basic \K[^\\"]*' | head -n 1)
-          SHIKKANIME_TOKEN=$(curl 'https://raw.githubusercontent.com/Shikkanime/core/dev/src/main/kotlin/fr/shikkanime/wrappers/CrunchyrollWrapper.kt' | grep -oP 'Basic \K[^\\"]*' | head -n 1)
+          SHIKKANIME_TOKEN=$(cat 'src/main/kotlin/fr/shikkanime/wrappers/CrunchyrollWrapper.kt'  | grep -oP 'Basic \K[^\\"]*' | head -n 1)
           
           if [ "$CRUNCHYROLL_RS_TOKEN" != "$SHIKKANIME_TOKEN" ]; then
             echo "Tokens are different. Updating Shikkanime token..."
