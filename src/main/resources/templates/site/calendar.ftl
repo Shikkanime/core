@@ -75,7 +75,7 @@
                                             <img loading="lazy"
                                                  src="${imageUrl}"
                                                  alt="${su.sanitizeXSS(release.anime.shortName)} anime"
-                                                 class="img-fluid rounded-top-4" width="640"
+                                                 class="img-fluid" width="640"
                                                  height="360">
 
                                             <div class="position-absolute top-0 end-0 p-1">
@@ -107,8 +107,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-4"
-                                             style="display: none;" x-show="hover">
+                                        <div class="overlay" style="display: none;" x-show="hover">
                                             <#if release.anime.description??>
                                                 <div class="text-truncate-4">
                                                     ${release.anime.description}
