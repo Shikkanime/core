@@ -26,7 +26,7 @@ val twitter4jV2Version = "1.4.3"
 
 val junitVersion = "5.11.0"
 val h2Version = "2.3.232"
-val mockitoVersion = "5.12.0"
+val mockitoVersion = "5.13.0"
 
 plugins {
     val kotlinVersion = "2.0.20"
