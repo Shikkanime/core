@@ -7,7 +7,7 @@
                @mouseenter="hover = true" @mouseleave="hover = false">
                 <div class="position-relative">
                     <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image" alt="${su.sanitizeXSS(anime.shortName)} anime"
-                         class="img-fluid rounded-top-4" width="480" height="720">
+                         class="img-fluid" width="480" height="720">
 
                     <div class="mt-2 mx-2 mb-1">
                         <span class="h6 text-truncate-2 fw-bold mb-0">${anime.shortName}</span>
@@ -17,8 +17,7 @@
                         </#list>
                     </div>
 
-                    <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-3 rounded-top-4" style="display: none;"
-                         x-show="hover">
+                    <div class="overlay" style="display: none;" x-show="hover">
                         <div class="h6 text-truncate-2 fw-bold">
                             ${anime.shortName?upper_case}
                         </div>

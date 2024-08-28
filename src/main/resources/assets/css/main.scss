@@ -1,0 +1,104 @@
+@font-face {
+  font-family: Satoshi;
+  src: url(/assets/fonts/Satoshi-Regular.woff2) format('woff2'),
+  url(/assets/fonts/Satoshi-Regular.woff) format('woff'),
+  url(/assets/fonts/Satoshi-Regular.ttf) format('truetype'),
+  url(/assets/fonts/Satoshi-Regular.eot) format('embedded-opentype');
+}
+
+body {
+  background-color: #000;
+  font-family: Satoshi, sans-serif;
+}
+
+@mixin text-truncate($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-truncate-2 {
+  @include text-truncate(2);
+}
+
+.text-truncate-4 {
+  @include text-truncate(4);
+}
+
+.text-truncate-6 {
+  @include text-truncate(6);
+}
+
+.text-muted {
+  color: #b9b9b9 !important;
+}
+
+.shikk-element {
+  border: 1px solid #FFFFFF14;
+  border-radius: 1rem;
+  background-color: #FFFFFF14;
+  overflow: hidden;
+
+  &:has(.shikk-element-collection-1, .shikk-element-collection-2) {
+    overflow: visible;
+
+    img {
+      border-top-left-radius: 1rem;
+      border-top-right-radius: 1rem;
+    }
+  }
+
+  .shikk-element-collection-1, .shikk-element-collection-2 {
+    position: absolute;
+    height: 10%;
+    border-radius: 1rem;
+  }
+
+  .shikk-element-collection-1 {
+    top: -4px;
+    width: calc(100% - 12px);
+    left: 6px;
+  }
+
+  .shikk-element-collection-2 {
+    opacity: 50%;
+    top: -8px;
+    width: calc(100% - 24px);
+    left: 12px;
+  }
+
+  .overlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(0.25rem);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 1rem;
+  }
+}
+
+.anime-infos {
+  @media (min-width: 576px) {
+    position: relative;
+    margin-top: -100px;
+  }
+
+  @media (max-width: 575px) {
+    position: relative;
+    margin-top: -22.5rem;
+  }
+}
+
+.callout {
+  padding: 1.25rem;
+  color: #fff;
+  background-color: #202020;
+  border-left: 0.25rem solid #5a5a5a;
+  display: flex;
+  align-items: center;
+}

@@ -23,7 +23,7 @@
                     <div class="position-relative">
                         <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image"
                              alt="${su.sanitizeXSS(episodeMapping.anime.shortName)} episode preview"
-                             class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if> rounded-top-4"
+                             class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if>"
                              width="640" height="360">
 
                         <div class="position-absolute top-0 end-0 mt-1 d-flex">
@@ -54,8 +54,7 @@
                         </#list>
                     </div>
 
-                    <div class="bg-black bg-opacity-75 bg-blur position-absolute top-0 start-0 w-100 h-100 mh-100 p-2 rounded-4"
-                         style="display: none;" x-show="hover">
+                    <div class="overlay" style="display: none;" x-show="hover">
                         <#if episodeMapping.title??>
                             <div class="h6 text-truncate-2 fw-bold mb-0">
                                 ${episodeMapping.title}
