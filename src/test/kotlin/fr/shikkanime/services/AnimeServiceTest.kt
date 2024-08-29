@@ -85,6 +85,7 @@ class AnimeServiceTest {
         animeService.update(anime!!.uuid!!, dto)
 
         assertEquals(1, animeService.findAll().size)
+        assertEquals("Dragon Quest", animeService.findAll()[0].name)
     }
 
     @Test
@@ -164,6 +165,7 @@ class AnimeServiceTest {
         animeService.update(anime!!.uuid!!, dto)
 
         assertEquals(1, animeService.findAll().size)
+        assertEquals("Dragon Quest", animeService.findAll()[0].name)
         assertEquals(1, episodeMappingService.findAll().size)
         assertEquals(3, episodeVariantService.findAll().size)
     }
@@ -274,6 +276,7 @@ class AnimeServiceTest {
         animeService.update(anime!!.uuid!!, dto)
 
         assertEquals(1, animeService.findAll().size)
+        assertEquals("Dragon Quest", animeService.findAll()[0].name)
         assertEquals(2, episodeMappingService.findAll().size)
         assertEquals(3, episodeVariantService.findAll().size)
         assertEquals(1, memberService.findAll().size)

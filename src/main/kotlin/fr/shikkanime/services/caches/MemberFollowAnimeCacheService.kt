@@ -6,6 +6,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.MissedAnimeDto
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.MemberFollowEpisode
@@ -25,6 +26,7 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
             classes = listOf(
                 MemberFollowAnime::class.java,
                 MemberFollowEpisode::class.java,
+                Anime::class.java,
                 EpisodeMapping::class.java,
             ),
         ) {
