@@ -197,7 +197,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug!!)
 
             if (findBySlug != null && findBySlug.uuid != anime.uuid) {
-                merge(anime, findBySlug)
+                return merge(anime, findBySlug)
             }
 
             anime.slug = animeDto.slug
@@ -252,10 +252,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         MapCache.invalidate(Anime::class.java)
     }
 
-    private fun merge(anime: Anime, findBySlug: Anime) {
-        episodeMappingService.findAllByAnime(findBySlug).forEach { episodeMapping ->
+    private fun merge(from: Anime, to: Anime): Anime {
+        episodeMappingService.findAllByAnime(from).forEach { episodeMapping ->
             val findByAnimeSeasonEpisodeTypeNumber = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
-                anime.uuid!!,
+                to.uuid!!,
                 episodeMapping.season!!,
                 episodeMapping.episodeType!!,
                 episodeMapping.number!!
@@ -271,19 +271,20 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 return@forEach
             }
 
-            episodeMapping.anime = anime
+            episodeMapping.anime = to
             episodeMappingService.update(episodeMapping)
         }
 
-        memberFollowAnimeService.findAllByAnime(findBySlug).forEach { memberFollowAnime ->
-            if (memberFollowAnimeService.existsByMemberAndAnime(memberFollowAnime.member!!, anime)) {
+        memberFollowAnimeService.findAllByAnime(from).forEach { memberFollowAnime ->
+            if (memberFollowAnimeService.existsByMemberAndAnime(memberFollowAnime.member!!, to)) {
                 memberFollowAnimeService.delete(memberFollowAnime)
             } else {
-                memberFollowAnime.anime = anime
+                memberFollowAnime.anime = to
                 memberFollowAnimeService.update(memberFollowAnime)
             }
         }
 
-        delete(findBySlug)
+        delete(from)
+        return to
     }
 }
