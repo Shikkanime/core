@@ -14,9 +14,13 @@ import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.wrappers.CrunchyrollWrapper
+import io.mockk.every
+import io.mockk.mockkClass
+import io.mockk.mockkStatic
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -197,5 +201,212 @@ class CrunchyrollPlatformTest {
         assertEquals(EpisodeType.EPISODE, episodes[0].episodeType)
         assertEquals(1, episodes[0].season)
         assertEquals(3, episodes[0].number)
+    }
+
+    @Test
+    fun fetchNextEpisodeSuccessfully() {
+        val expectedEpisode = mockkClass(CrunchyrollWrapper.BrowseObject::class)
+
+        mockkStatic(CrunchyrollWrapper::class) {
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getUpNext(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } returns expectedEpisode
+            val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
+            assertEquals(expectedEpisode, result)
+        }
+    }
+
+    @Test
+    fun getNextEpisodeFallbackToEpisode() = runBlocking {
+        val episode = CrunchyrollWrapper.Episode(
+            null,
+            "",
+            "",
+            "",
+            emptyList(),
+            ZonedDateTime.now(),
+            "",
+            null,
+            null,
+            "",
+            null,
+            null,
+            null,
+            null,
+            1440000L,
+            null,
+            null,
+            "nextId",
+        )
+        val expectedEpisode = mockkClass(CrunchyrollWrapper.BrowseObject::class)
+
+        mockkStatic(CrunchyrollWrapper::class) {
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getUpNext(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } throws Exception()
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getEpisode(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } returns episode
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getObjects(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } returns arrayOf(expectedEpisode)
+            val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
+            assertEquals(expectedEpisode, result)
+        }
+    }
+
+    @Test
+    fun getNextEpisodeFallbackToSeason() = runBlocking {
+        val countryCode = CountryCode.FR
+        val crunchyrollId = "someId"
+        val episode = CrunchyrollWrapper.Episode(
+            null,
+            "",
+            "",
+            "",
+            emptyList(),
+            ZonedDateTime.now().minusDays(1),
+            "seasonId",
+            null,
+            null,
+            "",
+            null,
+            null,
+            null,
+            null,
+            1440000L,
+            null,
+            null,
+            null,
+        )
+        val nextEpisode = mockkClass(CrunchyrollWrapper.Episode::class)
+        every { nextEpisode.id } returns "nextId"
+        every { nextEpisode.premiumAvailableDate } returns ZonedDateTime.now()
+        val expectedEpisode = mockkClass(CrunchyrollWrapper.BrowseObject::class)
+
+        mockkStatic(CrunchyrollWrapper::class) {
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getUpNext(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } throws Exception()
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getEpisode(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } returns episode
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getEpisodesBySeasonId(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class),
+                    )
+                }
+            } returns arrayOf(nextEpisode)
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getObjects(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } returns arrayOf(expectedEpisode)
+
+            val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
+            assertEquals(expectedEpisode, result)
+        }
+    }
+
+    @Test
+    fun getNextEpisodeNotFound() = runBlocking {
+        val countryCode = CountryCode.FR
+        val crunchyrollId = "someId"
+        val episode = CrunchyrollWrapper.Episode(
+            null,
+            "",
+            "",
+            "",
+            emptyList(),
+            ZonedDateTime.now().minusDays(1),
+            "seasonId",
+            null,
+            null,
+            "",
+            null,
+            null,
+            null,
+            null,
+            1440000L,
+            null,
+            null,
+            null,
+        )
+
+        mockkStatic(CrunchyrollWrapper::class) {
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getUpNext(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } throws Exception()
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getEpisode(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class)
+                    )
+                }
+            } returns episode
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getEpisodesBySeasonId(
+                        any(String::class),
+                        any(String::class),
+                        any(String::class),
+                    )
+                }
+            } returns arrayOf()
+
+            val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
+            assertNull(result)
+        }
     }
 }

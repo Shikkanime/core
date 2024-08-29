@@ -93,6 +93,8 @@ object CrunchyrollWrapper {
         val durationMs: Long,
         val description: String?,
         val versions: List<Version>?,
+        @SerializedName("next_episode_id")
+        val nextEpisodeId: String?,
     )
 
     data class BrowseObject(
@@ -192,7 +194,8 @@ object CrunchyrollWrapper {
 
     }
 
-    private suspend fun getEpisodesBySeasonId(locale: String, accessToken: String, seasonId: String): Array<Episode> {
+    @JvmStatic
+    suspend fun getEpisodesBySeasonId(locale: String, accessToken: String, seasonId: String): Array<Episode> {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/seasons/$seasonId/episodes?locale=$locale",
             headers = mapOf(
@@ -207,6 +210,7 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray, Array<Episode>::class.java)
     }
 
+    @JvmStatic
     suspend fun getEpisode(locale: String, accessToken: String, id: String): Episode {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/episodes/$id?locale=$locale",
@@ -241,10 +245,12 @@ object CrunchyrollWrapper {
         return getEpisodeByType(locale, accessToken, id, "previous_episode")
     }
 
-    suspend fun getNextEpisode(locale: String, accessToken: String, id: String): BrowseObject {
+    @JvmStatic
+    suspend fun getUpNext(locale: String, accessToken: String, id: String): BrowseObject {
         return getEpisodeByType(locale, accessToken, id, "up_next")
     }
 
+    @JvmStatic
     suspend fun getObjects(locale: String, accessToken: String, vararg ids: String): Array<BrowseObject> {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/objects/${ids.joinToString(",")}?locale=$locale",

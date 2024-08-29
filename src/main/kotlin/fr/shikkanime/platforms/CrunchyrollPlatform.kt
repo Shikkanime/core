@@ -167,14 +167,8 @@ class CrunchyrollPlatform :
                 return@forEach
             }
 
-            val nextEpisode = try {
-                CrunchyrollWrapper.getNextEpisode(
-                    countryCode.locale,
-                    identifiers[countryCode]!!,
-                    crunchyrollId
-                )
-            } catch (e: Exception) {
-                logger.warning("Can not fetch next episode for $crunchyrollId")
+            val nextEpisode = getNextEpisode(countryCode, crunchyrollId) ?: run {
+                logger.warning("Next episode not found for $crunchyrollId")
                 return@forEach
             }
 
@@ -187,6 +181,28 @@ class CrunchyrollPlatform :
         }
 
         return list
+    }
+
+    suspend fun getNextEpisode(countryCode: CountryCode, crunchyrollId: String): CrunchyrollWrapper.BrowseObject? {
+        return try {
+            CrunchyrollWrapper.getUpNext(countryCode.locale, identifiers[countryCode]!!, crunchyrollId)
+        } catch (_: Exception) {
+            logger.warning("Can not fetch up next episode for $crunchyrollId, trying to check with the episode...")
+            val episode = CrunchyrollWrapper.getEpisode(countryCode.locale, identifiers[countryCode]!!, crunchyrollId)
+
+            if (!episode.nextEpisodeId.isNullOrEmpty()) {
+                return CrunchyrollWrapper.getObjects(
+                    countryCode.locale,
+                    identifiers[countryCode]!!,
+                    episode.nextEpisodeId
+                ).firstOrNull()
+            }
+
+            logger.warning("Next episode ID not found for $crunchyrollId, trying to find it by season...")
+            val episodes = CrunchyrollWrapper.getEpisodesBySeasonId(countryCode.locale, identifiers[countryCode]!!, episode.seasonId)
+            episodes.firstOrNull { it.premiumAvailableDate > episode.premiumAvailableDate }
+                ?.let { CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, it.id!!).firstOrNull() }
+        }
     }
 
     fun getCrunchyrollId(identifier: String) =

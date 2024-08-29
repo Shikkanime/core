@@ -74,8 +74,8 @@ class CrunchyrollWrapperTest {
     }
 
     @Test
-    fun getNextEpisode() {
-        val nextEpisode = runBlocking { CrunchyrollWrapper.getNextEpisode(locale, token!!, "G14U47QGQ") }
+    fun getUpNext() {
+        val nextEpisode = runBlocking { CrunchyrollWrapper.getUpNext(locale, token!!, "G14U47QGQ") }
         assertNotNull(nextEpisode)
         assertEquals("GJWU2WNE7", nextEpisode.id)
     }

@@ -9,12 +9,12 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
+import io.mockk.every
+import io.mockk.mockkClass
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import java.time.ZonedDateTime
 
 class EpisodeVariantServiceTest {
@@ -49,10 +49,12 @@ class EpisodeVariantServiceTest {
     @Test
     fun `getSimulcasts get next`() {
         val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", image = "test.jpg", slug = "test-anime")
-        val episode = mock(EpisodeMapping::class.java)
+        val episode = mockkClass(EpisodeMapping::class)
 
         anime.releaseDateTime = ZonedDateTime.parse("2023-12-20T16:00:00Z")
-        `when`(episode.releaseDateTime).thenReturn(anime.releaseDateTime)
+        every { episode.releaseDateTime } returns anime.releaseDateTime
+        every { episode.episodeType } returns EpisodeType.EPISODE
+        every { episode.number } returns 1
 
         animeService.save(anime)
         val simulcast = episodeVariantService.getSimulcast(anime, episode)
@@ -64,7 +66,7 @@ class EpisodeVariantServiceTest {
     @Test
     fun `getSimulcasts continue on current`() {
         val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", image = "test.jpg", slug = "test-anime")
-        val episode = mock(EpisodeMapping::class.java)
+        val episode = mockkClass(EpisodeMapping::class)
         val finalRelease = ZonedDateTime.parse("2024-01-03T16:00:00Z")
 
         anime.releaseDateTime = finalRelease.minusWeeks(12)
@@ -74,11 +76,11 @@ class EpisodeVariantServiceTest {
         (1..<12).map { i ->
             episodeMappingService.save(
                 EpisodeMapping(
-                anime = anime,
-                episodeType = EpisodeType.EPISODE,
-                season = 1,
-                number = i,
-                releaseDateTime = anime.releaseDateTime.plusWeeks(i.toLong()),
+                    anime = anime,
+                    episodeType = EpisodeType.EPISODE,
+                    season = 1,
+                    number = i,
+                    releaseDateTime = anime.releaseDateTime.plusWeeks(i.toLong()),
                     image = "test.jpg",
                 )
             ).apply {
@@ -94,9 +96,9 @@ class EpisodeVariantServiceTest {
             }
         }
 
-        `when`(episode.releaseDateTime).thenReturn(finalRelease)
-        `when`(episode.episodeType).thenReturn(EpisodeType.EPISODE)
-        `when`(episode.number).thenReturn(12)
+        every { episode.releaseDateTime } returns finalRelease
+        every { episode.episodeType } returns EpisodeType.EPISODE
+        every { episode.number } returns 12
 
         val simulcast = episodeVariantService.getSimulcast(anime, episode)
 
