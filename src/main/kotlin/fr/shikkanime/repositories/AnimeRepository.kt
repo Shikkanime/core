@@ -136,7 +136,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             query.where(
                 *predicates.toTypedArray(),
-                cb.or(*orPredicate.toTypedArray())
+                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
             )
 
             val list = createReadOnlyQuery(it, query)
@@ -185,7 +185,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             query.where(
                 *predicates.toTypedArray(),
-                cb.or(*orPredicate.toTypedArray())
+                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
             )
 
             query.orderBy(cb.asc(root[Anime_.name]))
