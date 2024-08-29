@@ -26,7 +26,7 @@ val twitter4jV2Version = "1.4.3"
 
 val junitVersion = "5.11.0"
 val h2Version = "2.3.232"
-val mockitoVersion = "5.13.0"
+val mockkVersion = "1.13.12"
 
 plugins {
     val kotlinVersion = "2.0.20"
@@ -108,7 +108,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("com.h2database:h2:$h2Version")
-    testImplementation("org.mockito:mockito-core:$mockitoVersion")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 }
 
 kotlin {
