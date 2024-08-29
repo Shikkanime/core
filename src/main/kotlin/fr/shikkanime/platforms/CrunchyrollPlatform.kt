@@ -33,7 +33,7 @@ class CrunchyrollPlatform :
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
-    private val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
+    val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
         return@MapCache runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
     }
 

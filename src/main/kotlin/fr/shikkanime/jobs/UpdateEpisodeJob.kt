@@ -60,7 +60,6 @@ class UpdateEpisodeJob : AbstractJob {
             return
         }
 
-        val accessToken = runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
         var needRecalculate = false
         val identifiers = episodeVariantService.findAllIdentifiers()
 
@@ -69,7 +68,7 @@ class UpdateEpisodeJob : AbstractJob {
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
             val episodes =
-                variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(accessToken, mapping, variant) } }
+                variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
 
             episodes.filter { it.getIdentifier() !in identifiers }.takeIf { it.isNotEmpty() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
@@ -123,7 +122,6 @@ class UpdateEpisodeJob : AbstractJob {
     }
 
     private suspend fun retrievePlatformEpisode(
-        accessToken: String,
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant
     ): List<Episode> {
@@ -146,7 +144,6 @@ class UpdateEpisodeJob : AbstractJob {
             episodes.addAll(
                 getCrunchyrollEpisodeAndVariants(
                     countryCode,
-                    accessToken,
                     crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
                 )
             )
@@ -157,14 +154,15 @@ class UpdateEpisodeJob : AbstractJob {
 
     private suspend fun getCrunchyrollEpisodeAndVariants(
         countryCode: CountryCode,
-        accessToken: String,
         crunchyrollId: String,
     ): List<Episode> {
-        val crunchyrollEpisode = CrunchyrollWrapper.getEpisode(countryCode.locale, accessToken, crunchyrollId)
+        val crunchyrollEpisode = CrunchyrollWrapper.getObjects(countryCode.locale, crunchyrollPlatform.identifiers[countryCode]!!, crunchyrollId).first()
 
-        val crunchyrollEpisodes =
-            (crunchyrollEpisode.versions ?: listOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id!!, true)))
-                .asSequence()
+        val versionIds = crunchyrollEpisode.episodeMetadata!!.versions?.toMutableList() ?: mutableListOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id, true))
+        versionIds.removeIf { it.guid.isBlank() || it.guid == crunchyrollId }
+
+        val crunchyrollEpisodes = if (versionIds.isNotEmpty()) {
+            versionIds.asSequence()
                 .distinctBy { variant -> variant.guid }
                 .chunked(50)
                 .flatMap { chunk ->
@@ -172,7 +170,7 @@ class UpdateEpisodeJob : AbstractJob {
                         runBlocking {
                             CrunchyrollWrapper.getObjects(
                                 countryCode.locale,
-                                accessToken,
+                                crunchyrollPlatform.identifiers[countryCode]!!,
                                 *chunk.map { it.guid }.toTypedArray()
                             ).toList()
                         }
@@ -182,6 +180,9 @@ class UpdateEpisodeJob : AbstractJob {
                     }
                 }
                 .toList()
+        } else {
+            listOf(crunchyrollEpisode)
+        }
 
         return crunchyrollEpisodes.mapNotNull { browseObject ->
             try {

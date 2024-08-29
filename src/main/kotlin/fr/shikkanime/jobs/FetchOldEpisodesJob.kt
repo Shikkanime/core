@@ -18,7 +18,6 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
-import java.time.Duration
 import java.time.LocalDate
 import java.time.Period
 import java.util.concurrent.TimeoutException
@@ -44,10 +43,6 @@ class FetchOldEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
-
-    private val crunchyrollAccessTokenCache = MapCache<CountryCode, String>(duration = Duration.ofMinutes(30)) {
-        runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-    }
 
     override fun run() {
         val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
@@ -223,7 +218,7 @@ class FetchOldEpisodesJob : AbstractJob {
                 return runBlocking {
                     CrunchyrollWrapper.getSimulcastCalendar(
                         countryCode,
-                        crunchyrollAccessTokenCache[countryCode]!!,
+                        crunchyrollPlatform.identifiers[countryCode]!!,
                         date
                     )
                 }
