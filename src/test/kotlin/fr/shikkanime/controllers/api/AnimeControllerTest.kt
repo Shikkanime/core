@@ -151,4 +151,29 @@ class AnimeControllerTest : AbstractControllerTest() {
             }
         }
     }
+
+    @Test
+    fun bugSearch() {
+        testApplication {
+            application {
+                module()
+            }
+
+            client.get(
+                "/api/v1/animes?country=${CountryCode.FR}&name=one&page=5&limit=6&searchTypes=${
+                    LangType.entries.joinToString(
+                        ","
+                    )
+                }"
+            ) {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val animes = ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<AnimeDto>>() {})
+                animes.data.forEach(::println)
+                assertEquals(0, animes.data.size)
+                assertEquals(1, animes.total)
+            }
+        }
+    }
 }
