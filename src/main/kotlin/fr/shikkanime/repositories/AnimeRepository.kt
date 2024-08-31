@@ -144,10 +144,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 .sortedByDescending { anime -> ids.first { pair -> pair.first == anime.uuid }.second }
 
             Pageable(
-                list.subList(
-                    (page - 1) * limit,
-                    (page * limit).coerceAtMost(list.size)
-                ),
+                list.drop((page - 1) * limit).take(limit),
                 page,
                 limit,
                 list.size.toLong()
