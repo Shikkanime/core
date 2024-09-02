@@ -3,12 +3,13 @@ package fr.shikkanime.entities.enums
 enum class Platform(
     val platformName: String,
     var url: String,
-    var image: String
+    var image: String,
+    var banner: String? = null,
 ) {
-    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg"),
-    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg"),
-    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg"),
-    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg"),
+    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", "animation_digital_network.png"),
+    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", "crunchyroll.png"),
+    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", "disneyplus.png"),
+    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", "netflix.png"),
     PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg"),
     ;
 

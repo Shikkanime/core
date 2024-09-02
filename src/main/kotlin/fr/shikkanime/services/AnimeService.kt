@@ -83,32 +83,31 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val startOfPreviousWeek = startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId)
         val endOfWeek = startOfWeekDay.with(DayOfWeek.SUNDAY).atTime(23, 59, 59).atZone(zoneId)
 
-        val tuples = episodeVariantService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
+        val entries = episodeVariantService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
             countryCode, member, startOfPreviousWeek, endOfWeek
         )
 
         return startOfWeekDay.datesUntil(startOfWeekDay.plusDays(7)).toList().map { date ->
             val zonedDate = date.atStartOfDay(zoneId)
-            val tuplesDay = tuples.filter { (it[2] as ZonedDateTime).withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
+            val entriesDay = entries.filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
 
             WeeklyAnimesDto(
                 date.format(DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))).capitalizeWords(),
-                tuplesDay.groupBy { triple ->
-                    val anime = triple[0] as Anime
-                    Triple(anime, (triple[1] as EpisodeMapping).episodeType!!, LangType.fromAudioLocale(anime.countryCode!!, triple[4] as String))
-                }.map { (triple, values) ->
+                entriesDay.groupBy { calendarEntry ->
+                    Triple(calendarEntry.anime, calendarEntry.episodeMapping.episodeType!!, LangType.fromAudioLocale(calendarEntry.anime.countryCode!!, calendarEntry.audioLocale))
+                }.map { (triple, calendarEntries) ->
                     val anime = triple.first
-                    val releaseDateTime = values.maxOf { it[2] as ZonedDateTime }
+                    val releaseDateTime = calendarEntries.maxOf(CalendarEntry::releaseDateTime)
 
-                    val mappings = values.filter {
-                        (it[2] as ZonedDateTime).withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
-                    }.map { it[1] as EpisodeMapping }
+                    val mappings = calendarEntries.filter {
+                        it.releaseDateTime.withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
+                    }.map { it.episodeMapping }
                         .distinctBy { it.uuid }
                         .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
 
                     WeeklyAnimeDto(
                         AbstractConverter.convert(anime, AnimeDto::class.java),
-                        AbstractConverter.convert(values.map { it[3] as Platform }.distinct(), PlatformDto::class.java)!!,
+                        AbstractConverter.convert(calendarEntries.map { it.platform }.distinct(), PlatformDto::class.java)!!,
                         releaseDateTime.withUTCString(),
                         "/animes/${anime.slug}${
                             mappings.firstOrNull()

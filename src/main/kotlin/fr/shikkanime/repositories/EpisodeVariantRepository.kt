@@ -20,7 +20,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         member: Member?,
         start: ZonedDateTime,
         end: ZonedDateTime,
-    ): List<Tuple> {
+    ): List<CalendarEntry> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createTupleQuery()
@@ -57,6 +57,15 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(entityManager, query)
                 .resultList
+                .map { tuple ->
+                    CalendarEntry(
+                        tuple[0] as Anime,
+                        tuple[1] as EpisodeMapping,
+                        tuple[2] as ZonedDateTime,
+                        tuple[3] as Platform,
+                        tuple[4] as String
+                    )
+                }
         }
     }
 

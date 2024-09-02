@@ -20,9 +20,9 @@ object StringUtils {
     private val regex = "( [-|!].*[-|!])|( Saison \\d*)|\\(\\d*\\)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
 
-    private fun isAllPartsHaveSameAmountOfWords(parts: List<String>, limit: Int): Boolean {
-        val words = parts.map { it.trim().split(" ").size }
-        return words.all { it <= limit }
+    private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
+        val words = parts.map { it.trim().split(" ").size }.distinct()
+        return words.size == 1
     }
 
     fun getShortName(fullName: String): String {
@@ -34,10 +34,7 @@ object StringUtils {
                 val firstPart = split[0].trim()
                 val lastPart = split.subList(1, split.size).joinToString(" ").trim()
 
-                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(
-                        split,
-                        2
-                    )) {
+                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(split)) {
                     shortName = firstPart
                 }
             }

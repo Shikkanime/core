@@ -29,6 +29,8 @@ fun BufferedImage.resize(width: Int, height: Int): BufferedImage {
     return ResampleOp(width, height).filter(this, null)
 }
 
+fun BufferedImage.ratioResize(ratio: Double) = resize((width * ratio).toInt(), (height * ratio).toInt())
+
 fun String?.normalize(): String? {
     return this?.replace("(?U)\\s+".toRegex(), " ")
         ?.trim()
