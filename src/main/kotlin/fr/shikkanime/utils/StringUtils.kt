@@ -8,7 +8,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.caches.LanguageCacheService
 import java.text.Normalizer
 import java.util.*
@@ -20,9 +19,9 @@ object StringUtils {
     private val regex = "( [-|!].*[-|!])|( Saison \\d*)|\\(\\d*\\)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
 
-    private fun isAllPartsHaveSameAmountOfWords(parts: List<String>, limit: Int): Boolean {
-        val words = parts.map { it.trim().split(" ").size }
-        return words.all { it <= limit }
+    private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
+        val words = parts.map { it.trim().split(" ").size }.distinct()
+        return words.size == 1
     }
 
     fun getShortName(fullName: String): String {
@@ -34,10 +33,9 @@ object StringUtils {
                 val firstPart = split[0].trim()
                 val lastPart = split.subList(1, split.size).joinToString(" ").trim()
 
-                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && !isAllPartsHaveSameAmountOfWords(
-                        split,
-                        2
-                    )) {
+                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && (separator == ":" || !isAllPartsHaveSameAmountOfWords(
+                        split
+                    ))) {
                     shortName = firstPart
                 }
             }
@@ -139,21 +137,6 @@ object StringUtils {
             ) ||
             episodeMapping.title.isNullOrBlank() ||
             episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
-        ) Status.INVALID else Status.VALID
-    }
-
-    fun getStatus(episode: AbstractPlatform.Episode): Status {
-        val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
-
-        return if (
-            isInvalid(
-                episode.image,
-                episode.description,
-                episode.countryCode,
-                languageCacheService
-            ) ||
-            episode.title.isNullOrBlank() ||
-            episode.image == Constant.DEFAULT_IMAGE_PREVIEW
         ) Status.INVALID else Status.VALID
     }
 
