@@ -31,6 +31,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
 
+    @Inject
+    private lateinit var traceActionService: TraceActionService
+
     override fun getRepository() = episodeVariantRepository
 
     fun findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
@@ -147,7 +150,18 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         )
 
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+        traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
         return savedEntity
+    }
+
+    override fun update(entity: EpisodeVariant): EpisodeVariant {
+        traceActionService.createTraceAction(entity, TraceAction.Action.UPDATE)
+        return super.update(entity)
+    }
+
+    override fun delete(entity: EpisodeVariant) {
+        super.delete(entity)
+        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
     private fun getEpisodeMapping(

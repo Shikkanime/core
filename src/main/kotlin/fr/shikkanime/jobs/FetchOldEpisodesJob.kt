@@ -1,10 +1,7 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -14,6 +11,7 @@ import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.EpisodeVariantService
+import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.CrunchyrollWrapper
@@ -43,6 +41,9 @@ class FetchOldEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun run() {
         val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
@@ -114,7 +115,7 @@ class FetchOldEpisodesJob : AbstractJob {
         }
 
         logger.info("Saved $realSaved episodes")
-        realSavedAnimes.forEach { logger.info("Updating ${StringUtils.getShortName(it)}...") }
+        realSavedAnimes.forEach { logger.info("Updating $it...") }
 
         if (realSaved > 0) {
             logger.info("Recalculating simulcasts...")
@@ -131,6 +132,7 @@ class FetchOldEpisodesJob : AbstractJob {
         logger.info("Updating config to the next fetch date...")
         config.propertyValue = from.toString()
         configService.update(config)
+        traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
     }
 

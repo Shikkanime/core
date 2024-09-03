@@ -239,6 +239,8 @@
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
                     toastBootstrap.show();
+                    // Wait 1s
+                    return new Promise(resolve => setTimeout(resolve, 1000)).then(() => window.location.href = '/admin/episodes');
                 });
         }
 

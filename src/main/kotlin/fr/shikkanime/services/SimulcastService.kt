@@ -2,6 +2,7 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.SimulcastRepository
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
@@ -9,6 +10,9 @@ import fr.shikkanime.utils.MapCache
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     @Inject
     private lateinit var simulcastRepository: SimulcastRepository
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = simulcastRepository
 
@@ -20,12 +24,14 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     override fun save(entity: Simulcast): Simulcast {
         val save = super.save(entity)
         MapCache.invalidate(Simulcast::class.java)
+        traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
         return save
     }
 
     override fun delete(entity: Simulcast) {
         super.delete(entity)
         MapCache.invalidate(Simulcast::class.java)
+        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
     companion object {

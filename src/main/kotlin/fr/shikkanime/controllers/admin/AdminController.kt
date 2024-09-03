@@ -155,6 +155,13 @@ class AdminController {
         return Response.template("admin/episodes/edit.ftl", "Edit episode")
     }
 
+    @Path("/trace-actions")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getTraceActions(): Response {
+        return Response.template(Link.TRACE_ACTIONS)
+    }
+
     @Path("/config")
     @Get
     @AdminSessionAuthenticated
