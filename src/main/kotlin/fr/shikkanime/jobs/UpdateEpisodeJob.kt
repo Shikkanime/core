@@ -66,6 +66,7 @@ class UpdateEpisodeJob : AbstractJob {
         }
 
         var needRecalculate = false
+        var needRefreshCache = false
         val identifiers = episodeVariantService.findAllIdentifiers()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -81,6 +82,7 @@ class UpdateEpisodeJob : AbstractJob {
                 ?.also {
                     logger.info("Added ${it.size} episodes for $mappingIdentifier")
                     needRecalculate = true
+                    needRefreshCache = true
                 }
 
             val originalEpisode = episodes.firstOrNull { it.original }
@@ -92,15 +94,21 @@ class UpdateEpisodeJob : AbstractJob {
                     logger.info("Episode $mappingIdentifier updated")
                 }
 
+            var hasChanged = false
+
             if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
                 mapping.image = originalEpisode.image
                 episodeMappingService.addImage(mapping.uuid!!, originalEpisode.image, true)
                 logger.info("Image updated for $mappingIdentifier to ${originalEpisode.image}")
+                hasChanged = true
+                needRefreshCache = true
             }
 
             if (originalEpisode.title != mapping.title && !originalEpisode.title.isNullOrBlank()) {
                 mapping.title = originalEpisode.title
                 logger.info("Title updated for $mappingIdentifier to ${originalEpisode.title}")
+                hasChanged = true
+                needRefreshCache = true
             }
 
             if (originalEpisode.description != mapping.description && !originalEpisode.description.isNullOrBlank() && languageCacheService.detectLanguage(
@@ -109,13 +117,18 @@ class UpdateEpisodeJob : AbstractJob {
             ) {
                 mapping.description = originalEpisode.description
                 logger.info("Description updated for $mappingIdentifier to ${originalEpisode.description}")
+                hasChanged = true
+                needRefreshCache = true
             }
 
             mapping.status = StringUtils.getStatus(mapping)
             mapping.lastUpdateDateTime = ZonedDateTime.now()
             episodeMappingService.update(mapping)
-            traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
-            logger.info("Episode $mappingIdentifier updated")
+
+            if (hasChanged) {
+                traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
+                logger.info("Episode $mappingIdentifier updated")
+            }
         }
 
         if (needRecalculate) {
@@ -123,8 +136,10 @@ class UpdateEpisodeJob : AbstractJob {
             animeService.recalculateSimulcasts()
         }
 
-        logger.info("Episodes updated")
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        if (needRefreshCache) {
+            logger.info("Episodes updated")
+            MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        }
     }
 
     private suspend fun retrievePlatformEpisode(
