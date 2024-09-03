@@ -15,6 +15,7 @@ enum class Link(
     PLATFORMS("/admin/platforms", "/admin/platforms/list.ftl", "bi bi-display", "Platforms"),
     ANIMES("/admin/animes", "/admin/animes/list.ftl", "bi bi-file-earmark-play", "Animes"),
     EPISODES("/admin/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
+    TRACE_ACTIONS("/admin/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
     CONFIG("/admin/config", "/admin/configs.ftl", "bi bi-gear", "Configurations"),
 
     // Site

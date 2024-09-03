@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform.Episode
@@ -12,6 +13,7 @@ import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
+import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -42,6 +44,9 @@ class UpdateEpisodeJob : AbstractJob {
 
     @Inject
     private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun run() {
         // Take 15 episodes of a platform, and if the lastUpdate is older than 30 days, or if the episode mapping is valid
@@ -109,6 +114,7 @@ class UpdateEpisodeJob : AbstractJob {
             mapping.status = StringUtils.getStatus(mapping)
             mapping.lastUpdateDateTime = ZonedDateTime.now()
             episodeMappingService.update(mapping)
+            traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
             logger.info("Episode $mappingIdentifier updated")
         }
 

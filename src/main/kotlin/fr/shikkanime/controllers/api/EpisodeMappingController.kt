@@ -102,7 +102,8 @@ class EpisodeMappingController : HasPageableRoute() {
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun read(@PathParam("uuid") uuid: UUID): Response {
-        return Response.ok(AbstractConverter.convert(episodeMappingService.find(uuid), EpisodeMappingDto::class.java))
+        val find = episodeMappingService.find(uuid) ?: return Response.notFound()
+        return Response.ok(AbstractConverter.convert(find, EpisodeMappingDto::class.java))
     }
 
     @Path("/{uuid}")

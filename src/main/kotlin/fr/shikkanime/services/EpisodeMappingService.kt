@@ -3,10 +3,7 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
@@ -28,6 +25,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = episodeMappingRepository
 
@@ -73,6 +73,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         val save = super.save(entity)
         addImage(save.uuid!!, save.image!!)
         MapCache.invalidate(EpisodeMapping::class.java)
+        traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return save
     }
 
@@ -136,6 +137,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         val update = super.update(episode)
         updateEpisodeMappingVariants(entity, episode, update)
         MapCache.invalidate(EpisodeMapping::class.java)
+        traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         return update
     }
 
@@ -222,5 +224,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         memberFollowEpisodeService.findAllByEpisode(entity).forEach { memberFollowEpisodeService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 }

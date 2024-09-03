@@ -213,7 +213,13 @@
 
             return await axios.get('/api/v1/animes/' + uuid)
                 .then(response => response.data)
-                .catch(() => ({}));
+                .catch(() => {
+                    const toastEl = document.getElementById('errorToast');
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
+                    toastBootstrap.show();
+                    // Wait 1s
+                    return new Promise(resolve => setTimeout(resolve, 1000)).then(() => window.location.href = '/admin/animes');
+                });
         }
 
         async function updateAnime(anime) {

@@ -40,6 +40,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var memberFollowAnimeService: MemberFollowAnimeService
 
+    @Inject
+    private lateinit var traceActionService: TraceActionService
+
     override fun getRepository() = animeRepository
 
     fun findAllLoaded() = animeRepository.findAllLoaded()
@@ -183,6 +186,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         addImage(uuid, savedEntity.image!!)
         addBanner(uuid, savedEntity.banner)
         MapCache.invalidate(Anime::class.java)
+        traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return savedEntity
     }
 
@@ -228,6 +232,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         anime.status = StringUtils.getStatus(anime)
         val update = super.update(anime)
         MapCache.invalidate(Anime::class.java)
+        traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
         return update
     }
 
@@ -250,6 +255,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(Anime::class.java)
+        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
     private fun merge(from: Anime, to: Anime): Anime {
