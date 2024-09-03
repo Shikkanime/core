@@ -28,7 +28,7 @@ class StringUtilsTest {
             "HYPNOSISMIC -Division Rap Battle- Rhyme Anima" to "HYPNOSISMIC Rhyme Anima",
             "Fate/strange Fake -Whispers of Dawn-" to "Fate/strange Fake",
             "NieR:Automata Ver1.1a" to "NieR:Automata Ver1.1a",
-            "Reborn as a Vending Machine, I Now Wander the Dungeon" to "Reborn as a Vending Machine",
+            "Reborn as a Vending Machine, I Now Wander the Dungeon" to "Reborn as a Vending Machine, I Now Wander the Dungeon",
             "BIRDIE WING -Golf Girls' Story-" to "BIRDIE WING",
             "Urusei Yatsura (2022)" to "Urusei Yatsura",
             "Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!" to "Cherry Magic",
@@ -45,6 +45,10 @@ class StringUtilsTest {
             "DanMachi - La Légende des Familias" to "DanMachi",
             "Demon Slayer - Le village des forgerons" to "Demon Slayer",
             "Dragon Quest - The Adventures of Dai" to "Dragon Quest",
+            "Si je suis la Vilaine, autant mater le boss final" to "Si je suis la Vilaine, autant mater le boss final",
+            "Reborn to Master the Blade: From Hero-King to Extraordinary Squire" to "Reborn to Master the Blade",
+            "Stand My Heroes: Piece of Truth" to "Stand My Heroes",
+            "CARDFIGHT!! VANGUARD overDress" to "CARDFIGHT!! VANGUARD overDress",
         )
 
         list.forEach { (input, expected) ->
