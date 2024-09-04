@@ -25,6 +25,7 @@ jobs:
 
     outputs:
       v-version: ${{ steps.version.outputs.v-version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +84,7 @@ jobs:
           PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
 
           # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ needs.upgrade-version.outputs.v-version }}|g" build.gradle.kts
+          sed -i "s|$PROJECT_VERSION|${{ needs.upgrade-version.outputs.version }}|g" build.gradle.kts
 
       - name: Build
         run: gradle clean installDist
@@ -116,7 +117,7 @@ jobs:
           PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
 
           # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ needs.upgrade-version.outputs.v-version }}|g" build.gradle.kts
+          sed -i "s|$PROJECT_VERSION|${{ needs.upgrade-version.outputs.version }}|g" build.gradle.kts
 
           # Set up Git
           git config user.name Ziedelth
@@ -124,7 +125,7 @@ jobs:
 
           # Commit the changes
           git add build.gradle.kts
-          git commit -m "Update version to ${{ needs.upgrade-version.outputs.v-version }}"
+          git commit -m "Update version to ${{ needs.upgrade-version.outputs.version }}"
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.8.0
