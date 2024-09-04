@@ -1,6 +1,7 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -47,6 +48,30 @@ class UpdateEpisodeJob : AbstractJob {
 
     @Inject
     private lateinit var traceActionService: TraceActionService
+
+    private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>> {
+        return@MapCache runBlocking {
+            val video = try {
+                AnimationDigitalNetworkWrapper.getShowVideo(it.id)
+            } catch (e: Exception) {
+                logger.severe("Impossible to get ADN video ${it.id} : ${e.message} (Maybe the video is not available anymore)")
+                return@runBlocking emptyList()
+            }
+
+            try {
+                animationDigitalNetworkPlatform.convertEpisode(
+                    it.countryCode,
+                    video,
+                    ZonedDateTime.now(),
+                    needSimulcast = false,
+                    checkAnimation = false
+                )
+            } catch (e: Exception) {
+                logger.warning("Error while getting ADN episode ${it.id} : ${e.message}")
+                emptyList()
+            }
+        }
+    }
 
     override fun run() {
         // Take 15 episodes of a platform, and if the lastUpdate is older than 30 days, or if the episode mapping is valid
@@ -127,8 +152,9 @@ class UpdateEpisodeJob : AbstractJob {
 
             if (hasChanged) {
                 traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
-                logger.info("Episode $mappingIdentifier updated")
             }
+
+            logger.info("Episode $mappingIdentifier updated")
         }
 
         if (needRecalculate) {
@@ -136,8 +162,9 @@ class UpdateEpisodeJob : AbstractJob {
             animeService.recalculateSimulcasts()
         }
 
+        logger.info("Episodes updated")
+
         if (needRefreshCache) {
-            logger.info("Episodes updated")
             MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         }
     }
@@ -158,7 +185,7 @@ class UpdateEpisodeJob : AbstractJob {
                 return emptyList()
             }
 
-            episodes.addAll(getADNEpisodeAndVariants(countryCode, adnId))
+            episodes.addAll(adnCache[CountryCodeIdKeyCache(countryCode, adnId)]!!)
         }
 
         if (episodeVariant.platform == Platform.CRUN) {
@@ -216,31 +243,6 @@ class UpdateEpisodeJob : AbstractJob {
                 logger.warning("Error while getting Crunchyroll episode ${browseObject.id} : ${e.message}")
                 return@mapNotNull null
             }
-        }
-    }
-
-    private suspend fun getADNEpisodeAndVariants(
-        countryCode: CountryCode,
-        adnId: String,
-    ): List<Episode> {
-        val video = try {
-            AnimationDigitalNetworkWrapper.getShowVideo(adnId)
-        } catch (e: Exception) {
-            logger.severe("Impossible to get ADN video $adnId : ${e.message} (Maybe the video is not available anymore)")
-            return emptyList()
-        }
-
-        return try {
-            animationDigitalNetworkPlatform.convertEpisode(
-                countryCode,
-                video,
-                ZonedDateTime.now(),
-                needSimulcast = false,
-                checkAnimation = false
-            )
-        } catch (e: Exception) {
-            logger.warning("Error while getting ADN episode $adnId : ${e.message}")
-            emptyList()
         }
     }
 }
