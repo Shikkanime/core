@@ -2,10 +2,16 @@ name: Release workflow
 
 on:
   workflow_dispatch:  # Allows manual triggering
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
 
 env:
   JAVA_VERSION: 21
   REGISTRY_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/shikkanime-core
+  V-VERSION: v${{ github.event.inputs.version }}
+  VERSION: ${{ github.event.inputs.version }}
 
 jobs:
   test:
@@ -20,25 +26,9 @@ jobs:
       - name: Build and test
         run: ./gradlew clean test --info
 
-  upgrade-version:
-    runs-on: ubuntu-latest
-
-    outputs:
-      v-version: ${{ steps.version.outputs.v-version }}
-      version: ${{ steps.version.outputs.version }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get next version
-        uses: reecetech/version-increment@2024.9.2
-        id: version
-        with:
-          scheme: conventional_commits
-
   docker:
     runs-on: ubuntu-latest
-    needs: [test, upgrade-version]
+    needs: [ test ]
     strategy:
       fail-fast: false
       matrix:
@@ -64,7 +54,7 @@ jobs:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
             type=raw,value=${{ matrix.build_version }}
-            type=raw,value=${{ matrix.build_version }}-${{ needs.upgrade-version.outputs.v-version }}
+            type=raw,value=${{ matrix.build_version }}-${{ env.V-VERSION }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -84,7 +74,7 @@ jobs:
           PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
 
           # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ needs.upgrade-version.outputs.version }}|g" build.gradle.kts
+          sed -i "s|$PROJECT_VERSION|${{ env.VERSION }}|g" build.gradle.kts
 
       - name: Build
         run: gradle clean installDist
@@ -104,7 +94,7 @@ jobs:
 
   push-commit:
     runs-on: ubuntu-latest
-    needs: [upgrade-version, docker]
+    needs: [ docker ]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -117,7 +107,7 @@ jobs:
           PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
 
           # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ needs.upgrade-version.outputs.version }}|g" build.gradle.kts
+          sed -i "s|$PROJECT_VERSION|${{ env.VERSION }}|g" build.gradle.kts
 
           # Set up Git
           git config user.name Ziedelth
@@ -125,7 +115,7 @@ jobs:
 
           # Commit the changes
           git add build.gradle.kts
-          git commit -m "Update version to ${{ needs.upgrade-version.outputs.version }}"
+          git commit -m "Update version to ${{ env.VERSION }}"
 
       - name: Push changes
         uses: ad-m/github-push-action@v0.8.0
@@ -136,7 +126,7 @@ jobs:
 
   push-tag:
     runs-on: ubuntu-latest
-    needs: [upgrade-version, push-commit]
+    needs: [ push-commit ]
 
     steps:
       - uses: actions/checkout@v4
@@ -149,5 +139,5 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ needs.upgrade-version.outputs.v-version }}
-          git push origin ${{ needs.upgrade-version.outputs.v-version }}
+          git tag ${{ env.V-VERSION }}
+          git push origin ${{ env.V-VERSION }}
