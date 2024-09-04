@@ -140,8 +140,8 @@ class EpisodeMappingController : HasPageableRoute() {
         )
 
         val baos = ByteArrayOutputStream()
-        ImageIO.write(image, "png", baos)
+        ImageIO.write(image, "jpg", baos)
         val bytes = baos.toByteArray()
-        return Response.multipart(bytes, ContentType.Image.PNG)
+        return Response.multipart(bytes, ContentType.Image.JPEG)
     }
 }

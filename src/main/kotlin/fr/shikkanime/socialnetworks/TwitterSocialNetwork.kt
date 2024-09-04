@@ -73,18 +73,18 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
         if (twitter == null) return
 
-        val uploadMedia = twitter!!.tweets().uploadMedia(UUID.randomUUID().toString(), ByteArrayInputStream(mediaImage))
         val firstMessage = getEpisodeMessage(
             episodeDto,
             configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: ""
         )
-        val firstTweet = twitter!!.v2.createTweet(mediaIds = arrayOf(uploadMedia.mediaId), text = firstMessage)
-
+        val firstTweet = twitter!!.v2.createTweet(mediaIds = mediaImage?.let {
+            arrayOf(twitter!!.tweets().uploadMedia(UUID.randomUUID().toString(), ByteArrayInputStream(it)).mediaId)
+        }, text = firstMessage)
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)
 
         if (!secondMessage.isNullOrBlank()) {

@@ -62,20 +62,28 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
         val message =
             getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.BSKY_MESSAGE) ?: "")
-        val webpByteArray = FileManager.encodeToWebP(mediaImage)
-        val imageJson =
-            runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
+
         runBlocking {
             BskyWrapper.createRecord(
                 accessJwt!!,
                 did!!,
                 message,
-                listOf(BskyWrapper.Image(imageJson))
+                mediaImage?.let {
+                    listOf(
+                        BskyWrapper.Image(
+                            BskyWrapper.uploadBlob(
+                                accessJwt!!,
+                                ContentType.Image.JPEG,
+                                it
+                            )
+                        )
+                    )
+                } ?: emptyList()
             )
         }
     }

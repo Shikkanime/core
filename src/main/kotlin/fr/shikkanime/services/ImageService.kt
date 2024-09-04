@@ -579,7 +579,23 @@ object ImageService {
         val bannerImage = tmpBannerImage.resize(tmpBannerImage.width / bannerScale, tmpBannerImage.height / bannerScale)
         val scale = 1.0
 
-        val animeImage = getLongTimeoutImage(episode.mapping.anime.image!!).resize((480 / scale).toInt(), (720 / scale).toInt())
+        var originalImage: BufferedImage?
+        var tryCount = 0
+
+        do {
+            originalImage = try {
+                getLongTimeoutImage(episode.mapping.anime.image!!)
+            } catch (e: Exception) {
+                logger.warning("Failed to load anime image: ${e.message} (try $tryCount)")
+                null
+            }
+        } while (originalImage == null && tryCount++ < 3)
+
+        if (originalImage == null) {
+            throw Exception("Failed to load anime image")
+        }
+
+        val animeImage = originalImage.resize((480 / scale).toInt(), (720 / scale).toInt())
 
         val platformImage =
             FileManager.getInputStreamFromResource("assets/img/platforms/${episode.platform.image}").run {
@@ -591,7 +607,8 @@ object ImageService {
         return Tuple(backgroundImage, bannerImage, font, animeImage, platformImage)
     }
 
-    fun getLongTimeoutImage(url: String) = ByteArrayInputStream(runBlocking { HttpRequest().get(url).readBytes() }).use { ImageIO.read(it) }
+    fun getLongTimeoutImage(url: String): BufferedImage? =
+        ByteArrayInputStream(runBlocking { HttpRequest().get(url).readBytes() }).use { ImageIO.read(it) }
 
     fun toEpisodeImage(episode: EpisodeVariantDto, adjustColor: Boolean = true): BufferedImage {
         val (backgroundImage, bannerImage, font, animeImage, platformImage) = loadResources(episode)
