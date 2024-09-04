@@ -49,6 +49,8 @@ class StringUtilsTest {
             "Reborn to Master the Blade: From Hero-King to Extraordinary Squire" to "Reborn to Master the Blade",
             "Stand My Heroes: Piece of Truth" to "Stand My Heroes",
             "CARDFIGHT!! VANGUARD overDress" to "CARDFIGHT!! VANGUARD overDress",
+            "Re:ZERO –Starting Life in Another World–" to "Re:ZERO",
+            "Arifureta: From Commonplace to World's Strongest" to "Arifureta",
         )
 
         list.forEach { (input, expected) ->
