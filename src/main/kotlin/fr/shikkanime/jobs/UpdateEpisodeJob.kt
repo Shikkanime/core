@@ -23,6 +23,7 @@ import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
+import java.time.Duration
 import java.time.ZonedDateTime
 
 class UpdateEpisodeJob : AbstractJob {
@@ -49,7 +50,7 @@ class UpdateEpisodeJob : AbstractJob {
     @Inject
     private lateinit var traceActionService: TraceActionService
 
-    private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>> {
+    private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>>(duration = Duration.ofDays(1)) {
         return@MapCache runBlocking {
             val video = try {
                 AnimationDigitalNetworkWrapper.getShowVideo(it.id)
