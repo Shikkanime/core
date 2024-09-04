@@ -244,7 +244,7 @@ class ThreadsWrapper(
         val uploadId = System.currentTimeMillis().toString()
 
         if (image != null) {
-            val uploadImage = uploadImage(username, token, ContentType.Image.PNG, uploadId, image)
+            val uploadImage = uploadImage(username, token, ContentType.Image.JPEG, uploadId, image)
             require(uploadImage.status.value == 200) { "Failed to upload image: ${uploadImage.status}" }
         }
 

@@ -612,7 +612,7 @@ object ImageService {
 
     fun toEpisodeImage(episode: EpisodeVariantDto, adjustColor: Boolean = true): BufferedImage {
         val (backgroundImage, bannerImage, font, animeImage, platformImage) = loadResources(episode)
-        val finalImage = BufferedImage(backgroundImage.width, backgroundImage.height, BufferedImage.TYPE_INT_ARGB)
+        val finalImage = BufferedImage(backgroundImage.width, backgroundImage.height, BufferedImage.TYPE_INT_RGB)
 
         val graphics = finalImage.createGraphics().apply {
             setRenderingHints()
