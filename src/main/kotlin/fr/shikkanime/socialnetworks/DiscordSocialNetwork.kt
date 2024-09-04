@@ -87,7 +87,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray) {
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
         if (episodeDto.mapping.image.isBlank()) return

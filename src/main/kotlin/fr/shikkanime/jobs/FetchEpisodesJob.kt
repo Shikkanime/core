@@ -207,11 +207,11 @@ class FetchEpisodesJob : AbstractJob {
     private fun sendToSocialNetworks(dto: EpisodeVariantDto) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(ImageService.toEpisodeImage(dto), "png", byteArrayOutputStream)
+            ImageIO.write(ImageService.toEpisodeImage(dto), "jpg", byteArrayOutputStream)
             byteArrayOutputStream.toByteArray()
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while converting episode image for social networks", e)
-            return
+            null
         }
 
         Constant.abstractSocialNetworks.parallelStream().forEach { socialNetwork ->
