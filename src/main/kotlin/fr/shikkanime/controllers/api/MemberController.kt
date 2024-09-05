@@ -82,7 +82,7 @@ class MemberController {
         ],
         security = true
     )
-    private fun associateEmail(@JWTUser uuidUser: UUID, @BodyParam email: String): Response {
+    private fun associateEmail(@JWTUser memberUuid: UUID, @BodyParam email: String): Response {
         // Verify email
         if (!StringUtils.isValidEmail(email)) {
             return Response.badRequest("Invalid email")
@@ -92,7 +92,7 @@ class MemberController {
             return Response.conflict("Email already associated to an account")
         }
 
-        return Response.created(GenericDto(memberService.associateEmail(uuidUser, email)))
+        return Response.created(GenericDto(memberService.associateEmail(memberUuid, email)))
     }
 
     @Path("/forgot-identifier")
@@ -106,13 +106,13 @@ class MemberController {
         ],
         security = true
     )
-    private fun forgotIdentifier(@JWTUser uuidUser: UUID, @BodyParam email: String): Response {
+    private fun forgotIdentifier(@JWTUser memberUuid: UUID, @BodyParam email: String): Response {
         // Verify email
         if (!StringUtils.isValidEmail(email)) {
             return Response.badRequest("Invalid email")
         }
 
-        if (memberCacheService.find(uuidUser)!!.email == email) {
+        if (memberCacheService.find(memberUuid)!!.email == email) {
             return Response.badRequest("Email already associated to your account")
         }
 
@@ -138,8 +138,8 @@ class MemberController {
         ],
         security = true
     )
-    private fun followAnime(@JWTUser uuidUser: UUID, @BodyParam anime: GenericDto): Response {
-        return memberFollowAnimeService.follow(uuidUser, anime)
+    private fun followAnime(@JWTUser memberUuid: UUID, @BodyParam anime: GenericDto): Response {
+        return memberFollowAnimeService.follow(memberUuid, anime)
     }
 
     @Path("/animes")
@@ -153,8 +153,8 @@ class MemberController {
         ],
         security = true
     )
-    private fun unfollowAnime(@JWTUser uuidUser: UUID, @BodyParam anime: GenericDto): Response {
-        return memberFollowAnimeService.unfollow(uuidUser, anime)
+    private fun unfollowAnime(@JWTUser memberUuid: UUID, @BodyParam anime: GenericDto): Response {
+        return memberFollowAnimeService.unfollow(memberUuid, anime)
     }
 
     @Path("/follow-all-episodes")
@@ -168,8 +168,8 @@ class MemberController {
         ],
         security = true
     )
-    private fun followAllEpisodes(@JWTUser uuidUser: UUID, @BodyParam anime: GenericDto): Response {
-        return memberFollowEpisodeService.followAll(uuidUser, anime)
+    private fun followAllEpisodes(@JWTUser memberUuid: UUID, @BodyParam anime: GenericDto): Response {
+        return memberFollowEpisodeService.followAll(memberUuid, anime)
     }
 
     @Path("/episodes")
@@ -183,8 +183,8 @@ class MemberController {
         ],
         security = true
     )
-    private fun followEpisode(@JWTUser uuidUser: UUID, @BodyParam episode: GenericDto): Response {
-        return memberFollowEpisodeService.follow(uuidUser, episode)
+    private fun followEpisode(@JWTUser memberUuid: UUID, @BodyParam episode: GenericDto): Response {
+        return memberFollowEpisodeService.follow(memberUuid, episode)
     }
 
     @Path("/episodes")
@@ -198,8 +198,8 @@ class MemberController {
         ],
         security = true
     )
-    private fun unfollowEpisode(@JWTUser uuidUser: UUID, @BodyParam episode: GenericDto): Response {
-        return memberFollowEpisodeService.unfollow(uuidUser, episode)
+    private fun unfollowEpisode(@JWTUser memberUuid: UUID, @BodyParam episode: GenericDto): Response {
+        return memberFollowEpisodeService.unfollow(memberUuid, episode)
     }
 
     @Path("/image")
@@ -214,7 +214,7 @@ class MemberController {
         ],
         security = true
     )
-    private fun uploadProfileImage(@JWTUser uuidUser: UUID, @BodyParam multiPartData: MultiPartData): Response {
+    private fun uploadProfileImage(@JWTUser memberUuid: UUID, @BodyParam multiPartData: MultiPartData): Response {
         val file = runBlocking { multiPartData.readAllParts().filterIsInstance<PartData.FileItem>().firstOrNull() }
             ?: return Response.badRequest("No file provided")
         val bytes = file.streamProvider().readBytes()
@@ -231,7 +231,7 @@ class MemberController {
         }
 
         ImageService.add(
-            uuidUser,
+            memberUuid,
             ImageService.Type.IMAGE,
             bytes,
             128,

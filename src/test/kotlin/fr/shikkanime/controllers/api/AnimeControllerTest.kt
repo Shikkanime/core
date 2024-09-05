@@ -176,4 +176,48 @@ class AnimeControllerTest : AbstractControllerTest() {
             }
         }
     }
+
+    @Test
+    fun getFollowedAnimes() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (identifier, token) = registerAndLogin()
+            val anime = animeService.findAll().first()
+
+            client.put("/api/v1/members/animes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(anime.uuid!!)))
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
+                assertNotNull(findPrivateMember)
+                assertEquals(1, followedAnimesUUID.size)
+                assertEquals(anime.uuid, followedAnimesUUID.first())
+            }
+
+            client.get("/api/v1/animes?&page=1&limit=8") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val followedEpisodes = ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<AnimeDto>>() {})
+                assertEquals(2, followedEpisodes.data.size)
+                assertEquals(2, followedEpisodes.total)
+            }
+
+            client.get("/api/v1/animes?page=1&limit=8") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val followedEpisodes = ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<AnimeDto>>() {})
+                assertEquals(1, followedEpisodes.data.size)
+                assertEquals(1, followedEpisodes.total)
+            }
+        }
+    }
 }

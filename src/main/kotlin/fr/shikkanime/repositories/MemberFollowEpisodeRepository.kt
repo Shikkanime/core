@@ -6,6 +6,23 @@ import java.util.*
 class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() {
     override fun getEntityClass() = MemberFollowEpisode::class.java
 
+    fun findAllFollowedEpisodes(member: Member, page: Int, limit: Int): Pageable<EpisodeMapping> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(EpisodeMapping::class.java)
+            val root = query.from(getEntityClass())
+            query.select(root[MemberFollowEpisode_.episode])
+
+            query.where(
+                cb.equal(root[MemberFollowEpisode_.member], member)
+            )
+
+            query.orderBy(cb.desc(root[MemberFollowEpisode_.followDateTime]))
+
+            buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
+        }
+    }
+
     fun findAllFollowedEpisodesUUID(member: Member): List<UUID> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

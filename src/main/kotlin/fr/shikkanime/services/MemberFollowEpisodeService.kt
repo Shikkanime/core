@@ -28,6 +28,8 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     override fun getRepository() = memberFollowEpisodeRepository
 
+    fun findAllFollowedEpisodes(member: Member, page: Int, limit: Int) = memberFollowEpisodeRepository.findAllFollowedEpisodes(member, page, limit)
+
     fun findAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(member)
 
     fun findAllByEpisode(episodeMapping: EpisodeMapping) =
@@ -35,8 +37,8 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     fun getTotalDuration(member: Member) = memberFollowEpisodeRepository.getTotalDuration(member)
 
-    fun followAll(uuidUser: UUID, anime: GenericDto): Response {
-        val member = memberService.find(uuidUser) ?: return Response.notFound()
+    fun followAll(memberUuid: UUID, anime: GenericDto): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
         val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
             .filter { it.episodeType != EpisodeType.SUMMARY }
         val followed = memberFollowEpisodeRepository.findAllFollowedEpisodesByMemberAndEpisodes(member, elements)
@@ -55,8 +57,8 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         return Response.ok(AllFollowedEpisodeDto(data = filtered.mapNotNull { it.episode?.uuid }.toSet(), duration = filtered.sumOf { it.episode!!.duration }))
     }
 
-    fun follow(uuidUser: UUID, episode: GenericDto): Response {
-        val member = memberService.find(uuidUser) ?: return Response.notFound()
+    fun follow(memberUuid: UUID, episode: GenericDto): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
         if (memberFollowEpisodeRepository.existsByMemberAndEpisode(member, element)) {
@@ -70,8 +72,8 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         return Response.ok()
     }
 
-    fun unfollow(uuidUser: UUID, episode: GenericDto): Response {
-        val member = memberService.find(uuidUser) ?: return Response.notFound()
+    fun unfollow(memberUuid: UUID, episode: GenericDto): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
         val findByMemberAndEpisode = memberFollowEpisodeRepository.findByMemberAndEpisode(member, element)

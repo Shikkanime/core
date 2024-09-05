@@ -117,8 +117,8 @@ class AnimeCacheService : AbstractCacheService {
 
     fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
 
-    fun getWeeklyAnimes(countryCode: CountryCode, member: UUID?, startOfWeekDay: LocalDate) =
-        weeklyMemberCache[CountryCodeLocalDateKeyCache(member, countryCode, startOfWeekDay)]
+    fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
+        weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
 
     fun findAll() = findAllCache["all"]
 }

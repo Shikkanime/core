@@ -41,6 +41,9 @@ abstract class AbstractControllerTest {
     @Inject
     protected lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
+    @Inject
+    protected lateinit var simulcastService: SimulcastService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -60,6 +63,7 @@ abstract class AbstractControllerTest {
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
         animeService.deleteAll()
+        simulcastService.deleteAll()
         ImageService.clearPool()
         MapCache.invalidate(
             Member::class.java,
@@ -67,7 +71,8 @@ abstract class AbstractControllerTest {
             MemberFollowEpisode::class.java,
             Anime::class.java,
             EpisodeMapping::class.java,
-            EpisodeVariant::class.java
+            EpisodeVariant::class.java,
+            Simulcast::class.java
         )
     }
 

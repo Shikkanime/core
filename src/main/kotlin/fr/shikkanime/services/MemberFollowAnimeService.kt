@@ -23,6 +23,8 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     override fun getRepository() = memberFollowAnimeRepository
 
+    fun findAllFollowedAnimes(member: Member, page: Int, limit: Int) = memberFollowAnimeRepository.findAllFollowedAnimes(member, page, limit)
+
     fun findAllFollowedAnimesUUID(member: Member) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(member)
 
     fun findAllByAnime(anime: Anime) = memberFollowAnimeRepository.findAllByAnime(anime)
@@ -32,8 +34,8 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     fun existsByMemberAndAnime(member: Member, anime: Anime) = memberFollowAnimeRepository.existsByMemberAndAnime(member, anime)
 
-    fun follow(uuidUser: UUID, anime: GenericDto): Response {
-        val member = memberService.find(uuidUser) ?: return Response.notFound()
+    fun follow(memberUuid: UUID, anime: GenericDto): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
         if (memberFollowAnimeRepository.existsByMemberAndAnime(member, element)) {
@@ -47,8 +49,8 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
         return Response.ok()
     }
 
-    fun unfollow(uuidUser: UUID, anime: GenericDto): Response {
-        val member = memberService.find(uuidUser) ?: return Response.notFound()
+    fun unfollow(memberUuid: UUID, anime: GenericDto): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
         val findByMemberAndAnime = memberFollowAnimeRepository.findByMemberAndAnime(member, element)

@@ -48,8 +48,8 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         return password
     }
 
-    fun associateEmail(uuid: UUID, email: String): UUID {
-        val member = requireNotNull(find(uuid))
+    fun associateEmail(memberUuid: UUID, email: String): UUID {
+        val member = requireNotNull(find(memberUuid))
         // Creation member action
         return memberActionService.save(Action.VALIDATE_EMAIL, member, email)
     }
