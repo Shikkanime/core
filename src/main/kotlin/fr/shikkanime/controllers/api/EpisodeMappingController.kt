@@ -11,6 +11,7 @@ import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
+import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -36,8 +37,12 @@ class EpisodeMappingController : HasPageableRoute() {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
+    @Inject
+    private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
+
     @Path
     @Get
+    @JWTAuthenticated(optional = true)
     @OpenAPI(
         "Get episode mappings",
         [
@@ -46,9 +51,13 @@ class EpisodeMappingController : HasPageableRoute() {
                 "Episode mappings found",
                 PageableDto::class,
             ),
-        ]
+            OpenAPIResponse(401, "Unauthorized")
+        ],
+        security = true
     )
     private fun getAll(
+        @JWTUser
+        memberUuid: UUID?,
         @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
         countryParam: CountryCode?,
         @QueryParam("anime", description = "UUID of the anime to filter by")
@@ -83,6 +92,16 @@ class EpisodeMappingController : HasPageableRoute() {
         statusParam: Status?,
     ): Response {
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
+
+        if (memberUuid != null) {
+            return Response.ok(
+                memberFollowEpisodeCacheService.findAllBy(
+                    memberUuid,
+                    page,
+                    limit
+                )
+            )
+        }
 
         return Response.ok(
             episodeMappingCacheService.findAllBy(

@@ -36,6 +36,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path
     @Get
+    @JWTAuthenticated(optional = true)
     @OpenAPI(
         "Get animes",
         [
@@ -44,14 +45,18 @@ class AnimeController : HasPageableRoute() {
                 "Animes found",
                 PageableDto::class,
             ),
+            OpenAPIResponse(401, "Unauthorized"),
             OpenAPIResponse(
                 409,
                 "You can't use simulcast and name at the same time OR You can't use sort and desc with name",
                 MessageDto::class
             ),
-        ]
+        ],
+        security = true
     )
     private fun getAll(
+        @JWTUser
+        memberUuid: UUID?,
         @QueryParam("name", description = "Name to filter by")
         name: String?,
         @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
@@ -102,6 +107,16 @@ class AnimeController : HasPageableRoute() {
         }
 
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
+
+        if (memberUuid != null) {
+            return Response.ok(
+                memberFollowAnimeCacheService.findAllBy(
+                    memberUuid,
+                    page,
+                    limit
+                )
+            )
+        }
 
         return Response.ok(
             if (!name.isNullOrBlank()) {
@@ -155,7 +170,7 @@ class AnimeController : HasPageableRoute() {
     )
     private fun getWeekly(
         @JWTUser
-        uuid: UUID?,
+        memberUuid: UUID?,
         @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
         countryParam: CountryCode?,
         @QueryParam(
@@ -174,7 +189,7 @@ class AnimeController : HasPageableRoute() {
         return Response.ok(
             animeCacheService.getWeeklyAnimes(
                 countryParam ?: CountryCode.FR,
-                uuid,
+                memberUuid,
                 startOfWeekDay,
             )
         )

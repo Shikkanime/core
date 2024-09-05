@@ -53,5 +53,25 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
             )
         }
 
+    private val findAllByCache =
+        MapCache<UUIDPaginationKeyCache, PageableDto<AnimeDto>>(
+            classes = listOf(
+                MemberFollowAnime::class.java,
+                Anime::class.java,
+            ),
+        ) {
+            val member = memberCacheService.find(it.uuid) ?: return@MapCache PageableDto.empty()
+
+            val pageable = memberFollowAnimeService.findAllFollowedAnimes(
+                member,
+                it.page,
+                it.limit
+            )
+
+            PageableDto.fromPageable(pageable, AnimeDto::class.java)
+        }
+
     fun getMissedAnimes(member: UUID, page: Int, limit: Int) = cache[UUIDPaginationKeyCache(member, page, limit)]
+
+    fun findAllBy(member: UUID, page: Int, limit: Int) = findAllByCache[UUIDPaginationKeyCache(member, page, limit)]
 }
