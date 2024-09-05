@@ -17,7 +17,13 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
                 cb.equal(root[MemberFollowEpisode_.member], member)
             )
 
-            query.orderBy(cb.desc(root[MemberFollowEpisode_.followDateTime]))
+            query.orderBy(
+                cb.desc(root[MemberFollowEpisode_.followDateTime]),
+                cb.desc(root[MemberFollowEpisode_.episode][EpisodeMapping_.anime]),
+                cb.desc(root[MemberFollowEpisode_.episode][EpisodeMapping_.season]),
+                cb.desc(root[MemberFollowEpisode_.episode][EpisodeMapping_.episodeType]),
+                cb.desc(root[MemberFollowEpisode_.episode][EpisodeMapping_.number]),
+            )
 
             buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
         }

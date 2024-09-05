@@ -42,10 +42,11 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
             .filter { it.episodeType != EpisodeType.SUMMARY }
         val followed = memberFollowEpisodeRepository.findAllFollowedEpisodesByMemberAndEpisodes(member, elements)
+        val now = ZonedDateTime.now()
 
         val filtered = elements.mapNotNull { element ->
             if (element.uuid in followed) return@mapNotNull null
-            MemberFollowEpisode(member = member, episode = element)
+            MemberFollowEpisode(followDateTime = now, member = member, episode = element)
         }
 
         memberFollowEpisodeRepository.saveAll(filtered)
