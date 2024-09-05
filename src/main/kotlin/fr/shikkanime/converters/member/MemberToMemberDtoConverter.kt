@@ -5,6 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.MemberDto
 import fr.shikkanime.dtos.TokenDto
 import fr.shikkanime.entities.Member
+import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.utils.withUTCString
@@ -29,6 +30,7 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
             followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(from),
             followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from),
             totalDuration = memberFollowEpisodeService.getTotalDuration(from),
+            hasProfilePicture = ImageService[from.uuid, ImageService.Type.IMAGE] != null
         )
     }
 }
