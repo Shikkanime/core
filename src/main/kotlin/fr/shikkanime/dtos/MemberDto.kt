@@ -12,4 +12,5 @@ data class MemberDto(
     val followedAnimes: List<UUID>,
     val followedEpisodes: List<UUID>,
     val totalDuration: Long,
+    val hasProfilePicture: Boolean = false,
 )
