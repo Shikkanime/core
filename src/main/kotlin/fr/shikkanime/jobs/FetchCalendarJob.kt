@@ -55,7 +55,7 @@ class FetchCalendarJob : AbstractJob {
                 val episodes = getEpisodes(elements, httpRequest)
 
                 val backgroundImage = getBackgroundImage() ?: return@use
-                val calendarImage = BufferedImage(backgroundImage.width, 900, BufferedImage.TYPE_INT_ARGB)
+                val calendarImage = BufferedImage(backgroundImage.width, 900, BufferedImage.TYPE_INT_RGB)
                 val graphics = calendarImage.createGraphics()
                 graphics.setRenderingHints()
 
@@ -84,7 +84,7 @@ class FetchCalendarJob : AbstractJob {
 
                 val calendarImageByteArray = try {
                     val byteArrayOutputStream = ByteArrayOutputStream()
-                    ImageIO.write(calendarImage, "png", byteArrayOutputStream)
+                    ImageIO.write(calendarImage, "jpg", byteArrayOutputStream)
                     byteArrayOutputStream.toByteArray()
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while converting calendar image for social networks", e)
