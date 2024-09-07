@@ -2,7 +2,6 @@ package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.BskyWrapper
@@ -91,15 +90,20 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     override fun sendCalendar(message: String, calendarImage: ByteArray) {
         checkSession()
         if (!isInitialized) return
-        val webpByteArray = FileManager.encodeToWebP(calendarImage)
-        val imageJson =
-            runBlocking { BskyWrapper.uploadBlob(accessJwt!!, ContentType.parse("image/webp"), webpByteArray) }
         runBlocking {
             BskyWrapper.createRecord(
                 accessJwt!!,
                 did!!,
                 message,
-                listOf(BskyWrapper.Image(imageJson))
+                listOf(
+                    BskyWrapper.Image(
+                        BskyWrapper.uploadBlob(
+                            accessJwt!!,
+                            ContentType.Image.JPEG,
+                            calendarImage
+                        )
+                    )
+                )
             )
         }
     }
