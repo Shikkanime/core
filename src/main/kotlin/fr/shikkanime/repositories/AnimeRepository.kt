@@ -47,18 +47,24 @@ class AnimeRepository : AbstractRepository<Anime>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
+        searchTypes: List<LangType>?,
         status: Status? = null
     ): Pageable<Anime> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
+            query.distinct(true).select(root)
 
             val predicates = mutableListOf<Predicate>()
             simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
-            countryCode?.let { predicates.add(cb.equal(root[Anime_.countryCode], it)) }
             status?.let { predicates.add(cb.equal(root[Anime_.status], it)) }
-            query.where(*predicates.toTypedArray())
+            val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
+
+            query.where(
+                *predicates.toTypedArray(),
+                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
+            )
 
             val orders = sort.mapNotNull { sortParameter ->
                 val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc

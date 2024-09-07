@@ -53,8 +53,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
+        searchTypes: List<LangType>?,
         status: Status? = null,
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, status)
+    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes, status)
 
     fun findAllByName(
         countryCode: CountryCode?,

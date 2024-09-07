@@ -122,7 +122,15 @@ class AnimeController : HasPageableRoute() {
             if (!name.isNullOrBlank()) {
                 animeCacheService.findAllByName(countryParam, name, page, limit, searchTypes?.toList())
             } else {
-                animeCacheService.findAllBy(countryParam, simulcastParam, sortParameters, page, limit, statusParam)
+                animeCacheService.findAllBy(
+                    countryParam,
+                    simulcastParam,
+                    sortParameters,
+                    page,
+                    limit,
+                    searchTypes?.toList(),
+                    statusParam
+                )
             }
         )
     }
