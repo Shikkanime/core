@@ -44,6 +44,7 @@ class AnimeCacheService : AbstractCacheService {
                     it.sort,
                     it.page,
                     it.limit,
+                    it.searchTypes,
                     it.status
                 ),
                 AnimeDto::class.java
@@ -109,8 +110,9 @@ class AnimeCacheService : AbstractCacheService {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
+        searchTypes: List<LangType>? = null,
         status: Status? = null,
-    ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, status)]
+    ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes, status)]
 
     fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: List<LangType>?) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes)]
