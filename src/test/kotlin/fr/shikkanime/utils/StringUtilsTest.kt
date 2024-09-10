@@ -51,6 +51,8 @@ class StringUtilsTest {
             "CARDFIGHT!! VANGUARD overDress" to "CARDFIGHT!! VANGUARD overDress",
             "Re:ZERO –Starting Life in Another World–" to "Re:ZERO",
             "Arifureta: From Commonplace to World's Strongest" to "Arifureta",
+            "Digimon Adventure: (2020)" to "Digimon Adventure",
+            "Kenshin le vagabond (2023)" to "Kenshin le vagabond",
         )
 
         list.forEach { (input, expected) ->
