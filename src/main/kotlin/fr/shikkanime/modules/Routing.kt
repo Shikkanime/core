@@ -56,7 +56,7 @@ fun Application.configureRouting() {
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
         if (call.response.status()?.value != null || !configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
-        setSecurityHeaders(call, configCacheService)
+        setSecurityHeaders(call)
     }
 
     environment.monitor.subscribe(Routing.RoutingCallFinished) { call ->
@@ -73,7 +73,7 @@ fun Application.configureRouting() {
     }
 }
 
-private fun setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
+private fun setSecurityHeaders(call: ApplicationCall) {
     call.response.pipeline.intercept(ApplicationSendPipeline.Transform) {
         context.response.header(
             HttpHeaders.StrictTransportSecurity,
@@ -87,7 +87,7 @@ private fun setSecurityHeaders(call: ApplicationCall, configCacheService: Config
                     "font-src 'self' https://cdn.jsdelivr.net; " +
                     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;" +
                     "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl};" +
-                    "connect-src 'self' ${Constant.apiUrl} ${configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API) ?: ""};"
+                    "connect-src 'self' ${Constant.apiUrl};"
         )
 
         context.response.header("X-Frame-Options", "DENY")

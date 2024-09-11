@@ -94,10 +94,6 @@ object StringUtils {
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
 
-    fun unSanitizeXSS(input: String): String = input.replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-
     fun getIdentifier(
         countryCode: CountryCode,
         platform: Platform,
