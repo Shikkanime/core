@@ -26,9 +26,6 @@ fun setGlobalAttributes(
     modelMap["googleSiteVerification"] =
         configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)
     modelMap["currentSimulcast"] = simulcastCacheService.currentSimulcast
-    modelMap["analyticsDomain"] = configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_DOMAIN)
-    modelMap["analyticsApi"] = configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_API)
-    modelMap["analyticsScript"] = configCacheService.getValueAsString(ConfigPropertyKey.ANALYTICS_SCRIPT)
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl
 }

@@ -26,9 +26,6 @@
 [#-- @ftlvariable name="previousWeek" type="java.lang.String" --]
 [#-- @ftlvariable name="nextWeek" type="java.lang.String" --]
 
-[#-- @ftlvariable name="analyticsDomain" type="java.lang.String" --]
-[#-- @ftlvariable name="analyticsApi" type="java.lang.String" --]
-[#-- @ftlvariable name="analyticsScript" type="java.lang.String" --]
 [#-- @ftlvariable name="baseUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="apiUrl" type="java.lang.String" --]
 
