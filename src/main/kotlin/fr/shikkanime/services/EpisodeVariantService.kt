@@ -184,7 +184,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 number = episode.number,
                 duration = episode.duration,
                 title = episode.title,
-                description = episode.description,
+                description = episode.description?.take(Constant.MAX_DESCRIPTION_LENGTH),
                 image = episode.image,
             ).apply {
                 status = StringUtils.getStatus(this)

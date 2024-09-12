@@ -137,12 +137,14 @@ class UpdateEpisodeJob : AbstractJob {
                 needRefreshCache = true
             }
 
-            if (originalEpisode.description != mapping.description && !originalEpisode.description.isNullOrBlank() && languageCacheService.detectLanguage(
-                    originalEpisode.description
-                ) == mapping.anime!!.countryCode!!.name.lowercase()
+            val trimmedDescription = originalEpisode.description?.take(Constant.MAX_DESCRIPTION_LENGTH)
+
+            if (trimmedDescription != mapping.description &&
+                !trimmedDescription.isNullOrBlank() &&
+                languageCacheService.detectLanguage(trimmedDescription) == mapping.anime!!.countryCode!!.name.lowercase()
             ) {
-                mapping.description = originalEpisode.description
-                logger.info("Description updated for $mappingIdentifier to ${originalEpisode.description}")
+                mapping.description = trimmedDescription
+                logger.info("Description updated for $mappingIdentifier to $trimmedDescription")
                 hasChanged = true
                 needRefreshCache = true
             }
