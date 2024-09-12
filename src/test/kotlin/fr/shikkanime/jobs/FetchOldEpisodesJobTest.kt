@@ -83,4 +83,16 @@ class FetchOldEpisodesJobTest {
         val episodes = episodeMappingService.findAllByAnime(anime)
         assertTrue(episodes.any { it.season == 1 && it.number == 13 })
     }
+
+    @Test
+    fun `failed to fetch due to long description`() {
+        configService.save(Config(propertyKey = ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key, propertyValue = "2023-02-13"))
+        configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key, propertyValue = "14"))
+        configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT.key, propertyValue = "6"))
+        MapCache.invalidate(Config::class.java)
+        crunchyrollPlatform.configuration?.availableCountries?.add(CountryCode.FR)
+        fetchOldEpisodesJob.run()
+        val animes = animeService.findAll()
+        animes.forEach { println(it.name) }
+    }
 }
