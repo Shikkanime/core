@@ -36,12 +36,6 @@ class AdminController {
     @Inject
     private lateinit var animeService: AnimeService
 
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
     @Path
     @Get
     private fun home(@QueryParam("error") error: String?): Response {

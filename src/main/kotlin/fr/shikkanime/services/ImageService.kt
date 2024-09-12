@@ -305,6 +305,33 @@ object ImageService {
         get() = toHumanReadable(cache.toList().sumOf { it.size })
 
     fun invalidate() {
+        Constant.injector.getInstance(Database::class.java).entityManager.use {
+            val query = it.createNativeQuery(
+                """
+                SELECT uuid
+                FROM anime
+                UNION
+                SELECT uuid
+                FROM episode_mapping
+                UNION
+                SELECT uuid
+                FROM member
+                """,
+                UUID::class.java
+            )
+
+            val uuids = (query.resultList as List<UUID>) // NOSONAR
+                .map { uuid -> uuid.toString() }
+                .toSet()
+
+            // Calculate the difference between the cache and the UUIDs
+            val difference = cache.filter { img -> img.uuid !in uuids }
+            logger.warning("Removing ${difference.size} images from cache, not found in database")
+            logger.warning("${toHumanReadable(difference.sumOf { img -> img.size })} will be freed")
+
+            cache.removeIf { img -> img.uuid !in uuids }
+        }
+
         addAll(true)
     }
 
