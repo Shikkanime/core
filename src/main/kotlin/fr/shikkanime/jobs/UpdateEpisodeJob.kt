@@ -227,7 +227,19 @@ class UpdateEpisodeJob : AbstractJob {
         countryCode: CountryCode,
         crunchyrollId: String,
     ): List<Episode> {
-        val crunchyrollEpisode = CrunchyrollWrapper.getObjects(countryCode.locale, crunchyrollPlatform.identifiers[countryCode]!!, crunchyrollId).first()
+        val crunchyrollEpisode = runCatching {
+            CrunchyrollWrapper.getObjects(countryCode.locale, crunchyrollPlatform.identifiers[countryCode]!!, crunchyrollId).first()
+        }.getOrElse { e ->
+            logger.warning("Error while fetching Crunchyroll Browse Object: ${e.message}")
+
+            runCatching {
+                CrunchyrollWrapper.getEpisode(countryCode.locale, crunchyrollPlatform.identifiers[countryCode]!!, crunchyrollId)
+                    .convertToBrowseObject()
+            }.getOrElse { e2 ->
+                logger.warning("Error while fetching Crunchyroll Episode: ${e2.message}")
+                return emptyList()
+            }
+        }
 
         val versionIds = crunchyrollEpisode.episodeMetadata!!.versions?.toMutableList() ?: mutableListOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id, true))
         versionIds.removeIf { it.guid.isBlank() || it.guid == crunchyrollId }

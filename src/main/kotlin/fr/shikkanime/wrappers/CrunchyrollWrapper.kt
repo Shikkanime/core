@@ -95,7 +95,16 @@ object CrunchyrollWrapper {
         val versions: List<Version>?,
         @SerializedName("next_episode_id")
         val nextEpisodeId: String?,
-    )
+    ) {
+        fun convertToBrowseObject() = BrowseObject(
+            id = id!!,
+            images = images,
+            description = description,
+            title = title,
+            episodeMetadata = this,
+            slugTitle = slugTitle,
+        )
+    }
 
     data class BrowseObject(
         val id: String,
