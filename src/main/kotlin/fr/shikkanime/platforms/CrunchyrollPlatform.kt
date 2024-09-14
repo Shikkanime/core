@@ -286,7 +286,7 @@ class CrunchyrollPlatform :
         )
     }
 
-    fun getNumberAndEpisodeType(episode: CrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
+    private fun getNumberAndEpisodeType(episode: CrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
         var number = episode.number ?: -1
         val specialEpisodeRegex = "SP(\\d*)".toRegex()
 
