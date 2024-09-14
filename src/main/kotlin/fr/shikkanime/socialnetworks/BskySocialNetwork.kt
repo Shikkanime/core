@@ -86,25 +86,4 @@ class BskySocialNetwork : AbstractSocialNetwork() {
             )
         }
     }
-
-    override fun sendCalendar(message: String, calendarImage: ByteArray) {
-        checkSession()
-        if (!isInitialized) return
-        runBlocking {
-            BskyWrapper.createRecord(
-                accessJwt!!,
-                did!!,
-                message,
-                listOf(
-                    BskyWrapper.Image(
-                        BskyWrapper.uploadBlob(
-                            accessJwt!!,
-                            ContentType.Image.JPEG,
-                            calendarImage
-                        )
-                    )
-                )
-            )
-        }
-    }
 }

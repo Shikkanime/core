@@ -83,10 +83,4 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
             getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: "")
         runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
     }
-
-    override fun sendCalendar(message: String, calendarImage: ByteArray) {
-        checkSession()
-        if (!isInitialized) return
-        runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, calendarImage) }
-    }
 }

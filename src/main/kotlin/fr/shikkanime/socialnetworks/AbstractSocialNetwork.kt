@@ -56,8 +56,4 @@ abstract class AbstractSocialNetwork {
         "${Constant.baseUrl}/animes/${episodeDto.mapping.anime.slug}/season-${episodeDto.mapping.season}/${episodeDto.mapping.episodeType.slug}-${episodeDto.mapping.number}?utm_campaign=episode_post&utm_medium=social&utm_source=${utmSource()}&utm_content=${episodeDto.uuid}"
 
     abstract fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?)
-
-    open fun sendCalendar(message: String, calendarImage: ByteArray) {
-        // Default implementation
-    }
 }

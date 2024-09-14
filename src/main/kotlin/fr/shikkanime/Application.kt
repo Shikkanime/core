@@ -47,8 +47,6 @@ fun main() {
     JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
     // Every day at 3pm
      JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
-    // Every day at 9am
-    JobManager.scheduleJob("0 0 9 * * ?", FetchCalendarJob::class.java)
     JobManager.start()
 
     Constant.injector.getInstance(DiscordSocialNetwork::class.java).login()
