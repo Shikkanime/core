@@ -71,4 +71,10 @@ class SEOController {
             contentType = ContentType.Text.Xml
         )
     }
+
+    @Path("c97385827d194199b3a0509ec9221517.txt")
+    @Get
+    private fun indexNow(): Response {
+        return Response.ok("c97385827d194199b3a0509ec9221517", contentType = ContentType.Text.Plain)
+    }
 }

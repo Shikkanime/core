@@ -19,8 +19,12 @@ open class Response(
     val contentType: ContentType = ContentType.Application.Json,
 ) {
     companion object {
-        fun ok(data: Any? = null, session: TokenDto? = null): Response =
-            Response(HttpStatusCode.OK, data = data, session = session)
+        fun ok(
+            data: Any? = null,
+            session: TokenDto? = null,
+            contentType: ContentType = ContentType.Application.Json
+        ): Response =
+            Response(HttpStatusCode.OK, data = data, session = session, contentType = contentType)
 
         fun created(data: Any? = null, session: TokenDto? = null): Response =
             Response(HttpStatusCode.Created, data = data, session = session)
