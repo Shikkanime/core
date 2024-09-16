@@ -27,6 +27,9 @@ class EpisodeMappingServiceTest {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -36,6 +39,7 @@ class EpisodeMappingServiceTest {
     fun tearDown() {
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
     }

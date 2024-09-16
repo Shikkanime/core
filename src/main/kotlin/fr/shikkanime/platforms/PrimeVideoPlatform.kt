@@ -40,6 +40,7 @@ class PrimeVideoPlatform :
 
             Episode(
                 countryCode = key.countryCode,
+                animeId = id,
                 anime = animeName,
                 animeImage = key.primeVideoSimulcast.image,
                 animeBanner = animeBanner,

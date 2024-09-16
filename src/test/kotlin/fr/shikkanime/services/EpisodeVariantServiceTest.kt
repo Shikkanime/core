@@ -30,6 +30,9 @@ class EpisodeVariantServiceTest {
     @Inject
     private lateinit var animeService: AnimeService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -42,6 +45,7 @@ class EpisodeVariantServiceTest {
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
         configService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         MapCache.invalidate(Config::class.java, Anime::class.java)
     }
@@ -111,6 +115,7 @@ class EpisodeVariantServiceTest {
         episodeVariantService.save(
             AbstractPlatform.Episode(
                 CountryCode.FR,
+                "GNVHKN7M4",
                 "Shikimori n’est pas juste mignonne",
                 "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/57da95e93614672250ff0312b4c8194c.jpe",
                 "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/c1aa33105d2acdcf7807310743b01948.jpe",

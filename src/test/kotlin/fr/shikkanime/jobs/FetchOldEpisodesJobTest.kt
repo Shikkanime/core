@@ -9,7 +9,7 @@ import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -32,6 +32,9 @@ class FetchOldEpisodesJobTest {
     @Inject
     private lateinit var crunchyrollPlatform: CrunchyrollPlatform
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -41,6 +44,7 @@ class FetchOldEpisodesJobTest {
     fun tearDown() {
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         configService.deleteAll()
         MapCache.invalidate(Config::class.java)

@@ -44,6 +44,9 @@ abstract class AbstractControllerTest {
     @Inject
     protected lateinit var simulcastService: SimulcastService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -62,6 +65,7 @@ abstract class AbstractControllerTest {
 
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         simulcastService.deleteAll()
         ImageService.clearPool()

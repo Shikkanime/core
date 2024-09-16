@@ -13,6 +13,7 @@ import java.util.logging.Level
 abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     data class Episode(
         val countryCode: CountryCode,
+        val animeId: String,
         val anime: String,
         val animeImage: String,
         val animeBanner: String,

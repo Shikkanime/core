@@ -34,6 +34,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject
     private lateinit var traceActionService: TraceActionService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     override fun getRepository() = episodeVariantRepository
 
     fun findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
@@ -120,6 +123,16 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                         status = StringUtils.getStatus(this)
                     }
                 )
+
+        if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null) {
+            animePlatformService.save(
+                AnimePlatform(
+                    anime = anime,
+                    platform = episode.platform,
+                    platformId = episode.animeId
+                )
+            )
+        }
 
         val mapping = episodeMapping ?: getEpisodeMapping(anime, episode)
 

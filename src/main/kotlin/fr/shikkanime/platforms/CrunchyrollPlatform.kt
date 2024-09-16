@@ -264,6 +264,7 @@ class CrunchyrollPlatform :
 
         return Episode(
             countryCode = countryCode,
+            animeId = browseObject.episodeMetadata.seriesId,
             anime = animeName,
             animeImage = crunchyrollAnimeContent.image,
             animeBanner = crunchyrollAnimeContent.banner,
