@@ -43,6 +43,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var traceActionService: TraceActionService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     override fun getRepository() = animeRepository
 
     fun findAllLoaded() = animeRepository.findAllLoaded()
@@ -254,6 +257,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     override fun delete(entity: Anime) {
         episodeMappingService.findAllByAnime(entity).forEach { episodeMappingService.delete(it) }
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
+        animePlatformService.findAllByAnime(entity).forEach { animePlatformService.delete(it) }
         super.delete(entity)
         MapCache.invalidate(Anime::class.java)
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
@@ -289,6 +293,19 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 memberFollowAnime.anime = to
                 memberFollowAnimeService.update(memberFollowAnime)
             }
+        }
+
+        animePlatformService.findAllByAnime(from).forEach { animePlatform ->
+            val findByAnimePlatformAndId =
+                animePlatformService.findByAnimePlatformAndId(to, animePlatform.platform!!, animePlatform.platformId!!)
+
+            if (findByAnimePlatformAndId != null) {
+                animePlatformService.delete(animePlatform)
+                return@forEach
+            }
+
+            animePlatform.anime = to
+            animePlatformService.update(animePlatform)
         }
 
         delete(from)

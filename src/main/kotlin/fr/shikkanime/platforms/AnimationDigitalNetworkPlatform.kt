@@ -101,6 +101,7 @@ class AnimationDigitalNetworkPlatform :
         return video.languages.map {
             Episode(
                 countryCode = countryCode,
+                animeId = video.show.id.toString(),
                 anime = animeName,
                 animeImage = video.show.image2x,
                 animeBanner = video.show.imageHorizontal2x,

@@ -141,6 +141,7 @@ class DisneyPlusPlatform :
 
         return Episode(
             countryCode = countryCode,
+            animeId = simulcast.name,
             anime = animeName,
             animeImage = animeImage,
             animeBanner = animeBanner,

@@ -122,6 +122,7 @@ object CrunchyrollWrapper {
     private val seriesRegex = "/series/([A-Z0-9]{9})/".toRegex()
     private val episodeRegex = "/watch/([A-Z0-9]{9})".toRegex()
     private val httpRequest = HttpRequest()
+    const val CRUNCHYROLL_CHUNK = 50
 
     suspend fun getAnonymousAccessToken(): String {
         val response = httpRequest.post(
@@ -307,7 +308,7 @@ object CrunchyrollWrapper {
 
             if (isMultipleRelease) {
                 cache[seriesId].orEmpty()
-                    .chunked(50)
+                    .chunked(CRUNCHYROLL_CHUNK)
                     .flatMap { chunk ->
                         getObjects(countryCode.locale, accessToken, *chunk.toTypedArray())
                             .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() == releaseDateTime }

@@ -8,10 +8,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.ConfigService
-import fr.shikkanime.services.EpisodeMappingService
-import fr.shikkanime.services.EpisodeVariantService
+import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.wrappers.CrunchyrollWrapper
@@ -42,6 +39,9 @@ class CrunchyrollPlatformTest {
     @Inject
     private lateinit var animeService: AnimeService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -55,6 +55,7 @@ class CrunchyrollPlatformTest {
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
         configService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         MapCache.invalidate(
             Config::class.java,
@@ -160,6 +161,7 @@ class CrunchyrollPlatformTest {
         episodeVariantService.save(
             AbstractPlatform.Episode(
                 CountryCode.FR,
+                "G1XHJV0XM",
                 "Alya Sometimes Hides Her Feelings in Russian",
                 "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b0bdcf73a7e00f9bc75131088970288d.jpg",
                 "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2db2c99a90bc322a2fe8a2fa07810fd5.jpg",

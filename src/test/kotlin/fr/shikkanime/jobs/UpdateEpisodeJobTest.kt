@@ -7,6 +7,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.services.AnimePlatformService
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
@@ -32,6 +33,9 @@ class UpdateEpisodeJobTest {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -41,6 +45,7 @@ class UpdateEpisodeJobTest {
     fun tearDown() {
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
     }

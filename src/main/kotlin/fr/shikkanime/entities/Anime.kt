@@ -54,5 +54,8 @@ class Anime(
     var status: Status = Status.VALID,
     @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var platformIds: MutableSet<AnimePlatform> = mutableSetOf(),
+    @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
 ) : ShikkEntity(uuid)

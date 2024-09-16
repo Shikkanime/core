@@ -2,8 +2,8 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -35,6 +35,9 @@ class AnimeServiceTest {
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
+
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
@@ -47,6 +50,7 @@ class AnimeServiceTest {
         memberService.deleteAll()
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
+        animePlatformService.deleteAll()
         animeService.deleteAll()
         MapCache.invalidate(
             Anime::class.java,

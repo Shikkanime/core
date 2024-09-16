@@ -2,19 +2,13 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeIdKeyCache
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.TraceAction
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeMappingService
-import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.services.TraceActionService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -49,6 +43,9 @@ class UpdateEpisodeJob : AbstractJob {
 
     @Inject
     private lateinit var traceActionService: TraceActionService
+
+    @Inject
+    private lateinit var animePlatformService: AnimePlatformService
 
     private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>>(duration = Duration.ofDays(1)) {
         return@MapCache runBlocking {
@@ -101,6 +98,8 @@ class UpdateEpisodeJob : AbstractJob {
             logger.info("Updating episode $mappingIdentifier...")
             val episodes =
                 variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
+
+            saveAnimePlatformIfNotExists(episodes, mapping)
 
             episodes.filter { it.getIdentifier() !in identifiers }.takeIf { it.isNotEmpty() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
@@ -172,6 +171,23 @@ class UpdateEpisodeJob : AbstractJob {
         }
     }
 
+    private fun saveAnimePlatformIfNotExists(
+        episodes: List<Episode>,
+        mapping: EpisodeMapping
+    ) {
+        episodes.forEach {
+            if (animePlatformService.findByAnimePlatformAndId(mapping.anime!!, it.platform, it.animeId) == null) {
+                animePlatformService.save(
+                    AnimePlatform(
+                        anime = mapping.anime,
+                        platform = it.platform,
+                        platformId = it.animeId
+                    )
+                )
+            }
+        }
+    }
+
     private suspend fun retrievePlatformEpisode(
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant
@@ -215,7 +231,7 @@ class UpdateEpisodeJob : AbstractJob {
         val crunchyrollEpisodes = if (versionIds.isNotEmpty()) {
             versionIds.asSequence()
                 .distinctBy { variant -> variant.guid }
-                .chunked(50)
+                .chunked(CrunchyrollWrapper.CRUNCHYROLL_CHUNK)
                 .flatMap { chunk ->
                     try {
                         runBlocking {
