@@ -69,6 +69,7 @@ class AnimeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "DRAGON QUEST The Adventure of Dai",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "dragon-quest-the-adventure-of-dai"
             )
         )
@@ -78,6 +79,7 @@ class AnimeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Dragon Quest",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "dragon-quest"
             )
         )
@@ -99,6 +101,7 @@ class AnimeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "DRAGON QUEST The Adventure of Dai",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "dragon-quest-the-adventure-of-dai"
             )
         )
@@ -128,6 +131,7 @@ class AnimeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Dragon Quest",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "dragon-quest"
             )
         )
@@ -183,6 +187,7 @@ class AnimeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "DRAGON QUEST The Adventure of Dai",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "dragon-quest-the-adventure-of-dai"
             )
         )
@@ -216,6 +221,7 @@ class AnimeServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Dragon Quest",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "dragon-quest"
             )
         )

@@ -145,8 +145,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720, bypass)
     }
 
-    fun addBanner(uuid: UUID, image: String?, bypass: Boolean = false) {
-        if (image.isNullOrBlank()) return
+    fun addBanner(uuid: UUID, image: String, bypass: Boolean = false) {
         ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360, bypass)
     }
 
@@ -188,7 +187,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val savedEntity = super.save(entity)
         val uuid = savedEntity.uuid!!
         addImage(uuid, savedEntity.image!!)
-        addBanner(uuid, savedEntity.banner)
+        addBanner(uuid, savedEntity.banner!!)
         MapCache.invalidate(Anime::class.java)
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return savedEntity
@@ -201,8 +200,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             anime.name = animeDto.name
         }
 
-        if (!animeDto.slug.isNullOrBlank() && animeDto.slug != anime.slug) {
-            val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug!!)
+        if (animeDto.slug.isNotBlank() && animeDto.slug != anime.slug) {
+            val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug)
 
             if (findBySlug != null && findBySlug.uuid != anime.uuid) {
                 return merge(anime, findBySlug)
@@ -211,24 +210,20 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             anime.slug = animeDto.slug
         }
 
-        if (animeDto.releaseDateTime.isNotBlank() && animeDto.releaseDateTime != anime.releaseDateTime.toString()) {
-            anime.releaseDateTime = ZonedDateTime.parse(animeDto.releaseDateTime)
+        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
+            anime.description = animeDto.description
         }
 
-        if (!animeDto.image.isNullOrBlank() && animeDto.image != anime.image) {
+        if (animeDto.image.isNotBlank() && animeDto.image != anime.image) {
             anime.image = animeDto.image
             ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
             addImage(anime.uuid, anime.image!!)
         }
 
-        if (!animeDto.banner.isNullOrBlank() && animeDto.banner != anime.banner) {
+        if (animeDto.banner.isNotBlank() && animeDto.banner != anime.banner) {
             anime.banner = animeDto.banner
             ImageService.remove(anime.uuid!!, ImageService.Type.BANNER)
-            addBanner(anime.uuid, anime.banner)
-        }
-
-        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
-            anime.description = animeDto.description
+            addBanner(anime.uuid, anime.banner!!)
         }
 
         updateAnimeSimulcast(animeDto, anime)

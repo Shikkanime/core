@@ -123,7 +123,7 @@ class SiteController {
 
     private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null): Response {
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
-        val seasonDto = dto.seasons.firstOrNull { it.number == (season ?: it.number) } ?: return Response.notFound()
+        val seasonDto = dto.seasons?.firstOrNull { it.number == (season ?: it.number) } ?: return Response.notFound()
         val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
         val findAllBy = episodeMappingCacheService.findAllBy(
             CountryCode.FR,
@@ -187,8 +187,8 @@ class SiteController {
     ): Response {
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
 
-        if (dto.seasons.isEmpty()) return Response.notFound()
-        if (dto.seasons.none { it.number == season }) return Response.redirect("/animes/$slug/season-${dto.seasons.last().number}/$episodeSlug")
+        if (dto.seasons.isNullOrEmpty()) return Response.notFound()
+        if (dto.seasons!!.none { it.number == season }) return Response.redirect("/animes/$slug/season-${dto.seasons!!.last().number}/$episodeSlug")
 
         val match = "(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)".toRegex().find(episodeSlug) ?: return Response.notFound()
         val episodeType = EpisodeType.fromSlug(match.groupValues[1])

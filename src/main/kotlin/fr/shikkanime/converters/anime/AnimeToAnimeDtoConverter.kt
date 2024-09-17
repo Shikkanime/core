@@ -3,6 +3,7 @@ package fr.shikkanime.converters.anime
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
@@ -25,11 +26,11 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             countryCode = from.countryCode!!,
             name = from.name!!,
             shortName = StringUtils.getShortName(from.name!!),
-            slug = from.slug,
+            slug = from.slug!!,
             releaseDateTime = from.releaseDateTime.withUTCString(),
             lastReleaseDateTime = from.lastReleaseDateTime.withUTCString(),
-            image = from.image,
-            banner = from.banner,
+            image = from.image!!,
+            banner = from.banner!!,
             description = from.description,
             simulcasts = if (Hibernate.isInitialized(from.simulcasts))
                 convert(
@@ -38,10 +39,14 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
                 )?.toList()
             else
                 null,
-            audioLocales = audioLocales,
-            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted(),
-            seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) },
-            status = from.status
+            audioLocales = audioLocales.takeIf { it.isNotEmpty() },
+            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() },
+            seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() },
+            status = from.status,
+            platformIds = if (Hibernate.isInitialized(from.platformIds))
+                convert(from.platformIds, AnimePlatformDto::class.java)?.toList()
+            else
+                null
         )
     }
 }
