@@ -60,7 +60,8 @@ class UpdateEpisodeJobTest {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Rent-a-Girlfriend",
                 slug = "rent-a-girlfriend",
-                image = "test.jpg"
+                image = "test.jpg",
+                banner = "test.jpg",
             )
         )
         val episodeMapping = episodeMappingService.save(
@@ -115,7 +116,8 @@ class UpdateEpisodeJobTest {
                 lastReleaseDateTime = zonedDateTime,
                 name = "The Eminence in Shadow",
                 slug = "the-eminence-in-shadow",
-                image = "test.jpg"
+                image = "test.jpg",
+                banner = "test.jpg"
             )
         )
         val episodeMapping = episodeMappingService.save(
@@ -127,7 +129,7 @@ class UpdateEpisodeJobTest {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 1,
-                image = "test.jpg"
+                image = "test.jpg",
             )
         )
         episodeVariantService.save(

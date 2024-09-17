@@ -37,7 +37,33 @@ object ImageService {
         var bytes: ByteArray = byteArrayOf(),
         var originalSize: Long = 0,
         var size: Long = 0,
-    ) : Serializable
+    ) : Serializable {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Image
+
+            if (uuid != other.uuid) return false
+            if (type != other.type) return false
+            if (url != other.url) return false
+            if (!bytes.contentEquals(other.bytes)) return false
+            if (originalSize != other.originalSize) return false
+            if (size != other.size) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = uuid.hashCode()
+            result = 31 * result + type.hashCode()
+            result = 31 * result + (url?.hashCode() ?: 0)
+            result = 31 * result + bytes.contentHashCode()
+            result = 31 * result + originalSize.hashCode()
+            result = 31 * result + size.hashCode()
+            return result
+        }
+    }
 
     private val logger = LoggerFactory.getLogger(javaClass)
     private var threadPool = Executors.newFixedThreadPool(4)
@@ -347,7 +373,7 @@ object ImageService {
         animeService.findAllUuidImageAndBanner().forEach {
             val uuid = it[0] as UUID
             val image = it[1] as String
-            val banner = it[2] as String?
+            val banner = it[2] as String
 
             animeService.addImage(uuid, image, bypass)
             animeService.addBanner(uuid, banner, bypass)
@@ -611,7 +637,7 @@ object ImageService {
 
         do {
             originalImage = try {
-                getLongTimeoutImage(episode.mapping.anime.image!!)
+                getLongTimeoutImage(episode.mapping.anime.image)
             } catch (e: Exception) {
                 logger.warning("Failed to load anime image: ${e.message} (try $tryCount)")
                 null

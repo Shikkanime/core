@@ -51,6 +51,7 @@ class EpisodeMappingServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Test Anime",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "test-anime"
             )
         )
@@ -78,6 +79,7 @@ class EpisodeMappingServiceTest {
                 countryCode = CountryCode.FR,
                 name = "Test Anime",
                 image = "test.jpg",
+                banner = "test.jpg",
                 slug = "test-anime"
             )
         )
