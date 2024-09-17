@@ -1,8 +1,8 @@
 package fr.shikkanime.dtos
 
+import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import java.util.*
 
 data class WeeklyAnimeDto(
     val anime: AnimeDto,
@@ -10,11 +10,10 @@ data class WeeklyAnimeDto(
     val releaseDateTime: String,
     val slug: String,
     val langType: LangType,
-    val isReleased: Boolean,
-    val isMultipleReleased: Boolean,
-    val mappings: List<UUID>,
+
     val episodeType: EpisodeType? = null,
     val minNumber: Int? = null,
     val maxNumber: Int? = null,
     val number: Int? = null,
+    val mappings: List<EpisodeMappingWithoutAnimeDto>? = null
 )

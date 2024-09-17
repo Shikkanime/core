@@ -152,14 +152,12 @@ class CrunchyrollPlatform :
         alreadyFetched: List<Episode>
     ): List<Episode> {
         val list = mutableListOf<Episode>()
-
-        val lastWeek = zonedDateTime.minusWeeks(1)
-        val lastWeekStartOfTheDay = lastWeek.withHour(0).withMinute(0).withSecond(0).withNano(0)
+        val lastWeek = zonedDateTime.minusWeeks(1).toLocalDate()
 
         episodeVariantService.findAllIdentifierByDateRangeWithoutNextEpisode(
             countryCode,
-            lastWeekStartOfTheDay,
-            lastWeek.plusSeconds(1),
+            lastWeek.atStartOfDay(Constant.utcZoneId),
+            lastWeek.atEndOfTheDay(Constant.utcZoneId),
             getPlatform()
         ).forEach { identifier ->
             val crunchyrollId = getCrunchyrollId(identifier) ?: run {

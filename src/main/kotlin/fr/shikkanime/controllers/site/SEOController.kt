@@ -1,23 +1,25 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.URLDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Link
-import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
+import fr.shikkanime.utils.withUTCString
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
 @Controller("/")
 class SEOController {
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
+    private fun ZonedDateTime.formatDateTime() = this.withUTCString().replace("Z", "+00:00")
 
     @Inject
     private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
@@ -38,36 +40,53 @@ class SEOController {
     @Path("sitemap.xml")
     @Get
     private fun sitemap(): Response {
-        val simulcasts = simulcastCacheService.findAll()!!.toMutableList()
-        val animes = animeCacheService.findAll()!!
-            .sortedBy { it.shortName.lowercase() }
+        val globalLastModification = "2024-03-20T17:00:00+00:00"
 
-        simulcasts.forEach { simulcast ->
-            simulcast.lastReleaseDateTime =
-                animes.filter { anime -> anime.simulcasts!!.size == 1 && anime.simulcasts.any { it.uuid == simulcast.uuid } }
-                    .maxByOrNull { d -> ZonedDateTime.parse(d.releaseDateTime) }?.releaseDateTime
-        }
-
-        simulcasts.removeIf { simulcast -> simulcast.lastReleaseDateTime == null }
-
-        val episodeMapping = episodeMappingCacheService.findAllBy(
+        val lastReleaseDateTime = episodeMappingCacheService.findAllBy(
             CountryCode.FR,
             null,
             null,
             listOf(SortParameter("lastReleaseDateTime", SortParameter.Order.DESC)),
             1,
             1
-        )!!.data.firstOrNull()
+        )?.data?.firstOrNull()?.lastReleaseDateTime?.replace("Z", "+00:00") ?: globalLastModification
+
+        val urls = mutableSetOf(
+            URLDto(Constant.baseUrl, lastReleaseDateTime),
+            URLDto("${Constant.baseUrl}/calendar", lastReleaseDateTime),
+            URLDto("${Constant.baseUrl}/search", globalLastModification)
+        )
+
+        simulcastCacheService.findAllModified()?.mapTo(urls) {
+            URLDto("${Constant.baseUrl}/catalog/${it.slug}", it.lastReleaseDateTime!!)
+        }
+
+        episodeMappingCacheService.findAllSeo()?.groupBy { it[0] as String }?.forEach { (animeSlug, episodes) ->
+            val seasonMap = episodes.groupBy { it[1] as Int }
+            val firstSeasonDateTime = seasonMap.values.flatten().maxOf { it[4] as ZonedDateTime }
+
+            urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug", firstSeasonDateTime.formatDateTime()))
+
+            seasonMap.forEach { (season, seasonEpisodes) ->
+                val lastSeasonDateTime = seasonEpisodes.maxOf { it[4] as ZonedDateTime }
+                urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season", lastSeasonDateTime.formatDateTime()))
+
+                seasonEpisodes.forEach {
+                    val episodeType = it[2] as EpisodeType
+                    val number = it[3] as Int
+                    val episodeDateTime = it[4] as ZonedDateTime
+                    urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season/${episodeType.slug}-$number", episodeDateTime.formatDateTime()))
+                }
+            }
+        }
+
+        Link.entries.filter { !it.href.startsWith("/admin") && it.footer }
+            .mapTo(urls) { URLDto("${Constant.baseUrl}${it.href}", globalLastModification) }
 
         return Response.template(
             "/site/seo/sitemap.ftl",
             null,
-            mutableMapOf(
-                "episodeMapping" to episodeMapping,
-                "simulcasts" to simulcasts,
-                "animes" to animes,
-                "seoLinks" to Link.entries.filter { !it.href.startsWith("/admin") && it.footer }.toList()
-            ),
+            mutableMapOf("urls" to urls),
             contentType = ContentType.Text.Xml
         )
     }

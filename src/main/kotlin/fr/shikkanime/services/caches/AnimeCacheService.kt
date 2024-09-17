@@ -10,12 +10,10 @@ import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
@@ -31,9 +29,6 @@ class AnimeCacheService : AbstractCacheService {
 
     @Inject
     private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
 
     private val findAllByCache =
         MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
@@ -69,26 +64,6 @@ class AnimeCacheService : AbstractCacheService {
             .let { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
     }
 
-    private val findAllCache = MapCache<String, List<AnimeDto>>(
-        classes = listOf(
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java
-        )
-    ) {
-        val list = animeService.findAllLoaded()
-        val dtos = list.associateWith { AbstractConverter.convert(it, AnimeDto::class.java) }
-
-        dtos.forEach { (anime, dto) ->
-            dto.episodes = AbstractConverter.convert(
-                episodeMappingService.findAllByAnime(anime),
-                EpisodeMappingWithoutAnimeDto::class.java
-            )
-        }
-
-        dtos.values.toList()
-    }
-
     private val weeklyMemberCache =
         MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
             classes = listOf(
@@ -121,6 +96,4 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
-
-    fun findAll() = findAllCache["all"]
 }

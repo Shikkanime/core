@@ -15,6 +15,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
+import jakarta.persistence.Tuple
 import java.util.*
 
 class EpisodeMappingCacheService : AbstractCacheService {
@@ -44,6 +45,10 @@ class EpisodeMappingCacheService : AbstractCacheService {
                 EpisodeMappingDto::class.java
             )
         }
+
+    private val findAllSeo = MapCache<String, List<Tuple>>(classes = listOf(EpisodeMapping::class.java)) {
+        episodeMappingService.findAllSeo()
+    }
 
     private val findByAnimeSeasonEpisodeTypeNumberCache =
         MapCache<CountryCodeSlugSeasonEpisodeTypeNumberKeyCache, Triple<EpisodeMappingDto?, EpisodeMappingDto, EpisodeMappingDto?>>(
@@ -82,6 +87,8 @@ class EpisodeMappingCacheService : AbstractCacheService {
         limit: Int,
         status: Status? = null
     ) = findAllByCache[CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit, status)]
+
+    fun findAllSeo() = findAllSeo["seo"]
 
     fun findByAnimeSeasonEpisodeTypeNumber(
         animeUuid: UUID,

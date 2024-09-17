@@ -55,14 +55,17 @@
                 <#list weeklyAnimes as dailyAnimes>
                     <td class="border-start border-end border-dark bg-black">
                         <#list dailyAnimes.releases as release>
+                            <#assign isReleased = (release.mappings?? && release.mappings?size > 0)>
+                            <#assign isMultipleReleased = isReleased && (release.mappings?size > 1)>
+
                             <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner">
 
-                            <#if release.isReleased()>
-                                <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.mappings?first}&type=image">
+                            <#if isReleased>
+                                <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.mappings?first.uuid}&type=image">
                             </#if>
 
-                            <article x-data="{ hover: false }" class="shikk-element mb-3 position-relative<#if release.isMultipleReleased()> mt-2</#if>">
-                                <#if release.isMultipleReleased()>
+                            <article x-data="{ hover: false }" class="shikk-element mb-3 position-relative<#if isMultipleReleased> mt-2</#if>">
+                                <#if isMultipleReleased>
                                     <div data-multiple-released>
                                         <div class="shikk-element-collection-2"></div>
                                         <div class="shikk-element-collection-1"></div>
@@ -99,7 +102,7 @@
                                                     <span class="h6 text-truncate-2 mb-1 fw-bold">${release.anime.shortName}</span>
                                                     <#if release.minNumber?? || release.maxNumber?? || release.number??>
                                                         <p class="text-muted mb-0">
-                                                            ${getPrefixEpisode(release.episodeType)} <#if release.isMultipleReleased()>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
+                                                            ${getPrefixEpisode(release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
                                                         </p>
                                                     </#if>
                                                     <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=release.langType /></p>
@@ -114,7 +117,7 @@
                                                 </div>
                                             </#if>
 
-                                            <#if release.isReleased()>
+                                            <#if isReleased>
                                                 <div class="mt-3 text-warning fw-bold">
                                                     <i class="me-2">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
