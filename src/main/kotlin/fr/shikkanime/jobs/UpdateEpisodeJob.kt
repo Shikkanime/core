@@ -3,12 +3,14 @@ package fr.shikkanime.jobs
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -47,6 +49,9 @@ class UpdateEpisodeJob : AbstractJob {
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
 
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
+
     private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>>(duration = Duration.ofDays(1)) {
         return@MapCache runBlocking {
             val video = try {
@@ -72,8 +77,7 @@ class UpdateEpisodeJob : AbstractJob {
     }
 
     override fun run() {
-        // Take 15 episodes of a platform, and if the lastUpdate is older than 30 days, or if the episode mapping is valid
-        val lastDateTime = ZonedDateTime.now().minusDays(30)
+        val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
         val adnEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.ANIM, lastDateTime)
         val crunchyrollEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.CRUN, lastDateTime)
 
@@ -81,7 +85,7 @@ class UpdateEpisodeJob : AbstractJob {
 
         val needUpdateEpisodes = (adnEpisodes + crunchyrollEpisodes).distinctBy { it.uuid }
             .shuffled()
-            .take(15)
+            .take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_SIZE, 15))
 
         if (needUpdateEpisodes.isEmpty()) {
             logger.info("No episode to update")
