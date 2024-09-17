@@ -35,4 +35,6 @@ enum class ConfigPropertyKey(val key: String) {
     EMAIL_USERNAME("email_username"),
     EMAIL_PASSWORD("email_password"),
     USE_SECURITY_HEADERS("use_security_headers"),
+    UPDATE_EPISODE_DELAY("update_episode_delay"),
+    UPDATE_EPISODE_SIZE("update_episode_size"),
 }

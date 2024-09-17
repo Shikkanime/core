@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1726557749197"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'update_episode_delay'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="update_episode_delay"/>
+            <column name="property_value" value="30"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'update_episode_size'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="update_episode_size"/>
+            <column name="property_value" value="15"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
