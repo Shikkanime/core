@@ -145,6 +145,27 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
+    fun findAllSeo(): List<Tuple> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            query.multiselect(
+                root[EpisodeMapping_.anime][Anime_.slug],
+                root[EpisodeMapping_.season],
+                root[EpisodeMapping_.episodeType],
+                root[EpisodeMapping_.number],
+                root[EpisodeMapping_.lastReleaseDateTime],
+            )
+
+            query.orderBy(cb.asc(root[EpisodeMapping_.releaseDateTime]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByAnimeSeasonEpisodeTypeNumber(
         animeUuid: UUID,
         season: Int,

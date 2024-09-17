@@ -17,7 +17,6 @@
 [#-- @ftlvariable name="seoDescription" type="java.lang.String" --]
 [#-- @ftlvariable name="currentSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]
 [#-- @ftlvariable name="footerLinks" type="kotlin.collections.AbstractList<fr.shikkanime.entities.LinkObject>" --]
-[#-- @ftlvariable name="seoLinks" type="kotlin.collections.AbstractList<fr.shikkanime.entities.enums.Link>" --]
 [#-- @ftlvariable name="su" type="fr.shikkanime.utils.StringUtils" --]
 [#-- @ftlvariable name="weeklyAnimes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.WeeklyAnimesDto>" --]
 [#-- @ftlvariable name="query" type="java.lang.String" --]
@@ -31,8 +30,6 @@
 
 [#-- @ftlvariable name="episodeMappings" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.mappings.EpisodeMappingDto>" --]
 [#-- @ftlvariable name="episodeMapping" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
-[#-- @ftlvariable name="episodeVariants" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.variants.EpisodeVariantDto>" --]
-[#-- @ftlvariable name="episodeVariant" type="fr.shikkanime.dtos.variants.EpisodeVariantDto" --]
 [#-- @ftlvariable name="previousEpisode" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
 [#-- @ftlvariable name="nextEpisode" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
 
@@ -40,3 +37,4 @@
 [#-- @ftlvariable name="showMore" type="java.lang.Boolean" --]
 [#-- @ftlvariable name="showLess" type="java.lang.Boolean" --]
 [#-- @ftlvariable name="page" type="java.lang.Integer" --]
+[#-- @ftlvariable name="urls" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.URLDto>" --]

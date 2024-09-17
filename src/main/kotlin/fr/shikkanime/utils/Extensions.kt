@@ -25,6 +25,14 @@ fun LocalDate.atStartOfWeek(): LocalDate {
     return this.with(DayOfWeek.MONDAY)
 }
 
+fun LocalDate.atEndOfWeek(): LocalDate {
+    return this.with(DayOfWeek.SUNDAY)
+}
+
+fun LocalDate.atEndOfTheDay(zoneId: ZoneId): ZonedDateTime {
+    return this.atTime(LocalTime.MAX).atZone(zoneId)
+}
+
 fun BufferedImage.resize(width: Int, height: Int): BufferedImage {
     return ResampleOp(width, height).filter(this, null)
 }

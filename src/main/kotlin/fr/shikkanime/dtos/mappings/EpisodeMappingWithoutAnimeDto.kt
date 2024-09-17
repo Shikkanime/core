@@ -1,7 +1,10 @@
 package fr.shikkanime.dtos.mappings
 
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
 import java.util.*
 
 data class EpisodeMappingWithoutAnimeDto(
@@ -16,5 +19,8 @@ data class EpisodeMappingWithoutAnimeDto(
     val title: String?,
     val description: String?,
     val image: String,
+    val variants: List<EpisodeVariantWithoutMappingDto>? = null,
+    val platforms: List<PlatformDto>? = null,
+    val langTypes: List<LangType>? = null,
     val status: Status,
 )

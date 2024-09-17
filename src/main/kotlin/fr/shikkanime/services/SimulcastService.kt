@@ -19,6 +19,8 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     override fun findAll() =
         super.findAll().sortBySeasonAndYear()
 
+    fun findAllModified() = simulcastRepository.findAllModified()
+
     fun findBySeasonAndYear(season: String, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 
     override fun save(entity: Simulcast): Simulcast {

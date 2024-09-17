@@ -50,6 +50,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllSimulcastedByAnime(anime: Anime) = episodeMappingRepository.findAllSimulcastedByAnime(anime)
 
+    fun findAllSeo() = episodeMappingRepository.findAllSeo()
+
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
