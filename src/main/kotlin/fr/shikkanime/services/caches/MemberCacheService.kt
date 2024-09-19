@@ -2,7 +2,8 @@ package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.dtos.member.MemberDto
+import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.MapCache
@@ -32,7 +33,21 @@ class MemberCacheService : AbstractCacheService {
                 ?.let { member -> AbstractConverter.convert(member, MemberDto::class.java) }
         }
 
+    private val refreshMemberCache = MapCache<UUID, RefreshMemberDto?>(
+        classes = listOf(
+            Member::class.java,
+            Anime::class.java,
+            MemberFollowAnime::class.java,
+            EpisodeMapping::class.java,
+            MemberFollowEpisode::class.java,
+        )
+    ) {
+        memberService.find(it)?.let { member -> AbstractConverter.convert(member, RefreshMemberDto::class.java) }
+    }
+
     fun find(uuid: UUID) = cache[uuid]
 
     fun findByIdentifier(identifier: String) = findByIdentifierCache[identifier]
+
+    fun getRefreshMember(uuid: UUID) = refreshMemberCache[uuid]
 }

@@ -1,4 +1,4 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.member
 
 import io.ktor.server.auth.*
 
