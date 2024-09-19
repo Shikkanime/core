@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.dtos.MessageDto
-import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.Constant

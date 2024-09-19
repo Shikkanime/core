@@ -1,4 +1,4 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.member
 
 import java.util.*
 
@@ -12,5 +12,6 @@ data class MemberDto(
     val followedAnimes: List<UUID>,
     val followedEpisodes: List<UUID>,
     val totalDuration: Long,
+    val totalUnseenDuration: Long,
     val hasProfilePicture: Boolean = false,
 )

@@ -2,8 +2,8 @@ package fr.shikkanime.converters.member
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.MemberDto
-import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.dtos.member.MemberDto
+import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberFollowAnimeService
@@ -19,6 +19,7 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
 
     override fun convert(from: Member): MemberDto {
         val tokenDto = convert(from, TokenDto::class.java)
+        val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(from)
 
         return MemberDto(
             uuid = from.uuid!!,
@@ -29,7 +30,8 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
             email = from.email,
             followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(from),
             followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from),
-            totalDuration = memberFollowEpisodeService.getTotalDuration(from),
+            totalDuration = seenAndUnseenDuration.first,
+            totalUnseenDuration = seenAndUnseenDuration.second,
             hasProfilePicture = ImageService[from.uuid, ImageService.Type.IMAGE] != null
         )
     }

@@ -1,6 +1,6 @@
 package fr.shikkanime.utils.routes
 
-import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.Link
 import io.ktor.http.*
 

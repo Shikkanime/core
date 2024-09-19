@@ -3,6 +3,7 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
@@ -11,6 +12,7 @@ import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
+import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
@@ -240,5 +242,20 @@ class MemberController {
         )
 
         return Response.ok()
+    }
+
+    @Path("/refresh")
+    @Get
+    @JWTAuthenticated
+    @OpenAPI(
+        description = "Get member data after a watchlist modification",
+        responses = [
+            OpenAPIResponse(200, "Member data refreshed", RefreshMemberDto::class),
+            OpenAPIResponse(401, "Unauthorized")
+        ],
+        security = true
+    )
+    private fun getRefreshMember(@JWTUser memberUuid: UUID): Response {
+        return Response.ok(memberCacheService.getRefreshMember(memberUuid))
     }
 }

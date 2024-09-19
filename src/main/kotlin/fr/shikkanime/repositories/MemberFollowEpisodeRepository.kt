@@ -1,6 +1,8 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
+import fr.shikkanime.entities.enums.EpisodeType
+import jakarta.persistence.criteria.JoinType
 import java.util.*
 
 class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() {
@@ -112,20 +114,44 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun getTotalDuration(member: Member): Long {
+    fun getSeenAndUnseenDuration(member: Member): Pair<Long, Long> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(Long::class.java)
-            val root = query.from(getEntityClass())
-            query.select(cb.sum(root[MemberFollowEpisode_.episode][EpisodeMapping_.duration]))
+            val query = cb.createTupleQuery()
+            val root = query.from(MemberFollowAnime::class.java)
+            val anime = root.join(MemberFollowAnime_.anime)
+            val episodeMapping = anime.join(Anime_.mappings, JoinType.LEFT)
+            val memberFollowEpisode = episodeMapping.join(EpisodeMapping_.memberFollowEpisodes, JoinType.LEFT)
+            memberFollowEpisode.on(cb.equal(memberFollowEpisode[MemberFollowEpisode_.member], member))
 
-            query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member)
+            val seenDuration = cb.sum(
+                cb.selectCase<Number?>()
+                    .`when`(cb.isNotNull(memberFollowEpisode[MemberFollowEpisode_.episode]), episodeMapping[EpisodeMapping_.duration])
+                    .otherwise(0)
             )
 
-            it.createQuery(query)
-                .resultList
-                .firstOrNull() ?: 0L
+            val unseenDuration = cb.sum(
+                cb.selectCase<Number?>()
+                    .`when`(
+                        cb.and(
+                            cb.isNull(memberFollowEpisode[MemberFollowEpisode_.episode]),
+                            cb.notEqual(episodeMapping[EpisodeMapping_.episodeType], EpisodeType.SUMMARY)
+                        ),
+                        episodeMapping[EpisodeMapping_.duration]
+                    )
+                    .otherwise(0)
+            )
+
+            query.multiselect(
+                cb.coalesce(seenDuration, 0L),
+                cb.coalesce(unseenDuration, 0L)
+            )
+
+            query.where(cb.equal(root[MemberFollowAnime_.member], member))
+
+            createReadOnlyQuery(it, query)
+                .singleResult
+                .let { pair -> pair[0] as Long to pair[1] as Long }
         }
     }
 }

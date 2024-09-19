@@ -1,7 +1,8 @@
 package fr.shikkanime.controllers.api
 
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.MemberDto
+import fr.shikkanime.dtos.member.MemberDto
+import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.enums.Action
@@ -446,6 +447,59 @@ class MemberControllerTest : AbstractControllerTest() {
                 runBlocking { bodyAsChannel().copyTo(byteArrayOutputStream) }
                 val image = byteArrayOutputStream.toByteArray()
                 assertTrue(image.isNotEmpty())
+            }
+        }
+    }
+
+    @Test
+    fun refreshMember() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (identifier, token) = registerAndLogin()
+            val anime = animeService.findAll().first()
+
+            client.put("/api/v1/members/animes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(anime.uuid!!)))
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
+                assertNotNull(findPrivateMember)
+                assertEquals(1, followedAnimesUUID.size)
+                assertEquals(anime.uuid, followedAnimesUUID.first())
+            }
+
+            client.put("/api/v1/members/follow-all-episodes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(anime.uuid!!)))
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
+                val followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
+                assertNotNull(findPrivateMember)
+                assertEquals(116, followedEpisodes.size)
+            }
+
+            client.get("/api/v1/members/refresh") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val refreshMemberDto = ObjectParser.fromJson(bodyAsText(), RefreshMemberDto::class.java)
+                println(refreshMemberDto)
+                val findPrivateMember = memberService.findByIdentifier(identifier)
+                val followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
+                assertNotNull(findPrivateMember)
+                assertEquals(1, refreshMemberDto.followedAnimes.total)
+                assertEquals(followedEpisodes.size.toLong(), refreshMemberDto.followedEpisodes.total)
+                assertTrue(refreshMemberDto.totalDuration > 0)
+                assertEquals(0, refreshMemberDto.totalUnseenDuration)
             }
         }
     }

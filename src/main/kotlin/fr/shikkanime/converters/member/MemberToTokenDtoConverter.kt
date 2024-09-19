@@ -3,7 +3,7 @@ package fr.shikkanime.converters.member
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.TokenDto
+import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.utils.Constant
 import java.util.*
