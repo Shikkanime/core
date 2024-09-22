@@ -1,7 +1,12 @@
 package fr.shikkanime.entities.enums
 
-enum class CountryCode(val locale: String, val timezone: String) {
-    FR("fr-FR", "Europe/Paris"),
+enum class CountryCode(
+    val locale: String,
+    val timezone: String,
+    val latitude: Double,
+    val longitude: Double
+) {
+    FR("fr-FR", "Europe/Paris", 48.866667, 2.333333),
     ;
 
     companion object {

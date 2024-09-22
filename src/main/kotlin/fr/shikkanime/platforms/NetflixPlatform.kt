@@ -4,6 +4,7 @@ import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.utils.*
+import org.jsoup.nodes.Document
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -25,8 +26,18 @@ class NetflixPlatform :
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.netflixSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
-        val document =
-            HttpRequest().use { it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id") }
+        val document = HttpRequest(key.countryCode).use {
+            var subdoc: Document
+            var i = 0
+
+            do {
+                subdoc = it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id")
+                i++
+            } while (subdoc.getElementsByTag("html").attr("lang") != key.countryCode.name.lowercase() && i < 5)
+
+            subdoc
+        }
+
         val animeName = document.selectFirst(".title-title")?.text() ?: return emptySet()
         val animeBanner =
             document.selectXpath("//*[@id=\"section-hero\"]/div[1]/div[2]/picture/source[2]").attr("srcset")
