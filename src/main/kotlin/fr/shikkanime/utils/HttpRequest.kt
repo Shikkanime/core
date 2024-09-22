@@ -1,7 +1,9 @@
 package fr.shikkanime.utils
 
 import com.microsoft.playwright.Browser
+import com.microsoft.playwright.BrowserContext
 import com.microsoft.playwright.Page
+import fr.shikkanime.entities.enums.CountryCode
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
@@ -15,9 +17,12 @@ private const val TIMEOUT = 60_000L
 private const val BROWSER_TIMEOUT = 15_000L
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
-class HttpRequest : AutoCloseable {
+class HttpRequest(
+    val countryCode: CountryCode? = null
+) : AutoCloseable {
     private var isBrowserInitialized = false
     private var browser: Browser? = null
+    private var context: BrowserContext? = null
     private var page: Page? = null
 
     private fun httpClient(): HttpClient {
@@ -74,7 +79,18 @@ class HttpRequest : AutoCloseable {
         }
 
         browser = Constant.playwright.firefox().launch(Constant.launchOptions)
-        page = browser?.newPage()
+
+        context = if (countryCode != null)
+            browser?.newContext(
+                Browser.NewContextOptions()
+                    .setGeolocation(countryCode.latitude, countryCode.longitude)
+                    .setPermissions(listOf("geolocation"))
+                    .setLocale(countryCode.locale)
+                    .setTimezoneId(countryCode.timezone)
+            ) else
+            browser?.newContext()
+
+        page = context?.newPage()
         page?.setDefaultTimeout(BROWSER_TIMEOUT.toDouble())
         page?.setDefaultNavigationTimeout(BROWSER_TIMEOUT.toDouble())
         isBrowserInitialized = true
@@ -110,6 +126,7 @@ class HttpRequest : AutoCloseable {
 
     override fun close() {
         page?.close()
+        context?.close()
         browser?.close()
     }
 }
