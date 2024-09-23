@@ -16,16 +16,16 @@ import java.util.regex.Pattern
 object StringUtils {
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
-    private val regex = "( [-|!].*[-|!])|( Saison \\d*)|(?:: )?\\(\\d*\\)".toRegex()
+    private val regex = "( [-|!].*[-|!](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([MDCLXVI]+$)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
-        val words = parts.map { it.trim().split(" ").size }.distinct()
+        val words = parts.map { it.trim().split(" ", "-").size }.distinct()
         return words.size == 1
     }
 
     fun getShortName(fullName: String): String {
-        var shortName = regex.replace(fullName, "")
+        var shortName = regex.replace(fullName, " ").trim()
 
         separators.forEach { separator ->
             if (shortName.contains(separator)) {
@@ -146,5 +146,19 @@ object StringUtils {
     fun isValidEmail(email: String): Boolean {
         val emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$".toRegex()
         return emailRegex.matches(email)
+    }
+
+    fun romanToInt(string: String): Int {
+        val map = mapOf('I' to 1, 'V' to 5, 'X' to 10, 'L' to 50, 'C' to 100, 'D' to 500, 'M' to 1000)
+        var result = 0
+        var prev = 0
+
+        string.reversed().forEach { char ->
+            val curr = map[char]!!
+            result += if (curr < prev) -curr else curr
+            prev = curr
+        }
+
+        return result
     }
 }

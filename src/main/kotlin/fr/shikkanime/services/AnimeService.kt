@@ -263,7 +263,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
-    private fun merge(from: Anime, to: Anime): Anime {
+    fun merge(from: Anime, to: Anime): Anime {
         episodeMappingService.findAllByAnime(from).forEach { episodeMapping ->
             val findByAnimeSeasonEpisodeTypeNumber = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
                 to.uuid!!,

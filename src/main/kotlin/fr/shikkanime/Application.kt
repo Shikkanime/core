@@ -62,17 +62,19 @@ fun main() {
 
 private fun updateAndDeleteData(animeService: AnimeService) {
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
-    val seasonRegex = " Saison (\\d)".toRegex()
+    val seasonRegex = " Saison (\\d)| ([MDCLXVI]+$)".toRegex()
 
     animeService.findAll().forEach {
         if (it.name!!.contains(seasonRegex)) {
-            val season = seasonRegex.find(it.name!!)!!.groupValues[1]
+            val seasonString = seasonRegex.find(it.name!!)!!.groupValues[0].trim()
+            val season = seasonString.toIntOrNull() ?: StringUtils.romanToInt(seasonString)
+            val oldName = it.name
             it.name = it.name!!.replace(seasonRegex, "")
-            logger.info("Updating name for anime ${it.name} to ${it.name}")
+            logger.info("Updating name for anime $oldName to ${it.name}")
             logger.warning("Replacing all season episodes for anime ${it.name} to season $season")
 
             episodeMappingService.findAllByAnime(it).forEach { episodeMapping ->
-                episodeMapping.season = season.toInt()
+                episodeMapping.season = season
                 episodeMappingService.update(episodeMapping)
             }
         }
@@ -82,6 +84,14 @@ private fun updateAndDeleteData(animeService: AnimeService) {
         if (toSlug != it.slug) {
             it.slug = toSlug
             logger.info("Updating slug for anime ${it.name} to $toSlug")
+
+            val existing = animeService.findBySlug(it.countryCode!!, toSlug)
+
+            if (existing != null) {
+                logger.warning("Slug $toSlug already exists, merging ${it.name} with ${existing.name}")
+                animeService.merge(it, existing)
+                return@forEach
+            }
         }
 
         it.status = StringUtils.getStatus(it)
