@@ -53,6 +53,14 @@ class StringUtilsTest {
             "Arifureta: From Commonplace to World's Strongest" to "Arifureta",
             "Digimon Adventure: (2020)" to "Digimon Adventure",
             "Kenshin le vagabond (2023)" to "Kenshin le vagabond",
+            "Strike the Blood - Valkyria no Ôkoku-hen" to "Strike the Blood",
+            "Strike the Blood II" to "Strike the Blood",
+            "Overlord IV" to "Overlord",
+            "The Seven Deadly Sins: Four Knights of the Apocalypse" to "The Seven Deadly Sins",
+            "86 EIGHTY-SIX" to "86 EIGHTY-SIX",
+            "JORAN THE PRINCESS OF SNOW AND BLOOD" to "JORAN THE PRINCESS OF SNOW AND BLOOD",
+            "MIX" to "MIX",
+            "Cyberpunk: Edgerunners" to "Cyberpunk: Edgerunners",
         )
 
         list.forEach { (input, expected) ->
@@ -85,6 +93,7 @@ class StringUtilsTest {
             "Dragon Quest - The Adventures of Dai" to "dragon-quest",
             "Au Cœur du Donjon" to "au-coeur-du-donjon",
             "THE IDOLM@STER Million Live!" to "the-idolmaster-million-live",
+            "MIX" to "mix",
         )
 
         list.forEach { (input, expected) ->
@@ -118,6 +127,7 @@ class StringUtilsTest {
             "Jellyfish Can't Swim in the Night" to "JellyfishCantSwimInTheNight",
             "Au Cœur du Donjon" to "AuCoeurDuDonjon",
             "THE IDOLM@STER Million Live!" to "TheIdolmasterMillionLive",
+            "Overlord IV" to "Overlord",
         )
 
         list.forEach { (input, expected) ->
