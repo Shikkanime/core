@@ -19,7 +19,6 @@ import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.Period
-import java.util.concurrent.TimeoutException
 import java.util.logging.Level
 
 class FetchOldEpisodesJob : AbstractJob {
@@ -186,7 +185,7 @@ class FetchOldEpisodesJob : AbstractJob {
             .distinct()
             .forEachIndexed { _, date ->
                 try {
-                    tryFetchCrunchyrollCalendar(countryCode, date)
+                    HttpRequest.retry(3) { CrunchyrollWrapper.getSimulcastCalendar(countryCode, crunchyrollPlatform.identifiers[countryCode]!!, date) }
                         .forEach { browseObject ->
                             try {
                                 episodes.add(
@@ -212,31 +211,5 @@ class FetchOldEpisodesJob : AbstractJob {
             }
 
         return episodes
-    }
-
-    private fun tryFetchCrunchyrollCalendar(
-        countryCode: CountryCode,
-        date: LocalDate
-    ): Array<CrunchyrollWrapper.BrowseObject> {
-        var retry = 0
-
-        while (true) {
-            try {
-                return runBlocking {
-                    CrunchyrollWrapper.getSimulcastCalendar(
-                        countryCode,
-                        crunchyrollPlatform.identifiers[countryCode]!!,
-                        date
-                    )
-                }
-            } catch (e: Exception) {
-                if (++retry > 3) {
-                    logger.log(Level.SEVERE, "Error while fetching Crunchyroll calendar", e)
-                    throw TimeoutException("Error while fetching Crunchyroll calendar")
-                }
-
-                logger.log(Level.WARNING, "Error while fetching Crunchyroll calendar, retrying... (Retry: $retry/3)")
-            }
-        }
     }
 }

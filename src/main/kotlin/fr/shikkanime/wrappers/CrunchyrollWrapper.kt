@@ -319,7 +319,7 @@ object CrunchyrollWrapper {
                 cache[seriesId].orEmpty()
                     .chunked(CRUNCHYROLL_CHUNK)
                     .flatMap { chunk ->
-                        failOver(3, 1000) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()) }
+                        HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()) }
                             .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() == releaseDateTime }
                             .onEach { alreadyChecked[it.id] = it }
                             .map { it.id }
@@ -332,7 +332,7 @@ object CrunchyrollWrapper {
         val objects = alreadyChecked.values.toMutableList()
 
         episodeIds.subtract(alreadyChecked.keys).chunked(CRUNCHYROLL_CHUNK).forEach { chunk ->
-            objects.addAll(failOver(3, 1000) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()) })
+            objects.addAll(HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()) })
         }
 
         return objects.toTypedArray()
@@ -340,21 +340,4 @@ object CrunchyrollWrapper {
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =
         "${BASE_URL}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: ""}"
-
-    private fun <R> failOver(maxRetry: Int, delayBetweenRetry: Long, block: suspend () -> R): R {
-        var retry = 0
-
-        while (true) {
-            try {
-                return runBlocking { block() }
-            } catch (e: Exception) {
-                if (retry >= maxRetry) {
-                    throw e
-                }
-
-                retry++
-                Thread.sleep(delayBetweenRetry)
-            }
-        }
-    }
 }

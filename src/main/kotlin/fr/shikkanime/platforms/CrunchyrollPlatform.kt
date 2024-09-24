@@ -63,13 +63,7 @@ class CrunchyrollPlatform :
     private val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent?>(Duration.ofDays(1)) {
         try {
             val token = identifiers[it.countryCode]!!
-            val series = runBlocking {
-                CrunchyrollWrapper.getSeries(
-                    it.countryCode.locale,
-                    token,
-                    it.id
-                )
-            }
+            val series = HttpRequest.retry(3) { CrunchyrollWrapper.getSeries(it.countryCode.locale, token, it.id) }
 
             val image = series.images.posterTall.first().maxByOrNull { poster -> poster.width }?.source
             val banner = series.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source

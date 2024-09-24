@@ -9,6 +9,7 @@ import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
@@ -128,5 +129,24 @@ class HttpRequest(
         page?.close()
         context?.close()
         browser?.close()
+    }
+
+    companion object {
+        fun <T> retry(times: Int, delay: Long = 500, operation: suspend () -> T): T {
+            repeat(times) { attempt ->
+                try {
+                    return runBlocking { operation() }
+                } catch (e: Exception) {
+                    logger.warning("Attempt $attempt failed: ${e.message}")
+
+                    if (attempt < times - 1) {
+                        logger.warning("Retrying in $delay ms...")
+                        Thread.sleep(delay)
+                    }
+                }
+            }
+
+            throw Exception("Failed after $times attempts")
+        }
     }
 }
