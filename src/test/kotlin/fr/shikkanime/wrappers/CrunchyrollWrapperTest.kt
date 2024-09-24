@@ -81,13 +81,13 @@ class CrunchyrollWrapperTest {
     }
 
     @Test
-    fun getSimulcastCalendar() {
-        val episodes = runBlocking { CrunchyrollWrapper.getSimulcastCalendar(CountryCode.FR, token!!, LocalDate.parse("2024-01-01")) }
+    fun getSimulcastCalendarWithDates() {
+        val episodes = runBlocking { CrunchyrollWrapper.getSimulcastCalendarWithDates(CountryCode.FR, token!!, setOf(LocalDate.parse("2024-01-01"))) }
         assertEquals(true, episodes.isNotEmpty())
     }
 
     @Test
-    fun getSeries() {
+    fun testSpamSeriesRequest() {
         assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GREXH8DQ2") })
         assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G8DHV722J") })
         assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G9VHN9P99") })
@@ -95,6 +95,10 @@ class CrunchyrollWrapperTest {
         assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GKEH2G0N1") })
         assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G0XHWM1MK") })
         assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GEXH3W2W7") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GQWH0M9N8") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GZJH3DXJG") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G9VHN91DJ") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G79H23Z3P") })
     }
 
     companion object {
