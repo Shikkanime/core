@@ -5,6 +5,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
@@ -160,6 +161,8 @@ class FetchOldEpisodesJob : AbstractJob {
                             false
                         )
                     )
+                } catch (e: EpisodeNoSubtitlesOrVoiceException) {
+                    logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
                 } catch (e: Exception) {
                     logger.log(
                         Level.SEVERE,
@@ -193,6 +196,8 @@ class FetchOldEpisodesJob : AbstractJob {
                                         false
                                     )
                                 )
+                            } catch (e: EpisodeNoSubtitlesOrVoiceException) {
+                                logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
                             } catch (e: Exception) {
                                 logger.log(
                                     Level.SEVERE,
