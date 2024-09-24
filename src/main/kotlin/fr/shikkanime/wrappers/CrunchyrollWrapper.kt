@@ -144,7 +144,7 @@ object CrunchyrollWrapper {
             body = "grant_type=client_id&client_id=offline_access"
         )
 
-        require(response.status.value == 200) { "Failed to get anonymous access token" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get anonymous access token (${response.status})" }
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsString("access_token")!!
     }
@@ -165,7 +165,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get media list (${response.status.value})" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get media list (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get media list")
@@ -181,7 +181,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get series" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get series (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get series")
@@ -196,7 +196,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get seasons" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get seasons (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get seasons")
@@ -213,7 +213,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get episodes" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get episodes (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get episodes")
@@ -229,7 +229,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get episode" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get episode (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get episode")
@@ -244,7 +244,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get $type episode" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get $type episode (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get $type episode")
@@ -269,7 +269,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get objects (${response.status.value})" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get objects (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get objects")
@@ -285,7 +285,7 @@ object CrunchyrollWrapper {
             ),
         )
 
-        require(response.status.value == 200) { "Failed to get simulcasts" }
+        require(response.status == HttpStatusCode.OK) { "Failed to get simulcasts (${response.status})" }
 
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")
             ?: throw Exception("Failed to get simulcasts")

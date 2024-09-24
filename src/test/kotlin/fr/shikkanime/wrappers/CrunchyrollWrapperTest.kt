@@ -86,6 +86,17 @@ class CrunchyrollWrapperTest {
         assertEquals(true, episodes.isNotEmpty())
     }
 
+    @Test
+    fun getSeries() {
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GREXH8DQ2") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G8DHV722J") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G9VHN9P99") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GYZJEEQGR") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GKEH2G0N1") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "G0XHWM1MK") })
+        assertNotNull(runBlocking { CrunchyrollWrapper.getSeries(locale, token!!, "GEXH3W2W7") })
+    }
+
     companion object {
         private var token: String? = null
 
