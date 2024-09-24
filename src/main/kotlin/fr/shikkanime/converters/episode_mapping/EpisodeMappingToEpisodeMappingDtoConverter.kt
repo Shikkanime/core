@@ -15,7 +15,8 @@ class EpisodeMappingToEpisodeMappingDtoConverter : AbstractConverter<EpisodeMapp
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
-    override fun convert(from: EpisodeMapping): EpisodeMappingDto {
+    @Converter
+    fun convert(from: EpisodeMapping): EpisodeMappingDto {
         val variants = episodeVariantService.findAllByMapping(from).sortedBy { it.releaseDateTime }
 
         return EpisodeMappingDto(

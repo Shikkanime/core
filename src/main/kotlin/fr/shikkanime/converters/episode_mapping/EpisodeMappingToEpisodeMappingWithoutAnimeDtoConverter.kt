@@ -15,7 +15,8 @@ class EpisodeMappingToEpisodeMappingWithoutAnimeDtoConverter :
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
-    override fun convert(from: EpisodeMapping): EpisodeMappingWithoutAnimeDto {
+    @Converter
+    fun convert(from: EpisodeMapping): EpisodeMappingWithoutAnimeDto {
         val variants = episodeVariantService.findAllByMapping(from).sortedBy { it.releaseDateTime }
 
         return EpisodeMappingWithoutAnimeDto(

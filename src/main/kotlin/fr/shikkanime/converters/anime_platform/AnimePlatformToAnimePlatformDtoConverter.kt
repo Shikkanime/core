@@ -5,7 +5,8 @@ import fr.shikkanime.dtos.*
 import fr.shikkanime.entities.AnimePlatform
 
 class AnimePlatformToAnimePlatformDtoConverter : AbstractConverter<AnimePlatform, AnimePlatformDto>() {
-    override fun convert(from: AnimePlatform): AnimePlatformDto {
+    @Converter
+    fun convert(from: AnimePlatform): AnimePlatformDto {
         return AnimePlatformDto(
             uuid = from.uuid,
             platform = convert(from.platform, PlatformDto::class.java),

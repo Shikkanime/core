@@ -17,7 +17,8 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
-    override fun convert(from: Member): MemberDto {
+    @Converter
+    fun convert(from: Member): MemberDto {
         val tokenDto = convert(from, TokenDto::class.java)
         val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(from)
 

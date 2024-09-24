@@ -9,7 +9,8 @@ import java.time.format.DateTimeFormatter
 class MetricToMetricDtoConverter : AbstractConverter<Metric, MetricDto>() {
     private val dateFormatter = DateTimeFormatter.ofPattern("HH:mm:ssZ")
 
-    override fun convert(from: Metric): MetricDto {
+    @Converter
+    fun convert(from: Metric): MetricDto {
         return MetricDto(
             uuid = from.uuid,
             cpuLoad = (from.cpuLoad * 100).toString().replace(',', '.'),

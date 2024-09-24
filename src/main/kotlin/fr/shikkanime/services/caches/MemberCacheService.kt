@@ -1,6 +1,7 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.UUIDPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.member.MemberDto
 import fr.shikkanime.dtos.member.RefreshMemberDto
@@ -33,7 +34,7 @@ class MemberCacheService : AbstractCacheService {
                 ?.let { member -> AbstractConverter.convert(member, MemberDto::class.java) }
         }
 
-    private val refreshMemberCache = MapCache<UUID, RefreshMemberDto?>(
+    private val refreshMemberCache = MapCache<UUIDPaginationKeyCache, RefreshMemberDto?>(
         classes = listOf(
             Member::class.java,
             Anime::class.java,
@@ -42,12 +43,17 @@ class MemberCacheService : AbstractCacheService {
             MemberFollowEpisode::class.java,
         )
     ) {
-        memberService.find(it)?.let { member -> AbstractConverter.convert(member, RefreshMemberDto::class.java) }
+        try {
+            memberService.find(it.uuid)?.let { member -> AbstractConverter.convert(member, RefreshMemberDto::class.java, it.limit) }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     fun find(uuid: UUID) = cache[uuid]
 
     fun findByIdentifier(identifier: String) = findByIdentifierCache[identifier]
 
-    fun getRefreshMember(uuid: UUID) = refreshMemberCache[uuid]
+    fun getRefreshMember(uuid: UUID, limit: Int) = refreshMemberCache[UUIDPaginationKeyCache(uuid, 1, limit)]
 }

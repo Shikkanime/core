@@ -7,10 +7,11 @@ open class HasPageableRoute {
         pageParam: Int?,
         limitParam: Int?,
         sortParam: String?,
-        descParam: String?
+        descParam: String?,
+        defaultLimit: Int = 15
     ): Triple<Int, Int, List<SortParameter>> {
         val page = pageParam ?: 1
-        val limit = limitParam?.coerceIn(1, 30) ?: 15
+        val limit = limitParam?.coerceIn(1, 30) ?: defaultLimit
 
         val sortParameters = sortParam?.split(",")?.map { sort ->
             val desc = descParam?.split(",")?.contains(sort) ?: false
