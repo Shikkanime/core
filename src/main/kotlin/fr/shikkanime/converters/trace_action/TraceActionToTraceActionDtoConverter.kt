@@ -6,7 +6,8 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.utils.withUTCString
 
 class TraceActionToTraceActionDtoConverter : AbstractConverter<TraceAction, TraceActionDto>() {
-    override fun convert(from: TraceAction): TraceActionDto {
+    @Converter
+    fun convert(from: TraceAction): TraceActionDto {
         return TraceActionDto(
             uuid = from.uuid!!,
             actionDateTime = from.actionDateTime!!.withUTCString(),

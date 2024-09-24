@@ -18,13 +18,11 @@ class MemberToRefreshMemberDtoConverter : AbstractConverter<Member, RefreshMembe
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
-    override fun convert(from: Member): RefreshMemberDto {
-        val page = 1
-        val limit = 9
-
-        val missedAnimesPageable = memberFollowAnimeService.findAllMissedAnimes(from, page, limit)
-        val followedAnimesPageable = memberFollowAnimeService.findAllFollowedAnimes(from, page, limit)
-        val followedEpisodesPageable = memberFollowEpisodeService.findAllFollowedEpisodes(from, page, limit)
+    @Converter
+    fun convert(from: Member, limit: Int): RefreshMemberDto {
+        val missedAnimesPageable = memberFollowAnimeService.findAllMissedAnimes(from, 1, limit)
+        val followedAnimesPageable = memberFollowAnimeService.findAllFollowedAnimes(from, 1, limit)
+        val followedEpisodesPageable = memberFollowEpisodeService.findAllFollowedEpisodes(from, 1, limit)
         val (totalDuration, totalUnseenDuration) = memberFollowEpisodeService.getSeenAndUnseenDuration(from)
 
         val missedAnimeDtos = missedAnimesPageable.data.map { tuple ->

@@ -18,6 +18,7 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -26,7 +27,7 @@ import java.util.*
 import javax.imageio.ImageIO
 
 @Controller("/api/v1/members")
-class MemberController {
+class MemberController : HasPageableRoute() {
     @Inject
     private lateinit var memberService: MemberService
 
@@ -255,7 +256,13 @@ class MemberController {
         ],
         security = true
     )
-    private fun getRefreshMember(@JWTUser memberUuid: UUID): Response {
-        return Response.ok(memberCacheService.getRefreshMember(memberUuid))
+    private fun getRefreshMember(
+        @JWTUser
+        memberUuid: UUID,
+        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "9")
+        limitParam: Int?,
+    ): Response {
+        val (_, limit, _) = pageableRoute(null, limitParam, null, null, defaultLimit = 9)
+        return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit))
     }
 }

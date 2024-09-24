@@ -6,7 +6,8 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.utils.StringUtils
 
 class ConfigToConfigDtoConverter : AbstractConverter<Config, ConfigDto>() {
-    override fun convert(from: Config): ConfigDto {
+    @Converter
+    fun convert(from: Config): ConfigDto {
         return ConfigDto(
             uuid = from.uuid,
             propertyKey = from.propertyKey,

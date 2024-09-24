@@ -12,7 +12,8 @@ class AnimeDtoToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
     @Inject
     private lateinit var animeService: AnimeService
 
-    override fun convert(from: AnimeDto): Anime {
+    @Converter
+    fun convert(from: AnimeDto): Anime {
         val findByUuid = animeService.find(from.uuid)
 
         if (findByUuid != null)

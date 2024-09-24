@@ -18,7 +18,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     @Inject
     private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
-    override fun convert(from: Anime): AnimeDto {
+    @Converter
+    fun convert(from: Anime): AnimeDto {
         val (audioLocales, seasons) = episodeVariantCacheService.findAudioLocalesAndSeasonsByAnimeCache(from)!!
 
         return AnimeDto(

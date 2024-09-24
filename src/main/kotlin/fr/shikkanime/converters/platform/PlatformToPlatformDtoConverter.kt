@@ -5,7 +5,8 @@ import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.entities.enums.Platform
 
 class PlatformToPlatformDtoConverter : AbstractConverter<Platform, PlatformDto>() {
-    override fun convert(from: Platform): PlatformDto {
+    @Converter
+    fun convert(from: Platform): PlatformDto {
         return PlatformDto(
             id = from.name,
             name = from.platformName,

@@ -10,7 +10,8 @@ class SimulcastDtoToSimulcastConverter : AbstractConverter<SimulcastDto, Simulca
     @Inject
     private lateinit var simulcastService: SimulcastService
 
-    override fun convert(from: SimulcastDto): Simulcast {
+    @Converter
+    fun convert(from: SimulcastDto): Simulcast {
         val found = simulcastService.find(from.uuid)
 
         if (found != null)

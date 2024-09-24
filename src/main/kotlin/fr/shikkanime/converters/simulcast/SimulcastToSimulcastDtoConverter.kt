@@ -5,7 +5,8 @@ import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Simulcast
 
 class SimulcastToSimulcastDtoConverter : AbstractConverter<Simulcast, SimulcastDto>() {
-    override fun convert(from: Simulcast): SimulcastDto {
+    @Converter
+    fun convert(from: Simulcast): SimulcastDto {
         return SimulcastDto(
             uuid = from.uuid,
             season = from.season!!,

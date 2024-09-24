@@ -2,9 +2,13 @@ package fr.shikkanime.converters
 
 import fr.shikkanime.utils.Constant
 import java.lang.reflect.ParameterizedType
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.jvm.isAccessible
 
 abstract class AbstractConverter<F, T> {
-    abstract fun convert(from: F): T
+    @Target(AnnotationTarget.FUNCTION)
+    @Retention(AnnotationRetention.RUNTIME)
+    annotation class Converter
 
     companion object {
         val converters: MutableMap<Pair<Class<*>, Class<*>>, AbstractConverter<*, *>> = mutableMapOf()
@@ -18,7 +22,7 @@ abstract class AbstractConverter<F, T> {
             }
         }
 
-        inline fun <reified T> convert(`object`: Any?, to: Class<T>): T {
+        inline fun <reified T> convert(`object`: Any?, to: Class<T>, vararg args: Any): T {
             if (`object` == null) {
                 throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
             }
@@ -30,11 +34,12 @@ abstract class AbstractConverter<F, T> {
             }
 
             val abstractConverter = converters[pair] ?: throw IllegalStateException()
-            val abstractConverterClass = abstractConverter.javaClass
-            val method = abstractConverterClass.getMethod("convert", `object`.javaClass)
-            method.isAccessible = true
+            val function = abstractConverter::class.declaredFunctions.firstOrNull { it.annotations.any { annotation -> annotation is Converter } }
+                ?: throw NoSuchElementException("Can not find converter function for \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"")
+            function.isAccessible = true
+
             return try {
-                val invoke = method.invoke(abstractConverter, `object`)
+                val invoke = function.call(abstractConverter, `object`, *args)
                     ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
                 check(invoke is T) { "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"" }
                 invoke

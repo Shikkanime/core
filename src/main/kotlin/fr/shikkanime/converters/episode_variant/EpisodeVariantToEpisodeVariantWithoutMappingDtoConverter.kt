@@ -8,7 +8,8 @@ import fr.shikkanime.utils.withUTCString
 
 class EpisodeVariantToEpisodeVariantWithoutMappingDtoConverter :
     AbstractConverter<EpisodeVariant, EpisodeVariantWithoutMappingDto>() {
-    override fun convert(from: EpisodeVariant): EpisodeVariantWithoutMappingDto {
+    @Converter
+    fun convert(from: EpisodeVariant): EpisodeVariantWithoutMappingDto {
         return EpisodeVariantWithoutMappingDto(
             uuid = from.uuid!!,
             releaseDateTime = from.releaseDateTime.withUTCString(),
