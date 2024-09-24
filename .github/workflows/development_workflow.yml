@@ -28,6 +28,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
+          cache: gradle
       - name: Analyze push
         if: github.event_name == 'push'
         env:
@@ -60,6 +61,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
+          cache: gradle
       - name: Build
         run: gradle clean installDist -x test
       - name: Set up QEMU

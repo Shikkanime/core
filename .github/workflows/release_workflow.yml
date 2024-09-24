@@ -23,6 +23,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
+          cache: gradle
       - name: Build and test
         run: ./gradlew clean test --info
 
@@ -46,6 +47,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
+          cache: gradle
 
       - name: Docker meta
         id: meta
