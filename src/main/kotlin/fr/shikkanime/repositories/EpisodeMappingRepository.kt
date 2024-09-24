@@ -117,34 +117,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeMapping> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(EpisodeVariant::class.java)
-
-            query.distinct(true)
-                .select(root[EpisodeVariant_.mapping])
-                .where(
-                    cb.and(
-                        cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
-                        cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
-                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
-                    )
-                )
-                .orderBy(
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
-                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
-                )
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
     fun findAllSeo(): List<Tuple> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

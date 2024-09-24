@@ -25,9 +25,15 @@ class SimulcastCacheService : AbstractCacheService {
         }
     }
 
+    private val seasonYearCache = MapCache<Pair<String, Int>, Simulcast?>(classes = listOf(Simulcast::class.java)) {
+        simulcastService.findBySeasonAndYear(it.first, it.second)
+    }
+
     fun findAll() = cache["all"]
 
     fun findAllModified() = modifiedCache["all"]
+
+    fun findBySeasonAndYear(season: String, year: Int) = seasonYearCache[season to year]
 
     val currentSimulcast: SimulcastDto?
         get() = findAll()?.firstOrNull()

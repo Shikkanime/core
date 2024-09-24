@@ -3,6 +3,7 @@ package fr.shikkanime.repositories
 import com.google.inject.Inject
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
@@ -147,6 +148,32 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             query.select(root[EpisodeVariant_.identifier])
                 .distinct(true)
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllSimulcastedByAnime(anime: Anime): List<EpisodeVariant> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
+                    cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
+                    cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
+                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
+                )
+            )
+                .orderBy(
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                    cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
+                )
 
             createReadOnlyQuery(it, query)
                 .resultList
