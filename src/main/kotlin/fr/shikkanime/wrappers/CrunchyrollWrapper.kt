@@ -173,9 +173,9 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
     }
 
-    suspend fun getSeries(locale: String, accessToken: String, vararg ids: String): Series {
+    suspend fun getSeries(locale: String, accessToken: String, id: String): Series {
         val response = httpRequest.get(
-            "${BASE_URL}content/v2/cms/series/${ids.joinToString(",")}?locale=$locale",
+            "${BASE_URL}content/v2/cms/series/$id?locale=$locale",
             headers = mapOf(
                 "Authorization" to "Bearer $accessToken",
             ),
@@ -293,49 +293,51 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java).toList()
     }
 
-    suspend fun getSimulcastCalendar(countryCode: CountryCode, accessToken: String, date: LocalDate): Array<BrowseObject> {
-        val response = httpRequest.get("$BASE_URL${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=${date.atStartOfWeek()}")
-        require(response.status == HttpStatusCode.OK)
-        val document = Jsoup.parse(response.bodyAsText())
+    private suspend fun getEpisodesBySeriesId(countryCode: CountryCode, accessToken: String, seriesId: String): List<BrowseObject> {
+        val browseObjects = mutableListOf<BrowseObject>()
 
-        val cache = MapCache<String, List<String>> {
-            runBlocking {
-                getSeasonsBySeriesId(countryCode.locale, accessToken, it)
-                    .flatMap { season ->
-                        getEpisodesBySeasonId(countryCode.locale, accessToken, season.id)
-                            .flatMap { episode -> episode.versions?.map { it.guid } ?: listOf(episode.id!!) }
-                    }.distinct()
+        val variantObjects = getSeasonsBySeriesId(countryCode.locale, accessToken, seriesId)
+            .flatMap { season ->
+                getEpisodesBySeasonId(countryCode.locale, accessToken, season.id)
+                    .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
+                    .flatMap { episode -> episode.versions?.map { it.guid } ?: listOf(episode.id!!) }
+            }
+            .subtract(browseObjects.map { it.id }.toSet())
+            .chunked(CRUNCHYROLL_CHUNK)
+            .flatMap { chunk -> HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()).toList() } }
+
+        return browseObjects + variantObjects
+    }
+
+    suspend fun getSimulcastCalendarWithDates(countryCode: CountryCode, accessToken: String, dates: Set<LocalDate>): Array<BrowseObject> {
+        val startOfWeekDates = dates.map { it.atStartOfWeek() }.distinct()
+        val seriesObjectsCache = MapCache<String, Set<BrowseObject>> { runBlocking { getEpisodesBySeriesId(countryCode, accessToken, it).toSet() } }
+
+        val episodeIds = mutableSetOf<String>()
+        val alreadyFetched = mutableMapOf<String, BrowseObject>()
+
+        startOfWeekDates.forEach { date ->
+            val response = HttpRequest.retry(3) { httpRequest.get("$BASE_URL${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date") }
+            require(response.status == HttpStatusCode.OK)
+            val document = Jsoup.parse(response.bodyAsText())
+
+            document.select("article.release").forEach { element ->
+                val isMultipleRelease = element.attr("data-episode-num").contains("-")
+                val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
+                val seriesId = seriesRegex.find(element.select("a").first { seriesRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1]
+
+                if (isMultipleRelease) {
+                    val browseObjects = seriesObjectsCache[seriesId].orEmpty().filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() == releaseDateTime }
+                    browseObjects.forEach { alreadyFetched[it.id] = it }
+                } else {
+                    episodeIds.add(episodeRegex.find(element.select("a").first { episodeRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1])
+                }
             }
         }
 
-        val alreadyChecked = mutableMapOf<String, BrowseObject>()
-
-        val episodeIds = document.select("article.release").flatMap { element ->
-            val isMultipleRelease = element.attr("data-episode-num").contains("-")
-            val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
-            val seriesId = seriesRegex.find(element.select("a").first { seriesRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1]
-
-            if (isMultipleRelease) {
-                cache[seriesId].orEmpty()
-                    .chunked(CRUNCHYROLL_CHUNK)
-                    .flatMap { chunk ->
-                        HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()) }
-                            .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() == releaseDateTime }
-                            .onEach { alreadyChecked[it.id] = it }
-                            .map { it.id }
-                    }
-            } else {
-                listOf(episodeRegex.find(element.select("a").first { episodeRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1])
-            }
-        }.distinct()
-
-        val objects = alreadyChecked.values.toMutableList()
-
-        episodeIds.subtract(alreadyChecked.keys).chunked(CRUNCHYROLL_CHUNK).forEach { chunk ->
-            objects.addAll(HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()) })
-        }
-
-        return objects.toTypedArray()
+        return episodeIds.chunked(CRUNCHYROLL_CHUNK).flatMap { chunk ->
+            HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()).toList() }
+        }.toTypedArray() + alreadyFetched.values.toTypedArray()
     }
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =

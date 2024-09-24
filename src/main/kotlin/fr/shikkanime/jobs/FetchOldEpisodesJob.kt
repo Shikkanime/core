@@ -63,7 +63,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
-        val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).toList().sorted()
+        val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).toList().sorted().toSet()
 
         val episodes = mutableListOf<Episode>()
         val start = System.currentTimeMillis()
@@ -138,7 +138,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
     private fun fetchAnimationDigitalNetwork(
         countryCode: CountryCode,
-        dates: List<LocalDate>
+        dates: Set<LocalDate>
     ): List<Episode> {
         val episodes = mutableListOf<Episode>()
 
@@ -177,38 +177,34 @@ class FetchOldEpisodesJob : AbstractJob {
 
     private fun fetchCrunchyroll(
         countryCode: CountryCode,
-        dates: List<LocalDate>
+        dates: Set<LocalDate>
     ): List<Episode> {
         val episodes = mutableListOf<Episode>()
 
-        dates.map { it.atStartOfWeek() }
-            .distinct()
-            .forEachIndexed { _, date ->
-                try {
-                    HttpRequest.retry(3) { CrunchyrollWrapper.getSimulcastCalendar(countryCode, crunchyrollPlatform.identifiers[countryCode]!!, date) }
-                        .forEach { browseObject ->
-                            try {
-                                episodes.add(
-                                    crunchyrollPlatform.convertEpisode(
-                                        countryCode,
-                                        browseObject,
-                                        false
-                                    )
-                                )
-                            } catch (e: EpisodeNoSubtitlesOrVoiceException) {
-                                logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
-                            } catch (e: Exception) {
-                                logger.log(
-                                    Level.SEVERE,
-                                    "Error while converting episode (Episode ID: ${browseObject.id})",
-                                    e
-                                )
-                            }
-                        }
-                } catch (e: Exception) {
-                    throw e
+        try {
+            runBlocking { CrunchyrollWrapper.getSimulcastCalendarWithDates(countryCode, crunchyrollPlatform.identifiers[countryCode]!!, dates) }
+                .forEach { browseObject ->
+                    try {
+                        episodes.add(
+                            crunchyrollPlatform.convertEpisode(
+                                countryCode,
+                                browseObject,
+                                false
+                            )
+                        )
+                    } catch (e: EpisodeNoSubtitlesOrVoiceException) {
+                        logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
+                    } catch (e: Exception) {
+                        logger.log(
+                            Level.SEVERE,
+                            "Error while converting episode (Episode ID: ${browseObject.id})",
+                            e
+                        )
+                    }
                 }
-            }
+        } catch (e: Exception) {
+            throw e
+        }
 
         return episodes
     }
