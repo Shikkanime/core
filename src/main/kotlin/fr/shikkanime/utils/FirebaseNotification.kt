@@ -30,11 +30,12 @@ object FirebaseNotification {
         init()
         if (!isInitialized) return
         val memberService = Constant.injector.getInstance(MemberService::class.java)
+        val image = "${Constant.apiUrl}/v1/attachments?uuid=${episodeDto.mapping.uuid}&type=image"
 
         val notification = Notification.builder()
             .setTitle(episodeDto.mapping.anime.shortName)
             .setBody(StringUtils.toEpisodeString(episodeDto))
-            .setImage("${Constant.apiUrl}/v1/attachments?uuid=${episodeDto.mapping.uuid}&type=image")
+            .setImage(image)
             .build()
 
         val androidConfig = AndroidConfig.builder()
@@ -42,7 +43,9 @@ object FirebaseNotification {
             .build()
 
         val apnsConfig = ApnsConfig.builder()
-            .setAps(Aps.builder().setBadge(1).build())
+            .setAps(Aps.builder().setContentAvailable(false).build())
+            .setFcmOptions(ApnsFcmOptions.builder().setImage(image).build())
+            .putAllHeaders(mapOf("apns-priority" to "10"))
             .build()
 
         val topics = mutableSetOf("global")
