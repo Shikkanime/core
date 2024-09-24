@@ -46,8 +46,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     override fun getRepository() = animeRepository
 
-    fun findAllLoaded() = animeRepository.findAllLoaded()
-
     fun findAllBy(
         countryCode: CountryCode?,
         simulcast: Simulcast?,
@@ -158,6 +156,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         if (anime.simulcasts.isEmpty() || anime.simulcasts.none { s -> s.uuid == simulcast.uuid }) {
             if (simulcast.uuid == null) {
                 simulcastService.save(simulcast)
+                MapCache.invalidate(Simulcast::class.java)
             }
 
             anime.simulcasts.add(simulcast)
@@ -168,11 +167,25 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeMappingService.updateAllReleaseDate()
         animeRepository.updateAllReleaseDate()
 
-        findAllLoaded().forEach { anime ->
-            anime.simulcasts.clear()
+        findAll().forEach { anime ->
+            // Avoid lazy loading exception
+            anime.simulcasts = mutableSetOf()
 
-            episodeMappingService.findAllSimulcastedByAnime(anime).forEach { episodeMapping ->
-                addSimulcastToAnime(anime, episodeVariantService.getSimulcast(anime, episodeMapping))
+            val variants = episodeVariantService.findAllSimulcastedByAnime(anime)
+
+            val episodeMappings = variants.mapNotNull { it.mapping }.distinctBy { it.uuid }
+                .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+
+            episodeMappings.forEach { episodeMapping ->
+                val previousReleaseDateTime = variants.filter {
+                    it.mapping!!.anime!!.uuid == anime.uuid &&
+                            it.mapping!!.releaseDateTime.isBefore(episodeMapping.releaseDateTime) &&
+                            it.mapping!!.episodeType == episodeMapping.episodeType &&
+                            it.audioLocale != anime.countryCode!!.locale
+                }.maxOfOrNull { it.mapping!!.releaseDateTime }
+
+                val simulcast = episodeVariantService.getSimulcast(anime, episodeMapping, previousReleaseDateTime)
+                addSimulcastToAnime(anime, simulcast)
             }
 
             update(anime)

@@ -25,22 +25,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllLoaded(): List<Anime> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            query.from(getEntityClass())
-
-            val list = createReadOnlyQuery(it, query).resultList
-
-            list.forEach { anime ->
-                Hibernate.initialize(anime.simulcasts)
-            }
-
-            list
-        }
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
         simulcast: Simulcast?,
