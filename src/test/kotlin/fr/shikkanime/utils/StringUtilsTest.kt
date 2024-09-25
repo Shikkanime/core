@@ -61,6 +61,7 @@ class StringUtilsTest {
             "JORAN THE PRINCESS OF SNOW AND BLOOD" to "JORAN THE PRINCESS OF SNOW AND BLOOD",
             "MIX" to "MIX",
             "Cyberpunk: Edgerunners" to "Cyberpunk: Edgerunners",
+            "Loner Life in Another World" to "Loner Life in Another World",
         )
 
         list.forEach { (input, expected) ->
@@ -94,6 +95,7 @@ class StringUtilsTest {
             "Au Cœur du Donjon" to "au-coeur-du-donjon",
             "THE IDOLM@STER Million Live!" to "the-idolmaster-million-live",
             "MIX" to "mix",
+            "Loner Life in Another World" to "loner-life-in-another-world",
         )
 
         list.forEach { (input, expected) ->
@@ -128,6 +130,7 @@ class StringUtilsTest {
             "Au Cœur du Donjon" to "AuCoeurDuDonjon",
             "THE IDOLM@STER Million Live!" to "TheIdolmasterMillionLive",
             "Overlord IV" to "Overlord",
+            "Loner Life in Another World" to "LonerLifeInAnotherWorld",
         )
 
         list.forEach { (input, expected) ->

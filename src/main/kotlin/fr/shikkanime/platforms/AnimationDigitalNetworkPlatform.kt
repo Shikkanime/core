@@ -69,7 +69,7 @@ class AnimationDigitalNetworkPlatform :
         val season = video.season?.toIntOrNull() ?: 1
 
         val animeName = (video.show.shortTitle ?: video.show.title)
-            .replace("(?: -)? Saison \\d|Part.*|$season$".toRegex(), "")
+            .replace("(?: -)? Saison \\d|Part.*|$season$| [MDCLXVI]+$".toRegex(), "")
             .trim()
 
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
