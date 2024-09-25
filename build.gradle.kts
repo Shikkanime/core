@@ -22,7 +22,7 @@ val angusMailVersion = "2.0.3"
 
 val jdaVersion = "5.1.1"
 val twitter4jVersion = "4.0.7"
-val twitter4jV2Version = "1.4.3"
+val twitter4jV2Version = "1.4.4"
 
 val junitVersion = "5.11.1"
 val h2Version = "2.3.232"
