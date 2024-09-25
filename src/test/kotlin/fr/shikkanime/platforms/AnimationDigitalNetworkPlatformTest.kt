@@ -36,6 +36,7 @@ class AnimationDigitalNetworkPlatformTest {
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Dragon Quest - The Adventures of Dai"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Kingdom"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Demon Slave"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Overlord"))
     }
 
     @AfterEach
@@ -235,5 +236,25 @@ class AnimationDigitalNetworkPlatformTest {
 
         assertTrue(episodes.isNotEmpty())
         assertTrue(episodes.any { it.anime == "FAIRY TAIL 100 YEARS QUEST" })
+    }
+
+    @Test
+    fun `fetchEpisodes for 2022-09-27`() {
+        val s = "2022-09-27T23:59:59Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader()
+                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        println(episodes)
+
+        assertTrue(episodes.isNotEmpty())
+        assertTrue(episodes.any { it.anime == "Overlord" })
     }
 }
