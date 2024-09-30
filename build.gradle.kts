@@ -18,7 +18,7 @@ val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.78.1"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.3.0"
-val angusMailVersion = "2.0.3"
+val simpleJavaMailVersion = "8.12.0"
 
 val jdaVersion = "5.1.1"
 val twitter4jVersion = "4.0.7"
@@ -75,10 +75,7 @@ dependencies {
     implementation("io.github.smiley4:ktor-swagger-ui:$ktorSwaggerUiVersion")
     implementation("org.hibernate.orm:hibernate-core:$hibernateCoreVersion")
     implementation("org.hibernate.orm:hibernate-jcache:$hibernateCoreVersion")
-    implementation("org.ehcache:ehcache:$ehcacheVersion") {
-        exclude(group = "org.glassfish.jaxb", module = "jaxb-runtime")
-    }
-    implementation("org.glassfish.jaxb:jaxb-runtime:$glassfishJaxbVersion")
+    implementation("org.ehcache:ehcache:$ehcacheVersion")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")
     implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")
@@ -96,7 +93,7 @@ dependencies {
     implementation("org.apache.tika:tika-core:$tikaVersion")
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
-    implementation("org.eclipse.angus:angus-mail:$angusMailVersion")
+    implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")

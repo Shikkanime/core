@@ -4,9 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.enums.Action
-import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.repositories.MemberActionRepository
-import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import freemarker.cache.ClassTemplateLoader
 import freemarker.template.Configuration
@@ -25,7 +23,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     private lateinit var memberService: MemberService
 
     @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    private lateinit var emailService: EmailService
 
     override fun getRepository() = memberActionRepository
 
@@ -41,9 +39,9 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     memberService.update(memberAction.member!!)
                     MapCache.invalidate(Member::class.java)
 
-                    sendEmail(
+                    emailService.sendEmail(
                         memberAction.email!!,
-                        "Shikkanime - Adresse email validée",
+                        "${Constant.NAME} - Adresse email validée",
                         getFreemarkerContent("/mail/email-associated.ftl").toString()
                     )
                 }
@@ -59,9 +57,9 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     memberService.update(memberAction.member!!)
                     MapCache.invalidate(Member::class.java)
 
-                    sendEmail(
+                    emailService.sendEmail(
                         memberAction.email!!,
-                        "Shikkanime - Votre nouvel identifiant",
+                        "${Constant.NAME} - Votre nouvel identifiant",
                         getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
                     )
                 }
@@ -99,30 +97,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         return savedAction.uuid!!
     }
 
-    private fun sendEmail(email: String, title: String, content: String) {
-        val emailHost = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_HOST)) { "Email host config not found" }
-        val emailPort = configCacheService.getValueAsInt(ConfigPropertyKey.EMAIL_PORT)
-        require(emailPort != -1) { "Email port config not found" }
-        val emailUsername = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_USERNAME)) { "Email username config not found" }
-        val emailPassword = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_PASSWORD)) { "Email password config not found" }
-
-        Thread {
-            try {
-                MailService.sendEmail(
-                    emailHost,
-                    emailPort,
-                    emailUsername,
-                    emailPassword,
-                    email,
-                    title,
-                    content
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }.start()
-    }
-
     private fun getFreemarkerContent(template: String, code: String? = null): StringWriter {
         val stringWriter = StringWriter()
         val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
@@ -143,12 +117,12 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         when (action) {
             Action.VALIDATE_EMAIL -> {
                 val stringWriter = getFreemarkerContent("/mail/associate-email.ftl", code)
-                sendEmail(email, "Shikkanime - Vérification d'adresse email", stringWriter.toString())
+                emailService.sendEmail(email, "${Constant.NAME} - Vérification d'adresse email", stringWriter.toString())
             }
 
             Action.FORGOT_IDENTIFIER -> {
                 val stringWriter = getFreemarkerContent("/mail/forgot-identifier.ftl", code)
-                sendEmail(email, "Shikkanime - Récupération d'identifiant", stringWriter.toString())
+                emailService.sendEmail(email, "${Constant.NAME} - Récupération d'identifiant", stringWriter.toString())
             }
         }
     }
