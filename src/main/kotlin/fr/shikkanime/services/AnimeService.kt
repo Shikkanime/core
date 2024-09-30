@@ -72,6 +72,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllUuidImageAndBanner() = animeRepository.findAllUuidImageAndBanner()
 
+    fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
+
     fun preIndex() = animeRepository.preIndex()
 
     fun findLoaded(uuid: UUID) = animeRepository.findLoaded(uuid)

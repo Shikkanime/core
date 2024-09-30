@@ -3,10 +3,15 @@ package fr.shikkanime.wrappers
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
 object AnimationDigitalNetworkWrapper {
+    data class Microdata(
+        val startDate: ZonedDateTime,
+    )
+
     data class Show(
         val id: Int,
         val shortTitle: String?,
@@ -17,6 +22,7 @@ object AnimationDigitalNetworkWrapper {
         val genres: List<String> = emptyList(),
         val simulcast: Boolean,
         val firstReleaseYear: String,
+        val microdata: Microdata? = null,
     )
 
     data class Video(
@@ -49,6 +55,19 @@ object AnimationDigitalNetworkWrapper {
             ?: throw Exception("Failed to get media list")
 
         return ObjectParser.fromJson(videos, Array<Video>::class.java)
+    }
+
+    suspend fun getShow(id: String): Show {
+        val response = httpRequest.get("${BASE_URL}show/$id?withMicrodata=true")
+
+        if (response.status != HttpStatusCode.OK) {
+            throw Exception("Failed to get show")
+        }
+
+        val showJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("show")
+            ?: throw Exception("Failed to get show")
+
+        return ObjectParser.fromJson(showJson, Show::class.java)
     }
 
     suspend fun getShowVideo(videoId: String): Video {

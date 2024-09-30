@@ -12,12 +12,11 @@ import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.CrunchyrollWrapper
+import fr.shikkanime.wrappers.CrunchyrollWrapper.BrowseObject
+import fr.shikkanime.wrappers.CrunchyrollWrapper.getObjects
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -133,14 +132,14 @@ class UpdateEpisodeJob : AbstractJob {
                 needRefreshCache = true
             }
 
-            if (originalEpisode.title != mapping.title && !originalEpisode.title.isNullOrBlank()) {
-                mapping.title = originalEpisode.title
-                logger.info("Title updated for $mappingIdentifier to ${originalEpisode.title}")
+            if (originalEpisode.title.normalize() != mapping.title && !originalEpisode.title.isNullOrBlank()) {
+                mapping.title = originalEpisode.title.normalize()
+                logger.info("Title updated for $mappingIdentifier to ${originalEpisode.title.normalize()}")
                 hasChanged = true
                 needRefreshCache = true
             }
 
-            val trimmedDescription = originalEpisode.description?.take(Constant.MAX_DESCRIPTION_LENGTH)
+            val trimmedDescription = originalEpisode.description?.take(Constant.MAX_DESCRIPTION_LENGTH).normalize()
 
             if (trimmedDescription != mapping.description &&
                 !trimmedDescription.isNullOrBlank() &&
@@ -199,25 +198,28 @@ class UpdateEpisodeJob : AbstractJob {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
 
-        if (episodeVariant.platform == Platform.ANIM) {
-            val adnId = "[A-Z]{2}-ANIM-([0-9]{1,5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex()
-                .find(episodeVariant.identifier!!)?.groupValues?.get(1)
+        when (episodeVariant.platform) {
+            Platform.ANIM -> {
+                val adnId = "[A-Z]{2}-ANIM-([0-9]{1,5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex()
+                    .find(episodeVariant.identifier!!)?.groupValues?.get(1)
 
-            if (adnId.isNullOrBlank()) {
-                logger.warning("Error while getting ADN episode $adnId : Invalid ADN ID")
-                return emptyList()
+                episodes.addAll(
+                    adnCache[CountryCodeIdKeyCache(countryCode, adnId!!)]!!
+                )
             }
 
-            episodes.addAll(adnCache[CountryCodeIdKeyCache(countryCode, adnId)]!!)
-        }
-
-        if (episodeVariant.platform == Platform.CRUN) {
-            episodes.addAll(
-                getCrunchyrollEpisodeAndVariants(
-                    countryCode,
-                    crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+            Platform.CRUN -> {
+                episodes.addAll(
+                    getCrunchyrollEpisodeAndVariants(
+                        countryCode,
+                        crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+                    )
                 )
-            )
+            }
+
+            else -> {
+                logger.warning("Error while getting episode ${episodeVariant.identifier} : Invalid platform")
+            }
         }
 
         return episodes
@@ -227,47 +229,27 @@ class UpdateEpisodeJob : AbstractJob {
         countryCode: CountryCode,
         crunchyrollId: String,
     ): List<Episode> {
-        val crunchyrollEpisode = runCatching {
-            CrunchyrollWrapper.getObjects(countryCode.locale, crunchyrollPlatform.identifiers[countryCode]!!, crunchyrollId).first()
-        }.getOrElse { e ->
-            logger.warning("Error while fetching Crunchyroll Browse Object: ${e.message}")
-
-            runCatching {
-                CrunchyrollWrapper.getEpisode(countryCode.locale, crunchyrollPlatform.identifiers[countryCode]!!, crunchyrollId)
-                    .convertToBrowseObject()
-            }.getOrElse { e2 ->
-                logger.warning("Error while fetching Crunchyroll Episode: ${e2.message}")
-                return emptyList()
-            }
-        }
-
-        val versionIds = crunchyrollEpisode.episodeMetadata!!.versions?.toMutableList() ?: mutableListOf(CrunchyrollWrapper.Version(crunchyrollEpisode.id, true))
-        versionIds.removeIf { it.guid.isBlank() || it.guid == crunchyrollId }
-
-        val crunchyrollEpisodes = if (versionIds.isNotEmpty()) {
-            versionIds.asSequence()
-                .distinctBy { variant -> variant.guid }
-                .chunked(CrunchyrollWrapper.CRUNCHYROLL_CHUNK)
-                .flatMap { chunk ->
-                    try {
-                        runBlocking {
-                            CrunchyrollWrapper.getObjects(
-                                countryCode.locale,
-                                crunchyrollPlatform.identifiers[countryCode]!!,
-                                *chunk.map { it.guid }.toTypedArray()
-                            ).toList()
-                        }
-                    } catch (e: Exception) {
-                        logger.warning("Error while fetching Crunchyroll chunked variants: ${e.message}")
-                        emptyList()
-                    }
+        val browseObjects = mutableListOf<BrowseObject>()
+        val variantObjects = CrunchyrollWrapper.getEpisode(
+            countryCode.locale,
+            crunchyrollPlatform.identifiers[countryCode]!!,
+            crunchyrollId
+        )
+            .also { browseObjects.add(it.convertToBrowseObject()) }
+            .getVariants()
+            .subtract(browseObjects.map { it.id }.toSet())
+            .chunked(CrunchyrollWrapper.CRUNCHYROLL_CHUNK)
+            .flatMap { chunk ->
+                HttpRequest.retry(3) {
+                    getObjects(
+                        countryCode.locale,
+                        crunchyrollPlatform.identifiers[countryCode]!!,
+                        *chunk.toTypedArray()
+                    ).toList()
                 }
-                .toList()
-        } else {
-            listOf(crunchyrollEpisode)
-        }
+            }
 
-        return crunchyrollEpisodes.mapNotNull { browseObject ->
+        return (browseObjects + variantObjects).mapNotNull { browseObject ->
             try {
                 crunchyrollPlatform.convertEpisode(
                     countryCode,
