@@ -205,6 +205,25 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
+    fun findAllNeedUpdate(lastDateTime: ZonedDateTime): List<Anime> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.or(
+                    cb.isNull(root[Anime_.lastUpdateDateTime]),
+                    cb.lessThanOrEqualTo(root[Anime_.lastUpdateDateTime], lastDateTime),
+                ),
+                cb.isNotEmpty(root[Anime_.platformIds]),
+            ).orderBy(cb.asc(root[Anime_.lastUpdateDateTime]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findLoaded(uuid: UUID?): Anime? {
         if (uuid == null) return null
 

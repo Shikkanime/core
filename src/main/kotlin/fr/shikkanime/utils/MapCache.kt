@@ -67,5 +67,10 @@ class MapCache<K : Any, V>(
                 globalCaches.filter { it.classes.contains(clazz) }.forEach { it.invalidate() }
             }
         }
+
+        // For test only
+        fun invalidateAll() {
+            globalCaches.forEach { it.invalidate() }
+        }
     }
 }

@@ -85,32 +85,21 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val root = query.from(EpisodeVariant::class.java)
 
-            // Platform is in the episode variant list
-            // Subquery to get the episode mapping with the platform
-            val subQuery = query.subquery(getEntityClass())
-            val subRoot = subQuery.from(EpisodeVariant::class.java)
-            subQuery.select(subRoot[EpisodeVariant_.mapping])
-
-            subQuery.where(
-                cb.and(
-                    cb.equal(subRoot[EpisodeVariant_.platform], platform),
-                    cb.equal(subRoot[EpisodeVariant_.mapping], root)
-                )
-            )
-
-            query.where(
-                cb.and(
+            query.distinct(true)
+                .select(root[EpisodeVariant_.mapping])
+                .where(
+                    cb.equal(root[EpisodeVariant_.platform], platform),
                     cb.or(
-                        cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], lastDateTime),
-                        cb.equal(root[EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
+                        cb.lessThanOrEqualTo(
+                            root[EpisodeVariant_.mapping][EpisodeMapping_.lastUpdateDateTime],
+                            lastDateTime
+                        ),
+                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
                     ),
-                    cb.exists(subQuery)
-                ),
-            )
-
-            query.orderBy(cb.asc(root[EpisodeMapping_.lastUpdateDateTime]))
+                )
+                .orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.lastUpdateDateTime]))
 
             createReadOnlyQuery(it, query)
                 .resultList
