@@ -30,6 +30,7 @@ enum class ConfigPropertyKey(val key: String) {
     LAST_FETCH_OLD_EPISODES("last_fetch_old_episodes"),
     FETCH_OLD_EPISODES_RANGE("fetch_old_episodes_range"),
     FETCH_OLD_EPISODES_LIMIT("fetch_old_episodes_limit"),
+    FETCH_OLD_EPISODES_EMAIL("fetch_old_episodes_email"),
     EMAIL_HOST("email_host"),
     EMAIL_PORT("email_port"),
     EMAIL_USERNAME("email_username"),

@@ -9,10 +9,7 @@ import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.ConfigService
-import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.services.TraceActionService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.CrunchyrollWrapper
@@ -45,6 +42,14 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject
     private lateinit var traceActionService: TraceActionService
 
+    @Inject
+    private lateinit var emailService: EmailService
+
+    private fun log(stringBuilder: StringBuilder, level: Level, message: String) {
+        logger.log(level, message)
+        stringBuilder.append("[${level.localizedName}] $message<br/>")
+    }
+
     override fun run() {
         val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
             logger.warning("Config ${ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key} not found")
@@ -67,7 +72,9 @@ class FetchOldEpisodesJob : AbstractJob {
 
         val episodes = mutableListOf<Episode>()
         val start = System.currentTimeMillis()
-        logger.info("Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
+        val emailLogs = StringBuilder()
+
+        log(emailLogs, Level.INFO, "Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
 
         episodes.addAll(
             animationDigitalNetworkPlatform.configuration?.availableCountries?.flatMap {
@@ -93,14 +100,14 @@ class FetchOldEpisodesJob : AbstractJob {
         if (limit != -1) {
             episodes.groupBy { it.anime + it.releaseDateTime.toLocalDate().toString() }.forEach { (_, animeDayEpisodes) ->
                 if (animeDayEpisodes.size > limit) {
-                    logger.warning("More than $limit episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
+                    log(emailLogs, Level.WARNING, "More than $limit episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
                     episodes.removeAll(animeDayEpisodes)
                     return@forEach
                 }
             }
         }
 
-        logger.info("Found ${episodes.size} episodes, saving...")
+        log(emailLogs, Level.INFO, "Found ${episodes.size} episodes, saving...")
         var realSaved = 0
         val realSavedAnimes = mutableSetOf<String>()
 
@@ -108,17 +115,20 @@ class FetchOldEpisodesJob : AbstractJob {
             val findByIdentifier = episodeVariantService.findByIdentifier(episode.getIdentifier())
 
             if (findByIdentifier == null) {
-                realSavedAnimes.add(episode.anime)
+                realSavedAnimes.add(StringUtils.getShortName(episode.anime))
                 realSaved++
                 episodeVariantService.save(episode, false)
             }
         }
 
-        logger.info("Saved $realSaved episodes")
-        realSavedAnimes.forEach { logger.info("Updating $it...") }
+        log(emailLogs, Level.INFO, "Saved $realSaved episodes")
+
+        realSavedAnimes.forEach {
+            log(emailLogs, Level.INFO, "Updating $it...")
+        }
 
         if (realSaved > 0) {
-            logger.info("Recalculating simulcasts...")
+            log(emailLogs, Level.INFO, "Recalculating simulcasts...")
             animeService.recalculateSimulcasts()
 
             MapCache.invalidate(
@@ -129,11 +139,23 @@ class FetchOldEpisodesJob : AbstractJob {
             )
         }
 
-        logger.info("Updating config to the next fetch date...")
+        log(emailLogs, Level.INFO, "Updating config to the next fetch date...")
+
         config.propertyValue = from.toString()
         configService.update(config)
         traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
-        logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
+
+        log(emailLogs, Level.INFO, "Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
+
+        try {
+            emailService.sendEmail(
+                requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.FETCH_OLD_EPISODES_EMAIL)),
+                "FetchOldEpisodesJob - ${dates.first()} to ${dates.last()}",
+                emailLogs.toString(),
+            )
+        } catch (e: Exception) {
+            logger.warning("Impossible to send email: ${e.message}")
+        }
     }
 
     private fun fetchAnimationDigitalNetwork(
