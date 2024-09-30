@@ -104,6 +104,8 @@ object CrunchyrollWrapper {
             episodeMetadata = this,
             slugTitle = slugTitle,
         )
+
+        fun getVariants() = versions?.map { it.guid } ?: listOf(id!!)
     }
 
     data class BrowseObject(
@@ -293,25 +295,25 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java).toList()
     }
 
-    private suspend fun getEpisodesBySeriesId(countryCode: CountryCode, accessToken: String, seriesId: String): List<BrowseObject> {
+    suspend fun getEpisodesBySeriesId(locale: String, accessToken: String, seriesId: String): List<BrowseObject> {
         val browseObjects = mutableListOf<BrowseObject>()
 
-        val variantObjects = getSeasonsBySeriesId(countryCode.locale, accessToken, seriesId)
+        val variantObjects = getSeasonsBySeriesId(locale, accessToken, seriesId)
             .flatMap { season ->
-                getEpisodesBySeasonId(countryCode.locale, accessToken, season.id)
+                getEpisodesBySeasonId(locale, accessToken, season.id)
                     .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
-                    .flatMap { episode -> episode.versions?.map { it.guid } ?: listOf(episode.id!!) }
+                    .flatMap(Episode::getVariants)
             }
             .subtract(browseObjects.map { it.id }.toSet())
             .chunked(CRUNCHYROLL_CHUNK)
-            .flatMap { chunk -> HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()).toList() } }
+            .flatMap { chunk -> HttpRequest.retry(3) { getObjects(locale, accessToken, *chunk.toTypedArray()).toList() } }
 
         return browseObjects + variantObjects
     }
 
     suspend fun getSimulcastCalendarWithDates(countryCode: CountryCode, accessToken: String, dates: Set<LocalDate>): Array<BrowseObject> {
         val startOfWeekDates = dates.map { it.atStartOfWeek() }.distinct()
-        val seriesObjectsCache = MapCache<String, Set<BrowseObject>> { runBlocking { getEpisodesBySeriesId(countryCode, accessToken, it).toSet() } }
+        val seriesObjectsCache = MapCache<String, Set<BrowseObject>> { runBlocking { getEpisodesBySeriesId(countryCode.locale, accessToken, it).toSet() } }
 
         val episodeIds = mutableSetOf<String>()
         val alreadyFetched = mutableMapOf<String, BrowseObject>()

@@ -31,6 +31,10 @@ class Anime(
     var name: String? = null,
     @Column(nullable = false, name = "release_date_time")
     var releaseDateTime: ZonedDateTime = ZonedDateTime.now(),
+    @Column(nullable = false, name = "last_release_date_time")
+    var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
+    @Column(nullable = true, name = "last_update_date_time")
+    var lastUpdateDateTime: ZonedDateTime = releaseDateTime,
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
@@ -47,8 +51,6 @@ class Anime(
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
     @Column(nullable = false)
     var slug: String? = null,
-    @Column(nullable = false, name = "last_release_date_time")
-    var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
     @Column(nullable = true, name = "status")
     @Enumerated(EnumType.STRING)
     var status: Status = Status.VALID,
