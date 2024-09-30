@@ -47,7 +47,12 @@ application {
     mainClass.set("fr.shikkanime.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+
+    applicationDefaultJvmArgs = listOf(
+        "-Dio.ktor.development=$isDevelopment",
+        "--add-modules",
+        "jdk.incubator.vector",
+    )
 }
 
 repositories {
