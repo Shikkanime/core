@@ -57,7 +57,7 @@ class EmailService {
         )
     }
 
-    fun sendEmail(email: String, title: String, content: String, async : Boolean = true) {
+    fun sendEmail(email: String, title: String, content: String, async : Boolean = false) {
         val emailHost = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.EMAIL_HOST)) { "Email host config not found" }
         val emailPort = configCacheService.getValueAsInt(ConfigPropertyKey.EMAIL_PORT)
         require(emailPort != -1) { "Email port config not found" }
