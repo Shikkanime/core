@@ -112,26 +112,27 @@ class FetchEpisodesJob : AbstractJob {
     }
 
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
-        if (savedEpisodes.isEmpty()) {
-            return
-        }
+        if (savedEpisodes.isEmpty()) return
 
-        val animeMap = savedEpisodes.groupBy { it.mapping!!.anime!!.uuid!! }
+        val sizeLimit = configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)
 
-        for ((_, episodes) in animeMap) {
-            val nonSavedEpisodes = episodes.filter { !typeIdentifiersWithPlatforms.contains(getTypeIdentifierWithPlatform(it)) }
+        savedEpisodes
+            .groupBy { it.mapping?.anime?.uuid }
+            .values
+            .forEach { episodes ->
+                episodes
+                    .filterNot { typeIdentifiersWithPlatforms.contains(getTypeIdentifierWithPlatform(it)) }
+                    .takeIf { it.size < sizeLimit }
+                    ?.forEach { episode ->
+                        val typeIdentifier = getTypeIdentifierWithPlatform(episode)
 
-            if (nonSavedEpisodes.size >= configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)) {
-                continue
+                        if (typeIdentifiersWithPlatforms.add(typeIdentifier)) {
+                            val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
+                            sendToSocialNetworks(episodeDto)
+                            sendEpisodeNotification(episode, episodeDto)
+                        }
+                    }
             }
-
-            for (episode in nonSavedEpisodes) {
-                typeIdentifiersWithPlatforms.add(getTypeIdentifierWithPlatform(episode))
-                val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
-                sendToSocialNetworks(episodeDto)
-                sendEpisodeNotification(episode, episodeDto)
-            }
-        }
     }
 
     private fun sendEpisodeNotification(
