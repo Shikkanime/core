@@ -61,7 +61,7 @@
                     </div>
                 </#if>
 
-                <span class="mt-3">${anime.description}</span>
+                <span class="mt-3">${anime.description!"Aucune description pour le moment..."}</span>
 
                 <button class="btn btn-dark dropdown-toggle mt-3" data-bs-toggle="dropdown" aria-expanded="false">
                     Saison <#if season??>${season.number}<#else>${anime.seasons?first.number}</#if>
