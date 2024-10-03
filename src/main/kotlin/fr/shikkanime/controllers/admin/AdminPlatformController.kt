@@ -42,6 +42,8 @@ class AdminPlatformController {
             Constant.abstractPlatforms.find { it.getPlatform().name == platformName } ?: return redirectResponse
         abstractPlatform.configuration?.of(parameters)
         abstractPlatform.saveConfiguration()
+        abstractPlatform.reset()
+
         return redirectResponse
     }
 
@@ -107,6 +109,8 @@ class AdminPlatformController {
         }
 
         abstractPlatform.saveConfiguration()
+        abstractPlatform.reset()
+
         return Response.redirect(Link.PLATFORMS.href)
     }
 
@@ -121,6 +125,8 @@ class AdminPlatformController {
             ?: return Response.redirect(Link.PLATFORMS.href)
         abstractPlatform.configuration?.simulcasts?.removeIf { it.uuid == uuid }
         abstractPlatform.saveConfiguration()
+        abstractPlatform.reset()
+
         return Response.redirect(Link.PLATFORMS.href)
     }
 }
