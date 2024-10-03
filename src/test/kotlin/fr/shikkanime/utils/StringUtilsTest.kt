@@ -1,6 +1,7 @@
 package fr.shikkanime.utils
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class StringUtilsTest {
@@ -137,6 +138,18 @@ class StringUtilsTest {
 
         list.forEach { (input, expected) ->
             assertEquals(expected, StringUtils.getHashtag(StringUtils.getShortName(input)))
+        }
+    }
+
+    @Test
+    fun computeAnimeHashcode() {
+        val list = listOf(
+            "DAN DA DAN" to "DANDADAN",
+            "DANDADAN" to "DANDADAN",
+        )
+
+        list.forEach { (input, expected) ->
+            assertTrue(StringUtils.computeAnimeHashcode(input) == StringUtils.computeAnimeHashcode(expected))
         }
     }
 }

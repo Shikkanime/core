@@ -72,9 +72,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllUuidImageAndBanner() = animeRepository.findAllUuidImageAndBanner()
 
+    fun findAllUuidAndName() = animeRepository.findAllUuidAndName()
+
     fun preIndex() = animeRepository.preIndex()
 
-    fun findLoaded(uuid: UUID) = animeRepository.findLoaded(uuid)
+    fun findLoaded(uuid: UUID?) = animeRepository.findLoaded(uuid)
 
     fun findByName(countryCode: CountryCode, name: String?) =
         animeRepository.findByName(countryCode, name)
@@ -152,15 +154,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360, bypass)
     }
 
-    fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast) {
-        if (anime.simulcasts.isEmpty() || anime.simulcasts.none { s -> s.uuid == simulcast.uuid }) {
-            if (simulcast.uuid == null) {
-                simulcastService.save(simulcast)
-                MapCache.invalidate(Simulcast::class.java)
-            }
-
+    fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
+        if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
+            simulcast.uuid ?: simulcastService.save(simulcast).also { MapCache.invalidate(Simulcast::class.java) }
             anime.simulcasts.add(simulcast)
+            return true
         }
+
+        return false
     }
 
     fun recalculateSimulcasts() {

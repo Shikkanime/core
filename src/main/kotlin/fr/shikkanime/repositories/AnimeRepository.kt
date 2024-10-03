@@ -193,7 +193,21 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findLoaded(uuid: UUID): Anime? {
+    fun findAllUuidAndName(): List<Tuple> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            query.multiselect(root[Anime_.uuid], root[Anime_.name])
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findLoaded(uuid: UUID?): Anime? {
+        if (uuid == null) return null
+
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())

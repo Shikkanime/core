@@ -145,4 +145,114 @@ class EpisodeVariantServiceTest {
         assertEquals(1, mapping.season)
         assertEquals(1, mapping.number)
     }
+
+    @Test
+    fun `save dan da dan multiple platform`() {
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "1160",
+                "DAN DA DAN",
+                "https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/affiche_350x500.jpg",
+                "https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/license_640x360.jpg",
+                "Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…",
+                ZonedDateTime.parse("2024-10-03T16:00:00Z"),
+                EpisodeType.EPISODE,
+                1,
+                1,
+                1442,
+                "Serait-ce une romance qui commence ?",
+                "Okarun ne croit pas aux fantômes, mais il croit aux aliens. Pour Momo, c’est l’inverse, elle croit aux fantômes, mais pas aux aliens. Les deux se lancent un défi afin de savoir qui a raison. Mais en explorant des lieux abandonnés, leur petit défi va prendre des proportions qui dépassent l’entendement.",
+                "https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/eps1_640x360.jpg",
+                Platform.ANIM,
+                "ja-JP",
+                "26662",
+                "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "1160",
+                "DAN DA DAN",
+                "https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/affiche_350x500.jpg",
+                "https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/license_640x360.jpg",
+                "Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…",
+                ZonedDateTime.parse("2024-10-03T16:00:00Z"),
+                EpisodeType.EPISODE,
+                1,
+                1,
+                1442,
+                "Serait-ce une romance qui commence ?",
+                "Okarun ne croit pas aux fantômes, mais il croit aux aliens. Pour Momo, c’est l’inverse, elle croit aux fantômes, mais pas aux aliens. Les deux se lancent un défi afin de savoir qui a raison. Mais en explorant des lieux abandonnés, leur petit défi va prendre des proportions qui dépassent l’entendement.",
+                "https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/eps1_640x360.jpg",
+                Platform.ANIM,
+                "fr-FR",
+                "26662",
+                "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "GG5H5XQ0D",
+                "DAN DA DAN",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/13839ea2b48b0323417b23813a090c93.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fa62dd1fc7a9bc0b587f36f53bf572c1.jpg",
+                "Quand Momo, issue d'une lignée de médiums, rencontre son camarade de classe Okarun, fasciné par l’occulte, ils se disputent. Lorsqu'il s'avère que les deux phénomènes sont bien réels, Momo réveille en elle un pouvoir caché tandis qu'une malédiction s'abat sur Okarun. Ensemble, ils doivent affronter les forces du paranormal qui menacent notre monde...",
+                ZonedDateTime.parse("2024-10-03T16:00:00Z"),
+                EpisodeType.EPISODE,
+                1,
+                1,
+                1437,
+                "Serait-ce une romance qui commence ?",
+                "Okarun ne croit pas aux fantômes, mais il croit aux aliens. Pour Momo, c’est l’inverse, elle croit aux fantômes, mais pas aux aliens. Les deux se lancent un défi afin de savoir qui a raison. Mais en explorant des lieux abandonnés, leur petit défi va prendre des proportions qui dépassent l’entendement.",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/39d31aee335444ba382668b17b85c429.jpg",
+                Platform.CRUN,
+                "ja-JP",
+                "GN7UNXWMJ",
+                "https://www.crunchyroll.com/fr/watch/GN7UNXWMJ/thats-how-love-starts-ya-know",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "81736884",
+                "DANDADAN",
+                "https://fr.web.img6.acsta.net/pictures/24/03/18/10/50/1581066.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fa62dd1fc7a9bc0b587f36f53bf572c1.jpg",
+                "Entre menaces paranormales, nouveaux superpouvoirs et histoire d'amour naissante, deux lycéens se mettent au défi de prouver l'existence des fantômes ou des extraterrestres.",
+                ZonedDateTime.parse("2024-10-03T16:00:00Z"),
+                EpisodeType.EPISODE,
+                1,
+                1,
+                1440,
+                "Serait-ce une romance qui commence ?",
+                "Momo est une lycéenne qui croit aux fantômes, mais pas aux extraterrestres. Un jour, elle se dispute avec un camarade de classe qui croit aux ovnis, mais pas aux esprits.",
+                "https://occ-0-8194-56.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABX1dtlp9gxfhu0LxOrbUq_MT-KlN7dEm6VpsU5JXCZoGzRx0VqYgzgKJa1EWZRnmym_WWv5CWg3jKqLdoYYX88X7IwSHEyeilqmA8ujaaGGeyTaH_A_fUm8D.webp",
+                Platform.CRUN,
+                "ja-JP",
+                "a7b9feca",
+                "https://www.netflix.com/fr/title/81736884",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(4, variants.size)
+    }
 }

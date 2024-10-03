@@ -17,6 +17,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
 import java.util.*
 
@@ -59,6 +60,12 @@ class AnimeCacheService : AbstractCacheService {
             }
         }
 
+    private val findAllHashCodeCache = MapCache<String, Map<String, UUID>>(classes = listOf(Anime::class.java)) {
+        animeService.findAllUuidAndName().associate { tuple ->
+            StringUtils.computeAnimeHashcode(tuple[1] as String) to (tuple[0] as UUID)
+        }
+    }
+
     private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(classes = listOf(Anime::class.java, EpisodeMapping::class.java)) {
         animeService.findBySlug(it.countryCode, it.id)
             .let { anime -> AbstractConverter.convert(anime, AnimeDto::class.java) }
@@ -92,6 +99,8 @@ class AnimeCacheService : AbstractCacheService {
 
     fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: List<LangType>?) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes)]
+
+    fun findAllHashCode() = findAllHashCodeCache["all"]
 
     fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
 
