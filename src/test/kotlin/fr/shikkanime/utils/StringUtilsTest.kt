@@ -62,6 +62,8 @@ class StringUtilsTest {
             "MIX" to "MIX",
             "Cyberpunk: Edgerunners" to "Cyberpunk: Edgerunners",
             "Loner Life in Another World" to "Loner Life in Another World",
+            "Anime KAPIBARASAN" to "KAPIBARASAN",
+            "Anime AzurLane: Slow Ahead!" to "AzurLane: Slow Ahead!",
         )
 
         list.forEach { (input, expected) ->

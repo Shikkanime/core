@@ -113,18 +113,21 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     }
 
     fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
+        val animeName = StringUtils.removeAnimeNamePart(episode.anime)
+        val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
+
         val anime =
-            animeService.findBySlug(episode.countryCode, StringUtils.toSlug(StringUtils.getShortName(episode.anime)))
+            animeService.findBySlug(episode.countryCode, slug)
                 ?: animeService.save(
                     Anime(
                         countryCode = episode.countryCode,
-                        name = episode.anime,
+                        name = animeName,
                         releaseDateTime = episode.releaseDateTime,
                         lastReleaseDateTime = episode.releaseDateTime,
                         image = episode.animeImage,
                         banner = episode.animeBanner,
                         description = episode.animeDescription,
-                        slug = StringUtils.toSlug(StringUtils.getShortName(episode.anime))
+                        slug = slug
                     ).apply {
                         status = StringUtils.getStatus(this)
                     }
