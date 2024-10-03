@@ -65,6 +65,14 @@ private fun updateAndDeleteData(animeService: AnimeService) {
     val seasonRegex = " Saison (\\d)| ([MDCLXVI]+$)".toRegex()
 
     animeService.findAll().forEach {
+        val removeAnimeNamePart = StringUtils.removeAnimeNamePart(it.name!!)
+
+        if (removeAnimeNamePart != it.name) {
+            val oldName = it.name
+            it.name = removeAnimeNamePart
+            logger.info("Updating name for anime $oldName to ${it.name}")
+        }
+
         if (it.name!!.contains(seasonRegex)) {
             val seasonString = seasonRegex.find(it.name!!)!!.groupValues[0].trim()
             val season = seasonString.toIntOrNull() ?: StringUtils.romanToInt(seasonString)

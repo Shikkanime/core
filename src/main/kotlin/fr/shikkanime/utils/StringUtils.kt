@@ -19,13 +19,15 @@ object StringUtils {
     private val regex = "( [-|!].*[-|!](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([MDCLXVI]+$)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
 
+    fun removeAnimeNamePart(name: String) = name.replace("Anime ".toRegex(), "").trim()
+
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
         val words = parts.map { it.trim().split(" ", "-").size }.distinct()
         return words.size == 1
     }
 
     fun getShortName(fullName: String): String {
-        var shortName = regex.replace(fullName, " ").trim()
+        var shortName = regex.replace(removeAnimeNamePart(fullName), " ").trim()
 
         separators.forEach { separator ->
             if (shortName.contains(separator)) {
