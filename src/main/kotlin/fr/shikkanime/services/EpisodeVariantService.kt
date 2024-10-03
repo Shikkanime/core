@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
+import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
@@ -28,6 +29,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var animeCacheService: AnimeCacheService
 
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
@@ -115,23 +119,24 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
+        val animeHashCodes = animeCacheService.findAllHashCode()!!
 
-        val anime =
-            animeService.findBySlug(episode.countryCode, slug)
-                ?: animeService.save(
-                    Anime(
-                        countryCode = episode.countryCode,
-                        name = animeName,
-                        releaseDateTime = episode.releaseDateTime,
-                        lastReleaseDateTime = episode.releaseDateTime,
-                        image = episode.animeImage,
-                        banner = episode.animeBanner,
-                        description = episode.animeDescription,
-                        slug = slug
-                    ).apply {
-                        status = StringUtils.getStatus(this)
-                    }
-                )
+        val anime = animeService.findBySlug(episode.countryCode, slug)
+            ?: animeService.findLoaded(animeHashCodes[StringUtils.computeAnimeHashcode(animeName)])
+            ?: animeService.save(
+                Anime(
+                    countryCode = episode.countryCode,
+                    name = animeName,
+                    releaseDateTime = episode.releaseDateTime,
+                    lastReleaseDateTime = episode.releaseDateTime,
+                    image = episode.animeImage,
+                    banner = episode.animeBanner,
+                    description = episode.animeDescription,
+                    slug = slug
+                ).apply {
+                    status = StringUtils.getStatus(this)
+                }
+            )
 
         if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null) {
             animePlatformService.save(
@@ -270,8 +275,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         if (episode.audioLocale != episode.countryCode.locale && episode.episodeType != EpisodeType.FILM) {
             val simulcast = getSimulcast(anime, mapping)
-            animeService.addSimulcastToAnime(anime, simulcast)
-            needAnimeUpdate = true
+            val added = animeService.addSimulcastToAnime(anime, simulcast)
+            needAnimeUpdate = needAnimeUpdate || added
         }
 
         if (needAnimeUpdate) {

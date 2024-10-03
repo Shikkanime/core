@@ -35,6 +35,7 @@ class PrimeVideoPlatformTest {
         val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }
 
         assertTrue(episodes.isNotEmpty())
+        assertTrue(episodes.size == 13)
 
         episodes.forEach {
             assertTrue(it.image.startsWith("https://m.media-amazon.com"))

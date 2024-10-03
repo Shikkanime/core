@@ -90,6 +90,8 @@ object StringUtils {
         return slug.lowercase()
     }
 
+    fun computeAnimeHashcode(anime: String) = EncryptionManager.toSHA512(toSlug(getShortName(anime).replace(" ", "")))
+
     private fun normalized(input: String) = input.replace("œ", "oe").replace("@", "a")
 
     fun sanitizeXSS(input: String): String = input.replace("<", "&lt;")
