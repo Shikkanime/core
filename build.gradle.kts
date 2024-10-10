@@ -1,8 +1,8 @@
 val ktorVersion = "2.3.12"
-val ktorSwaggerUiVersion = "2.10.0"
+val ktorSwaggerUiVersion = "4.0.0"
+val schemaKenerator = "1.5.0"
 val hibernateCoreVersion = "6.6.1.Final"
 val ehcacheVersion = "3.10.8"
-val glassfishJaxbVersion = "4.0.5"
 val hibernateSearchVersion = "7.2.1.Final"
 val tikaVersion = "3.0.0"
 val postgresqlVersion = "42.7.4"
@@ -32,9 +32,10 @@ plugins {
     val kotlinVersion = "2.0.21"
 
     kotlin("jvm") version kotlinVersion
+    kotlin("plugin.serialization") version kotlinVersion
     kotlin("kapt") version kotlinVersion
 
-    id("io.ktor.plugin") version "2.3.12"
+    id("io.ktor.plugin") version "3.0.0"
     id("org.sonarqube") version "5.1.0.4882"
 
     jacoco
@@ -60,24 +61,27 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions:$ktorVersion")
-    implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-host-common-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-caching-headers-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-compression-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-cors-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-host-common:$ktorVersion")
+    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+    implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
+    implementation("io.ktor:ktor-server-compression:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson:$ktorVersion")
-    implementation("io.ktor:ktor-server-freemarker-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-freemarker:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
+
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
-    implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
+
     implementation("io.github.smiley4:ktor-swagger-ui:$ktorSwaggerUiVersion")
+    implementation("io.github.smiley4:schema-kenerator-core:$schemaKenerator")
+    implementation("io.github.smiley4:schema-kenerator-reflection:$schemaKenerator")
+    implementation("io.github.smiley4:schema-kenerator-swagger:$schemaKenerator")
     implementation("org.hibernate.orm:hibernate-core:$hibernateCoreVersion")
     implementation("org.hibernate.orm:hibernate-jcache:$hibernateCoreVersion")
     implementation("org.ehcache:ehcache:$ehcacheVersion")
@@ -105,8 +109,9 @@ dependencies {
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("com.h2database:h2:$h2Version")

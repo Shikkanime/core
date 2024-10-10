@@ -14,7 +14,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.sessions.*
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.cookie
 import java.util.*
 
 private val memberCacheService = Constant.injector.getInstance(MemberCacheService::class.java)
@@ -22,9 +23,9 @@ private val memberCacheService = Constant.injector.getInstance(MemberCacheServic
 fun Application.configureSecurity() {
     val jwtVerifier = setupJWTVerifier()
 
-    authentication {
+    install(Authentication) {
         setupJWTAuthentication(jwtVerifier)
-        setupSessionAuthentication(jwtVerifier)
+        setupAdminSessionAuthentication(jwtVerifier)
     }
 
     install(Sessions) {
@@ -64,7 +65,7 @@ private fun AuthenticationConfig.setupJWTAuthentication(jwtVerifier: JWTVerifier
     }
 }
 
-private fun AuthenticationConfig.setupSessionAuthentication(jwtVerifier: JWTVerifier) {
+private fun AuthenticationConfig.setupAdminSessionAuthentication(jwtVerifier: JWTVerifier) {
     session<TokenDto>("auth-admin-session") {
         validate { session -> validationSession(jwtVerifier, session) }
         challenge {

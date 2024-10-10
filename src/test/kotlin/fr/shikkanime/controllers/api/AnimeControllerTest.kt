@@ -5,7 +5,6 @@ import fr.shikkanime.dtos.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.module
-import fr.shikkanime.services.*
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.statement.*

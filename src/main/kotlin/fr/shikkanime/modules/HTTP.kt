@@ -8,6 +8,14 @@ import freemarker.cache.ClassTemplateLoader
 import io.github.smiley4.ktorswaggerui.SwaggerUI
 import io.github.smiley4.ktorswaggerui.data.AuthScheme
 import io.github.smiley4.ktorswaggerui.data.AuthType
+import io.github.smiley4.schemakenerator.core.connectSubTypes
+import io.github.smiley4.schemakenerator.core.handleNameAnnotation
+import io.github.smiley4.schemakenerator.reflection.*
+import io.github.smiley4.schemakenerator.swagger.compileReferencingRoot
+import io.github.smiley4.schemakenerator.swagger.data.TitleType
+import io.github.smiley4.schemakenerator.swagger.generateSwaggerSchema
+import io.github.smiley4.schemakenerator.swagger.handleCoreAnnotations
+import io.github.smiley4.schemakenerator.swagger.withTitle
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
@@ -19,6 +27,7 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import java.util.UUID
 import java.util.logging.Level
 
 private val logger = LoggerFactory.getLogger("HTTP")
@@ -64,8 +73,7 @@ fun Application.configureHTTP() {
         }
     }
     install(ContentNegotiation) {
-        gson {
-        }
+        gson()
     }
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
@@ -74,14 +82,12 @@ fun Application.configureHTTP() {
     install(CachingHeaders) {
     }
     install(SwaggerUI) {
-        securityScheme("BearerAuth") {
-            type = AuthType.HTTP
-            scheme = AuthScheme.BEARER
-            bearerFormat = "jwt"
-        }
-        swagger {
-            swaggerUrl = "api/swagger"
-            forwardRoot = false
+        security {
+            securityScheme("BearerAuth") {
+                type = AuthType.HTTP
+                scheme = AuthScheme.BEARER
+                bearerFormat = "jwt"
+            }
         }
         info {
             title = "${Constant.NAME} API"
@@ -90,6 +96,21 @@ fun Application.configureHTTP() {
         }
         server {
             url = Constant.baseUrl
+        }
+        schemas {
+            generator = { type ->
+                type
+                    .collectSubTypes()
+                    .processReflection {
+                        redirect<UUID, String>() // redirect UUID to string, i.e treat is as a string for schema generation
+                    }
+                    .connectSubTypes()
+                    .handleNameAnnotation()
+                    .generateSwaggerSchema()
+                    .handleCoreAnnotations()
+                    .withTitle(TitleType.SIMPLE)
+                    .compileReferencingRoot()
+            }
         }
     }
 }
