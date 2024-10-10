@@ -15,6 +15,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import io.ktor.util.hex
 import java.util.*
 
 private val memberCacheService = Constant.injector.getInstance(MemberCacheService::class.java)
@@ -31,6 +32,8 @@ fun Application.configureSecurity() {
         cookie<TokenDto>("user_session") {
             cookie.path = "/"
             cookie.maxAgeInSeconds = 3600
+
+            transform(SessionTransportTransformerMessageAuthentication(hex("03e156f6058a13813816065")))
         }
     }
 }
