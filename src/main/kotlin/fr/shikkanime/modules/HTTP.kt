@@ -64,8 +64,7 @@ fun Application.configureHTTP() {
         }
     }
     install(ContentNegotiation) {
-        gson {
-        }
+        gson()
     }
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")

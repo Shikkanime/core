@@ -53,14 +53,14 @@ private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
 fun Application.configureRouting() {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 
-    environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
+    monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
         if (call.response.status()?.value != null || !configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
-        setSecurityHeaders(call)
+        setSecurityHeaders()
     }
 
-    environment.monitor.subscribe(Routing.RoutingCallFinished) { call ->
+    monitor.subscribe(RoutingRoot.RoutingCallFinished) { call ->
         logCallDetails(call)
     }
 
@@ -74,8 +74,8 @@ fun Application.configureRouting() {
     }
 }
 
-private fun setSecurityHeaders(call: ApplicationCall) {
-    call.response.pipeline.intercept(ApplicationSendPipeline.Transform) {
+private fun Application.setSecurityHeaders() {
+    intercept(ApplicationSendPipeline.Transform) {
         context.response.header(
             HttpHeaders.StrictTransportSecurity,
             "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
