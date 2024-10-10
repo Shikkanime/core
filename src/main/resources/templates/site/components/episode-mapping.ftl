@@ -49,8 +49,8 @@
                             </div>
                         </#if>
 
-                        <#list episodeMapping.langTypes as langTypes>
-                            <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=langTypes /></p>
+                        <#list episodeMapping.langTypes as langType>
+                            <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=langType /></p>
                         </#list>
                     </div>
 

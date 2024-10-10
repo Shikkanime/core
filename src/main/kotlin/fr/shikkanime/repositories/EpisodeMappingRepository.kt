@@ -62,6 +62,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
             query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
+            query.orderBy(cb.desc(root[EpisodeMapping_.lastReleaseDateTime]))
 
             createReadOnlyQuery(it, query)
                 .resultList

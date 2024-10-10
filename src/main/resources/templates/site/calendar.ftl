@@ -105,7 +105,11 @@
                                                             ${getPrefixEpisode(release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
                                                         </p>
                                                     </#if>
-                                                    <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=release.langType /></p>
+                                                    <div class="mb-1">
+                                                        <#list release.langTypes as langType>
+                                                            <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=langType /></p>
+                                                        </#list>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

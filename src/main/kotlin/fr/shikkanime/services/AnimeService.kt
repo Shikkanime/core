@@ -102,18 +102,20 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
             WeeklyAnimesDto(
                 date.format(dateFormatter).capitalizeWords(),
-                tuplesDay.groupBy { triple ->
-                    val anime = triple[0] as Anime
-                    anime to LangType.fromAudioLocale(anime.countryCode!!, triple[4] as String)
+                tuplesDay.groupBy { tuple ->
+                    val releaseDateTime = tuple[2] as ZonedDateTime
+                    val anime = tuple[0] as Anime
+                    releaseDateTime.format(DateTimeFormatter.ofPattern("HH")) to anime
                 }.flatMap { (pair, values) ->
-                    val (anime, langType) = pair
-                    val releaseDateTime = values.maxOf { it[2] as ZonedDateTime }
+                    val anime = pair.second
+                    val currentWeekValues = values.filter { (it[2] as ZonedDateTime).withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == currentWeek }
+                    val releaseDateTime = currentWeekValues.minOfOrNull { it[2] as ZonedDateTime } ?: values.minOfOrNull { it[2] as ZonedDateTime }!!
 
-                    val mappings = values.filter {
-                        (it[2] as ZonedDateTime).withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == currentWeek
-                    }.map { it[1] as EpisodeMapping }
+                    val mappings = currentWeekValues.map { it[1] as EpisodeMapping }
                         .distinctBy { it.uuid }
                         .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+
+                    val langTypes = values.map { LangType.fromAudioLocale(anime.countryCode!!, it[4] as String) }.distinct()
 
                     mappings.groupBy { it.episodeType }.ifEmpty { mapOf(null to mappings) }.map { (episodeType, episodeMappings) ->
                         WeeklyAnimeDto(
@@ -127,7 +129,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                                     if (mappings.size <= 1) append("/${it.episodeType!!.slug}-${it.number}")
                                 }
                             },
-                            langType,
+                            langTypes,
                             episodeType,
                             episodeMappings.minOfOrNull { it.number!! },
                             episodeMappings.maxOfOrNull { it.number!! },
@@ -139,7 +141,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     compareBy(
                         { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
                         { it.anime.shortName },
-                        { it.langType }
                     )
                 )
             )

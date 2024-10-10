@@ -187,6 +187,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
             query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
+            query.orderBy(cb.desc(root[Anime_.lastReleaseDateTime]))
 
             createReadOnlyQuery(it, query)
                 .resultList

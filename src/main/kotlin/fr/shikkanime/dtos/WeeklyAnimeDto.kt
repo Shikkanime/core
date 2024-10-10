@@ -9,7 +9,7 @@ data class WeeklyAnimeDto(
     val platforms: List<PlatformDto>,
     val releaseDateTime: String,
     val slug: String,
-    val langType: LangType,
+    val langTypes: List<LangType>,
 
     val episodeType: EpisodeType? = null,
     val minNumber: Int? = null,
