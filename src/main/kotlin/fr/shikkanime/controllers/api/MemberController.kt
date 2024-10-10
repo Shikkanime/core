@@ -20,8 +20,10 @@ import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
+import io.ktor.utils.io.InternalAPI
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.io.readByteArray
 import java.io.ByteArrayInputStream
 import java.util.*
 import javax.imageio.ImageIO
@@ -205,6 +207,7 @@ class MemberController : HasPageableRoute() {
         return memberFollowEpisodeService.unfollow(memberUuid, episode)
     }
 
+    @OptIn(InternalAPI::class)
     @Path("/image")
     @Post
     @JWTAuthenticated
@@ -218,9 +221,21 @@ class MemberController : HasPageableRoute() {
         security = true
     )
     private fun uploadProfileImage(@JWTUser memberUuid: UUID, @BodyParam multiPartData: MultiPartData): Response {
-        val file = runBlocking { multiPartData.readAllParts().filterIsInstance<PartData.FileItem>().firstOrNull() }
-            ?: return Response.badRequest("No file provided")
-        val bytes = file.streamProvider().readBytes()
+        var file: PartData.FileItem? = null
+
+        runBlocking {
+            multiPartData.forEachPart { part ->
+                if (part is PartData.FileItem) {
+                    file = part
+                }
+            }
+        }
+
+        if (file == null) {
+            return Response.badRequest("No file found")
+        }
+
+        val bytes = file.provider().readBuffer.readByteArray()
 
         try {
             val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(bytes))

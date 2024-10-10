@@ -1,10 +1,11 @@
 package fr.shikkanime.dtos.member
 
-import io.ktor.server.auth.*
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class TokenDto(
     val token: String? = null,
-) : Principal {
+) {
     companion object {
         val empty = TokenDto()
     }

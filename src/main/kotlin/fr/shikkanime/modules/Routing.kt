@@ -1,6 +1,5 @@
 package fr.shikkanime.modules
 
-import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -18,7 +17,9 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.github.smiley4.ktorswaggerui.dsl.*
+import io.github.smiley4.ktorswaggerui.dsl.routing.*
+import io.github.smiley4.ktorswaggerui.routing.openApiSpec
+import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -32,10 +33,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import io.ktor.server.util.*
 import io.ktor.util.*
-import io.ktor.util.pipeline.*
-import io.ktor.utils.io.*
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
@@ -53,14 +51,14 @@ private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
 fun Application.configureRouting() {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 
-    environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
+    monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
         if (call.response.status()?.value != null || !configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
-        setSecurityHeaders(call)
+//        setSecurityHeaders()
     }
 
-    environment.monitor.subscribe(Routing.RoutingCallFinished) { call ->
+    monitor.subscribe(RoutingRoot.RoutingCallFinished) { call ->
         logCallDetails(call)
     }
 
@@ -70,12 +68,20 @@ fun Application.configureRouting() {
             cacheControl { listOf(CacheControl.MaxAge(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION)) }
         }
 
+        route("/api/openapi.json") {
+            openApiSpec()
+        }
+
+        route("/api/swagger") {
+            swaggerUI("/api/openapi.json")
+        }
+
         createRoutes()
     }
 }
 
-private fun setSecurityHeaders(call: ApplicationCall) {
-    call.response.pipeline.intercept(ApplicationSendPipeline.Transform) {
+private fun Application.setSecurityHeaders() {
+    intercept(ApplicationSendPipeline.Render) {
         context.response.header(
             HttpHeaders.StrictTransportSecurity,
             "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
@@ -157,7 +163,7 @@ private fun Route.handleMethods(
     val routeTags = listOf(controller.javaClass.simpleName.replace("Controller", ""))
     val hiddenRoute = !"$prefix$path".startsWith("/api")
     val swaggerBuilder = swagger(method, routeTags, hiddenRoute)
-    val routeHandler: suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit =
+    val routeHandler: suspend RoutingContext.() -> Unit =
         { handleRequest(call, method, prefix, controller, path) }
 
     when {
