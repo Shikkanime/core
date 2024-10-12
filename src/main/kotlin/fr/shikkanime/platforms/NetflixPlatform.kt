@@ -11,7 +11,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class NetflixPlatform :
-    AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<AbstractPlatform.Episode>>() {
+    AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<AbstractPlatform.Episode>?>() {
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
@@ -19,7 +19,7 @@ class NetflixPlatform :
     override suspend fun fetchApiContent(
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ): Set<Episode> {
+    ): Set<Episode>? {
         val id = key.netflixSimulcast.name
         val season = key.netflixSimulcast.season
         val releaseDateTimeUTC = zonedDateTime.withUTC()
@@ -33,7 +33,12 @@ class NetflixPlatform :
             do {
                 subdoc = it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id")
                 i++
-            } while (subdoc.getElementsByTag("html").attr("lang") != key.countryCode.name.lowercase() && i < 5)
+            } while (subdoc.getElementsByTag("html").attr("lang") != key.countryCode.name.lowercase() && i < 10)
+
+            if (subdoc.getElementsByTag("html").attr("lang") != key.countryCode.name.lowercase()) {
+                logger.severe("Failed to fetch Netflix page for $id in ${key.countryCode.name}")
+                return null
+            }
 
             subdoc
         }
@@ -109,8 +114,8 @@ class NetflixPlatform :
                     .isEqualOrAfter(LocalTime.parse(it.releaseTime))
             }
                 .forEach { simulcast ->
-                    val api = getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
-                    list.addAll(api)
+                    getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
+                        ?.let { list.addAll(it) }
                 }
         }
 

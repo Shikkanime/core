@@ -34,7 +34,8 @@ class NetflixPlatformTest {
             name = "81497635"
         })
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assumeTrue(episodes.isNotEmpty())
+        assumeTrue(episodes != null)
+        assumeTrue(episodes!!.isNotEmpty())
 
         episodes.forEach {
             println(it)
@@ -58,7 +59,8 @@ class NetflixPlatformTest {
             name = "81562396"
         })
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assumeTrue(episodes.isNotEmpty())
+        assumeTrue(episodes != null)
+        assumeTrue(episodes!!.isNotEmpty())
         assumeTrue("Alors qu'une prophétie funeste plane sur le paisible royaume de Britannia, un garçon au cœur pur se lance dans un périple captivant de découverte… et de vengeance." == episodes.first().animeDescription)
 
         episodes.forEach {

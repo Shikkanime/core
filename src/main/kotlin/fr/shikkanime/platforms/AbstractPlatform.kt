@@ -54,8 +54,15 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val entry = apiCache.entries.firstOrNull { it.key.first == key }
 
         if (entry == null || zonedDateTime.isEqualOrAfter(entry.key.second.plusMinutes(configuration!!.apiCheckDelayInMinutes))) {
+            val values = runBlocking { fetchApiContent(key, zonedDateTime) }
+
+            if (values == null) {
+                logger.warning("API content is null for $key")
+                return values
+            }
+
             apiCache.remove(entry?.key)
-            apiCache[Pair(key, zonedDateTime)] = runBlocking { fetchApiContent(key, zonedDateTime) }
+            apiCache[Pair(key, zonedDateTime)] = values
         }
 
         return apiCache.entries.firstOrNull { it.key.first == key }!!.value
