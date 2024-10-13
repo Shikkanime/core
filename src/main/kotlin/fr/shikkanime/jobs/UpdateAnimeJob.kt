@@ -22,7 +22,7 @@ import java.time.ZonedDateTime
 
 class UpdateAnimeJob : AbstractJob {
     data class UpdatableAnime(
-        val releaseDateTime: ZonedDateTime,
+        val lastReleaseDateTime: ZonedDateTime,
         val image: String,
         val banner: String,
         val description: String?,
@@ -67,7 +67,7 @@ class UpdateAnimeJob : AbstractJob {
             // Compare platform sort index and anime release date descending
             val updatedAnimes = runBlocking { fetchAnime(anime) }.sortedWith(
                 compareBy<Pair<Platform, UpdatableAnime>> { it.first.sortIndex }
-                    .thenByDescending { it.second.releaseDateTime }
+                    .thenByDescending { it.second.lastReleaseDateTime }
             ).map { it.second }
 
             if (updatedAnimes.isEmpty()) {
@@ -138,7 +138,7 @@ class UpdateAnimeJob : AbstractJob {
         return AnimationDigitalNetworkWrapper.getShow(animePlatform.platformId!!)
             .let {
                 UpdatableAnime(
-                    releaseDateTime = it.microdata!!.startDate,
+                    lastReleaseDateTime = it.microdata!!.startDate,
                     image = it.image2x,
                     banner = it.imageHorizontal2x,
                     description = it.summary,
@@ -158,10 +158,10 @@ class UpdateAnimeJob : AbstractJob {
                 countryCode.locale,
                 crunchyrollPlatform.identifiers[countryCode]!!,
                 series.id
-            ).minOf { it.episodeMetadata!!.premiumAvailableDate }
+            ).maxOf { it.episodeMetadata!!.premiumAvailableDate }
 
             UpdatableAnime(
-                releaseDateTime = releaseDateTime,
+                lastReleaseDateTime = releaseDateTime,
                 image = series.images.posterTall.first().maxBy { poster -> poster.width }.source,
                 banner = series.images.posterWide.first().maxBy { poster -> poster.width }.source,
                 description = series.description,

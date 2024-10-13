@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1728843634683"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="anime" columnName="last_update_date_time"/>
+        </preConditions>
+
+        <!-- Set last_update_date_time column value to null -->
+        <update tableName="anime">
+            <column name="last_update_date_time" valueComputed="NULL"/>
+        </update>
+    </changeSet>
+</databaseChangeLog>
