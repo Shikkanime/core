@@ -137,4 +137,57 @@ class UpdateAnimeJobTest {
             anime.description
         )
     }
+
+    @Test
+    fun `run old Crunchyroll anime My Hero Academia`() {
+        val zonedDateTime = ZonedDateTime.parse("2015-08-22T01:00:00Z")
+
+        val tmpAnime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                name = "My Hero Academia",
+                slug = "my-hero-academia",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/6e008ad5211c3998b8f3e4bc166821cd.jpg",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9ca680632ac63f44c7220f61ace9a81b.jpg",
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.CRUN,
+                platformId = "GMEHME5WK"
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.CRUN,
+                platformId = "G6NQ5DWZ6"
+            )
+        )
+
+        updateAnimeJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val anime = animes.first()
+
+        assertEquals(
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/6e008ad5211c3998b8f3e4bc166821cd.jpg",
+            anime.image
+        )
+        assertEquals(
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9ca680632ac63f44c7220f61ace9a81b.jpg",
+            anime.banner
+        )
+        assertEquals(
+            "Super héros, super pouvoirs… On a tous déjà rêvé secrètement de posséder une qualité hors du commun, de briller ou d’être LA personne la plus puissante de l’univers. Dans ce nouveau monde, ce rêve est à la portée de quasiment toute la population car les humains peuvent désormais naître avec un pouvoir : le « alter ». Mais certains malchanceux naissent sans alter.",
+            anime.description
+        )
+    }
 }
