@@ -12,8 +12,6 @@ services:
   shikkanime-core:
     build:
         context: .
-        args:
-          BUILD_VERSION: ${BUILD_VERSION:-full} # Use the environment variable or default to 'full
     ports:
       - "37100:37100"
     restart: on-failure

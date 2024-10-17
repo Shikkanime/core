@@ -52,8 +52,6 @@ jobs:
       fail-fast: false
       matrix:
         platform: [linux/amd64, linux/arm64]
-        build_version: [slim, full]
-
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK ${{ env.JAVA_VERSION }}
@@ -71,6 +69,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Start services
-        run: BUILD_VERSION=${{ matrix.build_version }} docker compose up -d --build --wait
+        run: docker compose up -d --build --wait
       - name: Stop services
         run: docker compose down

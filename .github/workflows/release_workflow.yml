@@ -30,11 +30,6 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: [ test ]
-    strategy:
-      fail-fast: false
-      matrix:
-        build_version: [slim, full]
-
     steps:
       - uses: actions/checkout@v4
 
@@ -55,8 +50,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY_IMAGE }}
           tags: |
-            type=raw,value=${{ matrix.build_version }}
-            type=raw,value=${{ matrix.build_version }}-${{ env.V-VERSION }}
+            type=raw,value=${{ env.V-VERSION }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -86,12 +80,11 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          build-args: BUILD_VERSION=${{ matrix.build_version }}
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ matrix.build_version }}
-          cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache-${{ matrix.build_version }},mode=max
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache,mode=max
           push: true
 
   push-commit:
