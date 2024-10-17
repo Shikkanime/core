@@ -8,7 +8,7 @@ FROM amazoncorretto:${JAVA_VERSION} AS java
 FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy AS full
 
 # Base image for slim version
-FROM node:22-bookworm-slim AS slim
+FROM node:23-bookworm-slim AS slim
 ARG PLAYWRIGHT_VERSION
 RUN npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps firefox
 
