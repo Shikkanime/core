@@ -154,14 +154,22 @@ class UpdateAnimeJob : AbstractJob {
             crunchyrollPlatform.identifiers[countryCode]!!,
             animePlatform.platformId!!
         ).let { series ->
-            val releaseDateTime = CrunchyrollWrapper.getEpisodesBySeriesId(
+            val objects = CrunchyrollWrapper.getEpisodesBySeriesId(
                 countryCode.locale,
                 crunchyrollPlatform.identifiers[countryCode]!!,
                 series.id
-            ).maxOf { it.episodeMetadata!!.premiumAvailableDate }
+            ).mapNotNull {
+                runCatching {
+                    crunchyrollPlatform.convertEpisode(
+                        countryCode,
+                        it,
+                        false
+                    )
+                }.getOrNull()
+            }
 
             UpdatableAnime(
-                lastReleaseDateTime = releaseDateTime,
+                lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
                 image = series.images.posterTall.first().maxBy { poster -> poster.width }.source,
                 banner = series.images.posterWide.first().maxBy { poster -> poster.width }.source,
                 description = series.description,
