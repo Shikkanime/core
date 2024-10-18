@@ -7,8 +7,10 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.*
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -19,6 +21,7 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
+import fr.shikkanime.wrappers.ThreadsWrapper
 import io.ktor.http.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -35,6 +38,9 @@ class AdminController {
 
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
 
     @Path
     @Get
@@ -154,6 +160,45 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getTraceActions(): Response {
         return Response.template(Link.TRACE_ACTIONS)
+    }
+
+    @Path("/threads")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getThreads(
+        @QueryParam("success") success: Int?
+    ): Response {
+        return Response.template(
+            Link.THREADS,
+            mapOf(
+                "askCodeUrl" to ThreadsWrapper.getCode(
+                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
+                ),
+                "success" to success
+            )
+        )
+    }
+
+    @Path("/threads-publish")
+    @Get
+    @AdminSessionAuthenticated
+    private fun threadsPublish(
+        @QueryParam("message") message: String,
+        @QueryParam("image_url") imageUrl: String?,
+    ): Response {
+        val hasImage = !imageUrl.isNullOrBlank()
+
+        runBlocking {
+            ThreadsWrapper.post(
+                requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_ACCESS_TOKEN)),
+                if (hasImage) ThreadsWrapper.PostType.IMAGE else ThreadsWrapper.PostType.TEXT,
+                message,
+                imageUrl.takeIf { hasImage },
+                "An example image".takeIf { hasImage }
+            )
+        }
+
+        return Response.redirect(Link.THREADS.href)
     }
 
     @Path("/config")

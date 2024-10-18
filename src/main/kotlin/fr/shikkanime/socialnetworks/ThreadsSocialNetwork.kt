@@ -1,9 +1,11 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.wrappers.OldThreadsWrapper
 import fr.shikkanime.wrappers.ThreadsWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
@@ -11,7 +13,7 @@ import java.util.logging.Level
 
 class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(ThreadsSocialNetwork::class.java)
-    private val threadsWrapper = ThreadsWrapper()
+    private val oldThreadsWrapper = OldThreadsWrapper()
 
     private var isInitialized = false
     private var initializedAt: ZonedDateTime? = null
@@ -27,16 +29,21 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         if (isInitialized) return
 
         try {
-            val username = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_USERNAME))
-            val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_PASSWORD))
-            if (username.isBlank() || password.isBlank()) throw Exception("Username or password is empty")
-            val generateDeviceId = threadsWrapper.generateDeviceId(username, password)
-            val (token, userId) = runBlocking { threadsWrapper.login(generateDeviceId, username, password) }
+            if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_NEW_THREADS_WRAPPER)) {
+                this.token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_ACCESS_TOKEN))
+            } else {
+                val username = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_USERNAME))
+                val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_PASSWORD))
+                if (username.isBlank() || password.isBlank()) throw Exception("Username or password is empty")
+                val generateDeviceId = oldThreadsWrapper.generateDeviceId(username, password)
+                val (token, userId) = runBlocking { oldThreadsWrapper.login(generateDeviceId, username, password) }
 
-            this.username = username
-            this.deviceId = generateDeviceId
-            this.token = token
-            this.userId = userId
+                this.username = username
+                this.deviceId = generateDeviceId
+                this.token = token
+                this.userId = userId
+            }
+
             isInitialized = true
             initializedAt = ZonedDateTime.now()
         } catch (e: Exception) {
@@ -53,26 +60,25 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     }
 
     private fun checkSession() {
-        if (isInitialized &&
-            initializedAt != null &&
-            initializedAt!!.plusMinutes(
-                configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong()
-            ).isAfter(ZonedDateTime.now())
-        ) {
-            return
-        }
+        val useNewWrapper = configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_NEW_THREADS_WRAPPER)
+        val sessionTimeout = configCacheService.getValueAsInt(ConfigPropertyKey.THREADS_SESSION_TIMEOUT, 10).toLong()
+
+        if (useNewWrapper && isInitialized) return
+        if (!useNewWrapper && isInitialized && initializedAt?.plusMinutes(sessionTimeout)
+                ?.isAfter(ZonedDateTime.now()) == true
+        ) return
 
         logout()
         login()
     }
 
-    override fun platformAccount(platform: PlatformDto): String {
-        return when (platform.id) {
-            "CRUN" -> "@crunchyroll_fr"
-            "DISN" -> "@disneyplus"
-            "NETF" -> "@netflixfr"
-            "PRIM" -> "@primevideofr"
-            else -> platform.name
+    override fun platformAccount(platform: Platform): String {
+        return when (platform) {
+            Platform.CRUN -> "@crunchyroll_fr"
+            Platform.DISN -> "@disneyplus"
+            Platform.NETF -> "@netflixfr"
+            Platform.PRIM -> "@primevideofr"
+            else -> platform.platformName
         }
     }
 
@@ -80,7 +86,34 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         checkSession()
         if (!isInitialized) return
         val message =
-            getEpisodeMessage(episodeDto, configCacheService.getValueAsString(ConfigPropertyKey.THREADS_MESSAGE) ?: "")
-        runBlocking { threadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage) }
+            getEpisodeMessage(
+                episodeDto,
+                configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: ""
+            )
+
+        runBlocking {
+            if (configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_NEW_THREADS_WRAPPER)) {
+                val firstPost = ThreadsWrapper.post(
+                    token!!,
+                    ThreadsWrapper.PostType.IMAGE,
+                    message,
+                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/${episodeDto.uuid}/media-image",
+                    altText = "Image de l'épisode ${episodeDto.mapping.number} de ${episodeDto.mapping.anime.shortName}"
+                )
+
+                val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)
+
+                if (!secondMessage.isNullOrBlank()) {
+                    ThreadsWrapper.post(
+                        token!!,
+                        ThreadsWrapper.PostType.TEXT,
+                        getEpisodeMessage(episodeDto, secondMessage),
+                        replyToId = firstPost
+                    )
+                }
+            } else {
+                oldThreadsWrapper.publish(username!!, deviceId!!, userId!!, token!!, message, mediaImage)
+            }
+        }
     }
 }

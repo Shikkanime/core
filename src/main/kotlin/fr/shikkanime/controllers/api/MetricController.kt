@@ -25,7 +25,7 @@ class MetricController {
     private fun getMetrics(
         @QueryParam("hours") hours: Int?,
     ): Response {
-        val oneHourAgo = ZonedDateTime.now().minusHours(hours?.toLong() ?: 1)
-        return Response.ok(AbstractConverter.convert(metricService.findAllAfter(oneHourAgo), MetricDto::class.java))
+        val xHourAgo = ZonedDateTime.now().minusHours(hours?.toLong() ?: 1)
+        return Response.ok(AbstractConverter.convert(metricService.findAllAfter(xHourAgo), MetricDto::class.java))
     }
 }

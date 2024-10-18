@@ -1,8 +1,8 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.LoggerFactory
 import twitter4j.Twitter
 import twitter4j.TwitterFactory
@@ -62,14 +62,14 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun platformAccount(platform: PlatformDto): String {
-        return when (platform.id) {
-            "ANIM" -> "@ADNanime"
-            "CRUN" -> "@Crunchyroll_fr"
-            "NETF" -> "@NetflixFR"
-            "DISN" -> "@DisneyPlusFR"
-            "PRIM" -> "@PrimeVideoFR"
-            else -> platform.name
+    override fun platformAccount(platform: Platform): String {
+        return when (platform) {
+            Platform.ANIM -> "@ADNanime"
+            Platform.CRUN -> "@Crunchyroll_fr"
+            Platform.NETF -> "@NetflixFR"
+            Platform.DISN -> "@DisneyPlusFR"
+            Platform.PRIM -> "@PrimeVideoFR"
+            else -> platform.platformName
         }
     }
 

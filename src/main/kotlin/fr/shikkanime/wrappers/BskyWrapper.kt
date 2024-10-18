@@ -5,10 +5,12 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import org.jsoup.Jsoup
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
+import java.util.stream.Collectors
 
 private const val TYPE = "\$type"
 
@@ -18,10 +20,22 @@ object BskyWrapper {
         val alt: String = "",
     )
 
+    enum class FacetType(val typeKey: String, val jsonKey: String) {
+        LINK("link", "uri"),
+        HASHTAG("tag", "tag"),
+        ;
+    }
+
     data class Facet(
-        val link: String,
         val start: Int,
         val end: Int,
+        val link: String,
+        val type: FacetType
+    )
+
+    data class Record(
+        val uri: String,
+        val cid: String,
     )
 
     private const val BASE_URL = "https://bsky.social/xrpc"
@@ -68,7 +82,9 @@ object BskyWrapper {
         did: String,
         text: String,
         images: List<Image> = emptyList(),
-    ): JsonObject {
+        replyTo: Record? = null,
+        embed: String? = null
+    ): Record {
         val (finalText, facets) = getFacets(text)
 
         val recordMap = mutableMapOf<String, Any>(
@@ -94,12 +110,38 @@ object BskyWrapper {
                     ),
                     "features" to listOf(
                         mapOf(
-                            TYPE to "app.bsky.richtext.facet#link",
-                            "uri" to it.link
+                            TYPE to "app.bsky.richtext.facet#${it.type.typeKey}",
+                            it.type.jsonKey to it.link
                         )
                     )
                 )
             }
+        }
+
+        if (replyTo != null) {
+            recordMap["reply"] = mapOf(
+                "root" to replyTo,
+                "parent" to replyTo
+            )
+        }
+
+        if (embed != null) {
+            val document = HttpRequest().use { Jsoup.parse(it.get(embed).bodyAsText()) }
+
+            recordMap["embed"] = mapOf(
+                "\$type" to "app.bsky.embed.external",
+                "external" to mapOf(
+                    "uri" to embed,
+                    "title" to document.select("meta[property=og:title]").attr("content"),
+                    "description" to document.select("meta[property=og:description]").attr("content"),
+                    "thumb" to uploadBlob(
+                        accessJwt,
+                        ContentType.Image.JPEG,
+                        HttpRequest().use { it.get(document.select("meta[property=og:image]").attr("content")) }
+                            .readBytes()
+                    )
+                )
+            )
         }
 
         val response = httpRequest.post(
@@ -119,36 +161,49 @@ object BskyWrapper {
         )
 
         require(response.status.value == 200) { "Failed to create record (${response.bodyAsText()})" }
-        return ObjectParser.fromJson(response.bodyAsText())
+        return ObjectParser.fromJson(response.bodyAsText(), Record::class.java)
     }
+
+    private fun countEmoji(text: String) = Pattern.compile("\\p{So}+")
+        .matcher(text)
+        .results()
+        .collect(Collectors.toUnmodifiableList())
 
     private fun getFacets(text: String): Pair<String, List<Facet>> {
         var tmpText = text
 
-        val facets = text.split(" ").mapNotNull { word ->
-            val link = word.trim()
+        val facets = text.split(" ", "\n")
+            .mapNotNull { word ->
+                val link = word.trim()
+                when {
+                    link.startsWith("http") -> {
+                        val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "").trim()
+                        tmpText = tmpText.replace(link, beautifulLink)
 
-            if (link.startsWith("http")) {
-                val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "").trim()
-                tmpText = tmpText.replace(link, beautifulLink)
+                        val emojiCount = countEmoji(tmpText.substringBeforeLast(beautifulLink))!!
+                        val added =
+                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it!!.group().length } + emojiCount.size else 0
 
-                // Count \n before the link
-                val newLineCount = tmpText.substring(0, tmpText.indexOf(beautifulLink)).count { it == '\n' }
-                // Count the number of emojis before the link
-                val p = Pattern.compile("\\p{So}+")
-                val m = p.matcher(tmpText.substring(0, tmpText.indexOf(beautifulLink)))
-                var emojiCount = 0
+                        val start = tmpText.indexOf(beautifulLink) + added
+                        val end = start + beautifulLink.length
+                        Facet(start, end, link, FacetType.LINK)
+                    }
 
-                while (m.find()) {
-                    emojiCount++
+                    link.startsWith("#") -> {
+                        val emojiCount = countEmoji(tmpText.substringBeforeLast(link))!!
+                        val added =
+                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it!!.group().length } + emojiCount.size else 1
+
+                        val start = tmpText.indexOf(link) + added
+                        val end = start + link.length
+                        Facet(start, end, link.substring(1), FacetType.HASHTAG)
+                    }
+
+                    else -> null
                 }
-
-                val start = tmpText.indexOf(beautifulLink) + (((newLineCount + emojiCount) * 2) - 1)
-                val end = start + beautifulLink.length
-                Facet(link, start, end)
-            } else null
-        }
+            }
 
         return tmpText to facets
     }
+
 }

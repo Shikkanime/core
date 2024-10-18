@@ -24,6 +24,8 @@
 [#-- @ftlvariable name="season" type="fr.shikkanime.dtos.SeasonDto" --]
 [#-- @ftlvariable name="previousWeek" type="java.lang.String" --]
 [#-- @ftlvariable name="nextWeek" type="java.lang.String" --]
+[#-- @ftlvariable name="askCodeUrl" type="java.lang.String" --]
+[#-- @ftlvariable name="success" type="java.lang.Integer" --]
 
 [#-- @ftlvariable name="baseUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="apiUrl" type="java.lang.String" --]
