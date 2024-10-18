@@ -12,7 +12,6 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
-import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
@@ -66,10 +65,12 @@ class UpdateAnimeJob : AbstractJob {
         needUpdateAnimes.forEach { anime ->
             logger.info("Updating anime ${StringUtils.getShortName(anime.name!!)}...")
             // Compare platform sort index and anime release date descending
-            val updatedAnimes = runBlocking { fetchAnime(anime) }.sortedWith(
+            val updatedAnimes = runCatching { runBlocking { fetchAnime(anime) } }
+                .getOrNull()
+                ?.sortedWith(
                 compareBy<Pair<Platform, UpdatableAnime>> { it.first.sortIndex }
                     .thenByDescending { it.second.lastReleaseDateTime }
-            ).map { it.second }
+                )?.map { it.second } ?: emptyList()
 
             if (updatedAnimes.isEmpty()) {
                 logger.warning("No platform found for anime ${StringUtils.getShortName(anime.name!!)}")
@@ -127,7 +128,7 @@ class UpdateAnimeJob : AbstractJob {
         animePlatformService.findAllByAnime(anime).forEach {
             when (it.platform!!) {
                 Platform.ANIM -> list.add(it.platform to fetchADNAnime(it))
-                Platform.CRUN -> list.add(it.platform to HttpRequest.retry(3) { fetchCrunchyrollAnime(it) })
+                Platform.CRUN -> list.add(it.platform to fetchCrunchyrollAnime(it))
                 else -> logger.warning("Platform ${it.platform} not supported")
             }
         }
