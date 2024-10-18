@@ -58,7 +58,7 @@ class HttpRequest(
         return response
     }
 
-    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: Any): HttpResponse {
+    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: Any? = null): HttpResponse {
         val httpClient = httpClient()
         logger.info("Making request to $url... (POST)")
         val start = System.currentTimeMillis()
@@ -67,7 +67,7 @@ class HttpRequest(
                 header(key, value)
             }
 
-            setBody(body)
+            body?.let { setBody(it) }
         }
         httpClient.close()
         logger.info("Request to $url done in ${System.currentTimeMillis() - start}ms (POST)")

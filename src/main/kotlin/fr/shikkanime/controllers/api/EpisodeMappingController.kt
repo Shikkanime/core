@@ -148,12 +148,21 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/{uuid}/media-image")
     @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun getMediaImage(@PathParam("uuid") uuid: UUID): Response {
+    @OpenAPI(
+        "Get episode variant image published on social networks",
+        [
+            OpenAPIResponse(200, "Image found", contentType = "image/jpeg"),
+            OpenAPIResponse(404, "Image not found")
+        ]
+    )
+    private fun getMediaImage(
+        @PathParam("uuid", description = "UUID of the episode variant") uuid: UUID
+    ): Response {
+        val episodeVariant = episodeVariantService.find(uuid) ?: return Response.notFound()
+
         val image = ImageService.toEpisodeImage(
             AbstractConverter.convert(
-                episodeVariantService.find(uuid),
+                episodeVariant,
                 EpisodeVariantDto::class.java
             )
         )
