@@ -12,6 +12,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
+import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
@@ -126,7 +127,7 @@ class UpdateAnimeJob : AbstractJob {
         animePlatformService.findAllByAnime(anime).forEach {
             when (it.platform!!) {
                 Platform.ANIM -> list.add(it.platform to fetchADNAnime(it))
-                Platform.CRUN -> list.add(it.platform to fetchCrunchyrollAnime(it))
+                Platform.CRUN -> list.add(it.platform to HttpRequest.retry(3) { fetchCrunchyrollAnime(it) })
                 else -> logger.warning("Platform ${it.platform} not supported")
             }
         }
@@ -167,6 +168,9 @@ class UpdateAnimeJob : AbstractJob {
                     )
                 }.getOrNull()
             }
+
+            if (objects.isEmpty())
+                throw Exception("No episode found for Crunchyroll anime ${series.title}")
 
             UpdatableAnime(
                 lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
