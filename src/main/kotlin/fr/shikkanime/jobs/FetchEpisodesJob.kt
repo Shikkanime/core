@@ -128,8 +128,8 @@ class FetchEpisodesJob : AbstractJob {
 
                         if (typeIdentifiersWithPlatforms.add(typeIdentifier)) {
                             val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
-                            sendToSocialNetworks(episodeDto)
                             sendEpisodeNotification(episode, episodeDto)
+                            sendToSocialNetworks(episodeDto)
                         }
                     }
             }
