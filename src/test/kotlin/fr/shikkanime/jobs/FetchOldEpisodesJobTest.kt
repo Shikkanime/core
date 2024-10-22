@@ -38,8 +38,6 @@ class FetchOldEpisodesJobTest {
     @BeforeEach
     fun setUp() {
         Constant.injector.injectMembers(this)
-        configService.save(Config(propertyKey = ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS.key, propertyValue = "false"))
-        MapCache.invalidate(Config::class.java)
     }
 
     @AfterEach

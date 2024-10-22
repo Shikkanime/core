@@ -279,22 +279,6 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
     }
 
-    suspend fun getSimulcasts(locale: String, accessToken: String): List<Simulcast> {
-        val response = httpRequest.get(
-            "${BASE_URL}content/v1/season_list?locale=$locale",
-            headers = mapOf(
-                "Authorization" to "Bearer $accessToken",
-            ),
-        )
-
-        require(response.status == HttpStatusCode.OK) { "Failed to get simulcasts (${response.status})" }
-
-        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items")
-            ?: throw Exception("Failed to get simulcasts")
-
-        return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java).toList()
-    }
-
     suspend fun getEpisodesBySeriesId(locale: String, accessToken: String, seriesId: String): List<BrowseObject> {
         val browseObjects = mutableListOf<BrowseObject>()
 

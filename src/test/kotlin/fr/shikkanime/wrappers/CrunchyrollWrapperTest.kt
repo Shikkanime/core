@@ -35,19 +35,6 @@ class CrunchyrollWrapperTest {
     }
 
     @Test
-    fun getSimulcasts() {
-        val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(locale, token!!) }
-        assertEquals(true, simulcasts.isNotEmpty())
-    }
-
-    @Test
-    fun getSimulcastsError() {
-        assertThrows<Exception> {
-            runBlocking { CrunchyrollWrapper.getSimulcasts(locale, OLD_TOKEN) }
-        }
-    }
-
-    @Test
     fun getWinter2024Series() {
         val series = runBlocking {
             CrunchyrollWrapper.getBrowse(
