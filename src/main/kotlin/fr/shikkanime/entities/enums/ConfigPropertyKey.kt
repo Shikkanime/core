@@ -16,18 +16,7 @@ enum class ConfigPropertyKey(val key: String) {
     TWITTER_FIRST_MESSAGE("twitter_first_message"),
     TWITTER_SECOND_MESSAGE("twitter_second_message"),
 
-    // Threads old API
-    @Deprecated("Use Threads API")
-    THREADS_USERNAME("threads_username"),
-
-    @Deprecated("Use Threads API")
-    THREADS_PASSWORD("threads_password"),
-
-    @Deprecated("Use Threads API")
-    THREADS_SESSION_TIMEOUT("threads_session_timeout"),
-
     // Threads API
-    USE_NEW_THREADS_WRAPPER("use_new_threads_wrapper"),
     THREADS_APP_ID("threads_app_id"),
     THREADS_APP_SECRET("threads_app_secret"),
     THREADS_ACCESS_TOKEN("threads_access_token"),
