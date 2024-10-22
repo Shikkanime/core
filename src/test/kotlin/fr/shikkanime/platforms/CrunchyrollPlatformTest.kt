@@ -8,6 +8,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
@@ -52,6 +53,7 @@ class CrunchyrollPlatformTest {
 
     @AfterEach
     fun tearDown() {
+        platform.configuration!!.simulcasts.clear()
         episodeVariantService.deleteAll()
         episodeMappingService.deleteAll()
         configService.deleteAll()
@@ -70,7 +72,7 @@ class CrunchyrollPlatformTest {
         val s = "2024-01-24T18:45:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)
 
-        platform.simulcasts[CountryCode.FR] = setOf("metallic rouge")
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(name = "metallic rouge"))
 
         val episodes = platform.fetchEpisodes(
             zonedDateTime,
@@ -78,7 +80,8 @@ class CrunchyrollPlatformTest {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "Metallic Rouge" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
@@ -95,7 +98,7 @@ class CrunchyrollPlatformTest {
         val s = "2024-04-14T09:00:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)
 
-        platform.simulcasts[CountryCode.FR] = setOf("one piece")
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(name = "one piece"))
 
         val episodes = platform.fetchEpisodes(
             zonedDateTime,
@@ -103,7 +106,8 @@ class CrunchyrollPlatformTest {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "One Piece" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals("One Piece", episodes[0].anime)
@@ -116,7 +120,7 @@ class CrunchyrollPlatformTest {
         val s = "2024-06-08T12:45:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)
 
-        platform.simulcasts[CountryCode.FR] = setOf("kaiju no. 8")
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(name = "kaiju no. 8"))
 
         val episodes = platform.fetchEpisodes(
             zonedDateTime,
@@ -124,7 +128,8 @@ class CrunchyrollPlatformTest {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "Kaiju No. 8" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals("Kaiju No. 8", episodes[0].anime)
@@ -138,7 +143,8 @@ class CrunchyrollPlatformTest {
         val s = "2024-07-08T07:30:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)
 
-        platform.simulcasts[CountryCode.FR] = setOf("days with my stepsister", "mayonaka punch")
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(name = "days with my stepsister"))
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(name = "mayonaka punch"))
 
         val episodes = platform.fetchEpisodes(
             zonedDateTime,
@@ -146,7 +152,8 @@ class CrunchyrollPlatformTest {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "Days with My Stepsister" && it.anime != "Mayonaka Punch" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
@@ -187,7 +194,7 @@ class CrunchyrollPlatformTest {
         val s = "2024-07-17T15:00:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)
 
-        platform.simulcasts[CountryCode.FR] = setOf("alya sometimes hides her feelings in russian")
+        platform.configuration!!.simulcasts.add(PlatformSimulcast(name = "alya sometimes hides her feelings in russian"))
 
         val episodes = platform.fetchEpisodes(
             zonedDateTime,
@@ -195,7 +202,8 @@ class CrunchyrollPlatformTest {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "Alya Sometimes Hides Her Feelings in Russian" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)

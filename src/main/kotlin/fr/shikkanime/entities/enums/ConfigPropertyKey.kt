@@ -6,7 +6,6 @@ enum class ConfigPropertyKey(val key: String) {
     SEO_DESCRIPTION("seo_description"),
     SOCIAL_NETWORK_EPISODES_SIZE_LIMIT("social_network_episodes_size_limit"),
     GOOGLE_SITE_VERIFICATION_ID("google_site_verification_id"),
-    CHECK_CRUNCHYROLL_SIMULCASTS("check_crunchyroll_simulcasts"),
 
     // Twitter API
     TWITTER_CONSUMER_KEY("twitter_consumer_key"),

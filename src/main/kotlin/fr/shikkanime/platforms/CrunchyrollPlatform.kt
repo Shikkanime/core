@@ -37,29 +37,6 @@ class CrunchyrollPlatform :
         return@MapCache runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
     }
 
-    val simulcasts = MapCache<CountryCode, Set<String>>(Duration.ofHours(1)) {
-        val simulcastSeries = mutableSetOf<String>()
-        val accessToken = identifiers[it]!!
-        val simulcasts = runBlocking { CrunchyrollWrapper.getSimulcasts(it.locale, accessToken) }.take(2)
-
-        val series = simulcasts.flatMap { simulcast ->
-            runBlocking {
-                CrunchyrollWrapper.getBrowse(
-                    it.locale,
-                    accessToken,
-                    sortBy = CrunchyrollWrapper.SortType.POPULARITY,
-                    type = CrunchyrollWrapper.MediaType.SERIES,
-                    100,
-                    simulcast = simulcast.id
-                ).toList()
-            }
-        }.map { serie -> serie.title!!.lowercase() }.toSet()
-
-        simulcastSeries.addAll(series)
-        logger.info(simulcastSeries.joinToString(", "))
-        return@MapCache simulcastSeries
-    }
-
     private val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent?>(Duration.ofDays(1)) {
         try {
             val token = identifiers[it.countryCode]!!
@@ -133,11 +110,6 @@ class CrunchyrollPlatform :
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error on converting episode", e)
         }
-    }
-
-    override fun saveConfiguration() {
-        super.saveConfiguration()
-        simulcasts.resetWithNewDuration(Duration.ofMinutes(configuration!!.simulcastCheckDelayInMinutes))
     }
 
     private suspend fun predictFutureEpisodes(
@@ -229,20 +201,12 @@ class CrunchyrollPlatform :
         if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale)))
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
-        val checkCrunchyrollSimulcasts =
-            configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_CRUNCHYROLL_SIMULCASTS, true)
+        val crunchyrollAnimeContent =
+            animeInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seriesId)]
+                ?: throw AnimeException("Anime not found")
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        if (needSimulcast && checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || simulcasts[countryCode]!!.contains(
-                animeName.lowercase()
-            ))
-        )
-            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
-
-        val crunchyrollAnimeContent =
-            animeInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seriesId)] ?: throw AnimeException("Anime not found")
-
-        if (needSimulcast && !checkCrunchyrollSimulcasts && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
+        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata)
@@ -251,7 +215,7 @@ class CrunchyrollPlatform :
 
         if (!browseObject.episodeMetadata.versions.isNullOrEmpty()) {
             val currentVersion = browseObject.episodeMetadata.versions.firstOrNull { it.guid == browseObject.id }
-            original = currentVersion?.original ?: true
+            original = currentVersion?.original != false
         }
 
         return Episode(
