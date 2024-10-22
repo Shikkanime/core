@@ -13,6 +13,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val id: Int,
         val shortTitle: String?,
         val title: String,
+        val originalTitle: String?,
         val image2x: String,
         val imageHorizontal2x: String,
         val summary: String?,

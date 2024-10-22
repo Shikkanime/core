@@ -6,12 +6,12 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.*
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 
 abstract class AbstractCrunchyrollWrapper {
     enum class SortType {
@@ -80,6 +80,8 @@ abstract class AbstractCrunchyrollWrapper {
         val premiumAvailableDate: ZonedDateTime,
         @SerializedName("season_id")
         val seasonId: String,
+        @SerializedName("season_title")
+        val seasonTitle: String?,
         @SerializedName("season_number")
         val seasonNumber: Int?,
         @SerializedName("season_slug_title")

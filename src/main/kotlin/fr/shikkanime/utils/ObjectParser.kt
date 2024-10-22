@@ -4,12 +4,14 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
-import fr.shikkanime.modules.ZonedDateTimeAdapter
+import fr.shikkanime.modules.ZonedDateTimeDeserializer
+import fr.shikkanime.modules.ZonedTimeSerializer
 import java.time.ZonedDateTime
 
 object ObjectParser {
     private val gson = GsonBuilder()
-        .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapter())
+        .registerTypeAdapter(ZonedDateTime::class.java, ZonedTimeSerializer())
+        .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeDeserializer())
         .create()
 
     fun fromJson(json: String): JsonObject {
