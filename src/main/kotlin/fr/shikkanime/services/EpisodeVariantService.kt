@@ -1,6 +1,7 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.variants.SeparateVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -16,6 +17,7 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
     @Inject
@@ -284,5 +286,28 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             animeService.update(anime)
             MapCache.invalidate(Anime::class.java)
         }
+    }
+
+    fun separate(uuid: UUID, dto: SeparateVariantDto) {
+        val episodeVariant = find(uuid) ?: return
+        val mapping = episodeVariant.mapping!!
+
+        val newMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = mapping.anime,
+                releaseDateTime = mapping.releaseDateTime,
+                lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z"),
+                episodeType = dto.episodeType,
+                season = dto.season,
+                number = dto.number,
+                duration = mapping.duration,
+                title = mapping.title,
+                description = mapping.description,
+                image = mapping.image,
+            )
+        )
+
+        episodeVariant.mapping = newMapping
+        update(episodeVariant)
     }
 }

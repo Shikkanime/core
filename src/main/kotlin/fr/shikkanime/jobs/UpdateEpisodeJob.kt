@@ -20,6 +20,7 @@ import fr.shikkanime.wrappers.CrunchyrollWrapper.getObjects
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.ZonedDateTime
+import java.util.concurrent.atomic.AtomicBoolean
 
 class UpdateEpisodeJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -91,8 +92,8 @@ class UpdateEpisodeJob : AbstractJob {
             return
         }
 
-        var needRecalculate = false
-        var needRefreshCache = false
+        var needRecalculate = AtomicBoolean(false)
+        var needRefreshCache = AtomicBoolean(false)
         val identifiers = episodeVariantService.findAllIdentifiers()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -109,8 +110,8 @@ class UpdateEpisodeJob : AbstractJob {
                 ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
                 ?.also {
                     logger.info("Added ${it.size} episodes for $mappingIdentifier")
-                    needRecalculate = true
-                    needRefreshCache = true
+                    needRecalculate.set(true)
+                    needRefreshCache.set(true)
                 }
 
             val originalEpisode = episodes.firstOrNull { it.original }
@@ -122,55 +123,99 @@ class UpdateEpisodeJob : AbstractJob {
                     logger.info("Episode $mappingIdentifier updated")
                 }
 
-            var hasChanged = false
+            var hasChanged = AtomicBoolean(false)
 
-            if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
-                mapping.image = originalEpisode.image
-                episodeMappingService.addImage(mapping.uuid!!, originalEpisode.image, true)
-                logger.info("Image updated for $mappingIdentifier to ${originalEpisode.image}")
-                hasChanged = true
-                needRefreshCache = true
-            }
-
-            if (originalEpisode.title.normalize() != mapping.title && !originalEpisode.title.isNullOrBlank()) {
-                mapping.title = originalEpisode.title.normalize()
-                logger.info("Title updated for $mappingIdentifier to ${originalEpisode.title.normalize()}")
-                hasChanged = true
-                needRefreshCache = true
-            }
-
-            val trimmedDescription = originalEpisode.description?.take(Constant.MAX_DESCRIPTION_LENGTH).normalize()
-
-            if (trimmedDescription != mapping.description &&
-                !trimmedDescription.isNullOrBlank() &&
-                languageCacheService.detectLanguage(trimmedDescription) == mapping.anime!!.countryCode!!.name.lowercase()
-            ) {
-                mapping.description = trimmedDescription
-                logger.info("Description updated for $mappingIdentifier to $trimmedDescription")
-                hasChanged = true
-                needRefreshCache = true
-            }
+            updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+            updateEpisodeMappingTitle(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+            updateEpisodeMappingDescription(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+            updateEpisodeMappingDuration(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
 
             mapping.status = StringUtils.getStatus(mapping)
             mapping.lastUpdateDateTime = ZonedDateTime.now()
             episodeMappingService.update(mapping)
 
-            if (hasChanged) {
+            if (hasChanged.get()) {
                 traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
             }
 
             logger.info("Episode $mappingIdentifier updated")
         }
 
-        if (needRecalculate) {
+        if (needRecalculate.get()) {
             logger.info("Recalculating simulcasts...")
             animeService.recalculateSimulcasts()
         }
 
         logger.info("Episodes updated")
 
-        if (needRefreshCache) {
+        if (needRefreshCache.get()) {
             MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        }
+    }
+
+    private fun updateEpisodeMappingImage(
+        originalEpisode: Episode,
+        mapping: EpisodeMapping,
+        mappingIdentifier: String,
+        hasChanged: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
+            mapping.image = originalEpisode.image
+            episodeMappingService.addImage(mapping.uuid!!, originalEpisode.image, true)
+            logger.info("Image updated for $mappingIdentifier to ${originalEpisode.image}")
+            hasChanged.set(true)
+            needRefreshCache.set(true)
+        }
+    }
+
+    private fun updateEpisodeMappingTitle(
+        originalEpisode: Episode,
+        mapping: EpisodeMapping,
+        mappingIdentifier: String,
+        hasChanged: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        if (originalEpisode.title.normalize() != mapping.title && !originalEpisode.title.isNullOrBlank()) {
+            mapping.title = originalEpisode.title.normalize()
+            logger.info("Title updated for $mappingIdentifier to ${originalEpisode.title.normalize()}")
+            hasChanged.set(true)
+            needRefreshCache.set(true)
+        }
+    }
+
+    private fun updateEpisodeMappingDescription(
+        originalEpisode: Episode,
+        mapping: EpisodeMapping,
+        mappingIdentifier: String,
+        hasChanged: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        val trimmedDescription = originalEpisode.description?.take(Constant.MAX_DESCRIPTION_LENGTH).normalize()
+
+        if (trimmedDescription != mapping.description &&
+            !trimmedDescription.isNullOrBlank() &&
+            languageCacheService.detectLanguage(trimmedDescription) == mapping.anime!!.countryCode!!.name.lowercase()
+        ) {
+            mapping.description = trimmedDescription
+            logger.info("Description updated for $mappingIdentifier to $trimmedDescription")
+            hasChanged.set(true)
+            needRefreshCache.set(true)
+        }
+    }
+
+    private fun updateEpisodeMappingDuration(
+        originalEpisode: Episode,
+        mapping: EpisodeMapping,
+        mappingIdentifier: String,
+        hasChanged: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        if (originalEpisode.duration != mapping.duration) {
+            mapping.duration = originalEpisode.duration
+            logger.info("Duration updated for $mappingIdentifier to ${originalEpisode.duration}")
+            hasChanged.set(true)
+            needRefreshCache.set(true)
         }
     }
 
