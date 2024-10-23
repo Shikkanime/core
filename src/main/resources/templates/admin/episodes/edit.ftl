@@ -27,7 +27,8 @@
 
     <div x-data="{
     episode: {},
-    loading: true
+    loading: true,
+    selectedVariant: {}
     }">
         <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -44,6 +45,57 @@
 
                         <button class="btn btn-danger"
                                 @click="loading = true; await deleteEpisode(); window.location.href = '/admin/episodes'">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="separateVariantModal" tabindex="-1" aria-labelledby="separateVariantModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="separateVariantModalLabel">Separate variant</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="uuid" class="form-label">UUID</label>
+
+                                <div class="input-group">
+                                    <input type="text" class="form-control disabled" id="uuid" name="uuid"
+                                           x-model="selectedVariant.uuid" aria-label="UUID"
+                                           aria-describedby="basic-addon" disabled>
+                                    <span class="input-group-text" id="basic-addon"
+                                          @click="copyToClipboard(selectedVariant.uuid)" style="cursor: pointer"><i
+                                                class="bi bi-clipboard"></i></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="episodeType" class="form-label">Episode type</label>
+                                <input type="text" class="form-control" id="episodeType" name="episodeType"
+                                       x-model="selectedVariant.episodeType">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="season" class="form-label">Season</label>
+                                <input type="number" class="form-control" id="season" name="season"
+                                       x-model="selectedVariant.season">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="number" class="form-label">Number</label>
+                                <input type="number" class="form-control" id="number" name="number"
+                                       x-model="selectedVariant.number">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                        <button class="btn btn-success"
+                                @click="loading = true; await separateVariant(selectedVariant); location.reload();">
                             Confirm
                         </button>
                     </div>
@@ -158,65 +210,65 @@
                         </div>
                         <div class="col-md-12 mt-3">
                             <hr>
-                            <template x-for="variant in episode.variants" :id="variant.uuid">
-                                <div class="row g-3 mt-3">
-                                    <div class="col-md-auto">
-                                        <button type="button" class="btn btn-outline-danger"
-                                                @click="episode.variants.splice(episode.variants.indexOf(variant), 1)">
-                                            -
-                                        </button>
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <label for="variantReleaseDateTime" class="form-label">Release date time</label>
-                                        <input type="datetime-local" class="form-control" id="variantReleaseDateTime"
-                                               name="variantReleaseDateTime"
-                                               :value="variant.releaseDateTime.substring(0, 16)"
-                                               @input="variant.releaseDateTime = $event.target.value + ':00Z'">
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <label for="variantPlatform" class="form-label">Platform</label>
-                                        <input type="text" class="form-control" id="variantPlatform"
-                                               name="variantPlatform"
-                                               x-model="variant.platform.name" disabled>
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <label for="variantAudioLocale" class="form-label">Audio locale</label>
-                                        <input type="text" class="form-control" id="variantAudioLocale"
-                                               name="variantAudioLocale"
-                                               x-model="variant.audioLocale" disabled>
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <label for="variantIdentifier" class="form-label">Identifier</label>
-                                        <input type="text" class="form-control" id="variantIdentifier"
-                                               name="variantIdentifier"
-                                               x-model="variant.identifier">
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <label for="variantUrl" class="form-label">URL</label>
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Identifier</th>
+                                    <th scope="col">Release date time</th>
+                                    <th scope="col">Platform</th>
+                                    <th scope="col">Audio locale</th>
+                                    <th scope="col">URL</th>
+                                    <th scope="col">Uncensored</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                <template x-for="variant in episode.variants">
+                                    <tr>
+                                        <th scope="row"><span x-text="variant.identifier"></span></th>
+                                        <td>
+                                            <input type="datetime-local" class="form-control"
+                                                   id="variantReleaseDateTime"
+                                                   name="variantReleaseDateTime"
+                                                   :value="variant.releaseDateTime.substring(0, 16)"
+                                                   @input="variant.releaseDateTime = $event.target.value + ':00Z'">
+                                        </td>
+                                        <td x-text="variant.platform.name"></td>
+                                        <td x-text="variant.audioLocale"></td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="variantUrl"
+                                                       name="variantUrl"
+                                                       x-model="variant.url" aria-label="Image"
+                                                       aria-describedby="basic-addon">
 
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="variantUrl" name="variantUrl"
-                                                   x-model="variant.url" aria-label="Image"
-                                                   aria-describedby="basic-addon">
+                                                <a class="input-group-text" id="basic-addon" style="cursor: pointer"
+                                                   target="_blank" :href="variant.url">
+                                                    <i class="bi bi-box-arrow-up-right"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" id="variantUncensored"
+                                                   name="variantUncensored"
+                                                   x-model="variant.uncensored">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-warning" data-bs-toggle="modal"
+                                                    data-bs-target="#separateVariantModal"
+                                                    @click="selectedVariant = {uuid: variant.uuid}">
+                                                Separate
+                                            </button>
 
-                                            <a class="input-group-text" id="basic-addon" style="cursor: pointer"
-                                               target="_blank" :href="variant.url">
-                                                <i class="bi bi-box-arrow-up-right"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <input type="checkbox" class="form-check-input" id="variantUncensored"
-                                               name="variantUncensored"
-                                               x-model="variant.uncensored">
-                                        <label for="variantUncensored" class="form-label">Uncensored</label>
-                                    </div>
-                                    <div class="col-md-auto">
-                                        <img :src="'/api/v1/episode-mappings/' + variant.uuid + '/media-image'"
-                                             class="rounded-4 w-25" alt="Variant image">
-                                    </div>
-                                </div>
-                            </template>
+                                            <button type="button" class="btn btn-danger"
+                                                    @click="episode.variants.splice(episode.variants.indexOf(variant), 1)">
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -269,6 +321,10 @@
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
                     toastBootstrap.show();
                 });
+        }
+
+        async function separateVariant(dto) {
+            await axios.post('/api/v1/episode-variants/' + dto.uuid + '/separate', dto);
         }
     </script>
 </@navigation.display>
