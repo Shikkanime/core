@@ -206,7 +206,7 @@ class CrunchyrollPlatform :
                 ?: throw AnimeException("Anime not found")
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast))
+        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast || isDubbed))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata)

@@ -419,4 +419,23 @@ class CrunchyrollPlatformTest {
             assertNull(result)
         }
     }
+
+    @Test
+    fun `fetchEpisodes for 2024-10-24`() {
+        val s = "2024-10-24T22:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "BOCCHI THE ROCK!" }
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(12, episodes.size)
+        assertEquals("BOCCHI THE ROCK!", episodes[0].anime)
+    }
 }
