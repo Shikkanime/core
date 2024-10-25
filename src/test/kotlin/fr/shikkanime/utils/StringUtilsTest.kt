@@ -65,6 +65,7 @@ class StringUtilsTest {
             "Loner Life in Another World" to "Loner Life in Another World",
             "Anime KAPIBARASAN" to "KAPIBARASAN",
             "Anime AzurLane: Slow Ahead!" to "AzurLane: Slow Ahead!",
+            "<DOGEZA>I Tried Asking While Kowtowing." to "DOGEZA",
         )
 
         list.forEach { (input, expected) ->
@@ -99,6 +100,7 @@ class StringUtilsTest {
             "THE IDOLM@STER Million Live!" to "the-idolmaster-million-live",
             "MIX" to "mix",
             "Loner Life in Another World" to "loner-life-in-another-world",
+            "<DOGEZA>I Tried Asking While Kowtowing." to "dogeza",
         )
 
         list.forEach { (input, expected) ->

@@ -38,7 +38,8 @@
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${episodeMapping.anime.shortName} - Saison ${episodeMapping.season?c} ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}</h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${su.sanitizeXSS(episodeMapping.anime.shortName)} -
+                    Saison ${episodeMapping.season?c} ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}</h1>
 
                 <div class="mt-1">
                     <#list episodeMapping.langTypes as langType>

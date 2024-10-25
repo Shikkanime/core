@@ -27,7 +27,13 @@ object StringUtils {
     }
 
     fun getShortName(fullName: String): String {
-        var shortName = regex.replace(removeAnimeNamePart(fullName), " ").trim()
+        var shortName = fullName
+
+        if ("<.*> ?.*".toRegex().matches(shortName)) {
+            shortName = shortName.replace("<", "").replace(">", ": ").trim()
+        }
+
+        shortName = regex.replace(removeAnimeNamePart(shortName), " ").trim()
 
         separators.forEach { separator ->
             if (shortName.contains(separator)) {
