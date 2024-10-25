@@ -10,7 +10,7 @@
                          class="img-fluid" width="480" height="720">
 
                     <div class="mt-2 mx-2 mb-1">
-                        <span class="h6 text-truncate-2 fw-bold mb-0">${anime.shortName}</span>
+                        <span class="h6 text-truncate-2 fw-bold mb-0">${su.sanitizeXSS(anime.shortName)}</span>
 
                         <#list anime.langTypes as langType>
                             <p class="text-muted mt-0 mb-0"><@langTypeComponent.display langType=langType /></p>
@@ -19,7 +19,7 @@
 
                     <div class="overlay" style="display: none;" x-show="hover">
                         <div class="h6 text-truncate-2 fw-bold">
-                            ${anime.shortName?upper_case}
+                            ${su.sanitizeXSS(anime.shortName)?upper_case}
                         </div>
 
                         <hr>
