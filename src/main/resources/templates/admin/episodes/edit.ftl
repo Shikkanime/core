@@ -225,7 +225,14 @@
                                 <tbody class="table-group-divider">
                                 <template x-for="variant in episode.variants">
                                     <tr>
-                                        <th scope="row"><span x-text="variant.identifier"></span></th>
+                                        <th scope="row">
+                                            <span x-text="variant.identifier"></span>
+
+                                            <a :href="'/api/v1/episode-mappings/' + variant.uuid + '/media-image'"
+                                               target="_blank">
+                                                <i class="ms-2 bi bi-image"></i>
+                                            </a>
+                                        </th>
                                         <td>
                                             <input type="datetime-local" class="form-control"
                                                    id="variantReleaseDateTime"

@@ -9,7 +9,7 @@ import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
 import fr.shikkanime.utils.routes.*
@@ -160,7 +160,7 @@ class EpisodeMappingController : HasPageableRoute() {
     ): Response {
         val episodeVariant = episodeVariantService.find(uuid) ?: return Response.notFound()
 
-        val image = ImageService.toEpisodeImage(
+        val image = MediaImage.toMediaImage(
             AbstractConverter.convert(
                 episodeVariant,
                 EpisodeVariantDto::class.java

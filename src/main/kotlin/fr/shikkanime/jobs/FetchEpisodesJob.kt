@@ -6,7 +6,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import jakarta.inject.Inject
@@ -25,8 +25,7 @@ class FetchEpisodesJob : AbstractJob {
     private val maxLock = 5
 
     private val identifiers = mutableSetOf<String>()
-    private val typeIdentifiersWithPlatforms = mutableSetOf<String>()
-    private val typeIdentifiersWithoutPlatforms = mutableSetOf<String>()
+    private val typeIdentifiers = mutableSetOf<String>()
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
@@ -63,11 +62,7 @@ class FetchEpisodesJob : AbstractJob {
                 )
             }
 
-            // COMPARE COUNTRY, ANIME, PLATFORM, EPISODE TYPE, SEASON, NUMBER, AND LANG TYPE
-            variants.forEach {
-                typeIdentifiersWithPlatforms.add(getTypeIdentifierWithPlatform(it))
-                typeIdentifiersWithoutPlatforms.add(getTypeIdentifierWithoutPlatform(it))
-            }
+            variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
 
             isInitialized = true
         }
@@ -111,42 +106,64 @@ class FetchEpisodesJob : AbstractJob {
         isRunning = false
     }
 
+    data class TypeIdentifier(
+        val country: CountryCode,
+        val anime: UUID,
+        val season: Int,
+        val episodeType: EpisodeType,
+        val number: Int,
+        val audioLocale: String
+    )
+
+    private fun getTypeIdentifier(input: Any): String {
+        val (country, anime, season, episodeType, number, audioLocale) = when (input) {
+            is Tuple -> TypeIdentifier(
+                input[0] as CountryCode,
+                input[1] as UUID,
+                input[4] as Int,
+                input[3] as EpisodeType,
+                input[5] as Int,
+                input[6] as String
+            )
+
+            is EpisodeVariant -> TypeIdentifier(
+                input.mapping!!.anime!!.countryCode!!,
+                input.mapping!!.anime!!.uuid!!,
+                input.mapping!!.season!!,
+                input.mapping!!.episodeType!!,
+                input.mapping!!.number!!,
+                input.audioLocale!!
+            )
+
+            else -> throw IllegalArgumentException("Invalid input type")
+        }
+
+        val langType = LangType.fromAudioLocale(country, audioLocale)
+        return "${country}_${anime}_${season}_${episodeType}_${number}_${langType}"
+    }
+
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
         if (savedEpisodes.isEmpty()) return
-
         val sizeLimit = configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)
 
         savedEpisodes
             .groupBy { it.mapping?.anime?.uuid }
-            .values
-            .forEach { episodes ->
+            .flatMap { (_, episodes) ->
                 episodes
-                    .filterNot { typeIdentifiersWithPlatforms.contains(getTypeIdentifierWithPlatform(it)) }
-                    .takeIf { it.size < sizeLimit }
-                    ?.forEach { episode ->
-                        val typeIdentifier = getTypeIdentifierWithPlatform(episode)
-
-                        if (typeIdentifiersWithPlatforms.add(typeIdentifier)) {
-                            val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
-                            sendEpisodeNotification(episode, episodeDto)
-                            sendToSocialNetworks(episodeDto)
-                        }
-                    }
+                    .filterNot { typeIdentifiers.contains(getTypeIdentifier(it)) }
+                    .take(sizeLimit)
+            }
+            .forEach { episode ->
+                val typeIdentifier = getTypeIdentifier(episode)
+                if (typeIdentifiers.add(typeIdentifier)) {
+                    val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
+                    sendEpisodeNotification(episodeDto)
+                    sendToSocialNetworks(episodeDto)
+                }
             }
     }
 
-    private fun sendEpisodeNotification(
-        episode: EpisodeVariant,
-        episodeDto: EpisodeVariantDto
-    ) {
-        val typeIdentifierWithoutPlatform = getTypeIdentifierWithoutPlatform(episode)
-
-        if (typeIdentifiersWithoutPlatforms.contains(typeIdentifierWithoutPlatform)) {
-            return
-        }
-
-        typeIdentifiersWithoutPlatforms.add(typeIdentifierWithoutPlatform)
-
+    private fun sendEpisodeNotification(episodeDto: EpisodeVariantDto) {
         try {
             FirebaseNotification.send(episodeDto)
         } catch (e: Exception) {
@@ -154,61 +171,10 @@ class FetchEpisodesJob : AbstractJob {
         }
     }
 
-    private fun getTypeIdentifierWithPlatform(tuple: Tuple): String {
-        val country = tuple[0] as CountryCode
-        val anime = tuple[1] as UUID
-        val platform = tuple[2] as Platform
-        val episodeType = tuple[3] as EpisodeType
-        val season = tuple[4] as Int
-        val number = tuple[5] as Int
-        val audioLocale = tuple[6] as String
-
-        val langType = LangType.fromAudioLocale(country, audioLocale)
-        return "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
-    }
-
-    private fun getTypeIdentifierWithoutPlatform(tuple: Tuple): String {
-        val country = tuple[0] as CountryCode
-        val anime = tuple[1] as UUID
-        val episodeType = tuple[3] as EpisodeType
-        val season = tuple[4] as Int
-        val number = tuple[5] as Int
-        val audioLocale = tuple[6] as String
-
-        val langType = LangType.fromAudioLocale(country, audioLocale)
-        return "${country}_${anime}_${episodeType}_${season}_${number}_${langType}"
-    }
-
-    private fun getTypeIdentifierWithPlatform(episodeVariant: EpisodeVariant): String {
-        val country = episodeVariant.mapping!!.anime!!.countryCode!!
-        val anime = episodeVariant.mapping!!.anime!!.uuid!!
-        val platform = episodeVariant.platform!!
-        val episodeType = episodeVariant.mapping!!.episodeType!!
-        val season = episodeVariant.mapping!!.season!!
-        val number = episodeVariant.mapping!!.number!!
-        val audioLocale = episodeVariant.audioLocale!!
-
-        val langType = LangType.fromAudioLocale(country, audioLocale)
-        return "${country}_${anime}_${platform}_${episodeType}_${season}_${number}_${langType}"
-    }
-
-
-    private fun getTypeIdentifierWithoutPlatform(episodeVariant: EpisodeVariant): String {
-        val country = episodeVariant.mapping!!.anime!!.countryCode!!
-        val anime = episodeVariant.mapping!!.anime!!.uuid!!
-        val episodeType = episodeVariant.mapping!!.episodeType!!
-        val season = episodeVariant.mapping!!.season!!
-        val number = episodeVariant.mapping!!.number!!
-        val audioLocale = episodeVariant.audioLocale!!
-
-        val langType = LangType.fromAudioLocale(country, audioLocale)
-        return "${country}_${anime}_${episodeType}_${season}_${number}_${langType}"
-    }
-
     private fun sendToSocialNetworks(dto: EpisodeVariantDto) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(ImageService.toEpisodeImage(dto), "jpg", byteArrayOutputStream)
+            ImageIO.write(MediaImage.toMediaImage(dto), "jpg", byteArrayOutputStream)
             byteArrayOutputStream.toByteArray()
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while converting episode image for social networks", e)
