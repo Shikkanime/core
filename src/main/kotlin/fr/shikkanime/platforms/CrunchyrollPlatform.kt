@@ -58,6 +58,16 @@ class CrunchyrollPlatform :
         }
     }
 
+    private val seasonInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollWrapper.Season?>(Duration.ofDays(1)) {
+        try {
+            val token = identifiers[it.countryCode]!!
+            return@MapCache HttpRequest.retry(3) { CrunchyrollWrapper.getSeason(it.countryCode.locale, token, it.id) }
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error on fetching season info", e)
+            return@MapCache null
+        }
+    }
+
     override fun getPlatform(): Platform = Platform.CRUN
 
     override fun getConfigurationClass() = CrunchyrollConfiguration::class.java
@@ -206,10 +216,15 @@ class CrunchyrollPlatform :
                 ?: throw AnimeException("Anime not found")
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast || isDubbed))
-            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
+        val season = seasonInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seasonId)] ?: run {
+            logger.warning("Season not found for ${browseObject.episodeMetadata.seasonId}")
+            throw AnimeException("Anime season not found")
+        }
 
-        val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata)
+        val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
+
+        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast || isDubbed || episodeType == EpisodeType.FILM))
+            throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         var original = true
 
@@ -238,17 +253,25 @@ class CrunchyrollPlatform :
             audioLocale = browseObject.episodeMetadata.audioLocale,
             id = browseObject.id,
             url = CrunchyrollWrapper.buildUrl(countryCode, browseObject.id, browseObject.slugTitle),
-            uncensored = false,
+            uncensored = browseObject.episodeMetadata.matureBlocked,
             original = original
         )
     }
 
-    private fun getNumberAndEpisodeType(episode: CrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
+    private fun getNumberAndEpisodeType(
+        episode: CrunchyrollWrapper.Episode,
+        season: CrunchyrollWrapper.Season
+    ): Pair<Int, EpisodeType> {
         var number = episode.number ?: -1
         val specialEpisodeRegex = "SP(\\d*)".toRegex()
 
         var episodeType = when {
-            episode.seasonSlugTitle?.contains("movie", true) == true -> EpisodeType.FILM
+            episode.seasonSlugTitle?.contains("movie", true) == true || season.keywords.any {
+                it.contains(
+                    "movie",
+                    true
+                )
+            } -> EpisodeType.FILM
             number == -1 -> EpisodeType.SPECIAL
             else -> EpisodeType.EPISODE
         }
