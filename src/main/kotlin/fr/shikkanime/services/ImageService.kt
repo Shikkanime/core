@@ -4,8 +4,6 @@ import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import java.awt.*
-import java.awt.image.BufferedImage
 import java.io.*
 import java.util.*
 import java.util.concurrent.Executors
@@ -381,28 +379,5 @@ object ImageService {
                 bypass
             )
         }
-    }
-
-    fun getDominantColor(image: BufferedImage): Color {
-        val pixels = IntArray(image.width * image.height).apply {
-            image.getRGB(0, 0, image.width, image.height, this, 0, image.width)
-        }
-
-        val red = IntArray(256)
-        val green = IntArray(256)
-        val blue = IntArray(256)
-
-        pixels.forEach { rgb ->
-            red[rgb shr 16 and 0xFF]++
-            green[rgb shr 8 and 0xFF]++
-            blue[rgb and 0xFF]++
-        }
-
-        val total = pixels.size
-        val redAverage = red.indices.sumOf { it * red[it] } / total.toFloat()
-        val greenAverage = green.indices.sumOf { it * green[it] } / total.toFloat()
-        val blueAverage = blue.indices.sumOf { it * blue[it] } / total.toFloat()
-
-        return Color(redAverage.toInt(), greenAverage.toInt(), blueAverage.toInt())
     }
 }

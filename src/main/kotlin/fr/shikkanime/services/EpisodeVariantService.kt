@@ -260,16 +260,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     ) {
         var needAnimeUpdate = false
 
-        if (anime.banner.isNullOrBlank() && episode.animeBanner.isNotBlank()) {
-            anime.banner = episode.animeBanner
-            needAnimeUpdate = true
-        }
-
-        if (anime.description.isNullOrBlank() && !episode.animeDescription.isNullOrBlank()) {
-            anime.description = episode.animeDescription
-            needAnimeUpdate = true
-        }
-
         if (anime.lastReleaseDateTime.isBefore(episode.releaseDateTime)) {
             anime.lastReleaseDateTime = episode.releaseDateTime
             needAnimeUpdate = true

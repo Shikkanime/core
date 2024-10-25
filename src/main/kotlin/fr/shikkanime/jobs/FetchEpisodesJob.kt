@@ -88,7 +88,7 @@ class FetchEpisodesJob : AbstractJob {
                     { it.season },
                     { it.episodeType },
                     { it.number },
-                    { it.audioLocale })
+                    { LangType.fromAudioLocale(it.countryCode, it.audioLocale) })
             )
             .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !identifiers.contains(it.getIdentifier()) }
             .mapNotNull {

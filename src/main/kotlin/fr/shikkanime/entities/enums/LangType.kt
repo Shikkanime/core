@@ -6,8 +6,8 @@ enum class LangType {
     ;
 
     companion object {
-        fun fromAudioLocale(countryCode: CountryCode, audioLocale: String, ignoreCase: Boolean = true): LangType {
-            return if (audioLocale.equals(countryCode.locale, ignoreCase)) VOICE else SUBTITLES
+        fun fromAudioLocale(countryCode: CountryCode, audioLocale: String): LangType {
+            return if (audioLocale.equals(countryCode.locale, true)) VOICE else SUBTITLES
         }
     }
 }

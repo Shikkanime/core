@@ -1,20 +1,18 @@
 package fr.shikkanime.services
 
-import com.mortennobel.imagescaling.ResampleOp
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.resize
 import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.runBlocking
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics2D
-import java.awt.Point
-import java.awt.RadialGradientPaint
 import java.awt.RenderingHints
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
@@ -49,17 +47,12 @@ object MediaImage {
         val graphics = setupGraphics(mediaImage)
 
         drawBackground(graphics, mediaImage, dimensions)
-        drawGradientCircle(graphics, mediaImage, dimensions)
         drawAnimeImage(graphics, dimensions, episodeVariantDto)
         drawEpisodeInformation(graphics, dimensions, font, episodeVariantDto)
         drawBanner(graphics, mediaImage, bannerImage, dimensions)
 
         graphics.dispose()
         return mediaImage
-    }
-
-    private fun BufferedImage.resize(width: Int, height: Int): BufferedImage {
-        return ResampleOp(width, height).filter(this, null)
     }
 
     private fun BufferedImage.makeRoundedCorner(cornerRadius: Int): BufferedImage =
@@ -131,17 +124,6 @@ object MediaImage {
             dimensions.whiteLinesSize, dimensions.whiteLinesSize, mediaImage.width, mediaImage.height,
             dimensions.roundedCorner, dimensions.roundedCorner
         )
-    }
-
-    private fun drawGradientCircle(graphics: Graphics2D, mediaImage: BufferedImage, dimensions: Dimensions) {
-        val radius = 275
-        val fractions = floatArrayOf(0.0f, 1.0f)
-        val colors = arrayOf(Color(0xFFFFFF), Color(0x000000))
-        val point =
-            Point(dimensions.whiteLinesSize + mediaImage.width / 2, dimensions.whiteLinesSize + mediaImage.height / 2)
-        val gradientPaint = RadialGradientPaint(point, radius.toFloat(), fractions, colors)
-        graphics.paint = gradientPaint
-        graphics.fillOval(point.x - radius, point.y - radius, radius * 2, radius * 2)
     }
 
     fun getLongTimeoutImage(url: String): BufferedImage =

@@ -2,7 +2,6 @@ package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.services.ImageService
 import fr.shikkanime.socialnetworks.listeners.SlashCommandInteractionListener
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -17,10 +16,8 @@ import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import java.io.File
-import java.net.URI
 import java.time.ZonedDateTime
 import java.util.logging.Level
-import javax.imageio.ImageIO
 
 class DiscordSocialNetwork : AbstractSocialNetwork() {
     data class Channel(
@@ -93,13 +90,6 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         if (episodeDto.mapping.image.isBlank()) return
 
         val embedMessage = EmbedBuilder()
-        val image = ImageIO.read(URI(episodeDto.mapping.image).toURL())
-        embedMessage.setColor(ImageService.getDominantColor(image))
-        embedMessage.setAuthor(
-            episodeDto.platform.name,
-            episodeDto.platform.url,
-            "${Constant.baseUrl}/assets/img/platforms/${episodeDto.platform.image}"
-        )
         embedMessage.setTitle(episodeDto.mapping.anime.shortName, getShikkanimeUrl(episodeDto))
         embedMessage.setThumbnail(episodeDto.mapping.anime.image)
         embedMessage.setDescription(
@@ -109,7 +99,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
                 )
             }"
         )
-        embedMessage.setImage(episodeDto.mapping.image)
+        embedMessage.setImage("${Constant.apiUrl}/v1/episode-mappings/${episodeDto.uuid}/media-image")
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
         val embed = embedMessage.build()
