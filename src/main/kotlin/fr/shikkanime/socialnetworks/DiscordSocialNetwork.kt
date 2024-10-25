@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
+import net.dv8tion.jda.api.utils.FileUpload
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -99,15 +100,19 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
                 )
             }"
         )
-        embedMessage.setImage("${Constant.apiUrl}/v1/episode-mappings/${episodeDto.uuid}/media-image")
+        embedMessage.setImage("attachment://media-image.jpg")
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
         val embed = embedMessage.build()
         val channels = getChannels(getFile())
+        val fileUpload = FileUpload.fromData(mediaImage ?: byteArrayOf(), "media-image.jpg")
 
         channels.forEach { channel ->
             if (channel.releaseType == "ALL" || channel.animes.contains(episodeDto.mapping.anime.shortName)) {
-                jda?.getTextChannelById(channel.id)?.sendMessageEmbeds(embed)?.queue()
+                jda?.getTextChannelById(channel.id)
+                    ?.sendFiles(fileUpload)
+                    ?.setEmbeds(embed)
+                    ?.queue()
             }
         }
     }
