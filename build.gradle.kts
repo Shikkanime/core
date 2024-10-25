@@ -42,7 +42,7 @@ plugins {
 }
 
 group = "fr.shikkanime"
-version = "0.11.2"
+version = "0.11.3"
 
 application {
     mainClass.set("fr.shikkanime.ApplicationKt")
