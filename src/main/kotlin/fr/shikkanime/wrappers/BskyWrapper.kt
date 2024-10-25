@@ -138,7 +138,7 @@ object BskyWrapper {
                         accessJwt,
                         ContentType.Image.JPEG,
                         HttpRequest().use { it.get(document.select("meta[property=og:image]").attr("content")) }
-                            .readBytes()
+                            .readRawBytes()
                     )
                 )
             )

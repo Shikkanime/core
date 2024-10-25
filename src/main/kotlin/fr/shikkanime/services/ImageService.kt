@@ -238,7 +238,7 @@ object ImageService {
         image: Image
     ) {
         val httpResponse = runBlocking { HttpRequest().get(url) }
-        val bytes = runBlocking { httpResponse.readBytes() }
+        val bytes = runBlocking { httpResponse.readRawBytes() }
 
         if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
             logger.warning("Failed to load image $url")
@@ -661,7 +661,7 @@ object ImageService {
     }
 
     fun getLongTimeoutImage(url: String): BufferedImage? =
-        ByteArrayInputStream(runBlocking { HttpRequest().get(url).readBytes() }).use { ImageIO.read(it) }
+        ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
 
     fun toEpisodeImage(episode: EpisodeVariantDto, adjustColor: Boolean = true): BufferedImage {
         val (backgroundImage, bannerImage, font, animeImage, platformImage) = loadResources(episode)
