@@ -22,7 +22,7 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
-class UpdateEpisodeJob : AbstractJob {
+class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject
@@ -100,8 +100,8 @@ class UpdateEpisodeJob : AbstractJob {
             val variants = episodeVariantService.findAllByMapping(mapping)
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
-            val episodes =
-                variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
+            val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
+                .sortedBy { it.platform.sortIndex }
 
             saveAnimePlatformIfNotExists(episodes, mapping)
 

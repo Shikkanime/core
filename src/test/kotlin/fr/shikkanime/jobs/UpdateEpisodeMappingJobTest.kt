@@ -20,9 +20,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-class UpdateEpisodeJobTest {
+class UpdateEpisodeMappingJobTest {
     @Inject
-    private lateinit var updateEpisodeJob: UpdateEpisodeJob
+    private lateinit var updateEpisodeMappingJob: UpdateEpisodeMappingJob
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -86,7 +86,7 @@ class UpdateEpisodeJobTest {
                 url = "https://www.crunchyroll.com/fr/watch/GZ7UV8KWZ/rent-a-girlfriend"
             )
         )
-        updateEpisodeJob.run()
+        updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
@@ -142,7 +142,7 @@ class UpdateEpisodeJobTest {
                 url = "https://animationdigitalnetwork.fr/video/the-eminence-in-shadow/20568-episode-1-un-camarade-detestable"
             )
         )
-        updateEpisodeJob.run()
+        updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
@@ -192,7 +192,7 @@ class UpdateEpisodeJobTest {
         )
 
         val now = ZonedDateTime.now()
-        updateEpisodeJob.run()
+        updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
         assertEquals(1, animes.size)

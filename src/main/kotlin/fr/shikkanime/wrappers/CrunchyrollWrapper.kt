@@ -61,6 +61,7 @@ object CrunchyrollWrapper {
         val id: String,
         @SerializedName("subtitle_locales")
         val subtitleLocales: List<String>,
+        val keywords: List<String>,
     )
 
     data class Episode(
@@ -92,6 +93,8 @@ object CrunchyrollWrapper {
         @SerializedName("duration_ms")
         val durationMs: Long,
         val description: String?,
+        @SerializedName("mature_blocked")
+        val matureBlocked: Boolean,
         val versions: List<Version>?,
         @SerializedName("next_episode_id")
         val nextEpisodeId: String?,
@@ -203,7 +206,21 @@ object CrunchyrollWrapper {
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
             ?: throw Exception("Failed to get seasons")
         return ObjectParser.fromJson(asJsonArray, Array<Season>::class.java)
+    }
 
+    suspend fun getSeason(locale: String, accessToken: String, seasonId: String): Season {
+        val response = httpRequest.get(
+            "${BASE_URL}content/v2/cms/seasons/$seasonId?locale=$locale",
+            headers = mapOf(
+                "Authorization" to "Bearer $accessToken",
+            ),
+        )
+
+        require(response.status == HttpStatusCode.OK) { "Failed to get seasons (${response.status})" }
+
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data")
+            ?: throw Exception("Failed to get seasons")
+        return ObjectParser.fromJson(asJsonArray.first(), Season::class.java)
     }
 
     @JvmStatic

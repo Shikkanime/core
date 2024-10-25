@@ -251,6 +251,7 @@ class CrunchyrollPlatformTest {
             null,
             1440000L,
             null,
+            false,
             null,
             "nextId",
         )
@@ -310,6 +311,7 @@ class CrunchyrollPlatformTest {
             null,
             1440000L,
             null,
+            false,
             null,
             null,
         )
@@ -382,6 +384,7 @@ class CrunchyrollPlatformTest {
             null,
             1440000L,
             null,
+            false,
             null,
             null,
         )
@@ -437,5 +440,25 @@ class CrunchyrollPlatformTest {
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(12, episodes.size)
         assertEquals("BOCCHI THE ROCK!", episodes[0].anime)
+    }
+
+    @Test
+    fun `fetchEpisodes for 2024-10-25`() {
+        val s = "2024-10-25T18:15:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        ).toMutableList()
+        episodes.removeAll { it.anime != "Gridman Universe" }
+
+        assertEquals(true, episodes.isNotEmpty())
+        assertEquals(1, episodes.size)
+        assertEquals("Gridman Universe", episodes[0].anime)
+        assertEquals(EpisodeType.FILM, episodes[0].episodeType)
     }
 }
