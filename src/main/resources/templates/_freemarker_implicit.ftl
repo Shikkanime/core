@@ -29,6 +29,7 @@
 
 [#-- @ftlvariable name="baseUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="apiUrl" type="java.lang.String" --]
+[#-- @ftlvariable name="additionalHeadTags" type="java.lang.String" --]
 
 [#-- @ftlvariable name="episodeMappings" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.mappings.EpisodeMappingDto>" --]
 [#-- @ftlvariable name="episodeMapping" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]

@@ -28,6 +28,7 @@ fun setGlobalAttributes(
     modelMap["currentSimulcast"] = simulcastCacheService.currentSimulcast
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl
+    modelMap["additionalHeadTags"] = configCacheService.getValueAsString(ConfigPropertyKey.ADDITIONAL_HEAD_TAGS)
 }
 
 private fun getLinks(controller: Any, replacedPath: String, simulcastCacheService: SimulcastCacheService) =

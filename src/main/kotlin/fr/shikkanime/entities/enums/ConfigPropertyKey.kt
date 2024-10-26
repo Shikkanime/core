@@ -48,4 +48,7 @@ enum class ConfigPropertyKey(val key: String) {
     UPDATE_EPISODE_SIZE("update_episode_size"),
     UPDATE_ANIME_DELAY("update_anime_delay"),
     UPDATE_ANIME_SIZE("update_anime_size"),
+
+    AUTHORIZED_DOMAINS("authorized_domains"),
+    ADDITIONAL_HEAD_TAGS("additional_head_tags"),
 }

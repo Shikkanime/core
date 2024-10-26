@@ -55,7 +55,7 @@ fun Application.configureRouting() {
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
         if (call.response.status()?.value != null || !configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
-        setSecurityHeaders(call)
+        setSecurityHeaders(call, configCacheService)
     }
 
     monitor.subscribe(RoutingRoot.RoutingCallFinished) { call ->
@@ -80,7 +80,10 @@ fun Application.configureRouting() {
     }
 }
 
-private fun Application.setSecurityHeaders(call: ApplicationCall) {
+private fun Application.setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
+    val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS)
+    val authorizedDomainsString = authorizedDomains.joinToString(" ").trim()
+
     call.response.header(
         HttpHeaders.StrictTransportSecurity,
         "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
@@ -89,11 +92,11 @@ private fun Application.setSecurityHeaders(call: ApplicationCall) {
     call.response.header(
         "Content-Security-Policy",
         "default-src 'self';" +
-                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;" +
-                "font-src 'self' https://cdn.jsdelivr.net; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;" +
-                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl};" +
-                "connect-src 'self' ${Constant.apiUrl};"
+                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomainsString;" +
+                "font-src 'self' https://cdn.jsdelivr.net $authorizedDomainsString; " +
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomainsString;" +
+                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl} $authorizedDomainsString;" +
+                "connect-src 'self' ${Constant.apiUrl} $authorizedDomainsString;"
     )
 
     call.response.header("X-Frame-Options", "DENY")
