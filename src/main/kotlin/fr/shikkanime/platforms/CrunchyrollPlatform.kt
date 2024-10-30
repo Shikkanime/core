@@ -158,24 +158,41 @@ class CrunchyrollPlatform :
     }
 
     suspend fun getNextEpisode(countryCode: CountryCode, crunchyrollId: String): CrunchyrollWrapper.BrowseObject? {
-        return try {
-            CrunchyrollWrapper.getUpNext(countryCode.locale, identifiers[countryCode]!!, crunchyrollId)
+        val token = identifiers[countryCode]!!
+        val locale = countryCode.locale
+
+        // Try getting next episode directly
+        try {
+            return CrunchyrollWrapper.getUpNext(locale, token, crunchyrollId)
         } catch (_: Exception) {
             logger.warning("Can not fetch up next episode for $crunchyrollId, trying to check with the episode...")
-            val episode = CrunchyrollWrapper.getEpisode(countryCode.locale, identifiers[countryCode]!!, crunchyrollId)
+        }
 
-            if (!episode.nextEpisodeId.isNullOrEmpty()) {
-                return CrunchyrollWrapper.getObjects(
-                    countryCode.locale,
-                    identifiers[countryCode]!!,
-                    episode.nextEpisodeId
-                ).firstOrNull()
-            }
+        // Try getting episode and check nextEpisodeId
+        val episode = runCatching {
+            CrunchyrollWrapper.getEpisode(locale, token, crunchyrollId)
+        }.getOrNull() ?: return null
 
-            logger.warning("Next episode ID not found for $crunchyrollId, trying to find it by season...")
-            val episodes = CrunchyrollWrapper.getEpisodesBySeasonId(countryCode.locale, identifiers[countryCode]!!, episode.seasonId)
-            episodes.firstOrNull { it.premiumAvailableDate > episode.premiumAvailableDate }
-                ?.let { CrunchyrollWrapper.getObjects(countryCode.locale, identifiers[countryCode]!!, it.id!!).firstOrNull() }
+        // If nextEpisodeId exists, get that episode
+        if (!episode.nextEpisodeId.isNullOrEmpty()) {
+            return runCatching {
+                CrunchyrollWrapper.getObjects(locale, token, episode.nextEpisodeId)
+            }.getOrNull()?.firstOrNull()
+        }
+
+        // Try finding next episode by season
+        logger.warning("Next episode ID not found for $crunchyrollId, trying to find it by season...")
+        val episodes = runCatching {
+            CrunchyrollWrapper.getEpisodesBySeasonId(locale, token, episode.seasonId)
+        }.getOrNull()
+
+        // Find first episode with later premium date
+        return episodes?.firstOrNull {
+            it.premiumAvailableDate > episode.premiumAvailableDate
+        }?.let { nextEpisode ->
+            runCatching {
+                CrunchyrollWrapper.getObjects(locale, token, nextEpisode.id!!)
+            }.getOrNull()?.firstOrNull()
         }
     }
 
