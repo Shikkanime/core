@@ -21,7 +21,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         database.entityManager.use {
             val searchSession = Search.session(it)
             val indexer = searchSession.massIndexer(getEntityClass())
-            indexer.startAndWait()
+            indexer.start()
         }
     }
 
@@ -221,6 +221,45 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
+        }
+    }
+
+    fun findAllAudioLocalesAndSeasons(): Map<UUID, Pair<List<String>, List<Pair<Int, ZonedDateTime>>>> {
+        return database.entityManager.use { em ->
+            val cb = em.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(EpisodeVariant::class.java)
+
+            query.multiselect(
+                root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                root[EpisodeVariant_.audioLocale],
+                root[EpisodeVariant_.mapping][EpisodeMapping_.season],
+                cb.greatest(root[EpisodeVariant_.mapping][EpisodeMapping_.lastReleaseDateTime])
+            )
+
+            query.groupBy(
+                root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                root[EpisodeVariant_.audioLocale],
+                root[EpisodeVariant_.mapping][EpisodeMapping_.season]
+            )
+
+            query.orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]))
+
+            createReadOnlyQuery(em, query)
+                .resultList
+                .groupBy { tuple -> tuple[0] as UUID }
+                .mapValues { (_, results) ->
+                    // Process results
+                    val audioLocales = mutableSetOf<String>()
+                    val seasons = mutableListOf<Pair<Int, ZonedDateTime>>()
+
+                    results.forEach { tuple ->
+                        audioLocales.add(tuple[1] as String)
+                        seasons.add(tuple[2] as Int to tuple[3] as ZonedDateTime)
+                    }
+
+                    Pair(audioLocales.toList(), seasons.distinctBy { it.first })
+                }
         }
     }
 

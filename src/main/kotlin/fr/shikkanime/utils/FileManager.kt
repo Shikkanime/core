@@ -5,6 +5,11 @@ import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
 import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 object FileManager {
     init {
@@ -30,6 +35,35 @@ object FileManager {
         } catch (e: Exception) {
             e.printStackTrace()
             throw Exception("Failed to get input stream from resource")
+        }
+    }
+
+    inline fun <reified T> readFile(file: File): T {
+        try {
+            val value = ByteArrayInputStream(file.readBytes()).use { bais ->
+                ObjectInputStream(bais).use {
+                    it.readObject()
+                }
+            }
+            require(value is T) { "Invalid type" }
+            return value
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Failed to read file")
+        }
+    }
+
+    fun writeFile(file: File, `object`: Any) {
+        try {
+            ByteArrayOutputStream().use { baos ->
+                ObjectOutputStream(baos).use { oos ->
+                    oos.writeObject(`object`)
+                    file.writeBytes(baos.toByteArray())
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Failed to write file")
         }
     }
 }

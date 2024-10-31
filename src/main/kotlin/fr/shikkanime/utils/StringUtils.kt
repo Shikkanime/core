@@ -18,8 +18,10 @@ object StringUtils {
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
     private val regex = "( [-|!].*[-|!](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([MDCLXVI]+$)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
+    private val encasedRegex = "<.*> ?.*".toRegex()
+    private val duplicateSpaceRegex = " +".toRegex()
 
-    fun removeAnimeNamePart(name: String) = name.replace("Anime ".toRegex(), "").trim()
+    fun removeAnimeNamePart(name: String) = name.replace("Anime ", "").trim()
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
         val words = parts.map { it.trim().split(" ", "-").size }.distinct()
@@ -29,7 +31,7 @@ object StringUtils {
     fun getShortName(fullName: String): String {
         var shortName = fullName
 
-        if ("<.*> ?.*".toRegex().matches(shortName)) {
+        if (encasedRegex.matches(shortName)) {
             shortName = shortName.replace("<", "").replace(">", ": ").trim()
         }
 
@@ -49,7 +51,7 @@ object StringUtils {
             }
         }
 
-        return shortName.replace(" +".toRegex(), " ").trim()
+        return shortName.replace(duplicateSpaceRegex, " ").trim()
     }
 
     fun getHashtag(fullName: String) = getShortName(normalized(fullName)).lowercase().capitalizeWords()

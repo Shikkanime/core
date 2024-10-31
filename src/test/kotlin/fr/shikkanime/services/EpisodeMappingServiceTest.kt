@@ -109,7 +109,7 @@ class EpisodeMappingServiceTest {
         val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)
         assertNotEquals(updated!!.uuid, episodeMapping.uuid)
         assertEquals(EpisodeType.FILM, updated.episodeType)
-        assertNull(episodeMappingService.find(episodeMapping.uuid!!))
+        assertNull(episodeMappingService.find(episodeMapping.uuid))
     }
 
     @Test

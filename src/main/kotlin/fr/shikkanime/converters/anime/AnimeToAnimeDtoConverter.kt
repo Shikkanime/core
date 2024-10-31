@@ -9,18 +9,19 @@ import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
+import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTCString
 import org.hibernate.Hibernate
 
 class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    private lateinit var animeCacheService: AnimeCacheService
 
     @Converter
     fun convert(from: Anime): AnimeDto {
-        val (audioLocales, seasons) = episodeVariantCacheService.findAudioLocalesAndSeasonsByAnimeCache(from)!!
+        val (audioLocales, seasons) = animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(from)
+            ?: Pair(emptyList(), emptyList())
 
         return AnimeDto(
             uuid = from.uuid,

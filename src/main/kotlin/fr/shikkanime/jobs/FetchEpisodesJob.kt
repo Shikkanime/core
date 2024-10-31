@@ -148,18 +148,20 @@ class FetchEpisodesJob : AbstractJob {
 
         savedEpisodes
             .groupBy { it.mapping?.anime?.uuid }
-            .flatMap { (_, episodes) ->
+            .values
+            .forEach { episodes ->
                 episodes
                     .filterNot { typeIdentifiers.contains(getTypeIdentifier(it)) }
-                    .take(sizeLimit)
-            }
-            .forEach { episode ->
-                val typeIdentifier = getTypeIdentifier(episode)
-                if (typeIdentifiers.add(typeIdentifier)) {
-                    val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
-                    sendEpisodeNotification(episodeDto)
-                    sendToSocialNetworks(episodeDto)
-                }
+                    .takeIf { it.size < sizeLimit }
+                    ?.forEach { episode ->
+                        val typeIdentifier = getTypeIdentifier(episode)
+
+                        if (typeIdentifiers.add(typeIdentifier)) {
+                            val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
+                            sendEpisodeNotification(episodeDto)
+                            sendToSocialNetworks(episodeDto)
+                        }
+                    }
             }
     }
 

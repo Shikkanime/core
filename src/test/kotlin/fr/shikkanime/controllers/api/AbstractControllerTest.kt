@@ -86,7 +86,7 @@ abstract class AbstractControllerTest {
         client.post("/api/v1/members/register").apply {
             assertEquals(HttpStatusCode.Created, status)
             identifier = ObjectParser.fromJson(bodyAsText(), Map::class.java)["identifier"].toString()
-            val findPrivateMember = memberService.findByIdentifier(identifier!!)
+            val findPrivateMember = memberService.findByIdentifier(identifier)
             assertNotNull(findPrivateMember)
             assertTrue(findPrivateMember!!.isPrivate)
         }

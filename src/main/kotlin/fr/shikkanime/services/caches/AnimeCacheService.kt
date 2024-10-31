@@ -19,6 +19,7 @@ import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeCacheService : AbstractCacheService {
@@ -87,6 +88,17 @@ class AnimeCacheService : AbstractCacheService {
             )
         }
 
+    private val findAllAudioLocalesAndSeasonsCache =
+        MapCache<String, Map<UUID, Pair<List<String>, List<Pair<Int, ZonedDateTime>>>>>(
+            classes = listOf(
+                Anime::class.java,
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java
+            ),
+        ) {
+            animeService.findAllAudioLocalesAndSeasons()
+        }
+
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -106,4 +118,7 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
+
+    fun findAudioLocalesAndSeasonsByAnimeCache(anime: Anime) =
+        findAllAudioLocalesAndSeasonsCache["all"]?.get(anime.uuid)
 }
