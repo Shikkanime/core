@@ -56,8 +56,10 @@ object ImageService {
     }
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    private var threadPool = Executors.newFixedThreadPool(4)
+    private val nThreads = Runtime.getRuntime().availableProcessors()
+    private var threadPool = Executors.newFixedThreadPool(nThreads)
     val cache = mutableListOf<Image>()
+    private val searchCacheIndex = mutableMapOf<String, Int>()
     private val change = AtomicBoolean(false)
     private const val CACHE_FILE_NUMBER = 4
 
@@ -89,6 +91,23 @@ object ImageService {
 
         this.cache.addAll(cachePart)
         logger.info("Loaded images cache in $take ms (${this.cache.size} images)")
+        createImageIndex()
+    }
+
+    private fun createImageIndex() {
+        logger.info("Creating search index...")
+
+        val take = measureTimeMillis {
+            this.searchCacheIndex.clear()
+
+            this.searchCacheIndex.putAll(
+                cache.asSequence()
+                    .mapIndexed { index, image -> image.uuid + image.type to index }
+                    .toMap()
+            )
+        }
+
+        logger.info("Created search index in $take ms")
     }
 
     private fun loadCachePart(file: File): List<Image> {
@@ -100,12 +119,7 @@ object ImageService {
         val cache = mutableListOf<Image>()
 
         val take = measureTimeMillis {
-            val deserializedCache = ByteArrayInputStream(file.readBytes()).use { bais ->
-                ObjectInputStream(bais).use {
-                    it.readObject() as List<Image> // NOSONAR
-                }
-            }
-
+            val deserializedCache = FileManager.readFile<List<Image>>(file)
             cache.addAll(deserializedCache)
         }
 
@@ -162,14 +176,7 @@ object ImageService {
         }
 
         logger.info("Saving images cache part...")
-        val take = measureTimeMillis {
-            ByteArrayOutputStream().use { baos ->
-                ObjectOutputStream(baos).use { oos ->
-                    oos.writeObject(cache)
-                    file.writeBytes(baos.toByteArray())
-                }
-            }
-        }
+        val take = measureTimeMillis { FileManager.writeFile(file, cache) }
 
         logger.info(
             "Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${
@@ -186,12 +193,16 @@ object ImageService {
 
         val image = if (!bypass) {
             val image = Image(uuid.toString(), type, url)
+            val futureIndex = cache.size
             cache.add(image)
+            searchCacheIndex[uuid.toString() + type] = futureIndex
             image
         } else {
             get(uuid, type) ?: run {
                 val image = Image(uuid.toString(), type, url)
+                val futureIndex = cache.size
                 cache.add(image)
+                searchCacheIndex[uuid.toString() + type] = futureIndex
                 image
             }
         }
@@ -206,12 +217,16 @@ object ImageService {
 
         val image = if (!bypass) {
             val image = Image(uuid.toString(), type)
+            val futureIndex = cache.size
             cache.add(image)
+            searchCacheIndex[uuid.toString() + type] = futureIndex
             image
         } else {
             get(uuid, type) ?: run {
                 val image = Image(uuid.toString(), type)
+                val futureIndex = cache.size
                 cache.add(image)
+                searchCacheIndex[uuid.toString() + type] = futureIndex
                 image
             }
         }
@@ -227,8 +242,10 @@ object ImageService {
         height: Int,
         image: Image
     ) {
-        val httpResponse = runBlocking { HttpRequest().get(url) }
-        val bytes = runBlocking { httpResponse.readRawBytes() }
+        val (httpResponse, bytes) = runBlocking {
+            val response = HttpRequest().get(url)
+            response to response.readRawBytes()
+        }
 
         if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
             logger.warning("Failed to load image $url")
@@ -263,13 +280,9 @@ object ImageService {
                 }
 
                 val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(width, height)
-                val tmpFile = File.createTempFile("shikk", ".png").apply {
-                    writeBytes(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
-                }
-                val webp = FileManager.encodeToWebP(tmpFile.readBytes())
-
-                if (!tmpFile.delete())
-                    logger.warning("Can not delete tmp file image")
+                val webp =
+                    FileManager.encodeToWebP(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }
+                        .toByteArray())
 
                 if (webp.isEmpty()) {
                     logger.warning(FAILED_TO_ENCODE_MESSAGE)
@@ -281,7 +294,7 @@ object ImageService {
                 image.originalSize = bytes.size.toLong()
                 image.size = webp.size.toLong()
 
-                val indexOf = cache.indexOf(image)
+                val indexOf = searchCacheIndex[uuid.toString() + type] ?: -1
 
                 if (indexOf == -1) {
                     logger.warning("Failed to find image in cache")
@@ -307,9 +320,11 @@ object ImageService {
 
     fun remove(uuid: UUID, type: Type) {
         cache.removeIf { it.uuid == uuid.toString() && it.type == type }
+        searchCacheIndex.remove(uuid.toString() + type)
+        change.set(true)
     }
 
-    operator fun get(uuid: UUID, type: Type): Image? = cache.toList().find { it.uuid == uuid.toString() && it.type == type }
+    operator fun get(uuid: UUID, type: Type): Image? = searchCacheIndex[uuid.toString() + type]?.let { cache[it] }
 
     val size: Int
         get() = cache.toList().size
@@ -321,18 +336,23 @@ object ImageService {
         get() = toHumanReadable(cache.toList().sumOf { it.size })
 
     fun invalidate() {
+        removeUnusedImages()
+        addAll(true)
+    }
+
+    private fun removeUnusedImages() {
         Constant.injector.getInstance(Database::class.java).entityManager.use {
             val query = it.createNativeQuery(
                 """
-                SELECT uuid
-                FROM anime
-                UNION
-                SELECT uuid
-                FROM episode_mapping
-                UNION
-                SELECT uuid
-                FROM member
-                """,
+                    SELECT uuid
+                    FROM anime
+                    UNION
+                    SELECT uuid
+                    FROM episode_mapping
+                    UNION
+                    SELECT uuid
+                    FROM member
+                    """,
                 UUID::class.java
             )
 
@@ -343,17 +363,18 @@ object ImageService {
             // Calculate the difference between the cache and the UUIDs
             val difference = cache.filter { img -> img.uuid !in uuids }
             logger.warning("Removing ${difference.size} images from cache, not found in database")
-            logger.warning("${toHumanReadable(difference.sumOf { img -> img.size })} will be freed")
+            logger.warning("${toHumanReadable(difference.sumOf { img -> img.size })} will be free")
 
             cache.removeIf { img -> img.uuid !in uuids }
+            createImageIndex()
         }
-
-        addAll(true)
     }
 
     fun clearPool() {
         threadPool.shutdownNow()
-        threadPool = Executors.newFixedThreadPool(4)
+        threadPool = Executors.newFixedThreadPool(nThreads)
+        cache.clear()
+        searchCacheIndex.clear()
     }
 
     fun addAll(bypass: Boolean = false) {

@@ -7,17 +7,17 @@ import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantWithoutMappingDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.services.EpisodeVariantService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.withUTCString
 
 class EpisodeMappingToEpisodeMappingWithoutAnimeDtoConverter :
     AbstractConverter<EpisodeMapping, EpisodeMappingWithoutAnimeDto>() {
     @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Converter
     fun convert(from: EpisodeMapping): EpisodeMappingWithoutAnimeDto {
-        val variants = episodeVariantService.findAllByMapping(from).sortedBy { it.releaseDateTime }
+        val variants = episodeVariantCacheService.findAllByMapping(from) ?: emptyList()
 
         return EpisodeMappingWithoutAnimeDto(
             uuid = from.uuid!!,

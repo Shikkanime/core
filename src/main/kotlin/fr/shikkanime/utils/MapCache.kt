@@ -19,39 +19,28 @@ class MapCache<K : Any, V>(
     }
 
     private fun MapCache<K, V>.setCache() {
-        val builder = CacheBuilder.newBuilder()
-
-        if (duration != null) {
-            builder.expireAfterWrite(duration!!)
+        val builder = CacheBuilder.newBuilder().apply {
+            duration?.let { expireAfterWrite(it) }
         }
 
-        cache = builder
-            .build(object : CacheLoader<K, V & Any>() {
-                override fun load(key: K): V & Any {
-                    if (log) {
-                        logger.info("Loading $key")
-                    }
-
-                    return block(key)!!
-                }
-            })
+        cache = builder.build(object : CacheLoader<K, V & Any>() {
+            override fun load(key: K): V & Any {
+                if (log) logger.info("Loading $key")
+                return block(key)!!
+            }
+        })
     }
 
     operator fun get(key: K): V? {
         return try {
             cache.getUnchecked(key)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
 
     operator fun set(key: K, value: V & Any) {
         cache.put(key, value)
-    }
-
-    fun resetWithNewDuration(duration: Duration) {
-        this.duration = duration
-        setCache()
     }
 
     fun invalidate() {
@@ -63,9 +52,8 @@ class MapCache<K : Any, V>(
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun invalidate(vararg classes: Class<*>) {
-            classes.forEach { clazz ->
-                globalCaches.filter { it.classes.contains(clazz) }.forEach { it.invalidate() }
-            }
+            globalCaches.filter { it.classes.any { clazz -> classes.contains(clazz) } }
+                .forEach { it.invalidate() }
         }
 
         // For test only

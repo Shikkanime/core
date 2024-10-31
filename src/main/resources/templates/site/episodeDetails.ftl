@@ -16,6 +16,7 @@
 
 
 <#assign canonicalUrl = baseUrl + "/animes/" + episodeMapping.anime.slug + "/season-" + episodeMapping.season?c + "/" + episodeMapping.episodeType.slug + "-" + episodeMapping.number?c />
+<#assign animeSanitized = su.sanitizeXSS(episodeMapping.anime.shortName) />
 
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image">
     <div class="position-relative">
@@ -31,15 +32,17 @@
                 <a class="text-decoration-none"
                    href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}">
                     <img src="${apiUrl}/v1/attachments?uuid=${episodeMapping.anime.uuid}&type=image"
-                         alt="${su.sanitizeXSS(episodeMapping.anime.shortName)} anime" class="img-fluid w-50 rounded-4"
+                         alt="${animeSanitized} anime" class="img-fluid w-50 rounded-4"
                          width="480"
                          height="720">
                 </a>
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${su.sanitizeXSS(episodeMapping.anime.shortName)} -
-                    Saison ${episodeMapping.season?c} ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}</h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">
+                    ${animeSanitized}&NonBreakingSpace;
+                    -&NonBreakingSpace;Saison ${episodeMapping.season?c} ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                </h1>
 
                 <div class="mt-1">
                     <#list episodeMapping.langTypes as langType>

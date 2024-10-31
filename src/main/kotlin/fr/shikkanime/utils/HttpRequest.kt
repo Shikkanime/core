@@ -26,20 +26,17 @@ class HttpRequest(
     private var context: BrowserContext? = null
     private var page: Page? = null
 
-    private fun httpClient(): HttpClient {
-        val httpClient = HttpClient(OkHttp) {
-            install(HttpTimeout) {
-                requestTimeoutMillis = TIMEOUT
-                connectTimeoutMillis = TIMEOUT
-                socketTimeoutMillis = TIMEOUT
-            }
-            engine {
-                config {
-                    followRedirects(true)
-                }
+    private fun httpClient() = HttpClient(OkHttp) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = TIMEOUT
+            connectTimeoutMillis = TIMEOUT
+            socketTimeoutMillis = TIMEOUT
+        }
+        engine {
+            config {
+                followRedirects(true)
             }
         }
-        return httpClient
     }
 
     suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {

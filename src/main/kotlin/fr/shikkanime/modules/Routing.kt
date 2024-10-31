@@ -80,7 +80,7 @@ fun Application.configureRouting() {
     }
 }
 
-private fun Application.setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
+private fun setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
     val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS)
     val authorizedDomainsString = authorizedDomains.joinToString(" ").trim()
 
@@ -127,7 +127,7 @@ private fun Routing.createRoutes() {
 
 fun Routing.createControllerRoutes(controller: Any) {
     val prefix = controller::class.findAnnotation<Controller>()?.value ?: ""
-    val kMethods = controller::class.declaredFunctions.filter { it.hasAnnotation<Path>() }.toMutableSet()
+    val kMethods = controller::class.declaredFunctions.filter { it.hasAnnotation<Path>() }
 
     route(prefix) {
         kMethods.forEach { method ->

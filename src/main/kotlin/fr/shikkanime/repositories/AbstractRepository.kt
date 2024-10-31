@@ -43,7 +43,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
             .setHint(AvailableHints.HINT_CACHEABLE, true)
     }
 
-    fun <C> buildPageableQuery(query: TypedQuery<C>, page: Int, limit: Int): Pageable<C> {
+    inline fun <reified C> buildPageableQuery(query: TypedQuery<C>, page: Int, limit: Int): Pageable<C> {
         val scrollableResults = query.unwrap(Query::class.java)
             .setReadOnly(true)
             .setFetchSize(limit)
@@ -53,9 +53,11 @@ abstract class AbstractRepository<E : ShikkEntity> {
         var total = 0L
 
         if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
-            for (i in 0 until limit) {
-                list.add(scrollableResults.get() as C) // NOSONAR
-                if (!scrollableResults.next()) break
+            (0 until limit).forEach {
+                val get = scrollableResults.get() ?: return@forEach
+                require(get is C) { "Entity is not of type C" }
+                list.add(get)
+                if (!scrollableResults.next()) return@forEach
             }
 
             total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0

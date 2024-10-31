@@ -49,17 +49,23 @@ class Database {
             exitProcess(1)
         }
 
-        sessionFactory.openSession().doWork {
-            try {
-                CommandScope("update")
-                    .addArgumentValue("changeLogFile", "db/changelog/db.changelog-master.xml")
-                    .addArgumentValue("url", configuration.getProperty("hibernate.connection.url"))
-                    .addArgumentValue("username", configuration.getProperty("hibernate.connection.username"))
-                    .addArgumentValue("password", configuration.getProperty("hibernate.connection.password"))
-                    .execute()
-            } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while updating database", e)
-                exitProcess(1)
+        executeLiquibaseChangelogs(configuration)
+    }
+
+    private fun executeLiquibaseChangelogs(configuration: Configuration) {
+        sessionFactory.openSession().use { session ->
+            session.doWork {
+                try {
+                    CommandScope("update")
+                        .addArgumentValue("changeLogFile", "db/changelog/db.changelog-master.xml")
+                        .addArgumentValue("url", configuration.getProperty("hibernate.connection.url"))
+                        .addArgumentValue("username", configuration.getProperty("hibernate.connection.username"))
+                        .addArgumentValue("password", configuration.getProperty("hibernate.connection.password"))
+                        .execute()
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while updating database", e)
+                    exitProcess(1)
+                }
             }
         }
 

@@ -8,7 +8,6 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
-import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -49,8 +48,6 @@ fun main() {
      JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
     JobManager.start()
 
-    Constant.injector.getInstance(DiscordSocialNetwork::class.java).login()
-
     logger.info("Starting server...")
     embeddedServer(
         Netty,
@@ -87,6 +84,7 @@ private fun updateAndDeleteData(animeService: AnimeService) {
         }
 
         val slug = StringUtils.toSlug(StringUtils.getShortName(anime.name!!))
+
         if (slug != anime.slug) {
             anime.slug = slug
             logger.info("Updating slug for anime ${anime.name} to $slug")

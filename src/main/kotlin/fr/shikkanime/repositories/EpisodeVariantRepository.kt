@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
+import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -15,6 +16,18 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     private lateinit var memberFollowAnimeService: MemberFollowAnimeService
 
     override fun getEntityClass() = EpisodeVariant::class.java
+
+    override fun findAll(): List<EpisodeVariant> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            query.from(getEntityClass())
+                .fetch(EpisodeVariant_.mapping, JoinType.INNER)
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
 
     fun findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
         countryCode: CountryCode,
@@ -174,55 +187,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                     cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
                     cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]),
                 )
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
-    fun findAudioLocalesAndSeasonsByAnime(anime: Anime): Pair<List<String>, List<Pair<Int, ZonedDateTime>>> {
-        return database.entityManager.use { em ->
-            val cb = em.criteriaBuilder
-            val query = cb.createTupleQuery()
-
-            val variantRoot = query.from(getEntityClass())
-            val mappingJoin = variantRoot.join(EpisodeVariant_.mapping)
-
-            query.multiselect(
-                variantRoot[EpisodeVariant_.audioLocale],
-                mappingJoin[EpisodeMapping_.season],
-                cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
-            )
-
-            query.where(cb.equal(mappingJoin[EpisodeMapping_.anime], anime))
-            query.groupBy(
-                variantRoot[EpisodeVariant_.audioLocale],
-                mappingJoin[EpisodeMapping_.season]
-            )
-            query.orderBy(cb.asc(mappingJoin[EpisodeMapping_.season]))
-
-            val results = createReadOnlyQuery(em, query).resultList
-
-            // Process results
-            val audioLocales = mutableSetOf<String>()
-            val seasons = mutableListOf<Pair<Int, ZonedDateTime>>()
-
-            results.forEach { tuple ->
-                audioLocales.add(tuple[0] as String)
-                seasons.add(tuple[1] as Int to tuple[2] as ZonedDateTime)
-            }
-
-            Pair(audioLocales.toList(), seasons.distinctBy { it.first })
-        }
-    }
-
-    fun findAllByAnime(anime: Anime): List<EpisodeVariant> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-
-            query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime))
 
             createReadOnlyQuery(it, query)
                 .resultList
