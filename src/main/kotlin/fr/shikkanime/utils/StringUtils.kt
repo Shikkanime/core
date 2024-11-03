@@ -54,15 +54,16 @@ object StringUtils {
         return shortName.replace(duplicateSpaceRegex, " ").trim()
     }
 
-    fun getHashtag(fullName: String) = getShortName(normalized(fullName)).lowercase().capitalizeWords()
+    fun getHashtag(fullName: String) =
+        getShortName(normalized(fullName.replace("1/2", ""))).lowercase().capitalizeWords()
         .replace(" S ", " s ")
         .replace(" T ", " t ")
         .filter { it.isLetterOrDigit() }
 
     fun String.capitalizeWords(): String {
-        val delimiters = arrayOf(" ", ",", "-", ":", "/", "'", "\"", "&")
+        val pattern = "[ ,\\-:/\"&]|(^')".toPattern()
 
-        return this.split(*delimiters).joinToString(" ") {
+        return this.split(pattern).joinToString(" ") {
             it.replaceFirstChar { char ->
                 if (char.isLowerCase()) char.titlecase(
                     Locale.getDefault()
