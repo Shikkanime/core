@@ -136,6 +136,8 @@ class StringUtilsTest {
             "THE IDOLM@STER Million Live!" to "TheIdolmasterMillionLive",
             "Overlord IV" to "Overlord",
             "Loner Life in Another World" to "LonerLifeInAnotherWorld",
+            "I'll Become a Villainess Who Goes Down in History" to "IllBecomeAVillainessWhoGoesDownInHistory",
+            "Ranma1/2" to "Ranma",
         )
 
         list.forEach { (input, expected) ->
