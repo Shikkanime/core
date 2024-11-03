@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
@@ -190,7 +191,7 @@ class AnimeController : HasPageableRoute() {
     ): Response {
         val startOfWeekDay = try {
             dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
         }.atStartOfWeek()
 

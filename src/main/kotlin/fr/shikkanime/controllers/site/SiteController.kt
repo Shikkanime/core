@@ -238,14 +238,14 @@ class SiteController {
     private fun calendar(@QueryParam("date") date: String?): Response {
         val startOfWeekDay = try {
             date?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             LocalDate.now()
         }.atStartOfWeek()
 
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimesV2(CountryCode.FR, null, startOfWeekDay),
                 "previousWeek" to startOfWeekDay.minusDays(7),
                 "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )

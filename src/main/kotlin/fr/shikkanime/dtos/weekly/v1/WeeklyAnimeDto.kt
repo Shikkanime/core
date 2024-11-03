@@ -1,5 +1,7 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.weekly.v1
 
+import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType

@@ -18,7 +18,7 @@
 [#-- @ftlvariable name="currentSimulcast" type="fr.shikkanime.dtos.SimulcastDto" --]
 [#-- @ftlvariable name="footerLinks" type="kotlin.collections.AbstractList<fr.shikkanime.entities.LinkObject>" --]
 [#-- @ftlvariable name="su" type="fr.shikkanime.utils.StringUtils" --]
-[#-- @ftlvariable name="weeklyAnimes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.WeeklyAnimesDto>" --]
+[#-- @ftlvariable name="weeklyAnimes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto>" --]
 [#-- @ftlvariable name="query" type="java.lang.String" --]
 [#-- @ftlvariable name="searchTypes" type="java.lang.String" --]
 [#-- @ftlvariable name="season" type="fr.shikkanime.dtos.SeasonDto" --]

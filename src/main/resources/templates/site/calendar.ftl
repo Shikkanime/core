@@ -105,15 +105,23 @@
                                                             ${getPrefixEpisode(release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
                                                         </p>
                                                     </#if>
-                                                    <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=release.langType /></p>
+                                                    <#list release.langTypes as langType>
+                                                        <p class="text-muted mt-0 mb-1"><@langTypeComponent.display langType=langType /></p>
+                                                    </#list>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="overlay" style="display: none;" x-show="hover">
-                                            <#if release.anime.description??>
+                                            <#assign description = release.anime.description>
+
+                                            <#if isReleased && !isMultipleReleased && release.mappings?first.description??>
+                                                <#assign description = release.mappings?first.description>
+                                            </#if>
+
+                                            <#if description??>
                                                 <div class="text-truncate-4">
-                                                    ${release.anime.description}
+                                                    ${description}
                                                 </div>
                                             </#if>
 
