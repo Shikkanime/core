@@ -4,10 +4,10 @@ import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
-import fr.shikkanime.dtos.WeeklyAnimeDto
-import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
+import fr.shikkanime.dtos.weekly.v1.WeeklyAnimeDto
+import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
@@ -15,6 +15,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
+import jakarta.persistence.Tuple
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -147,6 +148,144 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     )
                 )
             )
+        }
+    }
+
+    fun getWeeklyAnimesV2(
+        countryCode: CountryCode,
+        member: Member?,
+        startOfWeekDay: LocalDate
+    ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto> {
+        val zoneId = ZoneId.of(countryCode.timezone)
+        val startOfPreviousWeek = startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId)
+        val endOfWeek = startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId)
+        val dateFormatter = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
+        val currentWeek = startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
+
+        // Fetch all episode data for date range
+        val tuples = episodeVariantService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleByDateRange(
+            countryCode, member, startOfPreviousWeek, endOfWeek
+        )
+
+        // Process releases
+        val releases = tuples.groupBy { tuple ->
+            val releaseDateTime = tuple[2] as ZonedDateTime
+            val anime = tuple[0] as Anime
+            releaseDateTime.format(DateTimeFormatter.ofPattern("EEEE")) to anime
+        }.flatMap { (pair, values) ->
+            processAnimeReleases(pair.second, values, currentWeek, zoneId)
+        }
+
+        // Group by day and sort
+        return releases.groupBy {
+            ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).format(dateFormatter)
+        }.map { (day, weeklyAnimes) ->
+            fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto(
+                day.capitalizeWords(),
+                weeklyAnimes.sortedWith(
+                    compareBy(
+                        { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
+                        { it.anime.shortName }
+                    )
+                )
+            )
+        }
+    }
+
+    private fun processAnimeReleases(
+        anime: Anime,
+        values: List<Tuple>,
+        currentWeek: Int,
+        zoneId: ZoneId
+    ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto> {
+        val isCurrentWeek: (Tuple) -> Boolean = { tuple ->
+            (tuple[2] as ZonedDateTime).withZoneSameInstant(zoneId)[ChronoField.ALIGNED_WEEK_OF_YEAR] == currentWeek
+        }
+
+        val currentWeekValues = values.filter(isCurrentWeek)
+
+        return if (currentWeekValues.isEmpty()) {
+            processPreviousWeekReleases(anime, values.filterNot(isCurrentWeek))
+        } else {
+            processCurrentWeekReleases(anime, currentWeekValues)
+        }
+    }
+
+    private fun processPreviousWeekReleases(
+        anime: Anime,
+        values: List<Tuple>
+    ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto> {
+        return values.groupBy { tuple ->
+            (tuple[2] as ZonedDateTime).format(DateTimeFormatter.ofPattern("HH"))
+        }.flatMap { (_, hourValues) ->
+            val mappings = hourValues.map { it[1] as EpisodeMapping }
+                .distinctBy { it.uuid }
+                .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+
+            mappings.groupBy { it.episodeType }
+                .ifEmpty { mapOf(null to mappings) }
+                .map { _ ->
+                    val langTypes =
+                        hourValues.map { LangType.fromAudioLocale(anime.countryCode!!, it[4] as String) }.distinct()
+                    val releaseDateTime = hourValues.minOf { it[2] as ZonedDateTime }
+
+                    fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto(
+                        AbstractConverter.convert(anime, AnimeDto::class.java),
+                        AbstractConverter.convert(
+                            hourValues.mapNotNull { it[3] as? Platform }.distinct(),
+                            PlatformDto::class.java
+                        )!!,
+                        releaseDateTime.withUTCString(),
+                        "/animes/${anime.slug}",
+                        langTypes
+                    )
+                }
+        }
+    }
+
+    private fun processCurrentWeekReleases(
+        anime: Anime,
+        values: List<Tuple>
+    ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto> {
+        return values.groupBy { tuple ->
+            (tuple[2] as ZonedDateTime).format(DateTimeFormatter.ofPattern("HH"))
+        }.flatMap { (_, hourValues) ->
+            val mappings = hourValues.map { it[1] as EpisodeMapping }
+                .distinctBy { it.uuid }
+                .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+
+            mappings.groupBy { it.episodeType }
+                .ifEmpty { mapOf(null to mappings) }
+                .map { (episodeType, episodeMappings) ->
+                    val langTypes =
+                        hourValues.map { LangType.fromAudioLocale(anime.countryCode!!, it[4] as String) }.distinct()
+                    val releaseDateTime = hourValues.minOf { it[2] as ZonedDateTime }
+
+                    fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto(
+                        AbstractConverter.convert(anime, AnimeDto::class.java),
+                        AbstractConverter.convert(
+                            hourValues.mapNotNull { it[3] as? Platform }.distinct(),
+                            PlatformDto::class.java
+                        )!!,
+                        releaseDateTime.withUTCString(),
+                        buildString {
+                            append("/animes/${anime.slug}")
+                            episodeMappings.firstOrNull()?.let {
+                                append("/season-${it.season}")
+                                if (episodeMappings.size <= 1) append("/${it.episodeType!!.slug}-${it.number}")
+                            }
+                        },
+                        langTypes,
+                        episodeType,
+                        episodeMappings.minOfOrNull { it.number!! },
+                        episodeMappings.maxOfOrNull { it.number!! },
+                        episodeMappings.firstOrNull()?.number,
+                        AbstractConverter.convert(
+                            episodeMappings.takeIf { it.isNotEmpty() },
+                            EpisodeMappingWithoutAnimeDto::class.java
+                        )
+                    )
+                }
         }
     }
 

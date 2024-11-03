@@ -8,8 +8,8 @@ import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.WeeklyAnimesDto
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
@@ -88,6 +88,27 @@ class AnimeCacheService : AbstractCacheService {
             )
         }
 
+    private val weeklyMemberV2Cache =
+        MapCache<CountryCodeLocalDateKeyCache, List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto>>(
+            classes = listOf(
+                Anime::class.java,
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java,
+                MemberFollowAnime::class.java
+            )
+        ) {
+            try {
+                animeService.getWeeklyAnimesV2(
+                    it.countryCode,
+                    it.member?.let { uuid -> memberService.find(uuid) },
+                    it.localDate
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+
     private val findAllAudioLocalesAndSeasonsCache =
         MapCache<String, Map<UUID, Pair<List<String>, List<Pair<Int, ZonedDateTime>>>>>(
             classes = listOf(
@@ -119,6 +140,9 @@ class AnimeCacheService : AbstractCacheService {
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
 
+    fun getWeeklyAnimesV2(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
+        weeklyMemberV2Cache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
+
     fun findAudioLocalesAndSeasonsByAnimeCache(anime: Anime) =
-        findAllAudioLocalesAndSeasonsCache["all"]?.get(anime.uuid)
+        findAllAudioLocalesAndSeasonsCache["all"]?.get(anime.uuid!!)
 }
