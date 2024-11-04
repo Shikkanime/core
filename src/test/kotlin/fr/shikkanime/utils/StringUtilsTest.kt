@@ -66,6 +66,7 @@ class StringUtilsTest {
             "Anime KAPIBARASAN" to "KAPIBARASAN",
             "Anime AzurLane: Slow Ahead!" to "AzurLane: Slow Ahead!",
             "<DOGEZA>I Tried Asking While Kowtowing." to "DOGEZA",
+            "Demon Slayer: Kimetsu no Yaiba - L’entraînement des piliers" to "Demon Slayer",
         )
 
         list.forEach { (input, expected) ->
@@ -101,6 +102,7 @@ class StringUtilsTest {
             "MIX" to "mix",
             "Loner Life in Another World" to "loner-life-in-another-world",
             "<DOGEZA>I Tried Asking While Kowtowing." to "dogeza",
+            "Demon Slayer: Kimetsu no Yaiba - L’entraînement des piliers" to "demon-slayer",
         )
 
         list.forEach { (input, expected) ->
