@@ -1,6 +1,6 @@
 package fr.shikkanime.services
 
-import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AnimeDto
 import fr.shikkanime.dtos.GenericDto
@@ -8,60 +8,11 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AnimeServiceTest {
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        memberFollowEpisodeService.deleteAll()
-        memberFollowAnimeService.deleteAll()
-        memberService.deleteAll()
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        MapCache.invalidate(
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java,
-            Member::class.java,
-            MemberFollowAnime::class.java,
-            MemberFollowEpisode::class.java
-        )
-    }
-
+class AnimeServiceTest : AbstractTest() {
     @Test
     fun `update with no episodes`() {
         animeService.save(
@@ -204,7 +155,7 @@ class AnimeServiceTest {
             )
         )
 
-        memberFollowEpisodeService.follow(member.uuid!!, GenericDto(mapping1.uuid!!))
+        memberFollowEpisodeService.follow(member.uuid, GenericDto(mapping1.uuid!!))
 
         episodeVariantService.save(
             EpisodeVariant(
@@ -226,7 +177,7 @@ class AnimeServiceTest {
             )
         )
 
-        memberFollowAnimeService.follow(member.uuid!!, GenericDto(anime2.uuid!!))
+        memberFollowAnimeService.follow(member.uuid, GenericDto(anime2.uuid!!))
 
         val mapping2 = episodeMappingService.save(
             EpisodeMapping(
@@ -238,7 +189,7 @@ class AnimeServiceTest {
             )
         )
 
-        memberFollowEpisodeService.follow(member.uuid!!, GenericDto(mapping2.uuid!!))
+        memberFollowEpisodeService.follow(member.uuid, GenericDto(mapping2.uuid!!))
 
         episodeVariantService.save(
             EpisodeVariant(
@@ -270,7 +221,7 @@ class AnimeServiceTest {
             )
         )
 
-        memberFollowEpisodeService.follow(member.uuid!!, GenericDto(mapping3.uuid!!))
+        memberFollowEpisodeService.follow(member.uuid, GenericDto(mapping3.uuid!!))
 
         assertEquals(1, memberService.findAll().size)
         assertEquals(2, memberFollowAnimeService.findAll().size)

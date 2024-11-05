@@ -1,17 +1,12 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.Config
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
-import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import io.mockk.every
 import io.mockk.mockkClass
@@ -24,47 +19,21 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.ZonedDateTime
 
-class CrunchyrollPlatformTest {
+class CrunchyrollPlatformTest : AbstractTest() {
     @Inject
     lateinit var platform: CrunchyrollPlatform
 
-    @Inject
-    lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
     @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-
+    override fun setUp() {
+        super.setUp()
         platform.loadConfiguration()
         platform.configuration!!.availableCountries.add(CountryCode.FR)
     }
 
     @AfterEach
-    fun tearDown() {
+    override fun tearDown() {
+        super.tearDown()
         platform.configuration!!.simulcasts.clear()
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        configService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        MapCache.invalidate(
-            Config::class.java,
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java
-        )
     }
 
     @Test

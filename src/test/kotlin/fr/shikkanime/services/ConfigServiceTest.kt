@@ -1,36 +1,14 @@
 package fr.shikkanime.services
 
-import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.util.*
 
-class ConfigServiceTest {
-    @Inject
-    private lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        configService.deleteAll()
-        traceActionService.deleteAll()
-        MapCache.invalidate(Config::class.java)
-    }
-
+class ConfigServiceTest : AbstractTest() {
     @Test
     fun updateConfigSuccessfully() {
         val saved = configService.save(Config(null, "propertyName", "oldValue"))

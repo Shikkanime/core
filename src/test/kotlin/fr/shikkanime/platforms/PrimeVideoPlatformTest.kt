@@ -1,26 +1,20 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
-import fr.shikkanime.utils.Constant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-class PrimeVideoPlatformTest {
+class PrimeVideoPlatformTest : AbstractTest() {
     @Inject
     private lateinit var primeVideoPlatform: PrimeVideoPlatform
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
 
     @Test
     fun fetchApiContent() {

@@ -1,54 +1,21 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.AnimePlatformService
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeMappingService
-import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-class UpdateEpisodeMappingJobTest {
+class UpdateEpisodeMappingJobTest : AbstractTest() {
     @Inject
     private lateinit var updateEpisodeMappingJob: UpdateEpisodeMappingJob
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
-    }
 
     @Test
     fun `run old Crunchyroll episodes`() {

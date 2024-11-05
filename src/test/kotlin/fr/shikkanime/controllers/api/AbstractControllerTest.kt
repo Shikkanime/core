@@ -1,83 +1,30 @@
 package fr.shikkanime.controllers.api
 
-import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.dtos.member.MemberDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.*
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import java.time.ZonedDateTime
 
-abstract class AbstractControllerTest {
-    @Inject
-    protected lateinit var animeService: AnimeService
-
-    @Inject
-    protected lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    protected lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    protected lateinit var memberService: MemberService
-
-    @Inject
-    protected lateinit var memberActionService: MemberActionService
-
-    @Inject
-    protected lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    protected lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    protected lateinit var simulcastService: SimulcastService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
+abstract class AbstractControllerTest : AbstractTest() {
     @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
+    override fun setUp() {
+        super.setUp()
 
         initOnePiece()
         init7thTimeLoop()
         animeService.recalculateSimulcasts()
-    }
-
-    @AfterEach
-    fun tearDown() {
-        memberFollowEpisodeService.deleteAll()
-        memberFollowAnimeService.deleteAll()
-        memberActionService.deleteAll()
-        memberService.deleteAll()
-
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        simulcastService.deleteAll()
-        ImageService.clearPool()
-        MapCache.invalidate(
-            Member::class.java,
-            MemberFollowAnime::class.java,
-            MemberFollowEpisode::class.java,
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java,
-            Simulcast::class.java
-        )
+        MapCache.invalidateAll()
     }
 
     protected suspend fun ApplicationTestBuilder.registerAndLogin(): Pair<String, String> {

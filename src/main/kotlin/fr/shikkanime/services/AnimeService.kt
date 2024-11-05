@@ -348,9 +348,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         entity.status = StringUtils.getStatus(entity)
         val savedEntity = super.save(entity)
         val uuid = savedEntity.uuid!!
-        addImage(uuid, savedEntity.image!!)
-        addBanner(uuid, savedEntity.banner!!)
-        MapCache.invalidate(Anime::class.java)
+
+        if (!Constant.disableImageConversion) {
+            addImage(uuid, savedEntity.image!!)
+            addBanner(uuid, savedEntity.banner!!)
+        }
+
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return savedEntity
     }

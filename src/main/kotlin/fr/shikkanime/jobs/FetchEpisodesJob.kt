@@ -2,6 +2,8 @@ package fr.shikkanime.jobs
 
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
@@ -102,8 +104,11 @@ class FetchEpisodesJob : AbstractJob {
                 }
             }
 
-        sendToNetworks(savedEpisodes)
         isRunning = false
+
+        if (savedEpisodes.isEmpty()) return
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        sendToNetworks(savedEpisodes)
     }
 
     data class TypeIdentifier(
@@ -143,7 +148,6 @@ class FetchEpisodesJob : AbstractJob {
     }
 
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
-        if (savedEpisodes.isEmpty()) return
         val sizeLimit = configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)
 
         savedEpisodes

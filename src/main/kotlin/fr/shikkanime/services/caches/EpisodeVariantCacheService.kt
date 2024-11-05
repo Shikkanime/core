@@ -14,6 +14,7 @@ class EpisodeVariantCacheService : AbstractCacheService {
 
     private val findAllCache = MapCache<String, Map<UUID, List<EpisodeVariant>>>(
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
+        defaultKeys = listOf("all")
     ) {
         episodeVariantService.findAll().sortedBy { it.releaseDateTime }
             .groupBy { it.mapping!!.uuid!! }

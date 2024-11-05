@@ -89,10 +89,10 @@ class MemberControllerTest : AbstractControllerTest() {
                 memberAction = memberActionService.find(dto.uuid)
                 assertNotNull(memberAction)
                 assertEquals(findPrivateMember!!.uuid, memberAction!!.member!!.uuid)
-                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
-                assertEquals(memberAction!!.action, Action.VALIDATE_EMAIL)
-                assertEquals(memberAction!!.validated, false)
-                assertNotNull(memberAction!!.code)
+                assertEquals(memberAction.email, "contact@shikkanime.fr")
+                assertEquals(memberAction.action, Action.VALIDATE_EMAIL)
+                assertEquals(memberAction.validated, false)
+                assertNotNull(memberAction.code)
             }
 
             client.post("/api/v1/member-actions/validate?uuid=${memberAction!!.uuid}") {
@@ -101,14 +101,14 @@ class MemberControllerTest : AbstractControllerTest() {
                 setBody(memberAction!!.code!!)
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
-                memberAction = memberActionService.find(memberAction!!.uuid)
+                memberAction = memberActionService.find(memberAction.uuid)
                 val member = memberService.findByIdentifier(identifier)
                 assertNotNull(memberAction)
                 assertEquals(findPrivateMember!!.uuid, memberAction!!.member!!.uuid)
-                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
-                assertEquals(memberAction!!.action, Action.VALIDATE_EMAIL)
-                assertEquals(memberAction!!.validated, true)
-                assertNotNull(memberAction!!.code)
+                assertEquals(memberAction.email, "contact@shikkanime.fr")
+                assertEquals(memberAction.action, Action.VALIDATE_EMAIL)
+                assertEquals(memberAction.validated, true)
+                assertNotNull(memberAction.code)
                 assertEquals(member!!.email, "contact@shikkanime.fr")
             }
         }
@@ -137,10 +137,10 @@ class MemberControllerTest : AbstractControllerTest() {
                 memberAction = memberActionService.find(dto.uuid)
                 assertNotNull(memberAction)
                 assertEquals(findPrivateMember!!.uuid, memberAction!!.member!!.uuid)
-                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
-                assertEquals(memberAction!!.action, Action.VALIDATE_EMAIL)
-                assertEquals(memberAction!!.validated, false)
-                assertNotNull(memberAction!!.code)
+                assertEquals(memberAction.email, "contact@shikkanime.fr")
+                assertEquals(memberAction.action, Action.VALIDATE_EMAIL)
+                assertEquals(memberAction.validated, false)
+                assertNotNull(memberAction.code)
             }
 
             client.post("/api/v1/member-actions/validate?uuid=${memberAction!!.uuid}") {
@@ -149,14 +149,14 @@ class MemberControllerTest : AbstractControllerTest() {
                 setBody(memberAction!!.code!!)
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
-                memberAction = memberActionService.find(memberAction!!.uuid)
+                memberAction = memberActionService.find(memberAction.uuid)
                 val member = memberService.findByIdentifier(identifier)
                 assertNotNull(memberAction)
                 assertEquals(findPrivateMember!!.uuid, memberAction!!.member!!.uuid)
-                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
-                assertEquals(memberAction!!.action, Action.VALIDATE_EMAIL)
-                assertEquals(memberAction!!.validated, true)
-                assertNotNull(memberAction!!.code)
+                assertEquals(memberAction.email, "contact@shikkanime.fr")
+                assertEquals(memberAction.action, Action.VALIDATE_EMAIL)
+                assertEquals(memberAction.validated, true)
+                assertNotNull(memberAction.code)
                 assertEquals(member!!.email, "contact@shikkanime.fr")
             }
 
@@ -196,10 +196,10 @@ class MemberControllerTest : AbstractControllerTest() {
                 memberAction = memberActionService.find(dto.uuid)
                 assertNotNull(memberAction)
                 assertEquals(findPrivateMember2.uuid, memberAction!!.member!!.uuid)
-                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
-                assertEquals(memberAction!!.action, Action.FORGOT_IDENTIFIER)
-                assertEquals(memberAction!!.validated, false)
-                assertNotNull(memberAction!!.code)
+                assertEquals(memberAction.email, "contact@shikkanime.fr")
+                assertEquals(memberAction.action, Action.FORGOT_IDENTIFIER)
+                assertEquals(memberAction.validated, false)
+                assertNotNull(memberAction.code)
             }
 
             client.post("/api/v1/member-actions/validate?uuid=${memberAction!!.uuid}") {
@@ -208,18 +208,18 @@ class MemberControllerTest : AbstractControllerTest() {
                 setBody(memberAction!!.code!!)
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
-                memberAction = memberActionService.find(memberAction!!.uuid)
+                memberAction = memberActionService.find(memberAction.uuid)
                 val member = memberService.findByIdentifier(identifier2)
                 assertNotNull(memberAction)
                 assertNull(member)
 
                 assertEquals(findPrivateMember2.uuid, memberAction!!.member!!.uuid)
-                assertEquals(memberAction!!.email, "contact@shikkanime.fr")
-                assertEquals(memberAction!!.action, Action.FORGOT_IDENTIFIER)
-                assertEquals(memberAction!!.validated, true)
-                assertNotNull(memberAction!!.code)
+                assertEquals(memberAction.email, "contact@shikkanime.fr")
+                assertEquals(memberAction.action, Action.FORGOT_IDENTIFIER)
+                assertEquals(memberAction.validated, true)
+                assertNotNull(memberAction.code)
 
-                assertNotEquals(memberAction!!.member!!.username, findPrivateMember2.username)
+                assertNotEquals(memberAction.member!!.username, findPrivateMember2.username)
             }
         }
     }

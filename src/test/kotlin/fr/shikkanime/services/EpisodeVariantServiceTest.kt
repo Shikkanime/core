@@ -1,53 +1,26 @@
 package fr.shikkanime.services
 
-import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import io.mockk.every
 import io.mockk.mockkClass
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-class EpisodeVariantServiceTest {
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
+class EpisodeVariantServiceTest : AbstractTest() {
     @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
+    override fun setUp() {
+        super.setUp()
         configService.save(Config(propertyKey = ConfigPropertyKey.SIMULCAST_RANGE.key, propertyValue = "15"))
-        MapCache.invalidate(Config::class.java, Anime::class.java)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        configService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        MapCache.invalidate(Config::class.java, Anime::class.java)
+        MapCache.invalidate(Config::class.java)
     }
 
     @Test
@@ -248,7 +221,9 @@ class EpisodeVariantServiceTest {
             )
         )
 
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         val animes = animeService.findAll()
+        animes.forEach { println(it.name) }
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
         assertEquals(1, mappings.size)
