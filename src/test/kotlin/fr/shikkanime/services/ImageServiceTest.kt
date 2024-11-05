@@ -1,5 +1,6 @@
 package fr.shikkanime.services
 
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.module
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -10,18 +11,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.util.*
 
-class ImageServiceTest {
-
-    @BeforeEach
-    fun setUp() {
-        ImageService.clearPool()
-    }
-
+class ImageServiceTest : AbstractTest() {
     @Test
     fun add() {
         val uuid = UUID.randomUUID()

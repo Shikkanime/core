@@ -45,6 +45,7 @@ object Constant {
     val DEFAULT_IMAGE_PREVIEW = "$baseUrl/assets/img/episode_no_image_preview.jpg"
     const val DEFAULT_CACHE_DURATION = 31536000 // 1 year
     const val MAX_DESCRIPTION_LENGTH = 1_000
+    var disableImageConversion: Boolean = false
 
     init {
         abstractPlatforms.forEach {

@@ -1,55 +1,21 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.*
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class FetchOldEpisodesJobTest {
+class FetchOldEpisodesJobTest : AbstractTest() {
     @Inject
     private lateinit var fetchOldEpisodesJob: FetchOldEpisodesJob
 
     @Inject
-    private lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
     private lateinit var crunchyrollPlatform: CrunchyrollPlatform
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        configService.deleteAll()
-        MapCache.invalidate(Config::class.java)
-        ImageService.clearPool()
-    }
 
     @Test
     fun `fix issue #503`() {

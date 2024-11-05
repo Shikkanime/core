@@ -92,8 +92,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
             return
         }
 
-        var needRecalculate = AtomicBoolean(false)
-        var needRefreshCache = AtomicBoolean(false)
+        val needRecalculate = AtomicBoolean(false)
+        val needRefreshCache = AtomicBoolean(false)
         val identifiers = episodeVariantService.findAllIdentifiers()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -123,7 +123,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     logger.info("Episode $mappingIdentifier updated")
                 }
 
-            var hasChanged = AtomicBoolean(false)
+            val hasChanged = AtomicBoolean(false)
 
             updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
             updateEpisodeMappingTitle(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
@@ -149,7 +149,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         logger.info("Episodes updated")
 
         if (needRefreshCache.get()) {
-            MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+            MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         }
     }
 
@@ -275,9 +275,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
         crunchyrollId: String,
     ): List<Episode> {
         val browseObjects = mutableListOf<BrowseObject>()
+
         val variantObjects = CrunchyrollWrapper.getEpisode(
             countryCode.locale,
-            crunchyrollPlatform.identifiers[countryCode]!!,
+            CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
             crunchyrollId
         )
             .also { browseObjects.add(it.convertToBrowseObject()) }
@@ -288,7 +289,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 HttpRequest.retry(3) {
                     getObjects(
                         countryCode.locale,
-                        crunchyrollPlatform.identifiers[countryCode]!!,
+                        CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
                         *chunk.toTypedArray()
                     ).toList()
                 }

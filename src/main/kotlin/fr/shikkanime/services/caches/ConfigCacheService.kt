@@ -10,11 +10,14 @@ class ConfigCacheService : AbstractCacheService {
     @Inject
     private lateinit var configService: ConfigService
 
-    private val cache = MapCache<String, Config?>(classes = listOf(Config::class.java)) {
-        configService.findByName(it)
+    private val cache = MapCache<String, List<Config>>(
+        classes = listOf(Config::class.java),
+        defaultKeys = listOf("all")
+    ) {
+        configService.findAll()
     }
 
-    private fun findByName(name: String) = cache[name]
+    private fun findByName(name: String) = cache["all"]?.find { it.propertyKey == name }
 
     fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue
 
@@ -26,11 +29,8 @@ class ConfigCacheService : AbstractCacheService {
 
     fun getValueAsInt(configPropertyKey: ConfigPropertyKey) = getValueAsInt(configPropertyKey, -1)
 
-    fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey, defaultValue: Boolean) =
-        findByName(configPropertyKey.key)?.propertyValue?.toBoolean() ?: defaultValue
-
     fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey) =
-        getValueAsBoolean(configPropertyKey, false)
+        findByName(configPropertyKey.key)?.propertyValue?.toBoolean() == true
 
     fun getValueAsStringList(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.split(",") ?: emptyList()

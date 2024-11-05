@@ -1,7 +1,6 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -14,59 +13,16 @@ import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.CrunchyrollWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
-import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class CrunchyrollPlatform :
     AbstractPlatform<CrunchyrollConfiguration, CountryCode, Array<CrunchyrollWrapper.BrowseObject>>() {
-    data class CrunchyrollAnimeContent(
-        val image: String,
-        val banner: String = "",
-        val description: String? = null,
-        val simulcast: Boolean = false,
-    )
-
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
-
-    val identifiers = MapCache<CountryCode, String>(Duration.ofMinutes(30)) {
-        return@MapCache runBlocking { CrunchyrollWrapper.getAnonymousAccessToken() }
-    }
-
-    private val animeInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollAnimeContent?>(Duration.ofDays(1)) {
-        try {
-            val token = identifiers[it.countryCode]!!
-            val series = HttpRequest.retry(3) { CrunchyrollWrapper.getSeries(it.countryCode.locale, token, it.id) }
-
-            val image = series.images.posterTall.first().maxByOrNull { poster -> poster.width }?.source
-            val banner = series.images.posterWide.first().maxByOrNull { poster -> poster.width }?.source
-
-            if (image.isNullOrEmpty())
-                throw Exception("Image is null or empty")
-
-            if (banner.isNullOrEmpty())
-                throw Exception("Banner is null or empty")
-
-            return@MapCache CrunchyrollAnimeContent(image, banner, series.description, series.isSimulcast)
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error on fetching anime info", e)
-            return@MapCache null
-        }
-    }
-
-    private val seasonInfoCache = MapCache<CountryCodeIdKeyCache, CrunchyrollWrapper.Season?>(Duration.ofDays(1)) {
-        try {
-            val token = identifiers[it.countryCode]!!
-            return@MapCache HttpRequest.retry(3) { CrunchyrollWrapper.getSeason(it.countryCode.locale, token, it.id) }
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error on fetching season info", e)
-            return@MapCache null
-        }
-    }
 
     override fun getPlatform(): Platform = Platform.CRUN
 
@@ -78,7 +34,7 @@ class CrunchyrollPlatform :
     ): Array<CrunchyrollWrapper.BrowseObject> {
         return CrunchyrollWrapper.getBrowse(
             key.locale,
-            identifiers[key]!!,
+            CrunchyrollWrapper.getAccessTokenCached(key)!!,
             size = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
         )
     }
@@ -158,7 +114,7 @@ class CrunchyrollPlatform :
     }
 
     suspend fun getNextEpisode(countryCode: CountryCode, crunchyrollId: String): CrunchyrollWrapper.BrowseObject? {
-        val token = identifiers[countryCode]!!
+        val token = CrunchyrollWrapper.getAccessTokenCached(countryCode)!!
         val locale = countryCode.locale
 
         // Try getting next episode directly
@@ -229,18 +185,18 @@ class CrunchyrollPlatform :
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
         val crunchyrollAnimeContent =
-            animeInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seriesId)]
+            CrunchyrollWrapper.getSeriesCached(countryCode, browseObject.episodeMetadata.seriesId)
                 ?: throw AnimeException("Anime not found")
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
 
-        val season = seasonInfoCache[CountryCodeIdKeyCache(countryCode, browseObject.episodeMetadata.seasonId)] ?: run {
+        val season = CrunchyrollWrapper.getSeasonCached(countryCode, browseObject.episodeMetadata.seasonId) ?: run {
             logger.warning("Season not found for ${browseObject.episodeMetadata.seasonId}")
             throw AnimeException("Anime season not found")
         }
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
 
-        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.simulcast || isDubbed || episodeType == EpisodeType.FILM))
+        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.isSimulcast || isDubbed || episodeType == EpisodeType.FILM))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         var original = true
@@ -254,8 +210,8 @@ class CrunchyrollPlatform :
             countryCode = countryCode,
             animeId = browseObject.episodeMetadata.seriesId,
             anime = animeName,
-            animeImage = crunchyrollAnimeContent.image,
-            animeBanner = crunchyrollAnimeContent.banner,
+            animeImage = crunchyrollAnimeContent.fullHDImage!!,
+            animeBanner = crunchyrollAnimeContent.fullHDBanner!!,
             animeDescription = crunchyrollAnimeContent.description.normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,

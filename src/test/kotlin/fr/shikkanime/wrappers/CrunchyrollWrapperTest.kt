@@ -69,7 +69,12 @@ class CrunchyrollWrapperTest {
 
     @Test
     fun getSimulcastCalendarWithDates() {
-        val episodes = runBlocking { CrunchyrollWrapper.getSimulcastCalendarWithDates(CountryCode.FR, token!!, setOf(LocalDate.parse("2024-01-01"))) }
+        val episodes = runBlocking {
+            CrunchyrollWrapper.getSimulcastCalendarWithDates(
+                CountryCode.FR,
+                setOf(LocalDate.parse("2024-01-01"))
+            )
+        }
         assertEquals(true, episodes.isNotEmpty())
     }
 

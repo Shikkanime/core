@@ -1,45 +1,19 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.AbstractService
-import fr.shikkanime.services.AnimePlatformService
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-class UpdateAnimeJobTest {
+class UpdateAnimeJobTest : AbstractTest() {
     @Inject
     private lateinit var updateAnimeJob: UpdateAnimeJob
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        Constant.reflections.getSubTypesOf(AbstractService::class.java).forEach {
-            Constant.injector.getInstance(it).deleteAll()
-        }
-
-        MapCache.invalidateAll()
-    }
 
     @Test
     fun `run old Crunchyroll anime`() {

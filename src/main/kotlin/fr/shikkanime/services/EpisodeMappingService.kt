@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.EpisodeMappingRepository
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
@@ -71,8 +72,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun save(entity: EpisodeMapping): EpisodeMapping {
         val save = super.save(entity)
-        addImage(save.uuid!!, save.image!!)
-        MapCache.invalidate(EpisodeMapping::class.java)
+        if (!Constant.disableImageConversion) addImage(save.uuid!!, save.image!!)
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return save
     }

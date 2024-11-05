@@ -1,26 +1,20 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.utils.Constant
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
-class NetflixPlatformTest {
+class NetflixPlatformTest : AbstractTest() {
     @Inject
     private lateinit var netflixPlatform: NetflixPlatform
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
 
     @Test
     fun fetchApiContent() {

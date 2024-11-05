@@ -13,6 +13,7 @@ import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
@@ -120,6 +121,8 @@ class UpdateAnimeJob : AbstractJob {
 
             logger.info("Anime ${StringUtils.getShortName(anime.name!!)} updated")
         }
+
+        MapCache.invalidate(Anime::class.java)
     }
 
     private suspend fun fetchAnime(anime: Anime): List<Pair<Platform, UpdatableAnime>> {
@@ -151,14 +154,10 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchCrunchyrollAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val countryCode = animePlatform.anime!!.countryCode!!
 
-        return CrunchyrollWrapper.getSeries(
-            countryCode.locale,
-            crunchyrollPlatform.identifiers[countryCode]!!,
-            animePlatform.platformId!!
-        ).let { series ->
+        return CrunchyrollWrapper.getSeriesCached(countryCode, animePlatform.platformId!!)?.let { series ->
             val objects = CrunchyrollWrapper.getEpisodesBySeriesId(
                 countryCode.locale,
-                crunchyrollPlatform.identifiers[countryCode]!!,
+                CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
                 series.id
             ).mapNotNull {
                 runCatching {
@@ -175,10 +174,10 @@ class UpdateAnimeJob : AbstractJob {
 
             UpdatableAnime(
                 lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
-                image = series.images.posterTall.first().maxBy { poster -> poster.width }.source,
-                banner = series.images.posterWide.first().maxBy { poster -> poster.width }.source,
+                image = series.fullHDImage!!,
+                banner = series.fullHDBanner!!,
                 description = series.description,
             )
-        }
+        } ?: throw Exception("Crunchyroll anime not found")
     }
 }

@@ -9,11 +9,9 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
-import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -31,9 +29,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     @Inject
     private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
 
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
@@ -73,8 +68,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
 
-    fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
-
     fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
         val adjustedDates =
@@ -108,7 +101,10 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
-        val animeHashCodes = animeCacheService.findAllHashCode()!!
+
+        val animeHashCodes = animeService.findAllUuidAndName().associate { tuple ->
+            StringUtils.computeAnimeHashcode(tuple[1] as String) to (tuple[0] as UUID)
+        }
 
         val anime = animeService.findBySlug(episode.countryCode, slug)
             ?: animeService.findLoaded(animeHashCodes[StringUtils.computeAnimeHashcode(animeName)])
@@ -139,9 +135,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         val mapping = episodeMapping ?: getEpisodeMapping(anime, episode)
 
-        if (updateMappingDateTime) {
+        if (updateMappingDateTime && episode.releaseDateTime.isAfter(mapping.lastReleaseDateTime)) {
             mapping.lastReleaseDateTime = episode.releaseDateTime
-            mapping.lastUpdateDateTime = episode.releaseDateTime
             episodeMappingService.update(mapping)
         }
 
@@ -165,7 +160,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
         )
 
-        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
         traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
         return savedEntity
     }
@@ -247,7 +241,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     ) {
         var needAnimeUpdate = false
 
-        if (anime.lastReleaseDateTime.isBefore(episode.releaseDateTime)) {
+        if (episode.releaseDateTime.isAfter(anime.lastReleaseDateTime)) {
             anime.lastReleaseDateTime = episode.releaseDateTime
             needAnimeUpdate = true
         }
@@ -261,7 +255,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         if (needAnimeUpdate) {
             anime.status = StringUtils.getStatus(anime)
             animeService.update(anime)
-            MapCache.invalidate(Anime::class.java)
         }
     }
 

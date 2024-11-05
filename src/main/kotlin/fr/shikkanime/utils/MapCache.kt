@@ -8,7 +8,7 @@ import java.time.Duration
 class MapCache<K : Any, V>(
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = listOf(),
-    private val log: Boolean = true,
+    private val defaultKeys: List<K> = listOf(),
     private val block: (K) -> V,
 ) {
     private lateinit var cache: LoadingCache<K, V>
@@ -25,10 +25,13 @@ class MapCache<K : Any, V>(
 
         cache = builder.build(object : CacheLoader<K, V & Any>() {
             override fun load(key: K): V & Any {
-                if (log) logger.info("Loading $key")
                 return block(key)!!
             }
         })
+    }
+
+    private fun loadDefaultKeys() {
+        defaultKeys.forEach { this[it] }
     }
 
     operator fun get(key: K): V? {
@@ -45,11 +48,15 @@ class MapCache<K : Any, V>(
 
     fun invalidate() {
         cache.invalidateAll()
+        loadDefaultKeys()
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(MapCache::class.java)
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
+
+        fun loadAll() {
+            globalCaches.forEach { it.loadDefaultKeys() }
+        }
 
         fun invalidate(vararg classes: Class<*>) {
             globalCaches.filter { it.classes.any { clazz -> classes.contains(clazz) } }

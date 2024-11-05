@@ -11,6 +11,7 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -47,6 +48,9 @@ fun main() {
     // Every day at 3pm
      JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
     JobManager.start()
+
+    logger.info("Loading caches...")
+    MapCache.loadAll()
 
     logger.info("Starting server...")
     embeddedServer(

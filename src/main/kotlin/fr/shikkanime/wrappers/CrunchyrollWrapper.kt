@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers
 
 import com.google.gson.annotations.SerializedName
+import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -8,6 +9,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
+import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -55,7 +57,12 @@ object CrunchyrollWrapper {
         val description: String?,
         @SerializedName("is_simulcast")
         val isSimulcast: Boolean,
-    )
+    ) {
+        val fullHDImage: String?
+            get() = images.posterTall.firstOrNull()?.maxByOrNull { it.width }?.source
+        val fullHDBanner: String?
+            get() = images.posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
+    }
 
     data class Season(
         val id: String,
@@ -138,6 +145,27 @@ object CrunchyrollWrapper {
     private val httpRequest = HttpRequest()
     const val CRUNCHYROLL_CHUNK = 50
 
+    private val identifiers = MapCache<CountryCode, String?>(Duration.ofMinutes(30)) {
+        return@MapCache runBlocking { getAnonymousAccessToken() }
+    }
+
+    private val animeInfoCache = MapCache<CountryCodeIdKeyCache, Series?>(Duration.ofDays(1)) {
+        val series =
+            HttpRequest.retry(3) { getSeries(it.countryCode.locale, getAccessTokenCached(it.countryCode)!!, it.id) }
+
+        if (series.fullHDImage.isNullOrEmpty())
+            throw Exception("Image is null or empty")
+
+        if (series.fullHDBanner.isNullOrEmpty())
+            throw Exception("Banner is null or empty")
+
+        return@MapCache series
+    }
+
+    private val seasonInfoCache = MapCache<CountryCodeIdKeyCache, Season?>(Duration.ofDays(1)) {
+        HttpRequest.retry(3) { getSeason(it.countryCode.locale, getAccessTokenCached(it.countryCode)!!, it.id) }
+    }
+
     suspend fun getAnonymousAccessToken(): String {
         val response = httpRequest.post(
             "${BASE_URL}auth/v1/token",
@@ -153,6 +181,8 @@ object CrunchyrollWrapper {
 
         return ObjectParser.fromJson(response.bodyAsText()).getAsString("access_token")!!
     }
+
+    fun getAccessTokenCached(countryCode: CountryCode) = identifiers[countryCode]
 
     suspend fun getBrowse(
         locale: String,
@@ -193,6 +223,8 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray.first(), Series::class.java)
     }
 
+    fun getSeriesCached(countryCode: CountryCode, id: String) = animeInfoCache[CountryCodeIdKeyCache(countryCode, id)]
+
     private suspend fun getSeasonsBySeriesId(locale: String, accessToken: String, seriesId: String): Array<Season> {
         val response = httpRequest.get(
             "${BASE_URL}content/v2/cms/series/$seriesId/seasons?locale=$locale",
@@ -222,6 +254,8 @@ object CrunchyrollWrapper {
             ?: throw Exception("Failed to get seasons")
         return ObjectParser.fromJson(asJsonArray.first(), Season::class.java)
     }
+
+    fun getSeasonCached(countryCode: CountryCode, id: String) = seasonInfoCache[CountryCodeIdKeyCache(countryCode, id)]
 
     @JvmStatic
     suspend fun getEpisodesBySeasonId(locale: String, accessToken: String, seasonId: String): Array<Episode> {
@@ -312,16 +346,30 @@ object CrunchyrollWrapper {
         return browseObjects + variantObjects
     }
 
-    suspend fun getSimulcastCalendarWithDates(countryCode: CountryCode, accessToken: String, dates: Set<LocalDate>): Array<BrowseObject> {
+    suspend fun getSimulcastCalendarWithDates(countryCode: CountryCode, dates: Set<LocalDate>): List<BrowseObject> {
         val startOfWeekDates = dates.map { it.atStartOfWeek() }.distinct()
-        val seriesObjectsCache = MapCache<String, Set<BrowseObject>> { runBlocking { getEpisodesBySeriesId(countryCode.locale, accessToken, it).toSet() } }
+        val token = getAccessTokenCached(countryCode)!!
+        val seriesObjectsCache = MapCache<String, Set<BrowseObject>> {
+            runBlocking {
+                getEpisodesBySeriesId(
+                    countryCode.locale,
+                    token,
+                    it
+                ).toSet()
+            }
+        }
 
         val episodeIds = mutableSetOf<String>()
         val alreadyFetched = mutableMapOf<String, BrowseObject>()
 
         startOfWeekDates.forEach { date ->
-            val response = HttpRequest.retry(3) { httpRequest.get("$BASE_URL${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date") }
-            require(response.status == HttpStatusCode.OK)
+            val response = HttpRequest.retry(3) {
+                val response =
+                    httpRequest.get("$BASE_URL${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date")
+                require(response.status == HttpStatusCode.OK)
+                response
+            }
+
             val document = Jsoup.parse(response.bodyAsText())
 
             document.select("article.release").forEach { element ->
@@ -338,9 +386,9 @@ object CrunchyrollWrapper {
             }
         }
 
-        return episodeIds.chunked(CRUNCHYROLL_CHUNK).flatMap { chunk ->
-            HttpRequest.retry(3) { getObjects(countryCode.locale, accessToken, *chunk.toTypedArray()).toList() }
-        }.toTypedArray() + alreadyFetched.values.toTypedArray()
+        return (episodeIds.chunked(CRUNCHYROLL_CHUNK).flatMap { chunk ->
+            HttpRequest.retry(3) { getObjects(countryCode.locale, token, *chunk.toTypedArray()).toList() }
+        } + alreadyFetched.values)
     }
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =

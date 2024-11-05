@@ -1,12 +1,11 @@
 package fr.shikkanime.platforms
 
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
-import fr.shikkanime.services.ConfigService
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
@@ -17,16 +16,13 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.*
 
-class AnimationDigitalNetworkPlatformTest {
+class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     @Inject
     lateinit var platform: AnimationDigitalNetworkPlatform
 
-    @Inject
-    lateinit var configService: ConfigService
-
     @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
+    override fun setUp() {
+        super.setUp()
 
         platform.loadConfiguration()
         platform.configuration!!.availableCountries.add(CountryCode.FR)
@@ -40,12 +36,11 @@ class AnimationDigitalNetworkPlatformTest {
     }
 
     @AfterEach
-    fun tearDown() {
+    override fun tearDown() {
+        super.tearDown()
         platform.configuration!!.availableCountries.clear()
         platform.configuration!!.simulcasts.clear()
         platform.reset()
-        configService.deleteAll()
-        MapCache.invalidate(Config::class.java)
     }
 
     @Test

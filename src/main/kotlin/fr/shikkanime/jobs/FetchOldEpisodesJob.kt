@@ -45,6 +45,9 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject
     private lateinit var emailService: EmailService
 
+    @Inject
+    private lateinit var database: Database
+
     private fun log(stringBuilder: StringBuilder, level: Level, message: String) {
         logger.log(level, message)
         stringBuilder.append("[${level.localizedName}] $message<br/>")
@@ -65,6 +68,10 @@ class FetchOldEpisodesJob : AbstractJob {
             logger.warning("Config ${ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key} not found")
             return
         }
+
+        val entityManager = database.entityManager
+        val transaction = entityManager.transaction
+        transaction.begin()
 
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
@@ -88,7 +95,7 @@ class FetchOldEpisodesJob : AbstractJob {
                     fetchCrunchyroll(it, dates)
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
-                    return
+                    return@flatMap emptyList<Episode>()
                 }
             } ?: emptyList()
         )
@@ -110,11 +117,10 @@ class FetchOldEpisodesJob : AbstractJob {
         log(emailLogs, Level.INFO, "Found ${episodes.size} episodes, saving...")
         var realSaved = 0
         val realSavedAnimes = mutableSetOf<String>()
+        val identifiers = episodeVariantService.findAllIdentifiers()
 
         episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
-            val findByIdentifier = episodeVariantService.findByIdentifier(episode.getIdentifier())
-
-            if (findByIdentifier == null) {
+            if (identifiers.none { it == episode.getIdentifier() }) {
                 realSavedAnimes.add(StringUtils.getShortName(episode.anime))
                 realSaved++
                 episodeVariantService.save(episode, false)
@@ -156,6 +162,9 @@ class FetchOldEpisodesJob : AbstractJob {
         } catch (e: Exception) {
             logger.warning("Impossible to send email: ${e.message}")
         }
+
+        transaction.commit()
+        entityManager.close()
     }
 
     private fun fetchAnimationDigitalNetwork(
@@ -201,33 +210,29 @@ class FetchOldEpisodesJob : AbstractJob {
         countryCode: CountryCode,
         dates: Set<LocalDate>
     ): List<Episode> {
-        val episodes = mutableListOf<Episode>()
-
-        try {
-            runBlocking { CrunchyrollWrapper.getSimulcastCalendarWithDates(countryCode, crunchyrollPlatform.identifiers[countryCode]!!, dates) }
-                .forEach { browseObject ->
-                    try {
-                        episodes.add(
-                            crunchyrollPlatform.convertEpisode(
-                                countryCode,
-                                browseObject,
-                                false
-                            )
-                        )
-                    } catch (e: EpisodeNoSubtitlesOrVoiceException) {
-                        logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
-                    } catch (e: Exception) {
-                        logger.log(
-                            Level.SEVERE,
-                            "Error while converting episode (Episode ID: ${browseObject.id})",
-                            e
-                        )
-                    }
-                }
-        } catch (e: Exception) {
-            throw e
-        }
-
-        return episodes
+        return runBlocking {
+            CrunchyrollWrapper.getSimulcastCalendarWithDates(
+                countryCode,
+                dates
+            )
+        }.map { browseObject ->
+            try {
+                crunchyrollPlatform.convertEpisode(
+                    countryCode,
+                    browseObject,
+                    false
+                )
+            } catch (e: EpisodeNoSubtitlesOrVoiceException) {
+                logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
+                null
+            } catch (e: Exception) {
+                logger.log(
+                    Level.SEVERE,
+                    "Error while converting episode (Episode ID: ${browseObject.id})",
+                    e
+                )
+                null
+            }
+        }.filterNotNull()
     }
 }

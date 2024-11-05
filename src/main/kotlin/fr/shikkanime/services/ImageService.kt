@@ -304,7 +304,13 @@ object ImageService {
                 cache[indexOf] = image
                 change.set(true)
             } catch (e: Exception) {
-                logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
+                when (e) {
+                    is InterruptedException, is RuntimeException -> {
+                        // Ignore
+                    }
+                    else -> logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
+                }
+
                 remove(uuid, type)
             }
         }

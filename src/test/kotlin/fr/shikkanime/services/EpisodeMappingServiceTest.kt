@@ -1,6 +1,6 @@
 package fr.shikkanime.services
 
-import com.google.inject.Inject
+import fr.shikkanime.AbstractTest
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.Anime
@@ -9,41 +9,11 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class EpisodeMappingServiceTest {
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @BeforeEach
-    fun setUp() {
-        Constant.injector.injectMembers(this)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        episodeVariantService.deleteAll()
-        episodeMappingService.deleteAll()
-        animePlatformService.deleteAll()
-        animeService.deleteAll()
-        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
-    }
-
+class EpisodeMappingServiceTest : AbstractTest() {
     @Test
     fun update() {
         val anime = animeService.save(
