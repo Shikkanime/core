@@ -40,8 +40,9 @@
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
                 <h1 class="h6 fw-bold mb-0 text-uppercase">
-                    ${animeSanitized}&NonBreakingSpace;
-                    -&NonBreakingSpace;Saison ${episodeMapping.season?c} ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                    <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}"
+                       class="text-white text-decoration-none">${animeSanitized}&NonBreakingSpace;-&NonBreakingSpace;Saison ${episodeMapping.season?c}</a>
+                    &NonBreakingSpace;${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
                 </h1>
 
                 <div class="mt-1">
@@ -55,31 +56,62 @@
                 <h2 class="mt-3 h6 fw-bold mb-0">${episodeMapping.title!"＞︿＜"}</h2>
                 <span class="mt-2">${episodeMapping.description!"Aucune description pour le moment..."}</span>
 
-                <div class="d-flex justify-content-center mt-3">
-                    <#if previousEpisode??>
-                        <a href="/animes/${previousEpisode.anime.slug}/season-${previousEpisode.season}/${previousEpisode.episodeType.slug}-${previousEpisode.number?c}"
-                           class="btn btn-light ms-0 me-auto d-flex align-items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                 class="bi bi-chevron-left me-1" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd"
-                                      d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
-                            </svg>
-                            Épisode précédent
-                        </a>
-                    </#if>
+                <#if previousEpisode?? || nextEpisode??>
+                    <div class="d-none d-md-block">
+                        <div class="mt-2 row row-cols-md-2 gx-3 align-items-center">
+                            <#if previousEpisode??>
+                                <a href="/animes/${previousEpisode.anime.slug}/season-${previousEpisode.season}/${previousEpisode.episodeType.slug}-${previousEpisode.number?c}"
+                                   class="text-white text-decoration-none col-12">
+                                    <div class="shikk-element p-2">
+                                        <p class="mb-1 text-uppercase fw-bold">Épisode précédent</p>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
+                                                     alt="${previousEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                            </div>
+                                            <div class="col-6 d-flex flex-column justify-content-center">
+                                                <h6 class="fw-bold">
+                                                    ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;
+                                                    ${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title}</h6>
+                                                <#list previousEpisode.langTypes as langType>
+                                                    <p class="text-muted mb-0">
+                                                        <@langTypeComponent.display langType=langType />
+                                                    </p>
+                                                </#list>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </#if>
 
-                    <#if nextEpisode??>
-                        <a href="/animes/${nextEpisode.anime.slug}/season-${nextEpisode.season}/${nextEpisode.episodeType.slug}-${nextEpisode.number?c}"
-                           class="btn btn-light ms-auto me-0 d-flex align-items-center">
-                            Épisode suivant
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                 class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd"
-                                      d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
-                            </svg>
-                        </a>
-                    </#if>
-                </div>
+                            <#if nextEpisode??>
+                                <div class="col-12">
+                                    <a href="/animes/${nextEpisode.anime.slug}/season-${nextEpisode.season}/${nextEpisode.episodeType.slug}-${nextEpisode.number?c}"
+                                       class="text-white text-decoration-none">
+                                        <div class="shikk-element p-2">
+                                            <p class="mb-1 text-uppercase fw-bold">Épisode suivant</p>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
+                                                         alt="${nextEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                                </div>
+                                                <div class="col-6 d-flex flex-column justify-content-center">
+                                                    <h6 class="fw-bold">
+                                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title}</h6>
+                                                    <#list nextEpisode.langTypes as langType>
+                                                        <p class="text-muted mb-0">
+                                                            <@langTypeComponent.display langType=langType />
+                                                        </p>
+                                                    </#list>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </#if>
+                        </div>
+                    </div>
+                </#if>
             </div>
         </div>
     </div>
@@ -103,4 +135,58 @@
             </div>
         </#list>
     </div>
+
+    <#if previousEpisode?? || nextEpisode??>
+        <div class="d-block d-md-none mt-3">
+            <#if previousEpisode??>
+                <a href="/animes/${previousEpisode.anime.slug}/season-${previousEpisode.season}/${previousEpisode.episodeType.slug}-${previousEpisode.number?c}"
+                   class="text-white text-decoration-none">
+                    <div class="shikk-element p-2">
+                        <p class="mb-1 text-uppercase fw-bold">Épisode précédent</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
+                                     alt="${previousEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                            </div>
+                            <div class="col-6 d-flex flex-column justify-content-center">
+                                <h6 class="fw-bold">
+                                    ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title}</h6>
+                                <#list previousEpisode.langTypes as langType>
+                                    <p class="text-muted mb-0">
+                                        <@langTypeComponent.display langType=langType />
+                                    </p>
+                                </#list>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </#if>
+
+            <#if nextEpisode??>
+                <div class="<#if previousEpisode??> mt-3 mt-md-auto</#if>">
+                    <a href="/animes/${nextEpisode.anime.slug}/season-${nextEpisode.season}/${nextEpisode.episodeType.slug}-${nextEpisode.number?c}"
+                       class="text-white text-decoration-none">
+                        <div class="shikk-element p-2">
+                            <p class="mb-1 text-uppercase fw-bold">Épisode suivant</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
+                                         alt="${nextEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                </div>
+                                <div class="col-6 d-flex flex-column justify-content-center">
+                                    <h6 class="fw-bold">
+                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title}</h6>
+                                    <#list nextEpisode.langTypes as langType>
+                                        <p class="text-muted mb-0">
+                                            <@langTypeComponent.display langType=langType />
+                                        </p>
+                                    </#list>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </#if>
+        </div>
+    </#if>
 </@navigation.display>

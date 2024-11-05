@@ -12,6 +12,8 @@
     <#assign canonicalUrl = canonicalUrl + "/page-" + page>
 </#if>
 
+<#assign animeSanitized = su.sanitizeXSS(anime.shortName) />
+
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
     <div class="position-relative">
         <#-- Bottom to top background gradient -->
@@ -24,13 +26,13 @@
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
                 <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
-                     alt="${su.sanitizeXSS(anime.shortName)} anime" class="img-fluid w-50 rounded-4"
+                     alt="${animeSanitized} anime" class="img-fluid w-50 rounded-4"
                      width="480"
                      height="720">
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${su.sanitizeXSS(anime.shortName)}<#if season??> - Saison ${season.number?c}</#if></h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${animeSanitized}<#if season??> - Saison ${season.number?c}</#if></h1>
 
                 <div class="mt-1">
                     <#list anime.langTypes as langType>
