@@ -45,9 +45,6 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject
     private lateinit var emailService: EmailService
 
-    @Inject
-    private lateinit var database: Database
-
     private fun log(stringBuilder: StringBuilder, level: Level, message: String) {
         logger.log(level, message)
         stringBuilder.append("[${level.localizedName}] $message<br/>")
@@ -68,10 +65,6 @@ class FetchOldEpisodesJob : AbstractJob {
             logger.warning("Config ${ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key} not found")
             return
         }
-
-        val entityManager = database.entityManager
-        val transaction = entityManager.transaction
-        transaction.begin()
 
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
@@ -162,9 +155,6 @@ class FetchOldEpisodesJob : AbstractJob {
         } catch (e: Exception) {
             logger.warning("Impossible to send email: ${e.message}")
         }
-
-        transaction.commit()
-        entityManager.close()
     }
 
     private fun fetchAnimationDigitalNetwork(
