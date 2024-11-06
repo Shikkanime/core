@@ -25,7 +25,9 @@ class LoggerFactory {
     }
 
     companion object {
-        fun getLogger(name: String): Logger {
+        private val map = mutableMapOf<String, Logger>()
+
+        private fun buildLogger(name: String): Logger {
             val logger = Logger.getLogger(name)
             logger.useParentHandlers = false
             val consoleHandler = ConsoleHandler()
@@ -36,6 +38,7 @@ class LoggerFactory {
             return logger
         }
 
-        fun getLogger(clazz: Class<*>) = getLogger(clazz.name)
+        fun getLogger(name: String) = map.getOrPut(name) { buildLogger(name) }
+        fun getLogger(clazz: Class<*>) = map.getOrPut(clazz.name) { buildLogger(clazz.name) }
     }
 }
