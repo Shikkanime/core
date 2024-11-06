@@ -3,16 +3,12 @@ package fr.shikkanime
 import com.google.inject.Inject
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 
 abstract class AbstractTest {
-    @Inject
-    private lateinit var database: Database
-
     @Inject
     protected lateinit var animeService: AnimeService
 
@@ -51,15 +47,8 @@ abstract class AbstractTest {
     }
 
     private fun deleteAll() {
-        database.entityManager.use {
-            val transaction = it.transaction
-            transaction.begin()
-
-            Constant.reflections.getSubTypesOf(AbstractService::class.java).forEach {
-                Constant.injector.getInstance(it).deleteAll()
-            }
-
-            transaction.commit()
+        Constant.reflections.getSubTypesOf(AbstractService::class.java).forEach {
+            Constant.injector.getInstance(it).deleteAll()
         }
     }
 

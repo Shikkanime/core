@@ -94,7 +94,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
-        val identifiers = episodeVariantService.findAllIdentifiers()
+        val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
 
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
@@ -105,24 +105,35 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
             saveAnimePlatformIfNotExists(episodes, mapping)
 
+            if (episodes.isEmpty()) {
+                logger.warning("No episode found for $mappingIdentifier")
+                mapping.lastUpdateDateTime = ZonedDateTime.now()
+                episodeMappingService.update(mapping)
+                logger.info("Episode $mappingIdentifier updated")
+                return@forEach
+            }
+
             episodes.filter { it.getIdentifier() !in identifiers }.takeIf { it.isNotEmpty() }
+                ?.distinctBy { it.getIdentifier() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
                 ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
                 ?.also {
+                    identifiers.addAll(it.mapNotNull { it.identifier })
                     logger.info("Added ${it.size} episodes for $mappingIdentifier")
                     needRecalculate.set(true)
                     needRefreshCache.set(true)
                 }
 
-            val originalEpisode = episodes.firstOrNull { it.original }
-                ?: episodes.firstOrNull()
-                ?: return@forEach run {
-                    logger.warning("No episode found for $mappingIdentifier")
-                    mapping.lastUpdateDateTime = ZonedDateTime.now()
-                    episodeMappingService.update(mapping)
-                    logger.info("Episode $mappingIdentifier updated")
+            episodeVariantService.findAllByMapping(mapping).forEach { episodeVariant ->
+                if (episodes.none { it.getIdentifier() == episodeVariant.identifier }) {
+                    episodeVariantService.delete(episodeVariant)
+                    logger.info("Deleted episode ${episodeVariant.identifier} for $mappingIdentifier")
+                    needRecalculate.set(true)
+                    needRefreshCache.set(true)
                 }
+            }
 
+            val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.first()
             val hasChanged = AtomicBoolean(false)
 
             updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)

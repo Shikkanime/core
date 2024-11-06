@@ -21,15 +21,14 @@ abstract class AbstractRepository<E : ShikkEntity> {
     protected fun <T> inTransaction(block: (EntityManager) -> T): T {
         return database.entityManager.use {
             val transaction = it.transaction
-            val isActive = transaction.isActive
-            if (!isActive) transaction.begin()
+            transaction.begin()
             val result: T
 
             try {
                 result = block(it)
-                if (!isActive) transaction.commit()
+                transaction.commit()
             } catch (e: Exception) {
-                if (!isActive) transaction.rollback()
+                transaction.rollback()
                 throw e
             }
 
