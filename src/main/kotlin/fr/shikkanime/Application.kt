@@ -21,12 +21,18 @@ private val logger = LoggerFactory.getLogger(Constant.NAME)
 
 fun main() {
     logger.info("Starting ${Constant.NAME}...")
+
+    logger.info("Pre-indexing anime data...")
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     animeService.preIndex()
     updateAndDeleteData(animeService)
 
+    logger.info("Loading images cache...")
     ImageService.loadCache()
     ImageService.addAll()
+
+    logger.info("Loading all default caches...")
+    MapCache.loadAll()
 
     try {
         Constant.injector.getInstance(MemberService::class.java).initDefaultAdminUser()
@@ -48,9 +54,6 @@ fun main() {
     // Every day at 3pm
      JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
     JobManager.start()
-
-    logger.info("Loading caches...")
-    MapCache.loadAll()
 
     logger.info("Starting server...")
     embeddedServer(
