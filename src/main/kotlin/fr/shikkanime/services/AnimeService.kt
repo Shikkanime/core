@@ -228,13 +228,19 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeType: EpisodeType?,
         episodeMappings: List<EpisodeMapping>
     ): fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto {
-        val langTypes = filter.map { LangType.fromAudioLocale(pair.second.countryCode!!, it[4] as String) }.distinct().sorted()
-            .ifEmpty { hourValues.map { LangType.fromAudioLocale(pair.second.countryCode!!, it[4] as String) }.distinct().sorted() }
+        val platforms = filter.mapNotNull { it[3] as? Platform }.distinct()
+            .ifEmpty { hourValues.mapNotNull { it[3] as? Platform }.distinct() }
         val releaseDateTime = filter.minOfOrNull { it[2] as ZonedDateTime } ?: hourValues.minOf { it[2] as ZonedDateTime }
+        val langTypes =
+            filter.map { LangType.fromAudioLocale(pair.second.countryCode!!, it[4] as String) }.distinct().sorted()
+                .ifEmpty {
+                    hourValues.map { LangType.fromAudioLocale(pair.second.countryCode!!, it[4] as String) }.distinct()
+                        .sorted()
+                }
 
         return fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto(
             AbstractConverter.convert(pair.second, AnimeDto::class.java),
-            AbstractConverter.convert(hourValues.mapNotNull { it[3] as? Platform }.distinct(), PlatformDto::class.java)!!,
+            AbstractConverter.convert(platforms, PlatformDto::class.java)!!,
             releaseDateTime.withUTCString(),
             "/animes/${pair.second.slug}",
             langTypes,
