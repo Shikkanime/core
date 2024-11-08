@@ -2,6 +2,7 @@ package fr.shikkanime.modules
 
 import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
@@ -10,6 +11,8 @@ import fr.shikkanime.utils.StringUtils
 private const val ADMIN = "/admin"
 
 fun setGlobalAttributes(
+    ipAddress: String,
+    userAgent: String,
     modelMap: MutableMap<String, Any?>,
     controller: Any,
     replacedPath: String,
@@ -17,6 +20,7 @@ fun setGlobalAttributes(
 ) {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
+    val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
 
     modelMap["su"] = StringUtils
     modelMap["links"] = getLinks(controller, replacedPath, simulcastCacheService)
@@ -28,7 +32,10 @@ fun setGlobalAttributes(
     modelMap["currentSimulcast"] = simulcastCacheService.currentSimulcast
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl
-    modelMap["additionalHeadTags"] = configCacheService.getValueAsString(ConfigPropertyKey.ADDITIONAL_HEAD_TAGS)
+
+    if (!botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
+        modelMap["additionalHeadTags"] = configCacheService.getValueAsString(ConfigPropertyKey.ADDITIONAL_HEAD_TAGS)
+    }
 }
 
 private fun getLinks(controller: Any, replacedPath: String, simulcastCacheService: SimulcastCacheService) =
