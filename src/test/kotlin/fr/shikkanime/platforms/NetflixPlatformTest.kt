@@ -68,4 +68,26 @@ class NetflixPlatformTest : AbstractTest() {
         assertTrue(episodes.sumOf { it.duration } > 0)
         assertEquals("FR-NETF-8a6184b0-JA-JP", episodes.first().getIdentifier())
     }
+
+    @Test
+    fun `fetchApiContent for Dragon Ball DAIMA`() {
+        val countryCode = CountryCode.FR
+        val zonedDateTime = ZonedDateTime.parse("2024-08-11T16:45:00Z")
+        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay(
+            5,
+            "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=85,width=480,height=720/catalog/crunchyroll/298acc932735d9a731ea39a3db6a613c.jpg",
+            "16:45:00"
+        ).apply {
+            name = "81943491"
+        })
+        val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
+        assumeTrue(episodes != null)
+        assumeTrue(episodes!!.isNotEmpty())
+
+        episodes.forEach {
+            println(it)
+        }
+
+        assertTrue(episodes.size >= 4)
+    }
 }
