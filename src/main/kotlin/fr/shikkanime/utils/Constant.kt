@@ -2,8 +2,6 @@ package fr.shikkanime.utils
 
 import com.google.inject.Guice
 import com.google.inject.Injector
-import com.microsoft.playwright.BrowserType
-import com.microsoft.playwright.Playwright
 import fr.shikkanime.modules.DefaultModule
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
@@ -34,8 +32,6 @@ object Constant {
     val abstractSocialNetworks =
         reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
     val utcZoneId: ZoneId = ZoneId.of("UTC")
-    val playwright: Playwright = Playwright.create()
-    val launchOptions: BrowserType.LaunchOptions = BrowserType.LaunchOptions().setHeadless(true)
     val jwtAudience: String = System.getenv("JWT_AUDIENCE") ?: "jwt-audience"
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"
     val jwtRealm: String = System.getenv("JWT_REALM") ?: "ktor sample app"

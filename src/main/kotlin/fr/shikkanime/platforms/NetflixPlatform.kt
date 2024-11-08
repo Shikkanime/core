@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.utils.*
@@ -12,9 +13,34 @@ import java.time.format.DateTimeFormatter
 
 class NetflixPlatform :
     AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<AbstractPlatform.Episode>?>() {
+    private val maxRetry = 10
+
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
+
+    private fun loadContent(id: String, countryCode: CountryCode, i: Int = 0): Document? {
+        if (i >= maxRetry) {
+            logger.severe("Failed to fetch Netflix page for $id in ${countryCode.name}")
+            return null
+        }
+
+        val document =
+            HttpRequest(countryCode).use { it.getBrowser("https://www.netflix.com/${countryCode.name.lowercase()}/title/$id") }
+
+        if (document.getElementsByTag("html").attr("lang") != countryCode.name.lowercase()) {
+            logger.warning("Failed to fetch Netflix page for $id in ${countryCode.name}, retrying... ($i/${maxRetry})")
+            return loadContent(id, countryCode, i + 1)
+        }
+
+        // Is new design?
+        if (document.selectXpath("//*[@id=\"appMountPoint\"]/div/div[2]/div/header").isNotEmpty()) {
+            logger.warning("New Netflix design detected, trying to get the old design... ($i/${maxRetry})")
+            return loadContent(id, countryCode, i + 1)
+        }
+
+        return document
+    }
 
     override suspend fun fetchApiContent(
         key: CountryCodeNetflixSimulcastKeyCache,
@@ -25,24 +51,7 @@ class NetflixPlatform :
         val releaseDateTimeUTC = zonedDateTime.withUTC()
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.netflixSimulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
-
-        val document = HttpRequest(key.countryCode).use {
-            var subdoc: Document
-            var i = 0
-
-            do {
-                subdoc = it.getBrowser("https://www.netflix.com/${key.countryCode.name.lowercase()}/title/$id")
-                i++
-            } while (subdoc.getElementsByTag("html").attr("lang") != key.countryCode.name.lowercase() && i < 10)
-
-            if (subdoc.getElementsByTag("html").attr("lang") != key.countryCode.name.lowercase()) {
-                logger.severe("Failed to fetch Netflix page for $id in ${key.countryCode.name}")
-                return null
-            }
-
-            subdoc
-        }
-
+        val document = loadContent(id, key.countryCode) ?: return null
         val animeName = document.selectFirst(".title-title")?.text() ?: return emptySet()
         val animeBanner =
             document.selectXpath("//*[@id=\"section-hero\"]/div[1]/div[2]/picture/source[2]").attr("srcset")

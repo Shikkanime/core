@@ -2,7 +2,9 @@ package fr.shikkanime.utils
 
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.BrowserContext
+import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
+import com.microsoft.playwright.Playwright
 import fr.shikkanime.entities.enums.CountryCode
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -22,6 +24,7 @@ class HttpRequest(
     val countryCode: CountryCode? = null
 ) : AutoCloseable {
     private var isBrowserInitialized = false
+    private var playwright: Playwright? = null
     private var browser: Browser? = null
     private var context: BrowserContext? = null
     private var page: Page? = null
@@ -76,7 +79,8 @@ class HttpRequest(
             return
         }
 
-        browser = Constant.playwright.firefox().launch(Constant.launchOptions)
+        playwright = Playwright.create()
+        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true))
 
         context = if (countryCode != null)
             browser?.newContext(
@@ -126,6 +130,7 @@ class HttpRequest(
         page?.close()
         context?.close()
         browser?.close()
+        playwright?.close()
     }
 
     companion object {
