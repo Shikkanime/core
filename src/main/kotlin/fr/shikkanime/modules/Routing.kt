@@ -218,9 +218,12 @@ suspend fun handleTemplateResponse(
     replacedPath: String,
     response: Response
 ) {
+    val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
+    val userAgent = call.request.userAgent() ?: "Unknown"
+
     val map = response.data as Map<String, Any> // NOSONAR
     val modelMap = (map["model"] as Map<String, Any?>).toMutableMap() // NOSONAR
-    setGlobalAttributes(modelMap, controller, replacedPath, map["title"] as String?)
+    setGlobalAttributes(ipAddress, userAgent, modelMap, controller, replacedPath, map["title"] as String?)
     call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
 }
 

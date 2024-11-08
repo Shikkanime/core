@@ -19,6 +19,7 @@ val bcprovVersion = "1.79"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.4.1"
 val simpleJavaMailVersion = "8.12.2"
+val jacksonVersion = "2.18.1"
 
 val jdaVersion = "5.2.0"
 val twitter4jVersion = "4.0.7"
@@ -103,6 +104,7 @@ dependencies {
     implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
