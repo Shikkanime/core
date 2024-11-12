@@ -5,6 +5,7 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import org.simplejavamail.api.mailer.Mailer
 import org.simplejavamail.api.mailer.config.TransportStrategy
@@ -12,6 +13,8 @@ import org.simplejavamail.email.EmailBuilder
 import org.simplejavamail.mailer.MailerBuilder
 
 class EmailService {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     data class SMTPConfig(
         val emailHost: String,
         val emailPort: Int,
@@ -84,6 +87,18 @@ class EmailService {
             Thread(block).start()
         } else {
             block()
+        }
+    }
+
+    fun sendAdminEmail(title: String, body: String) {
+        try {
+            sendEmail(
+                requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL)),
+                title,
+                body,
+            )
+        } catch (e: Exception) {
+            logger.warning("Can not send admin email: ${e.message}")
         }
     }
 }
