@@ -58,9 +58,9 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
+        assertEquals(2, mappings.size)
         val variants = episodeVariantService.findAll()
-        assertEquals(2, variants.size)
+        assertEquals(3, variants.size)
 
         assertEquals(
             "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/97ab10f90157c828a591cd4ec66e851c.jpg",
@@ -114,9 +114,9 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
+        assertEquals(2, mappings.size)
         val variants = episodeVariantService.findAll()
-        assertEquals(2, variants.size)
+        assertEquals(3, variants.size)
     }
 
     @Test
@@ -164,10 +164,10 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
+        assertEquals(3, mappings.size)
         assertTrue(mappings.first().lastUpdateDateTime.isAfter(now))
         val variants = episodeVariantService.findAll()
-        assertEquals(1, variants.size)
+        assertEquals(3, variants.size)
     }
 
     @Test
@@ -225,9 +225,113 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
+        assertEquals(3, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(6, variants.size)
+        assertTrue(variants.all { it.uncensored })
+    }
+
+    @Test
+    fun `run old ADN episodes Isekai Cheat Magician`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Isekai Cheat Magician",
+                slug = "isekai-cheat-magician",
+                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/affiche_350x500.jpg",
+                banner = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/license_640x360.jpg"
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 13,
+                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/eps13_640x360.jpg",
+                title = "La Nuit aux étoiles",
+                description = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts."
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.ANIM,
+                audioLocale = "ja-JP",
+                identifier = "FR-ANIM-10114-JA-JP",
+                url = "https://animationdigitalnetwork.fr/video/isekai-cheat-magician/10114-episode-13-la-nuit-aux-etoiles"
+            )
+        )
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(2, mappings.size)
         val variants = episodeVariantService.findAll()
         assertEquals(2, variants.size)
-        assertTrue(variants.all { it.uncensored })
+    }
+
+    @Test
+    fun `run old CRUN episodes Let's Make a Mug Too`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Let's Make a Mug Too",
+                slug = "lets-make-a-mug-too",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/4baa218403d5aa914114eb001e406f9a.jpe",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/509536f6e1d4757907762591182fd845.jpe"
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 9,
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/820b8839ea3260a5ca82a9ecaf25de96.jpe",
+                title = "Écraser, étirer, reculer, compléter",
+                description = "Himeno n'a toujours pas trouvé l'idée ultime pour le concours. Elle essaie donc plusieurs formes pour créer le coussin qu'elle désire."
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.CRUN,
+                audioLocale = "ja-JP",
+                identifier = "FR-CRUN-GK9U383WX-JA-JP",
+                url = "https://www.crunchyroll.com/fr/watch/GK9U383WX/pound-stretch-subtract-and-add"
+            )
+        )
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(1, variants.size)
     }
 }

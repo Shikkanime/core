@@ -2,9 +2,12 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeIdKeyCache
+import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
@@ -52,10 +55,13 @@ class UpdateEpisodeMappingJob : AbstractJob {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
+    @Inject
+    private lateinit var emailService: EmailService
+
     private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>>(duration = Duration.ofDays(1)) {
         return@MapCache runBlocking {
             val video = try {
-                AnimationDigitalNetworkWrapper.getShowVideo(it.id)
+                AnimationDigitalNetworkWrapper.getVideo(it.id.toInt())
             } catch (e: Exception) {
                 logger.severe("Impossible to get ADN video ${it.id} : ${e.message} (Maybe the video is not available anymore)")
                 return@runBlocking emptyList()
@@ -96,12 +102,22 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val needRefreshCache = AtomicBoolean(false)
         val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
 
+        val allPrevious = mutableListOf<Episode>()
+        val allNext = mutableListOf<Episode>()
+
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
+
             val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
                 .sortedBy { it.platform.sortIndex }
+
+            variants.map { variant -> runBlocking { retrievePreviousAndNextEpisodes(mapping, variant) } }
+                .forEach { (previous, next) ->
+                    allPrevious.addAll(previous.filter { it.episodeType == EpisodeType.EPISODE })
+                    allNext.addAll(next.filter { it.episodeType == EpisodeType.EPISODE })
+                }
 
             saveAnimePlatformIfNotExists(episodes, mapping)
 
@@ -152,6 +168,34 @@ class UpdateEpisodeMappingJob : AbstractJob {
             logger.info("Episode $mappingIdentifier updated")
         }
 
+        val allNewEpisodes = mutableSetOf<EpisodeVariant>()
+
+        allPrevious.distinctBy { it.getIdentifier() }
+            .filter { it.getIdentifier() !in identifiers }
+            .takeIf { it.isNotEmpty() }
+            ?.also { logger.info("Found ${it.size} new previous episodes") }
+            ?.map { episode -> episodeVariantService.save(episode, false, null) }
+            ?.also {
+                identifiers.addAll(it.mapNotNull { it.identifier })
+                allNewEpisodes.addAll(it)
+                logger.info("Added ${it.size} previous episodes")
+                needRecalculate.set(true)
+                needRefreshCache.set(true)
+            }
+
+        allNext.distinctBy { it.getIdentifier() }
+            .filter { it.getIdentifier() !in identifiers }
+            .takeIf { it.isNotEmpty() }
+            ?.also { logger.info("Found ${it.size} new next episodes") }
+            ?.map { episode -> episodeVariantService.save(episode, false, null) }
+            ?.also {
+                identifiers.addAll(it.mapNotNull { it.identifier })
+                allNewEpisodes.addAll(it)
+                logger.info("Added ${it.size} next episodes")
+                needRecalculate.set(true)
+                needRefreshCache.set(true)
+            }
+
         if (needRecalculate.get()) {
             logger.info("Recalculating simulcasts...")
             animeService.recalculateSimulcasts()
@@ -161,6 +205,19 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         if (needRefreshCache.get()) {
             MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
+        }
+
+        if (allNewEpisodes.isNotEmpty()) {
+            val dtos = AbstractConverter.convert(allNewEpisodes, EpisodeVariantDto::class.java)!!
+            val body = dtos.joinToString("\n") { "- ${it.mapping.anime.shortName} | ${StringUtils.toEpisodeString(it)}" }
+
+            logger.info("New episodes:")
+            logger.info(body)
+
+            emailService.sendAdminEmail(
+                "UpdateEpisodeMappingJob - ${allNewEpisodes.size} new episodes",
+                body
+            )
         }
     }
 
@@ -256,11 +313,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         when (episodeVariant.platform) {
             Platform.ANIM -> {
-                val adnId = "[A-Z]{2}-ANIM-([0-9]{1,5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex()
-                    .find(episodeVariant.identifier!!)?.groupValues?.get(1)
-
                 episodes.addAll(
-                    adnCache[CountryCodeIdKeyCache(countryCode, adnId!!)]!!
+                    adnCache[CountryCodeIdKeyCache(countryCode, animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!)]!!
                 )
             }
 
@@ -318,5 +372,51 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 return@mapNotNull null
             }
         }
+    }
+
+    private suspend fun retrievePreviousAndNextEpisodes(
+        episodeMapping: EpisodeMapping,
+        episodeVariant: EpisodeVariant
+    ): Pair<List<Episode>, List<Episode>> {
+        val countryCode = episodeMapping.anime!!.countryCode!!
+        val previous = mutableListOf<Episode>()
+        val next = mutableListOf<Episode>()
+
+        when (episodeVariant.platform) {
+            Platform.ANIM -> {
+                val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!
+                val video = adnCache[CountryCodeIdKeyCache(countryCode, videoId)]!!.first()
+
+                AnimationDigitalNetworkWrapper.getPreviousVideo(videoId.toInt(), video.animeId.toInt())
+                    ?.let { previous.addAll(animationDigitalNetworkPlatform.convertEpisode(countryCode, it, ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)) }
+
+                AnimationDigitalNetworkWrapper.getNextVideo(videoId.toInt(), video.animeId.toInt())
+                    ?.let { next.addAll(animationDigitalNetworkPlatform.convertEpisode(countryCode, it, ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)) }
+            }
+
+            Platform.CRUN -> {
+                val videoId = crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+
+                runCatching {
+                    CrunchyrollWrapper.getPreviousEpisode(countryCode.locale, CrunchyrollWrapper.getAccessTokenCached(countryCode)!!, videoId)
+                        .let { previous.add(crunchyrollPlatform.convertEpisode(countryCode, it, needSimulcast = false)) }
+                }.onFailure {
+                    logger.warning("Error while getting previous episode for ${episodeVariant.identifier} : ${it.message}")
+                }
+
+                runCatching {
+                    CrunchyrollWrapper.getUpNext(countryCode.locale, CrunchyrollWrapper.getAccessTokenCached(countryCode)!!, videoId)
+                        .let { next.add(crunchyrollPlatform.convertEpisode(countryCode, it, needSimulcast = false)) }
+                }.onFailure {
+                    logger.warning("Error while getting next episode for ${episodeVariant.identifier} : ${it.message}")
+                }
+            }
+
+            else -> {
+                logger.warning("Error while getting episode ${episodeVariant.identifier} : Invalid platform")
+            }
+        }
+
+        return previous to next
     }
 }

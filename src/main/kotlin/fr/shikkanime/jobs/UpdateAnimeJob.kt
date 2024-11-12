@@ -140,7 +140,7 @@ class UpdateAnimeJob : AbstractJob {
     }
 
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        return AnimationDigitalNetworkWrapper.getShow(animePlatform.platformId!!)
+        return AnimationDigitalNetworkWrapper.getShow(animePlatform.platformId!!.toInt())
             .let {
                 UpdatableAnime(
                     lastReleaseDateTime = it.microdata!!.startDate,

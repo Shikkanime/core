@@ -146,15 +146,10 @@ class FetchOldEpisodesJob : AbstractJob {
 
         log(emailLogs, Level.INFO, "Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
 
-        try {
-            emailService.sendEmail(
-                requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.FETCH_OLD_EPISODES_EMAIL)),
-                "FetchOldEpisodesJob - ${dates.first()} to ${dates.last()}",
-                emailLogs.toString(),
-            )
-        } catch (e: Exception) {
-            logger.warning("Impossible to send email: ${e.message}")
-        }
+        emailService.sendAdminEmail(
+            "FetchOldEpisodesJob - ${dates.first()} to ${dates.last()}",
+            emailLogs.toString(),
+        )
     }
 
     private fun fetchAnimationDigitalNetwork(
@@ -205,7 +200,7 @@ class FetchOldEpisodesJob : AbstractJob {
                 countryCode,
                 dates
             )
-        }.map { browseObject ->
+        }.mapNotNull { browseObject ->
             try {
                 crunchyrollPlatform.convertEpisode(
                     countryCode,
@@ -223,6 +218,6 @@ class FetchOldEpisodesJob : AbstractJob {
                 )
                 null
             }
-        }.filterNotNull()
+        }
     }
 }

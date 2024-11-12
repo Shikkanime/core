@@ -41,7 +41,7 @@ object AnimationDigitalNetworkWrapper {
         val show: Show,
     )
 
-    private const val BASE_URL = "https://gw.api.animationdigitalnetwork.fr/"
+    private const val BASE_URL = "https://gw.api.animationdigitalnetwork.com/"
     private val httpRequest = HttpRequest()
 
     suspend fun getLatestVideos(date: LocalDate): Array<Video> {
@@ -57,7 +57,7 @@ object AnimationDigitalNetworkWrapper {
         return ObjectParser.fromJson(videos, Array<Video>::class.java)
     }
 
-    suspend fun getShow(id: String): Show {
+    suspend fun getShow(id: Int): Show {
         val response = httpRequest.get("${BASE_URL}show/$id?withMicrodata=true")
 
         if (response.status != HttpStatusCode.OK) {
@@ -70,7 +70,36 @@ object AnimationDigitalNetworkWrapper {
         return ObjectParser.fromJson(showJson, Show::class.java)
     }
 
-    suspend fun getShowVideo(videoId: String): Video {
+    private suspend fun getShowVideos(showId: Int): Array<Video> {
+        val response = httpRequest.get("${BASE_URL}video/show/$showId?order=asc")
+        require(response.status == HttpStatusCode.OK) { "Failed to get show videos" }
+        val videosJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("videos") ?: throw Exception("Failed to get videos")
+        return ObjectParser.fromJson(videosJson, Array<Video>::class.java)
+    }
+
+    suspend fun getPreviousVideo(videoId: Int, showId: Int): Video? {
+        val videos = getShowVideos(showId)
+        val videoIndex = videos.indexOfFirst { it.id == videoId }
+
+        if (videoIndex == -1 || videoIndex == 0) {
+            return null
+        }
+
+        return videos.getOrNull(videoIndex - 1)
+    }
+
+    suspend fun getNextVideo(videoId: Int, showId: Int): Video? {
+        val videos = getShowVideos(showId)
+        val videoIndex = videos.indexOfFirst { it.id == videoId }
+
+        if (videoIndex == -1 || videoIndex == videos.size - 1) {
+            return null
+        }
+
+        return videos.getOrNull(videoIndex + 1)
+    }
+
+    suspend fun getVideo(videoId: Int): Video {
         val response = httpRequest.get("${BASE_URL}video/$videoId/public")
 
         if (response.status.value != 200) {
