@@ -55,11 +55,9 @@
                     </div>
 
                     <div class="overlay" style="display: none;" x-show="hover">
-                        <#if episodeMapping.title??>
-                            <div class="h6 text-truncate-2 fw-bold mb-0">
-                                ${episodeMapping.title}
-                            </div>
-                        </#if>
+                        <div class="h6 text-truncate-2 fw-bold mb-0">
+                            ${episodeMapping.title!"＞︿＜"}
+                        </div>
 
                         <span class="text-muted mt-0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"

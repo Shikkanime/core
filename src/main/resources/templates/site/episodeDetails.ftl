@@ -67,12 +67,13 @@
                                         <div class="row">
                                             <div class="col-6">
                                                 <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
-                                                     alt="${previousEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                                     alt="${previousEpisode.title!"＞︿＜"}" class="img-fluid"
+                                                     style="border-radius: 0 0 0 1rem">
                                             </div>
                                             <div class="col-6 d-flex flex-column justify-content-center">
                                                 <h6 class="fw-bold">
                                                     ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;
-                                                    ${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title}</h6>
+                                                    ${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}</h6>
                                                 <#list previousEpisode.langTypes as langType>
                                                     <p class="text-muted mb-0">
                                                         <@langTypeComponent.display langType=langType />
@@ -93,11 +94,12 @@
                                             <div class="row">
                                                 <div class="col-6">
                                                     <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
-                                                         alt="${nextEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                                         alt="${nextEpisode.title!"＞︿＜"}" class="img-fluid"
+                                                         style="border-radius: 0 0 0 1rem">
                                                 </div>
                                                 <div class="col-6 d-flex flex-column justify-content-center">
                                                     <h6 class="fw-bold">
-                                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title}</h6>
+                                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}</h6>
                                                     <#list nextEpisode.langTypes as langType>
                                                         <p class="text-muted mb-0">
                                                             <@langTypeComponent.display langType=langType />
@@ -146,11 +148,12 @@
                         <div class="row">
                             <div class="col-6">
                                 <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
-                                     alt="${previousEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                     alt="${previousEpisode.title!"＞︿＜"}" class="img-fluid"
+                                     style="border-radius: 0 0 0 1rem">
                             </div>
                             <div class="col-6 d-flex flex-column justify-content-center">
                                 <h6 class="fw-bold">
-                                    ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title}</h6>
+                                    ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}</h6>
                                 <#list previousEpisode.langTypes as langType>
                                     <p class="text-muted mb-0">
                                         <@langTypeComponent.display langType=langType />
@@ -171,11 +174,12 @@
                             <div class="row">
                                 <div class="col-6">
                                     <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
-                                         alt="${nextEpisode.title}" class="img-fluid" style="border-radius: 0 0 0 1rem">
+                                         alt="${nextEpisode.title!"＞︿＜"}" class="img-fluid"
+                                         style="border-radius: 0 0 0 1rem">
                                 </div>
                                 <div class="col-6 d-flex flex-column justify-content-center">
                                     <h6 class="fw-bold">
-                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title}</h6>
+                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}</h6>
                                     <#list nextEpisode.langTypes as langType>
                                         <p class="text-muted mb-0">
                                             <@langTypeComponent.display langType=langType />
