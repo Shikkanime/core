@@ -96,4 +96,30 @@ class SEOController {
     private fun indexNow(): Response {
         return Response.ok("c97385827d194199b3a0509ec9221517", contentType = ContentType.Text.Plain)
     }
+
+    @Path("/feed/episodes")
+    @Get
+    private fun feedRss(): Response {
+        val data = episodeMappingCacheService.findAllBy(
+            CountryCode.FR,
+            null,
+            null,
+            listOf(
+                SortParameter("lastReleaseDateTime", SortParameter.Order.DESC),
+                SortParameter("animeName", SortParameter.Order.DESC),
+                SortParameter("season", SortParameter.Order.DESC),
+                SortParameter("episodeType", SortParameter.Order.DESC),
+                SortParameter("number", SortParameter.Order.DESC),
+            ),
+            1,
+            50
+        )?.data ?: emptyList()
+
+        return Response.template(
+            "/site/seo/rss.ftl",
+            null,
+            mutableMapOf("episodeMappings" to data),
+            contentType = ContentType.Text.Xml
+        )
+    }
 }
