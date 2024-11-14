@@ -2,6 +2,8 @@ package fr.shikkanime.services.caches
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.google.inject.Inject
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import io.ktor.client.statement.*
@@ -14,6 +16,9 @@ import kotlin.experimental.and
 
 class BotDetectorCache : AbstractCacheService {
     private val ipv4Regex = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
+
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
 
     private val ipGlobalCache = MapCache<String, List<String>>(duration = Duration.ofDays(1)) {
         runBlocking {
@@ -82,7 +87,10 @@ class BotDetectorCache : AbstractCacheService {
         }
 
         if (!userAgent.isNullOrBlank()) {
-            regexGlobalCache["all"]?.forEach { regex ->
+            val regexes = regexGlobalCache["all"]?.toMutableSet() ?: mutableSetOf()
+            configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.toRegex()?.let { regexes.add(it) }
+
+            regexes.forEach { regex ->
                 if (userAgent.contains(regex)) {
                     return true
                 }

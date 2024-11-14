@@ -51,4 +51,5 @@ enum class ConfigPropertyKey(val key: String) {
 
     AUTHORIZED_DOMAINS("authorized_domains"),
     ADDITIONAL_HEAD_TAGS("additional_head_tags"),
+    BOT_ADDITIONAL_REGEX("bot_additional_regex"),
 }
