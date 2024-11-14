@@ -156,4 +156,53 @@ class UpdateAnimeJobTest : AbstractTest() {
         assumeTrue(anime.banner == "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9ca680632ac63f44c7220f61ace9a81b.jpg")
         assumeTrue(anime.description == "Super héros, super pouvoirs… On a tous déjà rêvé secrètement de posséder une qualité hors du commun, de briller ou d’être LA personne la plus puissante de l’univers. Dans ce nouveau monde, ce rêve est à la portée de quasiment toute la population car les humains peuvent désormais naître avec un pouvoir : le « alter ». Mais certains malchanceux naissent sans alter.")
     }
+
+    @Test
+    fun `run old Crunchyroll anime Konosuba`() {
+
+        val tmpAnime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = ZonedDateTime.parse("2023-02-23T19:30:00Z"),
+                lastReleaseDateTime = ZonedDateTime.parse("2024-06-19T15:00:00Z"),
+                lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z"),
+                name = "KONOSUBA -God's blessing on this wonderful world!",
+                slug = "KONOSUBA",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/73224ab37d0b82b01a6748b690569511.jpg",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/26f4a1d5cd1369fb15c7d52a7d7a3105.jpg",
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.CRUN,
+                platformId = "GYE5K3GQR"
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.CRUN,
+                platformId = "GJ0H7Q5V7"
+            )
+        )
+
+        updateAnimeJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val anime = animes.first()
+
+        assumeTrue("https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/041fa9860f09efb08b3c8a3af712b985.jpg" == anime.image)
+        assertEquals(
+            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/131f32cf27743b9c95b78b4b3fb1c6ee.jpg",
+            anime.banner
+        )
+        assertEquals(
+            "Après avoir perdu la vie dans un accident de la route, Kazuma Satô voit apparaître devant lui une ravissante déesse, Aqua. Elle lui propose d’être réincarné dans un autre monde et d’emporter une seule chose avec lui. Kazuma choisit… la déesse ! Les voici transportés dans un pays sous la coupe d’un terrible roi démon. C’est le début de nombreuses aventures, car si Kazuma n’aspire qu’à la paix et au calme, Aqua se préoccupe beaucoup des problèmes des gens qu’ils croisent. Et cela ne plaît pas du tout au roi…",
+            anime.description
+        )
+    }
 }

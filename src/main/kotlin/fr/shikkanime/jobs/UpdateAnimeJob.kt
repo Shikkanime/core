@@ -158,7 +158,8 @@ class UpdateAnimeJob : AbstractJob {
             val objects = CrunchyrollWrapper.getEpisodesBySeriesId(
                 countryCode.locale,
                 CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
-                series.id
+                series.id,
+                true
             ).mapNotNull {
                 runCatching {
                     crunchyrollPlatform.convertEpisode(

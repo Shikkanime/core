@@ -115,7 +115,15 @@ object CrunchyrollWrapper {
             slugTitle = slugTitle,
         )
 
-        fun getVariants() = versions?.map { it.guid } ?: listOf(id!!)
+        fun getVariants(original: Boolean? = null): List<String> {
+            if (versions.isNullOrEmpty())
+                return listOf(id!!)
+
+            if (original == null)
+                return versions.map { it.guid }
+
+            return versions.filter { it.original == original }.map { it.guid }
+        }
     }
 
     data class BrowseObject(
@@ -330,14 +338,14 @@ object CrunchyrollWrapper {
         return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
     }
 
-    suspend fun getEpisodesBySeriesId(locale: String, accessToken: String, seriesId: String): List<BrowseObject> {
+    suspend fun getEpisodesBySeriesId(locale: String, accessToken: String, seriesId: String, original: Boolean? = null): List<BrowseObject> {
         val browseObjects = mutableListOf<BrowseObject>()
 
         val variantObjects = getSeasonsBySeriesId(locale, accessToken, seriesId)
             .flatMap { season ->
                 getEpisodesBySeasonId(locale, accessToken, season.id)
                     .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
-                    .flatMap(Episode::getVariants)
+                    .flatMap { it.getVariants(original) }
             }
             .subtract(browseObjects.map { it.id }.toSet())
             .chunked(CRUNCHYROLL_CHUNK)
