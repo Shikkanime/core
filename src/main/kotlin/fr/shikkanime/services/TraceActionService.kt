@@ -12,7 +12,7 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
 
     override fun getRepository() = traceActionRepository
 
-    fun findAllBy(page: Int, limit: Int) = traceActionRepository.findAllBy(page, limit)
+    fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) = traceActionRepository.findAllBy(entityType, action, page, limit)
 
     fun createTraceAction(shikkEntity: ShikkEntity, action: TraceAction.Action) = save(
         TraceAction(

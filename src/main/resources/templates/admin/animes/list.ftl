@@ -27,6 +27,10 @@
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         generatePageNumbers(currentPage, maxPage) {
+            if (currentPage === 0 || maxPage === 0) {
+                return [];
+            }
+
             const delta = 3;
             const range = [];
             for (let i = Math.max(2, currentPage - delta); i <= Math.min(maxPage - 1, currentPage + delta); i++) {
@@ -103,7 +107,7 @@
                             <a class="page-link" @click="setPage(i)" x-text="i"></a>
                         </li>
                     </template>
-                    <li class="page-item" :class="{ disabled: page === maxPage }">
+                    <li class="page-item" :class="{ disabled: page === maxPage || maxPage === 0 }">
                         <a class="page-link" @click="setPage(maxPage)">&raquo;</a>
                     </li>
                 </ul>

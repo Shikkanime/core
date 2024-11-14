@@ -19,12 +19,16 @@ class TraceActionController : HasPageableRoute() {
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun getTraceAction(
+        @QueryParam("entityType", description = "Entity type to filter by")
+        entityTypeParam: String?,
+        @QueryParam("action", description = "Action to filter by")
+        actionParam: String?,
         @QueryParam("page", description = "Page number for pagination")
         pageParam: Int?,
         @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(page, limit), TraceActionDto::class.java))
+        return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
     }
 }
