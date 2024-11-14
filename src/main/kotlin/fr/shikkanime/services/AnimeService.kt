@@ -80,6 +80,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllAudioLocalesAndSeasons() = animeRepository.findAllAudioLocalesAndSeasons()
 
+    fun findAllSlug() = animeRepository.findAllSlug()
+
     fun preIndex() = animeRepository.preIndex()
 
     fun findLoaded(uuid: UUID?) = animeRepository.findLoaded(uuid)

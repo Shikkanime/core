@@ -119,6 +119,14 @@
                     </ul>
 
                     <ul class="mt-3 list-unstyled justify-content-end text-md-end">
+                        <#if randomAnimeSlug?? && randomAnimeSlug?length != 0>
+                            <li>
+                                <a href="/animes/${randomAnimeSlug}" class="text-muted text-decoration-none">
+                                    Animé aléatoire
+                                </a>
+                            </li>
+                        </#if>
+
                         <#list footerLinks as link>
                             <li>
                                 <a href="${link.href}" class="text-muted text-decoration-none">

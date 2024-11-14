@@ -114,6 +114,14 @@ class AnimeCacheService : AbstractCacheService {
             animeService.findAllAudioLocalesAndSeasons()
         }
 
+    private val findAllSlugCache =
+        MapCache<String, List<String>>(
+            classes = listOf(Anime::class.java),
+            defaultKeys = listOf("all")
+        ) {
+            animeService.findAllSlug()
+        }
+
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -137,4 +145,6 @@ class AnimeCacheService : AbstractCacheService {
 
     fun findAudioLocalesAndSeasonsByAnimeCache(anime: Anime) =
         findAllAudioLocalesAndSeasonsCache["all"]?.get(anime.uuid!!)
+
+    fun findAllSlug() = findAllSlugCache["all"]
 }

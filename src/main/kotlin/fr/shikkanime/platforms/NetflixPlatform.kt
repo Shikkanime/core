@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 
 class NetflixPlatform :
     AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, Set<AbstractPlatform.Episode>?>() {
-    private val maxRetry = 10
+    private val maxRetry = 5
 
     override fun getPlatform(): Platform = Platform.NETF
 

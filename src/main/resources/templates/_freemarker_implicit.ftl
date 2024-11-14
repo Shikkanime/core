@@ -41,3 +41,4 @@
 [#-- @ftlvariable name="showLess" type="java.lang.Boolean" --]
 [#-- @ftlvariable name="page" type="java.lang.Integer" --]
 [#-- @ftlvariable name="urls" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.URLDto>" --]
+[#-- @ftlvariable name="randomAnimeSlug" type="java.lang.String" --]

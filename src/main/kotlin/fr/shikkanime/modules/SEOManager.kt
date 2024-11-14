@@ -1,7 +1,10 @@
 package fr.shikkanime.modules
 
+import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
@@ -20,6 +23,7 @@ fun setGlobalAttributes(
 ) {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
+    val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
     val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
 
     modelMap["su"] = StringUtils
@@ -36,6 +40,24 @@ fun setGlobalAttributes(
     if (!botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
         modelMap["additionalHeadTags"] = configCacheService.getValueAsString(ConfigPropertyKey.ADDITIONAL_HEAD_TAGS)
     }
+
+    var randomAnimeSlug: String? = null
+
+    if (modelMap.containsKey("anime") && modelMap["anime"] is AnimeDto) {
+        val anime = modelMap["anime"] as AnimeDto
+        randomAnimeSlug = animeCacheService.findAllSlug()?.filter { it != anime.slug }?.random()
+    }
+
+    if (modelMap.containsKey("episodeMapping") && modelMap["episodeMapping"] is EpisodeMappingDto) {
+        val episodeMapping = modelMap["episodeMapping"] as EpisodeMappingDto
+        randomAnimeSlug = animeCacheService.findAllSlug()?.filter { it != episodeMapping.anime.slug }?.random()
+    }
+
+    if (randomAnimeSlug == null) {
+        randomAnimeSlug = animeCacheService.findAllSlug()?.random()
+    }
+
+    modelMap["randomAnimeSlug"] = randomAnimeSlug
 }
 
 private fun getLinks(controller: Any, replacedPath: String, simulcastCacheService: SimulcastCacheService) =
