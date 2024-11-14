@@ -13,6 +13,9 @@ import fr.shikkanime.utils.StringUtils
 
 private const val ADMIN = "/admin"
 
+private fun <T> List<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else null
+private fun <T> List<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter(predicate).randomIfNotEmpty()
+
 fun setGlobalAttributes(
     ipAddress: String,
     userAgent: String,
@@ -45,16 +48,16 @@ fun setGlobalAttributes(
 
     if (modelMap.containsKey("anime") && modelMap["anime"] is AnimeDto) {
         val anime = modelMap["anime"] as AnimeDto
-        randomAnimeSlug = animeCacheService.findAllSlug()?.filter { it != anime.slug }?.random()
+        randomAnimeSlug = animeCacheService.findAllSlug()?.randomIfNotEmpty { it != anime.slug }
     }
 
     if (modelMap.containsKey("episodeMapping") && modelMap["episodeMapping"] is EpisodeMappingDto) {
         val episodeMapping = modelMap["episodeMapping"] as EpisodeMappingDto
-        randomAnimeSlug = animeCacheService.findAllSlug()?.filter { it != episodeMapping.anime.slug }?.random()
+        randomAnimeSlug = animeCacheService.findAllSlug()?.randomIfNotEmpty { it != episodeMapping.anime.slug }
     }
 
     if (randomAnimeSlug == null) {
-        randomAnimeSlug = animeCacheService.findAllSlug()?.random()
+        randomAnimeSlug = animeCacheService.findAllSlug()?.randomIfNotEmpty()
     }
 
     modelMap["randomAnimeSlug"] = randomAnimeSlug
