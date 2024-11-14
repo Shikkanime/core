@@ -2,6 +2,7 @@
 
 <@navigation.display>
     <div x-data="{
+        filter: {},
         pageable: {},
         page: 1,
         maxPage: 1,
@@ -11,7 +12,7 @@
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         async fetchTraceActions() {
-            this.pageable = await getTraceActions(this.page);
+            this.pageable = await getTraceActions(this.filter, this.page);
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
         },
         async setPage(newPage) {
@@ -19,7 +20,16 @@
             await this.fetchTraceActions();
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
+        async applyFilters() {
+            this.page = 1;
+            await this.fetchTraceActions();
+            this.pages = this.generatePageNumbers(this.page, this.maxPage);
+        },
         generatePageNumbers(currentPage, maxPage) {
+            if (currentPage === 0 || maxPage === 0) {
+                return [];
+            }
+
             const delta = 3;
             const range = [];
             for (let i = Math.max(2, currentPage - delta); i <= Math.min(maxPage - 1, currentPage + delta); i++) {
@@ -43,6 +53,29 @@
             return range;
         }
     }" x-init="init">
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-auto">
+                <label class="form-label" for="entityTypeInput">Entity type</label>
+                <select class="form-select" id="entityTypeInput" x-model="filter.entityType" @change="applyFilters">
+                    <option value="" selected>All</option>
+                    <option value="Anime">Anime</option>
+                    <option value="EpisodeMapping">Episode mapping</option>
+                    <option value="EpisodeVariant">Episode variant</option>
+                    <option value="Simulcast">Simulcast</option>
+                    <option value="Config">Config</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label" for="actionInput">Action</label>
+                <select class="form-select" id="actionInput" x-model="filter.action" @change="applyFilters">
+                    <option value="" selected>All</option>
+                    <option value="CREATE">Create</option>
+                    <option value="UPDATE">Update</option>
+                    <option value="DELETE">Delete</option>
+                </select>
+            </div>
+        </div>
+
         <template x-for="traceAction in pageable.data">
             <div class="card px-3 mb-3">
                 <div class="d-flex align-items-center my-3">
@@ -81,7 +114,7 @@
                             <a class="page-link" @click="setPage(i)" x-text="i"></a>
                         </li>
                     </template>
-                    <li class="page-item" :class="{ disabled: page === maxPage }">
+                    <li class="page-item" :class="{ disabled: page === maxPage || maxPage === 0 }">
                         <a class="page-link" @click="setPage(maxPage)">&raquo;</a>
                     </li>
                 </ul>
@@ -90,11 +123,19 @@
     </div>
 
     <script>
-        async function getTraceActions(page) {
+        async function getTraceActions(filter, page) {
             const params = new URLSearchParams({
                 page: page || 1,
                 limit: 8
             });
+
+            if (filter && filter.entityType) {
+                params.append('entityType', filter.entityType);
+            }
+
+            if (filter && filter.action) {
+                params.append('action', filter.action);
+            }
 
             const response = await axios.get(`/api/trace-actions?` + params.toString());
             return response.data;

@@ -31,6 +31,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             slug = from.slug!!,
             releaseDateTime = from.releaseDateTime.withUTCString(),
             lastReleaseDateTime = from.lastReleaseDateTime.withUTCString(),
+            lastUpdateDateTime = from.lastUpdateDateTime?.withUTCString(),
             image = from.image!!,
             banner = from.banner!!,
             description = from.description,

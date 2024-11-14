@@ -34,7 +34,7 @@ class Anime(
     @Column(nullable = false, name = "last_release_date_time")
     var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
     @Column(nullable = true, name = "last_update_date_time")
-    var lastUpdateDateTime: ZonedDateTime = releaseDateTime,
+    var lastUpdateDateTime: ZonedDateTime? = releaseDateTime,
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")

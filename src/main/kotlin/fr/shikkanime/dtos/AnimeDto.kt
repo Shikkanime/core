@@ -14,6 +14,7 @@ data class AnimeDto(
     var slug: String,
     var releaseDateTime: String,
     val lastReleaseDateTime: String,
+    val lastUpdateDateTime: String?,
     val image: String,
     val banner: String,
     val description: String? = null,

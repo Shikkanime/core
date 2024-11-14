@@ -159,6 +159,17 @@
                                    :value="anime.lastReleaseDateTime.substring(0, 16)" disabled>
                         </div>
                     </div>
+                    <div class="row mb-2">
+                        <div :class="'col-md-' + titleSize">
+                            <label for="lastUpdateDateTime" class="form-label">Last update date time</label>
+                            <p class="text-muted">This is the date and time when the anime was last updated</p>
+                        </div>
+                        <div :class="'col-md-' + (12 - titleSize)">
+                            <input type="datetime-local" class="form-control" id="lastUpdateDateTime"
+                                   name="lastUpdateDateTime"
+                                   :value="anime.lastUpdateDateTime.substring(0, 16)" disabled>
+                        </div>
+                    </div>
                     <div class="row">
                         <div :class="'col-md-' + titleSize">
                             <label for="description" class="form-label">Description</label>
