@@ -106,6 +106,7 @@ object StringUtils {
     fun sanitizeXSS(input: String): String = input.replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("\"", "&quot;")
+        .replace("&", "&amp;")
 
     fun getIdentifier(
         countryCode: CountryCode,
