@@ -387,11 +387,39 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!
                 val video = adnCache[CountryCodeIdKeyCache(countryCode, videoId)]!!.first()
 
-                AnimationDigitalNetworkWrapper.getPreviousVideo(videoId.toInt(), video.animeId.toInt())
-                    ?.let { previous.addAll(animationDigitalNetworkPlatform.convertEpisode(countryCode, it, ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)) }
+                runCatching {
+                    AnimationDigitalNetworkWrapper.getPreviousVideo(videoId.toInt(), video.animeId.toInt())
+                        ?.let {
+                            previous.addAll(
+                                animationDigitalNetworkPlatform.convertEpisode(
+                                    countryCode,
+                                    it,
+                                    ZonedDateTime.now(),
+                                    needSimulcast = false,
+                                    checkAnimation = false
+                                )
+                            )
+                        }
+                }.onFailure {
+                    logger.warning("Error while getting previous episode for ${episodeVariant.identifier} : ${it.message}")
+                }
 
-                AnimationDigitalNetworkWrapper.getNextVideo(videoId.toInt(), video.animeId.toInt())
-                    ?.let { next.addAll(animationDigitalNetworkPlatform.convertEpisode(countryCode, it, ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)) }
+                runCatching {
+                    AnimationDigitalNetworkWrapper.getNextVideo(videoId.toInt(), video.animeId.toInt())
+                        ?.let {
+                            next.addAll(
+                                animationDigitalNetworkPlatform.convertEpisode(
+                                    countryCode,
+                                    it,
+                                    ZonedDateTime.now(),
+                                    needSimulcast = false,
+                                    checkAnimation = false
+                                )
+                            )
+                        }
+                }.onFailure {
+                    logger.warning("Error while getting next episode for ${episodeVariant.identifier} : ${it.message}")
+                }
             }
 
             Platform.CRUN -> {
