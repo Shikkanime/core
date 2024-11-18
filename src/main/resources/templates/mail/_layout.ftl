@@ -39,6 +39,8 @@
                             </div>
                         </#if>
 
+                        <#nested />
+
                         <p style="font-size: 16px; color: #333333; margin-bottom: 20px;">
                             Merci d'utiliser notre application ! Nous apprécions votre confiance et espérons que notre
                             service répondra à vos attentes.

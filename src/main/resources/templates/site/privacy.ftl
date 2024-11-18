@@ -1,6 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 
-<@navigation.display canonicalUrl="${baseUrl}/presentation">
+<@navigation.display canonicalUrl="${baseUrl}/privacy">
     <div class="container mt-3">
         <h2>Politique de Confidentialité</h2>
         <p><strong>Dernière mise à jour :</strong> 20 août 2024 à 9h</p>
