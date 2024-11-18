@@ -1,6 +1,8 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.services.EpisodeVariantService
@@ -22,4 +24,8 @@ class EpisodeVariantCacheService : AbstractCacheService {
 
     fun findAllByMapping(episodeMapping: EpisodeMapping) =
         findAllCache["all"]?.get(episodeMapping.uuid)
+
+    fun find(uuid: String) = findAllCache["all"]?.values?.flatten()?.find { it.uuid.toString() == uuid }?.let {
+        AbstractConverter.convert(it, EpisodeVariantDto::class.java)
+    }
 }

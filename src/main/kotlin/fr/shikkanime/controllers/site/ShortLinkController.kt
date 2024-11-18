@@ -1,7 +1,10 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.services.MemberActionService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
@@ -12,6 +15,18 @@ import fr.shikkanime.utils.routes.param.PathParam
 class ShortLinkController {
     @Inject
     private lateinit var memberActionService: MemberActionService
+
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+
+    private fun getUrl(episodeDto: EpisodeVariantDto) =
+        "${Constant.baseUrl}/animes/${episodeDto.mapping.anime.slug}/season-${episodeDto.mapping.season}/${episodeDto.mapping.episodeType.slug}-${episodeDto.mapping.number}"
+
+    @Path("r/{episodeVariantUuid}")
+    @Get
+    private fun redirectToRealLink(@PathParam("episodeVariantUuid") episodeVariantUuid: String): Response {
+        return Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let { getUrl(it) } ?: "/404")
+    }
 
     @Path("v/{webTokenAction}")
     @Get
