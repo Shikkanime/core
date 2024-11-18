@@ -83,6 +83,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     }
 
     override fun run() {
+        val checkPreviousAndNextEpisodes = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_PREVIOUS_AND_NEXT_EPISODES)
         val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
         val adnEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.ANIM, lastDateTime)
         val crunchyrollEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.CRUN, lastDateTime)
@@ -113,11 +114,13 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
                 .sortedBy { it.platform.sortIndex }
 
-            variants.map { variant -> runBlocking { retrievePreviousAndNextEpisodes(mapping, variant) } }
-                .forEach { (previous, next) ->
-                    allPrevious.addAll(previous.filter { it.episodeType == EpisodeType.EPISODE })
-                    allNext.addAll(next.filter { it.episodeType == EpisodeType.EPISODE })
-                }
+            if (checkPreviousAndNextEpisodes) {
+                variants.map { variant -> runBlocking { retrievePreviousAndNextEpisodes(mapping, variant) } }
+                    .forEach { (previous, next) ->
+                        allPrevious.addAll(previous.filter { it.episodeType == EpisodeType.EPISODE })
+                        allNext.addAll(next.filter { it.episodeType == EpisodeType.EPISODE })
+                    }
+            }
 
             saveAnimePlatformIfNotExists(episodes, mapping)
 
