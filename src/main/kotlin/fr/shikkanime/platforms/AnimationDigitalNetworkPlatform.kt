@@ -12,13 +12,14 @@ import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguratio
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.normalize
-import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
+import fr.shikkanime.wrappers.factories.AbstractAnimationDigitalNetworkWrapper
+import fr.shikkanime.wrappers.impl.AnimationDigitalNetworkWrapper
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class AnimationDigitalNetworkPlatform :
-    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AnimationDigitalNetworkWrapper.Video>>() {
+    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
@@ -26,7 +27,7 @@ class AnimationDigitalNetworkPlatform :
 
     override fun getConfigurationClass() = AnimationDigitalNetworkConfiguration::class.java
 
-    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AnimationDigitalNetworkWrapper.Video> {
+    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Video> {
         return AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate())
     }
 
@@ -37,7 +38,7 @@ class AnimationDigitalNetworkPlatform :
             val api = if (bypassFileContent != null && bypassFileContent.exists()) {
                 ObjectParser.fromJson(
                     ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("videos"),
-                    Array<AnimationDigitalNetworkWrapper.Video>::class.java
+                    Array<AbstractAnimationDigitalNetworkWrapper.Video>::class.java
                 )
             } else {
                 getApiContent(countryCode, zonedDateTime) // NOSONAR
@@ -61,7 +62,7 @@ class AnimationDigitalNetworkPlatform :
 
     fun convertEpisode(
         countryCode: CountryCode,
-        video: AnimationDigitalNetworkWrapper.Video,
+        video: AbstractAnimationDigitalNetworkWrapper.Video,
         zonedDateTime: ZonedDateTime,
         needSimulcast: Boolean = true,
         checkAnimation: Boolean = true

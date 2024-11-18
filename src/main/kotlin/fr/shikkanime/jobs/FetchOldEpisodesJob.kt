@@ -12,7 +12,7 @@ import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
-import fr.shikkanime.wrappers.CrunchyrollWrapper
+import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.Period
@@ -196,7 +196,7 @@ class FetchOldEpisodesJob : AbstractJob {
         dates: Set<LocalDate>
     ): List<Episode> {
         return runBlocking {
-            CrunchyrollWrapper.getSimulcastCalendarWithDates(
+            CrunchyrollCachedWrapper.getSimulcastCalendarWithDates(
                 countryCode,
                 dates
             )

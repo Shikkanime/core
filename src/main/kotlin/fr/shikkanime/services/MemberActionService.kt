@@ -39,7 +39,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     fun validateWebAction(webToken: String) {
         val actionTokens = memberActionRepository.findAllNotValidated().associateBy(this::toWebToken)
         require(actionTokens.containsKey(webToken)) { "Action not found" }
-        val memberAction = actionTokens[webToken]!!
+        val memberAction = actionTokens[webToken] ?: return
         doValidateAction(memberAction)
     }
 

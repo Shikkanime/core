@@ -1,9 +1,8 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -16,12 +15,11 @@ import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
-import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
-import fr.shikkanime.wrappers.CrunchyrollWrapper
-import fr.shikkanime.wrappers.CrunchyrollWrapper.BrowseObject
-import fr.shikkanime.wrappers.CrunchyrollWrapper.getObjects
+import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
+import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
+import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
-import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -58,32 +56,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     @Inject
     private lateinit var emailService: EmailService
 
-    private val adnCache = MapCache<CountryCodeIdKeyCache, List<Episode>>(duration = Duration.ofDays(1)) {
-        return@MapCache runBlocking {
-            val video = try {
-                AnimationDigitalNetworkWrapper.getVideo(it.id.toInt())
-            } catch (e: Exception) {
-                logger.severe("Impossible to get ADN video ${it.id} : ${e.message} (Maybe the video is not available anymore)")
-                return@runBlocking emptyList()
-            }
-
-            try {
-                animationDigitalNetworkPlatform.convertEpisode(
-                    it.countryCode,
-                    video,
-                    ZonedDateTime.now(),
-                    needSimulcast = false,
-                    checkAnimation = false
-                )
-            } catch (e: Exception) {
-                logger.warning("Error while getting ADN episode ${it.id} : ${e.message}")
-                emptyList()
-            }
-        }
-    }
-
     override fun run() {
-        val checkPreviousAndNextEpisodes = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_PREVIOUS_AND_NEXT_EPISODES)
         val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
         val adnEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.ANIM, lastDateTime)
         val crunchyrollEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.CRUN, lastDateTime)
@@ -103,8 +76,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val needRefreshCache = AtomicBoolean(false)
         val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
 
-        val allPrevious = mutableListOf<Episode>()
-        val allNext = mutableListOf<Episode>()
+        val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
@@ -114,14 +86,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
                 .sortedBy { it.platform.sortIndex }
 
-            if (checkPreviousAndNextEpisodes) {
-                variants.map { variant -> runBlocking { retrievePreviousAndNextEpisodes(mapping, variant) } }
-                    .forEach { (previous, next) ->
-                        allPrevious.addAll(previous.filter { it.episodeType == EpisodeType.EPISODE })
-                        allNext.addAll(next.filter { it.episodeType == EpisodeType.EPISODE })
-                    }
-            }
-
+            allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
             saveAnimePlatformIfNotExists(episodes, mapping)
 
             if (episodes.isEmpty()) {
@@ -173,28 +138,15 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val allNewEpisodes = mutableSetOf<EpisodeVariant>()
 
-        allPrevious.distinctBy { it.getIdentifier() }
+        allPreviousAndNext.distinctBy { it.getIdentifier() }
             .filter { it.getIdentifier() !in identifiers }
             .takeIf { it.isNotEmpty() }
-            ?.also { logger.info("Found ${it.size} new previous episodes") }
+            ?.also { logger.info("Found ${it.size} new previous and next episodes") }
             ?.map { episode -> episodeVariantService.save(episode, false, null) }
             ?.also {
                 identifiers.addAll(it.mapNotNull { it.identifier })
                 allNewEpisodes.addAll(it)
-                logger.info("Added ${it.size} previous episodes")
-                needRecalculate.set(true)
-                needRefreshCache.set(true)
-            }
-
-        allNext.distinctBy { it.getIdentifier() }
-            .filter { it.getIdentifier() !in identifiers }
-            .takeIf { it.isNotEmpty() }
-            ?.also { logger.info("Found ${it.size} new next episodes") }
-            ?.map { episode -> episodeVariantService.save(episode, false, null) }
-            ?.also {
-                identifiers.addAll(it.mapNotNull { it.identifier })
-                allNewEpisodes.addAll(it)
-                logger.info("Added ${it.size} next episodes")
+                logger.info("Added ${it.size} previous and next episodes")
                 needRecalculate.set(true)
                 needRefreshCache.set(true)
             }
@@ -211,17 +163,69 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
 
         if (allNewEpisodes.isNotEmpty()) {
-            val dtos = AbstractConverter.convert(allNewEpisodes, EpisodeVariantDto::class.java)!!
-            val body = dtos.joinToString("\n") { "- ${it.mapping.anime.shortName} | ${StringUtils.toEpisodeString(it)}" }
+            val dtos = AbstractConverter.convert(allNewEpisodes.mapNotNull { it.mapping }.distinctBy { it.uuid }, EpisodeMappingDto::class.java)!!
 
             logger.info("New episodes:")
-            logger.info(body)
+
+            dtos.forEach {
+                logger.info("${it.anime.shortName} | Saison ${it.season} • ${StringUtils.getEpisodeTypeLabel(it.episodeType)} ${it.number}")
+            }
 
             emailService.sendAdminEmail(
                 "UpdateEpisodeMappingJob - ${allNewEpisodes.size} new episodes",
-                body
+                dtos.joinToString("<br>") { "- ${it.anime.shortName} | Saison ${it.season} • ${StringUtils.getEpisodeTypeLabel(it.episodeType)} ${it.number}" }
             )
         }
+    }
+
+    private fun checkPreviousAndNextEpisodes(
+        anime: Anime,
+        variants: List<EpisodeVariant>,
+    ): List<Episode> {
+        val checkPreviousAndNextEpisodes = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_PREVIOUS_AND_NEXT_EPISODES)
+
+        if (!checkPreviousAndNextEpisodes) {
+            return emptyList()
+        }
+
+        val countryCode = anime.countryCode!!
+        val depth = configCacheService.getValueAsInt(ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH, 1)
+        val platformIds = mutableMapOf<String, Platform>()
+
+        variants.forEach { variant ->
+            val identifier = when (variant.platform) {
+                Platform.ANIM -> animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(variant.identifier!!)!!
+                Platform.CRUN -> crunchyrollPlatform.getCrunchyrollId(variant.identifier!!)!!
+                else -> return@forEach
+            }
+
+            var previousId: String? = identifier
+            var nextId: String? = identifier
+
+            repeat(depth) {
+                runBlocking {
+                    previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
+                    nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
+
+                    previousId?.let { platformIds[it] = variant.platform!! }
+                    nextId?.let { platformIds[it] = variant.platform!! }
+                }
+            }
+        }
+
+        return platformIds.flatMap { (id, platform) ->
+            runCatching {
+                runBlocking {
+                    when (platform) {
+                        Platform.ANIM -> animationDigitalNetworkPlatform.convertEpisode(countryCode, AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()), ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)
+                        Platform.CRUN -> listOf(crunchyrollPlatform.convertEpisode(countryCode, CrunchyrollCachedWrapper.getObjects(countryCode.locale, id).first(), needSimulcast = false))
+                        else -> emptyList<Episode>()
+                    }
+                }
+            }.onFailure {
+                logger.warning("Error while getting previous and next episodes for $id: ${it.message}")
+            }.getOrDefault(emptyList())
+        }.distinctBy { it.getIdentifier() }.filter { it.episodeType == EpisodeType.EPISODE }
     }
 
     private fun updateEpisodeMappingImage(
@@ -317,7 +321,15 @@ class UpdateEpisodeMappingJob : AbstractJob {
         when (episodeVariant.platform) {
             Platform.ANIM -> {
                 episodes.addAll(
-                    adnCache[CountryCodeIdKeyCache(countryCode, animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!)]!!
+                    animationDigitalNetworkPlatform.convertEpisode(
+                        countryCode,
+                        AnimationDigitalNetworkCachedWrapper.getVideo(
+                            animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
+                        ),
+                        ZonedDateTime.now(),
+                        needSimulcast = false,
+                        checkAnimation = false
+                    )
                 )
             }
 
@@ -344,20 +356,18 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ): List<Episode> {
         val browseObjects = mutableListOf<BrowseObject>()
 
-        val variantObjects = CrunchyrollWrapper.getEpisode(
+        val variantObjects = CrunchyrollCachedWrapper.getEpisode(
             countryCode.locale,
-            CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
             crunchyrollId
         )
             .also { browseObjects.add(it.convertToBrowseObject()) }
             .getVariants()
             .subtract(browseObjects.map { it.id }.toSet())
-            .chunked(CrunchyrollWrapper.CRUNCHYROLL_CHUNK)
+            .chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
             .flatMap { chunk ->
                 HttpRequest.retry(3) {
-                    getObjects(
+                    CrunchyrollCachedWrapper.getObjects(
                         countryCode.locale,
-                        CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
                         *chunk.toTypedArray()
                     ).toList()
                 }
@@ -377,77 +387,74 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
     }
 
-    private suspend fun retrievePreviousAndNextEpisodes(
-        episodeMapping: EpisodeMapping,
-        episodeVariant: EpisodeVariant
-    ): Pair<List<Episode>, List<Episode>> {
-        val countryCode = episodeMapping.anime!!.countryCode!!
-        val previous = mutableListOf<Episode>()
-        val next = mutableListOf<Episode>()
-
-        when (episodeVariant.platform) {
-            Platform.ANIM -> {
-                val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!
-                val video = adnCache[CountryCodeIdKeyCache(countryCode, videoId)]!!.first()
-
-                runCatching {
-                    AnimationDigitalNetworkWrapper.getPreviousVideo(videoId.toInt(), video.animeId.toInt())
-                        ?.let {
-                            previous.addAll(
-                                animationDigitalNetworkPlatform.convertEpisode(
-                                    countryCode,
-                                    it,
-                                    ZonedDateTime.now(),
-                                    needSimulcast = false,
-                                    checkAnimation = false
-                                )
-                            )
-                        }
-                }.onFailure {
-                    logger.warning("Error while getting previous episode for ${episodeVariant.identifier} : ${it.message}")
-                }
-
-                runCatching {
-                    AnimationDigitalNetworkWrapper.getNextVideo(videoId.toInt(), video.animeId.toInt())
-                        ?.let {
-                            next.addAll(
-                                animationDigitalNetworkPlatform.convertEpisode(
-                                    countryCode,
-                                    it,
-                                    ZonedDateTime.now(),
-                                    needSimulcast = false,
-                                    checkAnimation = false
-                                )
-                            )
-                        }
-                }.onFailure {
-                    logger.warning("Error while getting next episode for ${episodeVariant.identifier} : ${it.message}")
-                }
-            }
-
-            Platform.CRUN -> {
-                val videoId = crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
-
-                runCatching {
-                    CrunchyrollWrapper.getPreviousEpisode(countryCode.locale, CrunchyrollWrapper.getAccessTokenCached(countryCode)!!, videoId)
-                        .let { previous.add(crunchyrollPlatform.convertEpisode(countryCode, it, needSimulcast = false)) }
-                }.onFailure {
-                    logger.warning("Error while getting previous episode for ${episodeVariant.identifier} : ${it.message}")
-                }
-
-                runCatching {
-                    CrunchyrollWrapper.getUpNext(countryCode.locale, CrunchyrollWrapper.getAccessTokenCached(countryCode)!!, videoId)
-                        .let { next.add(crunchyrollPlatform.convertEpisode(countryCode, it, needSimulcast = false)) }
-                }.onFailure {
-                    logger.warning("Error while getting next episode for ${episodeVariant.identifier} : ${it.message}")
-                }
-            }
-
+    private suspend fun retrievePreviousEpisodes(
+        countryCode: CountryCode,
+        platform: Platform,
+        id: String,
+    ): String? {
+        return when (platform) {
+            Platform.ANIM -> retrievePreviousADNEpisodes(id)
+            Platform.CRUN -> retrievePreviousCrunchyrollEpisodes(countryCode, id)
             else -> {
-                logger.warning("Error while getting episode ${episodeVariant.identifier} : Invalid platform")
+                logger.warning("Error while getting previous episode $id: Invalid platform")
+                null
             }
         }
-
-        return previous to next
     }
+
+
+    private suspend fun retrieveNextEpisodes(
+        countryCode: CountryCode,
+        platform: Platform,
+        id: String,
+    ): String? {
+        return when (platform) {
+            Platform.ANIM -> retrieveNextADNEpisodes(id)
+            Platform.CRUN -> retrieveNextCrunchyrollEpisodes(countryCode, id)
+            else -> {
+                logger.warning("Error while getting next episode $id: Invalid platform")
+                null
+            }
+        }
+    }
+
+    private suspend fun retrievePreviousADNEpisodes(
+        id: String,
+    ) = runCatching {
+        AnimationDigitalNetworkCachedWrapper.getPreviousVideo(
+            AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
+            id.toInt()
+        )?.id?.toString()
+    }.onFailure {
+        logger.warning("Error while getting previous episode for $id: ${it.message}")
+    }.getOrNull()
+
+    private suspend fun retrieveNextADNEpisodes(
+        id: String,
+    ) = runCatching {
+        AnimationDigitalNetworkCachedWrapper.getNextVideo(
+            AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
+            id.toInt()
+        )?.id?.toString()
+    }.onFailure {
+        logger.warning("Error while getting next episode for $id: ${it.message}")
+    }.getOrNull()
+
+    private suspend fun retrievePreviousCrunchyrollEpisodes(
+        countryCode: CountryCode,
+        id: String
+    ) = runCatching {
+        CrunchyrollCachedWrapper.getPreviousEpisode(countryCode.locale, id).id
+    }.onFailure {
+        logger.warning("Error while getting previous episode for $id: ${it.message}")
+    }.getOrNull()
+
+    private suspend fun retrieveNextCrunchyrollEpisodes(
+        countryCode: CountryCode,
+        id: String
+    ) = runCatching {
+        CrunchyrollCachedWrapper.getUpNext(countryCode.locale, id).id
+    }.onFailure {
+        logger.warning("Error while getting next episode for $id: ${it.message}")
+    }.getOrNull()
 }

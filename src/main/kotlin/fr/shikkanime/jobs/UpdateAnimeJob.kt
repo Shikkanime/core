@@ -16,8 +16,8 @@ import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
-import fr.shikkanime.wrappers.AnimationDigitalNetworkWrapper
-import fr.shikkanime.wrappers.CrunchyrollWrapper
+import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 
@@ -139,46 +139,42 @@ class UpdateAnimeJob : AbstractJob {
         return list
     }
 
-    private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        return AnimationDigitalNetworkWrapper.getShow(animePlatform.platformId!!.toInt())
-            .let {
-                UpdatableAnime(
-                    lastReleaseDateTime = it.microdata!!.startDate,
-                    image = it.image2x,
-                    banner = it.imageHorizontal2x,
-                    description = it.summary,
-                )
-            }
-    }
+    private suspend fun fetchADNAnime(animePlatform: AnimePlatform) = AnimationDigitalNetworkCachedWrapper.getShow(animePlatform.platformId!!.toInt())
+        .let {
+            UpdatableAnime(
+                lastReleaseDateTime = it.microdata!!.startDate,
+                image = it.image2x,
+                banner = it.imageHorizontal2x,
+                description = it.summary,
+            )
+        }
 
     private suspend fun fetchCrunchyrollAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val countryCode = animePlatform.anime!!.countryCode!!
+        val series = CrunchyrollCachedWrapper.getSeries(countryCode.locale, animePlatform.platformId!!)
 
-        return CrunchyrollWrapper.getSeriesCached(countryCode, animePlatform.platformId!!)?.let { series ->
-            val objects = CrunchyrollWrapper.getEpisodesBySeriesId(
-                countryCode.locale,
-                CrunchyrollWrapper.getAccessTokenCached(countryCode)!!,
-                series.id,
-                true
-            ).mapNotNull {
-                runCatching {
-                    crunchyrollPlatform.convertEpisode(
-                        countryCode,
-                        it,
-                        false
-                    )
-                }.getOrNull()
-            }
+        val objects = CrunchyrollCachedWrapper.getEpisodesBySeriesId(
+            countryCode.locale,
+            series.id,
+            true
+        ).mapNotNull {
+            runCatching {
+                crunchyrollPlatform.convertEpisode(
+                    countryCode,
+                    it,
+                    false
+                )
+            }.getOrNull()
+        }
 
-            if (objects.isEmpty())
-                throw Exception("No episode found for Crunchyroll anime ${series.title}")
+        if (objects.isEmpty())
+            throw Exception("No episode found for Crunchyroll anime ${series.title}")
 
-            UpdatableAnime(
-                lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
-                image = series.fullHDImage!!,
-                banner = series.fullHDBanner!!,
-                description = series.description,
-            )
-        } ?: throw Exception("Crunchyroll anime not found")
+        return UpdatableAnime(
+            lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
+            image = series.fullHDImage!!,
+            banner = series.fullHDBanner!!,
+            description = series.description,
+        )
     }
 }

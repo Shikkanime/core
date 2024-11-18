@@ -10,14 +10,15 @@ import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
-import fr.shikkanime.wrappers.CrunchyrollWrapper
+import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
+import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
+import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
-class CrunchyrollPlatform :
-    AbstractPlatform<CrunchyrollConfiguration, CountryCode, Array<CrunchyrollWrapper.BrowseObject>>() {
+class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, Array<AbstractCrunchyrollWrapper.BrowseObject>>() {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
@@ -31,10 +32,9 @@ class CrunchyrollPlatform :
     override suspend fun fetchApiContent(
         key: CountryCode,
         zonedDateTime: ZonedDateTime
-    ): Array<CrunchyrollWrapper.BrowseObject> {
+    ): Array<AbstractCrunchyrollWrapper.BrowseObject> {
         return CrunchyrollWrapper.getBrowse(
             key.locale,
-            CrunchyrollWrapper.getAccessTokenCached(key)!!,
             size = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
         )
     }
@@ -46,7 +46,7 @@ class CrunchyrollPlatform :
             val api = if (bypassFileContent != null && bypassFileContent.exists()) {
                 ObjectParser.fromJson(
                     ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("data"),
-                    Array<CrunchyrollWrapper.BrowseObject>::class.java
+                    Array<AbstractCrunchyrollWrapper.BrowseObject>::class.java
                 )
             } else {
                 getApiContent(countryCode, zonedDateTime) // NOSONAR
@@ -63,7 +63,7 @@ class CrunchyrollPlatform :
     private fun addToList(
         list: MutableList<Episode>,
         countryCode: CountryCode,
-        browseObject: CrunchyrollWrapper.BrowseObject
+        browseObject: AbstractCrunchyrollWrapper.BrowseObject
     ) {
         try {
             list.add(convertEpisode(countryCode, browseObject))
@@ -113,33 +113,32 @@ class CrunchyrollPlatform :
         return list
     }
 
-    suspend fun getNextEpisode(countryCode: CountryCode, crunchyrollId: String): CrunchyrollWrapper.BrowseObject? {
-        val token = CrunchyrollWrapper.getAccessTokenCached(countryCode)!!
+    suspend fun getNextEpisode(countryCode: CountryCode, crunchyrollId: String): AbstractCrunchyrollWrapper.BrowseObject? {
         val locale = countryCode.locale
 
         // Try getting next episode directly
         try {
-            return CrunchyrollWrapper.getUpNext(locale, token, crunchyrollId)
+            return CrunchyrollWrapper.getUpNext(locale, crunchyrollId)
         } catch (_: Exception) {
             logger.warning("Can not fetch up next episode for $crunchyrollId, trying to check with the episode...")
         }
 
         // Try getting episode and check nextEpisodeId
         val episode = runCatching {
-            CrunchyrollWrapper.getEpisode(locale, token, crunchyrollId)
+            CrunchyrollWrapper.getJvmStaticEpisode(locale, crunchyrollId)
         }.getOrNull() ?: return null
 
         // If nextEpisodeId exists, get that episode
         if (!episode.nextEpisodeId.isNullOrEmpty()) {
             return runCatching {
-                CrunchyrollWrapper.getObjects(locale, token, episode.nextEpisodeId)
+                CrunchyrollWrapper.getJvmStaticObjects(locale, episode.nextEpisodeId)
             }.getOrNull()?.firstOrNull()
         }
 
         // Try finding next episode by season
         logger.warning("Next episode ID not found for $crunchyrollId, trying to find it by season...")
         val episodes = runCatching {
-            CrunchyrollWrapper.getEpisodesBySeasonId(locale, token, episode.seasonId)
+            CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(locale, episode.seasonId)
         }.getOrNull()
 
         // Find first episode with later premium date
@@ -147,7 +146,7 @@ class CrunchyrollPlatform :
             it.premiumAvailableDate > episode.premiumAvailableDate
         }?.let { nextEpisode ->
             runCatching {
-                CrunchyrollWrapper.getObjects(locale, token, nextEpisode.id!!)
+                CrunchyrollWrapper.getJvmStaticObjects(locale, nextEpisode.id!!)
             }.getOrNull()?.firstOrNull()
         }
     }
@@ -157,7 +156,7 @@ class CrunchyrollPlatform :
 
     fun convertEpisode(
         countryCode: CountryCode,
-        browseObject: CrunchyrollWrapper.BrowseObject,
+        browseObject: AbstractCrunchyrollWrapper.BrowseObject,
         needSimulcast: Boolean = true
     ): Episode {
         val seasonRegex = " Saison (\\d)".toRegex()
@@ -184,15 +183,9 @@ class CrunchyrollPlatform :
         if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale)))
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
-        val crunchyrollAnimeContent =
-            CrunchyrollWrapper.getSeriesCached(countryCode, browseObject.episodeMetadata.seriesId)
-                ?: throw AnimeException("Anime not found")
+        val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getSeries(countryCode.locale, browseObject.episodeMetadata.seriesId) }
         val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
-
-        val season = CrunchyrollWrapper.getSeasonCached(countryCode, browseObject.episodeMetadata.seasonId) ?: run {
-            logger.warning("Season not found for ${browseObject.episodeMetadata.seasonId}")
-            throw AnimeException("Anime season not found")
-        }
+        val season = runBlocking { CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId) }
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
 
@@ -232,8 +225,8 @@ class CrunchyrollPlatform :
     }
 
     private fun getNumberAndEpisodeType(
-        episode: CrunchyrollWrapper.Episode,
-        season: CrunchyrollWrapper.Season
+        episode: AbstractCrunchyrollWrapper.Episode,
+        season: AbstractCrunchyrollWrapper.Season
     ): Pair<Int, EpisodeType> {
         var number = episode.number ?: -1
         val specialEpisodeRegex = "SP(\\d*)".toRegex()
