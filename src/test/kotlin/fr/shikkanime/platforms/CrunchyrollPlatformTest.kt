@@ -7,7 +7,8 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.wrappers.CrunchyrollWrapper
+import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
+import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
@@ -184,13 +185,12 @@ class CrunchyrollPlatformTest : AbstractTest() {
 
     @Test
     fun fetchNextEpisodeSuccessfully() {
-        val expectedEpisode = mockkClass(CrunchyrollWrapper.BrowseObject::class)
+        val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
         mockkStatic(CrunchyrollWrapper::class) {
             every {
                 runBlocking {
                     CrunchyrollWrapper.getUpNext(
-                        any(String::class),
                         any(String::class),
                         any(String::class)
                     )
@@ -203,7 +203,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
 
     @Test
     fun getNextEpisodeFallbackToEpisode() = runBlocking {
-        val episode = CrunchyrollWrapper.Episode(
+        val episode = AbstractCrunchyrollWrapper.Episode(
             null,
             "",
             "",
@@ -224,13 +224,12 @@ class CrunchyrollPlatformTest : AbstractTest() {
             null,
             "nextId",
         )
-        val expectedEpisode = mockkClass(CrunchyrollWrapper.BrowseObject::class)
+        val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
         mockkStatic(CrunchyrollWrapper::class) {
             every {
                 runBlocking {
                     CrunchyrollWrapper.getUpNext(
-                        any(String::class),
                         any(String::class),
                         any(String::class)
                     )
@@ -238,8 +237,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             } throws Exception()
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getEpisode(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticEpisode(
                         any(String::class),
                         any(String::class)
                     )
@@ -247,8 +245,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             } returns episode
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getObjects(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticObjects(
                         any(String::class),
                         any(String::class)
                     )
@@ -263,7 +260,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     fun getNextEpisodeFallbackToSeason() = runBlocking {
         val countryCode = CountryCode.FR
         val crunchyrollId = "someId"
-        val episode = CrunchyrollWrapper.Episode(
+        val episode = AbstractCrunchyrollWrapper.Episode(
             null,
             "",
             "",
@@ -284,16 +281,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
             null,
             null,
         )
-        val nextEpisode = mockkClass(CrunchyrollWrapper.Episode::class)
+        val nextEpisode = mockkClass(AbstractCrunchyrollWrapper.Episode::class)
         every { nextEpisode.id } returns "nextId"
         every { nextEpisode.premiumAvailableDate } returns ZonedDateTime.now()
-        val expectedEpisode = mockkClass(CrunchyrollWrapper.BrowseObject::class)
+        val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
         mockkStatic(CrunchyrollWrapper::class) {
             every {
                 runBlocking {
                     CrunchyrollWrapper.getUpNext(
-                        any(String::class),
                         any(String::class),
                         any(String::class)
                     )
@@ -301,8 +297,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             } throws Exception()
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getEpisode(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticEpisode(
                         any(String::class),
                         any(String::class)
                     )
@@ -310,8 +305,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             } returns episode
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getEpisodesBySeasonId(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(
                         any(String::class),
                         any(String::class),
                     )
@@ -319,8 +313,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             } returns arrayOf(nextEpisode)
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getObjects(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticObjects(
                         any(String::class),
                         any(String::class)
                     )
@@ -336,7 +329,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     fun getNextEpisodeNotFound() = runBlocking {
         val countryCode = CountryCode.FR
         val crunchyrollId = "someId"
-        val episode = CrunchyrollWrapper.Episode(
+        val episode = AbstractCrunchyrollWrapper.Episode(
             null,
             "",
             "",
@@ -363,15 +356,13 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 runBlocking {
                     CrunchyrollWrapper.getUpNext(
                         any(String::class),
-                        any(String::class),
                         any(String::class)
                     )
                 }
             } throws Exception()
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getEpisode(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticEpisode(
                         any(String::class),
                         any(String::class)
                     )
@@ -379,8 +370,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             } returns episode
             every {
                 runBlocking {
-                    CrunchyrollWrapper.getEpisodesBySeasonId(
-                        any(String::class),
+                    CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(
                         any(String::class),
                         any(String::class),
                     )

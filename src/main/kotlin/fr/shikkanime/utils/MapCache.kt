@@ -34,6 +34,8 @@ class MapCache<K : Any, V>(
         defaultKeys.forEach { this[it] }
     }
 
+    fun containsKey(key: K) = cache.getIfPresent(key) != null
+
     operator fun get(key: K): V? {
         return try {
             cache.getUnchecked(key)
@@ -42,8 +44,9 @@ class MapCache<K : Any, V>(
         }
     }
 
-    operator fun set(key: K, value: V & Any) {
-        cache.put(key, value)
+    fun setIfNotExists(key: K, value: V & Any) {
+        if (!containsKey(key))
+            cache.put(key, value)
     }
 
     fun invalidate() {
