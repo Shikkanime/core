@@ -231,7 +231,7 @@ object ImageService {
             }
         }
 
-        threadPool.submit { encodeImage(bytes, uuid, type, width, height, image) }
+        encodeImage(bytes, uuid, type, width, height, image)
     }
 
     private fun encodeImage(

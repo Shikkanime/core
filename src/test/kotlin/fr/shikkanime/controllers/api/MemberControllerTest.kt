@@ -17,7 +17,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.jvm.javaio.*
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -438,8 +437,6 @@ class MemberControllerTest : AbstractControllerTest() {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
             }
-
-            delay(1000)
 
             client.get("/api/v1/attachments?uuid=${member!!.uuid}").apply {
                 assertEquals(HttpStatusCode.OK, status)

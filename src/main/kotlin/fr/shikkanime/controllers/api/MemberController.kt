@@ -4,11 +4,13 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.dtos.member.RefreshMemberDto
+import fr.shikkanime.entities.Member
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -255,6 +257,8 @@ class MemberController : HasPageableRoute() {
             128,
             true
         )
+
+        MapCache.invalidate(Member::class.java)
 
         return Response.ok()
     }
