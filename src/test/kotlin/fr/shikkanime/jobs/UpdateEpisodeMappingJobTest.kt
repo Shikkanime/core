@@ -3,19 +3,37 @@ package fr.shikkanime.jobs
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
 class UpdateEpisodeMappingJobTest : AbstractTest() {
     @Inject
     private lateinit var updateEpisodeMappingJob: UpdateEpisodeMappingJob
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+
+        configService.save(
+            Config(
+                propertyKey = ConfigPropertyKey.CHECK_PREVIOUS_AND_NEXT_EPISODES.key,
+                propertyValue = "true"
+            )
+        )
+
+        MapCache.invalidate(Config::class.java)
+    }
 
     @Test
     fun `run old Crunchyroll episodes`() {
