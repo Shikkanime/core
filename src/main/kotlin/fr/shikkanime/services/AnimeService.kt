@@ -283,12 +283,15 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         zoneId: ZoneId,
         dateFormatter: DateTimeFormatter
     ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto> {
-        return releases.groupBy {
-            ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).format(dateFormatter)
-        }.map { (day, weeklyAnimes) ->
+        return (0..6).map { dayOffset ->
+            val date = LocalDate.now().plusDays(dayOffset.toLong())
+            val tuplesDay = releases.filter {
+                ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).dayOfWeek.value == dayOffset + 1
+            }
+
             fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto(
-                day.capitalizeWords(),
-                weeklyAnimes.sortedWith(
+                date.format(dateFormatter).capitalizeWords(),
+                tuplesDay.sortedWith(
                     compareBy(
                         { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
                         { it.anime.shortName }
