@@ -49,6 +49,7 @@ class MapCache<K : Any, V>(
             cache.put(key, value)
     }
 
+    @Synchronized
     fun invalidate() {
         cache.invalidateAll()
         loadDefaultKeys()
@@ -61,12 +62,14 @@ class MapCache<K : Any, V>(
             globalCaches.forEach { it.loadDefaultKeys() }
         }
 
+        @Synchronized
         fun invalidate(vararg classes: Class<*>) {
             globalCaches.filter { it.classes.any { clazz -> classes.contains(clazz) } }
                 .forEach { it.invalidate() }
         }
 
         // For test only
+        @Synchronized
         fun invalidateAll() {
             globalCaches.forEach { it.invalidate() }
         }

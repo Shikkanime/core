@@ -1,20 +1,15 @@
 package fr.shikkanime.repositories
 
-import com.google.inject.Inject
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.MemberFollowAnimeService
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
     override fun getEntityClass() = EpisodeVariant::class.java
 
     override fun findAll(): List<EpisodeVariant> {
@@ -48,16 +43,16 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                     root[EpisodeVariant_.audioLocale],
                 )
 
-            val countryPredicate =
-                cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
+            val countryPredicate = cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
             val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
             val predicates = mutableListOf(countryPredicate, datePredicate)
 
             member?.let {
-                val animePredicate = root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid].`in`(
-                    memberFollowAnimeService.findAllFollowedAnimesUUID(it)
-                )
-                predicates.add(animePredicate)
+                val memberFollowAnimeJoin = root.join(EpisodeVariant_.mapping)
+                    .join(EpisodeMapping_.anime)
+                    .join(Anime_.followings)
+
+                predicates.add(cb.equal(memberFollowAnimeJoin[MemberFollowAnime_.member], member))
             }
 
             query.where(cb.and(*predicates.toTypedArray()))

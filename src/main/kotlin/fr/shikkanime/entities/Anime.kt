@@ -60,4 +60,7 @@ class Anime(
     @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var mappings: MutableSet<EpisodeMapping> = mutableSetOf(),
+    @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var followings: MutableSet<MemberFollowAnime> = mutableSetOf(),
 ) : ShikkEntity(uuid)
