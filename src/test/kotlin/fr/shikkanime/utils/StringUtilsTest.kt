@@ -67,6 +67,8 @@ class StringUtilsTest {
             "Anime AzurLane: Slow Ahead!" to "AzurLane: Slow Ahead!",
             "<DOGEZA>I Tried Asking While Kowtowing." to "DOGEZA",
             "Demon Slayer: Kimetsu no Yaiba - L’entraînement des piliers" to "Demon Slayer",
+            "Hakuoki ~Demon of the Fleeting Blossom~" to "Hakuoki",
+            "Power of Hope ~Precure Full Bloom~" to "Power of Hope",
         )
 
         list.forEach { (input, expected) ->
