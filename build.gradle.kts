@@ -1,4 +1,4 @@
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.1"
 val ktorSwaggerUiVersion = "4.0.0"
 val schemaKenerator = "1.6.0"
 val hibernateCoreVersion = "6.6.2.Final"
@@ -111,7 +111,7 @@ dependencies {
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
-    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
