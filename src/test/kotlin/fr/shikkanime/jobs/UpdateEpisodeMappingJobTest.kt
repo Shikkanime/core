@@ -250,6 +250,80 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
     }
 
     @Test
+    fun `run old Berserk Crunchyroll with no updated platform variant`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Berserk : L'Âge d'or - Memorial Edition",
+                slug = "berserk",
+                image = "test.jpg",
+                banner = "test.jpg",
+            )
+        )
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 4,
+                image = "test.jpg"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.CRUN,
+                audioLocale = "ja-JP",
+                identifier = "FR-CRUN-GJWU23V97-JA-JP",
+                url = "https://www.crunchyroll.com/fr/watch/GJWU23V97/prepared-for-death"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.CRUN,
+                audioLocale = "fr-FR",
+                identifier = "FR-CRUN-G50UZQEW0-FR-FR",
+                url = "https://www.crunchyroll.com/fr/watch/G50UZQEW0/prepared-for-death"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.NETF,
+                audioLocale = "ja-JP",
+                identifier = "FR-NETF-abcde-JA-JP",
+                url = "https://www.netflix.com/watch/abcde",
+                uncensored = true
+            )
+        )
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(3, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(7, variants.size)
+        assertTrue(variants.all { it.uncensored })
+        assertTrue(variants.any { it.platform == Platform.NETF })
+    }
+
+    @Test
     fun `run old ADN episodes Isekai Cheat Magician`() {
         val zonedDateTime = ZonedDateTime.now().minusMonths(2)
 

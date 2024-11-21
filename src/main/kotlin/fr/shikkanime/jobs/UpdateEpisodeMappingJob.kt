@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
+    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN)
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -58,12 +59,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     override fun run() {
         val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
-        val adnEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.ANIM, lastDateTime)
-        val crunchyrollEpisodes = episodeMappingService.findAllNeedUpdateByPlatform(Platform.CRUN, lastDateTime)
 
-        logger.info("Found ${adnEpisodes.size} ADN episodes and ${crunchyrollEpisodes.size} Crunchyroll episodes to update")
+        val allPlatformEpisodes =
+            availableUpdatePlatforms.flatMap { episodeMappingService.findAllNeedUpdateByPlatform(it, lastDateTime) }
+        logger.info("Found ${allPlatformEpisodes.size} episodes to update")
 
-        val needUpdateEpisodes = (adnEpisodes + crunchyrollEpisodes).distinctBy { it.uuid }
+        val needUpdateEpisodes = allPlatformEpisodes.distinctBy { it.uuid }
             .shuffled()
             .take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_SIZE, 15))
 
@@ -101,21 +102,23 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 ?.distinctBy { it.getIdentifier() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
                 ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
-                ?.also {
-                    identifiers.addAll(it.mapNotNull { it.identifier })
-                    logger.info("Added ${it.size} episodes for $mappingIdentifier")
+                ?.also { episodeVariants ->
+                    identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
+                    logger.info("Added ${episodeVariants.size} episodes for $mappingIdentifier")
                     needRecalculate.set(true)
                     needRefreshCache.set(true)
                 }
 
-            episodeVariantService.findAllByMapping(mapping).forEach { episodeVariant ->
-                if (episodes.none { it.getIdentifier() == episodeVariant.identifier }) {
-                    episodeVariantService.delete(episodeVariant)
-                    logger.info("Deleted episode ${episodeVariant.identifier} for $mappingIdentifier")
-                    needRecalculate.set(true)
-                    needRefreshCache.set(true)
+            episodeVariantService.findAllByMapping(mapping)
+                .filter { episodeVariant -> episodeVariant.platform in availableUpdatePlatforms }
+                .forEach { episodeVariant ->
+                    if (episodes.none { it.getIdentifier() == episodeVariant.identifier }) {
+                        episodeVariantService.delete(episodeVariant)
+                        logger.info("Deleted episode ${episodeVariant.identifier} for $mappingIdentifier")
+                        needRecalculate.set(true)
+                        needRefreshCache.set(true)
+                    }
                 }
-            }
 
             val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.first()
             val hasChanged = AtomicBoolean(false)
@@ -143,10 +146,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
             .takeIf { it.isNotEmpty() }
             ?.also { logger.info("Found ${it.size} new previous and next episodes") }
             ?.map { episode -> episodeVariantService.save(episode, false, null) }
-            ?.also {
-                identifiers.addAll(it.mapNotNull { it.identifier })
-                allNewEpisodes.addAll(it)
-                logger.info("Added ${it.size} previous and next episodes")
+            ?.also { episodeVariants ->
+                identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
+                allNewEpisodes.addAll(episodeVariants)
+                logger.info("Added ${episodeVariants.size} previous and next episodes")
                 needRecalculate.set(true)
                 needRefreshCache.set(true)
             }
@@ -219,7 +222,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     when (platform) {
                         Platform.ANIM -> animationDigitalNetworkPlatform.convertEpisode(countryCode, AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()), ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)
                         Platform.CRUN -> listOf(crunchyrollPlatform.convertEpisode(countryCode, CrunchyrollCachedWrapper.getObjects(countryCode.locale, id).first(), needSimulcast = false))
-                        else -> emptyList<Episode>()
+                        else -> emptyList()
                     }
                 }
             }.onFailure {
