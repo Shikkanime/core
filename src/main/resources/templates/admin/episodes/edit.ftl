@@ -104,7 +104,9 @@
         </div>
 
         <div class="d-flex mb-3">
-            <a href="/admin/episodes" class="btn btn-secondary ms-0">Back</a>
+            <a class="btn btn-secondary ms-0" @click="window.history.back()">
+                Back
+            </a>
 
             <div class="spinner-border ms-2 me-auto" role="status" x-show="loading">
                 <span class="visually-hidden">Loading...</span>

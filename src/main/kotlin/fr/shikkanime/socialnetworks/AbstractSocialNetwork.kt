@@ -24,6 +24,7 @@ abstract class AbstractSocialNetwork {
             EpisodeType.SPECIAL -> "L'épisode spécial"
             EpisodeType.FILM -> "Le film"
             EpisodeType.SUMMARY -> "L'épisode récapitulatif"
+            EpisodeType.SPIN_OFF -> "Le spin-off"
             else -> "L'épisode ${episodeDto.mapping.number}"
         }
     }

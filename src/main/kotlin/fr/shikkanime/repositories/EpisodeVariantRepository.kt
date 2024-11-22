@@ -95,18 +95,16 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             subQuery.select(subMappingJoin[EpisodeMapping_.uuid])
             subQuery.where(
-                cb.and(
-                    cb.equal(subMappingJoin[EpisodeMapping_.anime], mappingJoin[EpisodeMapping_.anime]),
-                    cb.equal(subMappingJoin[EpisodeMapping_.season], mappingJoin[EpisodeMapping_.season]),
-                    cb.or(
-                        cb.greaterThan(subMappingJoin[EpisodeMapping_.lastReleaseDateTime], mappingJoin[EpisodeMapping_.lastReleaseDateTime]),
-                        cb.and(
-                            cb.equal(subMappingJoin[EpisodeMapping_.episodeType], mappingJoin[EpisodeMapping_.episodeType]),
-                            cb.greaterThan(subMappingJoin[EpisodeMapping_.number], mappingJoin[EpisodeMapping_.number])
-                        )
-                    ),
-                    cb.notEqual(subMappingJoin[EpisodeMapping_.uuid], mappingJoin[EpisodeMapping_.uuid])
-                )
+                cb.equal(subMappingJoin[EpisodeMapping_.anime], mappingJoin[EpisodeMapping_.anime]),
+                cb.equal(subMappingJoin[EpisodeMapping_.season], mappingJoin[EpisodeMapping_.season]),
+                cb.or(
+                    cb.greaterThan(subMappingJoin[EpisodeMapping_.lastReleaseDateTime], mappingJoin[EpisodeMapping_.lastReleaseDateTime]),
+                    cb.and(
+                        cb.equal(subMappingJoin[EpisodeMapping_.episodeType], mappingJoin[EpisodeMapping_.episodeType]),
+                        cb.greaterThan(subMappingJoin[EpisodeMapping_.number], mappingJoin[EpisodeMapping_.number])
+                    )
+                ),
+                cb.notEqual(subMappingJoin[EpisodeMapping_.uuid], mappingJoin[EpisodeMapping_.uuid])
             )
 
             query.where(
@@ -169,12 +167,10 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val root = query.from(getEntityClass())
 
             query.where(
-                cb.and(
-                    cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
-                    cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
-                    cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
-                )
+                cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
+                cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.FILM),
+                cb.notEqual(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
+                cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime)
             )
                 .orderBy(
                     cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),

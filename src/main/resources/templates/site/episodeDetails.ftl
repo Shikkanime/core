@@ -1,19 +1,6 @@
 <#import "_navigation.ftl" as navigation />
+<#import "components/episodeType.ftl" as episodeTypeComponent />
 <#import "components/langType.ftl" as langTypeComponent />
-
-<#function getPrefixEpisode(episodeType)>
-    <#switch episodeType>
-        <#case "EPISODE">
-            <#return "Épisode">
-        <#case "FILM">
-            <#return "Film">
-        <#case "SPECIAL">
-            <#return "Spécial">
-        <#case "SUMMARY">
-            <#return "Épisode récapitulatif">
-    </#switch>
-</#function>
-
 
 <#assign canonicalUrl = baseUrl + "/animes/" + episodeMapping.anime.slug + "/season-" + episodeMapping.season?c + "/" + episodeMapping.episodeType.slug + "-" + episodeMapping.number?c />
 <#assign animeSanitized = su.sanitizeXSS(episodeMapping.anime.shortName) />
@@ -42,7 +29,7 @@
                 <h1 class="h6 fw-bold mb-0 text-uppercase">
                     <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}"
                        class="text-white text-decoration-none">${animeSanitized}&NonBreakingSpace;-&NonBreakingSpace;Saison ${episodeMapping.season?c}</a>
-                    &NonBreakingSpace;${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                    &NonBreakingSpace;<@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}
                 </h1>
 
                 <div class="mt-1">
@@ -72,7 +59,7 @@
                                             </div>
                                             <div class="col-6 d-flex flex-column justify-content-center">
                                                 <h6 class="fw-bold">
-                                                    ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;
+                                                    <@episodeTypeComponent.display episodeType=previousEpisode.episodeType />&NonBreakingSpace;
                                                     ${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}</h6>
                                                 <#list previousEpisode.langTypes as langType>
                                                     <p class="text-muted mb-0">
@@ -99,7 +86,7 @@
                                                 </div>
                                                 <div class="col-6 d-flex flex-column justify-content-center">
                                                     <h6 class="fw-bold">
-                                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}</h6>
+                                                        <@episodeTypeComponent.display episodeType=nextEpisode.episodeType />&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}</h6>
                                                     <#list nextEpisode.langTypes as langType>
                                                         <p class="text-muted mb-0">
                                                             <@langTypeComponent.display langType=langType />
@@ -153,7 +140,7 @@
                             </div>
                             <div class="col-6 d-flex flex-column justify-content-center">
                                 <h6 class="fw-bold">
-                                    ${getPrefixEpisode(previousEpisode.episodeType)}&NonBreakingSpace;${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}</h6>
+                                    <@episodeTypeComponent.display episodeType=previousEpisode.episodeType />&NonBreakingSpace;${previousEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}</h6>
                                 <#list previousEpisode.langTypes as langType>
                                     <p class="text-muted mb-0">
                                         <@langTypeComponent.display langType=langType />
@@ -179,7 +166,7 @@
                                 </div>
                                 <div class="col-6 d-flex flex-column justify-content-center">
                                     <h6 class="fw-bold">
-                                        ${getPrefixEpisode(nextEpisode.episodeType)}&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}</h6>
+                                        <@episodeTypeComponent.display episodeType=nextEpisode.episodeType />&NonBreakingSpace;${nextEpisode.number?c}&NonBreakingSpace;-&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}</h6>
                                     <#list nextEpisode.langTypes as langType>
                                         <p class="text-muted mb-0">
                                             <@langTypeComponent.display langType=langType />

@@ -89,6 +89,7 @@ object StringUtils {
             EpisodeType.SPECIAL -> "Spécial"
             EpisodeType.FILM -> "Film"
             EpisodeType.SUMMARY -> "Épisode récapitulatif"
+            EpisodeType.SPIN_OFF -> "Spin-off"
         }
     }
 

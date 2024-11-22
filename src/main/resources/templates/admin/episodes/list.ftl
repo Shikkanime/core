@@ -5,24 +5,57 @@
         pageable: {},
         page: 1,
         maxPage: 1,
-        anime: '',
-        invalid: false,
+        filter: {
+            anime: '',
+            invalid: false,
+            season: ''
+        },
         pages: [],
+        updateAll: {
+            uuids: []
+        },
         async init() {
             await this.fetchEpisodes();
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         async fetchEpisodes() {
-            this.pageable = await getEpisodes(this.anime, this.page, this.invalid);
+            this.pageable = await getEpisodes(this.filter, this.page);
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
+        },
+        applyFilterParameters() {
+            if (this.filter.anime === '' && this.filter.season === '' && !this.filter.invalid && this.page === 1) {
+                window.history.pushState({}, '', '/admin/episodes');
+            } else {
+                const params = new URLSearchParams();
+
+                if (this.filter.anime) {
+                    params.append('anime', this.filter.anime);
+                }
+
+                if (this.filter.season) {
+                    params.append('season', this.filter.season);
+                }
+
+                if (this.filter.invalid) {
+                    params.append('invalid', 'true');
+                }
+
+                if (this.page !== 1) {
+                    params.append('page', this.page);
+                }
+
+                window.history.pushState({}, '', '/admin/episodes?' + params.toString());
+            }
         },
         async setPage(newPage) {
             this.page = newPage;
+            this.applyFilterParameters();
             await this.fetchEpisodes();
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         async applyFilters() {
             this.page = 1;
+            this.applyFilterParameters();
             await this.fetchEpisodes();
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
@@ -50,16 +83,75 @@
             return range;
         }
     }" x-init="init">
+        <div class="modal fade" id="updateAllModal" tabindex="-1" aria-labelledby="updateAllModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="updateAllModalLabel">Update selected</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="episodeType" class="form-label">Episode type</label>
+                                <input type="text" class="form-control" id="episodeType" name="episodeType"
+                                       x-model="updateAll.episodeType">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="season" class="form-label">Season</label>
+                                <input type="number" class="form-control" id="season" name="season"
+                                       x-model="updateAll.season">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                        <button class="btn btn-success"
+                                @click="await updateAllSelected(updateAll); location.reload();">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-3 align-items-center mb-3">
             <div class="col-auto">
                 <label class="form-label" for="animeInput">Anime UUID</label>
                 <input type="text" class="form-control" id="animeInput"
-                       x-model="anime" @input="applyFilters">
+                       x-model="filter.anime" @input="applyFilters">
+            </div>
+            <div class="col-auto">
+                <label class="form-label" for="seasonInput">Season</label>
+                <input type="number" class="form-control" id="seasonInput"
+                       x-model="filter.season" @input="applyFilters">
             </div>
             <div class="col-auto">
                 <input class="form-check-input" type="checkbox" id="invalidInput"
-                       x-model="invalid" @change="applyFilters">
+                       x-model="filter.invalid" @change="applyFilters">
                 <label class="form-check-label" for="invalidInput">Only invalid</label>
+            </div>
+            <div class="col-auto ms-auto">
+                <button class="btn btn-primary" type="button" @click="updateAll.uuids.push(...pageable.data.map(episode => episode.uuid));">
+                    <i class="bi bi-check-all me-2"></i>
+                    Check all
+                </button>
+
+                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#updateAllModal" x-show="updateAll.uuids.length > 0">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Update selected
+                </button>
+
+                <div class="mt-1" x-show="updateAll.uuids.length > 0">
+                    <strong x-text="updateAll.uuids.length"></strong> rows selected.
+
+                    <button class="ms-3 btn btn-danger" type="button" @click="updateAll.uuids = []">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Clear selection
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -74,8 +166,10 @@
             </thead>
             <tbody class="table-group-divider">
             <template x-for="episode in pageable.data">
-                <tr>
+                <tr @dblclick="if (updateAll.uuids.includes(episode.uuid)) { updateAll.uuids = updateAll.uuids.filter(uuid => uuid !== episode.uuid); } else { updateAll.uuids.push(episode.uuid); }">
                     <th scope="row">
+                        <i class="bi bi-check2 me-2" x-show="updateAll.uuids.includes(episode.uuid)"></i>
+
                         <span class="me-1 badge"
                               :class="episode.status === 'INVALID' ? 'bg-danger' : 'bg-success'"
                               x-text="episode.status === 'INVALID' ? 'Invalid' : 'Valid'"></span>
@@ -123,12 +217,13 @@
                 'EPISODE': 'EP',
                 'FILM': 'MOV',
                 'SPECIAL': 'SP',
-                'SUMMARY': 'SUM'
+                'SUMMARY': 'SUM',
+                'SPIN_OFF': 'SO',
             };
             return labels[episodeType] || episodeType;
         }
 
-        async function getEpisodes(anime, page, invalid) {
+        async function getEpisodes(filter, page) {
             const params = new URLSearchParams({
                 sort: 'lastReleaseDateTime,animeName,season,episodeType,number',
                 desc: 'lastReleaseDateTime,animeName,season,episodeType,number',
@@ -136,16 +231,24 @@
                 limit: 9
             });
 
-            if (invalid) {
+            if (filter.anime) {
+                params.append('anime', filter.anime);
+            }
+
+            if (filter.invalid) {
                 params.append('status', 'INVALID');
             }
 
-            if (anime) {
-                params.append('anime', anime);
+            if (filter.season) {
+                params.append('season', filter.season);
             }
 
             const response = await axios.get(`/api/v1/episode-mappings?` + params.toString());
             return response.data;
+        }
+
+        async function updateAllSelected(updateAll) {
+            await axios.put('/api/v1/episode-mappings/update-all', updateAll);
         }
     </script>
 </@navigation.display>
