@@ -27,4 +27,4 @@ COPY build/install/core hibernate.cfg.xml /app/
 
 WORKDIR /app
 EXPOSE 37100
-CMD ["./bin/core"]
+CMD ["./bin/core", "--enable-jobs"]

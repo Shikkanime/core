@@ -19,7 +19,7 @@ import io.ktor.server.netty.*
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
-fun main() {
+fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
 
     logger.info("Pre-indexing anime data...")
@@ -40,20 +40,24 @@ fun main() {
         logger.info("Admin user already exists")
     }
 
-    logger.info("Starting jobs...")
-    // Every 10 seconds
-    JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
-    // Every 20 seconds
-    JobManager.scheduleJob("*/20 * * * * ?", FetchEpisodesJob::class.java)
-    // Every 10 minutes
-    JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java)
-    // Every hour
-    JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java, UpdateAnimeJob::class.java)
-    // Every day at midnight
-    JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
-    // Every day at 3pm
-     JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
-    JobManager.start()
+    if (args.contains("--enable-jobs")) {
+        logger.info("Starting jobs...")
+        // Every 10 seconds
+        JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
+        // Every 20 seconds
+        JobManager.scheduleJob("*/20 * * * * ?", FetchEpisodesJob::class.java)
+        // Every 10 minutes
+        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java)
+        // Every hour
+        JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java, UpdateAnimeJob::class.java)
+        // Every day at midnight
+        JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
+        // Every day at 3pm
+        JobManager.scheduleJob("0 0 15 * * ?", FetchOldEpisodesJob::class.java)
+        JobManager.start()
+    } else {
+        logger.warning("Jobs are disabled, use --enable-jobs to enable them")
+    }
 
     logger.info("Starting server...")
     embeddedServer(
