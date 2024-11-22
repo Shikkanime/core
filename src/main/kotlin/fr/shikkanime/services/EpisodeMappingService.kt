@@ -1,6 +1,7 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.UpdateAllEpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.*
@@ -75,6 +76,27 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         if (!Constant.disableImageConversion) addImage(save.uuid!!, save.image!!)
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return save
+    }
+
+    fun updateAll(updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto) {
+        val episodes = updateAllEpisodeMappingDto.uuids.mapNotNull { find(it) }
+
+        episodes.forEach { episode ->
+            if (updateAllEpisodeMappingDto.episodeType != null) {
+                episode.episodeType = updateAllEpisodeMappingDto.episodeType
+            }
+
+            if (updateAllEpisodeMappingDto.season != null) {
+                episode.season = updateAllEpisodeMappingDto.season
+            }
+
+            episode.status = StringUtils.getStatus(episode)
+            episode.lastUpdateDateTime = ZonedDateTime.now()
+            super.update(episode)
+            traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
+        }
+
+        MapCache.invalidate(EpisodeMapping::class.java)
     }
 
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {

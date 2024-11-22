@@ -165,6 +165,7 @@ object MediaImage {
             EpisodeType.SPECIAL -> "SP"
             EpisodeType.FILM -> "FILM "
             EpisodeType.SUMMARY -> "RÉCAP"
+            EpisodeType.SPIN_OFF -> "SPIN-OFF"
         }
 
         val langTypeLabel = when (LangType.fromAudioLocale(

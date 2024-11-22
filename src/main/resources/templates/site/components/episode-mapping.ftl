@@ -1,17 +1,5 @@
+<#import "episodeType.ftl" as episodeTypeComponent />
 <#import "langType.ftl" as langTypeComponent />
-
-<#function getPrefixEpisode(episodeType)>
-    <#switch episodeType>
-        <#case "EPISODE">
-            <#return "Épisode">
-        <#case "FILM">
-            <#return "Film">
-        <#case "SPECIAL">
-            <#return "Spécial">
-        <#case "SUMMARY">
-            <#return "Épisode récapitulatif">
-    </#switch>
-</#function>
 
 <#macro display episodeMapping desktopColSize mobileColSize cover showAnime=true showSeason=true>
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
@@ -41,11 +29,11 @@
                             <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</div>
 
                             <p class="text-muted mb-0">
-                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if>${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if><@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}
                             </p>
                         <#else>
                             <div class="h6 mt-2 mb-0 text-truncate-2 fw-bold">
-                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if>${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}
+                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if><@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}
                             </div>
                         </#if>
 

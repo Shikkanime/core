@@ -1,18 +1,6 @@
 <#import "_navigation.ftl" as navigation />
+<#import "components/episodeType.ftl" as episodeTypeComponent />
 <#import "components/langType.ftl" as langTypeComponent />
-
-<#function getPrefixEpisode(episodeType)>
-    <#switch episodeType>
-        <#case "EPISODE">
-            <#return "Épisode">
-        <#case "FILM">
-            <#return "Film">
-        <#case "SPECIAL">
-            <#return "Spécial">
-        <#case "SUMMARY">
-            <#return "Épisode récapitulatif">
-    </#switch>
-</#function>
 
 <@navigation.display canonicalUrl="${baseUrl}/calendar">
     <div class="d-flex">
@@ -102,7 +90,7 @@
                                                     <span class="h6 text-truncate-2 mb-1 fw-bold">${su.sanitizeXSS(release.anime.shortName)}</span>
                                                     <#if release.minNumber?? || release.maxNumber?? || release.number??>
                                                         <p class="text-muted mb-0">
-                                                            ${getPrefixEpisode(release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
+                                                            <@episodeTypeComponent.display episodeType=release.episodeType /> <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
                                                         </p>
                                                     </#if>
                                                     <#list release.langTypes as langType>

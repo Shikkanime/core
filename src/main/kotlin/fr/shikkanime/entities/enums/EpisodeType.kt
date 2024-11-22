@@ -5,6 +5,7 @@ enum class EpisodeType(val slug: String) {
     FILM("film"),
     SPECIAL("special"),
     SUMMARY("summary"),
+    SPIN_OFF("spin-off"),
     ;
 
     companion object {

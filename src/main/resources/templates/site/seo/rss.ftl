@@ -1,15 +1,4 @@
-<#function getPrefixEpisode(episodeType)>
-    <#switch episodeType>
-        <#case "EPISODE">
-            <#return "Épisode">
-        <#case "FILM">
-            <#return "Film">
-        <#case "SPECIAL">
-            <#return "Spécial">
-        <#case "SUMMARY">
-            <#return "Épisode récapitulatif">
-    </#switch>
-</#function>
+<#import "../components/episodeType.ftl" as episodeTypeComponent />
 <?xml version="1.0" encoding="utf-8" ?>
 <rss version="2.0">
     <channel>
@@ -21,7 +10,7 @@
         <link>${baseUrl}</link>
         <#list episodeMappings as episodeMapping>
         <item>
-            <title>${episodeMapping.anime.shortName} - Saison ${episodeMapping.season?c} ${getPrefixEpisode(episodeMapping.episodeType)} ${episodeMapping.number?c}<#if episodeMapping.title??> - ${su.sanitizeXSS(episodeMapping.title)}</#if></title>
+            <title>${episodeMapping.anime.shortName} - Saison ${episodeMapping.season?c} <@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}<#if episodeMapping.title??> - ${su.sanitizeXSS(episodeMapping.title)}</#if></title>
             <description>${episodeMapping.description!""}</description>
             <pubDate>${episodeMapping.releaseDateTime?replace("Z", "+0000")}</pubDate>
             <lastBuildDate>${episodeMapping.lastReleaseDateTime?replace("Z", "+0000")}</lastBuildDate>

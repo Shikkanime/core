@@ -29,13 +29,13 @@ class NetflixPlatform :
             HttpRequest(countryCode).use { it.getBrowser("https://www.netflix.com/${countryCode.name.lowercase()}/title/$id") }
 
         if (document.getElementsByTag("html").attr("lang") != countryCode.name.lowercase()) {
-            logger.warning("Failed to fetch Netflix page for $id in ${countryCode.name}, retrying... ($i/${maxRetry})")
+            logger.warning("Failed to fetch Netflix page for $id in ${countryCode.name}, retrying... (${i + 1}/${maxRetry})")
             return loadContent(id, countryCode, i + 1)
         }
 
         // Is new design?
         if (document.selectXpath("//*[@id=\"appMountPoint\"]/div/div[2]/div/header").isNotEmpty()) {
-            logger.warning("New Netflix design detected, trying to get the old design... ($i/${maxRetry})")
+            logger.warning("New Netflix design detected, trying to get the old design... (${i + 1}/${maxRetry})")
             return loadContent(id, countryCode, i + 1)
         }
 
