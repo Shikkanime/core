@@ -90,13 +90,25 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
                 episode.season = updateAllEpisodeMappingDto.season
             }
 
+            val existing = findByAnimeSeasonEpisodeTypeNumber(
+                episode.anime!!.uuid!!,
+                episode.season!!,
+                episode.episodeType!!,
+                episode.number!!
+            )
+
+            if (existing != null && existing.uuid != episode.uuid) {
+                mergeEpisodeMapping(episode, existing, false)
+                return@forEach
+            }
+
             episode.status = StringUtils.getStatus(episode)
             episode.lastUpdateDateTime = ZonedDateTime.now()
             super.update(episode)
             traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         }
 
-        MapCache.invalidate(EpisodeMapping::class.java)
+        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
     }
 
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {
@@ -111,24 +123,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
                 findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, entity.season, entity.episodeType, entity.number)
 
             if (existing != null) {
-                // Set the variants of the current episode to the existing episode
-                episodeVariantService.findAllByMapping(episode).forEach { variant ->
-                    variant.mapping = existing
-                    episodeVariantService.update(variant)
-                }
-
-                // If the episode already exists, we delete the current episode
-                memberFollowEpisodeService.findAllByEpisode(episode).forEach { memberFollowEpisodeService.delete(it) }
-                super.delete(episode)
-
-                if (existing.lastReleaseDateTime.isBefore(episode.lastReleaseDateTime)) {
-                    existing.lastReleaseDateTime = episode.lastReleaseDateTime
-                }
-
-                existing.lastUpdateDateTime = ZonedDateTime.now()
-                update(existing)
-                MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
-                return find(existing.uuid!!)
+                return mergeEpisodeMapping(episode, existing)
             } else {
                 episode.episodeType = entity.episodeType
                 episode.season = entity.season
@@ -161,6 +156,36 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         MapCache.invalidate(EpisodeMapping::class.java)
         traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         return update
+    }
+
+    private fun mergeEpisodeMapping(
+        episode: EpisodeMapping,
+        existing: EpisodeMapping,
+        updateCache: Boolean = true
+    ): EpisodeMapping? {
+        // Set the variants of the current episode to the existing episode
+        episodeVariantService.findAllByMapping(episode).forEach { variant ->
+            variant.mapping = existing
+            episodeVariantService.update(variant)
+        }
+
+        // If the episode already exists, we delete the current episode
+        memberFollowEpisodeService.findAllByEpisode(episode).forEach { memberFollowEpisodeService.delete(it) }
+        traceActionService.createTraceAction(episode, TraceAction.Action.DELETE)
+        super.delete(episode)
+
+        if (existing.lastReleaseDateTime.isBefore(episode.lastReleaseDateTime)) {
+            existing.lastReleaseDateTime = episode.lastReleaseDateTime
+        }
+
+        existing.lastUpdateDateTime = ZonedDateTime.now()
+        update(existing)
+        traceActionService.createTraceAction(existing, TraceAction.Action.UPDATE)
+
+        if (updateCache)
+            MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+
+        return find(existing.uuid!!)
     }
 
     private fun updateEpisodeMappingAnime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
