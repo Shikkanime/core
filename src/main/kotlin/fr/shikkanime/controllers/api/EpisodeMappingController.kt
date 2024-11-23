@@ -137,7 +137,7 @@ class EpisodeMappingController : HasPageableRoute() {
             return Response.badRequest("uuids must not be empty")
         }
 
-        if (updateAllEpisodeMappingDto.episodeType == null && updateAllEpisodeMappingDto.season == null) {
+        if (updateAllEpisodeMappingDto.episodeType == null && updateAllEpisodeMappingDto.season == null && updateAllEpisodeMappingDto.forceUpdate == null) {
             return Response.badRequest("episodeType or season must be set")
         }
 

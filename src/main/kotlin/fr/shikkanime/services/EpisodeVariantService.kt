@@ -262,22 +262,34 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val episodeVariant = find(uuid) ?: return
         val mapping = episodeVariant.mapping!!
 
-        val newMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = mapping.anime,
-                releaseDateTime = mapping.releaseDateTime,
-                lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z"),
-                episodeType = dto.episodeType,
-                season = dto.season,
-                number = dto.number,
-                duration = mapping.duration,
-                title = mapping.title,
-                description = mapping.description,
-                image = mapping.image,
-            )
+        val entity = EpisodeMapping(
+            anime = mapping.anime,
+            releaseDateTime = mapping.releaseDateTime,
+            lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z"),
+            episodeType = dto.episodeType,
+            season = dto.season,
+            number = dto.number,
+            duration = mapping.duration,
+            title = mapping.title,
+            description = mapping.description,
+            image = mapping.image,
         )
 
-        episodeVariant.mapping = newMapping
-        update(episodeVariant)
+        val existing = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+            mapping.anime!!.uuid!!,
+            dto.season,
+            dto.episodeType,
+            dto.number
+        )
+
+        if (existing != null) {
+            episodeVariant.mapping = existing
+            update(episodeVariant)
+            return
+        } else {
+            val saved = episodeMappingService.save(entity)
+            episodeVariant.mapping = saved
+            update(episodeVariant)
+        }
     }
 }

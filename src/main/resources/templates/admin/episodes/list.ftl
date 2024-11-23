@@ -103,6 +103,11 @@
                                 <input type="number" class="form-control" id="season" name="season"
                                        x-model="updateAll.season">
                             </div>
+                            <div class="col-md-6">
+                                <input class="form-check-input" type="checkbox" id="forceUpdate"
+                                       x-model="updateAll.forceUpdate">
+                                <label class="form-check-label" for="forceUpdate">Force update</label>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

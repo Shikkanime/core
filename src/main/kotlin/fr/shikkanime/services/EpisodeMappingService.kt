@@ -82,12 +82,18 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         val episodes = updateAllEpisodeMappingDto.uuids.mapNotNull { find(it) }
 
         episodes.forEach { episode ->
+            var forcedUpdate = false
+
             if (updateAllEpisodeMappingDto.episodeType != null) {
                 episode.episodeType = updateAllEpisodeMappingDto.episodeType
             }
 
             if (updateAllEpisodeMappingDto.season != null) {
                 episode.season = updateAllEpisodeMappingDto.season
+            }
+
+            if (updateAllEpisodeMappingDto.forceUpdate == true) {
+                forcedUpdate = true
             }
 
             val existing = findByAnimeSeasonEpisodeTypeNumber(
@@ -98,12 +104,18 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             )
 
             if (existing != null && existing.uuid != episode.uuid) {
-                mergeEpisodeMapping(episode, existing, false)
+                val merged = mergeEpisodeMapping(episode, existing, false)
+
+                if (forcedUpdate) {
+                    merged?.lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
+                    super.update(merged!!)
+                }
+
                 return@forEach
             }
 
             episode.status = StringUtils.getStatus(episode)
-            episode.lastUpdateDateTime = ZonedDateTime.now()
+            episode.lastUpdateDateTime = if (forcedUpdate) ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
             super.update(episode)
             traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         }

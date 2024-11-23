@@ -7,4 +7,5 @@ data class UpdateAllEpisodeMappingDto(
     val uuids: List<UUID>,
     val episodeType: EpisodeType?,
     val season: Int?,
+    val forceUpdate: Boolean?
 )
