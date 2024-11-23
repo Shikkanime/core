@@ -22,7 +22,7 @@ object AnimationDigitalNetworkWrapper : AbstractAnimationDigitalNetworkWrapper()
     }
 
     override suspend fun getShowVideos(id: Int): Array<Video> {
-        val response = httpRequest.get("${baseUrl}video/show/$id?order=asc")
+        val response = httpRequest.get("${baseUrl}video/show/$id?order=asc&limit=-1")
         require(response.status == HttpStatusCode.OK) { "Failed to get show videos (${response.status.value})" }
         val videosJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("videos") ?: throw Exception("Failed to get videos")
         return ObjectParser.fromJson(videosJson, Array<Video>::class.java)

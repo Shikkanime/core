@@ -426,4 +426,56 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val variants = episodeVariantService.findAll()
         assertEquals(1, variants.size)
     }
+
+    @Test
+    fun `run old ADN episodes One Piece`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "One Piece",
+                slug = "one-piece",
+                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/affiche_350x500.jpg",
+                banner = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/license_640x360.jpg"
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 816,
+                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/eps13_640x360.jpg",
+                title = "La Nuit aux étoiles",
+                description = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts."
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.ANIM,
+                audioLocale = "ja-JP",
+                identifier = "FR-ANIM-16948-JA-JP",
+                url = "https://animationdigitalnetwork.fr/video/isekai-cheat-magician/10114-episode-13-la-nuit-aux-etoiles"
+            )
+        )
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(3, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(4, variants.size)
+    }
 }
