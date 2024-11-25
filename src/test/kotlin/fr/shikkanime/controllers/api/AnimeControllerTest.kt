@@ -222,7 +222,7 @@ class AnimeControllerTest : AbstractControllerTest() {
                 val animes = ObjectParser.fromJson(bodyAsText(), object : TypeToken<PageableDto<AnimeDto>>() {})
                 animes.data.forEach(::println)
                 assertEquals(0, animes.data.size)
-                assertEquals(1, animes.total)
+                assertEquals(2, animes.total)
             }
         }
     }

@@ -25,7 +25,6 @@ object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWra
 
     private val showVideosCache = MapCache<Int, Array<Video>>(defaultCacheDuration) {
         runBlocking { AnimationDigitalNetworkWrapper.getShowVideos(it) }
-            .apply { forEach { video -> videoCache.setIfNotExists(video.id, video) } }
     }
 
     override suspend fun getLatestVideos(date: LocalDate) = latestVideosCache[date] ?: emptyArray()

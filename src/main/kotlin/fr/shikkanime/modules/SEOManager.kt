@@ -24,6 +24,10 @@ fun setGlobalAttributes(
     replacedPath: String,
     title: String?
 ) {
+    if (!replacedPath.startsWith("/admin") && !isSitePath(replacedPath)) {
+        return
+    }
+
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
     val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
@@ -34,8 +38,7 @@ fun setGlobalAttributes(
     modelMap["footerLinks"] = getFooterLinks(controller)
     modelMap["title"] = getTitle(title)
     modelMap["seoDescription"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
-    modelMap["googleSiteVerification"] =
-        configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)
+    modelMap["googleSiteVerification"] = configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)
     modelMap["currentSimulcast"] = simulcastCacheService.currentSimulcast
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl

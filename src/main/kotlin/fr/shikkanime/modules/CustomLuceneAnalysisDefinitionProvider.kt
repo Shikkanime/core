@@ -8,9 +8,10 @@ class CustomLuceneAnalysisDefinitionProvider : LuceneAnalysisConfigurer {
         p0!!.analyzer("shikkanime_analyzer").custom()
             .tokenizer("standard")
             .tokenFilter("lowercase")
+            .tokenFilter("wordDelimiterGraph")
             .tokenFilter("asciifolding")
             .tokenFilter("ngram")
-            .param("minGramSize", "3")
+            .param("minGramSize", "2")
             .param("maxGramSize", "6")
     }
 }

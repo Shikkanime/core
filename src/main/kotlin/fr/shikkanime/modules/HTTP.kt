@@ -56,7 +56,7 @@ fun Application.configureHTTP() {
         }
         status(HttpStatusCode.NotFound) { call, _ ->
             val path = call.request.path()
-            if (isNotSiteRoute(path, "404")) return@status
+            if (!isSitePathWithAssetsOrError(path, "404")) return@status
 
             if (call.response.status() == HttpStatusCode.NotFound) {
                 val siteController = Constant.injector.getInstance(SiteController::class.java)
@@ -115,6 +115,10 @@ fun Application.configureHTTP() {
     }
 }
 
-private fun isNotSiteRoute(path: String, errorCode: String): Boolean {
-    return path.contains(".") || path.startsWith("/$errorCode") || path.startsWith("/api") || path.startsWith("/admin")
+fun isSitePath(path: String): Boolean {
+    return !path.startsWith("/api") && !path.startsWith("/admin") && !path.startsWith("/assets")
+}
+
+private fun isSitePathWithAssetsOrError(path: String, errorCode: String): Boolean {
+    return isSitePath(path) && !path.startsWith("/$errorCode")
 }

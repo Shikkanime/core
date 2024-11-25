@@ -11,8 +11,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.MapCache
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -134,7 +133,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val mappings = episodeMappingService.findAll()
         assertEquals(2, mappings.size)
         val variants = episodeVariantService.findAll()
-        assertEquals(3, variants.size)
+        assertEquals(4, variants.size)
     }
 
     @Test
@@ -476,6 +475,81 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val mappings = episodeMappingService.findAll()
         assertEquals(3, mappings.size)
         val variants = episodeVariantService.findAll()
-        assertEquals(4, variants.size)
+        assertEquals(6, variants.size)
+    }
+
+    @Test
+    fun `run old ADN episodes One Piece only french dub`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "One Piece",
+                slug = "one-piece",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg"
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 566,
+                image = "https://image.animationdigitalnetwork.fr/license/onepiece/tv/web/eps566_640x360.jpg",
+                title = "Conclusion. L'affrontement final contre Hody !",
+                description = null
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.ANIM,
+                audioLocale = "fr-FR",
+                identifier = "FR-ANIM-13530-FR-FR",
+                url = "https://animationdigitalnetwork.fr/video/one-piece-saga-8-ile-des-hommes-poissons/13530-episode-566-conclusion-l-affrontement-final-contre-hody"
+            )
+        )
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(3, mappings.size)
+
+        episodeVariantService.findAllByMapping(episodeMapping).let { variants ->
+            assertTrue(variants.map { it.audioLocale }.contains("ja-JP"))
+            assertEquals(2, variants.size)
+        }
+
+        val findPreviousEpisode = episodeMappingService.findAllByAnime(anime).find { it.number == 565 }
+        assertNotNull(findPreviousEpisode)
+
+        episodeVariantService.findAllByMapping(findPreviousEpisode!!).let { variants ->
+            assertTrue(variants.map { it.audioLocale }.contains("fr-FR"))
+            assertEquals(2, variants.size)
+        }
+
+        updateEpisodeMappingJob.run()
+
+        episodeVariantService.findAllByMapping(episodeMapping).let { variants ->
+            assertTrue(variants.map { it.audioLocale }.contains("ja-JP"))
+            assertEquals(2, variants.size)
+        }
+
+        episodeVariantService.findAllByMapping(findPreviousEpisode).let { variants ->
+            assertTrue(variants.map { it.audioLocale }.contains("fr-FR"))
+            assertEquals(2, variants.size)
+        }
     }
 }
