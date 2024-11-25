@@ -58,8 +58,7 @@ object ImageService {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val nThreads = Runtime.getRuntime().availableProcessors()
     private var threadPool = Executors.newFixedThreadPool(nThreads)
-    val cache = mutableListOf<Image>()
-    private val searchCacheIndex = mutableMapOf<String, Int>()
+    val cache = mutableMapOf<Pair<String, Type>, Image>()
     private val change = AtomicBoolean(false)
     private const val CACHE_FILE_NUMBER = 4
 
@@ -89,25 +88,8 @@ object ImageService {
             }
         }
 
-        this.cache.addAll(cachePart)
+        this.cache.putAll(cachePart.associateBy { it.uuid to it.type })
         logger.info("Loaded images cache in $take ms (${this.cache.size} images)")
-        createImageIndex()
-    }
-
-    private fun createImageIndex() {
-        logger.info("Creating search index...")
-
-        val take = measureTimeMillis {
-            this.searchCacheIndex.clear()
-
-            this.searchCacheIndex.putAll(
-                cache.asSequence()
-                    .mapIndexed { index, image -> image.uuid + image.type to index }
-                    .toMap()
-            )
-        }
-
-        logger.info("Created search index in $take ms")
     }
 
     private fun loadCachePart(file: File): List<Image> {
@@ -127,7 +109,7 @@ object ImageService {
         return cache
     }
 
-    private fun distributeImages(images: List<Image>, numberOfLists: Int): List<List<Image>> {
+    private fun distributeImages(images: Collection<Image>, numberOfLists: Int): List<List<Image>> {
         // Sort images by size in descending order for a more balanced distribution
         val sortedImages = images.sortedByDescending { it.size }
 
@@ -150,7 +132,7 @@ object ImageService {
 
         change.set(false)
 
-        val parts = distributeImages(cache, CACHE_FILE_NUMBER)
+        val parts = distributeImages(cache.values, CACHE_FILE_NUMBER)
 
         logger.info("Saving images cache...")
 
@@ -193,16 +175,12 @@ object ImageService {
 
         val image = if (!bypass) {
             val image = Image(uuid.toString(), type, url)
-            val futureIndex = cache.size
-            cache.add(image)
-            searchCacheIndex[uuid.toString() + type] = futureIndex
+            cache[uuid.toString() to type] = image
             image
         } else {
             get(uuid, type) ?: run {
                 val image = Image(uuid.toString(), type, url)
-                val futureIndex = cache.size
-                cache.add(image)
-                searchCacheIndex[uuid.toString() + type] = futureIndex
+                cache[uuid.toString() to type] = image
                 image
             }
         }
@@ -217,16 +195,12 @@ object ImageService {
 
         val image = if (!bypass) {
             val image = Image(uuid.toString(), type)
-            val futureIndex = cache.size
-            cache.add(image)
-            searchCacheIndex[uuid.toString() + type] = futureIndex
+            cache[uuid.toString() to type] = image
             image
         } else {
             get(uuid, type) ?: run {
                 val image = Image(uuid.toString(), type)
-                val futureIndex = cache.size
-                cache.add(image)
-                searchCacheIndex[uuid.toString() + type] = futureIndex
+                cache[uuid.toString() to type] = image
                 image
             }
         }
@@ -294,14 +268,7 @@ object ImageService {
                 image.originalSize = bytes.size.toLong()
                 image.size = webp.size.toLong()
 
-                val indexOf = searchCacheIndex[uuid.toString() + type] ?: -1
-
-                if (indexOf == -1) {
-                    logger.warning("Failed to find image in cache")
-                    return@measureTimeMillis
-                }
-
-                cache[indexOf] = image
+                cache[uuid.toString() to type] = image
                 change.set(true)
             } catch (e: Exception) {
                 when (e) {
@@ -325,21 +292,20 @@ object ImageService {
     }
 
     fun remove(uuid: UUID, type: Type) {
-        cache.removeIf { it.uuid == uuid.toString() && it.type == type }
-        searchCacheIndex.remove(uuid.toString() + type)
+        cache.remove(uuid.toString() to type)
         change.set(true)
     }
 
-    operator fun get(uuid: UUID, type: Type): Image? = searchCacheIndex[uuid.toString() + type]?.let { cache[it] }
+    operator fun get(uuid: UUID, type: Type): Image? = cache[uuid.toString() to type]
 
     val size: Int
-        get() = cache.toList().size
+        get() = cache.size
 
     val originalSize: String
-        get() = toHumanReadable(cache.toList().sumOf { it.originalSize })
+        get() = toHumanReadable(cache.values.sumOf { it.originalSize })
 
     val compressedSize: String
-        get() = toHumanReadable(cache.toList().sumOf { it.size })
+        get() = toHumanReadable(cache.values.sumOf { it.size })
 
     fun invalidate() {
         removeUnusedImages()
@@ -367,12 +333,11 @@ object ImageService {
                 .toSet()
 
             // Calculate the difference between the cache and the UUIDs
-            val difference = cache.filter { img -> img.uuid !in uuids }
+            val difference = cache.filter { entry -> entry.key.first !in uuids }.values
             logger.warning("Removing ${difference.size} images from cache, not found in database")
             logger.warning("${toHumanReadable(difference.sumOf { img -> img.size })} will be free")
 
-            cache.removeIf { img -> img.uuid !in uuids }
-            createImageIndex()
+            cache.keys.removeAll { pair -> pair.first !in uuids }
         }
     }
 
@@ -380,7 +345,6 @@ object ImageService {
         threadPool.shutdownNow()
         threadPool = Executors.newFixedThreadPool(nThreads)
         cache.clear()
-        searchCacheIndex.clear()
     }
 
     fun addAll(bypass: Boolean = false) {
