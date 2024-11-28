@@ -10,9 +10,7 @@ enum class CountryCode(
     ;
 
     companion object {
-        fun from(collection: Collection<String>): Set<CountryCode> {
-            return collection.map { valueOf(it.uppercase()) }.toSet()
-        }
+        fun from(collection: Collection<String>) = collection.map { valueOf(it.uppercase()) }
 
         fun from(string: String): CountryCode {
             return valueOf(string.uppercase())

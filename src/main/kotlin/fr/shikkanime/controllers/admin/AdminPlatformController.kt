@@ -27,7 +27,7 @@ class AdminPlatformController {
         return Response.template(
             Link.PLATFORMS,
             mutableMapOf(
-                "platforms" to Constant.abstractPlatforms.toList().sortedBy { it.getPlatform().name.lowercase() })
+                "platforms" to Constant.abstractPlatforms.sortedBy { it.getPlatform().name.lowercase() })
         )
     }
 

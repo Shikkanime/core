@@ -30,7 +30,7 @@ class MemberToRefreshMemberDtoConverter : AbstractConverter<Member, RefreshMembe
                 convert(tuple[0], AnimeDto::class.java),
                 tuple[1] as Long
             )
-        }
+        }.toSet()
 
         return RefreshMemberDto(
             missedAnimes = PageableDto(

@@ -76,7 +76,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
         val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
-
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -192,7 +191,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
 
         val countryCode = anime.countryCode!!
-        val depth = configCacheService.getValueAsInt(ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH, 1)
         val platformIds = mutableMapOf<String, Platform>()
 
         variants.forEach { variant ->
@@ -205,7 +203,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             var previousId: String? = identifier
             var nextId: String? = identifier
 
-            repeat(depth) {
+            repeat(configCacheService.getValueAsInt(ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH, 1)) {
                 runBlocking {
                     previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
                     nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
@@ -365,14 +363,14 @@ class UpdateEpisodeMappingJob : AbstractJob {
         )
             .also { browseObjects.add(it.convertToBrowseObject()) }
             .getVariants()
-            .subtract(browseObjects.map { it.id }.toSet())
+            .subtract(browseObjects.map { it.id }.distinct())
             .chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
             .flatMap { chunk ->
                 HttpRequest.retry(3) {
                     CrunchyrollCachedWrapper.getObjects(
                         countryCode.locale,
                         *chunk.toTypedArray()
-                    ).toList()
+                    )
                 }
             }
 

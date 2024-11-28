@@ -109,16 +109,16 @@ object ImageService {
         return cache
     }
 
-    private fun distributeImages(images: Collection<Image>, numberOfLists: Int): List<List<Image>> {
+    private fun distributeImages(images: Collection<Image>): List<List<Image>> {
         // Sort images by size in descending order for a more balanced distribution
         val sortedImages = images.sortedByDescending { it.size }
 
         // Initialize lists to hold the distributed images
-        val resultLists = MutableList(numberOfLists) { mutableListOf<Image>() }
+        val resultLists = MutableList(CACHE_FILE_NUMBER) { mutableListOf<Image>() }
 
         // Distribute images using round-robin approach
         sortedImages.forEachIndexed { index, image ->
-            resultLists[index % numberOfLists].add(image)
+            resultLists[index % CACHE_FILE_NUMBER].add(image)
         }
 
         return resultLists
@@ -132,7 +132,7 @@ object ImageService {
 
         change.set(false)
 
-        val parts = distributeImages(cache.values, CACHE_FILE_NUMBER)
+        val parts = distributeImages(cache.values)
 
         logger.info("Saving images cache...")
 
@@ -328,7 +328,8 @@ object ImageService {
                 UUID::class.java
             )
 
-            val uuids = (query.resultList as List<UUID>) // NOSONAR
+            val uuids = query.resultList.asSequence()
+                .filterIsInstance<UUID>()
                 .map { uuid -> uuid.toString() }
                 .toSet()
 
@@ -351,24 +352,19 @@ object ImageService {
         val animeService = Constant.injector.getInstance(AnimeService::class.java)
         val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
 
-        animeService.findAllUuidImageAndBanner().forEach {
-            val uuid = it[0] as UUID
-            val image = it[1] as String
-            val banner = it[2] as String
+        episodeMappingService.findAllAnimeUuidImageBannerAndUuidImage().groupBy {
+            Triple(it[0] as UUID, it[1] as String, it[2] as String)
+        }.forEach { (animeGroup, mappings) ->
+            animeService.addImage(animeGroup.first, animeGroup.second, bypass)
+            animeService.addBanner(animeGroup.first, animeGroup.third, bypass)
 
-            animeService.addImage(uuid, image, bypass)
-            animeService.addBanner(uuid, banner, bypass)
-        }
-
-        episodeMappingService.findAllUuidAndImage().forEach {
-            val uuid = it[0] as UUID
-            val image = it[1] as String
-
-            episodeMappingService.addImage(
-                uuid,
-                image.ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
-                bypass
-            )
+            mappings.forEach {
+                episodeMappingService.addImage(
+                    it[3] as UUID,
+                    (it[4] as String).ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+                    bypass
+                )
+            }
         }
     }
 }

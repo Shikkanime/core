@@ -7,8 +7,8 @@ import java.time.Duration
 
 class MapCache<K : Any, V>(
     private var duration: Duration? = null,
-    private val classes: List<Class<*>> = listOf(),
-    private val defaultKeys: List<K> = listOf(),
+    private val classes: List<Class<*>> = emptyList(),
+    private val fn: () -> List<K> = { emptyList() },
     private val block: (K) -> V,
 ) {
     private lateinit var cache: LoadingCache<K, V>
@@ -31,7 +31,7 @@ class MapCache<K : Any, V>(
     }
 
     private fun loadDefaultKeys() {
-        defaultKeys.forEach { this[it] }
+        fn().forEach { this[it] }
     }
 
     fun containsKey(key: K) = cache.getIfPresent(key) != null
@@ -49,7 +49,6 @@ class MapCache<K : Any, V>(
             cache.put(key, value)
     }
 
-    @Synchronized
     fun invalidate() {
         cache.invalidateAll()
         loadDefaultKeys()
@@ -59,12 +58,14 @@ class MapCache<K : Any, V>(
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun loadAll() {
-            globalCaches.forEach { it.loadDefaultKeys() }
+            globalCaches.parallelStream()
+                .forEach { it.loadDefaultKeys() }
         }
 
         @Synchronized
         fun invalidate(vararg classes: Class<*>) {
             globalCaches.filter { it.classes.any { clazz -> classes.contains(clazz) } }
+                .parallelStream()
                 .forEach { it.invalidate() }
         }
 

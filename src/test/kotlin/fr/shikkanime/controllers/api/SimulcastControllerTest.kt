@@ -1,6 +1,6 @@
 package fr.shikkanime.controllers.api
 
-import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.module
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*

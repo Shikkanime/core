@@ -1,6 +1,6 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.simulcasts
 
-import java.util.*
+import java.util.UUID
 
 data class SimulcastDto(
     val uuid: UUID?,

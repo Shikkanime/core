@@ -43,7 +43,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         status: Status? = null
     ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit, status)
 
-    fun findAllUuidAndImage() = episodeMappingRepository.findAllUuidAndImage()
+    fun findAllAnimeUuidImageBannerAndUuidImage() = episodeMappingRepository.findAllAnimeUuidImageBannerAndUuidImage()
 
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime)
 

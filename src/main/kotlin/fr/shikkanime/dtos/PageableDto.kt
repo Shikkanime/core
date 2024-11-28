@@ -4,7 +4,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.entities.Pageable
 
 data class PageableDto<T>(
-    val data: List<T>,
+    val data: Set<T>,
     val page: Int,
     val limit: Int,
     val total: Long,
@@ -12,7 +12,7 @@ data class PageableDto<T>(
     companion object {
         fun <T> empty(): PageableDto<T> {
             return PageableDto(
-                data = emptyList(),
+                data = emptySet(),
                 page = 0,
                 limit = 0,
                 total = 0,

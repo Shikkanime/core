@@ -2,6 +2,7 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.Role
+import jakarta.persistence.metamodel.SingularAttribute
 import java.util.*
 
 class MemberRepository : AbstractRepository<Member>() {
@@ -34,16 +35,15 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findByUsernameAndPassword(username: String, password: ByteArray): Member? {
+    private fun findBy(vararg pairs: Pair<SingularAttribute<Member, *>, Any>): Member? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
-            query.where(
-                cb.equal(root[Member_.username], username),
-                cb.equal(root[Member_.encryptedPassword], password)
-            )
+            query.where(*pairs.map { pair ->
+                cb.equal(root[pair.first], pair.second)
+            }.toTypedArray())
 
             createReadOnlyQuery(it, query)
                 .resultList
@@ -51,29 +51,12 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findByIdentifier(identifier: String): Member? {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            query.where(cb.equal(root[Member_.username], identifier))
+    fun findByUsernameAndPassword(username: String, password: ByteArray) = findBy(
+        Member_.username to username,
+        Member_.encryptedPassword to password
+    )
 
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
-        }
-    }
+    fun findByIdentifier(identifier: String) = findBy(Member_.username to identifier)
 
-    fun findByEmail(email: String): Member? {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            query.where(cb.equal(root[Member_.email], email))
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
-        }
-    }
+    fun findByEmail(email: String) = findBy(Member_.email to email)
 }

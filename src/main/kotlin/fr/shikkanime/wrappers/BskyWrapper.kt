@@ -126,22 +126,27 @@ object BskyWrapper {
         }
 
         if (embed != null) {
-            val document = HttpRequest().use { Jsoup.parse(it.get(embed).bodyAsText()) }
+            val (title, description, image) = Jsoup.parse(httpRequest.get(embed).bodyAsText()).run {
+                Triple(
+                    select("meta[property=og:title]").attr("content"),
+                    select("meta[property=og:description]").attr("content"),
+                    select("meta[property=og:image]").attr("content")
+                )
+            }
 
-            recordMap["embed"] = mapOf(
+            recordMap.putIfAbsent("embed", mutableMapOf(
                 "\$type" to "app.bsky.embed.external",
                 "external" to mapOf(
                     "uri" to embed,
-                    "title" to document.select("meta[property=og:title]").attr("content"),
-                    "description" to document.select("meta[property=og:description]").attr("content"),
+                    "title" to title,
+                    "description" to description,
                     "thumb" to uploadBlob(
                         accessJwt,
                         ContentType.Image.JPEG,
-                        HttpRequest().use { it.get(document.select("meta[property=og:image]").attr("content")) }
-                            .readRawBytes()
+                        httpRequest.get(image).readRawBytes()
                     )
                 )
-            )
+            ))
         }
 
         val response = httpRequest.post(
@@ -182,7 +187,7 @@ object BskyWrapper {
 
                         val emojiCount = countEmoji(tmpText.substringBeforeLast(beautifulLink))!!
                         val added =
-                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it!!.group().length } + emojiCount.size else 0
+                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it.group().length } + emojiCount.size else 0
 
                         val start = tmpText.indexOf(beautifulLink) + added
                         val end = start + beautifulLink.length
@@ -192,7 +197,7 @@ object BskyWrapper {
                     link.startsWith("#") -> {
                         val emojiCount = countEmoji(tmpText.substringBeforeLast(link))!!
                         val added =
-                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it!!.group().length } + emojiCount.size else 1
+                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it.group().length } + emojiCount.size else 1
 
                         val start = tmpText.indexOf(link) + added
                         val end = start + link.length

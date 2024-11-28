@@ -7,7 +7,6 @@ import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.normalize
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.PrimeVideoWrapper
 import java.io.File
@@ -16,7 +15,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class PrimeVideoPlatform :
-    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, Set<AbstractPlatform.Episode>>() {
+    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.PRIM
 
     override fun getConfigurationClass() = PrimeVideoConfiguration::class.java
@@ -24,43 +23,34 @@ class PrimeVideoPlatform :
     override suspend fun fetchApiContent(
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ): Set<Episode> {
+    ): List<Episode> {
         val id = key.primeVideoSimulcast.name
-        val releaseDateTimeUTC = zonedDateTime.withUTC()
-            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${key.primeVideoSimulcast.releaseTime}Z"
-        val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
-        val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode.name, key.countryCode.locale, id)
+        val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode, key.countryCode.locale, id)
 
         return episodes.map {
-            val animeName = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" }
-            val animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" }
-            val image = requireNotNull(it.getAsString("image")) { "Image is null" }
-            val computedId = requireNotNull(it.getAsString("id")) { "Id is null" }
-            val url = requireNotNull(it.getAsString("url")) { "Url is null" }
-
             Episode(
                 countryCode = key.countryCode,
                 animeId = id,
-                anime = animeName,
+                anime = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" },
                 animeImage = key.primeVideoSimulcast.image,
-                animeBanner = animeBanner,
-                animeDescription = it.getAsJsonObject("show").getAsString("description").normalize(),
-                releaseDateTime = releaseDateTime,
+                animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" },
+                animeDescription = it.getAsJsonObject("show").getAsString("description"),
+                releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.primeVideoSimulcast.releaseTime}Z"),
                 episodeType = EpisodeType.EPISODE,
                 season = it.getAsInt("season")!!,
                 number = it.getAsInt("number")!!,
                 duration = it.getAsInt("duration")?.toLong() ?: -1,
-                title = it.getAsString("title").normalize(),
-                description = it.getAsString("description").normalize(),
-                image = image,
+                title = it.getAsString("title"),
+                description = it.getAsString("description"),
+                image = requireNotNull(it.getAsString("image")) { "Image is null" },
                 platform = getPlatform(),
                 audioLocale = "ja-JP",
-                id = computedId,
-                url = url,
+                id = requireNotNull(it.getAsString("id")) { "Id is null" },
+                url = requireNotNull(it.getAsString("url")) { "Url is null" },
                 uncensored = false,
                 original = true,
             )
-        }.toSet()
+        }
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {

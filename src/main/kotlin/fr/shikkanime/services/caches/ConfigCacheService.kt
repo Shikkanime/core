@@ -10,9 +10,9 @@ class ConfigCacheService : AbstractCacheService {
     @Inject
     private lateinit var configService: ConfigService
 
-    private val cache = MapCache<String, List<Config>>(
+    private val cache = MapCache(
         classes = listOf(Config::class.java),
-        defaultKeys = listOf("all")
+        fn = { listOf("all") }
     ) {
         configService.findAll()
     }

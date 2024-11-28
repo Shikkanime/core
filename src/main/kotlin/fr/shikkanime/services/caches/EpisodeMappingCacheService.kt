@@ -16,7 +16,6 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
-import jakarta.persistence.Tuple
 import java.util.*
 
 class EpisodeMappingCacheService : AbstractCacheService {
@@ -75,10 +74,6 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         }
 
-    private val findNextEpisodeCache = MapCache<UUID, EpisodeMapping?>(classes = listOf(EpisodeMapping::class.java)) {
-        episodeMappingService.find(it)?.let { em -> episodeMappingService.findNextEpisode(em) }
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
         anime: UUID?,
@@ -102,6 +97,4 @@ class EpisodeMappingCacheService : AbstractCacheService {
         episodeType,
         number
     )]
-
-    fun findNextEpisode(uuid: UUID) = findNextEpisodeCache[uuid]
 }

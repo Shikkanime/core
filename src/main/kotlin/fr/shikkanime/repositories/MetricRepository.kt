@@ -22,9 +22,11 @@ class MetricRepository : AbstractRepository<Metric>() {
 
     fun deleteAllBefore(date: ZonedDateTime) {
         inTransaction {
-            it.createQuery("DELETE FROM Metric WHERE date < :date")
-                .setParameter("date", date)
-                .executeUpdate()
+            val cb = it.criteriaBuilder
+            val query = cb.createCriteriaDelete(getEntityClass())
+            val root = query.from(getEntityClass())
+            query.where(cb.lessThan(root[Metric_.date], date))
+            it.createQuery(query).executeUpdate()
         }
     }
 }

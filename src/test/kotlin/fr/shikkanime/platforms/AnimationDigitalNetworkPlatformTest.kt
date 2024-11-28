@@ -25,7 +25,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         super.setUp()
 
         platform.loadConfiguration()
-        platform.configuration!!.availableCountries.add(CountryCode.FR)
+        platform.configuration!!.availableCountries = mutableSetOf(CountryCode.FR)
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Pon no Michi"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "One Piece"))
         platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Urusei Yatsura"))
@@ -38,7 +38,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     @AfterEach
     override fun tearDown() {
         super.tearDown()
-        platform.configuration!!.availableCountries.clear()
+        platform.configuration!!.availableCountries = emptySet()
         platform.configuration!!.simulcasts.clear()
         platform.reset()
     }

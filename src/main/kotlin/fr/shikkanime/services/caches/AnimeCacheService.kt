@@ -17,7 +17,6 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
-import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeCacheService : AbstractCacheService {
@@ -101,25 +100,23 @@ class AnimeCacheService : AbstractCacheService {
             }
         }
 
-    private val findAllAudioLocalesAndSeasonsCache =
-        MapCache<String, Map<UUID, Pair<Set<String>, List<Pair<Int, ZonedDateTime>>>>>(
-            classes = listOf(
-                Anime::class.java,
-                EpisodeMapping::class.java,
-                EpisodeVariant::class.java
-            ),
-            defaultKeys = listOf("all")
-        ) {
-            animeService.findAllAudioLocalesAndSeasons()
-        }
+    private val findAllAudioLocalesAndSeasonsCache = MapCache(
+        classes = listOf(
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java
+        ),
+        fn = { listOf("all") }
+    ) {
+        animeService.findAllAudioLocalesAndSeasons()
+    }
 
-    private val findAllSlugCache =
-        MapCache<String, List<String>>(
-            classes = listOf(Anime::class.java),
-            defaultKeys = listOf("all")
-        ) {
-            animeService.findAllSlug()
-        }
+    private val findAllSlugCache = MapCache(
+        classes = listOf(Anime::class.java),
+        fn = { listOf("all") }
+    ) {
+        animeService.findAllSlug()
+    }
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -127,11 +124,11 @@ class AnimeCacheService : AbstractCacheService {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        searchTypes: List<LangType>? = null,
+        searchTypes: Array<LangType>? = null,
         status: Status? = null,
     ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes, status)]
 
-    fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: List<LangType>?) =
+    fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: Array<LangType>?) =
         findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes)]
 
     fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]

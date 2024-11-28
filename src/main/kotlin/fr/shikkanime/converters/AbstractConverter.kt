@@ -52,8 +52,8 @@ abstract class AbstractConverter<F, T> {
             return list?.map { convert(it, to) }
         }
 
-        inline fun <reified T> convert(set: Set<Any>?, to: Class<T>): Set<T>? {
-            return set?.map { convert(it, to) }?.toSet()
+        inline fun <reified T> convert(set: Set<Any>?, to: Class<T>): MutableSet<T>? {
+            return set?.map { convert(it, to) }?.toMutableSet()
         }
     }
 }

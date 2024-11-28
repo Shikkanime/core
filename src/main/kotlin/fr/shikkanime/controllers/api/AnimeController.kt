@@ -122,7 +122,7 @@ class AnimeController : HasPageableRoute() {
 
         return Response.ok(
             if (!name.isNullOrBlank()) {
-                animeCacheService.findAllByName(countryParam, name, page, limit, searchTypes?.toList())
+                animeCacheService.findAllByName(countryParam, name, page, limit, searchTypes)
             } else {
                 animeCacheService.findAllBy(
                     countryParam,
@@ -130,7 +130,7 @@ class AnimeController : HasPageableRoute() {
                     sortParameters,
                     page,
                     limit,
-                    searchTypes?.toList(),
+                    searchTypes,
                     statusParam
                 )
             }
@@ -191,7 +191,7 @@ class AnimeController : HasPageableRoute() {
         dateParam: String?,
     ): Response {
         val startOfWeekDay = try {
-            dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
+            dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
         } catch (_: Exception) {
             return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
         }.atStartOfWeek()

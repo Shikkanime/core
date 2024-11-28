@@ -1,7 +1,7 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get

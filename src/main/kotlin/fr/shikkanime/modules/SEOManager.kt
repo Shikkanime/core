@@ -19,7 +19,7 @@ private fun <T> List<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter
 fun setGlobalAttributes(
     ipAddress: String,
     userAgent: String,
-    modelMap: MutableMap<String, Any?>,
+    modelMap: MutableMap<Any?, Any?>,
     controller: Any,
     replacedPath: String,
     title: String?

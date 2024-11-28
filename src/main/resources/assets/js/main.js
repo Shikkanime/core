@@ -1,9 +1,11 @@
 function copyToClipboard(content) {
-    const textarea = document.createElement("textarea");
-    textarea.style.height = 0;
-    document.body.appendChild(textarea);
-    textarea.value = content;
-    textarea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textarea);
+    navigator.permissions.query({ name: "clipboard-write" }).then((result) => {
+        if (result.state === "granted" || result.state === "prompt") {
+            navigator.clipboard.writeText(content).then(function() {
+                console.log("Copied to clipboard");
+            }, function() {
+                console.error("Failed to copy to clipboard");
+            });
+        }
+    });
 }

@@ -49,7 +49,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
             .setFetchSize(limit)
             .scroll(ScrollMode.SCROLL_SENSITIVE)
 
-        val list = mutableListOf<C>()
+        val list = mutableSetOf<C>()
         var total = 0L
 
         if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {

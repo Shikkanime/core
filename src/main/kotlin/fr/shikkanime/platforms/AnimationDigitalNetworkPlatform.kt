@@ -41,7 +41,7 @@ class AnimationDigitalNetworkPlatform :
                     Array<AbstractAnimationDigitalNetworkWrapper.Video>::class.java
                 )
             } else {
-                getApiContent(countryCode, zonedDateTime) // NOSONAR
+                getApiContent(countryCode, zonedDateTime)
             }
 
             api.forEach {

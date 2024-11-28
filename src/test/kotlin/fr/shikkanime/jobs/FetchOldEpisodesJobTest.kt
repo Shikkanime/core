@@ -23,7 +23,7 @@ class FetchOldEpisodesJobTest : AbstractTest() {
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key, propertyValue = "14"))
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT.key, propertyValue = "8"))
         MapCache.invalidate(Config::class.java)
-        crunchyrollPlatform.configuration?.availableCountries?.add(CountryCode.FR)
+        crunchyrollPlatform.configuration?.availableCountries = mutableSetOf(CountryCode.FR)
         fetchOldEpisodesJob.run()
         val animes = animeService.findAll()
         assertTrue(animes.any { it.name == "CARDFIGHT!! VANGUARD overDress" })
@@ -39,7 +39,7 @@ class FetchOldEpisodesJobTest : AbstractTest() {
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key, propertyValue = "35"))
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT.key, propertyValue = "-1"))
         MapCache.invalidate(Config::class.java)
-        crunchyrollPlatform.configuration?.availableCountries?.add(CountryCode.FR)
+        crunchyrollPlatform.configuration?.availableCountries = mutableSetOf(CountryCode.FR)
         fetchOldEpisodesJob.run()
         val animes = animeService.findAll()
         animes.forEach { println(it.name) }
@@ -60,7 +60,7 @@ class FetchOldEpisodesJobTest : AbstractTest() {
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key, propertyValue = "14"))
         configService.save(Config(propertyKey = ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT.key, propertyValue = "6"))
         MapCache.invalidate(Config::class.java)
-        crunchyrollPlatform.configuration?.availableCountries?.add(CountryCode.FR)
+        crunchyrollPlatform.configuration?.availableCountries = mutableSetOf(CountryCode.FR)
         fetchOldEpisodesJob.run()
         val animes = animeService.findAll()
         animes.forEach { println(it.name) }

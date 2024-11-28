@@ -17,6 +17,7 @@ import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.Period
 import java.util.logging.Level
+import kotlin.streams.asSequence
 
 class FetchOldEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -68,7 +69,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
         val to = LocalDate.parse(config.propertyValue!!)
         val from = to.minusDays(range.toLong())
-        val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).toList().sorted().toSet()
+        val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).asSequence().sorted().toSet()
 
         val episodes = mutableListOf<Episode>()
         val start = System.currentTimeMillis()
