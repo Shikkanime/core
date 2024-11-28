@@ -135,7 +135,7 @@ class AnimeServiceTest : AbstractTest() {
 
     @Test
     fun `update with episodes and follow`() {
-        val member = memberService.save(StringUtils.generateRandomString(12))
+        val member = memberService.register(StringUtils.generateRandomString(12))
 
         val anime1 = animeService.save(
             Anime(

@@ -5,7 +5,6 @@ import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.Member
-import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
@@ -22,13 +21,9 @@ import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
-import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.io.readByteArray
-import java.io.ByteArrayInputStream
 import java.util.*
-import javax.imageio.ImageIO
 
 @Controller("/api/v1/members")
 class MemberController : HasPageableRoute() {
@@ -57,9 +52,10 @@ class MemberController : HasPageableRoute() {
 
         do {
             identifier = StringUtils.generateRandomString(12)
-        } while (memberCacheService.findByIdentifier(identifier) != null)
+        } while (memberService.findByIdentifier(identifier) != null)
 
-        memberService.save(identifier)
+        memberService.register(identifier)
+        MapCache.invalidate(Member::class.java)
         return Response.created(mapOf("identifier" to identifier))
     }
 
@@ -72,7 +68,7 @@ class MemberController : HasPageableRoute() {
         ]
     )
     private fun loginMember(@BodyParam identifier: String): Response {
-        return Response.ok(memberCacheService.findByIdentifier(identifier) ?: return runBlocking {
+        return Response.ok(memberService.login(identifier) ?: return runBlocking {
             delay(1000)
             Response.notFound()
         })
@@ -222,44 +218,13 @@ class MemberController : HasPageableRoute() {
         security = true
     )
     private fun uploadProfileImage(@JWTUser memberUuid: UUID, @BodyParam multiPartData: MultiPartData): Response {
-        var bytes: ByteArray? = null
-
-        runBlocking {
-            multiPartData.forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    bytes = part.provider().readRemaining().readByteArray()
-                }
-
-                part.dispose()
-            }
-        }
-
-        if (bytes == null) {
-            return Response.badRequest("No file found")
-        }
-
         try {
-            val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
-            val imageReaders = ImageIO.getImageReaders(imageInputStream)
-            require(imageReaders.hasNext()) { "Invalid file format" }
-            val imageReader = imageReaders.next()
-            val authorizedFormats = setOf("png", "jpeg", "jpg", "jpe")
-            require(imageReader.formatName.lowercase() in authorizedFormats) { "Invalid file format, only png and jpeg are allowed. Received ${imageReader.formatName}" }
+            runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
         } catch (e: Exception) {
             return Response.badRequest(e.message ?: "Invalid file format")
         }
 
-        ImageService.add(
-            memberUuid,
-            ImageService.Type.IMAGE,
-            bytes,
-            128,
-            128,
-            true
-        )
-
         MapCache.invalidate(Member::class.java)
-
         return Response.ok()
     }
 

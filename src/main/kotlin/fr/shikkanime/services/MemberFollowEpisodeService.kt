@@ -6,8 +6,10 @@ import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowEpisode
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.repositories.MemberFollowEpisodeRepository
+import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.Response
 import java.time.ZonedDateTime
@@ -18,13 +20,16 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
     private lateinit var memberFollowEpisodeRepository: MemberFollowEpisodeRepository
 
     @Inject
-    private lateinit var memberService: MemberService
+    private lateinit var memberCacheService: MemberCacheService
 
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
 
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberFollowEpisodeRepository
 
@@ -38,51 +43,43 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
     fun getSeenAndUnseenDuration(member: Member) = memberFollowEpisodeRepository.getSeenAndUnseenDuration(member)
 
     fun followAll(memberUuid: UUID, anime: GenericDto): Response {
-        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
             .filter { it.episodeType != EpisodeType.SUMMARY }
         val followed = memberFollowEpisodeRepository.findAllFollowedEpisodesByMemberAndEpisodes(member, elements)
         val now = ZonedDateTime.now()
 
-        val filtered = elements.mapNotNull { element ->
-            if (element.uuid in followed) return@mapNotNull null
-            MemberFollowEpisode(followDateTime = now, member = member, episode = element)
-        }
-
+        val filtered = elements.filter { it.uuid !in followed }.map { MemberFollowEpisode(followDateTime = now, member = member, episode = it) }
         memberFollowEpisodeRepository.saveAll(filtered)
-
-        member.lastUpdateDateTime = ZonedDateTime.now()
-        memberService.update(member)
+        filtered.forEach { traceActionService.createTraceAction(it, TraceAction.Action.CREATE) }
         MapCache.invalidate(MemberFollowEpisode::class.java)
 
         return Response.ok(AllFollowedEpisodeDto(data = filtered.mapNotNull { it.episode?.uuid }.toSet(), duration = filtered.sumOf { it.episode!!.duration }))
     }
 
     fun follow(memberUuid: UUID, episode: GenericDto): Response {
-        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
         if (memberFollowEpisodeRepository.existsByMemberAndEpisode(member, element)) {
             return Response.conflict()
         }
 
-        member.lastUpdateDateTime = ZonedDateTime.now()
-        memberService.update(member)
-        save(MemberFollowEpisode(member = member, episode = element))
+        val saved = save(MemberFollowEpisode(member = member, episode = element))
+        traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
         MapCache.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()
     }
 
     fun unfollow(memberUuid: UUID, episode: GenericDto): Response {
-        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
         val findByMemberAndEpisode = memberFollowEpisodeRepository.findByMemberAndEpisode(member, element)
             ?: return Response.conflict()
 
-        member.lastUpdateDateTime = ZonedDateTime.now()
-        memberService.update(member)
         memberFollowEpisodeRepository.delete(findByMemberAndEpisode)
+        traceActionService.createTraceAction(findByMemberAndEpisode, TraceAction.Action.DELETE)
         MapCache.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()
     }
