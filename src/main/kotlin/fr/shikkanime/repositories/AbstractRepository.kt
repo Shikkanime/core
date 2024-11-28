@@ -53,9 +53,8 @@ abstract class AbstractRepository<E : ShikkEntity> {
         var total = 0L
 
         if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
-            (0 until limit).forEach {
-                val get = scrollableResults.get() ?: return@forEach
-                require(get is C) { "Entity is not of type C" }
+            (0 until limit).forEach { _ ->
+                val get = scrollableResults.get() as? C ?: return@forEach
                 list.add(get)
                 if (!scrollableResults.next()) return@forEach
             }
@@ -109,7 +108,11 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     fun deleteAll() {
         inTransaction {
-            it.createQuery("DELETE FROM ${getEntityClass().simpleName}").executeUpdate()
+            val cb = it.criteriaBuilder
+            val query = cb.createCriteriaDelete(getEntityClass())
+            query.from(getEntityClass())
+
+            it.createQuery(query).executeUpdate()
         }
     }
 }

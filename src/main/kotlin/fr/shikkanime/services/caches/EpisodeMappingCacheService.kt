@@ -7,6 +7,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.SortParameter
@@ -46,7 +47,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         }
 
-    private val findAllSeo = MapCache<String, List<Tuple>>(classes = listOf(EpisodeMapping::class.java)) {
+    private val findAllSeo = MapCache<String, List<EpisodeMappingSeoDto>>(classes = listOf(EpisodeMapping::class.java)) {
         episodeMappingService.findAllSeo()
     }
 

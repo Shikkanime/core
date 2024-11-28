@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.URLDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
@@ -61,21 +60,18 @@ class SEOController {
             URLDto("${Constant.baseUrl}/catalog/${it.slug}", it.lastReleaseDateTime!!)
         }
 
-        episodeMappingCacheService.findAllSeo()?.groupBy { it[0] as String }?.forEach { (animeSlug, episodes) ->
-            val seasonMap = episodes.groupBy { it[1] as Int }
-            val firstSeasonDateTime = seasonMap.values.flatten().maxOf { it[4] as ZonedDateTime }
+        episodeMappingCacheService.findAllSeo()?.groupBy { it.animeSlug }?.forEach { (animeSlug, episodes) ->
+            val seasonMap = episodes.groupBy { it.season }
+            val firstSeasonDateTime = seasonMap.values.flatten().maxOf { it.lastReleaseDateTime }
 
             urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug", firstSeasonDateTime.formatDateTime()))
 
             seasonMap.forEach { (season, seasonEpisodes) ->
-                val lastSeasonDateTime = seasonEpisodes.maxOf { it[4] as ZonedDateTime }
+                val lastSeasonDateTime = seasonEpisodes.maxOf { it.lastReleaseDateTime }
                 urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season", lastSeasonDateTime.formatDateTime()))
 
                 seasonEpisodes.forEach {
-                    val episodeType = it[2] as EpisodeType
-                    val number = it[3] as Int
-                    val episodeDateTime = it[4] as ZonedDateTime
-                    urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season/${episodeType.slug}-$number", episodeDateTime.formatDateTime()))
+                    urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season/${it.episodeType.slug}-${it.number}", it.lastReleaseDateTime.formatDateTime()))
                 }
             }
         }

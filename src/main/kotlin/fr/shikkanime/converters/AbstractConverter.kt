@@ -17,7 +17,7 @@ abstract class AbstractConverter<F, T> {
             val converters = Constant.reflections.getSubTypesOf(AbstractConverter::class.java)
 
             converters.forEach {
-                val (from, to) = (it.genericSuperclass as ParameterizedType).actualTypeArguments.map { argument -> argument as Class<*> }
+                val (from, to) = (it.genericSuperclass as ParameterizedType).actualTypeArguments.filterIsInstance<Class<*>>()
                 this.converters[Pair(from, to)] = Constant.injector.getInstance(it)
             }
         }
@@ -39,10 +39,7 @@ abstract class AbstractConverter<F, T> {
             function.isAccessible = true
 
             return try {
-                val invoke = function.call(abstractConverter, `object`, *args)
-                    ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
-                check(invoke is T) { "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"" }
-                invoke
+                function.call(abstractConverter, `object`, *args) as? T ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")
             } catch (e: Exception) {
                 throw IllegalStateException(
                     "Can not convert \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"",

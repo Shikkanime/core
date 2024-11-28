@@ -2,7 +2,7 @@ package fr.shikkanime.converters.anime
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
@@ -21,7 +21,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     @Converter
     fun convert(from: Anime): AnimeDto {
         val (audioLocales, seasons) = animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(from)
-            ?: Pair(emptyList(), emptyList())
+            ?: Pair(emptySet(), emptyList())
 
         return AnimeDto(
             uuid = from.uuid,

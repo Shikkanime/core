@@ -1,10 +1,11 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.variants.EpisodeVariantIdentifierDto
+import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
 import java.util.*
@@ -29,19 +30,22 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         member: Member?,
         start: ZonedDateTime,
         end: ZonedDateTime,
-    ): List<Tuple> {
+    ): List<VariantReleaseDto> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(VariantReleaseDto::class.java)
             val root = query.from(getEntityClass())
 
-            query.multiselect(
+            query.select(
+                cb.construct(
+                    VariantReleaseDto::class.java,
                     root[EpisodeVariant_.mapping][EpisodeMapping_.anime],
                     root[EpisodeVariant_.mapping],
                     root[EpisodeVariant_.releaseDateTime],
                     root[EpisodeVariant_.platform],
                     root[EpisodeVariant_.audioLocale],
                 )
+            )
 
             val countryPredicate = cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode)
             val datePredicate = cb.between(root[EpisodeVariant_.releaseDateTime], start, end)
@@ -121,24 +125,27 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllTypeIdentifier(): List<Tuple> {
+    fun findAllTypeIdentifier(): List<EpisodeVariantIdentifierDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(EpisodeVariantIdentifierDto::class.java)
             val root = query.from(getEntityClass())
 
             val episodeMappingPath = root[EpisodeVariant_.mapping]
             val animePath = episodeMappingPath[EpisodeMapping_.anime]
 
-            query.multiselect(
-                animePath[Anime_.countryCode],
-                animePath[Anime_.uuid],
-                root[EpisodeVariant_.platform],
-                episodeMappingPath[EpisodeMapping_.episodeType],
-                episodeMappingPath[EpisodeMapping_.season],
-                episodeMappingPath[EpisodeMapping_.number],
-                root[EpisodeVariant_.audioLocale],
-                root[EpisodeVariant_.identifier]
+            query.select(
+                cb.construct(
+                    EpisodeVariantIdentifierDto::class.java,
+                    animePath[Anime_.countryCode],
+                    animePath[Anime_.uuid],
+                    root[EpisodeVariant_.platform],
+                    episodeMappingPath[EpisodeMapping_.season],
+                    episodeMappingPath[EpisodeMapping_.episodeType],
+                    episodeMappingPath[EpisodeMapping_.number],
+                    root[EpisodeVariant_.audioLocale],
+                    root[EpisodeVariant_.identifier]
+                )
             )
 
             createReadOnlyQuery(it, query)

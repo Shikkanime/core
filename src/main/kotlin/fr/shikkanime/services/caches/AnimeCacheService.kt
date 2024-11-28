@@ -6,7 +6,7 @@ import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
@@ -102,7 +102,7 @@ class AnimeCacheService : AbstractCacheService {
         }
 
     private val findAllAudioLocalesAndSeasonsCache =
-        MapCache<String, Map<UUID, Pair<List<String>, List<Pair<Int, ZonedDateTime>>>>>(
+        MapCache<String, Map<UUID, Pair<Set<String>, List<Pair<Int, ZonedDateTime>>>>>(
             classes = listOf(
                 Anime::class.java,
                 EpisodeMapping::class.java,

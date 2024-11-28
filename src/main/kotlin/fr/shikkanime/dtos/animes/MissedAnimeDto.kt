@@ -1,4 +1,4 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.animes
 
 data class MissedAnimeDto(
     val anime: AnimeDto,

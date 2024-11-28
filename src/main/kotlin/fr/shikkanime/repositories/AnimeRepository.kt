@@ -1,5 +1,6 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.animes.AnimeAudioLocalesSeasonsDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
@@ -51,8 +52,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
             )
 
             val orders = sort.mapNotNull { sortParameter ->
-                val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc
-
                 val field = when (sortParameter.field) {
                     "name" -> root[Anime_.name]
                     "releaseDateTime" -> root[Anime_.releaseDateTime]
@@ -60,7 +59,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                     else -> null
                 }
 
-                field?.let { order(it) }
+                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
             }
 
             query.orderBy(orders)
@@ -224,17 +223,20 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllAudioLocalesAndSeasons(): Map<UUID, Pair<List<String>, List<Pair<Int, ZonedDateTime>>>> {
+    fun findAllAudioLocalesAndSeasons(): Map<UUID, Pair<Set<String>, List<Pair<Int, ZonedDateTime>>>> {
         return database.entityManager.use { em ->
             val cb = em.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(AnimeAudioLocalesSeasonsDto::class.java)
             val root = query.from(EpisodeVariant::class.java)
 
-            query.multiselect(
-                root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
-                root[EpisodeVariant_.audioLocale],
-                root[EpisodeVariant_.mapping][EpisodeMapping_.season],
-                cb.greatest(root[EpisodeVariant_.mapping][EpisodeMapping_.lastReleaseDateTime])
+            query.select(
+                cb.construct(
+                    AnimeAudioLocalesSeasonsDto::class.java,
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                    root[EpisodeVariant_.audioLocale],
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.season],
+                    cb.greatest(root[EpisodeVariant_.mapping][EpisodeMapping_.lastReleaseDateTime])
+                )
             )
 
             query.groupBy(
@@ -247,18 +249,18 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(em, query)
                 .resultList
-                .groupBy { tuple -> tuple[0] as UUID }
+                .groupBy { it.animeUuid }
                 .mapValues { (_, results) ->
                     // Process results
                     val audioLocales = mutableSetOf<String>()
                     val seasons = mutableListOf<Pair<Int, ZonedDateTime>>()
 
-                    results.forEach { tuple ->
-                        audioLocales.add(tuple[1] as String)
-                        seasons.add(tuple[2] as Int to tuple[3] as ZonedDateTime)
+                    results.forEach {
+                        audioLocales.add(it.audioLocale)
+                        seasons.add(it.season to it.lastReleaseDateTime)
                     }
 
-                    Pair(audioLocales.toList(), seasons.distinctBy { it.first })
+                    Pair(audioLocales, seasons.distinctBy { it.first })
                 }
         }
     }

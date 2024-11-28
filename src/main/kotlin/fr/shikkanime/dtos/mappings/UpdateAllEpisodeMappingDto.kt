@@ -1,7 +1,7 @@
-package fr.shikkanime.dtos
+package fr.shikkanime.dtos.mappings
 
 import fr.shikkanime.entities.enums.EpisodeType
-import java.util.*
+import java.util.UUID
 
 data class UpdateAllEpisodeMappingDto(
     val uuids: List<UUID>,
