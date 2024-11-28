@@ -3,7 +3,7 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.UpdateAllEpisodeMappingDto
+import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto

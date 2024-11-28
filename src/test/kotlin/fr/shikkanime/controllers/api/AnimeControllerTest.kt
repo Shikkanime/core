@@ -2,6 +2,8 @@ package fr.shikkanime.controllers.api
 
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.dtos.*
+import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.MissedAnimeDto
 import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType

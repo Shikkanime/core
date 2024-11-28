@@ -2,7 +2,7 @@ package fr.shikkanime.services
 
 import fr.shikkanime.AbstractTest
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode

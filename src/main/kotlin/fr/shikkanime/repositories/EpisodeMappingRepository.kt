@@ -1,6 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -36,7 +37,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             query.where(*predicates.toTypedArray())
 
             val orders = sort.mapNotNull { sortParameter ->
-                val order = if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc
 
                 val field = when (sortParameter.field) {
                     "episodeType" -> root[EpisodeMapping_.episodeType]
@@ -48,7 +48,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                     else -> null
                 }
 
-                field?.let { order(it) }
+                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
             }
 
             query.orderBy(orders)
@@ -106,18 +106,21 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllSeo(): List<Tuple> {
+    fun findAllSeo(): List<EpisodeMappingSeoDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(EpisodeMappingSeoDto::class.java)
             val root = query.from(getEntityClass())
 
-            query.multiselect(
-                root[EpisodeMapping_.anime][Anime_.slug],
-                root[EpisodeMapping_.season],
-                root[EpisodeMapping_.episodeType],
-                root[EpisodeMapping_.number],
-                root[EpisodeMapping_.lastReleaseDateTime],
+            query.select(
+                cb.construct(
+                    EpisodeMappingSeoDto::class.java,
+                    root[EpisodeMapping_.anime][Anime_.slug],
+                    root[EpisodeMapping_.season],
+                    root[EpisodeMapping_.episodeType],
+                    root[EpisodeMapping_.number],
+                    root[EpisodeMapping_.lastReleaseDateTime],
+                )
             )
 
             query.orderBy(cb.asc(root[EpisodeMapping_.releaseDateTime]))

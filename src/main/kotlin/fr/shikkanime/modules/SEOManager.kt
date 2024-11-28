@@ -1,6 +1,6 @@
 package fr.shikkanime.modules
 
-import fr.shikkanime.dtos.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey

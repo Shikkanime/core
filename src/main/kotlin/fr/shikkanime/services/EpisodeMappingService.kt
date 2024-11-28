@@ -1,7 +1,7 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.UpdateAllEpisodeMappingDto
+import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.*

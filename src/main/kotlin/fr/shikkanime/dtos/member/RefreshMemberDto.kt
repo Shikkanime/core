@@ -1,7 +1,7 @@
 package fr.shikkanime.dtos.member
 
-import fr.shikkanime.dtos.AnimeDto
-import fr.shikkanime.dtos.MissedAnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.MissedAnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 
