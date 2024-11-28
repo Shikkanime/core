@@ -14,7 +14,6 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
@@ -29,7 +28,7 @@ class AnimeCacheService : AbstractCacheService {
     private lateinit var simulcastService: SimulcastService
 
     @Inject
-    private lateinit var memberService: MemberService
+    private lateinit var memberCacheService: MemberCacheService
 
     private val findAllByCache =
         MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(classes = listOf(Anime::class.java)) {
@@ -76,7 +75,7 @@ class AnimeCacheService : AbstractCacheService {
         ) {
             animeService.getWeeklyAnimes(
                 it.countryCode,
-                it.member?.let { uuid -> memberService.find(uuid) },
+                it.member?.let { uuid -> memberCacheService.find(uuid) },
                 it.localDate
             )
         }
@@ -93,7 +92,7 @@ class AnimeCacheService : AbstractCacheService {
             try {
                 animeService.getWeeklyAnimesV2(
                     it.countryCode,
-                    it.member?.let { uuid -> memberService.find(uuid) },
+                    it.member?.let { uuid -> memberCacheService.find(uuid) },
                     it.localDate
                 )
             } catch (e: Exception) {

@@ -25,6 +25,7 @@ class TraceAction(
     enum class Action {
         CREATE,
         UPDATE,
-        DELETE
+        DELETE,
+        LOGIN
     }
 }

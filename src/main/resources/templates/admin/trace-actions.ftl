@@ -63,6 +63,9 @@
                     <option value="EpisodeVariant">Episode variant</option>
                     <option value="Simulcast">Simulcast</option>
                     <option value="Config">Config</option>
+                    <option value="Member">Member</option>
+                    <option value="MemberFollowAnime">Member follow anime</option>
+                    <option value="MemberFollowEpisode">Member follow episode</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -72,6 +75,7 @@
                     <option value="CREATE">Create</option>
                     <option value="UPDATE">Update</option>
                     <option value="DELETE">Delete</option>
+                    <option value="LOGIN">Login</option>
                 </select>
             </div>
         </div>
@@ -82,10 +86,11 @@
                     <i x-show="traceAction.action === 'CREATE'" class="bi bi-database-add text-success"></i>
                     <i x-show="traceAction.action === 'UPDATE'" class="bi bi-database-up text-primary"></i>
                     <i x-show="traceAction.action === 'DELETE'" class="bi bi-database-x text-danger"></i>
+                    <i x-show="traceAction.action === 'LOGIN'" class="bi bi-person-check text-warning"></i>
 
                     <div class="ms-3">
                         <p class="mb-0">
-                            <a x-show="traceAction.action === 'CREATE' || traceAction.action === 'UPDATE'" x-bind:href="traceAction.entityType === 'Anime' ? '/admin/animes/' + traceAction.entityUuid :
+                            <a x-show="traceAction.action !== 'DELETE'" x-bind:href="traceAction.entityType === 'Anime' ? '/admin/animes/' + traceAction.entityUuid :
                                     traceAction.entityType === 'EpisodeMapping' ? '/admin/episodes/' + traceAction.entityUuid :
                                     `#`"
                                class="text-muted text-decoration-none"
@@ -96,6 +101,7 @@
                             <span x-show="traceAction.action === 'CREATE'" class="text-success">created</span>
                             <span x-show="traceAction.action === 'UPDATE'" class="text-primary">updated</span>
                             <span x-show="traceAction.action === 'DELETE'" class="text-danger">deleted</span>
+                            <span x-show="traceAction.action === 'LOGIN'" class="text-warning">logged in</span>
                         </p>
                         <span class="text-muted" x-text="new Date(traceAction.actionDateTime).toLocaleString()"></span>
                     </div>

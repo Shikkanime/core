@@ -3,6 +3,7 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.repositories.MemberActionRepository
 import fr.shikkanime.utils.*
@@ -30,6 +31,9 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
     @Inject
     private lateinit var emailService: EmailService
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberActionRepository
 
@@ -111,6 +115,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
             Action.VALIDATE_EMAIL -> {
                 memberAction.member!!.email = memberAction.email
                 memberService.update(memberAction.member!!)
+                traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
                 MapCache.invalidate(Member::class.java)
 
                 try {
@@ -133,6 +138,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
                 memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
                 memberService.update(memberAction.member!!)
+                traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
                 MapCache.invalidate(Member::class.java)
 
                 try {

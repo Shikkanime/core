@@ -5,10 +5,11 @@ import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowAnime
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.MemberFollowAnimeRepository
+import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.Response
-import java.time.ZonedDateTime
 import java.util.*
 
 class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollowAnimeRepository>() {
@@ -16,10 +17,13 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
     private lateinit var memberFollowAnimeRepository: MemberFollowAnimeRepository
 
     @Inject
-    private lateinit var memberService: MemberService
+    private lateinit var memberCacheService: MemberCacheService
 
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberFollowAnimeRepository
 
@@ -35,30 +39,28 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
     fun existsByMemberAndAnime(member: Member, anime: Anime) = memberFollowAnimeRepository.existsByMemberAndAnime(member, anime)
 
     fun follow(memberUuid: UUID, anime: GenericDto): Response {
-        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
         if (memberFollowAnimeRepository.existsByMemberAndAnime(member, element)) {
             return Response.conflict()
         }
 
-        member.lastUpdateDateTime = ZonedDateTime.now()
-        memberService.update(member)
-        save(MemberFollowAnime(member = member, anime = element))
+        val saved = save(MemberFollowAnime(member = member, anime = element))
+        traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
         MapCache.invalidate(MemberFollowAnime::class.java)
         return Response.ok()
     }
 
     fun unfollow(memberUuid: UUID, anime: GenericDto): Response {
-        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
         val findByMemberAndAnime = memberFollowAnimeRepository.findByMemberAndAnime(member, element)
             ?: return Response.conflict()
 
-        member.lastUpdateDateTime = ZonedDateTime.now()
-        memberService.update(member)
         memberFollowAnimeRepository.delete(findByMemberAndAnime)
+        traceActionService.createTraceAction(findByMemberAndAnime, TraceAction.Action.DELETE)
         MapCache.invalidate(MemberFollowAnime::class.java)
         return Response.ok()
     }
