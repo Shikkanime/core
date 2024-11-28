@@ -29,8 +29,8 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
             lastUpdateDateTime = from.lastUpdateDateTime.withUTCString(),
             isPrivate = from.isPrivate,
             email = from.email,
-            followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(from),
-            followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from),
+            followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(from).toSet(),
+            followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from).toSet(),
             totalDuration = seenAndUnseenDuration.first,
             totalUnseenDuration = seenAndUnseenDuration.second,
             hasProfilePicture = ImageService[from.uuid, ImageService.Type.IMAGE] != null

@@ -37,8 +37,7 @@ class NetflixPlatformTest : AbstractTest() {
 
         assertEquals(24, episodes.size)
         // Count the distinct episode identifiers
-        val identifiers = episodes.map { it.getIdentifier() }.toSet()
-        assertEquals(24, identifiers.size)
+        assertEquals(24, episodes.map { it.getIdentifier() }.distinct().size)
     }
 
     @Test
@@ -63,8 +62,7 @@ class NetflixPlatformTest : AbstractTest() {
 
         assertEquals(24, episodes.size)
         // Count the distinct episode identifiers
-        val identifiers = episodes.map { it.getIdentifier() }.toSet()
-        assertEquals(24, identifiers.size)
+        assertEquals(24, episodes.map { it.getIdentifier() }.distinct().size)
         assertTrue(episodes.sumOf { it.duration } > 0)
         assertEquals("FR-NETF-8a6184b0-JA-JP", episodes.first().getIdentifier())
     }

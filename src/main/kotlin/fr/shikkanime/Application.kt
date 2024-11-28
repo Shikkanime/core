@@ -23,9 +23,8 @@ fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
 
     logger.info("Pre-indexing anime data...")
-    val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    animeService.preIndex()
-    updateAndDeleteData(animeService)
+    Constant.injector.getInstance(AnimeService::class.java).preIndex()
+    updateAndDeleteData()
 
     logger.info("Loading images cache...")
     ImageService.loadCache()
@@ -68,7 +67,8 @@ fun main(args: Array<String>) {
     ).start(wait = true)
 }
 
-private fun updateAndDeleteData(animeService: AnimeService) {
+private fun updateAndDeleteData() {
+    val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     val seasonRegex = " Saison (\\d)| ([MDCLXVI]+$)".toRegex()
 

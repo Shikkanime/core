@@ -237,7 +237,7 @@ class SiteController {
     @Get
     private fun calendar(@QueryParam("date") date: String?): Response {
         val startOfWeekDay = try {
-            date?.let { LocalDate.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd")) } ?: LocalDate.now()
+            date?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
         } catch (_: Exception) {
             LocalDate.now()
         }.atStartOfWeek()

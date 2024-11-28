@@ -208,7 +208,8 @@ private suspend fun handleRequest(
 }
 
 private suspend fun handleMultipartResponse(call: ApplicationCall, response: Response) {
-    val map = response.data as Map<String, Any> // NOSONAR
+    require(response.data is Map<*, *>) { "Data must be a map" }
+    val map = response.data.toMap()
     call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
 }
 
@@ -220,11 +221,12 @@ suspend fun handleTemplateResponse(
 ) {
     val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
     val userAgent = call.request.userAgent() ?: "Unknown"
-
-    val map = response.data as Map<String, Any> // NOSONAR
-    val modelMap = (map["model"] as Map<String, Any?>).toMutableMap() // NOSONAR
-    setGlobalAttributes(ipAddress, userAgent, modelMap, controller, replacedPath, map["title"] as String?)
-    call.respond(response.status, FreeMarkerContent(map["template"] as String, modelMap, "", response.contentType))
+    require(response.data is Map<*, *>) { "Data must be a map" }
+    val model = response.data["model"]
+    require(model is Map<*, *>) { "Model must be a map" }
+    val mutableMap = model.toMutableMap()
+    setGlobalAttributes(ipAddress, userAgent, mutableMap, controller, replacedPath, response.data["title"] as String?)
+    call.respond(response.status, FreeMarkerContent(response.data["template"] as String, mutableMap, "", response.contentType))
 }
 
 private fun replacePathWithParameters(path: String, parameters: Map<String, List<String>>) =

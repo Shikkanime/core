@@ -67,11 +67,11 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
     private fun getFile() = File(Constant.configFolder, "discord_channels.json")
 
     private fun getChannels(file: File): MutableList<Channel> {
-        return if (file.exists()) {
-            ObjectParser.fromJson(file.readText(), Array<Channel>::class.java).toMutableList()
+        return (if (file.exists()) {
+            ObjectParser.fromJson(file.readText(), Array<Channel>::class.java)
         } else {
-            mutableListOf()
-        }
+            arrayOf()
+        }).toMutableList()
     }
 
     override fun logout() {

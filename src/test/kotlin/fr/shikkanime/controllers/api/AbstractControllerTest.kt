@@ -23,6 +23,8 @@ abstract class AbstractControllerTest : AbstractTest() {
 
         initOnePiece()
         init7thTimeLoop()
+        MapCache.invalidateAll()
+
         animeService.recalculateSimulcasts()
         MapCache.invalidateAll()
     }
@@ -33,7 +35,7 @@ abstract class AbstractControllerTest : AbstractTest() {
         client.post("/api/v1/members/register").apply {
             assertEquals(HttpStatusCode.Created, status)
             identifier = ObjectParser.fromJson(bodyAsText(), Map::class.java)["identifier"].toString()
-            val findPrivateMember = memberService.findByIdentifier(identifier)
+            val findPrivateMember = memberService.findByIdentifier(identifier!!)
             assertNotNull(findPrivateMember)
             assertTrue(findPrivateMember!!.isPrivate)
         }

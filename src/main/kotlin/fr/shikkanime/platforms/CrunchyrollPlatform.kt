@@ -18,7 +18,7 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
-class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, Array<AbstractCrunchyrollWrapper.BrowseObject>>() {
+class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<AbstractCrunchyrollWrapper.BrowseObject>>() {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
@@ -32,7 +32,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     override suspend fun fetchApiContent(
         key: CountryCode,
         zonedDateTime: ZonedDateTime
-    ): Array<AbstractCrunchyrollWrapper.BrowseObject> {
+    ): List<AbstractCrunchyrollWrapper.BrowseObject> {
         return CrunchyrollWrapper.getBrowse(
             key.locale,
             size = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
@@ -47,9 +47,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 ObjectParser.fromJson(
                     ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("data"),
                     Array<AbstractCrunchyrollWrapper.BrowseObject>::class.java
-                )
+                ).toList()
             } else {
-                getApiContent(countryCode, zonedDateTime) // NOSONAR
+                getApiContent(countryCode, zonedDateTime)
             }.toMutableList()
 
             api.forEach { addToList(list, countryCode, it) }

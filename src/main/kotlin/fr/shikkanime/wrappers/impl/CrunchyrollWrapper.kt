@@ -14,12 +14,11 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         size: Int,
         start: Int,
         simulcast: String?
-    ): Array<BrowseObject> {
+    ): List<BrowseObject> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else ""}")
         require(response.status == HttpStatusCode.OK) { "Failed to get media list (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get media list")
-        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
-   
+        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java).toList()
     }
 
     override suspend fun getSeries(
@@ -35,11 +34,11 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getSeasonsBySeriesId(
         locale: String,
         id: String
-    ): Array<Season> {
+    ): List<Season> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/series/$id/seasons?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get seasons with series id (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get seasons with series id")
-        return ObjectParser.fromJson(asJsonArray, Array<Season>::class.java)
+        return ObjectParser.fromJson(asJsonArray, Array<Season>::class.java).toList()
     }
 
     override suspend fun getSeason(
@@ -56,11 +55,11 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getEpisodesBySeasonId(
         locale: String,
         id: String
-    ): Array<Episode> {
+    ): List<Episode> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/seasons/$id/episodes?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get episodes by season id (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get episodes by season id")
-        return ObjectParser.fromJson(asJsonArray, Array<Episode>::class.java)
+        return ObjectParser.fromJson(asJsonArray, Array<Episode>::class.java).toList()
     }
 
     @JvmStatic
@@ -96,11 +95,11 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getObjects(
         locale: String,
         vararg ids: String
-    ): Array<BrowseObject> {
+    ): List<BrowseObject> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/objects/${ids.joinToString(",")}?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get objects (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get objects")
-        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java)
+        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java).toList()
     }
 
     @JvmStatic
@@ -110,7 +109,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String,
         original: Boolean?
-    ): Array<BrowseObject> {
+    ): List<BrowseObject> {
         val browseObjects = mutableListOf<BrowseObject>()
 
         val variantObjects = getSeasonsBySeriesId(locale, id)
@@ -119,10 +118,10 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
                     .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
                     .flatMap { it.getVariants(original) }
             }
-            .subtract(browseObjects.map { it.id }.toSet())
+            .subtract(browseObjects.map { it.id })
             .chunked(CRUNCHYROLL_CHUNK)
-            .flatMap { chunk -> HttpRequest.retry(3) { getObjects(locale, *chunk.toTypedArray()).toList() } }
+            .flatMap { chunk -> HttpRequest.retry(3) { getObjects(locale, *chunk.toTypedArray()) } }
 
-        return (browseObjects + variantObjects).toTypedArray()
+        return browseObjects + variantObjects
     }
 }

@@ -28,7 +28,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     override fun setUp() {
         super.setUp()
         platform.loadConfiguration()
-        platform.configuration!!.availableCountries.add(CountryCode.FR)
+        platform.configuration!!.availableCountries = setOf(CountryCode.FR)
     }
 
     @AfterEach
@@ -50,8 +50,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "Metallic Rouge" }
+        ).filterNot { it.anime != "Metallic Rouge" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(2, episodes.size)
@@ -76,8 +75,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "One Piece" }
+        ).filterNot { it.anime != "One Piece" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals("One Piece", episodes[0].anime)
@@ -98,8 +96,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "Kaiju No. 8" }
+        ).filterNot { it.anime != "Kaiju No. 8" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals("Kaiju No. 8", episodes[0].anime)
@@ -122,8 +119,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "Days with My Stepsister" && it.anime != "Mayonaka Punch" }
+        ).filterNot { it.anime != "Days with My Stepsister" && it.anime != "Mayonaka Punch" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
@@ -172,8 +168,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "Alya Sometimes Hides Her Feelings in Russian" }
+        ).filterNot { it.anime != "Alya Sometimes Hides Her Feelings in Russian" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)
@@ -250,7 +245,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                         any(String::class)
                     )
                 }
-            } returns arrayOf(expectedEpisode)
+            } returns listOf(expectedEpisode)
             val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
             assertEquals(expectedEpisode, result)
         }
@@ -310,7 +305,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                         any(String::class),
                     )
                 }
-            } returns arrayOf(nextEpisode)
+            } returns listOf(nextEpisode)
             every {
                 runBlocking {
                     CrunchyrollWrapper.getJvmStaticObjects(
@@ -318,7 +313,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                         any(String::class)
                     )
                 }
-            } returns arrayOf(expectedEpisode)
+            } returns listOf(expectedEpisode)
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertEquals(expectedEpisode, result)
@@ -375,7 +370,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                         any(String::class),
                     )
                 }
-            } returns arrayOf()
+            } returns listOf()
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertNull(result)
@@ -393,8 +388,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "BOCCHI THE ROCK!" }
+        ).filterNot { it.anime != "BOCCHI THE ROCK!" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(12, episodes.size)
@@ -412,8 +406,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
                     ?: throw Exception("File not found")
             )
-        ).toMutableList()
-        episodes.removeAll { it.anime != "Gridman Universe" }
+        ).filterNot { it.anime != "Gridman Universe" }
 
         assertEquals(true, episodes.isNotEmpty())
         assertEquals(1, episodes.size)

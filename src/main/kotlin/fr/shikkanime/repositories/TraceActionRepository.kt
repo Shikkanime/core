@@ -14,8 +14,8 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
             val root = query.from(getEntityClass())
 
             val predicates = mutableListOf(cb.conjunction())
-            entityType?.let { predicates.add(cb.equal(root[TraceAction_.entityType], it)) }
-            action?.let { predicates.add(cb.equal(root[TraceAction_.action], it)) }
+            entityType?.let { entityType -> predicates.add(cb.equal(root[TraceAction_.entityType], entityType)) }
+            action?.let { action -> predicates.add(cb.equal(root[TraceAction_.action], action)) }
             query.where(*predicates.toTypedArray())
 
             query.orderBy(cb.desc(root[TraceAction_.actionDateTime]))

@@ -8,7 +8,7 @@ import fr.shikkanime.entities.enums.LangType
 
 data class WeeklyAnimeDto(
     val anime: AnimeDto,
-    val platforms: List<PlatformDto>,
+    val platforms: Set<PlatformDto>,
     val releaseDateTime: String,
     val slug: String,
     val langType: LangType,
@@ -17,5 +17,5 @@ data class WeeklyAnimeDto(
     val minNumber: Int? = null,
     val maxNumber: Int? = null,
     val number: Int? = null,
-    val mappings: List<EpisodeMappingWithoutAnimeDto>? = null
+    val mappings: Set<EpisodeMappingWithoutAnimeDto>? = null
 )

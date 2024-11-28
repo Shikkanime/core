@@ -2,7 +2,7 @@ package fr.shikkanime.dtos.animes
 
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.dtos.SeasonDto
-import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.entities.enums.CountryCode
@@ -21,11 +21,11 @@ data class AnimeDto(
     val image: String,
     val banner: String,
     val description: String? = null,
-    val simulcasts: List<SimulcastDto>? = null,
+    val simulcasts: Set<SimulcastDto>? = null,
     var audioLocales: Set<String>? = null,
-    var langTypes: List<LangType>? = null,
-    var seasons: List<SeasonDto>? = null,
-    var episodes: List<EpisodeMappingWithoutAnimeDto>? = null,
+    var langTypes: Set<LangType>? = null,
+    var seasons: Set<SeasonDto>? = null,
+    var episodes: Set<EpisodeMappingWithoutAnimeDto>? = null,
     var status: Status? = null,
-    var platformIds: List<AnimePlatformDto>? = null,
+    var platformIds: Set<AnimePlatformDto>? = null,
 )

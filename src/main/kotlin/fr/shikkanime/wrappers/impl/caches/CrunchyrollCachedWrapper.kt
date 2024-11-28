@@ -26,7 +26,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         runBlocking { CrunchyrollWrapper.getSeason(it.first, it.second) }
     }
 
-    private val seasonsBySeriesIdCache = MapCache<Pair<String, String>, Array<Season>>(defaultCacheDuration) {
+    private val seasonsBySeriesIdCache = MapCache<Pair<String, String>, List<Season>>(defaultCacheDuration) {
         runBlocking { CrunchyrollWrapper.getSeasonsBySeriesId(it.first, it.second) }
             .apply { forEach { season -> seasonCache.setIfNotExists(it.first to season.id, season) } }
     }
@@ -40,7 +40,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
             .apply { objectCache.setIfNotExists(it.first to it.second, this.convertToBrowseObject()) }
     }
 
-    private val episodesBySeasonIdCache = MapCache<Pair<String, String>, Array<Episode>>(defaultCacheDuration) {
+    private val episodesBySeasonIdCache = MapCache<Pair<String, String>, List<Episode>>(defaultCacheDuration) {
         runBlocking { CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second) }
             .apply { forEach { episode ->
                 episodeCache.setIfNotExists(it.first to episode.id!!, episode)
@@ -53,7 +53,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
             .apply { objectCache.setIfNotExists(it.first to id, this) }
     }
     
-    private val episodesBySeriesIdCache = MapCache<Triple<String, String, Boolean?>, Array<BrowseObject>>(defaultCacheDuration) { triple ->
+    private val episodesBySeriesIdCache = MapCache<Triple<String, String, Boolean?>, List<BrowseObject>>(defaultCacheDuration) { triple ->
         runBlocking {
             val browseObjects = mutableListOf<BrowseObject>()
 
@@ -63,11 +63,11 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
                         .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
                         .flatMap { it.getVariants(triple.third) }
                 }
-                .subtract(browseObjects.map { it.id }.toSet())
+                .subtract(browseObjects.map { it.id })
                 .chunked(CRUNCHYROLL_CHUNK)
-                .flatMap { chunk -> HttpRequest.retry(3) { getObjects(triple.first, *chunk.toTypedArray()).toList() } }
+                .flatMap { chunk -> HttpRequest.retry(3) { getObjects(triple.first, *chunk.toTypedArray()) } }
 
-            (browseObjects + variantObjects).toTypedArray()
+            browseObjects + variantObjects
         }
     }
 
@@ -120,7 +120,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getObjects(
         locale: String,
         vararg ids: String
-    ): Array<BrowseObject> {
+    ): List<BrowseObject> {
         val predicate: (String) -> Boolean = { objectCache.containsKey(locale to it) }
         val alreadyCached = ids.filter(predicate)
         val notCached = ids.filterNot(predicate)
@@ -132,7 +132,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
             objects.addAll(newObjects)
         }
 
-        return objects.toTypedArray()
+        return objects
     }
 
     override suspend fun getEpisodesBySeriesId(
@@ -171,6 +171,6 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
             }
         }
 
-        return episodeIds.chunked(CRUNCHYROLL_CHUNK).flatMap { chunk -> HttpRequest.retry(3) { getObjects(countryCode.locale, *chunk.toTypedArray()).toList() } }
+        return episodeIds.chunked(CRUNCHYROLL_CHUNK).flatMap { chunk -> HttpRequest.retry(3) { getObjects(countryCode.locale, *chunk.toTypedArray()) } }
     }
 }

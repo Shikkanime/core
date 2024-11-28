@@ -56,12 +56,19 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllUuidAndImage(): List<Tuple> {
+    fun findAllAnimeUuidImageBannerAndUuidImage(): List<Tuple> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
-            query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
+
+            query.multiselect(
+                root[EpisodeMapping_.anime][Anime_.uuid],
+                root[EpisodeMapping_.anime][Anime_.image],
+                root[EpisodeMapping_.anime][Anime_.banner],
+                root[EpisodeMapping_.uuid],
+                root[EpisodeMapping_.image]
+            )
 
             createReadOnlyQuery(it, query)
                 .resultList

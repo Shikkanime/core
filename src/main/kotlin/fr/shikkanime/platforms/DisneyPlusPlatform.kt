@@ -130,7 +130,7 @@ class DisneyPlusPlatform :
         val description =
             visualsObject.getAsJsonObject("description")?.getAsString("medium")
         val releaseDateTimeUTC =
-            zonedDateTime.withUTC().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T${simulcast.releaseTime}Z"
+            zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
         if (hashCache.contains(oldId) || hashCache.contains(id)) {

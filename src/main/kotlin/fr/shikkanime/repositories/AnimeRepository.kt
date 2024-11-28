@@ -32,7 +32,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        searchTypes: List<LangType>?,
+        searchTypes: Array<LangType>?,
         status: Status? = null
     ): Pageable<Anime> {
         return database.entityManager.use { entityManager ->
@@ -72,7 +72,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         predicates: MutableList<Predicate>,
         cb: CriteriaBuilder,
         root: Root<Anime>,
-        searchTypes: List<LangType>?
+        searchTypes: Array<LangType>?
     ): MutableList<Predicate> {
         val orPredicate = mutableListOf<Predicate>()
 
@@ -106,15 +106,14 @@ class AnimeRepository : AbstractRepository<Anime>() {
         name: String,
         page: Int,
         limit: Int,
-        searchTypes: List<LangType>?
+        searchTypes: Array<LangType>?
     ): Pageable<Anime> {
         return database.entityManager.use {
-            @Suppress("UNCHECKED_CAST")
             val ids = (Search.session(it).search(getEntityClass())
                 // Select id and score
                 .select { s -> s.composite(s.id(), s.score()) }
                 .where { w -> w.bool().must(w.match().field(Anime_.NAME).matching(name)) }
-                .fetchAll().hits() as List<List<Any>>)
+                .fetchAll().hits().filterIsInstance<List<Any>>())
                 .map { array -> Pair(array[0] as UUID, array[1] as Float) }
 
             val cb = it.criteriaBuilder
@@ -133,7 +132,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 .sortedByDescending { anime -> ids.first { pair -> pair.first == anime.uuid }.second }
 
             Pageable(
-                list.drop((page - 1) * limit).take(limit),
+                list.asSequence().drop((page - 1) * limit).take(limit).toSet(),
                 page,
                 limit,
                 list.size.toLong()
@@ -146,7 +145,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         firstLetter: String,
         page: Int,
         limit: Int,
-        searchTypes: List<LangType>?
+        searchTypes: Array<LangType>?
     ): Pageable<Anime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
@@ -177,18 +176,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.orderBy(cb.asc(root[Anime_.name]))
 
             buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
-        }
-    }
-
-    fun findAllUuidImageAndBanner(): List<Tuple> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
-            query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
-
-            createReadOnlyQuery(it, query)
-                .resultList
         }
     }
 

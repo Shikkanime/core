@@ -5,7 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.dtos.SeasonDto
-import fr.shikkanime.dtos.SimulcastDto
+import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
@@ -39,15 +39,15 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
                 convert(
                     from.simulcasts.sortBySeasonAndYear(),
                     SimulcastDto::class.java
-                )?.toList()
+                )
             else
                 null,
             audioLocales = audioLocales.takeIf { it.isNotEmpty() },
-            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() },
-            seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() },
+            langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
+            seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),
             status = from.status,
             platformIds = if (Hibernate.isInitialized(from.platformIds))
-                convert(from.platformIds, AnimePlatformDto::class.java)?.toList()
+                convert(from.platformIds, AnimePlatformDto::class.java)
             else
                 null
         )

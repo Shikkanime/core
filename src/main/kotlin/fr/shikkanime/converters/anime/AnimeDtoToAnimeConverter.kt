@@ -31,7 +31,7 @@ class AnimeDtoToAnimeConverter : AbstractConverter<AnimeDto, Anime>() {
             image = from.image,
             banner = from.banner,
             description = from.description,
-            simulcasts = convert(from.simulcasts ?: emptyList(), Simulcast::class.java)!!.toMutableSet(),
+            simulcasts = convert(from.simulcasts ?: mutableSetOf(), Simulcast::class.java)!!,
             slug = from.slug,
         )
     }

@@ -37,10 +37,10 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     }
 
     companion object {
-        fun List<Simulcast>.sortBySeasonAndYear() =
+        fun List<Simulcast>.sortBySeasonAndYear(): List<Simulcast> =
             this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed()
 
-        fun Set<Simulcast>.sortBySeasonAndYear() =
-            this.toList().sortBySeasonAndYear().toSet()
+        fun Set<Simulcast>.sortBySeasonAndYear(): Set<Simulcast> =
+            this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed().toSet()
     }
 }

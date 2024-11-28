@@ -17,7 +17,7 @@ class EpisodeMappingToEpisodeMappingWithoutAnimeDtoConverter :
 
     @Converter
     fun convert(from: EpisodeMapping): EpisodeMappingWithoutAnimeDto {
-        val variants = episodeVariantCacheService.findAllByMapping(from) ?: emptyList()
+        val variants = episodeVariantCacheService.findAllByMapping(from) ?: emptySet()
 
         return EpisodeMappingWithoutAnimeDto(
             uuid = from.uuid!!,
@@ -33,12 +33,12 @@ class EpisodeMappingToEpisodeMappingWithoutAnimeDtoConverter :
             image = from.image!!,
             variants = convert(variants, EpisodeVariantWithoutMappingDto::class.java),
             platforms = convert(
-                variants.mapNotNull { it.platform }.sortedBy { it.name }.toSet(),
+                variants.asSequence().mapNotNull { it.platform }.sortedBy { it.name }.toSet(),
                 PlatformDto::class.java
-            )?.toList(),
+            ),
             langTypes = variants.map { LangType.fromAudioLocale(from.anime!!.countryCode!!, it.audioLocale!!) }
-                .distinct()
-                .sorted(),
+                .sorted()
+                .toSet(),
             status = from.status
         )
     }

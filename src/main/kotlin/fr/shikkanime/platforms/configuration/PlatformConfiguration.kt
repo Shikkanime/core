@@ -49,7 +49,7 @@ open class PlatformSimulcast(
 }
 
 abstract class PlatformConfiguration<S : PlatformSimulcast>(
-    var availableCountries: MutableSet<CountryCode> = mutableSetOf(),
+    var availableCountries: Collection<CountryCode> = emptySet(),
     var apiCheckDelayInMinutes: Long = 0,
     val simulcasts: MutableSet<S> = mutableSetOf(),
     val blacklistedSimulcasts: MutableSet<String> = mutableSetOf(),
@@ -61,7 +61,7 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
 
     open fun of(parameters: Parameters) {
         parameters["availableCountries"]?.let {
-            availableCountries = if (it.isNotBlank()) CountryCode.from(it.split(",")).toMutableSet() else mutableSetOf()
+            availableCountries = if (it.isNotBlank()) CountryCode.from(it.split(",")) else emptySet()
         }
         parameters["apiCheckDelayInMinutes"]?.let { apiCheckDelayInMinutes = it.toLong() }
         parameters["blacklistedSimulcasts"]?.let {

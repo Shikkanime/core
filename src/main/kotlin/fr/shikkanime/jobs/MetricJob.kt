@@ -25,7 +25,7 @@ class MetricJob : AbstractJob {
         val name = ObjectName.getInstance("java.lang:type=OperatingSystem")
         val list = mbs.getAttributes(name, arrayOf("ProcessCpuLoad"))
         if (list.isEmpty()) return Double.NaN
-        val value = (list.first() as Attribute).value as Double? ?: return Double.NaN
+        val value = (list.first() as? Attribute)?.value as? Double ?: return Double.NaN
         if (value < 0) return Double.NaN
         return value
     }

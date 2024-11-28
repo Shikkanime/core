@@ -1,10 +1,10 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.simulcasts.SimulcastModifiedDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Anime_
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.Simulcast_
-import jakarta.persistence.Tuple
 
 class SimulcastRepository : AbstractRepository<Simulcast>() {
     override fun getEntityClass() = Simulcast::class.java
@@ -23,17 +23,20 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
         }
     }
 
-    fun findAllModified(): List<Tuple> {
+    fun findAllModified(): List<SimulcastModifiedDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(SimulcastModifiedDto::class.java)
 
             val root = query.from(Anime::class.java)
             val simulcastJoin = root.join(Anime_.simulcasts)
 
-            query.multiselect(
-                simulcastJoin,
-                cb.greatest(root[Anime_.releaseDateTime])
+            query.select(
+                cb.construct(
+                    SimulcastModifiedDto::class.java,
+                    simulcastJoin,
+                    cb.greatest(root[Anime_.releaseDateTime])
+                )
             )
 
             query.groupBy(simulcastJoin)

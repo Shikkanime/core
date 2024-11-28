@@ -10,6 +10,7 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
+import java.util.UUID
 
 @Controller("/")
 class ShortLinkController {
@@ -24,7 +25,7 @@ class ShortLinkController {
 
     @Path("r/{episodeVariantUuid}")
     @Get
-    private fun redirectToRealLink(@PathParam("episodeVariantUuid") episodeVariantUuid: String): Response {
+    private fun redirectToRealLink(@PathParam("episodeVariantUuid") episodeVariantUuid: UUID): Response {
         return Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let { getUrl(it) } ?: "/404")
     }
 
