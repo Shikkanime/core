@@ -30,7 +30,7 @@ val h2Version = "2.3.232"
 val mockkVersion = "1.13.13"
 
 plugins {
-    val kotlinVersion = "2.0.21"
+    val kotlinVersion = "2.1.0"
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
