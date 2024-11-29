@@ -43,7 +43,7 @@ fun setGlobalAttributes(
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl
 
-    if (!botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
+    if (configCacheService.getValueAsBoolean(ConfigPropertyKey.DISABLE_BOT_DETECTION) || !botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
         modelMap["additionalHeadTags"] = configCacheService.getValueAsString(ConfigPropertyKey.ADDITIONAL_HEAD_TAGS)
     }
 
