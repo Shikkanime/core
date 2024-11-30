@@ -2,8 +2,8 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.dtos.variants.VariantReleaseDto
@@ -95,12 +95,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun getWeeklyAnimes(countryCode: CountryCode, member: Member?, startOfWeekDay: LocalDate): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
 
-        val variantReleaseDtos = episodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocale(
-            countryCode,
-            member,
-            startOfWeekDay,
-            zoneId
-        )
+        val variantReleaseDtos =
+            episodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocale(
+                countryCode,
+                member,
+                startOfWeekDay,
+                zoneId
+            )
 
         val dateFormatter = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
         val currentWeek = startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
@@ -108,13 +109,16 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return (0..6).map { dayOffset ->
             val date = startOfWeekDay.plusDays(dayOffset.toLong())
             val zonedDate = date.atStartOfDay(zoneId)
-            val variantReleasesDay = variantReleaseDtos.filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
+            val variantReleasesDay =
+                variantReleaseDtos.filter { it.releaseDateTime.withZoneSameInstant(zoneId).dayOfWeek == zonedDate.dayOfWeek }
 
             WeeklyAnimesDto(
                 date.format(dateFormatter).capitalizeWords(),
-                variantReleasesDay.asSequence()
-                    .groupBy { variantReleaseDto ->
-                    variantReleaseDto.anime to LangType.fromAudioLocale(variantReleaseDto.anime.countryCode!!, variantReleaseDto.audioLocale)
+                variantReleasesDay.groupBy { variantReleaseDto ->
+                    variantReleaseDto.anime to LangType.fromAudioLocale(
+                        variantReleaseDto.anime.countryCode!!,
+                        variantReleaseDto.audioLocale
+                    )
                 }.flatMap { (pair, values) ->
                     val (anime, langType) = pair
                     val releaseDateTime = values.maxOf(VariantReleaseDto::releaseDateTime)
@@ -126,29 +130,34 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                         .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
                         .toSet()
 
-                    mappings.asSequence()
-                        .groupBy { it.episodeType }
+                    mappings.groupBy { it.episodeType }
                         .ifEmpty { mapOf(null to mappings) }
                         .map { (episodeType, episodeMappings) ->
-                        WeeklyAnimeDto(
-                            AbstractConverter.convert(anime, AnimeDto::class.java),
-                            AbstractConverter.convert(values.map { it.platform }.toSet(), PlatformDto::class.java)!!,
-                            releaseDateTime.withUTCString(),
-                            buildString {
-                                append("/animes/${anime.slug}")
-                                episodeMappings.firstOrNull()?.let {
-                                    append("/season-${it.season}")
-                                    if (mappings.size <= 1) append("/${it.episodeType!!.slug}-${it.number}")
-                                }
-                            },
-                            langType,
-                            episodeType,
-                            episodeMappings.minOfOrNull { it.number!! },
-                            episodeMappings.maxOfOrNull { it.number!! },
-                            episodeMappings.firstOrNull()?.number,
-                            AbstractConverter.convert(episodeMappings.takeIf { it.isNotEmpty() }?.toSet(), EpisodeMappingWithoutAnimeDto::class.java)
-                        )
-                    }
+                            WeeklyAnimeDto(
+                                AbstractConverter.convert(anime, AnimeDto::class.java),
+                                AbstractConverter.convert(
+                                    values.map { it.platform }.toSet(),
+                                    PlatformDto::class.java
+                                )!!,
+                                releaseDateTime.withUTCString(),
+                                buildString {
+                                    append("/animes/${anime.slug}")
+                                    episodeMappings.firstOrNull()?.let {
+                                        append("/season-${it.season}")
+                                        if (mappings.size <= 1) append("/${it.episodeType!!.slug}-${it.number}")
+                                    }
+                                },
+                                langType,
+                                episodeType,
+                                episodeMappings.minOfOrNull { it.number!! },
+                                episodeMappings.maxOfOrNull { it.number!! },
+                                episodeMappings.firstOrNull()?.number,
+                                AbstractConverter.convert(
+                                    episodeMappings.takeIf { it.isNotEmpty() }?.toSet(),
+                                    EpisodeMappingWithoutAnimeDto::class.java
+                                )
+                            )
+                        }
                 }.sortedWith(
                     compareBy(
                         { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
@@ -169,12 +178,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val dateFormatter = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
         val currentWeek = startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
 
-        val variantReleaseDtos = episodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocale(
-            countryCode,
-            member,
-            startOfWeekDay,
-            zoneId
-        )
+        val variantReleaseDtos =
+            episodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocale(
+                countryCode,
+                member,
+                startOfWeekDay,
+                zoneId
+            )
 
         val releases = processReleases(variantReleaseDtos, zoneId, currentWeek).let { releases ->
             releases.filterNot { hasCurrentWeekRelease(it, releases, currentWeek) }
@@ -232,7 +242,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val platforms = filter.map { it.platform }.ifEmpty { hourValues.map { it.platform } }.toSet()
         val releaseDateTime = filter.minOfOrNull { it.releaseDateTime } ?: hourValues.minOf { it.releaseDateTime }
         val langTypes = filter.map {
-            LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale) }
+            LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale)
+        }
             .sorted()
             .ifEmpty {
                 hourValues.map { LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale) }
@@ -249,7 +260,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             episodeMappings.minOfOrNull { it.number!! },
             episodeMappings.maxOfOrNull { it.number!! },
             episodeMappings.firstOrNull()?.number,
-            AbstractConverter.convert(episodeMappings.takeIf { it.isNotEmpty() }, EpisodeMappingWithoutAnimeDto::class.java)
+            AbstractConverter.convert(
+                episodeMappings.takeIf { it.isNotEmpty() },
+                EpisodeMappingWithoutAnimeDto::class.java
+            )
         )
     }
 
@@ -319,25 +333,30 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     fun recalculateSimulcasts() {
+        val ignoreEpisodeTypes = setOf(EpisodeType.FILM, EpisodeType.SUMMARY)
+
         episodeMappingService.updateAllReleaseDate()
         animeRepository.updateAllReleaseDate()
 
+        val mappingsGroupped = episodeVariantService.findAll()
+            .asSequence()
+            .filter { it.mapping!!.episodeType !in ignoreEpisodeTypes && it.audioLocale != it.mapping!!.anime!!.countryCode!!.locale }
+            .mapNotNull { it.mapping }
+            .distinctBy { it.uuid }
+            .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+            .groupBy { it.anime!!.uuid!! }
+
         findAll().forEach { anime ->
-            val variants = episodeVariantCacheService.findAllSimulcastedByAnime(anime) ?: return@forEach
+            val episodeMappings = mappingsGroupped[anime.uuid] ?: return@forEach
 
             // Avoid lazy loading exception
             anime.simulcasts = mutableSetOf()
 
-            val episodeMappings = variants.mapNotNull { it.mapping }.distinctBy { it.uuid }
-                .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
-
             episodeMappings.forEach { episodeMapping ->
-                val previousReleaseDateTime = variants.filter {
-                    it.mapping!!.anime!!.uuid == anime.uuid &&
-                            it.mapping!!.releaseDateTime.isBefore(episodeMapping.releaseDateTime) &&
-                            it.mapping!!.episodeType == episodeMapping.episodeType &&
-                            it.audioLocale != anime.countryCode!!.locale
-                }.maxOfOrNull { it.mapping!!.releaseDateTime }
+                val previousReleaseDateTime = episodeMappings.filter {
+                    it.releaseDateTime < episodeMapping.releaseDateTime &&
+                            it.episodeType == episodeMapping.episodeType
+                }.maxOfOrNull { it.releaseDateTime }
 
                 val simulcast = episodeVariantService.getSimulcast(anime, episodeMapping, previousReleaseDateTime)
                 addSimulcastToAnime(anime, simulcast)
