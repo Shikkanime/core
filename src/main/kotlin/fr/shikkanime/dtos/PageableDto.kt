@@ -27,5 +27,14 @@ data class PageableDto<T>(
                 total = pageable.total,
             )
         }
+
+        fun <T : Any, R> fromPageable(pageable: Pageable<T>, fn: (T) -> R): PageableDto<R> {
+            return PageableDto(
+                data = pageable.data.map(fn).toSet(),
+                page = pageable.page,
+                limit = pageable.limit,
+                total = pageable.total,
+            )
+        }
     }
 }

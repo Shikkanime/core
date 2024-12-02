@@ -25,7 +25,7 @@ class Member(
     var email: String? = null,
     @Column(nullable = false, name = "encrypted_password")
     val encryptedPassword: ByteArray? = null,
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
         name = "member_roles",
         joinColumns = [JoinColumn(name = "member_uuid")]

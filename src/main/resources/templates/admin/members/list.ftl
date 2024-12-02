@@ -6,31 +6,25 @@
         pageable: {},
         page: 1,
         maxPage: 1,
-        search: '',
-        invalid: false,
         pages: [],
         async init() {
-            await this.fetchAnimes();
+            await this.fetchMembers();
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
-        async fetchAnimes() {
+        async fetchMembers() {
             if (this.loading) {
                 return;
             }
 
             this.loading = true;
-            this.pageable = await getAnimes(this.search, this.page, this.invalid);
+            this.pageable = await getMembers(this.page);
             this.loading = false;
+
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
         },
         async setPage(newPage) {
             this.page = newPage;
-            await this.fetchAnimes();
-            this.pages = this.generatePageNumbers(this.page, this.maxPage);
-        },
-        async applyFilters() {
-            this.page = 1;
-            await this.fetchAnimes();
+            await this.fetchMembers();
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         generatePageNumbers(currentPage, maxPage) {
@@ -61,39 +55,35 @@
             return range;
         }
     }" x-init="init">
-        <div class="row g-3 align-items-center mb-3">
-            <div class="col-auto">
-                <label class="form-label" for="nameInput">Name</label>
-                <input type="text" class="form-control" id="nameInput"
-                       x-model="search" @input="applyFilters">
-            </div>
-            <div class="col-auto">
-                <input class="form-check-input" type="checkbox" id="invalidInput"
-                       x-model="invalid" @change="applyFilters">
-                <label class="form-check-label" for="invalidInput">Only invalid</label>
-            </div>
-        </div>
-
         <table class="table table-striped table-bordered">
             <thead>
             <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Description</th>
+                <th scope="col">Email</th>
+                <th scope="col">Created at</th>
+                <th scope="col">Last updated at</th>
+                <th scope="col">Last login at</th>
+                <th scope="col">Anime followed</th>
+                <th scope="col">Episode followed</th>
                 <th scope="col">Actions</th>
             </tr>
             </thead>
             <tbody class="table-group-divider">
-            <template x-for="anime in pageable.data">
+            <template x-for="member in pageable.data">
                 <tr>
-                    <th scope="row">
-                        <span class="me-1 badge"
-                              :class="anime.status === 'INVALID' ? 'bg-danger' : 'bg-success'"
-                              x-text="anime.status === 'INVALID' ? 'Invalid' : 'Valid'"></span>
-                        <span x-text="anime.shortName"></span>
-                    </th>
-                    <td x-text="anime.description"></td>
                     <td>
-                        <a :href="'/admin/animes/' + anime.uuid" class="btn btn-warning">
+                        <img x-show="member.hasProfilePicture" x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE'" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
+                        <span class="me-1 badge"
+                              :class="(new Date(member.creationDateTime).toLocaleString() !== new Date(member.lastUpdateDateTime).toLocaleString() || member.lastLoginDateTime) ? 'bg-success' : 'bg-danger'"
+                              x-text="(new Date(member.creationDateTime).toLocaleString() !== new Date(member.lastUpdateDateTime).toLocaleString() || member.lastLoginDateTime) ? 'Active' : 'Inactive'"></span>
+                        <span x-text="member.email || 'N/A'"></span>
+                    </td>
+                    <td x-text="new Date(member.creationDateTime).toLocaleString()"></td>
+                    <td x-text="new Date(member.lastUpdateDateTime).toLocaleString()"></td>
+                    <td x-text="member.lastLoginDateTime ? new Date(member.lastLoginDateTime).toLocaleString() : 'N/A'"></td>
+                    <td x-text="member.followedAnimesCount"></td>
+                    <td x-text="member.followedEpisodesCount"></td>
+                    <td>
+                        <a :href="'/admin/members/' + member.uuid" class="btn btn-warning">
                             <i class="bi bi-pencil-square"></i>
                             Edit
                         </a>
@@ -123,30 +113,18 @@
     </div>
 
     <script>
-        async function getAnimes(name, page, invalid) {
+        async function getMembers(page) {
             let params = new URLSearchParams({
-                sort: 'releaseDateTime',
-                desc: 'releaseDateTime',
                 page: page || 1,
-                limit: 7
+                limit: 14
             });
 
-            if (invalid) {
-                params.append('status', 'INVALID');
-            }
-
-            if (name) {
-                params = new URLSearchParams({
-                    name: name,
-                });
-            }
-
             try {
-                const response = await axios.get(`/api/v1/animes?` + params.toString());
+                const response = await axios.get(`/api/v1/members?` + params.toString());
                 return response.data;
             } catch (error) {
-                console.error('Error fetching animes:', error);
-                return {data: [], total: 0, limit: 7};
+                console.error('Error fetching members:', error);
+                return {data: [], total: 0, limit: 14};
             }
         }
     </script>

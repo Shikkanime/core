@@ -7,7 +7,14 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(name = "member_follow_episode")
+@Table(
+    name = "member_follow_episode",
+    indexes = [
+        Index(name = "member_follow_episode_member_index", columnList = "member_uuid"),
+        Index(name = "member_follow_episode_episode_index", columnList = "episode_uuid"),
+        Index(name = "member_follow_episode_member_episode_index", columnList = "member_uuid, episode_uuid", unique = true)
+    ]
+)
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class MemberFollowEpisode(

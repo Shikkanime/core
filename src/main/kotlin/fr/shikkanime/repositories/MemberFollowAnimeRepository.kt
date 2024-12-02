@@ -31,7 +31,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
-            query.select(root[MemberFollowAnime_.anime][Anime_.UUID])
+            query.select(root[MemberFollowAnime_.anime][Anime_.uuid])
 
             query.where(
                 cb.equal(root[MemberFollowAnime_.member], member)

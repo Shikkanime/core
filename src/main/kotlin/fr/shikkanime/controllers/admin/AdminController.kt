@@ -162,6 +162,20 @@ class AdminController {
         return Response.template(Link.TRACE_ACTIONS)
     }
 
+    @Path("/members")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getMembers(): Response {
+        return Response.template(Link.MEMBERS)
+    }
+
+    @Path("/members/{uuid}")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getMemberView(): Response {
+        return Response.template("admin/members/edit.ftl", "Edit member")
+    }
+
     @Path("/threads")
     @Get
     @AdminSessionAuthenticated

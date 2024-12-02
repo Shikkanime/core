@@ -7,10 +7,10 @@ import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Member
+import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MemberFollowAnimeService
-import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.atEndOfTheDay
 import fr.shikkanime.utils.atEndOfWeek
@@ -26,9 +26,6 @@ class EpisodeVariantCacheService : AbstractCacheService {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var memberService: MemberService
 
     @Inject
     private lateinit var memberFollowAnimeService: MemberFollowAnimeService
@@ -51,19 +48,36 @@ class EpisodeVariantCacheService : AbstractCacheService {
     }
 
     private val findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleCache =
-        MapCache<Pair<CountryCode, Member?>, List<VariantReleaseDto>>(
+        MapCache<CountryCode, List<VariantReleaseDto>>(
             classes = listOf(EpisodeVariant::class.java),
-            fn = {
-                memberService.findAll()
-                    .filter(Member::isPrivate)
-                    .flatMap { member -> CountryCode.entries.map { countryCode -> countryCode to member } }
-            }
-        ) { pair ->
-            val followedAnimes =
-                pair.second?.let { member -> memberFollowAnimeService.findAllFollowedAnimesUUID(member) } ?: emptySet()
+            fn = { CountryCode.entries }
+        ) {
+            (findAllCache[DEFAULT_ALL_KEY]?.values ?: emptyList()).asSequence()
+                .filter { variant -> variant.mapping!!.anime!!.countryCode == it }
+                .sortedWith(
+                    compareBy(
+                        { it.releaseDateTime },
+                        { it.mapping!!.season },
+                        { it.mapping!!.episodeType },
+                        { it.mapping!!.number })
+                )
+                .map { variant ->
+                    VariantReleaseDto(
+                        anime = variant.mapping!!.anime!!,
+                        episodeMapping = variant.mapping!!,
+                        releaseDateTime = variant.releaseDateTime,
+                        platform = variant.platform!!,
+                        audioLocale = variant.audioLocale!!,
+                    )
+                }.toList()
+        }
+
+    private val findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleWithMemberCache =
+        MapCache<Member, List<VariantReleaseDto>>(classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java)) {
+            val followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(it)
 
             (findAllCache[DEFAULT_ALL_KEY]?.values ?: emptyList()).asSequence()
-                .filter { variant -> variant.mapping!!.anime!!.countryCode == pair.first && (pair.second == null || variant.mapping!!.anime!!.uuid!! in followedAnimes) }
+                .filter { variant -> variant.mapping!!.anime!!.uuid!! in followedAnimes }
                 .sortedWith(
                     compareBy(
                         { it.releaseDateTime },
@@ -98,13 +112,17 @@ class EpisodeVariantCacheService : AbstractCacheService {
         val startOfPreviousWeek = startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId)
         val endOfWeek = startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId)
 
-        return findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleCache[countryCode to member]
-            ?.filter { variantReleaseDto ->
-                variantReleaseDto.releaseDateTime.isBetween(
-                    startOfPreviousWeek,
-                    endOfWeek
-                )
-            }
-            ?: emptyList()
+        val values = if (member != null) {
+            findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleWithMemberCache[member]
+        } else {
+            findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleCache[countryCode]
+        }
+
+        return values?.filter { variantReleaseDto ->
+            variantReleaseDto.releaseDateTime.isBetween(
+                startOfPreviousWeek,
+                endOfWeek
+            )
+        } ?: emptyList()
     }
 }
