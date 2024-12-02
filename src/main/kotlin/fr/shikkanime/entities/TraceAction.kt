@@ -7,7 +7,14 @@ import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
-@Table(name = "trace_action")
+@Table(
+    name = "trace_action",
+    indexes = [
+        Index(name = "trace_action_entity_type_index", columnList = "entity_type"),
+        Index(name = "trace_action_entity_uuid_index", columnList = "entity_uuid"),
+        Index(name = "trace_action_action_index", columnList = "action")
+    ]
+)
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class TraceAction(

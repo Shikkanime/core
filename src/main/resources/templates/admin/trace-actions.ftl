@@ -2,6 +2,7 @@
 
 <@navigation.display>
     <div x-data="{
+        loading: false,
         filter: {},
         pageable: {},
         page: 1,
@@ -12,7 +13,13 @@
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         async fetchTraceActions() {
+            if (this.loading) {
+                return;
+            }
+
+            this.loading = true;
             this.pageable = await getTraceActions(this.filter, this.page);
+            this.loading = false;
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
         },
         async setPage(newPage) {

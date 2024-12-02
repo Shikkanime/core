@@ -2,6 +2,7 @@
 
 <@navigation.display>
     <div x-data="{
+        loading: false,
         pageable: {},
         page: 1,
         maxPage: 1,
@@ -19,7 +20,13 @@
             this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         async fetchEpisodes() {
+            if (this.loading) {
+                return;
+            }
+
+            this.loading = true;
             this.pageable = await getEpisodes(this.filter, this.page);
+            this.loading = false;
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
         },
         applyFilterParameters() {

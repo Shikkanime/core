@@ -17,6 +17,7 @@ import io.ktor.http.content.forEachPart
 import io.ktor.utils.io.readRemaining
 import kotlinx.io.readByteArray
 import java.io.ByteArrayInputStream
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
@@ -39,6 +40,8 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     fun findAllByAnimeUUID(animeUuid: UUID) = memberRepository.findAllByAnimeUUID(animeUuid)
 
+    fun findAllWithLastLogin(page: Int, limit: Int) = memberRepository.findAllWithLastLogin(page, limit)
+
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
@@ -46,6 +49,12 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         memberRepository.findByIdentifier(EncryptionManager.toSHA512(identifier))
 
     fun findByEmail(email: String) = memberRepository.findByEmail(email)
+
+    fun findMemberLoginActivities(memberUUID: UUID, after: LocalDate) = memberRepository.findMemberLoginActivities(memberUUID, after)
+
+    fun findMemberFollowAnimeActivities(memberUUID: UUID, after: LocalDate) = memberRepository.findMemberFollowAnimeActivities(memberUUID, after)
+
+    fun findMemberFollowEpisodeActivities(memberUUID: UUID, after: LocalDate) = memberRepository.findMemberFollowEpisodeActivities(memberUUID, after)
 
     fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRoles(listOf(Role.ADMIN))

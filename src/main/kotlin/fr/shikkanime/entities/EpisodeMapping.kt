@@ -21,6 +21,10 @@ import java.util.*
             name = "idx_episode_mapping_anime_uuid",
             columnList = "anime_uuid"
         ),
+        Index(
+            name = "idx_episode_mapping_sort_order",
+            columnList = "last_release_date_time DESC, season DESC, episode_type DESC, number DESC"
+        ),
     ]
 )
 @Cacheable
