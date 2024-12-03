@@ -69,16 +69,16 @@
             </thead>
             <tbody class="table-group-divider">
             <template x-for="member in pageable.data">
-                <tr>
+                <tr x-data="{
+                    isActive: (member.lastUpdateDateTime && new Date(member.creationDateTime).toLocaleDateString() !== new Date(member.lastUpdateDateTime).toLocaleDateString()) || member.lastLoginDateTime
+                }">
                     <td>
                         <img x-show="member.hasProfilePicture" x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE'" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
-                        <span class="me-1 badge"
-                              :class="(new Date(member.creationDateTime).toLocaleString() !== new Date(member.lastUpdateDateTime).toLocaleString() || member.lastLoginDateTime) ? 'bg-success' : 'bg-danger'"
-                              x-text="(new Date(member.creationDateTime).toLocaleString() !== new Date(member.lastUpdateDateTime).toLocaleString() || member.lastLoginDateTime) ? 'Active' : 'Inactive'"></span>
+                        <span class="me-1 badge" :class="isActive ? 'bg-success' : 'bg-danger'" x-text="isActive ? 'Active' : 'Inactive'"></span>
                         <span x-text="member.email || 'N/A'"></span>
                     </td>
                     <td x-text="new Date(member.creationDateTime).toLocaleString()"></td>
-                    <td x-text="new Date(member.lastUpdateDateTime).toLocaleString()"></td>
+                    <td x-text="member.lastUpdateDateTime ? new Date(member.lastUpdateDateTime).toLocaleString() : 'N/A'"></td>
                     <td x-text="member.lastLoginDateTime ? new Date(member.lastLoginDateTime).toLocaleString() : 'N/A'"></td>
                     <td x-text="member.followedAnimesCount"></td>
                     <td x-text="member.followedEpisodesCount"></td>

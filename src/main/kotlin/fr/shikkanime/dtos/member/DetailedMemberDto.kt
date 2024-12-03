@@ -6,7 +6,7 @@ data class DetailedMemberDto(
     val uuid: UUID,
     val email: String?,
     val creationDateTime: String,
-    val lastUpdateDateTime: String,
+    val lastUpdateDateTime: String?,
     val lastLoginDateTime: String?,
     val followedAnimesCount: Long,
     val followedEpisodesCount: Long,

@@ -97,7 +97,7 @@ class MemberRepository : AbstractRepository<Member>() {
                     tuple[0, UUID::class.java],
                     tuple[1, String::class.java],
                     tuple[2, ZonedDateTime::class.java].withUTCString(),
-                    tuple[3, ZonedDateTime::class.java].withUTCString(),
+                    tuple[3, ZonedDateTime::class.java]?.withUTCString(),
                     tuple[4, ZonedDateTime::class.java]?.withUTCString(),
                     tuple[5, Long::class.java],
                     tuple[6, Long::class.java]
