@@ -21,7 +21,8 @@ private const val BROWSER_TIMEOUT = 15_000L
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
 class HttpRequest(
-    val countryCode: CountryCode? = null
+    val countryCode: CountryCode? = null,
+    private val userAgent: String? = null
 ) : AutoCloseable {
     private var isBrowserInitialized = false
     private var playwright: Playwright? = null
@@ -89,8 +90,8 @@ class HttpRequest(
                     .setPermissions(listOf("geolocation"))
                     .setLocale(countryCode.locale)
                     .setTimezoneId(countryCode.timezone)
-            ) else
-            browser?.newContext()
+                    .apply { this@HttpRequest.userAgent?.let { setUserAgent(it) } }
+            ) else browser?.newContext()
 
         page = context?.newPage()
         page?.setDefaultTimeout(BROWSER_TIMEOUT.toDouble())
