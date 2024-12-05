@@ -37,7 +37,11 @@ class DisneyPlusPlatform :
     override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
 
     private val identifiers =
-        MapCache<CountryCode, String>(Duration.ofHours(3).plusMinutes(30), listOf(Config::class.java)) {
+        MapCache<CountryCode, String>(
+            "DisneyPlusPlatform.identifiers",
+            duration = Duration.ofHours(3).plusMinutes(30),
+            classes = listOf(Config::class.java)
+        ) {
             return@MapCache runBlocking {
                 DisneyPlusWrapper.getAccessToken(
                     configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION),

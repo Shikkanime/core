@@ -48,6 +48,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 banner = "test.jpg",
             )
         )
+
         val episodeMapping = episodeMappingService.save(
             EpisodeMapping(
                 anime = anime,
@@ -60,6 +61,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 image = "test.jpg"
             )
         )
+
         episodeVariantService.save(
             EpisodeVariant(
                 mapping = episodeMapping,
@@ -70,6 +72,9 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 url = "https://www.crunchyroll.com/fr/watch/GZ7UV8KWZ/rent-a-girlfriend"
             )
         )
+
+        MapCache.invalidateAll()
+
         updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
@@ -126,6 +131,9 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 url = "https://animationdigitalnetwork.fr/video/the-eminence-in-shadow/20568-episode-1-un-camarade-detestable"
             )
         )
+
+        MapCache.invalidateAll()
+
         updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
@@ -174,6 +182,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 url = "https://animationdigitalnetwork.fr/video/pon-no-michi/24026-episode-5-une-arrivee-inattendue"
             )
         )
+
+        MapCache.invalidateAll()
 
         val now = ZonedDateTime.now()
         updateEpisodeMappingJob.run()
@@ -236,6 +246,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 url = "https://www.crunchyroll.com/fr/watch/G50UZQEW0/prepared-for-death"
             )
         )
+
+        MapCache.invalidateAll()
 
         updateEpisodeMappingJob.run()
 
@@ -310,6 +322,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         )
 
+        MapCache.invalidateAll()
+
         updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
@@ -364,6 +378,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         )
 
+        MapCache.invalidateAll()
+
         updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
@@ -415,6 +431,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 url = "https://www.crunchyroll.com/fr/watch/GK9U383WX/pound-stretch-subtract-and-add"
             )
         )
+
+        MapCache.invalidateAll()
 
         updateEpisodeMappingJob.run()
 
@@ -468,6 +486,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         )
 
+        MapCache.invalidateAll()
+
         updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
@@ -519,6 +539,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 url = "https://animationdigitalnetwork.fr/video/one-piece-saga-8-ile-des-hommes-poissons/13530-episode-566-conclusion-l-affrontement-final-contre-hody"
             )
         )
+
+        MapCache.invalidateAll()
 
         updateEpisodeMappingJob.run()
 

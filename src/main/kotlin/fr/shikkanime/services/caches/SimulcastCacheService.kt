@@ -9,29 +9,22 @@ import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 
 class SimulcastCacheService : AbstractCacheService {
+    companion object {
+        private const val DEFAULT_ALL_KEY = "all"
+    }
+
     @Inject
     private lateinit var simulcastService: SimulcastService
 
     private val cache = MapCache(
+        "SimulcastCacheService.cache",
         classes = listOf(Simulcast::class.java, Anime::class.java),
-        fn = { listOf("all") }
+        fn = { listOf(DEFAULT_ALL_KEY) }
     ) {
-        AbstractConverter.convert(simulcastService.findAll(), SimulcastDto::class.java)!!
+        simulcastService.findAllModified()
     }
 
-    private val modifiedCache = MapCache<String, List<SimulcastDto>>(classes = listOf(Simulcast::class.java, Anime::class.java)) {
-        AbstractConverter.convert(simulcastService.findAllModified(), SimulcastDto::class.java)!!
-    }
-
-    private val seasonYearCache = MapCache<Pair<String, Int>, Simulcast?>(classes = listOf(Simulcast::class.java)) {
-        simulcastService.findBySeasonAndYear(it.first, it.second)
-    }
-
-    fun findAll() = cache["all"]
-
-    fun findAllModified() = modifiedCache["all"]
-
-    fun findBySeasonAndYear(season: String, year: Int) = seasonYearCache[season to year]
+    fun findAll() = AbstractConverter.convert(cache[DEFAULT_ALL_KEY], SimulcastDto::class.java)
 
     val currentSimulcast: SimulcastDto?
         get() = findAll()?.firstOrNull()

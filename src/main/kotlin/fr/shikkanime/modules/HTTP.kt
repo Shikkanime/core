@@ -116,7 +116,7 @@ fun Application.configureHTTP() {
 }
 
 fun isSitePath(path: String): Boolean {
-    return !path.startsWith("/api") && !path.startsWith("/admin") && !path.startsWith("/assets")
+    return !path.startsWith("/api") && !path.startsWith("/admin") && !path.startsWith("/assets") && !path.startsWith("/feed") && !path.startsWith("/sitemap.xml")
 }
 
 private fun isSitePathWithAssetsOrError(path: String, errorCode: String): Boolean {

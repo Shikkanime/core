@@ -4,11 +4,14 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import java.time.Duration
+import kotlin.time.measureTimedValue
 
 class MapCache<K : Any, V>(
+    private val name: String,
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = emptyList(),
     private val fn: () -> List<K> = { emptyList() },
+    private val requiredCaches: () -> List<MapCache<*, *>> = { emptyList() },
     private val block: (K) -> V,
 ) {
     private lateinit var cache: LoadingCache<K, V>
@@ -30,8 +33,10 @@ class MapCache<K : Any, V>(
         })
     }
 
-    private fun loadDefaultKeys() {
-        fn().forEach { this[it] }
+    private fun loadDefaultKeys(): Boolean {
+        val fn = fn()
+        fn.forEach { this[it] }
+        return fn.isNotEmpty()
     }
 
     fun containsKey(key: K) = cache.getIfPresent(key) != null
@@ -49,24 +54,44 @@ class MapCache<K : Any, V>(
             cache.put(key, value)
     }
 
-    fun invalidate() {
+    fun invalidate(): Boolean {
         cache.invalidateAll()
-        loadDefaultKeys()
+        return loadDefaultKeys()
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(javaClass)
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun loadAll() {
-            globalCaches.parallelStream()
-                .forEach { it.loadDefaultKeys() }
+            val loadedCaches = mutableSetOf<MapCache<*, *>>()
+
+            globalCaches
+                .sortedBy { it.requiredCaches().size }
+                .flatMap { it.requiredCaches() + it }
+                .filter { loadedCaches.add(it) }
+                .forEach {
+                    val take = measureTimedValue { it.loadDefaultKeys() }
+
+                    if (take.value)
+                        logger.info("Cache ${it.name} loaded in ${take.duration.inWholeMilliseconds} ms")
+                }
         }
 
         @Synchronized
         fun invalidate(vararg classes: Class<*>) {
+            val loadedCaches = mutableSetOf<MapCache<*, *>>()
+
             globalCaches.filter { it.classes.any { clazz -> classes.contains(clazz) } }
-                .parallelStream()
-                .forEach { it.invalidate() }
+                .sortedBy { it.requiredCaches().size }
+                .flatMap { it.requiredCaches() + it }
+                .filter { loadedCaches.add(it) }
+                .forEach {
+                    val take = measureTimedValue { it.invalidate() }
+
+                    if (take.value)
+                        logger.info("Cache ${it.name} invalidated in ${take.duration.inWholeMilliseconds} ms")
+                }
         }
 
         // For test only

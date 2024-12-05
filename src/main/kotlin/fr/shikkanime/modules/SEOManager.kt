@@ -51,16 +51,16 @@ fun setGlobalAttributes(
 
     if (modelMap.containsKey("anime") && modelMap["anime"] is AnimeDto) {
         val anime = modelMap["anime"] as AnimeDto
-        randomAnimeSlug = animeCacheService.findAllSlug()?.randomIfNotEmpty { it != anime.slug }
+        randomAnimeSlug = animeCacheService.findAll().randomIfNotEmpty { it.slug != anime.slug }?.slug
     }
 
     if (modelMap.containsKey("episodeMapping") && modelMap["episodeMapping"] is EpisodeMappingDto) {
         val episodeMapping = modelMap["episodeMapping"] as EpisodeMappingDto
-        randomAnimeSlug = animeCacheService.findAllSlug()?.randomIfNotEmpty { it != episodeMapping.anime.slug }
+        randomAnimeSlug = animeCacheService.findAll().randomIfNotEmpty { it.slug != episodeMapping.anime.slug }?.slug
     }
 
     if (randomAnimeSlug == null) {
-        randomAnimeSlug = animeCacheService.findAllSlug()?.randomIfNotEmpty()
+        randomAnimeSlug = animeCacheService.findAll().randomIfNotEmpty()?.slug
     }
 
     modelMap["randomAnimeSlug"] = randomAnimeSlug

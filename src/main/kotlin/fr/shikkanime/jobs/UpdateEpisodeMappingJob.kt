@@ -13,6 +13,7 @@ import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
@@ -35,6 +36,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var languageCacheService: LanguageCacheService
@@ -75,7 +79,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
-        val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
+        val identifiers = episodeVariantCacheService.findAllIdentifiers().toMutableSet()
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -161,7 +165,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
         logger.info("Episodes updated")
 
         if (needRefreshCache.get()) {
-            MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
+            MapCache.invalidate(
+                Anime::class.java,
+                EpisodeMapping::class.java,
+                EpisodeVariant::class.java,
+                Simulcast::class.java
+            )
         }
 
         if (allNewEpisodes.isNotEmpty()) {
@@ -174,7 +183,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             }
 
             emailService.sendAdminEmail(
-                "UpdateEpisodeMappingJob - ${allNewEpisodes.size} new episodes",
+                "UpdateEpisodeMappingJob - ${dtos.size} new episodes",
                 dtos.joinToString("<br>") { "- ${it.anime.shortName} | Saison ${it.season} • ${StringUtils.getEpisodeTypeLabel(it.episodeType)} ${it.number}" }
             )
         }

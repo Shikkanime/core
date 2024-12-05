@@ -11,6 +11,7 @@ import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
@@ -33,6 +34,9 @@ class FetchOldEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var configService: ConfigService
@@ -62,7 +66,7 @@ class FetchOldEpisodesJob : AbstractJob {
             return
         }
 
-        val config = configService.findByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key) ?: run {
+        val config = configCacheService.findByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key) ?: run {
             logger.warning("Config ${ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key} not found")
             return
         }
@@ -111,7 +115,7 @@ class FetchOldEpisodesJob : AbstractJob {
         log(emailLogs, Level.INFO, "Found ${episodes.size} episodes, saving...")
         var realSaved = 0
         val realSavedAnimes = mutableSetOf<String>()
-        val identifiers = episodeVariantService.findAllIdentifiers()
+        val identifiers = episodeVariantCacheService.findAllIdentifiers()
 
         episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
             if (identifiers.none { it == episode.getIdentifier() }) {

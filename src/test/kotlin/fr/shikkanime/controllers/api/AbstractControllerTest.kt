@@ -6,6 +6,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
@@ -19,12 +20,10 @@ import java.time.ZonedDateTime
 abstract class AbstractControllerTest : AbstractTest() {
     @BeforeEach
     override fun setUp() {
-        super.setUp()
+        Constant.injector.injectMembers(this)
 
         initOnePiece()
         init7thTimeLoop()
-        MapCache.invalidateAll()
-
         animeService.recalculateSimulcasts()
         MapCache.invalidateAll()
     }
@@ -35,7 +34,7 @@ abstract class AbstractControllerTest : AbstractTest() {
         client.post("/api/v1/members/register").apply {
             assertEquals(HttpStatusCode.Created, status)
             identifier = ObjectParser.fromJson(bodyAsText(), Map::class.java)["identifier"].toString()
-            val findPrivateMember = memberService.findByIdentifier(identifier!!)
+            val findPrivateMember = memberService.findByIdentifier(identifier)
             assertNotNull(findPrivateMember)
             assertTrue(findPrivateMember!!.isPrivate)
         }

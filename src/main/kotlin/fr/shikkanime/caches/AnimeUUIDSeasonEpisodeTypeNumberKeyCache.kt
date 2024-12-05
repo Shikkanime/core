@@ -3,7 +3,7 @@ package fr.shikkanime.caches
 import fr.shikkanime.entities.enums.EpisodeType
 import java.util.*
 
-data class CountryCodeSlugSeasonEpisodeTypeNumberKeyCache(
+data class AnimeUUIDSeasonEpisodeTypeNumberKeyCache(
     val animeUuid: UUID,
     val season: Int,
     val episodeType: EpisodeType,

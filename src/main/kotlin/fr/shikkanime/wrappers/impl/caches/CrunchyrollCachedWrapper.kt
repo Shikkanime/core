@@ -18,42 +18,65 @@ import java.time.ZonedDateTime
 object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     private val defaultCacheDuration = Duration.ofDays(1)
 
-    private val seriesCache = MapCache<Pair<String, String>, Series>(defaultCacheDuration) {
+    private val seriesCache = MapCache<Pair<String, String>, Series>(
+        "CrunchyrollCachedWrapper.seriesCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getSeries(it.first, it.second) }
     }
 
-    private val seasonCache = MapCache<Pair<String, String>, Season>(defaultCacheDuration) {
+    private val seasonCache = MapCache<Pair<String, String>, Season>(
+        "CrunchyrollCachedWrapper.seasonCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getSeason(it.first, it.second) }
     }
 
-    private val seasonsBySeriesIdCache = MapCache<Pair<String, String>, List<Season>>(defaultCacheDuration) {
+    private val seasonsBySeriesIdCache = MapCache<Pair<String, String>, List<Season>>(
+        "CrunchyrollCachedWrapper.seasonsBySeriesIdCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getSeasonsBySeriesId(it.first, it.second) }
-            .apply { forEach { season -> seasonCache.setIfNotExists(it.first to season.id, season) } }
     }
 
-    private val objectCache = MapCache<Pair<String, String>, BrowseObject>(defaultCacheDuration) {
+    private val objectCache = MapCache<Pair<String, String>, BrowseObject>(
+        "CrunchyrollCachedWrapper.objectCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getObjects(it.first, it.second).first() }
     }
 
-    private val episodeCache = MapCache<Pair<String, String>, Episode>(defaultCacheDuration) {
+    private val episodeCache = MapCache<Pair<String, String>, Episode>(
+        "CrunchyrollCachedWrapper.episodeCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getEpisode(it.first, it.second) }
-            .apply { objectCache.setIfNotExists(it.first to it.second, this.convertToBrowseObject()) }
+            .also { episode -> objectCache.setIfNotExists(it.first to it.second, episode.convertToBrowseObject()) }
     }
 
-    private val episodesBySeasonIdCache = MapCache<Pair<String, String>, List<Episode>>(defaultCacheDuration) {
+    private val episodesBySeasonIdCache = MapCache<Pair<String, String>, List<Episode>>(
+        "CrunchyrollCachedWrapper.episodesBySeasonIdCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second) }
-            .apply { forEach { episode ->
+            .also { episodes -> episodes.forEach { episode ->
                 episodeCache.setIfNotExists(it.first to episode.id!!, episode)
                 objectCache.setIfNotExists(it.first to episode.id, episode.convertToBrowseObject())
             } }
     }
 
-    private val episodeByTypeCache = MapCache<Triple<String, String, String>, BrowseObject>(defaultCacheDuration) {
+    private val episodeByTypeCache = MapCache<Triple<String, String, String>, BrowseObject>(
+        "CrunchyrollCachedWrapper.episodeByTypeCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { CrunchyrollWrapper.getEpisodeByType(it.first, it.second, it.third) }
-            .apply { objectCache.setIfNotExists(it.first to id, this) }
+            .also { episode -> objectCache.setIfNotExists(it.first to episode.id, episode) }
     }
     
-    private val episodesBySeriesIdCache = MapCache<Triple<String, String, Boolean?>, List<BrowseObject>>(defaultCacheDuration) { triple ->
+    private val episodesBySeriesIdCache = MapCache<Triple<String, String, Boolean?>, List<BrowseObject>>(
+        "CrunchyrollCachedWrapper.episodesBySeriesIdCache",
+        duration = defaultCacheDuration
+    ) { triple ->
         runBlocking {
             val browseObjects = mutableListOf<BrowseObject>()
 
@@ -85,15 +108,15 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         id: String
     ) = seriesCache[locale to id] ?: throw Exception("Failed to get series")
 
-    override suspend fun getSeasonsBySeriesId(
-        locale: String,
-        id: String
-    ) = seasonsBySeriesIdCache[locale to id] ?: throw Exception("Failed to get seasons with series id")
-
     override suspend fun getSeason(
         locale: String,
         id: String
     ) = seasonCache[locale to id] ?: throw Exception("Failed to get season")
+
+    override suspend fun getSeasonsBySeriesId(
+        locale: String,
+        id: String
+    ) = seasonsBySeriesIdCache[locale to id] ?: throw Exception("Failed to get seasons with series id")
 
     override suspend fun getEpisodesBySeasonId(
         locale: String,

@@ -25,7 +25,10 @@ class EmailService {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
-    private val cache = MapCache<SMTPConfig, Mailer>(classes = listOf(Config::class.java)) {
+    private val cache = MapCache<SMTPConfig, Mailer>(
+        "EmailService.cache",
+        classes = listOf(Config::class.java)
+    ) {
         MailerBuilder
             .withSMTPServer(
                 it.emailHost,
