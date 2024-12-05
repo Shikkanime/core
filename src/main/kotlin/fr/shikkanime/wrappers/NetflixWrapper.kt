@@ -19,8 +19,10 @@ object NetflixWrapper {
             return null
         }
 
-        val document =
-            HttpRequest(countryCode).use { it.getBrowser("$BASE_URL/${countryCode.name.lowercase()}/title/$id") }
+        val document = HttpRequest(
+            countryCode,
+            "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+        ).use { it.getBrowser("$BASE_URL/${countryCode.name.lowercase()}/title/$id") }
 
         if (document.getElementsByTag("html").attr("lang") != countryCode.name.lowercase()) {
             logger.warning("Failed to fetch Netflix page for $id in ${countryCode.name}, retrying... (${i + 1}/${MAX_RETRY})")
