@@ -56,7 +56,7 @@ class SEOController {
             URLDto("${Constant.baseUrl}/search", globalLastModification)
         )
 
-        simulcastCacheService.findAllModified()?.mapTo(urls) {
+        simulcastCacheService.findAll()?.mapTo(urls) {
             URLDto("${Constant.baseUrl}/catalog/${it.slug}", it.lastReleaseDateTime!!)
         }
 

@@ -144,8 +144,7 @@ class AnimeController : HasPageableRoute() {
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
-        val findLoaded = animeService.findLoaded(uuid) ?: return Response.notFound()
-        return Response.ok(AbstractConverter.convert(findLoaded, AnimeDto::class.java))
+        return Response.ok(AbstractConverter.convert(animeCacheService.find(uuid) ?: return Response.notFound(), AnimeDto::class.java))
     }
 
     @Path("/{uuid}")

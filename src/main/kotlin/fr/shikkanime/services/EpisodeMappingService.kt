@@ -50,17 +50,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime) =
         episodeMappingRepository.findAllNeedUpdateByPlatform(platform, lastDateTime)
 
-    fun findAllSeo() = episodeMappingRepository.findAllSeo()
-
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
     fun findByAnimeSeasonEpisodeTypeNumber(animeUuid: UUID, season: Int, episodeType: EpisodeType, number: Int) =
         episodeMappingRepository.findByAnimeSeasonEpisodeTypeNumber(animeUuid, season, episodeType, number)
-
-    fun findPreviousEpisode(episode: EpisodeMapping) = episodeMappingRepository.findPreviousEpisode(episode)
-
-    fun findNextEpisode(episode: EpisodeMapping) = episodeMappingRepository.findNextEpisode(episode)
 
     fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeMapping) =
         episodeMappingRepository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)

@@ -10,7 +10,6 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
@@ -22,7 +21,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     private lateinit var episodeVariantRepository: EpisodeVariantRepository
 
     @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
+    private lateinit var simulcastService: SimulcastService
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
@@ -48,11 +47,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         platform: Platform
     ) = episodeVariantRepository.findAllIdentifierByDateRangeWithoutNextEpisode(countryCode, start, end, platform)
 
-    fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
-
     fun findAllByMapping(mapping: EpisodeMapping) = episodeVariantRepository.findAllByMapping(mapping)
-
-    fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
 
     fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
@@ -63,12 +58,12 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val (previousSimulcast, currentSimulcast, nextSimulcast) = simulcasts
 
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates.first())
+
         val diff = (previousReleaseDateTime ?: episodeMappingService.findPreviousReleaseDateOfSimulcastedEpisodeMapping(
             anime,
             entity
         ))
             ?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
-
         val chosenSimulcast = when {
             anime.simulcasts.any { it.year == nextSimulcast.year && it.season == nextSimulcast.season } -> nextSimulcast
             entity.number!! <= 1 && currentSimulcast != nextSimulcast -> nextSimulcast
@@ -80,7 +75,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             else -> currentSimulcast
         }
 
-        return simulcastCacheService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
+        return simulcastService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
             ?: chosenSimulcast
     }
 
@@ -93,7 +88,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         }
 
         val anime = animeService.findBySlug(episode.countryCode, slug)
-            ?: animeService.findLoaded(animeHashCodes[StringUtils.computeAnimeHashcode(animeName)])
+            ?: animeService.find(animeHashCodes[StringUtils.computeAnimeHashcode(animeName)])
             ?: animeService.save(
                 Anime(
                     countryCode = episode.countryCode,

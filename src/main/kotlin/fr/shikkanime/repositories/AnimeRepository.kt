@@ -1,6 +1,5 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.animes.AnimeAudioLocalesSeasonsDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
@@ -22,7 +21,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         database.entityManager.use {
             val searchSession = Search.session(it)
             val indexer = searchSession.massIndexer(getEntityClass())
-            indexer.start()
+            indexer.startAndWait()
         }
     }
 
@@ -207,80 +206,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
-        }
-    }
-
-    fun findAllAudioLocalesAndSeasons(): Map<UUID, Pair<Set<String>, List<Pair<Int, ZonedDateTime>>>> {
-        return database.entityManager.use { em ->
-            val cb = em.criteriaBuilder
-            val query = cb.createQuery(AnimeAudioLocalesSeasonsDto::class.java)
-            val root = query.from(EpisodeVariant::class.java)
-
-            query.select(
-                cb.construct(
-                    AnimeAudioLocalesSeasonsDto::class.java,
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
-                    root[EpisodeVariant_.audioLocale],
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.season],
-                    cb.greatest(root[EpisodeVariant_.mapping][EpisodeMapping_.lastReleaseDateTime])
-                )
-            )
-
-            query.groupBy(
-                root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
-                root[EpisodeVariant_.audioLocale],
-                root[EpisodeVariant_.mapping][EpisodeMapping_.season]
-            )
-
-            query.orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]))
-
-            createReadOnlyQuery(em, query)
-                .resultList
-                .groupBy { it.animeUuid }
-                .mapValues { (_, results) ->
-                    // Process results
-                    val audioLocales = mutableSetOf<String>()
-                    val seasons = mutableListOf<Pair<Int, ZonedDateTime>>()
-
-                    results.forEach {
-                        audioLocales.add(it.audioLocale)
-                        seasons.add(it.season to it.lastReleaseDateTime)
-                    }
-
-                    Pair(audioLocales, seasons.distinctBy { it.first })
-                }
-        }
-    }
-
-    fun findAllSlug(): List<String> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
-            query.select(root[Anime_.slug])
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
-    fun findLoaded(uuid: UUID?): Anime? {
-        if (uuid == null) return null
-
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-
-            query.where(cb.equal(root[Anime_.uuid], uuid))
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
-                ?.apply {
-                    Hibernate.initialize(simulcasts)
-                    Hibernate.initialize(platformIds)
-                }
         }
     }
 

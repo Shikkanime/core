@@ -10,20 +10,32 @@ import java.time.LocalDate
 object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWrapper() {
     private val defaultCacheDuration = Duration.ofDays(1)
 
-    private val videoCache = MapCache<Int, Video>(defaultCacheDuration) {
+    private val videoCache = MapCache<Int, Video>(
+        "AnimationDigitalNetworkCachedWrapper.videoCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { AnimationDigitalNetworkWrapper.getVideo(it) }
     }
 
-    private val latestVideosCache = MapCache<LocalDate, Array<Video>>(defaultCacheDuration) {
+    private val latestVideosCache = MapCache<LocalDate, Array<Video>>(
+        "AnimationDigitalNetworkCachedWrapper.latestVideosCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { AnimationDigitalNetworkWrapper.getLatestVideos(it) }
             .apply { forEach { video -> videoCache.setIfNotExists(video.id, video) } }
     }
 
-    private val showCache = MapCache<Int, Show>(defaultCacheDuration) {
+    private val showCache = MapCache<Int, Show>(
+        "AnimationDigitalNetworkCachedWrapper.showCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { AnimationDigitalNetworkWrapper.getShow(it) }
     }
 
-    private val showVideosCache = MapCache<Int, Array<Video>>(defaultCacheDuration) {
+    private val showVideosCache = MapCache<Int, Array<Video>>(
+        "AnimationDigitalNetworkCachedWrapper.showVideosCache",
+        duration = defaultCacheDuration
+    ) {
         runBlocking { AnimationDigitalNetworkWrapper.getShowVideos(it) }
     }
 

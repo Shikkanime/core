@@ -2,7 +2,9 @@ package fr.shikkanime.converters
 
 import fr.shikkanime.utils.Constant
 import java.lang.reflect.ParameterizedType
+import kotlin.reflect.KFunction
 import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.jvm.isAccessible
 
 abstract class AbstractConverter<F, T> {
@@ -11,14 +13,18 @@ abstract class AbstractConverter<F, T> {
     annotation class Converter
 
     companion object {
-        val converters: MutableMap<Pair<Class<*>, Class<*>>, AbstractConverter<*, *>> = mutableMapOf()
+        val converters: MutableMap<Pair<Class<*>, Class<*>>, Pair<AbstractConverter<*, *>, KFunction<*>>> = mutableMapOf()
 
         init {
             val converters = Constant.reflections.getSubTypesOf(AbstractConverter::class.java)
 
             converters.forEach {
                 val (from, to) = (it.genericSuperclass as ParameterizedType).actualTypeArguments.filterIsInstance<Class<*>>()
-                this.converters[Pair(from, to)] = Constant.injector.getInstance(it)
+                val abstractConverter = Constant.injector.getInstance(it)
+                val function = abstractConverter::class.declaredFunctions.firstOrNull { it.hasAnnotation<Converter>() }
+                    ?: throw NoSuchElementException("Can not find converter function for \"${from.simpleName}\" to \"${to.simpleName}\"")
+                function.isAccessible = true
+                this.converters[Pair(from, to)] = abstractConverter to function
             }
         }
 
@@ -33,10 +39,7 @@ abstract class AbstractConverter<F, T> {
                 throw NoSuchElementException("Can not find converter \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"")
             }
 
-            val abstractConverter = converters[pair] ?: throw IllegalStateException()
-            val function = abstractConverter::class.declaredFunctions.firstOrNull { it.annotations.any { annotation -> annotation is Converter } }
-                ?: throw NoSuchElementException("Can not find converter function for \"${`object`.javaClass.simpleName}\" to \"${to.simpleName}\"")
-            function.isAccessible = true
+            val (abstractConverter, function) = converters[pair] ?: throw IllegalStateException()
 
             return try {
                 function.call(abstractConverter, `object`, *args) as? T ?: throw NullPointerException("Can not convert null to \"${to.simpleName}\"")

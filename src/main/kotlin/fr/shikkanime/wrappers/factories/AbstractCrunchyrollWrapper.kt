@@ -145,7 +145,10 @@ abstract class AbstractCrunchyrollWrapper {
     protected val baseUrl = "https://www.crunchyroll.com/"
     protected val httpRequest = HttpRequest()
 
-    private val accessTokenCache = MapCache<String, String>(Duration.ofMinutes(30)) {
+    private val accessTokenCache = MapCache<String, String>(
+        "CrunchyrollWrapper.accessTokenCache",
+        duration = Duration.ofMinutes(30)
+    ) {
         runBlocking {
             val response = httpRequest.post(
                 "${baseUrl}auth/v1/token",
@@ -178,6 +181,6 @@ abstract class AbstractCrunchyrollWrapper {
         "${baseUrl}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: ""}"
 
     companion object {
-        const val CRUNCHYROLL_CHUNK = 50
+        const val CRUNCHYROLL_CHUNK = 100
     }
 }

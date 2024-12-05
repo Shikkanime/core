@@ -100,6 +100,12 @@ abstract class AbstractRepository<E : ShikkEntity> {
         }
     }
 
+    fun updateAll(entities: List<E>) {
+        return inTransaction { entityManager ->
+            entities.forEach { entityManager.merge(it) }
+        }
+    }
+
     fun delete(entity: E) {
         inTransaction {
             it.remove(entity)

@@ -2,15 +2,16 @@ package fr.shikkanime.jobs
 
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
-import fr.shikkanime.dtos.variants.EpisodeVariantIdentifierDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.inject.Inject
 import java.io.ByteArrayOutputStream
@@ -32,6 +33,9 @@ class FetchEpisodesJob : AbstractJob {
     private lateinit var episodeVariantService: EpisodeVariantService
 
     @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+
+    @Inject
     private lateinit var configCacheService: ConfigCacheService
 
     override fun run() {
@@ -50,14 +54,14 @@ class FetchEpisodesJob : AbstractJob {
         lock = 0
 
         if (!isInitialized) {
-            val variants = episodeVariantService.findAllTypeIdentifier()
-            identifiers.addAll(variants.map { it.identifier })
+            identifiers.addAll(episodeVariantCacheService.findAllIdentifiers())
+            val variants = episodeVariantCacheService.findAll()
 
             Constant.abstractPlatforms.forEach {
                 it.hashCache.addAll(
                     variants.filter { variant -> variant.platform == it.getPlatform() }
                         .map { variant ->
-                            ".{2}-.{4}-(.*)-.{2}-.{2}".toRegex().find(variant.identifier)!!.groupValues[1]
+                            ".{2}-.{4}-(.*)-.{2}-.{2}".toRegex().find(variant.identifier!!)!!.groupValues[1]
                         }
                 )
             }
@@ -104,29 +108,20 @@ class FetchEpisodesJob : AbstractJob {
         isRunning = false
 
         if (savedEpisodes.isEmpty()) return
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+
+        MapCache.invalidate(
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java,
+            Simulcast::class.java
+        )
+
         sendToNetworks(savedEpisodes)
     }
 
-    private fun getTypeIdentifier(input: Any): String {
-        val episodeVariantIdentifierDto = when (input) {
-            is EpisodeVariantIdentifierDto -> input
-            is EpisodeVariant -> EpisodeVariantIdentifierDto(
-                input.mapping!!.anime!!.countryCode!!,
-                input.mapping!!.anime!!.uuid!!,
-                input.platform!!,
-                input.mapping!!.season!!,
-                input.mapping!!.episodeType!!,
-                input.mapping!!.number!!,
-                input.audioLocale!!,
-                input.identifier!!
-            )
-
-            else -> throw IllegalArgumentException("Invalid input type")
-        }
-
-        val langType = LangType.fromAudioLocale(episodeVariantIdentifierDto.countryCode, episodeVariantIdentifierDto.audioLocale)
-        return "${episodeVariantIdentifierDto.countryCode}_${episodeVariantIdentifierDto.animeUuid}_${episodeVariantIdentifierDto.season}_${episodeVariantIdentifierDto.episodeType}_${episodeVariantIdentifierDto.number}_${langType}"
+    private fun getTypeIdentifier(episodeVariant: EpisodeVariant): String {
+        val langType = LangType.fromAudioLocale(episodeVariant.mapping!!.anime!!.countryCode!!, episodeVariant.audioLocale!!)
+        return "${episodeVariant.mapping!!.anime!!.countryCode!!}_${episodeVariant.mapping!!.anime!!.uuid!!}_${episodeVariant.mapping!!.season!!}_${episodeVariant.mapping!!.episodeType!!}_${episodeVariant.mapping!!.number!!}_$langType"
     }
 
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {

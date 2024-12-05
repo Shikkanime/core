@@ -8,6 +8,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -24,7 +25,6 @@ fun main(args: Array<String>) {
 
     logger.info("Pre-indexing anime data...")
     Constant.injector.getInstance(AnimeService::class.java).preIndex()
-    updateAndDeleteData()
 
     logger.info("Loading images cache...")
     ImageService.loadCache()
@@ -58,6 +58,9 @@ fun main(args: Array<String>) {
         logger.warning("Jobs are disabled, use --enable-jobs to enable them")
     }
 
+    logger.info("Updating and deleting data...")
+    updateAndDeleteData()
+
     logger.info("Starting server...")
     embeddedServer(
         Netty,
@@ -69,6 +72,7 @@ fun main(args: Array<String>) {
 
 private fun updateAndDeleteData() {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
+    val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     val seasonRegex = " Saison (\\d)| ([MDCLXVI]+$)".toRegex()
 
@@ -100,7 +104,7 @@ private fun updateAndDeleteData() {
             anime.slug = slug
             logger.info("Updating slug for anime ${anime.name} to $slug")
 
-            animeService.findBySlug(anime.countryCode!!, slug)?.let { existing ->
+            animeCacheService.findBySlug(anime.countryCode!!, slug)?.let { existing ->
                 logger.warning("Slug $slug already exists, merging ${anime.name} with ${existing.name}")
                 animeService.merge(anime, existing)
                 return@forEach

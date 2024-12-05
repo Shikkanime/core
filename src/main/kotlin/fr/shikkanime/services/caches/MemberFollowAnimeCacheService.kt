@@ -23,6 +23,7 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
 
     private val cache =
         MapCache<UUIDPaginationKeyCache, PageableDto<MissedAnimeDto>?>(
+            "MemberFollowAnimeCacheService.cache",
             classes = listOf(
                 MemberFollowAnime::class.java,
                 MemberFollowEpisode::class.java,
@@ -55,6 +56,7 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
 
     private val findAllByCache =
         MapCache<UUIDPaginationKeyCache, PageableDto<AnimeDto>>(
+            "MemberFollowAnimeCacheService.findAllByCache",
             classes = listOf(
                 MemberFollowAnime::class.java,
                 Anime::class.java,

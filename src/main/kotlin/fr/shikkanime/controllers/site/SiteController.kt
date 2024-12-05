@@ -1,6 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.*
@@ -122,7 +123,7 @@ class SiteController {
     }
 
     private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val dto = AbstractConverter.convert(animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound(), AnimeDto::class.java)
         val seasonDto = dto.seasons?.firstOrNull { it.number == (season ?: it.number) } ?: return Response.notFound()
         val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
         val findAllBy = episodeMappingCacheService.findAllBy(
@@ -185,7 +186,7 @@ class SiteController {
         @PathParam("season") season: Int,
         @PathParam("episodeSlug") episodeSlug: String
     ): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
+        val dto = AbstractConverter.convert(animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound(), AnimeDto::class.java)
 
         if (dto.seasons.isNullOrEmpty()) return Response.notFound()
         if (dto.seasons!!.none { it.number == season }) return Response.redirect("/animes/$slug/season-${dto.seasons!!.last().number}/$episodeSlug")
@@ -194,7 +195,7 @@ class SiteController {
         val episodeType = EpisodeType.fromSlug(match.groupValues[1])
         val episodeNumber = match.groupValues[2].toInt()
 
-        val (previousDto, currentDto, nextDto) = episodeMappingCacheService.findByAnimeSeasonEpisodeTypeNumber(
+        val (previousDto, currentDto, nextDto) = episodeMappingCacheService.findPreviousAndNextBy(
             dto.uuid!!,
             season,
             episodeType,

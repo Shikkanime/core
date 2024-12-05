@@ -30,18 +30,21 @@ class EpisodeVariantCacheService : AbstractCacheService {
     @Inject
     private lateinit var memberFollowAnimeService: MemberFollowAnimeService
 
-    private val findAllCache = MapCache(
+    val findAllCache = MapCache(
+        "EpisodeVariantCacheService.findAllCache",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         fn = { listOf(DEFAULT_ALL_KEY) }
     ) {
-        episodeVariantService.findAll().associateBy { it.uuid!! }
+        episodeVariantService.findAll()
     }
 
-    private val findAllByEpisodeMappingCache = MapCache(
+    val findAllByEpisodeMappingCache = MapCache(
+        "EpisodeVariantCacheService.findAllByEpisodeMappingCache",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
-        fn = { listOf(DEFAULT_ALL_KEY) }
+        fn = { listOf(DEFAULT_ALL_KEY) },
+        requiredCaches = { listOf(findAllCache) }
     ) {
-        (findAllCache[DEFAULT_ALL_KEY]?.values ?: emptyList()).asSequence()
+        (findAllCache[DEFAULT_ALL_KEY] ?: emptyList()).asSequence()
             .sortedBy { it.releaseDateTime }
             .groupBy { it.mapping!!.uuid!! }
             .mapValues { entry -> entry.value.toSet() }
@@ -49,10 +52,12 @@ class EpisodeVariantCacheService : AbstractCacheService {
 
     private val findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleCache =
         MapCache<CountryCode, List<VariantReleaseDto>>(
+            "EpisodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleCache",
             classes = listOf(EpisodeVariant::class.java),
-            fn = { CountryCode.entries }
+            fn = { CountryCode.entries },
+            requiredCaches = { listOf(findAllCache) }
         ) {
-            (findAllCache[DEFAULT_ALL_KEY]?.values ?: emptyList()).asSequence()
+            (findAllCache[DEFAULT_ALL_KEY] ?: emptyList()).asSequence()
                 .filter { variant -> variant.mapping!!.anime!!.countryCode == it }
                 .sortedWith(
                     compareBy(
@@ -73,10 +78,14 @@ class EpisodeVariantCacheService : AbstractCacheService {
         }
 
     private val findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleWithMemberCache =
-        MapCache<Member, List<VariantReleaseDto>>(classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java)) {
+        MapCache<Member, List<VariantReleaseDto>>(
+            "EpisodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocaleWithMemberCache",
+            classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java),
+            requiredCaches = { listOf(findAllCache) }
+        ) {
             val followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(it)
 
-            (findAllCache[DEFAULT_ALL_KEY]?.values ?: emptyList()).asSequence()
+            (findAllCache[DEFAULT_ALL_KEY] ?: emptyList()).asSequence()
                 .filter { variant -> variant.mapping!!.anime!!.uuid!! in followedAnimes }
                 .sortedWith(
                     compareBy(
@@ -96,7 +105,18 @@ class EpisodeVariantCacheService : AbstractCacheService {
                 }.toList()
         }
 
-    fun find(uuid: UUID) = findAllCache[DEFAULT_ALL_KEY]?.get(uuid)?.let {
+    private val findAllIdentifiersCache = MapCache(
+        "EpisodeVariantCacheService.findAllIdentifiersCache",
+        classes = listOf(EpisodeVariant::class.java),
+        fn = { listOf(DEFAULT_ALL_KEY) },
+        requiredCaches = { listOf(findAllCache) }
+    ) {
+        (findAllCache[DEFAULT_ALL_KEY] ?: emptyList()).map { it.identifier!! }.toSet()
+    }
+
+    fun findAll() = findAllCache[DEFAULT_ALL_KEY] ?: emptyList()
+
+    fun find(uuid: UUID) = findAllCache[DEFAULT_ALL_KEY]?.find { it.uuid == uuid }?.let {
         AbstractConverter.convert(it, EpisodeVariantDto::class.java)
     }
 
@@ -125,4 +145,6 @@ class EpisodeVariantCacheService : AbstractCacheService {
             )
         } ?: emptyList()
     }
+
+    fun findAllIdentifiers() = findAllIdentifiersCache[DEFAULT_ALL_KEY] ?: emptySet()
 }

@@ -15,6 +15,8 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     open fun update(entity: E) = getRepository().update(entity)
 
+    fun updateAll(entities: List<E>) = getRepository().updateAll(entities)
+
     open fun delete(entity: E) = getRepository().delete(entity)
 
     fun deleteAll() = getRepository().deleteAll()

@@ -1,6 +1,7 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.simulcasts.SimulcastModifiedDto
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.SimulcastRepository
@@ -16,16 +17,12 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun getRepository() = simulcastRepository
 
-    override fun findAll() =
-        super.findAll().sortBySeasonAndYear()
-
-    fun findAllModified() = simulcastRepository.findAllModified()
+    fun findAllModified() = simulcastRepository.findAllModified().sortBySeasonAndYear()
 
     fun findBySeasonAndYear(season: String, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 
     override fun save(entity: Simulcast): Simulcast {
         val save = super.save(entity)
-        MapCache.invalidate(Simulcast::class.java)
         traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
         return save
     }
@@ -37,10 +34,10 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     }
 
     companion object {
-        fun List<Simulcast>.sortBySeasonAndYear(): List<Simulcast> =
-            this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed()
-
         fun Set<Simulcast>.sortBySeasonAndYear(): Set<Simulcast> =
             this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed().toSet()
+
+        fun List<SimulcastModifiedDto>.sortBySeasonAndYear(): List<SimulcastModifiedDto> =
+            this.sortedWith(compareBy({ it.simulcast.year }, { Constant.seasons.indexOf(it.simulcast.season) })).reversed()
     }
 }

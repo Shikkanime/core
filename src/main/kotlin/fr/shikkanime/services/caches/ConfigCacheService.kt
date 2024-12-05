@@ -7,17 +7,22 @@ import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.MapCache
 
 class ConfigCacheService : AbstractCacheService {
+    companion object {
+        private const val DEFAULT_ALL_KEY = "all"
+    }
+
     @Inject
     private lateinit var configService: ConfigService
 
     private val cache = MapCache(
+        "ConfigCacheService.cache",
         classes = listOf(Config::class.java),
-        fn = { listOf("all") }
+        fn = { listOf(DEFAULT_ALL_KEY) }
     ) {
         configService.findAll()
     }
 
-    private fun findByName(name: String) = cache["all"]?.find { it.propertyKey == name }
+    fun findByName(name: String) = cache[DEFAULT_ALL_KEY]?.find { it.propertyKey == name }
 
     fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue
 

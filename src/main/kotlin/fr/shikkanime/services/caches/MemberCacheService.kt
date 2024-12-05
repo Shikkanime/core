@@ -13,11 +13,15 @@ class MemberCacheService : AbstractCacheService {
     @Inject
     private lateinit var memberService: MemberService
 
-    private val cache = MapCache<UUID, Member?>(classes = listOf(Member::class.java)) {
+    private val cache = MapCache<UUID, Member?>(
+        "MemberCacheService.cache",
+        classes = listOf(Member::class.java)
+    ) {
         memberService.find(it)
     }
 
     private val refreshMemberCache = MapCache<UUIDPaginationKeyCache, RefreshMemberDto?>(
+        "MemberCacheService.refreshMemberCache",
         classes = listOf(
             Member::class.java,
             Anime::class.java,

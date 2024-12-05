@@ -1,6 +1,5 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.variants.EpisodeVariantIdentifierDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
@@ -73,48 +72,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             )
 
             createReadOnlyQuery(entityManager, query)
-                .resultList
-        }
-    }
-
-    fun findAllTypeIdentifier(): List<EpisodeVariantIdentifierDto> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(EpisodeVariantIdentifierDto::class.java)
-            val root = query.from(getEntityClass())
-
-            val episodeMappingPath = root[EpisodeVariant_.mapping]
-            val animePath = episodeMappingPath[EpisodeMapping_.anime]
-
-            query.select(
-                cb.construct(
-                    EpisodeVariantIdentifierDto::class.java,
-                    animePath[Anime_.countryCode],
-                    animePath[Anime_.uuid],
-                    root[EpisodeVariant_.platform],
-                    episodeMappingPath[EpisodeMapping_.season],
-                    episodeMappingPath[EpisodeMapping_.episodeType],
-                    episodeMappingPath[EpisodeMapping_.number],
-                    root[EpisodeVariant_.audioLocale],
-                    root[EpisodeVariant_.identifier]
-                )
-            )
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
-    fun findAllIdentifiers(): List<String> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
-
-            query.select(root[EpisodeVariant_.identifier])
-                .distinct(true)
-
-            createReadOnlyQuery(it, query)
                 .resultList
         }
     }

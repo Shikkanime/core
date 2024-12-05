@@ -18,6 +18,7 @@ class MemberFollowEpisodeCacheService : AbstractCacheService {
 
     private val cache =
         MapCache<UUIDPaginationKeyCache, PageableDto<EpisodeMappingDto>>(
+            "MemberFollowEpisodeCacheService.cache",
             classes = listOf(
                 MemberFollowEpisode::class.java,
             ),

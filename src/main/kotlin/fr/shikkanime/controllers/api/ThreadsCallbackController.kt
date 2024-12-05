@@ -48,7 +48,7 @@ class ThreadsCallbackController {
                     accessToken,
                 )
 
-                configService.findByName(ConfigPropertyKey.THREADS_ACCESS_TOKEN.key)?.let {
+                configCacheService.findByName(ConfigPropertyKey.THREADS_ACCESS_TOKEN.key)?.let {
                     it.propertyValue = longLivedAccessToken
                     configService.update(it)
                     MapCache.invalidate(Config::class.java)

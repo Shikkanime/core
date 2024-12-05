@@ -19,8 +19,6 @@ class ConfigService : AbstractService<Config, ConfigRepository>() {
 
     fun findAllByName(name: String) = configRepository.findAllByName(name)
 
-    fun findByName(name: String) = configRepository.findByName(name)
-
     fun update(uuid: UUID, configDto: ConfigDto): Config? {
         val config = find(uuid) ?: return null
 

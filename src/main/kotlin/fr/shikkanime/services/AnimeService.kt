@@ -79,18 +79,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
 
-    fun findAllAudioLocalesAndSeasons() = animeRepository.findAllAudioLocalesAndSeasons()
-
-    fun findAllSlug() = animeRepository.findAllSlug()
-
     fun preIndex() = animeRepository.preIndex()
 
-    fun findLoaded(uuid: UUID?) = animeRepository.findLoaded(uuid)
+    fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
     fun findByName(countryCode: CountryCode, name: String?) =
         animeRepository.findByName(countryCode, name)
-
-    fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
     fun getWeeklyAnimes(countryCode: CountryCode, member: Member?, startOfWeekDay: LocalDate): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
@@ -324,7 +318,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
         if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
-            simulcast.uuid ?: simulcastService.save(simulcast).also { MapCache.invalidate(Simulcast::class.java) }
+            simulcast.uuid ?: simulcastService.save(simulcast)
             anime.simulcasts.add(simulcast)
             return true
         }
@@ -346,7 +340,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
             .groupBy { it.anime!!.uuid!! }
 
-        findAll().forEach { anime ->
+        val animes = findAll()
+
+        animes.forEach { anime ->
             val episodeMappings = mappingsGroupped[anime.uuid] ?: return@forEach
 
             // Avoid lazy loading exception
@@ -361,9 +357,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 val simulcast = episodeVariantService.getSimulcast(anime, episodeMapping, previousReleaseDateTime)
                 addSimulcastToAnime(anime, simulcast)
             }
-
-            update(anime)
         }
+
+        updateAll(animes)
     }
 
     override fun save(entity: Anime): Anime {
@@ -389,7 +385,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
-        val anime = findLoaded(uuid) ?: return null
+        val anime = find(uuid) ?: return null
 
         if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
             anime.name = animeDto.name
@@ -431,15 +427,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     private fun updateAnimeSimulcast(animeDto: AnimeDto, anime: Anime) {
-        if (animeDto.simulcasts != null) {
-            anime.simulcasts.clear()
+        anime.simulcasts.clear()
 
-            animeDto.simulcasts.forEach { simulcastDto ->
-                val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
+        animeDto.simulcasts.forEach { simulcastDto ->
+            val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
 
-                if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
-                    anime.simulcasts.add(simulcast)
-                }
+            if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
+                anime.simulcasts.add(simulcast)
             }
         }
     }
