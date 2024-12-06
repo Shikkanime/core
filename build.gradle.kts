@@ -17,7 +17,7 @@ val gsonVersion = "2.11.0"
 val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.79"
 val javaImageScalingVersion = "0.8.6"
-val firebaseVersion = "9.4.1"
+val firebaseVersion = "9.4.2"
 val simpleJavaMailVersion = "8.12.3"
 val jacksonVersion = "2.18.2"
 
