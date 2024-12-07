@@ -330,26 +330,30 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         when (episodeVariant.platform) {
             Platform.ANIM -> {
-                episodes.addAll(
-                    animationDigitalNetworkPlatform.convertEpisode(
-                        countryCode,
-                        AnimationDigitalNetworkCachedWrapper.getVideo(
-                            animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
-                        ),
-                        ZonedDateTime.now(),
-                        needSimulcast = false,
-                        checkAnimation = false
+                runCatching {
+                    episodes.addAll(
+                        animationDigitalNetworkPlatform.convertEpisode(
+                            countryCode,
+                            AnimationDigitalNetworkCachedWrapper.getVideo(
+                                animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
+                            ),
+                            ZonedDateTime.now(),
+                            needSimulcast = false,
+                            checkAnimation = false
+                        )
                     )
-                )
+                }
             }
 
             Platform.CRUN -> {
-                episodes.addAll(
-                    getCrunchyrollEpisodeAndVariants(
-                        countryCode,
-                        crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+                runCatching {
+                    episodes.addAll(
+                        getCrunchyrollEpisodeAndVariants(
+                            countryCode,
+                            crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+                        )
                     )
-                )
+                }
             }
 
             else -> {
@@ -369,10 +373,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val variantObjects = CrunchyrollCachedWrapper.getEpisode(
             countryCode.locale,
             crunchyrollId
-        )
-            .also { browseObjects.add(it.convertToBrowseObject()) }
+        ).also { browseObjects.add(it.convertToBrowseObject()) }
             .getVariants()
-            .subtract(browseObjects.map { it.id }.distinct())
+            .subtract(browseObjects.map { it.id }.toSet())
             .chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
             .flatMap { chunk ->
                 HttpRequest.retry(3) {
@@ -382,6 +385,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     )
                 }
             }
+
 
         return (browseObjects + variantObjects).mapNotNull { browseObject ->
             try {
