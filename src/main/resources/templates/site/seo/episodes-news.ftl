@@ -9,7 +9,7 @@
                     <news:name>${episodeMapping.anime.shortName} - Saison ${episodeMapping.season?c} <@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}<#if episodeMapping.title??> - ${su.sanitizeXSS(episodeMapping.title)}</#if></news:name>
                     <news:language>fr</news:language>
                 </news:publication>
-                <news:publication_date>${episodeMapping.releaseDateTime?replace("Z", "+0000")}</news:publication_date>
+                <news:publication_date>${episodeMapping.releaseDateTime?split("T")?first}</news:publication_date>
                 <news:title>${episodeMapping.anime.shortName} - Saison ${episodeMapping.season?c} <@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}</news:title>
             </news:news>
         </url>
