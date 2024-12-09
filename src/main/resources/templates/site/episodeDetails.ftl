@@ -28,7 +28,7 @@
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
                 <h1 class="h6 fw-bold mb-0 text-uppercase">
                     <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}"
-                       class="text-white text-decoration-none">${animeSanitized}&NonBreakingSpace;-&NonBreakingSpace;Saison ${episodeMapping.season?c}</a>
+                       class="text-white text-decoration-none">${episodeMapping.anime.shortName}&NonBreakingSpace;-&NonBreakingSpace;Saison ${episodeMapping.season?c}</a>
                     &NonBreakingSpace;<@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}
                 </h1>
 
