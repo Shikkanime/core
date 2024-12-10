@@ -17,7 +17,7 @@ import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.util.*
 
-@Controller("/api/config")
+@Controller("/api/configs")
 class ConfigController {
     @Inject
     private lateinit var configService: ConfigService

@@ -152,6 +152,7 @@ class DisneyPlusPlatform :
             animeDescription = animeDescription.normalize(),
             releaseDateTime = releaseDateTime,
             episodeType = EpisodeType.EPISODE,
+            seasonId = season.toString(),
             season = season,
             number = number,
             duration = duration,

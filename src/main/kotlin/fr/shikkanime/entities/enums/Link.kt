@@ -17,6 +17,7 @@ enum class Link(
     EPISODES("/admin/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
     TRACE_ACTIONS("/admin/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
     MEMBERS("/admin/members", "/admin/members/list.ftl", "bi bi-people", "Members"),
+    RULES("/admin/rules", "/admin/rules.ftl", "bi bi-rulers", "Rules"),
     THREADS("/admin/threads", "/admin/threads.ftl", "bi bi-threads", "Threads"),
     CONFIG("/admin/config", "/admin/configs.ftl", "bi bi-gear", "Configurations"),
 

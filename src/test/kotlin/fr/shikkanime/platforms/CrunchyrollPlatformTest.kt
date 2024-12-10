@@ -141,6 +141,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 "Dans sa nouvelle école, Alya, étudiante au comportement glacial, fait tourner les têtes. Malgré ses excellents résultats en classe, elle garde ses distances avec tout le monde, en particulier avec l'intello Masachika Kuze. Jusqu'à ce qu'elle lui fasse un compliment en... russe ! À l'insu d'Alya, Kuze la comprend parfaitement, mais joue le jeu. Leurs malentendus hilarants se transformeront-ils en amour ?",
                 ZonedDateTime.parse("2024-07-10T15:00:00Z"),
                 EpisodeType.EPISODE,
+                "G6JQC1ZXV",
                 1,
                 2,
                 1479,

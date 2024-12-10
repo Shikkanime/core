@@ -112,13 +112,11 @@ abstract class AbstractRepository<E : ShikkEntity> {
         }
     }
 
-    fun deleteAll() {
-        inTransaction {
-            val cb = it.criteriaBuilder
-            val query = cb.createCriteriaDelete(getEntityClass())
-            query.from(getEntityClass())
+    fun deleteAll(entityManager: EntityManager) {
+        val cb = entityManager.criteriaBuilder
+        val query = cb.createCriteriaDelete(getEntityClass())
+        query.from(getEntityClass())
 
-            it.createQuery(query).executeUpdate()
-        }
+        entityManager.createQuery(query).executeUpdate()
     }
 }

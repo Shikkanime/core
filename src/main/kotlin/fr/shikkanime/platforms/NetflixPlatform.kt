@@ -36,6 +36,7 @@ class NetflixPlatform :
                 animeDescription = it.getAsJsonObject("show").getAsString("description"),
                 releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z"),
                 episodeType = key.netflixSimulcast.episodeType,
+                seasonId = it.getAsInt("season")!!.toString(),
                 season = it.getAsInt("season")!!,
                 number = it.getAsInt("number")!!,
                 duration = it.getAsInt("duration")?.toLong() ?: -1,

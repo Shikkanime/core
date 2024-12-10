@@ -109,6 +109,7 @@ class AnimationDigitalNetworkPlatform :
                 animeDescription = video.show.summary.normalize(),
                 releaseDateTime = video.releaseDate,
                 episodeType = episodeType,
+                seasonId = video.season ?: "1",
                 season = season,
                 number = number,
                 duration = video.duration,

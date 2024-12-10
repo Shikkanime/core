@@ -37,6 +37,7 @@ class PrimeVideoPlatform :
                 animeDescription = it.getAsJsonObject("show").getAsString("description"),
                 releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.primeVideoSimulcast.releaseTime}Z"),
                 episodeType = EpisodeType.EPISODE,
+                seasonId = it.getAsInt("season")!!.toString(),
                 season = it.getAsInt("season")!!,
                 number = it.getAsInt("number")!!,
                 duration = it.getAsInt("duration")?.toLong() ?: -1,

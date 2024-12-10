@@ -84,7 +84,7 @@
                     <td x-text="member.followedEpisodesCount"></td>
                     <td>
                         <a :href="'/admin/members/' + member.uuid" class="btn btn-warning">
-                            <i class="bi bi-pencil-square"></i>
+                            <i class="bi bi-pencil-square me-2"></i>
                             Edit
                         </a>
                     </td>
