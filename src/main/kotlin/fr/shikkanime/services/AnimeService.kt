@@ -184,7 +184,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             releases.filterNot { hasCurrentWeekRelease(it, releases, currentWeek) }
         }
 
-        return groupAndSortReleases(releases, zoneId, dateFormatter)
+        return groupAndSortReleases(startOfWeekDay, releases, zoneId, dateFormatter)
     }
 
     private fun processReleases(
@@ -286,12 +286,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     private fun groupAndSortReleases(
+        startOfWeekDay: LocalDate,
         releases: List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto>,
         zoneId: ZoneId,
         dateFormatter: DateTimeFormatter
     ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto> {
         return (0..6).map { dayOffset ->
-            val date = LocalDate.now().plusDays(dayOffset.toLong())
+            val date = startOfWeekDay.plusDays(dayOffset.toLong())
             val tuplesDay = releases.filter {
                 ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).dayOfWeek.value == dayOffset + 1
             }
