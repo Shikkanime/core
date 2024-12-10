@@ -176,6 +176,13 @@ class AdminController {
         return Response.template("admin/members/edit.ftl", "Edit member")
     }
 
+    @Path("/rules")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getRules(): Response {
+        return Response.template(Link.RULES)
+    }
+
     @Path("/threads")
     @Get
     @AdminSessionAuthenticated

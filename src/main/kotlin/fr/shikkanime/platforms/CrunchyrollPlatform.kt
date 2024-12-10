@@ -208,6 +208,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             animeDescription = crunchyrollAnimeContent.description.normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
+            seasonId = browseObject.episodeMetadata.seasonId,
             season = forcedSeason ?: (browseObject.episodeMetadata.seasonNumber ?: 1),
             number = number,
             duration = browseObject.episodeMetadata.durationMs / 1000,

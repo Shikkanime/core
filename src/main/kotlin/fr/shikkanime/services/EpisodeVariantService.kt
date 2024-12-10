@@ -10,6 +10,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.RuleCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
@@ -37,6 +38,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
+
+    @Inject
+    private lateinit var ruleCacheService: RuleCacheService
 
     override fun getRepository() = episodeVariantRepository
 
@@ -80,6 +84,15 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     }
 
     fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
+        val rules = ruleCacheService.findAllByPlatformSeriesIdAndSeasonId(episode.platform, episode.animeId, episode.seasonId)
+
+        rules.forEach { rule ->
+            when (rule.action!!) {
+                Rule.Action.REPLACE_ANIME_NAME -> episode.anime = rule.actionValue!!
+                Rule.Action.REPLACE_SEASON_NUMBER -> episode.season = rule.actionValue!!.toInt()
+            }
+        }
+
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
@@ -104,7 +117,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 }
             )
 
-        if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null) {
+        if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null && (rules.isEmpty() || rules.any { rule -> rule.action != Rule.Action.REPLACE_ANIME_NAME })) {
             animePlatformService.save(
                 AnimePlatform(
                     anime = anime,

@@ -94,7 +94,7 @@
                     <td x-text="anime.description"></td>
                     <td>
                         <a :href="'/admin/animes/' + anime.uuid" class="btn btn-warning">
-                            <i class="bi bi-pencil-square"></i>
+                            <i class="bi bi-pencil-square me-2"></i>
                             Edit
                         </a>
                     </td>

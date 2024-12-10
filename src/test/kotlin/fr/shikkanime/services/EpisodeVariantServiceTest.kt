@@ -95,6 +95,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
                 "Izumi est un lycéen maladroit et malchanceux. Pourtant, c’est ce qui fait son charme et lui a permis de sortir avec Shikimori. Cette camarade de classe est très jolie, elle a un beau sourire et semble toujours heureuse en compagnie d’Izumi. Pourtant, le garçon ne peut s’empêcher de complexer ! Il fait tout pour continuer de la séduire, même si ses actions ne l’aident pas vraiment dans sa tâche…",
                 ZonedDateTime.parse("2021-05-21T18:15:00Z"),
                 EpisodeType.SPECIAL,
+                "GRDQCG2KK",
                 1,
                 -1,
                 1404,
@@ -131,6 +132,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
                 "Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…",
                 ZonedDateTime.parse("2024-10-03T16:00:00Z"),
                 EpisodeType.EPISODE,
+                "1",
                 1,
                 1,
                 1442,
@@ -156,6 +158,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
                 "Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…",
                 ZonedDateTime.parse("2024-10-03T16:00:00Z"),
                 EpisodeType.EPISODE,
+                "1",
                 1,
                 1,
                 1442,
@@ -181,6 +184,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
                 "Quand Momo, issue d'une lignée de médiums, rencontre son camarade de classe Okarun, fasciné par l’occulte, ils se disputent. Lorsqu'il s'avère que les deux phénomènes sont bien réels, Momo réveille en elle un pouvoir caché tandis qu'une malédiction s'abat sur Okarun. Ensemble, ils doivent affronter les forces du paranormal qui menacent notre monde...",
                 ZonedDateTime.parse("2024-10-03T16:00:00Z"),
                 EpisodeType.EPISODE,
+                "G619CPMQ1",
                 1,
                 1,
                 1437,
@@ -206,13 +210,14 @@ class EpisodeVariantServiceTest : AbstractTest() {
                 "Entre menaces paranormales, nouveaux superpouvoirs et histoire d'amour naissante, deux lycéens se mettent au défi de prouver l'existence des fantômes ou des extraterrestres.",
                 ZonedDateTime.parse("2024-10-03T16:00:00Z"),
                 EpisodeType.EPISODE,
+                "1",
                 1,
                 1,
                 1440,
                 "Serait-ce une romance qui commence ?",
                 "Momo est une lycéenne qui croit aux fantômes, mais pas aux extraterrestres. Un jour, elle se dispute avec un camarade de classe qui croit aux ovnis, mais pas aux esprits.",
                 "https://occ-0-8194-56.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABX1dtlp9gxfhu0LxOrbUq_MT-KlN7dEm6VpsU5JXCZoGzRx0VqYgzgKJa1EWZRnmym_WWv5CWg3jKqLdoYYX88X7IwSHEyeilqmA8ujaaGGeyTaH_A_fUm8D.webp",
-                Platform.CRUN,
+                Platform.NETF,
                 "ja-JP",
                 "a7b9feca",
                 "https://www.netflix.com/fr/title/81736884",
@@ -229,5 +234,123 @@ class EpisodeVariantServiceTest : AbstractTest() {
         assertEquals(1, mappings.size)
         val variants = episodeVariantService.findAll()
         assertEquals(4, variants.size)
+    }
+
+    @Test
+    fun `save platform episode with rule`() {
+        ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GRMG8ZQZR", seasonId = "GYP8PM4KY", action = Rule.Action.REPLACE_ANIME_NAME, actionValue = "ONE PIECE Log: Fish-Man Island Saga"))
+        ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GRMG8ZQZR", seasonId = "GYP8PM4KY", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "1"))
+        MapCache.invalidate(Rule::class.java)
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "GRMG8ZQZR",
+                "One Piece",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg",
+                "Embarquez pour le voyage de votre vie avec One Piece. La série épique créée par le célèbre mangaka Eiichiro Oda est un phénomène mondial qui a captivé le cœur des fans de toutes les générations au cours de ses 25 années d'existence. Cette aventure palpitante en haute mer est remplie d'histoire d'amitiés, de batailles épiques pour la liberté et de la poursuite de rêves. Rejoignez Monkey D. Luffy et son équipage de pirates attachants, alors qu'ils découvrent la véritable signification du pouvoir et de la justice dans cette grande ère de piraterie.\\r\\n\\r\\nMonkey D. Luffy refuse de laisser qui que ce soit ou quoi que ce soit se mettre en travers de sa quête pour devenir le Roi des pirates. Grâce à son pouvoir d'élasticité conféré par un Fruit du Démon, le jeune pirate fougueux cherche le trésor légendaire connu sous le nom de One Piece. Il mettra le cap sur les eaux périlleuses de Grand Line et recrutera l'équipage du Chapeau de paille. Ce capitaine ne jettera jamais l'ancre tant que ses amis et lui n'auront pas réalisé leurs rêves!\\r\\n\\r\\nOne Piece compte plus de 1100 épisodes. Actuellement, dans l'arc de l'île d'Egghead, l'équipage du Chapeau de paille rencontre enfin le très attendu Dr. Vegapunk. Crunchyroll propose tous les épisodes sous-titrés ainsi que tous les épisodes doublés en anglais, soit plus de 1000 épisodes. De plus, One Piece compte 13 épisodes hors-série et 15 films, dont le dernier, One Piece Film: Red, qui a connu un grand succès. One Piece est produit par Toei.",
+                ZonedDateTime.parse("2024-12-08T08:00:00Z"),
+                EpisodeType.EPISODE,
+                "GYP8PM4KY",
+                37,
+                6,
+                1430,
+                "Paradis des sirènes ! Enfin l'île des hommes-poissons !",
+                "L'équipage arrive enfin sur l'île des hommes-poissons, mais se retrouve séparé. Luffy, Usopp, Sanji et Chopper retrouvent Keimi. Cette dernière les amène à la baie des Sirènes, mais Sanji ne pouvant contrôler son excitation, l'équipage s'attire des problèmes.",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/6df155415e0da8a5b6a83effa7c29654.jpg",
+                Platform.CRUN,
+                "ja-JP",
+                "GPWU8NDE8",
+                "https://www.crunchyroll.com/fr/watch/GPWU8NDE8/mermaids-paradise-landing-at-fish-man-island",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertEquals(EpisodeType.EPISODE, mappings.first().episodeType)
+        assertEquals(1, mappings.first().season)
+        assertEquals(6, mappings.first().number)
+        assertEquals("one-piece-log", mappings.first().anime?.slug)
+    }
+
+    @Test
+    fun `save platform episode with rule #2`() {
+        ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G649PJ0JY", seasonId = "G609CX8W1", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "4"))
+        MapCache.invalidate(Rule::class.java)
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "G649PJ0JY",
+                "Blue Exorcist",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/cead08fd2ced6e6dbe056ce0381da6ff.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/d172ce6deaf012f5e45863d3478854dd.jpg",
+                "Vers la fin de l’ère Edo, un démon connu sous le nom de Roi Impur tua des milliers de personnes. Après avoir vaincu le démon, les Chevaliers de la Croix-Vraie mirent son œil gauche en sécurité dans l’Académie. Mais celui-ci a été volé ! En apprenant que le voleur retient un enfant en otage, Yukio et Rin décident de s’en mêler. L’enquête va alors mener Rin et ses amis à Kyoto et les faire plonger dans une histoire encore plus sinistre. Cependant, est-ce que le fait de savoir que Rin est le fils de Satan va semer la discorde dans le groupe ?",
+                ZonedDateTime.parse("2024-12-07T18:00:00Z"),
+                EpisodeType.EPISODE,
+                "G609CX8W1",
+                3,
+                10,
+                1420,
+                "Sous la neige",
+                "Tandis qu'un cyclope a fait son apparition en plein de centre de Tokyo, Yukio est plus que désespéré après s'en être pris à Ryûji. Et si c'était dans ces moments de solitude qu'il avait besoin de retrouver celle qui l'a toujours encouragé dans les moments difficiles ?",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/770b4a35184b971a8ecc086b4cb1610a.jpg",
+                Platform.CRUN,
+                "ja-JP",
+                "G7PU3PVKP",
+                "https://www.crunchyroll.com/fr/watch/G7PU3PVKP/in-the-falling-snow",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertEquals(EpisodeType.EPISODE, mappings.first().episodeType)
+        assertEquals(4, mappings.first().season)
+        assertEquals(10, mappings.first().number)
+        assertEquals("blue-exorcist", mappings.first().anime?.slug)
+    }
+
+    @Test
+    fun `save platform episode with rule #3`() {
+        ruleService.save(Rule(platform = Platform.ANIM, seriesId = "1166", seasonId = "1", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "2"))
+        MapCache.invalidate(Rule::class.java)
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "1166",
+                "TONBO!",
+                "https://image.animationdigitalnetwork.fr/license/tonbo/tv/web/affiche_350x500.jpg",
+                "https://image.animationdigitalnetwork.fr/license/tonbo/tv/web/license_640x360.jpg",
+                "Igarashi, un ancien joueur professionnel cherchant à s’affranchir de son passé, s’établit à Hinoshima, une région isolée de la préfecture de Kagoshima. Sur place, il croise la route de Tonbo, la seule élève du collège de la péninsule, dotée d’un talent remarquable pour le golf. Cette rencontre fortuite entre deux passionnés de sport est sur le point de faire basculer le cours de leur existence…",
+                ZonedDateTime.parse("2024-12-07T01:30:00Z"),
+                EpisodeType.EPISODE,
+                "1",
+                1,
+                23,
+                1453,
+                "Première fois sous pression",
+                "Le dénouement du championnat approche, et chaque coup devient de plus en plus important à mesure que la tension monte. Pour la première fois, Tonbo doit lui faire face. Elle découvre ainsi le « véritable golf ».",
+                "https://image.animationdigitalnetwork.fr/license/tonbo/tv/web/eps23_640x360.jpg",
+                Platform.ANIM,
+                "ja-JP",
+                "25294",
+                "https://animationdigitalnetwork.fr/video/tonbo/25294-episode-23-premiere-fois-sous-pression",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertEquals(EpisodeType.EPISODE, mappings.first().episodeType)
+        assertEquals(2, mappings.first().season)
+        assertEquals(23, mappings.first().number)
+        assertEquals("tonbo", mappings.first().anime?.slug)
     }
 }

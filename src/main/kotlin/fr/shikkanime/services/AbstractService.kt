@@ -2,6 +2,7 @@ package fr.shikkanime.services
 
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.repositories.AbstractRepository
+import jakarta.persistence.EntityManager
 import java.util.*
 
 abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
@@ -19,5 +20,5 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     open fun delete(entity: E) = getRepository().delete(entity)
 
-    fun deleteAll() = getRepository().deleteAll()
+    fun deleteAll(entityManager: EntityManager) = getRepository().deleteAll(entityManager)
 }
