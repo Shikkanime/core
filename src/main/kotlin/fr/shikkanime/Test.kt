@@ -8,6 +8,7 @@ import fr.shikkanime.utils.StringUtils
 import kotlin.system.exitProcess
 
 enum class ErrorType {
+    INVALID_CHAIN_SEASON,
     INVALID_RELEASE_DATE,
     INVALID_EPISODE_NUMBER,
     INVALID_CHAIN_EPISODE_NUMBER,
@@ -19,7 +20,7 @@ fun main() {
 
     val invalidAnimes = mutableMapOf<Anime, MutableSet<ErrorType>>()
 
-    episodeMappingCacheService.findAll()
+    val sortedWith = episodeMappingCacheService.findAll()
         .sortedWith(
             compareBy(
                 { it.releaseDateTime },
@@ -28,7 +29,20 @@ fun main() {
                 { it.number }
             )
         )
-        .groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
+
+    sortedWith.mapNotNull { it.anime }
+        .distinctBy { it.uuid }
+        .forEach { anime ->
+            val seasons = sortedWith.filter { it.anime!!.uuid == anime.uuid }.mapNotNull { it.season }.distinct().sorted()
+
+            seasons.zipWithNext().forEach { (current, next) ->
+                if (current + 1 != next) {
+                    invalidAnimes.getOrPut(anime) { mutableSetOf() }.add(ErrorType.INVALID_CHAIN_SEASON)
+                }
+            }
+        }
+
+    sortedWith.groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
         .values.forEach { episodes ->
             episodes.groupBy { it.releaseDateTime.toLocalDate() }.values.forEach {
                 if (it.size > 3) {
