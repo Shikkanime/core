@@ -103,6 +103,7 @@ class MemberRepository : AbstractRepository<Member>() {
                     tuple[6, Long::class.java]
                 ).apply {
                     hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
+                    isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
                 }
             }
         }

@@ -82,9 +82,9 @@ class MapCache<K : Any, V>(
         fun invalidate(vararg classes: Class<*>) {
             val loadedCaches = mutableSetOf<MapCache<*, *>>()
 
-            globalCaches.filter { it.classes.any { clazz -> classes.contains(clazz) } }
-                .sortedBy { it.requiredCaches().size }
+            globalCaches.sortedBy { it.requiredCaches().size }
                 .flatMap { it.requiredCaches() + it }
+                .filter { it.classes.any { clazz -> classes.contains(clazz) } }
                 .filter { loadedCaches.add(it) }
                 .forEach {
                     val take = measureTimedValue { it.invalidate() }
@@ -97,7 +97,17 @@ class MapCache<K : Any, V>(
         // For test only
         @Synchronized
         fun invalidateAll() {
-            globalCaches.forEach { it.invalidate() }
+            val loadedCaches = mutableSetOf<MapCache<*, *>>()
+
+            globalCaches.sortedBy { it.requiredCaches().size }
+                .flatMap { it.requiredCaches() + it }
+                .filter { loadedCaches.add(it) }
+                .forEach {
+                    val take = measureTimedValue { it.invalidate() }
+
+                    if (take.value)
+                        logger.info("Cache ${it.name} invalidated in ${take.duration.inWholeMilliseconds} ms")
+                }
         }
     }
 }

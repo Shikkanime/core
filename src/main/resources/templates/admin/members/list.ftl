@@ -69,12 +69,10 @@
             </thead>
             <tbody class="table-group-divider">
             <template x-for="member in pageable.data">
-                <tr x-data="{
-                    isActive: (member.lastUpdateDateTime && new Date(member.creationDateTime).toLocaleDateString() !== new Date(member.lastUpdateDateTime).toLocaleDateString()) || member.lastLoginDateTime
-                }">
+                <tr>
                     <td>
                         <img x-show="member.hasProfilePicture" x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE'" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
-                        <span class="me-1 badge" :class="isActive ? 'bg-success' : 'bg-danger'" x-text="isActive ? 'Active' : 'Inactive'"></span>
+                        <span class="me-1 badge" :class="member.isActive ? 'bg-success' : 'bg-danger'" x-text="member.isActive ? 'Active' : 'Inactive'"></span>
                         <span x-text="member.email || 'N/A'"></span>
                     </td>
                     <td x-text="new Date(member.creationDateTime).toLocaleString()"></td>

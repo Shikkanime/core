@@ -11,4 +11,5 @@ data class DetailedMemberDto(
     val followedAnimesCount: Long,
     val followedEpisodesCount: Long,
     var hasProfilePicture: Boolean = false,
+    var isActive: Boolean = false
 )
