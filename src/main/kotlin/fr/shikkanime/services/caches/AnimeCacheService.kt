@@ -1,9 +1,11 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
@@ -69,7 +71,7 @@ class AnimeCacheService : AbstractCacheService {
             }
         }
 
-    private val findAllByCountryCodeCache = MapCache<CountryCode, List<Anime>>(
+    val findAllByCountryCodeCache = MapCache(
         "AnimeCacheService.findAllByCountryCodeCache",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java),
         fn = { CountryCode.entries },
@@ -143,6 +145,15 @@ class AnimeCacheService : AbstractCacheService {
             }
     }
 
+    private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(
+        "AnimeCacheService.findBySlugCache",
+        classes = listOf(Anime::class.java),
+    ) {
+        animeService.findBySlug(it.countryCode, it.id)?.let { anime ->
+            AbstractConverter.convert(anime, AnimeDto::class.java)
+        }
+    }
+
     fun findAllBy(
         countryCode: CountryCode?,
         uuid: UUID?,
@@ -158,9 +169,9 @@ class AnimeCacheService : AbstractCacheService {
 
     fun findAll() = CountryCode.entries.flatMap { findAllByCountryCodeCache[it]!! }
 
-    fun find(uuid: UUID?) = findAll().find { it.uuid == uuid }
+    fun find(uuid: UUID?) = findAll().firstOrNull { it.uuid == uuid }
 
-    fun findBySlug(countryCode: CountryCode, slug: String) = findAllByCountryCodeCache[countryCode]!!.find { it.slug == slug }
+    fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]

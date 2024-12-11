@@ -44,7 +44,11 @@ object DisneyPlusWrapper {
         )
 
         require(seasonsResponse.status.value == 200) { "Failed to fetch Disney+ content" }
-        val jsonObject = ObjectParser.fromJson(seasonsResponse.bodyAsText(), JsonObject::class.java)
+        return parseAnimeJson(seasonsResponse.bodyAsText())
+    }
+
+    fun parseAnimeJson(string: String): Pair<JsonObject, List<String>> {
+        val jsonObject = ObjectParser.fromJson(string, JsonObject::class.java)
         val pageObject = jsonObject.getAsJsonObject("data").getAsJsonObject("page")
 
         val seasons = pageObject.getAsJsonArray("containers")
@@ -68,17 +72,26 @@ object DisneyPlusWrapper {
                 "https://disney.api.edge.bamgrid.com/explore/v1.4/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}"
             val response = HttpRequest().get(url, mapOf("Authorization" to "Bearer $accessToken"))
             require(response.status.value == 200) { "Failed to fetch Disney+ content" }
-            val json = ObjectParser.fromJson(response.bodyAsText(), JsonObject::class.java)
-
-            val jsonObject = json.getAsJsonObject("data").getAsJsonObject("season")
-            hasMore = jsonObject.getAsJsonObject("pagination").getAsBoolean("hasMore") ?: false
-
-            jsonObject.getAsJsonArray("items")
-                .filter { it.asJsonObject.getAsString("type") == "view" }
-                .forEach { episodes.add(it.asJsonObject) }
+            hasMore = parseSeasonJson(response.bodyAsText(), episodes)
         } while (hasMore)
 
         return episodes
+    }
+
+    fun parseSeasonJson(
+        string: String,
+        episodes: MutableList<JsonObject>
+    ): Boolean {
+        val json = ObjectParser.fromJson(string, JsonObject::class.java)
+
+        val jsonObject = json.getAsJsonObject("data").getAsJsonObject("season")
+        val hasMore = jsonObject.getAsJsonObject("pagination").getAsBoolean("hasMore") ?: false
+
+        jsonObject.getAsJsonArray("items")
+            .filter { it.asJsonObject.getAsString("type") == "view" }
+            .forEach { episodes.add(it.asJsonObject) }
+
+        return hasMore
     }
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"

@@ -11,13 +11,10 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.normalize
-import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.DisneyPlusWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -63,6 +60,29 @@ class DisneyPlusPlatform :
         return animeDetails to episodes
     }
 
+    private fun getFileApiContent(
+        bypassFileContent: File,
+        simulcast: DisneyPlusConfiguration.DisneyPlusSimulcast
+    ): Pair<JsonObject, List<JsonObject>> {
+        val (animeDetails, seasons) = DisneyPlusWrapper.parseAnimeJson(bypassFileContent.readText())
+
+        val episodes = seasons.flatMap { season ->
+            val seasonEpisodes = mutableListOf<JsonObject>()
+
+            DisneyPlusWrapper.parseSeasonJson(
+                File(
+                    ClassLoader.getSystemClassLoader()
+                        .getResource("disney_plus/${simulcast.name}/episodes-$season.json")?.file
+                        ?: throw Exception("File not found")
+                ).readText(), seasonEpisodes
+            )
+
+            seasonEpisodes
+        }
+
+        return animeDetails to episodes
+    }
+
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
@@ -71,12 +91,19 @@ class DisneyPlusPlatform :
                 it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
                     .isEqualOrAfter(LocalTime.parse(it.releaseTime))
             }.forEach { simulcast ->
-                val (animeDetails, episodes) = getApiContent(
-                    CountryCodeDisneyPlusSimulcastKeyCache(
-                        countryCode,
+                val (animeDetails, episodes) = if (bypassFileContent != null && bypassFileContent.exists()) {
+                    getFileApiContent(
+                        bypassFileContent,
                         simulcast
-                    ), zonedDateTime
-                )
+                    )
+                } else {
+                    getApiContent(
+                        CountryCodeDisneyPlusSimulcastKeyCache(
+                            countryCode,
+                            simulcast
+                        ), zonedDateTime
+                    )
+                }
 
                 episodes.forEach {
                     try {
@@ -137,11 +164,13 @@ class DisneyPlusPlatform :
             zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${simulcast.releaseTime}Z"
         val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
 
-        if (hashCache.contains(oldId) || hashCache.contains(id)) {
+        val computedId = EncryptionManager.toSHA512("$animeName-$season-$number").substring(0..<8)
+
+        if (hashCache.contains(oldId) || hashCache.contains(id) || hashCache.contains(computedId)) {
             throw AnimeException("Episode already exists")
         }
 
-        hashCache.addAll(mutableListOf(oldId, id))
+        hashCache.addAll(mutableListOf(oldId, id, computedId))
 
         return Episode(
             countryCode = countryCode,

@@ -72,7 +72,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         cb: CriteriaBuilder,
         root: Root<Anime>,
         searchTypes: Array<LangType>?
-    ): MutableList<Predicate> {
+    ): List<Predicate> {
         val orPredicate = mutableListOf<Predicate>()
 
         countryCode?.let { cc ->
@@ -206,6 +206,24 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
+        }
+    }
+
+    override fun find(uuid: UUID): Anime? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[Anime_.uuid], uuid))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+                ?.apply {
+                    Hibernate.initialize(simulcasts)
+                    Hibernate.initialize(platformIds)
+                }
         }
     }
 

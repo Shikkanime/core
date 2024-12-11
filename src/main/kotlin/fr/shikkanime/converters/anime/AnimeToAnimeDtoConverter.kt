@@ -35,10 +35,10 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             image = from.image!!,
             banner = from.banner!!,
             description = from.description,
-            simulcasts = convert(
+            simulcasts = if (Hibernate.isInitialized(from.simulcasts)) convert(
                 from.simulcasts.sortBySeasonAndYear(),
                 SimulcastDto::class.java
-            )!!,
+            )!! else null,
             audioLocales = audioLocales.takeIf { it.isNotEmpty() },
             langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),

@@ -38,6 +38,24 @@ class FetchEpisodesJob : AbstractJob {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
+    fun addHashCaches(
+        it: AbstractPlatform<*, *, *>,
+        variants: List<EpisodeVariant>
+    ) {
+        if (it.getPlatform() == Platform.DISN) {
+            val episodeVariants = variants.filter { variant -> variant.platform == it.getPlatform() }
+
+            it.hashCache.addAll(episodeVariants.map { variant ->
+                ".{2}-.{4}-(.*)-.{2}-.{2}".toRegex().find(variant.identifier!!)!!.groupValues[1]
+            })
+
+            it.hashCache.addAll(episodeVariants.map { variant ->
+                EncryptionManager.toSHA512("${variant.mapping!!.anime!!.name}-${variant.mapping!!.season}-${variant.mapping!!.number}")
+                    .substring(0..<8)
+            })
+        }
+    }
+
     override fun run() {
         if (isRunning) {
             if (++lock > maxLock) {
@@ -56,16 +74,7 @@ class FetchEpisodesJob : AbstractJob {
         if (!isInitialized) {
             identifiers.addAll(episodeVariantCacheService.findAllIdentifiers())
             val variants = episodeVariantCacheService.findAll()
-
-            Constant.abstractPlatforms.forEach {
-                it.hashCache.addAll(
-                    variants.filter { variant -> variant.platform == it.getPlatform() }
-                        .map { variant ->
-                            ".{2}-.{4}-(.*)-.{2}-.{2}".toRegex().find(variant.identifier!!)!!.groupValues[1]
-                        }
-                )
-            }
-
+            Constant.abstractPlatforms.forEach { addHashCaches(it, variants) }
             variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
             isInitialized = true
         }
