@@ -13,7 +13,6 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import java.util.UUID
@@ -25,9 +24,6 @@ class EpisodeMappingCacheService : AbstractCacheService {
 
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var animeService: AnimeService
     
     @Inject
     private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
@@ -35,7 +31,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
 
-    private val findAllCache = MapCache<String, List<EpisodeMapping>>(
+    private val findAllCache = MapCache(
         "EpisodeMappingCacheService.findAllCache",
         classes = listOf(EpisodeMapping::class.java),
         fn = { listOf(DEFAULT_ALL_KEY) },
@@ -53,12 +49,13 @@ class EpisodeMappingCacheService : AbstractCacheService {
             classes = listOf(
                 EpisodeMapping::class.java,
                 EpisodeVariant::class.java
-            )
+            ),
+            requiredCaches = { listOf(animeCacheService.findAllByCountryCodeCache) }
         ) {
             PageableDto.fromPageable(
                 episodeMappingService.findAllBy(
                     it.countryCode,
-                    animeService.find(it.uuid),
+                    animeCacheService.find(it.uuid),
                     it.season,
                     it.sort,
                     it.page,
@@ -69,7 +66,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
             )
         }
 
-    private val findAllSeoCache = MapCache<String, List<EpisodeMappingSeoDto>>(
+    private val findAllSeoCache = MapCache(
         "EpisodeMappingCacheService.findAllSeoCache",
         classes = listOf(EpisodeMapping::class.java),
         fn = { listOf(DEFAULT_ALL_KEY) },

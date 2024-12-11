@@ -430,7 +430,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     private fun updateAnimeSimulcast(animeDto: AnimeDto, anime: Anime) {
         anime.simulcasts.clear()
 
-        animeDto.simulcasts.forEach { simulcastDto ->
+        animeDto.simulcasts?.forEach { simulcastDto ->
             val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
 
             if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
