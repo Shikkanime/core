@@ -2,36 +2,24 @@ package fr.shikkanime.converters.member
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.member.MemberDto
-import fr.shikkanime.dtos.member.TokenDto
+import fr.shikkanime.dtos.member.SiteMemberDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.ImageService
-import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.utils.withUTCString
 
-class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
+class MemberToSiteMemberDtoConverter : AbstractConverter<Member, SiteMemberDto>() {
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
     @Converter
-    fun convert(from: Member): MemberDto {
-        val tokenDto = convert(from, TokenDto::class.java)
+    fun convert(from: Member): SiteMemberDto {
         val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(from)
 
-        return MemberDto(
+        return SiteMemberDto(
             uuid = from.uuid!!,
-            token = tokenDto.token!!,
             creationDateTime = from.creationDateTime.withUTCString(),
-            lastUpdateDateTime = from.lastUpdateDateTime.withUTCString(),
-            isPrivate = from.isPrivate,
             username = from.username,
-            email = from.email,
-            followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(from).toSet(),
-            followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from).toSet(),
             totalDuration = seenAndUnseenDuration.first,
             totalUnseenDuration = seenAndUnseenDuration.second,
             hasProfilePicture = ImageService[from.uuid, ImageService.Type.IMAGE] != null

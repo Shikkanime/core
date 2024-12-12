@@ -45,6 +45,8 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
+    fun findByUsernameAndIsPublic(username: String) = memberRepository.findByUsernameAndIsPublic(username)
+
     fun findByIdentifier(identifier: String) =
         memberRepository.findByIdentifier(EncryptionManager.toSHA512(identifier))
 
@@ -75,7 +77,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         val saved = save(
             Member(
                 isPrivate = true,
-                username = EncryptionManager.toSHA512(identifier),
+                identifier = EncryptionManager.toSHA512(identifier),
                 encryptedPassword = byteArrayOf()
             )
         )

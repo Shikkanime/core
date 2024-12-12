@@ -76,6 +76,7 @@ class MemberRepository : AbstractRepository<Member>() {
             query.multiselect(
                 root[Member_.uuid],
                 root[Member_.email],
+                root[Member_.username],
                 root[Member_.creationDateTime],
                 root[Member_.lastUpdateDateTime],
                 maxActionDateTimeSubquery,
@@ -96,11 +97,12 @@ class MemberRepository : AbstractRepository<Member>() {
                 DetailedMemberDto(
                     tuple[0, UUID::class.java],
                     tuple[1, String::class.java],
-                    tuple[2, ZonedDateTime::class.java].withUTCString(),
-                    tuple[3, ZonedDateTime::class.java]?.withUTCString(),
+                    tuple[2, String::class.java],
+                    tuple[3, ZonedDateTime::class.java].withUTCString(),
                     tuple[4, ZonedDateTime::class.java]?.withUTCString(),
-                    tuple[5, Long::class.java],
-                    tuple[6, Long::class.java]
+                    tuple[5, ZonedDateTime::class.java]?.withUTCString(),
+                    tuple[6, Long::class.java],
+                    tuple[7, Long::class.java]
                 ).apply {
                     hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
                     isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
@@ -138,7 +140,12 @@ class MemberRepository : AbstractRepository<Member>() {
         Member_.encryptedPassword to password
     )
 
-    fun findByIdentifier(identifier: String) = findBy(Member_.username to identifier)
+    fun findByUsernameAndIsPublic(username: String) = findBy(
+        Member_.username to username,
+        Member_.isPrivate to false
+    )
+
+    fun findByIdentifier(identifier: String) = findBy(Member_.identifier to identifier)
 
     fun findByEmail(email: String) = findBy(Member_.email to email)
 

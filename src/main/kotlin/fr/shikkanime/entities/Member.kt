@@ -19,8 +19,10 @@ class Member(
     var lastUpdateDateTime: ZonedDateTime = ZonedDateTime.now(),
     @Column(nullable = false, name = "is_private")
     val isPrivate: Boolean = false,
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     var username: String? = null,
+    @Column(nullable = true, unique = true)
+    var identifier: String? = null,
     @Column(nullable = true, unique = true)
     var email: String? = null,
     @Column(nullable = false, name = "encrypted_password")

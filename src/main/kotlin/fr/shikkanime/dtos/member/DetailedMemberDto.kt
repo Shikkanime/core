@@ -5,6 +5,7 @@ import java.util.*
 data class DetailedMemberDto(
     val uuid: UUID,
     val email: String?,
+    val username: String,
     val creationDateTime: String,
     val lastUpdateDateTime: String?,
     val lastLoginDateTime: String?,

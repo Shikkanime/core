@@ -17,6 +17,7 @@ class MemberToTokenDtoConverter : AbstractConverter<Member, TokenDto>() {
             .withClaim("uuid", from.uuid.toString())
             .withClaim("isPrivate", from.isPrivate)
             .withClaim("username", from.username)
+            .withClaim("identifier", from.identifier)
             .withClaim("creationDateTime", from.creationDateTime.toString())
             .withClaim("roles", from.roles.map { it.name })
             .withExpiresAt(Date(System.currentTimeMillis() + (1 * 60 * 60 * 1000)))

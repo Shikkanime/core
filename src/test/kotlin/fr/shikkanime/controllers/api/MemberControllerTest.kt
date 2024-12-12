@@ -218,7 +218,7 @@ class MemberControllerTest : AbstractControllerTest() {
                 assertEquals(memberAction.validated, true)
                 assertNotNull(memberAction.code)
 
-                assertNotEquals(memberAction.member!!.username, findPrivateMember2.username)
+                assertNotEquals(memberAction.member!!.identifier, findPrivateMember2.identifier)
             }
         }
     }

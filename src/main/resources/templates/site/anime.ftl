@@ -25,7 +25,7 @@
     <div class="container mb-3 anime-infos">
         <div class="row g-3 mt-3">
             <div class="col-md-4 col-12 mt-0 text-center">
-                <img src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
+                <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
                      alt="${animeSanitized} anime" class="img-fluid w-50 rounded-4"
                      width="480"
                      height="720">
