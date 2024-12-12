@@ -43,3 +43,5 @@
 [#-- @ftlvariable name="countryCode" type="fr.shikkanime.entities.enums.CountryCode" --]
 [#-- @ftlvariable name="episodeType" type="fr.shikkanime.entities.enums.EpisodeType" --]
 [#-- @ftlvariable name="jobs" type="kotlin.collections.AbstractList<java.lang.String>" --]
+
+[#-- @ftlvariable name="member" type="fr.shikkanime.dtos.member.SiteMemberDto" --]

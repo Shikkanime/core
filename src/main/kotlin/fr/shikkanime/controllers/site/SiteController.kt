@@ -1,9 +1,12 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.member.SiteMemberDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.*
+import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
@@ -34,6 +37,9 @@ class SiteController {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
+    private lateinit var memberService: MemberService
 
     private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
         val animeSimulcastLimit = 6
@@ -244,6 +250,18 @@ class SiteController {
                 "previousWeek" to startOfWeekDay.minusDays(7),
                 "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )
+        )
+    }
+
+    @Path("@{pseudo}")
+    @Get
+    private fun profile(@PathParam("pseudo") pseudo: String): Response {
+        val dto = AbstractConverter.convert(memberService.findByUsernameAndIsPublic(pseudo) ?: return Response.notFound(), SiteMemberDto::class.java, 6)
+
+        return Response.template(
+            "/site/profile.ftl",
+            dto.username,
+            mutableMapOf("member" to dto)
         )
     }
 

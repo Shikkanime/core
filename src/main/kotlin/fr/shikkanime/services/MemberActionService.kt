@@ -135,7 +135,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     identifier = StringUtils.generateRandomString(12)
                 } while (memberService.findByIdentifier(identifier) != null)
 
-                memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
+                memberAction.member!!.identifier = EncryptionManager.toSHA512(identifier)
                 memberService.update(memberAction.member!!)
                 traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
 

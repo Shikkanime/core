@@ -59,6 +59,7 @@
             <thead>
             <tr>
                 <th scope="col">Email</th>
+                <th scope="col">Username</th>
                 <th scope="col">Created at</th>
                 <th scope="col">Last updated at</th>
                 <th scope="col">Last login at</th>
@@ -75,6 +76,7 @@
                         <span class="me-1 badge" :class="member.isActive ? 'bg-success' : 'bg-danger'" x-text="member.isActive ? 'Active' : 'Inactive'"></span>
                         <span x-text="member.email || 'N/A'"></span>
                     </td>
+                    <td x-text="member.username ? member.username : 'N/A'"></td>
                     <td x-text="new Date(member.creationDateTime).toLocaleString()"></td>
                     <td x-text="member.lastUpdateDateTime ? new Date(member.lastUpdateDateTime).toLocaleString() : 'N/A'"></td>
                     <td x-text="member.lastLoginDateTime ? new Date(member.lastLoginDateTime).toLocaleString() : 'N/A'"></td>

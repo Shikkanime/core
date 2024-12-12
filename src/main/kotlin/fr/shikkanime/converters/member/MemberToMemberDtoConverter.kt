@@ -28,6 +28,7 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
             creationDateTime = from.creationDateTime.withUTCString(),
             lastUpdateDateTime = from.lastUpdateDateTime.withUTCString(),
             isPrivate = from.isPrivate,
+            username = from.username,
             email = from.email,
             followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(from).toSet(),
             followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from).toSet(),
