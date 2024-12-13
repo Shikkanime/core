@@ -5,10 +5,10 @@
         <div class="d-flex flex-column flex-shrink-0 p-3 bg-light shadow">
             <a href="/admin/dashboard"
                class="d-flex align-items-center mb-md-0 me-md-auto link-dark text-decoration-none">
-                <img src="/assets/img/dark_banner.png" width="200" height="44" crossorigin="anonymous"
+                <img src="/assets/img/dark_banner.webp" width="200" height="44" crossorigin="anonymous"
                      class="img-fluid d-none d-md-inline-block" alt="Shikkanime dark banner">
 
-                <img src="/assets/img/dark_logo.png" width="44" height="44" crossorigin="anonymous"
+                <img src="/assets/img/dark_icon.webp" width="44" height="44" crossorigin="anonymous"
                      class="img-fluid d-block d-md-none" alt="Shikkanime dark logo">
             </a>
             <hr>

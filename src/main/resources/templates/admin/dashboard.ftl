@@ -5,16 +5,10 @@
         <div class="container-fluid d-flex">
             <div class="row g-3 align-items-center mb-3">
                 <div class="col-auto">
-                    <label class="col-form-label" for="hours">Hours</label>
-                </div>
-                <div class="col-auto">
-                    <select class="form-select" id="hours">
-                        <option value="1" selected>1</option>
-                        <option value="3">3</option>
-                        <option value="6">6</option>
-                        <option value="12">12</option>
-                        <option value="24">24</option>
-                        <option value="48">48</option>
+                    <select class="form-select" id="datemenu">
+                        <option value="1" selected>Last hour</option>
+                        <option value="24">Last 24 hours</option>
+                        <option value="168">Last 7 days</option>
                     </select>
                 </div>
             </div>
@@ -44,10 +38,13 @@
 
             <div class="col-md-6">
                 <div class="card p-3">
-                    <div class="d-flex mb-4">
+                    <div class="d-flex flex-column flex-md-row mb-3 mb-md-4 justify-content-center">
                         <h4 class="card-title">Simulcasts</h4>
-                        <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate"
-                           class="btn btn-danger ms-auto me-0">Invalidate</a>
+
+                        <div class="ms-md-auto me-md-0">
+                            <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate"
+                               class="btn btn-danger">Invalidate</a>
+                        </div>
                     </div>
 
                     <ul class="list-group list-group-numbered">
@@ -76,10 +73,13 @@
 
             <div class="col-md-6">
                 <div class="card p-3">
-                    <div class="d-flex mb-4">
+                    <div class="d-flex flex-column flex-md-row mb-3 mb-md-4 justify-content-center">
                         <h4 class="card-title">Images</h4>
-                        <a id="images-invalidate" href="/admin/images-invalidate" class="btn btn-danger ms-auto me-0">Invalidate</a>
-                        <a href="/admin/images-save" class="btn btn-success ms-2 me-0">Save</a>
+
+                        <div class="ms-md-auto me-md-0">
+                            <a id="images-invalidate" href="/admin/images-invalidate" class="btn btn-danger">Invalidate</a>
+                            <a href="/admin/images-save" class="btn btn-success">Save</a>
+                        </div>
                     </div>
 
                     <div class="row g-3">
@@ -106,6 +106,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
+
     <script src="/assets/js/home_chart.js" crossorigin="anonymous"></script>
 </@navigation.display>
