@@ -133,6 +133,13 @@ class AnimationDigitalNetworkPlatform :
             else -> EpisodeType.EPISODE
         }
 
+        val movieMatch = "Film (\\d*)".toRegex().find(numberAsString ?: "")
+
+        if (movieMatch != null) {
+            val movieNumber = movieMatch.groupValues[1].toIntOrNull()
+            return (movieNumber ?: number) to EpisodeType.FILM
+        }
+
         val specialMatch = "Épisode spécial (\\d*)".toRegex().find(numberAsString ?: "")
 
         if (specialMatch != null) {

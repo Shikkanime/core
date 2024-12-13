@@ -28,7 +28,8 @@ class AnimeController : HasPageableRoute() {
             OpenAPIResponse(400, "Invalid week format", MessageDto::class),
             OpenAPIResponse(401, "Unauthorized")
         ],
-        security = true
+        security = true,
+        deprecated = true
     )
     private fun getWeekly(
         @JWTUser

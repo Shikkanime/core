@@ -142,6 +142,20 @@ class AnimeController : HasPageableRoute() {
         )
     }
 
+    @Path("/alerts")
+    @Get
+    @AdminSessionAuthenticated
+    @OpenAPI(hidden = true)
+    private fun getAlerts(
+        @QueryParam("page", description = "Page number for pagination")
+        pageParam: Int?,
+        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        limitParam: Int?,
+    ): Response {
+        val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
+        return Response.ok(animeService.getAlerts(page, limit))
+    }
+
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated
