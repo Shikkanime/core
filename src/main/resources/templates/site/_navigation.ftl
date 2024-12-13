@@ -59,7 +59,7 @@
                 <div class="col-md-4 d-flex align-items-center">
                     <div>
                         <a href="/" class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
-                            <img src="/assets/img/favicons/favicon-64x64.png" alt="Shikkanime" width="24" height="24">
+                            <img src="/assets/img/light_icon.webp" alt="Shikkanime" width="24" height="24">
                         </a>
 
                         <#if seoDescription?? && seoDescription?length != 0>

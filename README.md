@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="src/main/resources/assets/img/dark_logo.png" alt="Shikkanime dark logo">
+    <img src="src/main/resources/assets/img/dark_icon.webp" width="128" height="128" alt="Shikkanime dark logo">
     <br>
     <a href="#getting-started">Getting Started</a> •
     <a href="https://www.shikkanime.fr">Website</a> •

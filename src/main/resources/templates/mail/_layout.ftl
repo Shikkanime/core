@@ -5,7 +5,7 @@
                 <td style="vertical-align: top; text-align: center;">
                     <div style="display: inline-block; max-width: 800px; width: 100%; margin: 50px 10px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); padding: 20px; box-sizing: border-box;">
                         <a href="${baseUrl}">
-                            <img src="${baseUrl}/assets/img/dark_banner.png"
+                            <img src="${baseUrl}/assets/img/dark_banner.webp"
                                  alt="Illustration"
                                  style="width: 100%; max-width: 400px; height: auto; margin-bottom: 20px;">
                         </a>
