@@ -2,9 +2,14 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.PlatformDto
+import fr.shikkanime.dtos.animes.AnimeAlertDto
 import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.animes.AnimeError
+import fr.shikkanime.dtos.animes.ErrorType
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimeDto
@@ -14,6 +19,8 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.AnimeRepository
+import fr.shikkanime.services.caches.AnimeCacheService
+import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
@@ -23,6 +30,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import java.util.*
+import kotlin.collections.zipWithNext
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
@@ -33,6 +41,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
+
+    @Inject
+    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
@@ -48,6 +59,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
+
+    @Inject
+    private lateinit var animeCacheService: AnimeCacheService
 
     override fun getRepository() = animeRepository
 
@@ -237,6 +251,83 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 ).toSet()
             )
         }
+    }
+
+    fun getAlerts(page: Int, limit: Int): PageableDto<AnimeAlertDto> {
+        val invalidAnimes = mutableMapOf<Anime, Pair<ZonedDateTime, MutableSet<AnimeError>>>()
+
+        val sortedWith = episodeMappingCacheService.findAll().sortedWith(
+            compareBy(
+                { it.releaseDateTime },
+                { it.season },
+                { it.episodeType },
+                { it.number }
+            )
+        )
+
+        sortedWith.mapNotNull { it.anime }
+            .distinctBy { it.uuid }
+            .forEach { anime ->
+                val seasons = sortedWith.filter { it.anime!!.uuid == anime.uuid }
+                    .mapNotNull { it.season }
+                    .distinct()
+                    .sorted()
+
+                seasons.zipWithNext().forEach { (current, next) ->
+                    if (current + 1 != next) {
+                        invalidAnimes.getOrPut(anime) { animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(anime)!!.second[current]!! to mutableSetOf() }.second
+                            .add(AnimeError(ErrorType.INVALID_CHAIN_SEASON, "$current -> $next"))
+                    }
+                }
+            }
+
+        sortedWith.groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
+            .values.forEach { episodes ->
+                val anime = episodes.first().anime!!
+                val (audioLocales, _) = animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(anime)!!
+
+                if (episodes.first().episodeType == EpisodeType.EPISODE) {
+                    episodes.groupBy { it.releaseDateTime.toLocalDate() }
+                        .values.forEach {
+                            if (it.size > 3 && !(audioLocales.size == 1 && LangType.fromAudioLocale(anime.countryCode!!, audioLocales.first()) == LangType.VOICE)) {
+                                it.forEach { episodeMapping ->
+                                    invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
+                                        .add(AnimeError(ErrorType.INVALID_RELEASE_DATE, "S${episodeMapping.season} ${episodeMapping.releaseDateTime.toLocalDate()}[${it.size}]"))
+                                    return@forEach
+                                }
+                            }
+                        }
+                }
+
+                episodes.filter { it.number!! < 0 }
+                    .forEach { episodeMapping ->
+                        invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
+                            .add(AnimeError(ErrorType.INVALID_EPISODE_NUMBER, StringUtils.toEpisodeMappingString(AbstractConverter.convert(episodeMapping,
+                                EpisodeMappingDto::class.java))))
+                    }
+
+                episodes.zipWithNext().forEach { (current, next) ->
+                    if (current.number!! + 1 != next.number!!) {
+                        invalidAnimes.getOrPut(current.anime!!) { current.releaseDateTime to mutableSetOf() }.second
+                            .add(AnimeError(ErrorType.INVALID_CHAIN_EPISODE_NUMBER, "${StringUtils.toEpisodeMappingString(AbstractConverter.convert(current,
+                                EpisodeMappingDto::class.java))} -> ${StringUtils.toEpisodeMappingString(AbstractConverter.convert(next,
+                                EpisodeMappingDto::class.java))}"))
+                    }
+                }
+            }
+
+        return PageableDto(
+            data = invalidAnimes.map { (anime, pair) ->
+                AnimeAlertDto(
+                    AbstractConverter.convert(anime, AnimeDto::class.java),
+                    pair.first.withUTCString(),
+                    pair.second
+                )
+            }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }.drop((page - 1) * limit).take(limit).toSet(),
+            page = page,
+            limit = limit,
+            total = invalidAnimes.size.toLong()
+        )
     }
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {

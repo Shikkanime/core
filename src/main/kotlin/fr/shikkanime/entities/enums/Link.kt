@@ -16,6 +16,7 @@ enum class Link(
     ANIMES("/admin/animes", "/admin/animes/list.ftl", "bi bi-file-earmark-play", "Animes"),
     EPISODES("/admin/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
     TRACE_ACTIONS("/admin/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
+    ANIME_ALERTS("/admin/anime-alerts", "/admin/anime-alerts.ftl", "bi bi-bug", "Anime alerts"),
     MEMBERS("/admin/members", "/admin/members/list.ftl", "bi bi-people", "Members"),
     RULES("/admin/rules", "/admin/rules.ftl", "bi bi-rulers", "Rules"),
     JOBS("/admin/jobs", "/admin/jobs.ftl", "bi bi-gear-wide-connected", "Jobs"),
