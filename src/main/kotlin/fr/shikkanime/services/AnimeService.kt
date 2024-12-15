@@ -344,10 +344,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val animes = findAll()
 
         animes.forEach { anime ->
-            val episodeMappings = mappingsGroupped[anime.uuid] ?: return@forEach
-
             // Avoid lazy loading exception
             anime.simulcasts = mutableSetOf()
+
+            val episodeMappings = mappingsGroupped[anime.uuid] ?: return@forEach
 
             episodeMappings.forEach { episodeMapping ->
                 val previousReleaseDateTime = episodeMappings.filter {
