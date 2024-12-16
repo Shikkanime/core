@@ -2,7 +2,6 @@ package fr.shikkanime.socialnetworks
 
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.wrappers.ThreadsWrapper
