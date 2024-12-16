@@ -62,17 +62,6 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun platformAccount(platform: Platform): String {
-        return when (platform) {
-            Platform.ANIM -> "@ADNanime"
-            Platform.CRUN -> "@Crunchyroll_fr"
-            Platform.NETF -> "@NetflixFR"
-            Platform.DISN -> "@DisneyPlusFR"
-            Platform.PRIM -> "@PrimeVideoFR"
-            else -> platform.platformName
-        }
-    }
-
     override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return

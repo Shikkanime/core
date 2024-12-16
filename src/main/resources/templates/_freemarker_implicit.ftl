@@ -26,16 +26,13 @@
 [#-- @ftlvariable name="nextWeek" type="java.lang.String" --]
 [#-- @ftlvariable name="askCodeUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="success" type="java.lang.Integer" --]
-
 [#-- @ftlvariable name="baseUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="apiUrl" type="java.lang.String" --]
 [#-- @ftlvariable name="additionalHeadTags" type="java.lang.String" --]
-
 [#-- @ftlvariable name="episodeMappings" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.mappings.EpisodeMappingDto>" --]
 [#-- @ftlvariable name="episodeMapping" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
 [#-- @ftlvariable name="previousEpisode" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
 [#-- @ftlvariable name="nextEpisode" type="fr.shikkanime.dtos.mappings.EpisodeMappingDto" --]
-
 [#-- @ftlvariable name="code" type="java.lang.String" --]
 [#-- @ftlvariable name="showMore" type="java.lang.Boolean" --]
 [#-- @ftlvariable name="showLess" type="java.lang.Boolean" --]
@@ -43,3 +40,5 @@
 [#-- @ftlvariable name="urls" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.URLDto>" --]
 [#-- @ftlvariable name="randomAnimeSlug" type="java.lang.String" --]
 [#-- @ftlvariable name="webToken" type="java.lang.String" --]
+[#-- @ftlvariable name="countryCode" type="fr.shikkanime.entities.enums.CountryCode" --]
+[#-- @ftlvariable name="episodeType" type="fr.shikkanime.entities.enums.EpisodeType" --]

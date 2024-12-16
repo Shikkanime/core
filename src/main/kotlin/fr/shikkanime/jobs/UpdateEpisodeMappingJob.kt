@@ -177,14 +177,17 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val dtos = AbstractConverter.convert(allNewEpisodes.mapNotNull { it.mapping }.distinctBy { it.uuid }, EpisodeMappingDto::class.java)!!
 
             logger.info("New episodes:")
+            val lines = mutableSetOf<String>()
 
             dtos.forEach {
-                logger.info("${it.anime.shortName} | Saison ${it.season} • ${StringUtils.getEpisodeTypeLabel(it.episodeType)} ${it.number}")
+                val line = "${it.anime.shortName} | ${StringUtils.toEpisodeMappingString(it)}"
+                lines.add(line)
+                logger.info("- $line")
             }
 
             emailService.sendAdminEmail(
                 "UpdateEpisodeMappingJob - ${dtos.size} new episodes",
-                dtos.joinToString("<br>") { "- ${it.anime.shortName} | Saison ${it.season} • ${StringUtils.getEpisodeTypeLabel(it.episodeType)} ${it.number}" }
+                lines.joinToString("<br>") { "- $it" }
             )
         }
     }

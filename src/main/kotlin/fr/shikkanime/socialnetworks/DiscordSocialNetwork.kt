@@ -95,7 +95,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         embedMessage.setThumbnail(episodeDto.mapping.anime.image)
         embedMessage.setDescription(
             "**${episodeDto.mapping.title ?: "Untitled"}**\n${
-                StringUtils.toEpisodeString(
+                StringUtils.toEpisodeVariantString(
                     episodeDto
                 )
             }"

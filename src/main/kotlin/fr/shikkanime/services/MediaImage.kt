@@ -1,11 +1,10 @@
 package fr.shikkanime.services
 
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.resize
 import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.runBlocking
@@ -159,25 +158,17 @@ object MediaImage {
     ) {
         graphics.color = Color.WHITE
         graphics.font = font.deriveFont(32f).deriveFont(Font.BOLD)
+        val countryCode = episodeVariantDto.mapping.anime.countryCode
 
-        val episodeTypeLabel = when (episodeVariantDto.mapping.episodeType) {
-            EpisodeType.EPISODE -> "ÉP"
-            EpisodeType.SPECIAL -> "SP"
-            EpisodeType.FILM -> "FILM "
-            EpisodeType.SUMMARY -> "RÉCAP"
-            EpisodeType.SPIN_OFF -> "SPIN-OFF"
+        val text = buildString {
+            append("S${episodeVariantDto.mapping.season} ")
+            append(StringUtils.getEpisodeTypePrefixLabel(countryCode, episodeVariantDto.mapping.episodeType))
+            append(episodeVariantDto.mapping.number)
+            append(" ")
+            append(StringUtils.toLangTypeString(countryCode, episodeVariantDto.audioLocale))
+            append(" | DISPONIBLE")
         }
 
-        val langTypeLabel = when (LangType.fromAudioLocale(
-            episodeVariantDto.mapping.anime.countryCode,
-            episodeVariantDto.audioLocale
-        )) {
-            LangType.SUBTITLES -> "VOSTFR"
-            LangType.VOICE -> "VF"
-        }
-
-        val text =
-            "S${episodeVariantDto.mapping.season} $episodeTypeLabel${episodeVariantDto.mapping.number} $langTypeLabel | DISPONIBLE"
         graphics.font = graphics.adjustFontSizeToFit(text, dimensions.animeImageWidth - (dimensions.margin / 2) * 2)
 
         val x =

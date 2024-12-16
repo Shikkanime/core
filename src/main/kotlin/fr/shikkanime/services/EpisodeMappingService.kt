@@ -7,11 +7,13 @@ import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -73,40 +75,39 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     }
 
     fun updateAll(updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto) {
-        val episodes = updateAllEpisodeMappingDto.uuids.mapNotNull { find(it) }
+        val episodes = updateAllEpisodeMappingDto.uuids
+            .mapNotNull { find(it) }
+            .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
+
+        var startDate = updateAllEpisodeMappingDto.startDate?.let { LocalDate.parse(it) }
 
         episodes.forEach { episode ->
-            var forcedUpdate = false
+            var forcedUpdate = updateAllEpisodeMappingDto.forceUpdate == true
 
-            if (updateAllEpisodeMappingDto.episodeType != null) {
-                episode.episodeType = updateAllEpisodeMappingDto.episodeType
+            updateAllEpisodeMappingDto.episodeType?.let { episode.episodeType = it }
+            updateAllEpisodeMappingDto.season?.let { episode.season = it }
+
+            startDate?.let { sd ->
+                episodeVariantService.findAllByMapping(episode)
+                    .filter { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) == LangType.SUBTITLES }
+                    .minByOrNull { it.releaseDateTime }
+                    ?.let { originalVariant ->
+                        originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(sd)
+                        episodeVariantService.update(originalVariant)
+                        if (updateAllEpisodeMappingDto.incrementDate == true) startDate = sd.plusWeeks(1)
+                    }
             }
 
-            if (updateAllEpisodeMappingDto.season != null) {
-                episode.season = updateAllEpisodeMappingDto.season
-            }
+            findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!)
+                ?.takeIf { it.uuid != episode.uuid }
+                ?.let { existing ->
+                    mergeEpisodeMapping(episode, existing, false)?.apply {
+                        if (forcedUpdate) lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
+                        super.update(this)
+                    }
 
-            if (updateAllEpisodeMappingDto.forceUpdate == true) {
-                forcedUpdate = true
-            }
-
-            val existing = findByAnimeSeasonEpisodeTypeNumber(
-                episode.anime!!.uuid!!,
-                episode.season!!,
-                episode.episodeType!!,
-                episode.number!!
-            )
-
-            if (existing != null && existing.uuid != episode.uuid) {
-                val merged = mergeEpisodeMapping(episode, existing, false)
-
-                if (forcedUpdate) {
-                    merged?.lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
-                    super.update(merged!!)
+                    return@forEach
                 }
-
-                return@forEach
-            }
 
             episode.status = StringUtils.getStatus(episode)
             episode.lastUpdateDateTime = if (forcedUpdate) ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
@@ -114,7 +115,12 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         }
 
-        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+        if (startDate == null) {
+            MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+        } else {
+            animeService.recalculateSimulcasts()
+            MapCache.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        }
     }
 
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {
