@@ -111,6 +111,16 @@
                                        x-model="updateAll.season">
                             </div>
                             <div class="col-md-6">
+                                <label for="startDate" class="form-label">Start date</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate"
+                                       x-model="updateAll.startDate">
+                            </div>
+                            <div class="col-md-6">
+                                <input class="form-check-input" type="checkbox" id="incrementDate"
+                                       x-model="updateAll.incrementDate">
+                                <label for="incrementDate" class="form-label">Increment date</label>
+                            </div>
+                            <div class="col-md-6">
                                 <input class="form-check-input" type="checkbox" id="forceUpdate"
                                        x-model="updateAll.forceUpdate">
                                 <label class="form-check-label" for="forceUpdate">Force update</label>

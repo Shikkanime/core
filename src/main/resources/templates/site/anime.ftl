@@ -32,7 +32,7 @@
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${anime.shortName}<#if season??> - Saison ${season.number?c}</#if></h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${anime.shortName}<#if season??> - ${su.toSeasonString(anime.countryCode, season.number)}</#if></h1>
 
                 <div class="mt-1">
                     <#list anime.langTypes as langType>
@@ -66,13 +66,19 @@
                 <span class="mt-3">${anime.description!"Aucune description pour le moment..."}</span>
 
                 <button class="btn btn-dark dropdown-toggle mt-3" data-bs-toggle="dropdown" aria-expanded="false">
-                    Saison <#if season??>${season.number}<#else>${anime.seasons?first.number}</#if>
+                    <#assign selectedSeason = anime.seasons?first.number>
+
+                    <#if season??>
+                        <#assign selectedSeason = season.number>
+                    </#if>
+
+                    ${su.toSeasonString(anime.countryCode, selectedSeason)}
                 </button>
 
                 <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
                     <#list anime.seasons as season>
                         <li><a class="dropdown-item"
-                               href="/animes/${anime.slug}/season-${season.number}">Saison ${season.number}</a></li>
+                               href="/animes/${anime.slug}/season-${season.number}">${su.toSeasonString(anime.countryCode, season.number)}</a></li>
                     </#list>
                 </ul>
             </div>

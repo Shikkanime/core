@@ -147,7 +147,11 @@ class AnimeCacheService : AbstractCacheService {
 
     private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(
         "AnimeCacheService.findBySlugCache",
-        classes = listOf(Anime::class.java),
+        classes = listOf(
+            Anime::class.java,
+            EpisodeMapping::class.java,
+            EpisodeVariant::class.java
+        ),
     ) {
         animeService.findBySlug(it.countryCode, it.id)?.let { anime ->
             AbstractConverter.convert(anime, AnimeDto::class.java)

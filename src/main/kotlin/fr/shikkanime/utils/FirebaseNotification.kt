@@ -34,7 +34,7 @@ object FirebaseNotification {
 
         val notification = Notification.builder()
             .setTitle(episodeDto.mapping.anime.shortName)
-            .setBody(StringUtils.toEpisodeString(episodeDto))
+            .setBody(StringUtils.toEpisodeVariantString(episodeDto))
             .setImage(image)
             .build()
 

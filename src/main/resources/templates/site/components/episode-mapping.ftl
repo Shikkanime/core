@@ -1,4 +1,3 @@
-<#import "episodeType.ftl" as episodeTypeComponent />
 <#import "langType.ftl" as langTypeComponent />
 
 <#macro display episodeMapping desktopColSize mobileColSize cover showAnime=true showSeason=true>
@@ -29,11 +28,11 @@
                             <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</div>
 
                             <p class="text-muted mb-0">
-                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if><@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}
+                                ${su.toEpisodeMappingString(episodeMapping, showSeason, true)}
                             </p>
                         <#else>
                             <div class="h6 mt-2 mb-0 text-truncate-2 fw-bold">
-                                <#if showSeason>Saison ${episodeMapping.season?c} | </#if><@episodeTypeComponent.display episodeType=episodeMapping.episodeType /> ${episodeMapping.number?c}
+                                ${su.toEpisodeMappingString(episodeMapping, showSeason, true)}
                             </div>
                         </#if>
 

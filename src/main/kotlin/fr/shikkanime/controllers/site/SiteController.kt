@@ -139,7 +139,7 @@ class SiteController {
             limit
         )!!
 
-        val title = dto.shortName + (season?.let { " - Saison $it" } ?: "")
+        val title = dto.shortName + (season?.let { " - ${StringUtils.toSeasonString(dto.countryCode, it)}" } ?: "")
         val showMore = ((((page ?: 1) - 1) * limit) + findAllBy.data.size < findAllBy.total.toInt())
 
         return Response.template(
@@ -201,7 +201,7 @@ class SiteController {
         ) ?: return Response.notFound()
 
         val title =
-            currentDto.anime.shortName + " - Saison $season ${StringUtils.getEpisodeTypeLabel(episodeType)} ${currentDto.number}"
+            currentDto.anime.shortName + " - ${StringUtils.toEpisodeMappingString(currentDto, separator = false)}"
 
         return Response.template(
             "/site/episodeDetails.ftl",

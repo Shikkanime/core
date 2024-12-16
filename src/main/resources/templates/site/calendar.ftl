@@ -1,5 +1,4 @@
 <#import "_navigation.ftl" as navigation />
-<#import "components/episodeType.ftl" as episodeTypeComponent />
 <#import "components/langType.ftl" as langTypeComponent />
 
 <@navigation.display canonicalUrl="${baseUrl}/calendar">
@@ -90,7 +89,7 @@
                                                     <span class="h6 text-truncate-2 mb-1 fw-bold">${release.anime.shortName}</span>
                                                     <#if release.minNumber?? || release.maxNumber?? || release.number??>
                                                         <p class="text-muted mb-0">
-                                                            <@episodeTypeComponent.display episodeType=release.episodeType /> <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
+                                                            ${su.getEpisodeTypeLabel(release.anime.countryCode, release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
                                                         </p>
                                                     </#if>
                                                     <#list release.langTypes as langType>

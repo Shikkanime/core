@@ -40,16 +40,6 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun platformAccount(platform: Platform): String {
-        return when (platform) {
-            Platform.CRUN -> "@crunchyroll_fr"
-            Platform.DISN -> "@disneyplus"
-            Platform.NETF -> "@netflixfr"
-            Platform.PRIM -> "@primevideofr"
-            else -> platform.platformName
-        }
-    }
-
     override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return

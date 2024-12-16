@@ -1,6 +1,7 @@
 package fr.shikkanime.utils
 
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
@@ -72,24 +73,73 @@ object StringUtils {
         }
     }
 
-    fun toEpisodeString(episode: EpisodeVariantDto): String {
-        val etName = getEpisodeTypeLabel(episode.mapping.episodeType)
-
-        val ltName = when (LangType.fromAudioLocale(episode.mapping.anime.countryCode, episode.audioLocale)) {
-            LangType.SUBTITLES -> "VOSTFR"
-            LangType.VOICE -> "VF"
+    fun toSeasonString(countryCode: CountryCode, season: Int): String {
+        return when(countryCode) {
+            CountryCode.FR -> "Saison $season"
         }
-
-        return "Saison ${episode.mapping.season} • $etName ${episode.mapping.number} $ltName"
     }
 
-    fun getEpisodeTypeLabel(episodeType: EpisodeType): String {
-        return when (episodeType) {
-            EpisodeType.EPISODE -> "Épisode"
-            EpisodeType.SPECIAL -> "Spécial"
-            EpisodeType.FILM -> "Film"
-            EpisodeType.SUMMARY -> "Épisode récapitulatif"
-            EpisodeType.SPIN_OFF -> "Spin-off"
+    fun getEpisodeTypeLabel(countryCode: CountryCode, episodeType: EpisodeType): String {
+        return when(countryCode) {
+            CountryCode.FR -> {
+                when (episodeType) {
+                    EpisodeType.EPISODE -> "Épisode"
+                    EpisodeType.SPECIAL -> "Spécial"
+                    EpisodeType.FILM -> "Film"
+                    EpisodeType.SUMMARY -> "Épisode récapitulatif"
+                    EpisodeType.SPIN_OFF -> "Spin-off"
+                }
+            }
+        }
+    }
+
+    fun getEpisodeTypePrefixLabel(countryCode: CountryCode, episodeType: EpisodeType): String {
+        return when(countryCode) {
+            CountryCode.FR -> {
+                when (episodeType) {
+                    EpisodeType.EPISODE -> "ÉP"
+                    EpisodeType.SPECIAL -> "SP"
+                    EpisodeType.FILM -> "FILM "
+                    EpisodeType.SUMMARY -> "RÉCAP"
+                    EpisodeType.SPIN_OFF -> "SPIN-OFF"
+                }
+            }
+        }
+    }
+
+    fun toLangTypeString(countryCode: CountryCode, audioLocale: String): String {
+        val langType = LangType.fromAudioLocale(countryCode, audioLocale)
+
+        return when(countryCode) {
+            CountryCode.FR -> {
+                when(langType) {
+                    LangType.SUBTITLES -> "VOSTFR"
+                    LangType.VOICE -> "VF"
+                }
+            }
+        }
+    }
+
+    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true): String {
+        val countryCode = episode.anime.countryCode
+
+        return buildString {
+            append(if (showSeason) toSeasonString(countryCode, episode.season) else "")
+            append(if (showSeason && separator) " • " else " ")
+            append(getEpisodeTypeLabel(countryCode, episode.episodeType))
+            append(" ${episode.number}")
+        }.trim()
+    }
+
+    fun toEpisodeVariantString(episode: EpisodeVariantDto): String {
+        val countryCode = episode.mapping.anime.countryCode
+
+        return buildString {
+            append(toSeasonString(countryCode, episode.mapping.season))
+            append(" • ")
+            append(getEpisodeTypeLabel(countryCode, episode.mapping.episodeType))
+            append(" ${episode.mapping.number}")
+            append(" ${toLangTypeString(countryCode, episode.audioLocale)}")
         }
     }
 
