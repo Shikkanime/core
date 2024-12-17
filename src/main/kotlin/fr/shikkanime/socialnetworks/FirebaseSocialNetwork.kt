@@ -1,35 +1,58 @@
-package fr.shikkanime.utils
+package fr.shikkanime.socialnetworks
 
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.*
+import com.google.inject.Inject
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import java.io.File
 import java.io.FileInputStream
+import java.util.logging.Level
 
-object FirebaseNotification {
+class FirebaseSocialNetwork : AbstractSocialNetwork() {
+    private val logger = LoggerFactory.getLogger(FirebaseSocialNetwork::class.java)
     private var isInitialized = false
 
-    private fun init() {
-        if (isInitialized) return
-        val file = File(Constant.dataFolder, "firebase.json")
-        if (!file.exists()) return
+    @Inject
+    private lateinit var memberService: MemberService
 
-        FirebaseApp.initializeApp(
-            FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(FileInputStream(file)))
-                .build()
-        )
+    override fun utmSource() = "firebase"
 
-        isInitialized = true
+    override fun login() {
+        if (isInitialized)
+            return
+
+        try {
+            val file = File(Constant.dataFolder, "firebase.json")
+            if (!file.exists())
+                return
+
+            FirebaseApp.initializeApp(
+                FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(FileInputStream(file)))
+                    .build()
+            )
+
+            isInitialized = true
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error while initializing FirebaseSocialNetwork", e)
+        }
     }
 
-    fun send(episodeDto: EpisodeVariantDto) {
-        init()
+    override fun logout() {
         if (!isInitialized) return
-        val memberService = Constant.injector.getInstance(MemberService::class.java)
+        isInitialized = false
+    }
+
+    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
+        login()
+        if (!isInitialized) return
+
         val image = "${Constant.apiUrl}/v1/attachments?uuid=${episodeDto.mapping.uuid}&type=image"
 
         val notification = Notification.builder()
