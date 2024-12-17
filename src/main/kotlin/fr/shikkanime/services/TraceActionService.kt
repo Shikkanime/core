@@ -14,6 +14,8 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
 
     fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) = traceActionRepository.findAllBy(entityType, action, page, limit)
 
+    fun getLoginCounts() = traceActionRepository.getLoginCounts()
+
     fun createTraceAction(shikkEntity: ShikkEntity, action: TraceAction.Action) = save(
         TraceAction(
             actionDateTime = ZonedDateTime.now(),

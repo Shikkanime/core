@@ -2,8 +2,8 @@
 
 <@navigation.display>
     <div x-data="{ display: 'CPU' }">
-        <div class="container-fluid d-flex">
-            <div class="row g-3 align-items-center mb-3">
+        <div class="d-flex align-items-center mb-3 gap-3">
+            <div class="row g-3 align-items-center">
                 <div class="col-auto">
                     <select class="form-select" id="datemenu">
                         <option value="1" selected>Last hour</option>
@@ -12,26 +12,24 @@
                     </select>
                 </div>
             </div>
-
-            <div class="row g-3 align-items-center mb-3">
-                <div class="col-auto">
-                    <label class="col-form-label ms-2" for="display">Display</label>
-                </div>
-                <div class="col-auto">
-                    <select class="form-select" id="display" x-model="display">
-                        <option value="CPU" selected>CPU</option>
-                        <option value="Memory">Memory</option>
-                    </select>
-                </div>
-            </div>
+            <button class="btn" @click="display = 'CPU'" :class="{ 'btn-dark': display === 'CPU', 'btn-outline-dark': display !== 'CPU' }">CPU</button>
+            <button class="btn" @click="display = 'Memory'" :class="{ 'btn-dark': display === 'Memory', 'btn-outline-dark': display !== 'Memory' }">Memory</button>
         </div>
 
         <div class="row g-4">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="card p-3">
                     <div style="height: 50vh">
                         <canvas id="cpuLoadChart" x-show="display === 'CPU'"></canvas>
                         <canvas id="memoryUsageChart" x-show="display === 'Memory'"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <div style="height: 50vh">
+                        <canvas id="loginCountChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -110,5 +108,5 @@
     <script src="https://cdn.jsdelivr.net/npm/moment@^2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1"></script>
 
-    <script src="/assets/js/home_chart.js" crossorigin="anonymous"></script>
+    <script src="/assets/js/dashboard_chart.js" crossorigin="anonymous"></script>
 </@navigation.display>

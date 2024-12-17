@@ -1,8 +1,10 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.LoginCountDto
 import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.TraceAction_
+import java.time.LocalDate
 
 class TraceActionRepository : AbstractRepository<TraceAction>() {
     override fun getEntityClass() = TraceAction::class.java
@@ -21,6 +23,35 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
             query.orderBy(cb.desc(root[TraceAction_.actionDateTime]))
 
             buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
+        }
+    }
+
+    fun getLoginCounts(): List<LoginCountDto> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            val function = cb.function("DATE", LocalDate::class.java, root[TraceAction_.actionDateTime])
+
+            query.multiselect(
+                function,
+                cb.countDistinct(root[TraceAction_.entityUuid]),
+                cb.count(root[TraceAction_.entityUuid]),
+            ).where(
+                cb.equal(root[TraceAction_.entityType], "Member"),
+                cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
+            ).groupBy(function)
+
+            createReadOnlyQuery(it, query)
+                .resultStream
+                .map { tuple ->
+                    LoginCountDto(
+                        date = (tuple[0] as LocalDate).toString(),
+                        distinctCount = tuple[1] as Long,
+                        count = tuple[2] as Long
+                    )
+                }
+                .toList()
         }
     }
 }

@@ -31,4 +31,12 @@ class TraceActionController : HasPageableRoute() {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
         return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
     }
+
+    @Path("/login-counts")
+    @Get
+    @AdminSessionAuthenticated
+    @OpenAPI(hidden = true)
+    private fun getLoginCounts(): Response {
+        return Response.ok(traceActionService.getLoginCounts())
+    }
 }
