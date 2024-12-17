@@ -21,7 +21,7 @@ object ThreadsWrapper {
     private const val API_URL = "https://graph.threads.net"
     private val httpRequest = HttpRequest()
 
-    fun getRedirectUri() = "${Constant.baseUrl}/api/threads".replace("http://", "https://")
+    private fun getRedirectUri() = "${Constant.baseUrl}/api/threads".replace("http://", "https://")
 
     fun getCode(appId: String) = "$AUTHORIZATION_URL/oauth/authorize?" +
             "client_id=$appId&" +
@@ -77,22 +77,22 @@ object ThreadsWrapper {
             "reply_to_id" to replyToId,
         ).filterValues { it != null }.map { (key, value) -> "$key=$value" }.joinToString("&")
 
-        val response = httpRequest.post(
+        val createResponse = httpRequest.post(
             "$API_URL/me/threads?$parameters",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
         )
 
-        require(response.status == HttpStatusCode.OK) { "Failed to post" }
-        val creationId = ObjectParser.fromJson(response.bodyAsText())["id"].asString
+        require(createResponse.status == HttpStatusCode.OK) { "Failed to post" }
+        val creationId = ObjectParser.fromJson(createResponse.bodyAsText())["id"].asString
 
-        val response2 = httpRequest.post(
+        val publishResponse = httpRequest.post(
             "$API_URL/me/threads_publish?" +
                     "access_token=$accessToken&" +
                     "creation_id=$creationId",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
         )
 
-        require(response2.status == HttpStatusCode.OK) { "Failed to publish" }
-        return ObjectParser.fromJson(response2.bodyAsText())["id"].asLong
+        require(publishResponse.status == HttpStatusCode.OK) { "Failed to publish" }
+        return ObjectParser.fromJson(publishResponse.bodyAsText())["id"].asLong
     }
 }

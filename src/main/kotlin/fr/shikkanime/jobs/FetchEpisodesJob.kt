@@ -8,6 +8,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
+import fr.shikkanime.services.EmailService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -15,6 +16,8 @@ import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.inject.Inject
 import java.io.ByteArrayOutputStream
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.util.logging.Level
 import javax.imageio.ImageIO
@@ -37,6 +40,9 @@ class FetchEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
+    private lateinit var emailService: EmailService
 
     fun addHashCaches(
         it: AbstractPlatform<*, *, *>,
@@ -148,19 +154,10 @@ class FetchEpisodesJob : AbstractJob {
 
                         if (typeIdentifiers.add(typeIdentifier)) {
                             val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
-                            sendEpisodeNotification(episodeDto)
                             sendToSocialNetworks(episodeDto)
                         }
                     }
             }
-    }
-
-    private fun sendEpisodeNotification(episodeDto: EpisodeVariantDto) {
-        try {
-            FirebaseNotification.send(episodeDto)
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while sending notification for episode ${episodeDto.identifier}", e)
-        }
     }
 
     private fun sendToSocialNetworks(dto: EpisodeVariantDto) {
@@ -177,16 +174,11 @@ class FetchEpisodesJob : AbstractJob {
             try {
                 socialNetwork.sendEpisodeRelease(dto, mediaImage)
             } catch (e: Exception) {
-                logger.log(
-                    Level.SEVERE,
-                    "Error while sending episode release for ${
-                        socialNetwork.javaClass.simpleName.replace(
-                            "SocialNetwork",
-                            ""
-                        )
-                    }",
-                    e
-                )
+                val title = "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork", "")}"
+                logger.log(Level.SEVERE, title, e)
+                val stringWriter = StringWriter()
+                e.printStackTrace(PrintWriter(stringWriter))
+                emailService.sendAdminEmail(title, stringWriter.toString().replace("\n", "<br>"))
             }
         }
     }
