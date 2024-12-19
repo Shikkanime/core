@@ -40,10 +40,8 @@ object ThreadsWrapper {
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
         )
 
-        require(response.status == HttpStatusCode.OK) { "Failed to get token" }
-
-        val json = ObjectParser.fromJson(response.bodyAsText())
-        return json["access_token"].asString
+        require(response.status == HttpStatusCode.OK) { "Failed to get token (${response.status.value} - ${response.bodyAsText()})" }
+        return ObjectParser.fromJson(response.bodyAsText())["access_token"].asString
     }
 
     suspend fun getLongLivedAccessToken(appSecret: String, accessToken: String): String {
@@ -54,10 +52,8 @@ object ThreadsWrapper {
                     "grant_type=th_exchange_token",
         )
 
-        require(response.status == HttpStatusCode.OK) { "Failed to get long-lived token" }
-
-        val json = ObjectParser.fromJson(response.bodyAsText())
-        return json["access_token"].asString
+        require(response.status == HttpStatusCode.OK) { "Failed to get long-lived token (${response.status.value} - ${response.bodyAsText()})" }
+        return ObjectParser.fromJson(response.bodyAsText())["access_token"].asString
     }
 
     suspend fun post(
@@ -82,7 +78,7 @@ object ThreadsWrapper {
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
         )
 
-        require(createResponse.status == HttpStatusCode.OK) { "Failed to post" }
+        require(createResponse.status == HttpStatusCode.OK) { "Failed to post (${createResponse.status.value} - ${createResponse.bodyAsText()})" }
         val creationId = ObjectParser.fromJson(createResponse.bodyAsText())["id"].asString
 
         val publishResponse = httpRequest.post(
@@ -92,7 +88,7 @@ object ThreadsWrapper {
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
         )
 
-        require(publishResponse.status == HttpStatusCode.OK) { "Failed to publish" }
+        require(publishResponse.status == HttpStatusCode.OK) { "Failed to publish (${publishResponse.status.value} - ${publishResponse.bodyAsText()})" }
         return ObjectParser.fromJson(publishResponse.bodyAsText())["id"].asLong
     }
 }

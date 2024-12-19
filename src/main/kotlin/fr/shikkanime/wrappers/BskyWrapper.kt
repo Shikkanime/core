@@ -9,8 +9,8 @@ import org.jsoup.Jsoup
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.regex.MatchResult
 import java.util.regex.Pattern
-import java.util.stream.Collectors
 
 private const val TYPE = "\$type"
 
@@ -57,7 +57,7 @@ object BskyWrapper {
             )
         )
 
-        require(response.status.value == 200) { "Failed to create session" }
+        require(response.status == HttpStatusCode.OK) { "Failed to create session (${response.status.value} - ${response.bodyAsText()})" }
         return ObjectParser.fromJson(response.bodyAsText())
     }
 
@@ -73,7 +73,7 @@ object BskyWrapper {
             body = content,
         )
 
-        require(response.status.value == 200) { "Failed to upload blob" }
+        require(response.status == HttpStatusCode.OK) { "Failed to upload blob (${response.status.value} - ${response.bodyAsText()})" }
         return ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("blob")
     }
 
@@ -165,14 +165,14 @@ object BskyWrapper {
             )
         )
 
-        require(response.status.value == 200) { "Failed to create record (${response.bodyAsText()})" }
+        require(response.status == HttpStatusCode.OK) { "Failed to create record (${response.status.value} - ${response.bodyAsText()})" }
         return ObjectParser.fromJson(response.bodyAsText(), Record::class.java)
     }
 
-    private fun countEmoji(text: String) = Pattern.compile("\\p{So}+")
+    private fun countEmoji(text: String): List<MatchResult> = Pattern.compile("\\p{So}+")
         .matcher(text)
         .results()
-        .collect(Collectors.toUnmodifiableList())
+        .toList()
 
     private fun getFacets(text: String): Pair<String, List<Facet>> {
         var tmpText = text
@@ -185,7 +185,7 @@ object BskyWrapper {
                         val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "").trim()
                         tmpText = tmpText.replace(link, beautifulLink)
 
-                        val emojiCount = countEmoji(tmpText.substringBeforeLast(beautifulLink))!!
+                        val emojiCount = countEmoji(tmpText.substringBeforeLast(beautifulLink))
                         val added =
                             if (emojiCount.isNotEmpty()) emojiCount.sumOf { it.group().length } + emojiCount.size else 0
 
@@ -195,7 +195,7 @@ object BskyWrapper {
                     }
 
                     link.startsWith("#") -> {
-                        val emojiCount = countEmoji(tmpText.substringBeforeLast(link))!!
+                        val emojiCount = countEmoji(tmpText.substringBeforeLast(link))
                         val added =
                             if (emojiCount.isNotEmpty()) emojiCount.sumOf { it.group().length } + emojiCount.size else 1
 
