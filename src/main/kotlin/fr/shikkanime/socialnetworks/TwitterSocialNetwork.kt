@@ -61,13 +61,13 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
         if (twitter == null) return
 
         val firstMessage = getEpisodeMessage(
-            episodeDto,
+            episodes,
             configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: ""
         )
         val firstTweet = twitter!!.v2.createTweet(mediaIds = mediaImage?.let {
@@ -78,7 +78,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (!secondMessage.isNullOrBlank()) {
             twitter!!.v2.createTweet(
                 inReplyToTweetId = firstTweet.id,
-                text = getEpisodeMessage(episodeDto, secondMessage)
+                text = getEpisodeMessage(episodes, secondMessage)
             )
         }
     }

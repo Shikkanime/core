@@ -186,9 +186,9 @@ class EpisodeMappingController : HasPageableRoute() {
 
         val image = MediaImage.toMediaImage(
             AbstractConverter.convert(
-                episodeVariant,
+                listOf(episodeVariant),
                 EpisodeVariantDto::class.java
-            )
+            )!!
         )
 
         val baos = ByteArrayOutputStream()

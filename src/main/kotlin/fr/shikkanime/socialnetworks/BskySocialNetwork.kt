@@ -61,13 +61,13 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
 
         val firstMessage =
             getEpisodeMessage(
-                episodeDto,
+                episodes,
                 configCacheService.getValueAsString(ConfigPropertyKey.BSKY_FIRST_MESSAGE) ?: ""
             )
 
@@ -97,9 +97,9 @@ class BskySocialNetwork : AbstractSocialNetwork() {
                 BskyWrapper.createRecord(
                     accessJwt!!,
                     did!!,
-                    getEpisodeMessage(episodeDto, secondMessage.replace("{EMBED}", "")).trim(),
+                    getEpisodeMessage(episodes, secondMessage.replace("{EMBED}", "")).trim(),
                     replyTo = firstRecord,
-                    embed = getShikkanimeUrl(episodeDto).takeIf { secondMessage.contains("{EMBED}") }
+                    embed = getShikkanimeUrl(episodes).takeIf { secondMessage.contains("{EMBED}") }
                 )
             }
         }

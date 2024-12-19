@@ -39,12 +39,12 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
         val message =
             getEpisodeMessage(
-                episodeDto,
+                episodes,
                 configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: ""
             )
 
@@ -53,8 +53,8 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                     token!!,
                     ThreadsWrapper.PostType.IMAGE,
                     message,
-                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/${episodeDto.uuid}/media-image",
-                    altText = "Image de l'épisode ${episodeDto.mapping.number} de ${episodeDto.mapping.anime.shortName}"
+                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/${episodes.first().uuid}/media-image",
+                    altText = "Image de l'épisode ${episodes.first().mapping.number} de ${episodes.first().mapping.anime.shortName}"
                 )
 
                 val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)
@@ -63,7 +63,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                     ThreadsWrapper.post(
                         token!!,
                         ThreadsWrapper.PostType.TEXT,
-                        getEpisodeMessage(episodeDto, secondMessage),
+                        getEpisodeMessage(episodes, secondMessage),
                         replyToId = firstPost
                     )
                 }

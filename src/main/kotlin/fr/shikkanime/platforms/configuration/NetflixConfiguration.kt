@@ -11,12 +11,14 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
         var seasonName: String = "",
         var season: Int = 1,
         var episodeType: EpisodeType = EpisodeType.EPISODE,
+        var audioLocales: MutableSet<String> = mutableSetOf<String>("ja-JP"),
     ) : ReleaseDayPlatformSimulcast(releaseDay, image, releaseTime) {
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["seasonName"]?.let { seasonName = it }
             parameters["season"]?.let { season = it.toInt() }
             parameters["episodeType"]?.let { episodeType = EpisodeType.valueOf(it) }
+            parameters["audioLocales"]?.let { audioLocales = it.split(",").toMutableSet() }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
@@ -42,6 +44,14 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
                     name = "episodeType",
                     type = "text",
                     value = episodeType.name,
+                )
+            )
+            add(
+                ConfigurationField(
+                    label = "Audio Locales",
+                    name = "audioLocales",
+                    type = "text",
+                    value = audioLocales.joinToString(","),
                 )
             )
         }
