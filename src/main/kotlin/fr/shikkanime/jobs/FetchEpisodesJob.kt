@@ -146,24 +146,20 @@ class FetchEpisodesJob : AbstractJob {
             .groupBy { it.mapping?.anime?.uuid }
             .values
             .forEach { episodes ->
-                episodes
-                    .filterNot { typeIdentifiers.contains(getTypeIdentifier(it)) }
+                episodes.filter { typeIdentifiers.add(getTypeIdentifier(it)) }
                     .takeIf { it.size < sizeLimit }
-                    ?.forEach { episode ->
-                        val typeIdentifier = getTypeIdentifier(episode)
-
-                        if (typeIdentifiers.add(typeIdentifier)) {
-                            val episodeDto = AbstractConverter.convert(episode, EpisodeVariantDto::class.java)
-                            sendToSocialNetworks(episodeDto)
-                        }
+                    ?.groupBy { it.mapping?.uuid }
+                    ?.forEach { _, episodes ->
+                        val dtos = AbstractConverter.convert(episodes, EpisodeVariantDto::class.java)!!
+                        sendToSocialNetworks(dtos)
                     }
             }
     }
 
-    private fun sendToSocialNetworks(dto: EpisodeVariantDto) {
+    private fun sendToSocialNetworks(episodes: List<EpisodeVariantDto>) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(MediaImage.toMediaImage(dto), "jpg", byteArrayOutputStream)
+            ImageIO.write(MediaImage.toMediaImage(episodes), "jpg", byteArrayOutputStream)
             byteArrayOutputStream.toByteArray()
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while converting episode image for social networks", e)
@@ -172,7 +168,7 @@ class FetchEpisodesJob : AbstractJob {
 
         Constant.abstractSocialNetworks.parallelStream().forEach { socialNetwork ->
             try {
-                socialNetwork.sendEpisodeRelease(dto, mediaImage)
+                socialNetwork.sendEpisodeRelease(episodes, mediaImage)
             } catch (e: Exception) {
                 val title = "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork", "")}"
                 logger.log(Level.SEVERE, title, e)

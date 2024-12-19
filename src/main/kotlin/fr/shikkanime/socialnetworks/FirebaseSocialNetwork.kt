@@ -49,15 +49,16 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
         isInitialized = false
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
 
-        val image = "${Constant.apiUrl}/v1/attachments?uuid=${episodeDto.mapping.uuid}&type=image"
+        val mapping = episodes.first().mapping
+        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping.uuid}&type=image"
 
         val notification = Notification.builder()
-            .setTitle(episodeDto.mapping.anime.shortName)
-            .setBody(StringUtils.toEpisodeVariantString(episodeDto))
+            .setTitle(mapping.anime.shortName)
+            .setBody(StringUtils.toEpisodeVariantString(episodes))
             .setImage(image)
             .build()
 
@@ -72,7 +73,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
             .build()
 
         val topics = mutableSetOf("global")
-        memberService.findAllByAnimeUUID(episodeDto.mapping.anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
+        memberService.findAllByAnimeUUID(mapping.anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
         // Chunked topics to avoid the 500 topics limit (due to the limit of the Firebase API)
         val chunkedTopics = topics.chunked(500)
 

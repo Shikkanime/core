@@ -85,30 +85,27 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodeDto: EpisodeVariantDto, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
-        if (episodeDto.mapping.image.isBlank()) return
+        val mapping = episodes.first().mapping
+        if (mapping.image.isBlank()) return
 
         val embedMessage = EmbedBuilder()
-        embedMessage.setTitle(episodeDto.mapping.anime.shortName, getShikkanimeUrl(episodeDto))
-        embedMessage.setThumbnail(episodeDto.mapping.anime.image)
+        embedMessage.setTitle(mapping.anime.shortName, getShikkanimeUrl(episodes))
+        embedMessage.setThumbnail(mapping.anime.image)
         embedMessage.setDescription(
-            "**${episodeDto.mapping.title ?: "Untitled"}**\n${
-                StringUtils.toEpisodeVariantString(
-                    episodeDto
-                )
-            }"
+            "**${mapping.title ?: "Untitled"}**\n${StringUtils.toEpisodeVariantString(episodes)}"
         )
         embedMessage.setImage("attachment://media-image.jpg")
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
-        embedMessage.setTimestamp(ZonedDateTime.parse(episodeDto.releaseDateTime).toInstant())
+        embedMessage.setTimestamp(ZonedDateTime.parse(episodes.first().releaseDateTime).toInstant())
         val embed = embedMessage.build()
         val channels = getChannels(getFile())
         val fileUpload = FileUpload.fromData(mediaImage ?: byteArrayOf(), "media-image.jpg")
 
         channels.forEach { channel ->
-            if (channel.releaseType == "ALL" || channel.animes.contains(episodeDto.mapping.anime.shortName)) {
+            if (channel.releaseType == "ALL" || channel.animes.contains(mapping.anime.shortName)) {
                 jda?.getTextChannelById(channel.id)
                     ?.sendFiles(fileUpload)
                     ?.setEmbeds(embed)

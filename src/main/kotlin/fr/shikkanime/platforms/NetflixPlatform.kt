@@ -26,30 +26,32 @@ class NetflixPlatform :
         val id = key.netflixSimulcast.name
         val episodes = NetflixWrapper.getShowVideos(key.countryCode, id, key.netflixSimulcast.seasonName, key.netflixSimulcast.season) ?: return null
 
-        return episodes.map {
-            Episode(
-                countryCode = key.countryCode,
-                animeId = id,
-                anime = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" },
-                animeImage = key.netflixSimulcast.image,
-                animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" },
-                animeDescription = it.getAsJsonObject("show").getAsString("description"),
-                releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z"),
-                episodeType = key.netflixSimulcast.episodeType,
-                seasonId = it.getAsInt("season")!!.toString(),
-                season = it.getAsInt("season")!!,
-                number = it.getAsInt("number")!!,
-                duration = it.getAsInt("duration")?.toLong() ?: -1,
-                title = it.getAsString("title"),
-                description = it.getAsString("description"),
-                image = requireNotNull(it.getAsString("image")) { "Image is null" },
-                platform = getPlatform(),
-                audioLocale = "ja-JP",
-                id = requireNotNull(it.getAsString("id")) { "Id is null" },
-                url = requireNotNull(it.getAsString("url")) { "Url is null" },
-                uncensored = false,
-                original = true,
-            )
+        return key.netflixSimulcast.audioLocales.flatMap { audioLocale ->
+            episodes.map {
+                Episode(
+                    countryCode = key.countryCode,
+                    animeId = id,
+                    anime = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" },
+                    animeImage = key.netflixSimulcast.image,
+                    animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" },
+                    animeDescription = it.getAsJsonObject("show").getAsString("description"),
+                    releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z"),
+                    episodeType = key.netflixSimulcast.episodeType,
+                    seasonId = it.getAsInt("season")!!.toString(),
+                    season = it.getAsInt("season")!!,
+                    number = it.getAsInt("number")!!,
+                    duration = it.getAsInt("duration")?.toLong() ?: -1,
+                    title = it.getAsString("title"),
+                    description = it.getAsString("description"),
+                    image = requireNotNull(it.getAsString("image")) { "Image is null" },
+                    platform = getPlatform(),
+                    audioLocale = audioLocale,
+                    id = requireNotNull(it.getAsString("id")) { "Id is null" },
+                    url = requireNotNull(it.getAsString("url")) { "Url is null" },
+                    uncensored = false,
+                    original = true,
+                )
+            }
         }
     }
 

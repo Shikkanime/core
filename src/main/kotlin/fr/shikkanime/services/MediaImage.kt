@@ -1,6 +1,8 @@
 package fr.shikkanime.services
 
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.HttpRequest
@@ -29,7 +31,7 @@ object MediaImage {
         val roundedCorner: Int
     )
 
-    fun toMediaImage(episodeVariantDto: EpisodeVariantDto): BufferedImage {
+    fun toMediaImage(episodes: List<EpisodeVariantDto>): BufferedImage {
         val dimensions = Dimensions(
             whiteLinesSize = 25,
             margin = 50,
@@ -46,8 +48,8 @@ object MediaImage {
         val graphics = setupGraphics(mediaImage)
 
         drawBackground(graphics, mediaImage, dimensions)
-        drawAnimeImage(graphics, dimensions, episodeVariantDto)
-        drawEpisodeInformation(graphics, dimensions, font, episodeVariantDto)
+        drawAnimeImage(graphics, dimensions, episodes.first().mapping.anime)
+        drawEpisodeInformation(graphics, dimensions, font, episodes.first().mapping.anime.countryCode, episodes)
         drawBanner(graphics, mediaImage, bannerImage, dimensions)
 
         graphics.dispose()
@@ -128,8 +130,8 @@ object MediaImage {
     fun getLongTimeoutImage(url: String): BufferedImage =
         ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
 
-    private fun drawAnimeImage(graphics: Graphics2D, dimensions: Dimensions, episodeVariantDto: EpisodeVariantDto) {
-        val animeImage = getLongTimeoutImage(episodeVariantDto.mapping.anime.image)
+    private fun drawAnimeImage(graphics: Graphics2D, dimensions: Dimensions, anime: AnimeDto) {
+        val animeImage = getLongTimeoutImage(anime.image)
             .resize(dimensions.animeImageWidth, dimensions.animeImageHeight)
 
         graphics.drawImage(
@@ -154,18 +156,18 @@ object MediaImage {
         graphics: Graphics2D,
         dimensions: Dimensions,
         font: Font,
-        episodeVariantDto: EpisodeVariantDto
+        countryCode: CountryCode,
+        episodes: List<EpisodeVariantDto>
     ) {
         graphics.color = Color.WHITE
         graphics.font = font.deriveFont(32f).deriveFont(Font.BOLD)
-        val countryCode = episodeVariantDto.mapping.anime.countryCode
 
         val text = buildString {
-            append("S${episodeVariantDto.mapping.season} ")
-            append(StringUtils.getEpisodeTypePrefixLabel(countryCode, episodeVariantDto.mapping.episodeType))
-            append(episodeVariantDto.mapping.number)
+            append("S${episodes.first().mapping.season} ")
+            append(StringUtils.getEpisodeTypePrefixLabel(countryCode, episodes.first().mapping.episodeType))
+            append(episodes.first().mapping.number)
             append(" ")
-            append(StringUtils.toLangTypeString(countryCode, episodeVariantDto.audioLocale))
+            append(episodes.map { it.audioLocale }.distinct().joinToString(" & ") { StringUtils.toLangTypeString(countryCode, it) })
             append(" | DISPONIBLE")
         }
 

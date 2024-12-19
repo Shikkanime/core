@@ -131,15 +131,16 @@ object StringUtils {
         }.trim()
     }
 
-    fun toEpisodeVariantString(episode: EpisodeVariantDto): String {
-        val countryCode = episode.mapping.anime.countryCode
+    fun toEpisodeVariantString(episodes: List<EpisodeVariantDto>): String {
+        val mapping = episodes.first().mapping
+        val countryCode = mapping.anime.countryCode
 
         return buildString {
-            append(toSeasonString(countryCode, episode.mapping.season))
+            append(toSeasonString(countryCode, mapping.season))
             append(" • ")
-            append(getEpisodeTypeLabel(countryCode, episode.mapping.episodeType))
-            append(" ${episode.mapping.number}")
-            append(" ${toLangTypeString(countryCode, episode.audioLocale)}")
+            append(getEpisodeTypeLabel(countryCode, mapping.episodeType))
+            append(" ${mapping.number}")
+            append(" ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { toLangTypeString(countryCode, it) }}")
         }
     }
 
