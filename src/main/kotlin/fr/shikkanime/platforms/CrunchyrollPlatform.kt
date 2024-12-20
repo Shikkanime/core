@@ -52,6 +52,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 getApiContent(countryCode, zonedDateTime)
             }.toMutableList()
 
+            api.map { it.episodeMetadata!!.seriesId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeries(countryCode.locale, it) } }
+            api.map { it.episodeMetadata!!.seasonId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeason(countryCode.locale, it) } }
+
             api.forEach { addToList(list, countryCode, it) }
 
             runBlocking { list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, list)) }

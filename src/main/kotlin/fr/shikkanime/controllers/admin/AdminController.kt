@@ -9,9 +9,11 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
@@ -183,6 +185,19 @@ class AdminController {
         return Response.template(Link.RULES)
     }
 
+    @Path("/jobs")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getJobs(): Response {
+        return Response.template(
+            Link.JOBS,
+            mapOf(
+                "jobs" to Constant.reflections.getSubTypesOf(AbstractJob::class.java)
+                    .map { it.simpleName.removeSuffix("Job") }
+            ),
+        )
+    }
+
     @Path("/threads")
     @Get
     @AdminSessionAuthenticated
@@ -198,6 +213,23 @@ class AdminController {
                 "success" to success
             )
         )
+    }
+
+    @Path("/jobs")
+    @Post
+    @AdminSessionAuthenticated
+    private fun runJob(@BodyParam parameters: Parameters): Response {
+        val jobName = parameters["jobName"] ?: return Response.redirect(Link.JOBS.href)
+        val jobClass = Constant.reflections.getSubTypesOf(AbstractJob::class.java)
+            .firstOrNull { it.simpleName == "${jobName}Job" } ?: return Response.redirect(Link.JOBS.href)
+        val job = Constant.injector.getInstance(jobClass)
+
+        // Launch the job in a new thread
+        Thread {
+            job.run()
+        }.start()
+
+        return Response.redirect(Link.JOBS.href)
     }
 
     @Path("/threads-publish")
