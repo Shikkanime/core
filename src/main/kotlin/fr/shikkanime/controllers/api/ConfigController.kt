@@ -3,8 +3,10 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
+import fr.shikkanime.entities.Config
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -44,6 +46,7 @@ class ConfigController {
     @OpenAPI(hidden = true)
     private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
         configService.update(uuid, configDto)
+        MapCache.invalidate(Config::class.java)
         Constant.abstractSocialNetworks.forEach { it.logout() }
         return Response.ok(AbstractConverter.convert(configService.find(uuid), ConfigDto::class.java))
     }

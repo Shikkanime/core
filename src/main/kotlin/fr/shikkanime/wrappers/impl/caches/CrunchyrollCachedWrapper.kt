@@ -167,20 +167,20 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     private val seriesRegex = "/series/([A-Z0-9]{9})/".toRegex()
     private val episodeRegex = "/watch/([A-Z0-9]{9})".toRegex()
 
-    suspend fun getSimulcastCalendarWithDates(countryCode: CountryCode, dates: Set<LocalDate>): List<BrowseObject> {
+    fun getSimulcastCalendarWithDates(countryCode: CountryCode, dates: Set<LocalDate>): List<BrowseObject> {
         val startOfWeekDates = dates.map { it.atStartOfWeek() }.distinct()
         val releaseDateTimes = mutableSetOf<ZonedDateTime>()
         val seriesIds = mutableSetOf<String>()
         val episodeIds = mutableSetOf<String>()
 
-        startOfWeekDates.forEach { date ->
-            val response = HttpRequest.retry(3) {
-                httpRequest.get("$baseUrl${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date").apply {
-                    require(status == HttpStatusCode.OK)
-                }
+        startOfWeekDates.parallelStream().forEach { date ->
+            val document = HttpRequest.retry(3) {
+                Jsoup.parse(
+                    httpRequest.get("$baseUrl${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date").apply {
+                        require(status == HttpStatusCode.OK)
+                    }.bodyAsText())
             }
 
-            val document = Jsoup.parse(response.bodyAsText())
             document.select("article.release").forEach { element ->
                 val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
                 releaseDateTimes.add(releaseDateTime)

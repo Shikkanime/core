@@ -60,7 +60,7 @@ class MapCache<K : Any, V>(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(javaClass)
+        private val logger = LoggerFactory.getLogger(this::class.java)
         private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
 
         fun loadAll() {

@@ -6,7 +6,6 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.SimulcastRepository
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     @Inject
@@ -29,7 +28,6 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun delete(entity: Simulcast) {
         super.delete(entity)
-        MapCache.invalidate(Simulcast::class.java)
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 

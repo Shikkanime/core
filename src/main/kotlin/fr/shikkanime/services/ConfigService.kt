@@ -5,7 +5,6 @@ import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.ConfigRepository
-import fr.shikkanime.utils.MapCache
 import java.util.*
 
 class ConfigService : AbstractService<Config, ConfigRepository>() {
@@ -28,7 +27,6 @@ class ConfigService : AbstractService<Config, ConfigRepository>() {
 
         config.propertyValue = configDto.propertyValue
         val updated = super.update(config)
-        MapCache.invalidate(Config::class.java)
         traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
         return updated
     }

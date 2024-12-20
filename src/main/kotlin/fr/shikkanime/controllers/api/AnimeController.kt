@@ -6,11 +6,16 @@ import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -153,6 +158,7 @@ class AnimeController : HasPageableRoute() {
     @OpenAPI(hidden = true)
     private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
         val updated = animeService.update(uuid, animeDto)
+        MapCache.invalidate(Anime::class.java)
         return Response.ok(AbstractConverter.convert(updated, AnimeDto::class.java))
     }
 
@@ -162,6 +168,7 @@ class AnimeController : HasPageableRoute() {
     @OpenAPI(hidden = true)
     private fun deleteAnime(@PathParam("uuid") uuid: UUID): Response {
         animeService.delete(animeService.find(uuid) ?: return Response.notFound())
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.noContent()
     }
 
