@@ -444,7 +444,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         animePlatformService.findAllByAnime(entity).forEach { animePlatformService.delete(it) }
         super.delete(entity)
-        MapCache.invalidate(Anime::class.java)
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 

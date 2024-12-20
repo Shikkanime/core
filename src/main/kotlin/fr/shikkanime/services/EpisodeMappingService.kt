@@ -278,7 +278,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         episodeVariantService.findAllByMapping(entity).forEach { episodeVariantService.delete(it) }
         memberFollowEpisodeService.findAllByEpisode(entity).forEach { memberFollowEpisodeService.delete(it) }
         super.delete(entity)
-        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 }

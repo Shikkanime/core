@@ -182,7 +182,7 @@ class FetchOldEpisodesJob : AbstractJob {
                         )
                     )
                 } catch (e: EpisodeNoSubtitlesOrVoiceException) {
-                    logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
+                    logger.warning("Error while fetching ADN episodes: ${e.message}")
                 } catch (e: Exception) {
                     logger.log(
                         Level.SEVERE,

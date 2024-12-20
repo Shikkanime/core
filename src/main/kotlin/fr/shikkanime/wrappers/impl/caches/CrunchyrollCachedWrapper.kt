@@ -169,31 +169,46 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
 
     suspend fun getSimulcastCalendarWithDates(countryCode: CountryCode, dates: Set<LocalDate>): List<BrowseObject> {
         val startOfWeekDates = dates.map { it.atStartOfWeek() }.distinct()
+        val releaseDateTimes = mutableSetOf<ZonedDateTime>()
+        val seriesIds = mutableSetOf<String>()
         val episodeIds = mutableSetOf<String>()
 
         startOfWeekDates.forEach { date ->
             val response = HttpRequest.retry(3) {
-                val response = httpRequest.get("$baseUrl${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date")
-                require(response.status == HttpStatusCode.OK)
-                response
+                httpRequest.get("$baseUrl${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date").apply {
+                    require(status == HttpStatusCode.OK)
+                }
             }
 
             val document = Jsoup.parse(response.bodyAsText())
-
             document.select("article.release").forEach { element ->
-                val isMultipleRelease = element.attr("data-episode-num").contains("-")
                 val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
-                val seriesId = seriesRegex.find(element.select("a").first { seriesRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1]
+                releaseDateTimes.add(releaseDateTime)
 
-                if (isMultipleRelease) {
-                    getEpisodesBySeriesId(countryCode.locale, seriesId).filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() == releaseDateTime }
-                        .forEach { episodeIds.add(it.id) }
+                if (element.attr("data-episode-num").contains("-")) {
+                    seriesIds.add(seriesRegex.find(element.select("a[href~=${seriesRegex.pattern}]").attr("href"))!!.groupValues[1])
                 } else {
-                    episodeIds.add(episodeRegex.find(element.select("a").first { episodeRegex.containsMatchIn(it.attr("href")) }.attr("href"))!!.groupValues[1])
+                    episodeIds.add(episodeRegex.find(element.select("a[href~=${episodeRegex.pattern}]").attr("href"))!!.groupValues[1])
                 }
             }
         }
 
-        return episodeIds.chunked(CRUNCHYROLL_CHUNK).flatMap { chunk -> HttpRequest.retry(3) { getObjects(countryCode.locale, *chunk.toTypedArray()) } }
+        episodeIds.addAll(
+            seriesIds.parallelStream()
+                .flatMap { seriesId -> HttpRequest.retry(3) { getSeasonsBySeriesId(countryCode.locale, seriesId) }.stream() }
+                .flatMap { season -> HttpRequest.retry(3) { getEpisodesBySeasonId(countryCode.locale, season.id) }.stream() }
+                .flatMap { episode -> (listOf(episode.id!!) + episode.getVariants(null)).stream() }
+                .distinct()
+                .toList()
+        )
+
+        return episodeIds.chunked(CRUNCHYROLL_CHUNK).parallelStream()
+            .flatMap { chunk -> HttpRequest.retry(3) { getObjects(countryCode.locale, *chunk.toTypedArray()) }.stream() }
+            .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() in releaseDateTimes }
+            .toList()
+            .apply {
+                map { it.episodeMetadata!!.seriesId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { getSeries(countryCode.locale, it) } }
+                map { it.episodeMetadata!!.seasonId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { getSeason(countryCode.locale, it) } }
+            }
     }
 }
