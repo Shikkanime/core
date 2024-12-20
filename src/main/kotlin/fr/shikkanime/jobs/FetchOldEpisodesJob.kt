@@ -147,6 +147,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
         config.propertyValue = from.toString()
         configService.update(config)
+        MapCache.invalidate(Config::class.java)
         traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
 
         log(emailLogs, Level.INFO, "Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
@@ -200,12 +201,10 @@ class FetchOldEpisodesJob : AbstractJob {
         countryCode: CountryCode,
         dates: Set<LocalDate>
     ): List<Episode> {
-        return runBlocking {
-            CrunchyrollCachedWrapper.getSimulcastCalendarWithDates(
-                countryCode,
-                dates
-            )
-        }.mapNotNull { browseObject ->
+        return CrunchyrollCachedWrapper.getSimulcastCalendarWithDates(
+            countryCode,
+            dates
+        ).mapNotNull { browseObject ->
             try {
                 crunchyrollPlatform.convertEpisode(
                     countryCode,

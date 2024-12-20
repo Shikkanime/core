@@ -7,8 +7,10 @@ import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.EpisodeVariantService
@@ -149,6 +151,7 @@ class EpisodeMappingController : HasPageableRoute() {
         }
 
         episodeMappingService.updateAll(updateAllEpisodeMappingDto)
+        MapCache.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         return Response.ok()
     }
 
@@ -161,6 +164,7 @@ class EpisodeMappingController : HasPageableRoute() {
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
         val updated = episodeMappingService.update(uuid, episodeMappingDto)
+        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.ok(AbstractConverter.convert(updated, EpisodeMappingDto::class.java))
     }
 

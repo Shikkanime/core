@@ -116,7 +116,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                 memberAction.member!!.email = memberAction.email
                 memberService.update(memberAction.member!!)
                 traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
-                MapCache.invalidate(Member::class.java)
 
                 try {
                     emailService.sendEmail(
@@ -139,7 +138,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                 memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
                 memberService.update(memberAction.member!!)
                 traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
-                MapCache.invalidate(Member::class.java)
 
                 try {
                     emailService.sendEmail(

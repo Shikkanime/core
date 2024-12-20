@@ -11,7 +11,6 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -82,7 +81,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         var startDate = updateAllEpisodeMappingDto.startDate?.let { LocalDate.parse(it) }
 
         episodes.forEach { episode ->
-            var forcedUpdate = updateAllEpisodeMappingDto.forceUpdate == true
+            val forcedUpdate = updateAllEpisodeMappingDto.forceUpdate == true
 
             updateAllEpisodeMappingDto.episodeType?.let { episode.episodeType = it }
             updateAllEpisodeMappingDto.season?.let { episode.season = it }
@@ -101,7 +100,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!)
                 ?.takeIf { it.uuid != episode.uuid }
                 ?.let { existing ->
-                    mergeEpisodeMapping(episode, existing, false)?.apply {
+                    mergeEpisodeMapping(episode, existing)?.apply {
                         if (forcedUpdate) lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
                         super.update(this)
                     }
@@ -115,11 +114,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         }
 
-        if (startDate == null) {
-            MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
-        } else {
+        if (startDate != null) {
             animeService.recalculateSimulcasts()
-            MapCache.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         }
     }
 
@@ -165,15 +161,13 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         episode.lastUpdateDateTime = ZonedDateTime.now()
         val update = super.update(episode)
         updateEpisodeMappingVariants(entity, episode, update)
-        MapCache.invalidate(EpisodeMapping::class.java)
         traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         return update
     }
 
     private fun mergeEpisodeMapping(
         episode: EpisodeMapping,
-        existing: EpisodeMapping,
-        updateCache: Boolean = true
+        existing: EpisodeMapping
     ): EpisodeMapping? {
         // Set the variants of the current episode to the existing episode
         episodeVariantService.findAllByMapping(episode).forEach { variant ->
@@ -193,9 +187,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         existing.lastUpdateDateTime = ZonedDateTime.now()
         update(existing)
         traceActionService.createTraceAction(existing, TraceAction.Action.UPDATE)
-
-        if (updateCache)
-            MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
 
         return find(existing.uuid!!)
     }
@@ -220,7 +211,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
             if (findAllByAnime(oldAnime).isEmpty()) {
                 animeService.delete(oldAnime)
-                MapCache.invalidate(Anime::class.java)
             }
         }
     }
@@ -271,7 +261,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         }
 
         oldList.forEach { episodeVariantService.delete(it) }
-        MapCache.invalidate(EpisodeVariant::class.java)
     }
 
     override fun delete(entity: EpisodeMapping) {
