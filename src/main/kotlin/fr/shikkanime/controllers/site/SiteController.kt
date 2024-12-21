@@ -241,6 +241,12 @@ class SiteController {
             LocalDate.now()
         }.atStartOfWeek()
 
+        val min = episodeMappingCacheService.findAll().minByOrNull { it.releaseDateTime }?.releaseDateTime?.toLocalDate()?.atStartOfWeek()
+
+        if (startOfWeekDay < min) {
+            return Response.notFound()
+        }
+
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
