@@ -45,8 +45,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
     }
 
     override fun logout() {
-        if (!isInitialized) return
-        isInitialized = false
+        // Do nothing
     }
 
     override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
