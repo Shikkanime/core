@@ -18,6 +18,8 @@ import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
+import fr.shikkanime.wrappers.impl.AnimationDigitalNetworkWrapper
+import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
@@ -337,7 +339,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     episodes.addAll(
                         animationDigitalNetworkPlatform.convertEpisode(
                             countryCode,
-                            AnimationDigitalNetworkCachedWrapper.getVideo(
+                            AnimationDigitalNetworkWrapper.getVideo(
                                 animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
                             ),
                             ZonedDateTime.now(),
@@ -373,7 +375,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ): List<Episode> {
         val browseObjects = mutableListOf<BrowseObject>()
 
-        val variantObjects = CrunchyrollCachedWrapper.getEpisode(
+        val variantObjects = CrunchyrollWrapper.getEpisode(
             countryCode.locale,
             crunchyrollId
         ).also { browseObjects.add(it.convertToBrowseObject()) }
@@ -382,7 +384,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             .chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
             .flatMap { chunk ->
                 HttpRequest.retry(3) {
-                    CrunchyrollCachedWrapper.getObjects(
+                    CrunchyrollWrapper.getObjects(
                         countryCode.locale,
                         *chunk.toTypedArray()
                     )
