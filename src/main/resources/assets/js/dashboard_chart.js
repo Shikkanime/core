@@ -22,7 +22,9 @@ const loginCountChart = new Chart(loginCountChartElement, {
     type: 'line',
     data: { labels: [], datasets: [
             { label: 'Login distinct count', data: [], fill: true, borderColor: 'rgb(255,255,0)', backgroundColor: 'rgba(255,255,0,0.5)', tension: 0.1 },
-            { label: 'Login count', data: [], fill: true, borderColor: 'rgb(255,122,0)', backgroundColor: 'rgba(255,122,0,0.5)', tension: 0.1 }
+            { label: 'Login distinct count trending', data: [], fill: false, borderColor: 'rgb(255,0,0)', tension: 0.1 },
+            { label: 'Login count', data: [], fill: true, borderColor: 'rgb(255,122,0)', backgroundColor: 'rgba(255,122,0,0.5)', tension: 0.1 },
+            { label: 'Login count trending', data: [], fill: false, borderColor: 'rgb(0,255,0)', tension: 0.1 }
         ] },
     options: {
         maintainAspectRatio: false,
@@ -54,6 +56,14 @@ const setChartData = async () => {
     const loginCounts = await getLoginCounts();
     loginCountChart.data.labels = loginCounts.map(loginCount => loginCount.date);
     loginCountChart.data.datasets[0].data = loginCounts.map(loginCount => loginCount.distinctCount);
-    loginCountChart.data.datasets[1].data = loginCounts.map(loginCount => loginCount.count);
+    loginCountChart.data.datasets[1].data = loginCounts.map((_, i) => {
+        const sum = loginCounts.slice(Math.max(0, i - 6), i + 1).reduce((acc, loginCount) => acc + loginCount.distinctCount, 0);
+        return sum / Math.min(i + 1, 7);
+    });
+    loginCountChart.data.datasets[2].data = loginCounts.map(loginCount => loginCount.count);
+    loginCountChart.data.datasets[3].data = loginCounts.map((_, i) => {
+        const sum = loginCounts.slice(Math.max(0, i - 6), i + 1).reduce((acc, loginCount) => acc + loginCount.count, 0);
+        return sum / Math.min(i + 1, 7);
+    });
     loginCountChart.update();
 };

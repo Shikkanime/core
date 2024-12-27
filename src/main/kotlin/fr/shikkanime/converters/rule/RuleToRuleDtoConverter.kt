@@ -16,7 +16,8 @@ class RuleToRuleDtoConverter : AbstractConverter<Rule, RuleDto>() {
             seriesId = from.seriesId!!,
             seasonId = from.seasonId!!,
             action = from.action!!,
-            actionValue = from.actionValue!!
+            actionValue = from.actionValue!!,
+            lastUsageDateTime = from.lastUsageDateTime?.withUTCString()
         )
     }
 }

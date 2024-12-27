@@ -26,7 +26,9 @@ class Rule(
     @Enumerated(EnumType.STRING)
     var action: Action? = null,
     @Column(name = "action_value", nullable = false)
-    var actionValue: String? = null
+    var actionValue: String? = null,
+    @Column(name = "last_usage_date_time", nullable = true)
+    var lastUsageDateTime: ZonedDateTime? = null,
 ) : ShikkEntity(uuid) {
     enum class Action {
         REPLACE_ANIME_NAME,

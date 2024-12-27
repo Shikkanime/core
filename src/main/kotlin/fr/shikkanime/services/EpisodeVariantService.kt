@@ -42,6 +42,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject
     private lateinit var ruleCacheService: RuleCacheService
 
+    @Inject
+    private lateinit var ruleService: RuleService
+
     override fun getRepository() = episodeVariantRepository
 
     fun findAllIdentifierByDateRangeWithoutNextEpisode(
@@ -84,6 +87,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     }
 
     fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
+        val now = ZonedDateTime.now()
         val rules = ruleCacheService.findAllByPlatformSeriesIdAndSeasonId(episode.platform, episode.animeId, episode.seasonId)
 
         rules.forEach { rule ->
@@ -91,6 +95,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 Rule.Action.REPLACE_ANIME_NAME -> episode.anime = rule.actionValue!!
                 Rule.Action.REPLACE_SEASON_NUMBER -> episode.season = rule.actionValue!!.toInt()
             }
+
+            rule.lastUsageDateTime = now
+            ruleService.update(rule)
         }
 
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)

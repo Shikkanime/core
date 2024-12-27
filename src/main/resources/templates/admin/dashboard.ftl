@@ -42,12 +42,21 @@
                         <div class="ms-md-auto me-md-0">
                             <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate"
                                class="btn btn-danger">Invalidate</a>
+                            <button id="simulcasts-show" class="btn btn-success">Show all</button>
                         </div>
+
+                        <script>
+                            document.getElementById('simulcasts-show').addEventListener('click', function () {
+                                document.querySelectorAll('.list-group-item.d-none').forEach(function (element) {
+                                    element.classList.remove('d-none');
+                                });
+                            });
+                        </script>
                     </div>
 
                     <ul class="list-group list-group-numbered">
                         <#list simulcasts as simulcast>
-                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <li class="list-group-item d-flex justify-content-between align-items-start <#if simulcast_index<5><#else>d-none</#if>">
                                 <div class="ms-2 me-auto">
                                     <div class="fw-bold">${simulcast.season} ${simulcast.year?c}</div>
                                 </div>

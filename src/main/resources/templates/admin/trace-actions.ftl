@@ -99,6 +99,7 @@
                         <p class="mb-0">
                             <a x-show="traceAction.action !== 'DELETE'" x-bind:href="traceAction.entityType === 'Anime' ? '/admin/animes/' + traceAction.entityUuid :
                                     traceAction.entityType === 'EpisodeMapping' ? '/admin/episodes/' + traceAction.entityUuid :
+                                    traceAction.entityType === 'Member' ? '/admin/members/' + traceAction.entityUuid :
                                     `#`"
                                class="text-muted text-decoration-none"
                                x-text="traceAction.entityType"
