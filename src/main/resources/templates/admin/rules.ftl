@@ -101,6 +101,7 @@
 
             <button type="submit" class="btn btn-success ms-auto me-0" :disabled="loading" data-bs-toggle="modal"
                     data-bs-target="#createModal" @click="selected = {platform: {}}">
+                <i class="bi bi-plus-circle me-2"></i>
                 Create
             </button>
         </div>
@@ -113,6 +114,7 @@
                 <th scope="col">Season ID</th>
                 <th scope="col">Action name</th>
                 <th scope="col">Action value</th>
+                <th scope="col">Last usage</th>
                 <th scope="col">Actions</th>
             </tr>
             </thead>
@@ -124,6 +126,7 @@
                     <td x-text="rule.seasonId"></td>
                     <td x-text="rule.action"></td>
                     <td x-text="rule.actionValue"></td>
+                    <td x-text="rule.lastUsageDateTime ? new Date(rule.lastUsageDateTime).toLocaleString() : 'Never'"></td>
                     <td>
                         <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                                 data-bs-target="#deleteModal" @click="selected = rule">

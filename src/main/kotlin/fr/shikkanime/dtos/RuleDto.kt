@@ -10,5 +10,6 @@ data class RuleDto(
     val seriesId: String,
     val seasonId: String,
     val action: Rule.Action,
-    val actionValue: String
+    val actionValue: String,
+    val lastUsageDateTime: String?,
 )

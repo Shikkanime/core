@@ -15,6 +15,7 @@ data class ConfigurationField(
 open class PlatformSimulcast(
     var uuid: UUID? = null,
     var name: String = "",
+    var lastUsageDateTime: String? = null,
 ) {
     open fun of(parameters: Parameters) {
         parameters["name"]?.let { name = it }
@@ -37,6 +38,7 @@ open class PlatformSimulcast(
 
         if (uuid != other.uuid) return false
         if (name != other.name) return false
+        if (lastUsageDateTime != other.lastUsageDateTime) return false
 
         return true
     }
@@ -44,6 +46,7 @@ open class PlatformSimulcast(
     override fun hashCode(): Int {
         var result = uuid?.hashCode() ?: 0
         result = 31 * result + name.hashCode()
+        result = 31 * result + (lastUsageDateTime?.hashCode() ?: 0)
         return result
     }
 }
@@ -58,6 +61,8 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
 
     @Suppress("UNCHECKED_CAST")
     fun addPlatformSimulcast(simulcast: PlatformSimulcast) = simulcasts.add(simulcast as S)
+
+    fun containsAnimeSimulcast(name: String) = simulcasts.any { it.name.lowercase() == name.lowercase() }
 
     open fun of(parameters: Parameters) {
         parameters["availableCountries"]?.let {

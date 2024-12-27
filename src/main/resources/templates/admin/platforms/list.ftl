@@ -49,7 +49,20 @@
                                     <a href="/admin/platforms/${abstractPlatform.platform.name()}/simulcasts/${simulcast.uuid}"
                                        class="card text-decoration-none mb-3">
                                         <div class="card-body">
-                                            ${simulcast.name}
+                                            <div class="row">
+                                                <div class="col-md-10">
+                                                    ${simulcast.name}
+                                                </div>
+                                                <div class="col-md-2 text-md-end text-muted">
+                                                    <i class="bi bi-clock-history me-2"></i>
+
+                                                    <#if simulcast.lastUsageDateTime??>
+                                                        ${simulcast.lastUsageDateTime?datetime.iso?string["dd/MM/yyyy HH:mm:ss"]}
+                                                    <#else>
+                                                        Never
+                                                    </#if>
+                                                </div>
+                                            </div>
                                         </div>
                                     </a>
                                 </#list>
@@ -66,7 +79,7 @@
                             <hr class="my-3">
 
                             <div class="d-flex">
-                                <button type="submit" class="btn btn-primary ms-auto mr-0">Update</button>
+                                <button type="submit" class="btn btn-success ms-auto mr-0">Update</button>
                             </div>
                         </div>
                     </form>

@@ -76,15 +76,15 @@ class AnimationDigitalNetworkPlatform :
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
         val genres = video.show.genres
+        val isConfigurationSimulcast = configuration!!.containsAnimeSimulcast(animeName)
 
-        val contains = configuration!!.simulcasts.map { it.name.lowercase() }.contains(animeName.lowercase())
-        if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !contains && checkAnimation)
+        if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !isConfigurationSimulcast && checkAnimation)
             throw Exception("Anime is not an animation")
 
         if (needSimulcast) {
             val isSimulcasted = video.show.simulcast ||
                     video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } ||
-                    contains ||
+                    isConfigurationSimulcast ||
                     configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)
                         ?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: "").lowercase()) } == true
 
@@ -98,6 +98,9 @@ class AnimationDigitalNetworkPlatform :
             throw NotSimulcastedMediaException("Trailer or special show type")
 
         val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
+
+        if (needSimulcast)
+            updateAnimeSimulcast(animeName)
 
         return video.languages.map {
             Episode(

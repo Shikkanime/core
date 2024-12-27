@@ -97,4 +97,11 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
 
     private fun getConfigurationFile() =
         File(Constant.configFolder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
+
+    fun updateAnimeSimulcast(name: String) {
+        configuration!!.simulcasts.find { it.name.lowercase() == name.lowercase() }?.let {
+            it.lastUsageDateTime = ZonedDateTime.now().withUTCString()
+            saveConfiguration()
+        }
+    }
 }

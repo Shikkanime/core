@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.RuleDto
 import fr.shikkanime.entities.Rule
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.RuleService
+import java.time.ZonedDateTime
 
 class RuleDtoToRuleConverter : AbstractConverter<RuleDto, Rule>() {
     @Inject
@@ -23,7 +24,8 @@ class RuleDtoToRuleConverter : AbstractConverter<RuleDto, Rule>() {
             seriesId = from.seriesId,
             seasonId = from.seasonId,
             action = from.action,
-            actionValue = from.actionValue
+            actionValue = from.actionValue,
+            lastUsageDateTime = from.lastUsageDateTime?.let { ZonedDateTime.parse(it) }
         )
     }
 }

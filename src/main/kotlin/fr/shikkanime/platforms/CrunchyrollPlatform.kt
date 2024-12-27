@@ -187,7 +187,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
         val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getSeries(countryCode.locale, browseObject.episodeMetadata.seriesId) }
-        val isConfigurationSimulcast = configuration!!.simulcasts.any { it.name.lowercase() == animeName.lowercase() }
+        val isConfigurationSimulcast = configuration!!.containsAnimeSimulcast(animeName)
         val season = runBlocking { CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId) }
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
@@ -201,6 +201,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             val currentVersion = browseObject.episodeMetadata.versions.firstOrNull { it.guid == browseObject.id }
             original = currentVersion?.original != false
         }
+
+        if (needSimulcast)
+            updateAnimeSimulcast(animeName)
 
         return Episode(
             countryCode = countryCode,
