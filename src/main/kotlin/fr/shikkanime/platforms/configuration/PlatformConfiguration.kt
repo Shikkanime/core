@@ -62,8 +62,6 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
     @Suppress("UNCHECKED_CAST")
     fun addPlatformSimulcast(simulcast: PlatformSimulcast) = simulcasts.add(simulcast as S)
 
-    fun containsAnimeSimulcast(name: String) = simulcasts.any { it.name.lowercase() == name.lowercase() }
-
     open fun of(parameters: Parameters) {
         parameters["availableCountries"]?.let {
             availableCountries = if (it.isNotBlank()) CountryCode.from(it.split(",")) else emptySet()

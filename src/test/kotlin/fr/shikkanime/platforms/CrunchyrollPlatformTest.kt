@@ -60,7 +60,6 @@ class CrunchyrollPlatformTest : AbstractTest() {
         assertEquals("Metallic Rouge", episodes[1].anime)
         assertEquals("ja-JP", episodes[1].audioLocale)
         assertNotNull(episodes[1].description)
-        assertNotNull(platform.configuration?.simulcasts?.first()?.lastUsageDateTime)
     }
 
     @Test

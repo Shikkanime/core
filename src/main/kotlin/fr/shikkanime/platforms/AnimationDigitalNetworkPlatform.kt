@@ -76,20 +76,15 @@ class AnimationDigitalNetworkPlatform :
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
         val genres = video.show.genres
-        val isConfigurationSimulcast = configuration!!.containsAnimeSimulcast(animeName)
+        val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
 
-        if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !isConfigurationSimulcast && checkAnimation)
+        if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !isConfigurationSimulcasted && checkAnimation)
             throw Exception("Anime is not an animation")
 
-        if (needSimulcast) {
-            val isSimulcasted = video.show.simulcast ||
-                    video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } ||
-                    isConfigurationSimulcast ||
-                    configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)
-                        ?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: "").lowercase()) } == true
+        val isSimulcasted = video.show.simulcast || video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: "").lowercase()) } == true
 
-            if (!isSimulcasted) throw AnimeNotSimulcastedException("Anime is not simulcasted")
-        }
+        if (needSimulcast && !(isConfigurationSimulcasted || isSimulcasted))
+            throw AnimeNotSimulcastedException("Anime is not simulcasted")
 
         val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
         val specialShowTypes = listOf("PV", "BONUS")
@@ -99,9 +94,6 @@ class AnimationDigitalNetworkPlatform :
 
         val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
 
-        if (needSimulcast)
-            updateAnimeSimulcast(animeName)
-
         return video.languages.map {
             Episode(
                 countryCode = countryCode,
@@ -110,6 +102,8 @@ class AnimationDigitalNetworkPlatform :
                 animeImage = video.show.image2x,
                 animeBanner = video.show.imageHorizontal2x,
                 animeDescription = video.show.summary.normalize(),
+                isConfigurationSimulcasted = isConfigurationSimulcasted,
+                isSimulcasted = isSimulcasted,
                 releaseDateTime = video.releaseDate,
                 episodeType = episodeType,
                 seasonId = video.season ?: "1",

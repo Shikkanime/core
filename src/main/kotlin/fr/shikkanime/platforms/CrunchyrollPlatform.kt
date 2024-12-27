@@ -187,12 +187,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
         val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getSeries(countryCode.locale, browseObject.episodeMetadata.seriesId) }
-        val isConfigurationSimulcast = configuration!!.containsAnimeSimulcast(animeName)
+        val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
         val season = runBlocking { CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId) }
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
 
-        if (needSimulcast && !(isConfigurationSimulcast || crunchyrollAnimeContent.isSimulcast || isDubbed || episodeType == EpisodeType.FILM))
+        val isSimulcasted = crunchyrollAnimeContent.isSimulcast || isDubbed || episodeType == EpisodeType.FILM
+
+        if (needSimulcast && !(isConfigurationSimulcasted || isSimulcasted))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
 
         var original = true
@@ -202,9 +204,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             original = currentVersion?.original != false
         }
 
-        if (needSimulcast)
-            updateAnimeSimulcast(animeName)
-
         return Episode(
             countryCode = countryCode,
             animeId = browseObject.episodeMetadata.seriesId,
@@ -212,6 +211,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             animeImage = crunchyrollAnimeContent.fullHDImage!!,
             animeBanner = crunchyrollAnimeContent.fullHDBanner!!,
             animeDescription = crunchyrollAnimeContent.description.normalize(),
+            isConfigurationSimulcasted = isConfigurationSimulcasted,
+            isSimulcasted = isSimulcasted,
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
             seasonId = browseObject.episodeMetadata.seasonId,

@@ -113,6 +113,10 @@ class FetchEpisodesJob : AbstractJob {
                 try {
                     val savedEpisode = episodeVariantService.save(it)
                     identifiers.add(it.getIdentifier())
+
+                    if (it.isConfigurationSimulcasted == true && it.isSimulcasted == false)
+                        Constant.abstractPlatforms.forEach { abstractPlatform -> abstractPlatform.updateAnimeSimulcastConfiguration(it.anime) }
+
                     savedEpisode
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while saving episode ${it.getIdentifier()} (${it.anime})", e)
@@ -149,8 +153,8 @@ class FetchEpisodesJob : AbstractJob {
                 episodes.filter { typeIdentifiers.add(getTypeIdentifier(it)) }
                     .takeIf { it.size < sizeLimit }
                     ?.groupBy { it.mapping?.uuid }
-                    ?.forEach { _, episodes ->
-                        val dtos = AbstractConverter.convert(episodes, EpisodeVariantDto::class.java)!!
+                    ?.forEach { (_, groupedEpisodes) ->
+                        val dtos = AbstractConverter.convert(groupedEpisodes, EpisodeVariantDto::class.java)!!
                         sendToSocialNetworks(dtos)
                     }
             }

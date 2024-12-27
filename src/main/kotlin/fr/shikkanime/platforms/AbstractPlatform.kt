@@ -33,6 +33,8 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val url: String,
         val uncensored: Boolean,
         val original: Boolean,
+        val isConfigurationSimulcasted: Boolean? = null,
+        val isSimulcasted: Boolean? = null,
     ) {
         fun getIdentifier() = StringUtils.getIdentifier(countryCode, platform, id, audioLocale, uncensored)
     }
@@ -98,7 +100,9 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     private fun getConfigurationFile() =
         File(Constant.configFolder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
 
-    fun updateAnimeSimulcast(name: String) {
+    fun containsAnimeSimulcastConfiguration(name: String) = configuration!!.simulcasts.any { it.name.lowercase() == name.lowercase() }
+
+    fun updateAnimeSimulcastConfiguration(name: String) {
         configuration!!.simulcasts.find { it.name.lowercase() == name.lowercase() }?.let {
             it.lastUsageDateTime = ZonedDateTime.now().withUTCString()
             saveConfiguration()
