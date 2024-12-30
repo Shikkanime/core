@@ -69,7 +69,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         browseObject: AbstractCrunchyrollWrapper.BrowseObject
     ) {
         try {
-            list.add(convertEpisode(countryCode, browseObject))
+            list.add(convertEpisode(countryCode, browseObject, needSimulcast = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_SIMULCAST, true)))
         } catch (_: EpisodeException) {
             // Ignore
         } catch (_: AnimeException) {

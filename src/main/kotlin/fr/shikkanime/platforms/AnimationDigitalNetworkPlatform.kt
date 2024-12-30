@@ -46,7 +46,7 @@ class AnimationDigitalNetworkPlatform :
 
             api.forEach {
                 try {
-                    list.addAll(convertEpisode(countryCode, it, zonedDateTime))
+                    list.addAll(convertEpisode(countryCode, it, zonedDateTime, needSimulcast = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_SIMULCAST, true)))
                 } catch (_: AnimeException) {
                     // Ignore
                 } catch (_: NotSimulcastedMediaException) {

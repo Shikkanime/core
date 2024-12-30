@@ -37,6 +37,9 @@ class ConfigCacheService : AbstractCacheService {
     fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.toBoolean() == true
 
+    fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey, defaultValue: Boolean) =
+        findByName(configPropertyKey.key)?.propertyValue?.toBoolean() ?: defaultValue
+
     fun getValueAsStringList(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.split(",") ?: emptyList()
 }
