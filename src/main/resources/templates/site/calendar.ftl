@@ -42,6 +42,8 @@
                 <#list weeklyAnimes as dailyAnimes>
                     <td class="border-start border-end border-dark bg-black">
                         <#list dailyAnimes.releases as release>
+                            <#assign animeSanitized = release.anime.shortName?html />
+
                             <#assign isReleased = (release.mappings?? && release.mappings?size > 0)>
                             <#assign isMultipleReleased = isReleased && (release.mappings?size > 1)>
 
@@ -64,7 +66,7 @@
                                         <div class="position-relative">
                                             <img loading="lazy"
                                                  src="${imageUrl}"
-                                                 alt="${su.sanitizeXSS(release.anime.shortName)} anime"
+                                                 alt="${animeSanitized} anime"
                                                  class="img-fluid" width="640"
                                                  height="360">
 
@@ -86,7 +88,7 @@
                                                       data-release-date-time="${release.releaseDateTime}"></span>
                                                 <div class="vr mx-2"></div>
                                                 <div class="d-block mt-2">
-                                                    <span class="h6 text-truncate-2 mb-1 fw-bold">${release.anime.shortName}</span>
+                                                    <span class="h6 text-truncate-2 mb-1 fw-bold">${animeSanitized}</span>
                                                     <#if release.minNumber?? || release.maxNumber?? || release.number??>
                                                         <p class="text-muted mb-0">
                                                             ${su.getEpisodeTypeLabel(release.anime.countryCode, release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
@@ -108,7 +110,7 @@
 
                                             <#if description??>
                                                 <div class="text-truncate-4">
-                                                    ${description}
+                                                    ${description?html}
                                                 </div>
                                             </#if>
 

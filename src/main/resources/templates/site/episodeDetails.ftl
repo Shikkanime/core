@@ -2,7 +2,7 @@
 <#import "components/langType.ftl" as langTypeComponent />
 
 <#assign canonicalUrl = baseUrl + "/animes/" + episodeMapping.anime.slug + "/season-" + episodeMapping.season?c + "/" + episodeMapping.episodeType.slug + "-" + episodeMapping.number?c />
-<#assign animeSanitized = su.sanitizeXSS(episodeMapping.anime.shortName) />
+<#assign animeSanitized = episodeMapping.anime.shortName?html />
 
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image">
     <div class="position-relative">
@@ -27,7 +27,7 @@
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
                 <h1 class="h6 fw-bold mb-0 text-uppercase">
                     <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}"
-                       class="text-white text-decoration-none">${episodeMapping.anime.shortName}&NonBreakingSpace;-&NonBreakingSpace;${su.toSeasonString(episodeMapping.anime.countryCode, episodeMapping.season)}</a>
+                       class="text-white text-decoration-none">${animeSanitized}&NonBreakingSpace;-&NonBreakingSpace;${su.toSeasonString(episodeMapping.anime.countryCode, episodeMapping.season)}</a>
                     &NonBreakingSpace;${su.toEpisodeMappingString(episodeMapping, false, false)}
                 </h1>
 
@@ -39,8 +39,8 @@
                     </#list>
                 </div>
 
-                <h2 class="mt-3 h6 fw-bold mb-0">${episodeMapping.title!"＞︿＜"}</h2>
-                <span class="mt-2">${episodeMapping.description!"Aucune description pour le moment..."}</span>
+                <h2 class="mt-3 h6 fw-bold mb-0">${(episodeMapping.title!"＞︿＜")?html}</h2>
+                <span class="mt-2">${(episodeMapping.description!"Aucune description pour le moment...")?html}</span>
 
                 <#if previousEpisode?? || nextEpisode??>
                     <div class="d-none d-md-block">
@@ -53,12 +53,12 @@
                                         <div class="row">
                                             <div class="col-6">
                                                 <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
-                                                     alt="${previousEpisode.title!"＞︿＜"}" class="img-fluid"
+                                                     alt="${(previousEpisode.title!"＞︿＜")?html}" class="img-fluid"
                                                      style="border-radius: 0 0 0 1rem">
                                             </div>
                                             <div class="col-6 d-flex flex-column justify-content-center">
                                                 <h6 class="fw-bold">
-                                                    ${su.toEpisodeMappingString(previousEpisode, false, false)} -&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}
+                                                    ${su.toEpisodeMappingString(previousEpisode, false, false)} -&NonBreakingSpace;${(previousEpisode.title!"＞︿＜")?html}
                                                 </h6>
                                                 <#list previousEpisode.langTypes as langType>
                                                     <p class="text-muted mb-0">
@@ -80,12 +80,12 @@
                                             <div class="row">
                                                 <div class="col-6">
                                                     <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
-                                                         alt="${nextEpisode.title!"＞︿＜"}" class="img-fluid"
+                                                         alt="${(nextEpisode.title!"＞︿＜")?html}" class="img-fluid"
                                                          style="border-radius: 0 0 0 1rem">
                                                 </div>
                                                 <div class="col-6 d-flex flex-column justify-content-center">
                                                     <h6 class="fw-bold">
-                                                        ${su.toEpisodeMappingString(nextEpisode, false, false)} -&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}
+                                                        ${su.toEpisodeMappingString(nextEpisode, false, false)} -&NonBreakingSpace;${(nextEpisode.title!"＞︿＜")?html}
                                                     </h6>
                                                     <#list nextEpisode.langTypes as langType>
                                                         <p class="text-muted mb-0">
@@ -135,12 +135,12 @@
                         <div class="row">
                             <div class="col-6">
                                 <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
-                                     alt="${previousEpisode.title!"＞︿＜"}" class="img-fluid"
+                                     alt="${(previousEpisode.title!"＞︿＜")?html}" class="img-fluid"
                                      style="border-radius: 0 0 0 1rem">
                             </div>
                             <div class="col-6 d-flex flex-column justify-content-center">
                                 <h6 class="fw-bold">
-                                    ${su.toEpisodeMappingString(previousEpisode, false, false)} -&NonBreakingSpace;${previousEpisode.title!"＞︿＜"}
+                                    ${su.toEpisodeMappingString(previousEpisode, false, false)} -&NonBreakingSpace;${(previousEpisode.title!"＞︿＜")?html}
                                 </h6>
                                 <#list previousEpisode.langTypes as langType>
                                     <p class="text-muted mb-0">
@@ -162,12 +162,12 @@
                             <div class="row">
                                 <div class="col-6">
                                     <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
-                                         alt="${nextEpisode.title!"＞︿＜"}" class="img-fluid"
+                                         alt="${(nextEpisode.title!"＞︿＜")?html}" class="img-fluid"
                                          style="border-radius: 0 0 0 1rem">
                                 </div>
                                 <div class="col-6 d-flex flex-column justify-content-center">
                                     <h6 class="fw-bold">
-                                        ${su.toEpisodeMappingString(nextEpisode, false, false)} -&NonBreakingSpace;${nextEpisode.title!"＞︿＜"}
+                                        ${su.toEpisodeMappingString(nextEpisode, false, false)} -&NonBreakingSpace;${(nextEpisode.title!"＞︿＜")?html}
                                     </h6>
                                     <#list nextEpisode.langTypes as langType>
                                         <p class="text-muted mb-0">

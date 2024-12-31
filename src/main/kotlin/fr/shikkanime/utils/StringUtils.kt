@@ -62,7 +62,7 @@ object StringUtils {
         .filter { it.isLetterOrDigit() }
 
     fun String.capitalizeWords(): String {
-        val pattern = "[ ,\\-:/\"&]|(^')".toPattern()
+        val pattern = "[ ,\\-:/\"&<]|(^')".toPattern()
 
         return this.split(pattern).joinToString(" ") {
             it.replaceFirstChar { char ->
@@ -154,11 +154,6 @@ object StringUtils {
     fun computeAnimeHashcode(anime: String) = EncryptionManager.toSHA512(toSlug(getShortName(anime).replace(" ", "")))
 
     private fun normalized(input: String) = input.replace("œ", "oe").replace("@", "a")
-
-    fun sanitizeXSS(input: String): String = input.replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
-        .replace("&", "&amp;")
 
     fun getIdentifier(
         countryCode: CountryCode,

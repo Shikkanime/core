@@ -5,11 +5,11 @@
             <loc>${baseUrl}/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}/${episodeMapping.episodeType.slug}-${episodeMapping.number?c}</loc>
             <news:news>
                 <news:publication>
-                    <news:name>${episodeMapping.anime.shortName} - ${su.toEpisodeMappingString(episodeMapping, true, false)}<#if episodeMapping.title??> - ${su.sanitizeXSS(episodeMapping.title)}</#if></news:name>
+                    <news:name>${episodeMapping.anime.shortName?html} - ${su.toEpisodeMappingString(episodeMapping, true, false)}<#if episodeMapping.title??> - ${episodeMapping.title?html}</#if></news:name>
                     <news:language>fr</news:language>
                 </news:publication>
                 <news:publication_date>${episodeMapping.releaseDateTime?split("T")?first}</news:publication_date>
-                <news:title>${episodeMapping.anime.shortName} - ${su.toEpisodeMappingString(episodeMapping, true, false)}</news:title>
+                <news:title>${episodeMapping.anime.shortName?html} - ${su.toEpisodeMappingString(episodeMapping, true, false)}</news:title>
             </news:news>
         </url>
     </#list>

@@ -1,6 +1,8 @@
 <#import "langType.ftl" as langTypeComponent />
 
 <#macro display episodeMapping desktopColSize mobileColSize cover showAnime=true showSeason=true>
+    <#assign animeSanitized = episodeMapping.anime.shortName?html />
+
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">
         <article class="shikk-element">
@@ -9,7 +11,7 @@
                 <div class="position-relative">
                     <div class="position-relative">
                         <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image"
-                             alt="${su.sanitizeXSS(episodeMapping.anime.shortName)} episode preview"
+                             alt="${animeSanitized} episode preview"
                              class="<#if cover>w-100 object-fit-cover<#else>img-fluid</#if>"
                              width="640" height="360">
 
@@ -25,7 +27,7 @@
 
                     <div class="mx-2 mb-1">
                         <#if showAnime>
-                            <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${episodeMapping.anime.shortName}</div>
+                            <div class="h6 mt-2 mb-1 text-truncate-2 fw-bold">${animeSanitized}</div>
 
                             <p class="text-muted mb-0">
                                 ${su.toEpisodeMappingString(episodeMapping, showSeason, true)}
@@ -43,7 +45,7 @@
 
                     <div class="overlay" style="display: none;" x-show="hover">
                         <div class="h6 text-truncate-2 fw-bold mb-0">
-                            ${episodeMapping.title!"＞︿＜"}
+                            ${(episodeMapping.title!"＞︿＜")?html}
                         </div>
 
                         <span class="text-muted mt-0">
@@ -57,7 +59,7 @@
 
                         <#if episodeMapping.description??>
                             <div class="text-truncate-4 my-2 m-0" style="font-size: 0.9rem;">
-                                ${episodeMapping.description}
+                                ${episodeMapping.description?html}
                             </div>
                         </#if>
 

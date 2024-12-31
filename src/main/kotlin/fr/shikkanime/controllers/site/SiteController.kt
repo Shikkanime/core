@@ -146,7 +146,7 @@ class SiteController {
             "/site/anime.ftl",
             title,
             mutableMapOf(
-                "description" to dto.description?.let { StringUtils.sanitizeXSS(it) },
+                "description" to dto.description,
                 "anime" to dto,
                 "season" to if (season != null) seasonDto else null,
                 "episodeMappings" to findAllBy.data,
@@ -207,7 +207,7 @@ class SiteController {
             "/site/episodeDetails.ftl",
             title,
             mutableMapOf(
-                "description" to currentDto.description?.let { StringUtils.sanitizeXSS(it) },
+                "description" to currentDto.description,
                 "episodeMapping" to currentDto,
                 "previousEpisode" to previousDto,
                 "nextEpisode" to nextDto,

@@ -12,7 +12,7 @@
     <#assign canonicalUrl = canonicalUrl + "/page-" + page>
 </#if>
 
-<#assign animeSanitized = su.sanitizeXSS(anime.shortName) />
+<#assign animeSanitized = anime.shortName?html />
 
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
     <div class="position-relative">
@@ -32,7 +32,7 @@
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${anime.shortName}<#if season??> - ${su.toSeasonString(anime.countryCode, season.number)}</#if></h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${animeSanitized}<#if season??> - ${su.toSeasonString(anime.countryCode, season.number)}</#if></h1>
 
                 <div class="mt-1">
                     <#list anime.langTypes as langType>
@@ -63,7 +63,7 @@
                     </div>
                 </#if>
 
-                <span class="mt-3">${anime.description!"Aucune description pour le moment..."}</span>
+                <span class="mt-3">${(anime.description!"Aucune description pour le moment...")?html}</span>
 
                 <button class="btn btn-dark dropdown-toggle mt-3" data-bs-toggle="dropdown" aria-expanded="false">
                     <#assign selectedSeason = anime.seasons?first.number>

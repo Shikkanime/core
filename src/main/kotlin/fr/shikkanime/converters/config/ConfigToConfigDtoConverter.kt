@@ -11,7 +11,7 @@ class ConfigToConfigDtoConverter : AbstractConverter<Config, ConfigDto>() {
         return ConfigDto(
             uuid = from.uuid,
             propertyKey = from.propertyKey,
-            propertyValue = from.propertyValue?.let { StringUtils.sanitizeXSS(it) },
+            propertyValue = from.propertyValue,
         )
     }
 }

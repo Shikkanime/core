@@ -142,6 +142,7 @@ class StringUtilsTest {
             "Loner Life in Another World" to "LonerLifeInAnotherWorld",
             "I'll Become a Villainess Who Goes Down in History" to "IllBecomeAVillainessWhoGoesDownInHistory",
             "Ranma1/2" to "Ranma",
+            "Bogus Skill <<Fruitmaster>> ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~" to "BogusSkillFruitmaster"
         )
 
         list.forEach { (input, expected) ->
