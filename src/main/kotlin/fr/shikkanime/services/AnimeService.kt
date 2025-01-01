@@ -180,7 +180,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 zoneId
             )
 
-        val releases = processReleases(variantReleaseDtos, zoneId, startOfWeekDay, currentWeek).let { releases ->
+        val releases = processReleases(variantReleaseDtos, zoneId, startOfWeekDay, startOfWeekDay.atEndOfWeek()).let { releases ->
             releases.filterNot { hasCurrentWeekRelease(it, releases, currentWeek) }
         }
 
@@ -191,15 +191,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         variantReleaseDtos: List<VariantReleaseDto>,
         zoneId: ZoneId,
         startOfWeekDay: LocalDate,
-        currentWeek: Int
+        endOfWeekDay: LocalDate
     ): List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimeDto> {
         val isCurrentWeek: (VariantReleaseDto) -> Boolean = { variantReleaseDto ->
-            val releaseDateTime = variantReleaseDto.releaseDateTime.withZoneSameInstant(zoneId)
-            val releaseWeek = releaseDateTime[ChronoField.ALIGNED_WEEK_OF_YEAR]
-            val releaseYear = releaseDateTime[ChronoField.YEAR]
-            val currentYear = startOfWeekDay.year
-
-            currentWeek == 53 && releaseWeek == 1 && releaseYear == currentYear + 1 || releaseWeek == currentWeek
+            variantReleaseDto.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in startOfWeekDay..endOfWeekDay
         }
 
         return variantReleaseDtos.groupBy { variantReleaseDto ->
