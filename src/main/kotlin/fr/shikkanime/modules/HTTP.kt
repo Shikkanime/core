@@ -27,6 +27,7 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
+import io.ktor.util.toMap
 import java.util.UUID
 import java.util.logging.Level
 
@@ -56,20 +57,20 @@ fun Application.configureHTTP() {
         }
         status(HttpStatusCode.NotFound) { call, _ ->
             val path = call.request.path()
-            if (!isSitePathWithAssetsOrError(path, "404")) return@status
+            if (!isSitePath(path)) return@status
+            val siteController = Constant.injector.getInstance(SiteController::class.java)
+            logCallDetails(call, HttpStatusCode.NotFound)
 
-            if (call.response.status() == HttpStatusCode.NotFound) {
-                val siteController = Constant.injector.getInstance(SiteController::class.java)
-                handleTemplateResponse(
-                    call,
-                    siteController,
-                    "/404",
-                    Response.template(HttpStatusCode.NotFound, "/site/errors/404.ftl", "Page introuvable")
+            handleTemplateResponse(
+                call,
+                siteController,
+                replacePathWithParameters(path, call.parameters.toMap()),
+                Response.template(
+                    HttpStatusCode.NotFound,
+                    "/site/errors/404.ftl",
+                    "Page introuvable"
                 )
-                return@status
-            }
-
-            call.respondRedirect("/404")
+            )
         }
     }
     install(ContentNegotiation) {
@@ -117,8 +118,4 @@ fun Application.configureHTTP() {
 
 fun isSitePath(path: String): Boolean {
     return !path.startsWith("/api") && !path.startsWith("/admin") && !path.startsWith("/assets") && !path.startsWith("/feed") && !path.startsWith("/sitemap.xml")
-}
-
-private fun isSitePathWithAssetsOrError(path: String, errorCode: String): Boolean {
-    return isSitePath(path) && !path.startsWith("/$errorCode")
 }

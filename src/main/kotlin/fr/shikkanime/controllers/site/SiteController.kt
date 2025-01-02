@@ -35,16 +35,6 @@ class SiteController {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
-    @Path("404")
-    @Get
-    private fun error404(): Response {
-        return Response.template(
-            HttpStatusCode.NotFound,
-            "/site/errors/404.ftl",
-            "Page introuvable"
-        )
-    }
-
     private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
         val animeSimulcastLimit = 6
 

@@ -54,7 +54,7 @@ fun Application.configureRouting() {
     monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
-        if (call.response.status()?.value != null || !configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
         setSecurityHeaders(call, configCacheService)
     }
 
@@ -106,11 +106,11 @@ private fun setSecurityHeaders(call: ApplicationCall, configCacheService: Config
     call.response.header("X-XSS-Protection", "1; mode=block")
 }
 
-private fun logCallDetails(call: ApplicationCall) {
-    val startTime = call.attributes[callStartTime]
+fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
+    val startTime = call.attributes.getOrNull(callStartTime)
     val httpMethod = call.request.httpMethod.value
-    val status = call.response.status()?.value ?: 0
-    val duration = ZonedDateTime.now().toInstant().toEpochMilli() - startTime.toInstant().toEpochMilli()
+    val status = statusCode?.value ?: call.response.status()?.value ?: 0
+    val duration = startTime?.let { ZonedDateTime.now().toInstant().toEpochMilli() - it.toInstant().toEpochMilli() } ?: -1
     val path = call.request.path()
     val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
     val userAgent = call.request.userAgent() ?: "Unknown"
@@ -229,7 +229,7 @@ suspend fun handleTemplateResponse(
     call.respond(response.status, FreeMarkerContent(response.data["template"] as String, mutableMap, "", response.contentType))
 }
 
-private fun replacePathWithParameters(path: String, parameters: Map<String, List<String>>) =
+fun replacePathWithParameters(path: String, parameters: Map<String, List<String>>) =
     parameters.entries.fold(path) { acc, (param, values) ->
         acc.replace("{$param}", values.joinToString(", "))
     }
