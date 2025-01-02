@@ -3,7 +3,6 @@ package fr.shikkanime.converters.config
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.Config
-import fr.shikkanime.utils.StringUtils
 
 class ConfigToConfigDtoConverter : AbstractConverter<Config, ConfigDto>() {
     @Converter
