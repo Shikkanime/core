@@ -103,8 +103,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 return@forEach
             }
 
-            episodes.filter { it.getIdentifier() !in identifiers }.takeIf { it.isNotEmpty() }
-                ?.distinctBy { it.getIdentifier() }
+            episodes.distinctBy { it.getIdentifier() }
+                .filter { it.getIdentifier() !in identifiers }
+                .takeIf { it.isNotEmpty() }
                 ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
                 ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
                 ?.also { episodeVariants ->
@@ -150,13 +151,18 @@ class UpdateEpisodeMappingJob : AbstractJob {
             .filter { it.getIdentifier() !in identifiers }
             .takeIf { it.isNotEmpty() }
             ?.also { logger.info("Found ${it.size} new previous and next episodes") }
-            ?.map { episode -> episodeVariantService.save(episode, false, null) }
+            ?.map { episode -> episodeVariantService.save(episode, false) }
             ?.also { episodeVariants ->
                 identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
                 allNewEpisodes.addAll(episodeVariants)
                 logger.info("Added ${episodeVariants.size} previous and next episodes")
                 needRecalculate.set(true)
                 needRefreshCache.set(true)
+
+                episodeVariants.forEach {
+                    it.mapping!!.lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
+                    episodeMappingService.update(it.mapping!!)
+                }
             }
 
         if (needRecalculate.get()) {
@@ -332,16 +338,20 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
+        val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
 
         when (episodeVariant.platform) {
             Platform.ANIM -> {
                 runCatching {
+                    val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
+
                     episodes.addAll(
                         animationDigitalNetworkPlatform.convertEpisode(
                             countryCode,
-                            AnimationDigitalNetworkWrapper.getVideo(
-                                animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
-                            ),
+                            if (isImageUpdate)
+                                AnimationDigitalNetworkWrapper.getVideo(videoId)
+                            else
+                                AnimationDigitalNetworkCachedWrapper.getVideo(videoId),
                             ZonedDateTime.now(),
                             needSimulcast = false,
                             checkAnimation = false
@@ -355,7 +365,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     episodes.addAll(
                         getCrunchyrollEpisodeAndVariants(
                             countryCode,
-                            crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!
+                            crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!,
+                            isImageUpdate
                         )
                     )
                 }
@@ -372,19 +383,28 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private suspend fun getCrunchyrollEpisodeAndVariants(
         countryCode: CountryCode,
         crunchyrollId: String,
+        isImageUpdate: Boolean
     ): List<Episode> {
         val browseObjects = mutableListOf<BrowseObject>()
 
-        val variantObjects = CrunchyrollWrapper.getEpisode(
-            countryCode.locale,
-            crunchyrollId
-        ).also { browseObjects.add(it.convertToBrowseObject()) }
+        val variantObjects = (
+                if (isImageUpdate)
+                    CrunchyrollWrapper.getEpisode(
+                        countryCode.locale,
+                        crunchyrollId
+                    )
+                else
+                    CrunchyrollCachedWrapper.getEpisode(
+                        countryCode.locale,
+                        crunchyrollId
+                    )
+                ).also { browseObjects.add(it.convertToBrowseObject()) }
             .getVariants()
             .subtract(browseObjects.map { it.id }.toSet())
             .chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
             .flatMap { chunk ->
                 HttpRequest.retry(3) {
-                    CrunchyrollWrapper.getObjects(
+                    CrunchyrollCachedWrapper.getObjects(
                         countryCode.locale,
                         *chunk.toTypedArray()
                     )

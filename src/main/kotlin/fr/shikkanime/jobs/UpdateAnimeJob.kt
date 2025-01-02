@@ -27,6 +27,7 @@ class UpdateAnimeJob : AbstractJob {
         val image: String,
         val banner: String,
         val description: String?,
+        val episodeSize: Int
     )
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -69,8 +70,9 @@ class UpdateAnimeJob : AbstractJob {
             val updatedAnimes = runCatching { runBlocking { fetchAnime(anime) } }
                 .getOrNull()
                 ?.sortedWith(
-                compareBy<Pair<Platform, UpdatableAnime>> { it.first.sortIndex }
-                    .thenByDescending { it.second.lastReleaseDateTime }
+                compareByDescending<Pair<Platform, UpdatableAnime>> { it.second.lastReleaseDateTime }
+                    .thenBy { it.second.episodeSize }
+                    .thenBy { it.first.sortIndex }
                 )?.map { it.second } ?: emptyList()
 
             if (updatedAnimes.isEmpty()) {
@@ -141,11 +143,14 @@ class UpdateAnimeJob : AbstractJob {
 
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform) = AnimationDigitalNetworkCachedWrapper.getShow(animePlatform.platformId!!.toInt())
         .let {
+            val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(animePlatform.platformId!!.toInt())
+
             UpdatableAnime(
-                lastReleaseDateTime = it.microdata!!.startDate,
+                lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
                 image = it.image2x,
                 banner = it.imageHorizontal2x,
                 description = it.summary,
+                episodeSize = showVideos.size
             )
         }
 
@@ -175,6 +180,7 @@ class UpdateAnimeJob : AbstractJob {
             image = series.fullHDImage!!,
             banner = series.fullHDBanner!!,
             description = series.description,
+            episodeSize = objects.size
         )
     }
 }

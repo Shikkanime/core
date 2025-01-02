@@ -205,4 +205,54 @@ class UpdateAnimeJobTest : AbstractTest() {
             anime.description
         )
     }
+
+    @Test
+    fun `run old ADN and Crunchyroll anime One Piece Log`() {
+        val zonedDateTime = ZonedDateTime.parse("2024-11-03T08:00:00Z")
+
+        val tmpAnime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                name = "ONE PIECE Log: Fish-Man Island Saga",
+                slug = "one-piece-log",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg",
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.ANIM,
+                platformId = "1260"
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.CRUN,
+                platformId = "GRMG8ZQZR"
+            )
+        )
+
+        updateAnimeJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val anime = animes.first()
+
+        assumeTrue("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/affiche_350x500.jpg" == anime.image)
+        assertEquals(
+            "https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/license_640x360.jpg",
+            anime.banner
+        )
+        assertEquals(
+            "Après deux ans de séparation, le grand jour est enfin arrivé : l’équipage du Chapeau de paille se réunit à nouveau sur l’archipel Sabaody. Forts de leur expérience et prêts à affronter le Nouveau Monde, ils se préparent à naviguer sous l’eau, avec un Thousand Sunny désormais équipé pour atteindre leur prochaine destination : l’Île des Hommes-Poissons, un paradis sous-marin à plus de 10 000 mètres de profondeur !",
+            anime.description
+        )
+    }
 }
