@@ -31,6 +31,16 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         return ObjectParser.fromJson(asJsonArray.first(), Series::class.java)
     }
 
+    override suspend fun getRelatedSeries(
+        locale: String,
+        id: String
+    ): List<Series> {
+        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/similar_to/$id?locale=$locale")
+        require(response.status == HttpStatusCode.OK) { "Failed to get related series (${response.status.value})" }
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get related series")
+        return ObjectParser.fromJson(asJsonArray, Array<Series>::class.java).toList()
+    }
+
     override suspend fun getSeasonsBySeriesId(
         locale: String,
         id: String

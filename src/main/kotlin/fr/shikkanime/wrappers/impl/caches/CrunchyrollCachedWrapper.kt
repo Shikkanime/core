@@ -25,6 +25,13 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         runBlocking { CrunchyrollWrapper.getSeries(it.first, it.second) }
     }
 
+    private val relatedSeriesCache = MapCache<Pair<String, String>, List<Series>>(
+        "CrunchyrollCachedWrapper.relatedSeriesCache",
+        duration = defaultCacheDuration
+    ) {
+        runBlocking { CrunchyrollWrapper.getRelatedSeries(it.first, it.second) }
+    }
+
     private val seasonCache = MapCache<Pair<String, String>, Season>(
         "CrunchyrollCachedWrapper.seasonCache",
         duration = defaultCacheDuration
@@ -107,6 +114,11 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String
     ) = seriesCache[locale to id] ?: throw Exception("Failed to get series")
+
+    override suspend fun getRelatedSeries(
+        locale: String,
+        id: String
+    ) = relatedSeriesCache[locale to id] ?: emptyList()
 
     override suspend fun getSeason(
         locale: String,

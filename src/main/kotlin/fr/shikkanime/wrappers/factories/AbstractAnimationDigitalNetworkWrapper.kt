@@ -45,6 +45,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
     abstract suspend fun getShow(id: Int): Show
     abstract suspend fun getShowVideos(id: Int): Array<Video>
     abstract suspend fun getVideo(id: Int): Video
+    abstract suspend fun getRelatedShows(showId: Int): Array<Show>
 
     suspend fun getPreviousVideo(showId: Int, videoId: Int): Video? {
         val videos = getShowVideos(showId)

@@ -27,7 +27,8 @@ class UpdateAnimeJob : AbstractJob {
         val image: String,
         val banner: String,
         val description: String?,
-        val episodeSize: Int
+        val episodeSize: Int,
+        val relatedAnimes: Set<Pair<Platform, String>> = emptySet()
     )
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -82,6 +83,18 @@ class UpdateAnimeJob : AbstractJob {
                 animeService.update(anime)
                 return@forEach
             }
+
+            updatedAnimes.flatMap { it.relatedAnimes }
+                .forEach { (platform, id) ->
+                    val animePlatform = animePlatformService.findByPlatformAndId(platform, id)
+
+                    if (animePlatform != null) {
+                        logger.warning("Anime ${StringUtils.getShortName(anime.name!!)} already exist for platform $platform")
+                        return@forEach
+                    }
+
+                    // TODO: Create a queue to add new anime
+                }
 
             var hasChanged = false
             val updatableImage = updatedAnimes.firstOrNull { it.image.isNotBlank() }?.image
@@ -150,7 +163,10 @@ class UpdateAnimeJob : AbstractJob {
                 image = it.image2x,
                 banner = it.imageHorizontal2x,
                 description = it.summary,
-                episodeSize = showVideos.size
+                episodeSize = showVideos.size,
+                relatedAnimes = AnimationDigitalNetworkCachedWrapper.getRelatedShows(animePlatform.platformId!!.toInt())
+                    .map { animePlatform.platform!! to it.id.toString() }
+                    .toSet()
             )
         }
 
@@ -180,7 +196,10 @@ class UpdateAnimeJob : AbstractJob {
             image = series.fullHDImage!!,
             banner = series.fullHDBanner!!,
             description = series.description,
-            episodeSize = objects.size
+            episodeSize = objects.size,
+            relatedAnimes = CrunchyrollCachedWrapper.getRelatedSeries(countryCode.locale, series.id)
+                .map { animePlatform.platform!! to it.id }
+                .toSet()
         )
     }
 }

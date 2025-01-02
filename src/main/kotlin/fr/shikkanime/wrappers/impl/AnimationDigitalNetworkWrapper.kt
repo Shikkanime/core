@@ -29,9 +29,16 @@ object AnimationDigitalNetworkWrapper : AbstractAnimationDigitalNetworkWrapper()
     }
 
     override suspend fun getVideo(id: Int): Video {
-         val response = httpRequest.get("${baseUrl}video/$id/public")
+        val response = httpRequest.get("${baseUrl}video/$id/public")
         require(response.status == HttpStatusCode.OK) { "Failed to get video (${response.status.value})" }
         val videoJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("video") ?: throw Exception("Failed to get video")
         return ObjectParser.fromJson(videoJson, Video::class.java)
+    }
+
+    override suspend fun getRelatedShows(showId: Int): Array<Show> {
+        val response = httpRequest.get("${baseUrl}show/$showId/related")
+        require(response.status == HttpStatusCode.OK) { "Failed to get related shows (${response.status.value})" }
+        val videoJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("shows") ?: throw Exception("Failed to get related shows")
+        return ObjectParser.fromJson(videoJson, Array<Show>::class.java)
     }
 }

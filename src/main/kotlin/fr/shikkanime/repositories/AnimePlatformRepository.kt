@@ -40,4 +40,23 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
                 .firstOrNull()
         }
     }
+
+    fun findByPlatformAndId(platform: Platform, platformId: String): AnimePlatform? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[AnimePlatform_.platform], platform),
+                    cb.equal(root[AnimePlatform_.platformId], platformId)
+                )
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
+    }
 }

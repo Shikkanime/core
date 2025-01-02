@@ -39,6 +39,13 @@ object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWra
         runBlocking { AnimationDigitalNetworkWrapper.getShowVideos(it) }
     }
 
+    private val relatedShowsCache = MapCache<Int, Array<Show>>(
+        "AnimationDigitalNetworkCachedWrapper.relatedShowsCache",
+        duration = defaultCacheDuration
+    ) {
+        runBlocking { AnimationDigitalNetworkWrapper.getRelatedShows(it) }
+    }
+
     override suspend fun getLatestVideos(date: LocalDate) = latestVideosCache[date] ?: emptyArray()
 
     override suspend fun getShow(id: Int) = showCache[id] ?: throw Exception("Show not found")
@@ -46,4 +53,6 @@ object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWra
     override suspend fun getShowVideos(id: Int) = showVideosCache[id] ?: emptyArray()
 
     override suspend fun getVideo(id: Int) = videoCache[id] ?: throw Exception("Video not found")
+
+    override suspend fun getRelatedShows(showId: Int) = relatedShowsCache[showId] ?: emptyArray()
 }

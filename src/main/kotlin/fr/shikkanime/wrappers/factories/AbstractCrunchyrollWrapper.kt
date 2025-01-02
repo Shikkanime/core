@@ -169,6 +169,7 @@ abstract class AbstractCrunchyrollWrapper {
 
     abstract suspend fun getBrowse(locale: String, sortBy: SortType = SortType.NEWLY_ADDED, type: MediaType = MediaType.EPISODE, size: Int = 25, start: Int = 0, simulcast: String? = null): List<BrowseObject>
     abstract suspend fun getSeries(locale: String, id: String): Series
+    abstract suspend fun getRelatedSeries(locale: String, id: String): List<Series>
     abstract suspend fun getSeasonsBySeriesId(locale: String, id: String): List<Season>
     abstract suspend fun getSeason(locale: String, id: String): Season
     abstract suspend fun getEpisodesBySeasonId(locale: String, id: String): List<Episode>
