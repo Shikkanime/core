@@ -173,11 +173,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             AbstractConverter.convert(platforms, PlatformDto::class.java)!!,
             releaseDateTime.withUTCString(),
             buildString {
-                "/animes/${pair.second.slug}"
-                append(episodeMappings.firstOrNull()?.let {
-                    "/season-${it.season}"
+                append("/animes/${pair.second.slug}")
+                episodeMappings.firstOrNull()?.let {
+                    append("/season-${it.season}")
                     if (episodeMappings.size <= 1) append("/${it.episodeType!!.slug}-${it.number}")
-                })
+                }
             },
             langTypes,
             episodeType,
