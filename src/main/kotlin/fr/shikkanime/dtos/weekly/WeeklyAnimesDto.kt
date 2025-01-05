@@ -1,4 +1,4 @@
-package fr.shikkanime.dtos.weekly.v1
+package fr.shikkanime.dtos.weekly
 
 data class WeeklyAnimesDto(
     val dayOfWeek: String,

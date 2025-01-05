@@ -5,7 +5,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
+import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -184,7 +184,7 @@ class AnimeController : HasPageableRoute() {
         ],
         security = true
     )
-    private fun getWeekly(
+    fun getWeekly(
         @JWTUser
         memberUuid: UUID?,
         @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)

@@ -9,7 +9,7 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
+import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
@@ -86,23 +86,6 @@ class AnimeCacheService : AbstractCacheService {
 
     private val weeklyMemberCache =
         MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
-            "AnimeCacheService.weeklyMemberCache",
-            classes = listOf(
-                Anime::class.java,
-                EpisodeMapping::class.java,
-                EpisodeVariant::class.java,
-                MemberFollowAnime::class.java
-            )
-        ) {
-            animeService.getWeeklyAnimes(
-                it.countryCode,
-                it.member?.let { uuid -> memberCacheService.find(uuid) },
-                it.localDate
-            )
-        }
-
-    private val weeklyMemberV2Cache =
-        MapCache<CountryCodeLocalDateKeyCache, List<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto>>(
             "AnimeCacheService.weeklyMemberV2Cache",
             classes = listOf(
                 Anime::class.java,
@@ -112,7 +95,7 @@ class AnimeCacheService : AbstractCacheService {
             )
         ) {
             try {
-                animeService.getWeeklyAnimesV2(
+                animeService.getWeeklyAnimes(
                     it.countryCode,
                     it.member?.let { uuid -> memberCacheService.find(uuid) },
                     it.localDate
@@ -179,9 +162,6 @@ class AnimeCacheService : AbstractCacheService {
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
         weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
-
-    fun getWeeklyAnimesV2(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
-        weeklyMemberV2Cache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
 
     fun findAudioLocalesAndSeasonsByAnimeCache(anime: Anime) =
         findAllAudioLocalesAndSeasonsCache[DEFAULT_ALL_KEY]?.get(anime.uuid!!)
