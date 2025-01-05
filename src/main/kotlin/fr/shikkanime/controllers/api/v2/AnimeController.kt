@@ -1,25 +1,23 @@
 package fr.shikkanime.controllers.api.v2
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.api.AnimeController
 import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
+import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.QueryParam
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Controller("/api/v2/animes")
 class AnimeController : HasPageableRoute() {
     @Inject
-    private lateinit var animeCacheService: AnimeCacheService
+    private lateinit var animeController: AnimeController
 
+    @Deprecated("Use /api/v1/animes/weekly instead")
     @Path("/weekly")
     @Get
     @JWTAuthenticated(optional = true)
@@ -43,19 +41,5 @@ class AnimeController : HasPageableRoute() {
             example = "2021-01-01"
         )
         dateParam: String?,
-    ): Response {
-        val startOfWeekDay = try {
-            dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
-        } catch (_: Exception) {
-            return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
-        }.atStartOfWeek()
-
-        return Response.ok(
-            animeCacheService.getWeeklyAnimesV2(
-                countryParam ?: CountryCode.FR,
-                memberUuid,
-                startOfWeekDay,
-            )
-        )
-    }
+    ) = animeController.getWeekly(memberUuid, countryParam, dateParam)
 }

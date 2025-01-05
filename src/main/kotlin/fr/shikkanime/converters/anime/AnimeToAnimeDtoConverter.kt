@@ -10,6 +10,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.services.caches.AnimeCacheService
+import fr.shikkanime.services.caches.AnimePlatformCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTCString
 import org.hibernate.Hibernate
@@ -17,6 +18,9 @@ import org.hibernate.Hibernate
 class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
+
+    @Inject
+    private lateinit var animePlatformCacheService: AnimePlatformCacheService
 
     @Converter
     fun convert(from: Anime): AnimeDto {
@@ -43,10 +47,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),
             status = from.status,
-            platformIds = if (Hibernate.isInitialized(from.platformIds))
-                convert(from.platformIds, AnimePlatformDto::class.java)
-            else
-                null
+            platformIds = convert(animePlatformCacheService.findAllByAnime(from).sortedBy { it.platform?.name }.toSet(), AnimePlatformDto::class.java)
         )
     }
 }

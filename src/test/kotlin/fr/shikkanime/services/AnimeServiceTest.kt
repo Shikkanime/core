@@ -250,7 +250,7 @@ class AnimeServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `getWeeklyV2 multiple lang types on same hour`() {
+    fun `getWeekly multiple lang types on same hour`() {
         val now = ZonedDateTime.now().withHour(19).withMinute(30).withSecond(0).withNano(0)
         val previousWeek = now.minusWeeks(1)
 
@@ -321,7 +321,7 @@ class AnimeServiceTest : AbstractTest() {
 
         MapCache.invalidateAll()
 
-        var weeklyReleases = animeService.getWeeklyAnimesV2(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
+        var weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         var releases = weeklyReleases.flatMap { it.releases }
         releases.forEach { println(it) }
         assertEquals(1, releases.size)
@@ -340,7 +340,7 @@ class AnimeServiceTest : AbstractTest() {
 
         MapCache.invalidateAll()
 
-        weeklyReleases = animeService.getWeeklyAnimesV2(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
+        weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         releases = weeklyReleases.flatMap { it.releases }
         releases.forEach { println(it) }
         assertEquals(1, releases.size)
@@ -348,7 +348,7 @@ class AnimeServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `getWeeklyV2 multiple lang types on different hour`() {
+    fun `getWeekly multiple lang types on different hour`() {
         val now = ZonedDateTime.now().withHour(17).withMinute(0).withSecond(0).withNano(0)
         val previousWeek = now.minusWeeks(1)
 
@@ -408,7 +408,7 @@ class AnimeServiceTest : AbstractTest() {
 
         MapCache.invalidateAll()
 
-        var weeklyReleases = animeService.getWeeklyAnimesV2(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
+        var weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         var releases = weeklyReleases.flatMap { it.releases }
         assertEquals(2, releases.size)
         assertTrue(releases.all { it.langTypes.size == 1 })
@@ -437,7 +437,7 @@ class AnimeServiceTest : AbstractTest() {
 
         MapCache.invalidateAll()
 
-        weeklyReleases = animeService.getWeeklyAnimesV2(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
+        weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         releases = weeklyReleases.flatMap { it.releases }
         releases.forEach { println(it) }
         assertEquals(2, releases.size)

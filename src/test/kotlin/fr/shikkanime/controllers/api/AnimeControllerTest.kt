@@ -4,7 +4,7 @@ import com.google.gson.reflect.TypeToken
 import fr.shikkanime.dtos.*
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
-import fr.shikkanime.dtos.weekly.v1.WeeklyAnimesDto
+import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.module
@@ -43,58 +43,12 @@ class AnimeControllerTest : AbstractControllerTest() {
                 assertEquals(anime.uuid, followedAnimesUUID.first())
             }
 
-            client.get("/api/v1/animes/weekly?date=2024-01-01") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            }.apply {
-                assertEquals(HttpStatusCode.OK, status)
-                val weeklyAnimesDto = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java).flatMap { it.releases }
-                assertEquals(3, weeklyAnimesDto.size)
-                assertTrue(weeklyAnimesDto.all { !it.anime.seasons.isNullOrEmpty() })
-            }
-
-            client.get("/api/v1/animes/weekly?date=2024-01-01") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            }.apply {
-                assertEquals(HttpStatusCode.OK, status)
-                val weeklyAnimesDto = ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java).flatMap { it.releases }
-                assertEquals(2, weeklyAnimesDto.size)
-                assertEquals(anime.uuid, weeklyAnimesDto.first().anime.uuid)
-                assertTrue(weeklyAnimesDto.all { !it.anime.seasons.isNullOrEmpty() })
-            }
-        }
-    }
-
-    @Test
-    fun getWeeklyV2() {
-        testApplication {
-            application {
-                module()
-            }
-
-            val (identifier, token) = registerAndLogin()
-            val animes = animeService.findAll()
-            val anime = animes.first()
-
-            client.put("/api/v1/members/animes") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ObjectParser.toJson(GenericDto(anime.uuid!!)))
-            }.apply {
-                assertEquals(HttpStatusCode.OK, status)
-                val findPrivateMember = memberService.findByIdentifier(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
-                assertNotNull(findPrivateMember)
-                assertEquals(1, followedAnimesUUID.size)
-                assertEquals(anime.uuid, followedAnimesUUID.first())
-            }
-
             client.get("/api/v2/animes/weekly?date=2024-01-01") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val weeklyAnimesDto =
-                    ObjectParser.fromJson(bodyAsText(), Array<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto>::class.java)
+                    ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java)
                         .flatMap { it.releases }
                 assertEquals(2, weeklyAnimesDto.size)
                 assertTrue(weeklyAnimesDto.all { !it.anime.seasons.isNullOrEmpty() })
@@ -106,7 +60,7 @@ class AnimeControllerTest : AbstractControllerTest() {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val weeklyAnimesDto =
-                    ObjectParser.fromJson(bodyAsText(), Array<fr.shikkanime.dtos.weekly.v2.WeeklyAnimesDto>::class.java)
+                    ObjectParser.fromJson(bodyAsText(), Array<WeeklyAnimesDto>::class.java)
                         .flatMap { it.releases }
                 assertEquals(1, weeklyAnimesDto.size)
                 assertEquals(anime.uuid, weeklyAnimesDto.first().anime.uuid)

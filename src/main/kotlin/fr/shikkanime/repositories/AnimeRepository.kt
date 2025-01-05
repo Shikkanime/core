@@ -220,10 +220,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
-                ?.apply {
-                    Hibernate.initialize(simulcasts)
-                    Hibernate.initialize(platformIds)
-                }
+                ?.apply { Hibernate.initialize(simulcasts) }
         }
     }
 

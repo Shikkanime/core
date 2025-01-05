@@ -1,4 +1,4 @@
-package fr.shikkanime.dtos.weekly.v2
+package fr.shikkanime.dtos.weekly
 
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
