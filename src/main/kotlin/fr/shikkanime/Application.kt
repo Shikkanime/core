@@ -8,11 +8,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.services.MemberService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.JobManager
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -28,6 +24,9 @@ fun main(args: Array<String>) {
     logger.info("Loading images cache...")
     ImageService.loadCache()
     ImageService.addAll()
+
+    logger.info("Updating and deleting data...")
+    updateAndDeleteData()
 
     logger.info("Loading all default caches...")
     MapCache.loadAll()
@@ -55,9 +54,6 @@ fun main(args: Array<String>) {
         logger.warning("Jobs are disabled, use --enable-jobs to enable them")
     }
 
-    logger.info("Updating and deleting data...")
-    updateAndDeleteData()
-
     logger.info("Starting server...")
     embeddedServer(
         Netty,
@@ -71,8 +67,9 @@ private fun updateAndDeleteData() {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     val seasonRegex = " Saison (\\d)| ([MDCLXVI]+$)".toRegex()
+    val animes = animeService.findAll()
 
-    animeService.findAll().forEach { anime ->
+    animes.forEach { anime ->
         val oldName = anime.name
         anime.name = StringUtils.removeAnimeNamePart(anime.name!!)
 
@@ -108,8 +105,9 @@ private fun updateAndDeleteData() {
         }
 
         anime.status = StringUtils.getStatus(anime)
-        animeService.update(anime)
     }
+
+    animeService.updateAll(animes)
 }
 
 fun Application.module() {

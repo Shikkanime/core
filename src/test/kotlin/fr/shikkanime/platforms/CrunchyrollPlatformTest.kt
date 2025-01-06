@@ -2,11 +2,13 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import io.mockk.every
@@ -157,6 +159,8 @@ class CrunchyrollPlatformTest : AbstractTest() {
             ),
             updateMappingDateTime = false
         )
+
+        MapCache.invalidate(EpisodeVariant::class.java)
 
         val s = "2024-07-17T15:00:00Z"
         val zonedDateTime = ZonedDateTime.parse(s)

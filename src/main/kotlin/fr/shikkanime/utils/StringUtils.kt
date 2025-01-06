@@ -25,7 +25,7 @@ object StringUtils {
     fun removeAnimeNamePart(name: String) = name.replace("Anime ", "").trim()
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
-        val words = parts.map { it.trim().split(" ", "-").size }.distinct()
+        val words = parts.map { it.trim().split(" ", "-", "'").size }.distinct()
         return words.size == 1
     }
 
@@ -55,8 +55,8 @@ object StringUtils {
         return shortName.replace(duplicateSpaceRegex, " ").trim()
     }
 
-    fun getHashtag(fullName: String) =
-        getShortName(normalized(fullName.replace("1/2", ""))).lowercase().capitalizeWords()
+    fun getHashtag(shortName: String) =
+        normalized(shortName.replace("1/2", "")).lowercase().capitalizeWords()
         .replace(" S ", " s ")
         .replace(" T ", " t ")
         .filter { it.isLetterOrDigit() }
@@ -151,7 +151,7 @@ object StringUtils {
         return slug.lowercase()
     }
 
-    fun computeAnimeHashcode(anime: String) = EncryptionManager.toSHA512(toSlug(getShortName(anime).replace(" ", "")))
+    fun computeAnimeHashcode(slug: String) = EncryptionManager.toSHA512(slug.replace("-", ""))
 
     private fun normalized(input: String) = input.replace("œ", "oe").replace("@", "a")
 

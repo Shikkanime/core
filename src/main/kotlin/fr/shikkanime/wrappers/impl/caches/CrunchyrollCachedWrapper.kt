@@ -7,8 +7,8 @@ import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import java.time.Duration
@@ -174,7 +174,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         val episodeIds = mutableSetOf<String>()
 
         startOfWeekDates.parallelStream().forEach { date ->
-            val document = HttpRequest.retry(3) {
+            val document = HttpRequest.retry(5) {
                 Jsoup.parse(
                     httpRequest.get("$baseUrl${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date").apply {
                         require(status == HttpStatusCode.OK)

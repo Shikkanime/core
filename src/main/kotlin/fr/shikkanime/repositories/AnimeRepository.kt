@@ -178,12 +178,12 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllUuidAndName(): List<Tuple> {
+    fun findAllUuidAndSlug(): List<Tuple> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
-            query.multiselect(root[Anime_.uuid], root[Anime_.name])
+            query.multiselect(root[Anime_.uuid], root[Anime_.slug])
 
             createReadOnlyQuery(it, query)
                 .resultList

@@ -65,7 +65,8 @@ class UpdateAnimeJob : AbstractJob {
         }
 
         needUpdateAnimes.forEach { anime ->
-            logger.info("Updating anime ${StringUtils.getShortName(anime.name!!)}...")
+            val shortName = StringUtils.getShortName(anime.name!!)
+            logger.info("Updating anime $shortName...")
             // Compare platform sort index and anime release date descending
             val updatedAnimes = runCatching { runBlocking { fetchAnime(anime) } }
                 .getOrNull()
@@ -76,7 +77,7 @@ class UpdateAnimeJob : AbstractJob {
                 )?.map { it.second } ?: emptyList()
 
             if (updatedAnimes.isEmpty()) {
-                logger.warning("No platform found for anime ${StringUtils.getShortName(anime.name!!)}")
+                logger.warning("No platform found for anime $shortName")
                 anime.status = StringUtils.getStatus(anime)
                 anime.lastUpdateDateTime = ZonedDateTime.now()
                 animeService.update(anime)
@@ -89,7 +90,7 @@ class UpdateAnimeJob : AbstractJob {
             if (updatableImage != anime.image && !updatableImage.isNullOrBlank()) {
                 anime.image = updatableImage
                 animeService.addImage(anime.uuid!!, updatableImage, true)
-                logger.info("Image updated for anime ${StringUtils.getShortName(anime.name!!)} to $updatableImage")
+                logger.info("Image updated for anime $shortName to $updatableImage")
                 hasChanged = true
             }
 
@@ -98,7 +99,7 @@ class UpdateAnimeJob : AbstractJob {
             if (updatableBanner != anime.banner && !updatableBanner.isNullOrBlank()) {
                 anime.banner = updatableBanner
                 animeService.addBanner(anime.uuid!!, updatableBanner, true)
-                logger.info("Banner updated for anime ${StringUtils.getShortName(anime.name!!)} to $updatableBanner")
+                logger.info("Banner updated for anime $shortName to $updatableBanner")
                 hasChanged = true
             }
 
@@ -109,7 +110,7 @@ class UpdateAnimeJob : AbstractJob {
                 ) == anime.countryCode!!.name.lowercase()
             ) {
                 anime.description = updatableDescription
-                logger.info("Description updated for anime ${StringUtils.getShortName(anime.name!!)} to $updatableDescription")
+                logger.info("Description updated for anime $shortName to $updatableDescription")
                 hasChanged = true
             }
 
@@ -121,7 +122,7 @@ class UpdateAnimeJob : AbstractJob {
                 traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
             }
 
-            logger.info("Anime ${StringUtils.getShortName(anime.name!!)} updated")
+            logger.info("Anime $shortName updated")
         }
 
         MapCache.invalidate(Anime::class.java)

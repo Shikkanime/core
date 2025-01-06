@@ -69,6 +69,7 @@ class StringUtilsTest {
             "Demon Slayer: Kimetsu no Yaiba - L’entraînement des piliers" to "Demon Slayer",
             "Hakuoki ~Demon of the Fleeting Blossom~" to "Hakuoki",
             "Power of Hope ~Precure Full Bloom~" to "Power of Hope",
+            "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "I'm a Noble on the Brink of Ruin",
         )
 
         list.forEach { (input, expected) ->
@@ -105,6 +106,7 @@ class StringUtilsTest {
             "Loner Life in Another World" to "loner-life-in-another-world",
             "<DOGEZA>I Tried Asking While Kowtowing." to "dogeza",
             "Demon Slayer: Kimetsu no Yaiba - L’entraînement des piliers" to "demon-slayer",
+            "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "im-a-noble-on-the-brink-of-ruin",
         )
 
         list.forEach { (input, expected) ->
@@ -142,7 +144,8 @@ class StringUtilsTest {
             "Loner Life in Another World" to "LonerLifeInAnotherWorld",
             "I'll Become a Villainess Who Goes Down in History" to "IllBecomeAVillainessWhoGoesDownInHistory",
             "Ranma1/2" to "Ranma",
-            "Bogus Skill <<Fruitmaster>> ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~" to "BogusSkillFruitmaster"
+            "Bogus Skill <<Fruitmaster>> ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~" to "BogusSkillFruitmaster",
+            "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "ImANobleOnTheBrinkOfRuin",
         )
 
         list.forEach { (input, expected) ->
@@ -158,7 +161,7 @@ class StringUtilsTest {
         )
 
         list.forEach { (input, expected) ->
-            assertTrue(StringUtils.computeAnimeHashcode(input) == StringUtils.computeAnimeHashcode(expected))
+            assertTrue(StringUtils.computeAnimeHashcode(StringUtils.toSlug(StringUtils.getShortName(input))) == StringUtils.computeAnimeHashcode(StringUtils.toSlug(StringUtils.getShortName(expected))))
         }
     }
 }
