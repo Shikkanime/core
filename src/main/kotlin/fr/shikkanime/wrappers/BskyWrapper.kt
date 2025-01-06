@@ -134,17 +134,21 @@ object BskyWrapper {
                 )
             }
 
+            val uploadedBlob = HttpRequest.retry(3) {
+                uploadBlob(
+                    accessJwt,
+                    ContentType.Image.JPEG,
+                    httpRequest.get(image).readRawBytes()
+                )
+            }
+
             recordMap.putIfAbsent("embed", mutableMapOf(
                 "\$type" to "app.bsky.embed.external",
                 "external" to mapOf(
                     "uri" to embed,
                     "title" to title,
                     "description" to description,
-                    "thumb" to uploadBlob(
-                        accessJwt,
-                        ContentType.Image.JPEG,
-                        httpRequest.get(image).readRawBytes()
-                    )
+                    "thumb" to uploadedBlob
                 )
             ))
         }

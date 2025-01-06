@@ -4,9 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.variants.SeparateVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -15,7 +13,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
+import java.util.*
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
     @Inject
@@ -46,13 +44,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     private lateinit var ruleService: RuleService
 
     override fun getRepository() = episodeVariantRepository
-
-    fun findAllIdentifierByDateRangeWithoutNextEpisode(
-        countryCode: CountryCode,
-        start: ZonedDateTime,
-        end: ZonedDateTime,
-        platform: Platform
-    ) = episodeVariantRepository.findAllIdentifierByDateRangeWithoutNextEpisode(countryCode, start, end, platform)
 
     fun findAllByMapping(mapping: EpisodeMapping) = episodeVariantRepository.findAllByMapping(mapping)
 
@@ -103,12 +94,12 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
-        val animeHashCodes = animeService.findAllUuidAndName().associate { tuple ->
+        val animeHashCodes = animeService.findAllUuidAndSlug().associate { tuple ->
             StringUtils.computeAnimeHashcode(tuple[1] as String) to (tuple[0] as UUID)
         }
 
         val anime = animeService.findBySlug(episode.countryCode, slug)
-            ?: animeService.find(animeHashCodes[StringUtils.computeAnimeHashcode(animeName)])
+            ?: animeService.find(animeHashCodes[StringUtils.computeAnimeHashcode(slug)])
             ?: animeService.save(
                 Anime(
                     countryCode = episode.countryCode,
