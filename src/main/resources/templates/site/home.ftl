@@ -20,7 +20,7 @@
                     <#assign firstRow=true>
                 </#if>
 
-                <@episodeMappingComponent.display episodeMapping=episodeMapping desktopColSize=col mobileColSize="col-12" cover=firstRow />
+                <@episodeMappingComponent.display episodeMapping=episodeMapping desktopColSize=col mobileColSize="col-6" cover=firstRow />
             </#list>
         </div>
     <#else>
@@ -34,7 +34,7 @@
 
         <#if currentSimulcast??>
             <a href="/catalog/${currentSimulcast.slug}"
-               class="btn btn-outline-light ms-auto me-0 rounded-pill px-4 d-flex align-items-center">
+               class="btn btn-dark ms-auto me-0 px-4 d-flex align-items-center">
                 PLUS
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                      class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">

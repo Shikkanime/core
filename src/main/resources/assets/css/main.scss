@@ -1,3 +1,11 @@
+:root {
+  --card-bg: #FFFFFF14;
+  --card-bg-hover: rgba(0, 0, 0, 0.75);
+  --card-border-radius: 1rem;
+  --card-img-padding: 0.5rem;
+  --card-content-padding: 0.5rem;
+}
+
 @font-face {
   font-family: Satoshi;
   src: url(/assets/fonts/Satoshi-Regular.woff2) format('woff2'),
@@ -35,42 +43,68 @@ body {
   color: #b9b9b9 !important;
 }
 
+@mixin img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
 .shikk-element {
-  border: 1px solid #FFFFFF14;
-  border-radius: 1rem;
-  background-color: #FFFFFF14;
+  border-radius: var(--card-border-radius);
+  background-color: var(--card-bg);
   overflow: hidden;
 
-  &:has(.shikk-element-collection-1, .shikk-element-collection-2) {
-    overflow: visible;
+  a {
+    text-decoration: none;
+    color: white;
+    position: relative;
+  }
 
-    img {
-      border-top-left-radius: 1rem;
-      border-top-right-radius: 1rem;
+  .shikk-element-content {
+    padding: var(--card-content-padding);
+
+    .shikk-element-content-img {
+      border-radius: calc(var(--card-border-radius) - var(--card-content-padding));
+
+      &:not(.responsive) {
+        @include img-fluid;
+      }
+
+      &, .responsive {
+        @media (min-width: 576px) {
+          width: 100%;
+          object-fit: cover;
+        }
+
+        @media (max-width: 576px) {
+          @include img-fluid;
+        }
+      }
+    }
+
+    .platforms {
+      display: flex;
+      position: absolute;
+      top: var(--card-img-padding);
+      right: var(--card-img-padding);
+    }
+
+    .duration {
+      display: flex;
+      position: absolute;
+      bottom: var(--card-img-padding);
+      right: var(--card-img-padding);
+      background-color: var(--card-bg-hover);
+      padding: 0.25rem 0.5rem;
+      border-radius: calc(var(--card-border-radius) - var(--card-img-padding));
+      font-size: 0.75rem;
     }
   }
 
-  .shikk-element-collection-1, .shikk-element-collection-2 {
-    position: absolute;
-    height: 10%;
-    border-radius: 1rem;
-  }
-
-  .shikk-element-collection-1 {
-    top: -4px;
-    width: calc(100% - 12px);
-    left: 6px;
-  }
-
-  .shikk-element-collection-2 {
-    opacity: 50%;
-    top: -8px;
-    width: calc(100% - 24px);
-    left: 12px;
-  }
-
   .overlay {
-    background-color: rgba(0, 0, 0, 0.75);
+    border: 1px solid var(--card-bg);
+    border-radius: var(--card-border-radius);
+
+    background-color: var(--card-bg-hover);
     backdrop-filter: blur(0.25rem);
     position: absolute;
     top: 0;
@@ -78,7 +112,7 @@ body {
     width: 100%;
     height: 100%;
     max-height: 100%;
-    padding: 1rem;
+    padding: calc(var(--card-content-padding) * 2);
   }
 }
 

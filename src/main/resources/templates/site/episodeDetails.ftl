@@ -1,5 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 <#import "components/langType.ftl" as langTypeComponent />
+<#import "components/simple-episode-mapping.ftl" as simpleEpisodeMapping />
 
 <#assign canonicalUrl = baseUrl + "/animes/" + episodeMapping.anime.slug + "/season-" + episodeMapping.season?c + "/" + episodeMapping.episodeType.slug + "-" + episodeMapping.number?c />
 <#assign animeSanitized = episodeMapping.anime.shortName?html />
@@ -40,63 +41,19 @@
                 </div>
 
                 <h2 class="mt-3 h6 fw-bold mb-0">${(episodeMapping.title!"＞︿＜")?html}</h2>
-                <span class="mt-2">${(episodeMapping.description!"Aucune description pour le moment...")?html}</span>
+                <span class="my-2">${(episodeMapping.description!"Aucune description pour le moment...")?html}</span>
 
                 <#if previousEpisode?? || nextEpisode??>
-                    <div class="d-none d-md-block">
-                        <div class="mt-2 row row-cols-md-2 gx-3 align-items-center">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6 px-0 px-md-1">
                             <#if previousEpisode??>
-                                <a href="/animes/${previousEpisode.anime.slug}/season-${previousEpisode.season}/${previousEpisode.episodeType.slug}-${previousEpisode.number?c}"
-                                   class="text-white text-decoration-none col-12">
-                                    <div class="shikk-element p-2">
-                                        <p class="mb-1 text-uppercase fw-bold">Épisode précédent</p>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
-                                                     alt="${(previousEpisode.title!"＞︿＜")?html}" class="img-fluid"
-                                                     style="border-radius: 0 0 0 1rem">
-                                            </div>
-                                            <div class="col-6 d-flex flex-column justify-content-center">
-                                                <h6 class="fw-bold">
-                                                    ${su.toEpisodeMappingString(previousEpisode, false, false)} -&NonBreakingSpace;${(previousEpisode.title!"＞︿＜")?html}
-                                                </h6>
-                                                <#list previousEpisode.langTypes as langType>
-                                                    <p class="text-muted mb-0">
-                                                        <@langTypeComponent.display langType=langType />
-                                                    </p>
-                                                </#list>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </a>
+                                <@simpleEpisodeMapping.display episodeMapping=previousEpisode label="Épisode précédent" />
                             </#if>
+                        </div>
 
+                        <div class="col-12 col-md-6 px-0 px-md-1">
                             <#if nextEpisode??>
-                                <div class="col-12">
-                                    <a href="/animes/${nextEpisode.anime.slug}/season-${nextEpisode.season}/${nextEpisode.episodeType.slug}-${nextEpisode.number?c}"
-                                       class="text-white text-decoration-none">
-                                        <div class="shikk-element p-2">
-                                            <p class="mb-1 text-uppercase fw-bold">Épisode suivant</p>
-                                            <div class="row">
-                                                <div class="col-6">
-                                                    <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
-                                                         alt="${(nextEpisode.title!"＞︿＜")?html}" class="img-fluid"
-                                                         style="border-radius: 0 0 0 1rem">
-                                                </div>
-                                                <div class="col-6 d-flex flex-column justify-content-center">
-                                                    <h6 class="fw-bold">
-                                                        ${su.toEpisodeMappingString(nextEpisode, false, false)} -&NonBreakingSpace;${(nextEpisode.title!"＞︿＜")?html}
-                                                    </h6>
-                                                    <#list nextEpisode.langTypes as langType>
-                                                        <p class="text-muted mb-0">
-                                                            <@langTypeComponent.display langType=langType />
-                                                        </p>
-                                                    </#list>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
+                                <@simpleEpisodeMapping.display episodeMapping=nextEpisode label="Épisode suivant" />
                             </#if>
                         </div>
                     </div>
@@ -124,62 +81,4 @@
             </div>
         </#list>
     </div>
-
-    <#if previousEpisode?? || nextEpisode??>
-        <div class="d-block d-md-none mt-3">
-            <#if previousEpisode??>
-                <a href="/animes/${previousEpisode.anime.slug}/season-${previousEpisode.season}/${previousEpisode.episodeType.slug}-${previousEpisode.number?c}"
-                   class="text-white text-decoration-none">
-                    <div class="shikk-element p-2">
-                        <p class="mb-1 text-uppercase fw-bold">Épisode précédent</p>
-                        <div class="row">
-                            <div class="col-6">
-                                <img src="${apiUrl}/v1/attachments?uuid=${previousEpisode.uuid}&type=image"
-                                     alt="${(previousEpisode.title!"＞︿＜")?html}" class="img-fluid"
-                                     style="border-radius: 0 0 0 1rem">
-                            </div>
-                            <div class="col-6 d-flex flex-column justify-content-center">
-                                <h6 class="fw-bold">
-                                    ${su.toEpisodeMappingString(previousEpisode, false, false)} -&NonBreakingSpace;${(previousEpisode.title!"＞︿＜")?html}
-                                </h6>
-                                <#list previousEpisode.langTypes as langType>
-                                    <p class="text-muted mb-0">
-                                        <@langTypeComponent.display langType=langType />
-                                    </p>
-                                </#list>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </#if>
-
-            <#if nextEpisode??>
-                <div class="<#if previousEpisode??> mt-3 mt-md-auto</#if>">
-                    <a href="/animes/${nextEpisode.anime.slug}/season-${nextEpisode.season}/${nextEpisode.episodeType.slug}-${nextEpisode.number?c}"
-                       class="text-white text-decoration-none">
-                        <div class="shikk-element p-2">
-                            <p class="mb-1 text-uppercase fw-bold">Épisode suivant</p>
-                            <div class="row">
-                                <div class="col-6">
-                                    <img src="${apiUrl}/v1/attachments?uuid=${nextEpisode.uuid}&type=image"
-                                         alt="${(nextEpisode.title!"＞︿＜")?html}" class="img-fluid"
-                                         style="border-radius: 0 0 0 1rem">
-                                </div>
-                                <div class="col-6 d-flex flex-column justify-content-center">
-                                    <h6 class="fw-bold">
-                                        ${su.toEpisodeMappingString(nextEpisode, false, false)} -&NonBreakingSpace;${(nextEpisode.title!"＞︿＜")?html}
-                                    </h6>
-                                    <#list nextEpisode.langTypes as langType>
-                                        <p class="text-muted mb-0">
-                                            <@langTypeComponent.display langType=langType />
-                                        </p>
-                                    </#list>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </#if>
-        </div>
-    </#if>
 </@navigation.display>

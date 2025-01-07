@@ -47,13 +47,13 @@
                         <#list anime.simulcasts as simulcast>
                             <div class="col-4 col-md-2" <#if (simulcast?index > 4)> x-show="showMore" style="display: none" <#else> x-show="true"</#if>>
                                 <a href="/catalog/${simulcast.slug}"
-                                   class="btn btn-outline-light w-100 h-100 text-center align-content-around">${simulcast.label}</a>
+                                   class="btn btn-dark w-100 h-100 text-center align-content-around">${simulcast.label}</a>
                             </div>
                         </#list>
 
                         <#if (anime.simulcasts?size > 5)>
                             <div class="col-4 col-md-2">
-                                <button class="btn btn-light w-100 h-100 text-center align-content-around"
+                                <button class="btn btn-outline-light w-100 h-100 text-center align-content-around"
                                         @click="showMore = !showMore">
                                     <span x-show="!showMore">Voir plus</span>
                                     <span x-show="showMore">Voir moins</span>

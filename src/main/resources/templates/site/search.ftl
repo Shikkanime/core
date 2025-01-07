@@ -88,46 +88,42 @@
             <template x-for="anime in animes">
                 <div class="col-md-2 col-6 mt-0 mb-4">
                     <article x-data="{hover:false}" class="shikk-element">
-                        <a x-bind:href="'/animes/' + anime.slug"
-                           class="text-decoration-none text-white"
-                           @mouseenter="hover = true" @mouseleave="hover = false">
-                            <div class="position-relative">
+                        <a x-bind:href="'/animes/' + anime.slug" @mouseenter="hover = true" @mouseleave="hover = false">
+                            <div class="shikk-element-content">
                                 <img x-bind:src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=image'"
                                      x-bind:alt="anime.shortName + ' anime'"
                                      loading="lazy"
-                                     class="img-fluid"
+                                     class="shikk-element-content-img"
                                      width="480"
                                      height="720">
 
-                                <div class="mt-2 mx-2 mb-1">
-                                    <span class="h6 text-truncate-2 fw-bold mb-0" x-text="anime.shortName"></span>
+                                <span class="h6 text-truncate-2 fw-bold mt-2 mb-0" x-text="anime.shortName"></span>
 
-                                    <template x-for="langType in anime.langTypes">
-                                        <p class="text-muted mt-0 mb-0">
-                                            <template x-if="langType === 'SUBTITLES'">
-                                                <span>
+                                <template x-for="langType in anime.langTypes">
+                                    <p class="text-muted my-0">
+                                        <template x-if="langType === 'SUBTITLES'">
+                                                <span class="d-flex align-items-center">
                                                     <img src="${baseUrl}/assets/img/icons/subtitles.svg" alt="Subtitles"
                                                          class="me-2">
                                                     Sous-titrage
                                                 </span>
-                                            </template>
-                                            <template x-if="langType === 'VOICE'">
-                                                <span>
+                                        </template>
+                                        <template x-if="langType === 'VOICE'">
+                                                <span class="d-flex align-items-center">
                                                     <img src="${baseUrl}/assets/img/icons/voice.svg" alt="Voice"
                                                          class="me-2">
                                                     Doublage
                                                 </span>
-                                            </template>
-                                        </p>
-                                    </template>
-                                </div>
+                                        </template>
+                                    </p>
+                                </template>
+                            </div>
 
-                                <div class="overlay" style="display: none;" x-show="hover">
-                                    <div class="h6 text-truncate-2 fw-bold"
-                                         x-text="anime.shortName.toUpperCase()"></div>
-                                    <hr>
-                                    <div class="text-truncate-6" x-text="anime.description"></div>
-                                </div>
+                            <div class="overlay" style="display: none;" x-show="hover">
+                                <div class="h6 text-truncate-2 fw-bold"
+                                     x-text="anime.shortName.toUpperCase()"></div>
+                                <hr>
+                                <div class="text-truncate-6" x-text="anime.description"></div>
                             </div>
                         </a>
                     </article>
