@@ -11,6 +11,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
+import fr.shikkanime.platforms.NetflixPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
@@ -18,17 +19,17 @@ import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
-import fr.shikkanime.wrappers.impl.AnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN)
+    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.NETF)
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -52,6 +53,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private lateinit var crunchyrollPlatform: CrunchyrollPlatform
 
     @Inject
+    private lateinit var netflixPlatform: NetflixPlatform
+
+    @Inject
     private lateinit var traceActionService: TraceActionService
 
     @Inject
@@ -66,8 +70,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     override fun run() {
         val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
 
-        val allPlatformEpisodes =
-            availableUpdatePlatforms.flatMap { episodeMappingService.findAllNeedUpdateByPlatform(it, lastDateTime) }
+        val allPlatformEpisodes = availableUpdatePlatforms.flatMap { episodeMappingService.findAllNeedUpdateByPlatform(it, lastDateTime) }.distinctBy { it.uuid }
         logger.info("Found ${allPlatformEpisodes.size} episodes to update")
 
         val needUpdateEpisodes = allPlatformEpisodes.distinctBy { it.uuid }
@@ -348,10 +351,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     episodes.addAll(
                         animationDigitalNetworkPlatform.convertEpisode(
                             countryCode,
-                            if (isImageUpdate)
-                                AnimationDigitalNetworkWrapper.getVideo(videoId)
-                            else
-                                AnimationDigitalNetworkCachedWrapper.getVideo(videoId),
+                            AnimationDigitalNetworkCachedWrapper.getVideo(videoId),
                             ZonedDateTime.now(),
                             needSimulcast = false,
                             checkAnimation = false
@@ -369,6 +369,25 @@ class UpdateEpisodeMappingJob : AbstractJob {
                             isImageUpdate
                         )
                     )
+                }
+            }
+
+            Platform.NETF -> {
+                runCatching {
+                    val showId = netflixPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
+                    val netflixEpisodes = NetflixCachedWrapper.getShowVideos(countryCode, showId)
+
+                    netflixEpisodes?.map { episode ->
+                        netflixPlatform.convertEpisode(
+                            countryCode,
+                            episodeMapping.anime!!.image!!,
+                            episode,
+                            ZonedDateTime.now(),
+                            episodeMapping.episodeType!!,
+                            episodeVariant.audioLocale!!,
+                        )
+                    }?.find { it.getIdentifier() == episodeVariant.identifier }
+                        ?.also { episodes.add(it) }
                 }
             }
 
@@ -432,8 +451,21 @@ class UpdateEpisodeMappingJob : AbstractJob {
         id: String,
     ): String? {
         return when (platform) {
-            Platform.ANIM -> retrievePreviousADNEpisodes(id)
-            Platform.CRUN -> retrievePreviousCrunchyrollEpisodes(countryCode, id)
+            Platform.ANIM -> runCatching {
+                AnimationDigitalNetworkCachedWrapper.getPreviousVideo(
+                    AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
+                    id.toInt()
+                )?.id?.toString()
+            }.onFailure {
+                logger.warning("Error while getting previous episode for $id: ${it.message}")
+            }.getOrNull()
+
+            Platform.CRUN -> runCatching {
+                CrunchyrollCachedWrapper.getPreviousEpisode(countryCode.locale, id).id
+            }.onFailure {
+                logger.warning("Error while getting previous episode for $id: ${it.message}")
+            }.getOrNull()
+
             else -> {
                 logger.warning("Error while getting previous episode $id: Invalid platform")
                 null
@@ -441,59 +473,31 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
     }
 
-
     private suspend fun retrieveNextEpisodes(
         countryCode: CountryCode,
         platform: Platform,
         id: String,
     ): String? {
         return when (platform) {
-            Platform.ANIM -> retrieveNextADNEpisodes(id)
-            Platform.CRUN -> retrieveNextCrunchyrollEpisodes(countryCode, id)
+            Platform.ANIM -> runCatching {
+                AnimationDigitalNetworkCachedWrapper.getNextVideo(
+                    AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
+                    id.toInt()
+                )?.id?.toString()
+            }.onFailure {
+                logger.warning("Error while getting next episode for $id: ${it.message}")
+            }.getOrNull()
+
+            Platform.CRUN -> runCatching {
+                CrunchyrollCachedWrapper.getUpNext(countryCode.locale, id).id
+            }.onFailure {
+                logger.warning("Error while getting next episode for $id: ${it.message}")
+            }.getOrNull()
+
             else -> {
                 logger.warning("Error while getting next episode $id: Invalid platform")
                 null
             }
         }
     }
-
-    private suspend fun retrievePreviousADNEpisodes(
-        id: String,
-    ) = runCatching {
-        AnimationDigitalNetworkCachedWrapper.getPreviousVideo(
-            AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
-            id.toInt()
-        )?.id?.toString()
-    }.onFailure {
-        logger.warning("Error while getting previous episode for $id: ${it.message}")
-    }.getOrNull()
-
-    private suspend fun retrieveNextADNEpisodes(
-        id: String,
-    ) = runCatching {
-        AnimationDigitalNetworkCachedWrapper.getNextVideo(
-            AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
-            id.toInt()
-        )?.id?.toString()
-    }.onFailure {
-        logger.warning("Error while getting next episode for $id: ${it.message}")
-    }.getOrNull()
-
-    private suspend fun retrievePreviousCrunchyrollEpisodes(
-        countryCode: CountryCode,
-        id: String
-    ) = runCatching {
-        CrunchyrollCachedWrapper.getPreviousEpisode(countryCode.locale, id).id
-    }.onFailure {
-        logger.warning("Error while getting previous episode for $id: ${it.message}")
-    }.getOrNull()
-
-    private suspend fun retrieveNextCrunchyrollEpisodes(
-        countryCode: CountryCode,
-        id: String
-    ) = runCatching {
-        CrunchyrollCachedWrapper.getUpNext(countryCode.locale, id).id
-    }.onFailure {
-        logger.warning("Error while getting next episode for $id: ${it.message}")
-    }.getOrNull()
 }
