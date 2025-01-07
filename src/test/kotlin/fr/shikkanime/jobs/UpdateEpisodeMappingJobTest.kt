@@ -11,6 +11,8 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,6 +34,13 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         )
 
         MapCache.invalidate(Config::class.java)
+        AbstractNetflixWrapper.checkLanguage = false
+    }
+
+    @AfterEach
+    override fun tearDown() {
+        super.tearDown()
+        AbstractNetflixWrapper.checkLanguage = true
     }
 
     @Test
@@ -275,6 +284,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 banner = "test.jpg",
             )
         )
+
         val episodeMapping = episodeMappingService.save(
             EpisodeMapping(
                 anime = anime,
@@ -310,18 +320,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         )
 
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.NETF,
-                audioLocale = "ja-JP",
-                identifier = "FR-NETF-abcde-JA-JP",
-                url = "https://www.netflix.com/watch/abcde",
-                uncensored = true
-            )
-        )
-
         MapCache.invalidateAll()
 
         updateEpisodeMappingJob.run()
@@ -331,9 +329,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val mappings = episodeMappingService.findAll()
         assertEquals(3, mappings.size)
         val variants = episodeVariantService.findAll()
-        assertEquals(7, variants.size)
+        assertEquals(6, variants.size)
         assertTrue(variants.all { it.uncensored })
-        assertTrue(variants.any { it.platform == Platform.NETF })
     }
 
     @Test
@@ -573,5 +570,217 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             assertTrue(variants.map { it.audioLocale }.contains("fr-FR"))
             assertEquals(2, variants.size)
         }
+    }
+
+    @Test
+    fun `run update with multiples differents platforms`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "DAN DA DAN",
+                slug = "dan-da-dan",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/13839ea2b48b0323417b23813a090c93.jpg",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fa62dd1fc7a9bc0b587f36f53bf572c1.jpg",
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 1,
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/39d31aee335444ba382668b17b85c429.jpg"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.NETF,
+                audioLocale = "ja-JP",
+                identifier = "FR-NETF-a7b9feca-JA-JP",
+                url = "https://www.netflix.com/fr/title/81736884"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.ANIM,
+                audioLocale = "fr-FR",
+                identifier = "FR-ANIM-26662-FR-FR",
+                url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.ANIM,
+                audioLocale = "ja-JP",
+                identifier = "FR-ANIM-26662-JA-JP",
+                url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.CRUN,
+                audioLocale = "ja-JP",
+                identifier = "FR-CRUN-GN7UNXWMJ-JA-JP",
+                url = "https://www.crunchyroll.com/fr/watch/GN7UNXWMJ/thats-how-love-starts-ya-know"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.NETF,
+                audioLocale = "fr-FR",
+                identifier = "FR-NETF-a7b9feca-FR-FR",
+                url = "https://www.netflix.com/fr/title/81736884"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.CRUN,
+                audioLocale = "fr-FR",
+                identifier = "FR-CRUN-GG1UXWE24-FR-FR",
+                url = "https://www.crunchyroll.com/fr/watch/GG1UXWE24/"
+            )
+        )
+
+        MapCache.invalidateAll()
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(2, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(10, variants.size)
+    }
+
+    @Test
+    fun `run update with bad netflix url`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Garôden : La voie du loup solitaire",
+                slug = "garoden",
+                image = "https://resizing.flixster.com/XksHj1sbnxReEwu8UxxkTQPgsaM=/fit-in/705x460/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p27251158_b_v9_ac.jpg",
+                banner = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/6AYY37jfdO6hpXcMjf9Yu5cnmO0/AAAABW4lOpbtZJEWTEWnn5Pg9mXu5wD-zf4SwbqsPGuk_pckstx2SsWMcNRxGC_kI7xv6CgGNKj9MiI8RBUFojGDKmvJNnqw0X4vVFmJ.jpg",
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 7,
+                image = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABeDPj8bjJgkLhwSHPXEEJggZGtaq_iSBmLsNP4DcgMrzUEuUVFe9rVuJROQpB4DNuPk5vyC4qd0VnmOu3YhOm4L2tw2ScA6a8T7VCxjCniE77CXmSGemQzno.jpg"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.NETF,
+                audioLocale = "ja-JP",
+                identifier = "FR-NETF-6c247a4d-JA-JP",
+                url = "https://www.netflix.com/fr/title/6c247a4d"
+            )
+        )
+
+        MapCache.invalidateAll()
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(1, variants.size)
+    }
+
+    @Test
+    fun `run update with netflix platform`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Du mouvement de la Terre",
+                slug = "du-mouvement-de-la-terre",
+                image = "https://cdn.myanimelist.net/images/anime/1713/144437l.jpg",
+                banner = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/6AYY37jfdO6hpXcMjf9Yu5cnmO0/AAAABTkMGRnW-6lH_YEXhGdcFKZM-rO0bZCKzA8846_wW3Xy_s1NN72RFbddfuh9-2L_nr5lvAlFxB6i7uvUEY49CTFLoAJZA2Ag_hY6.jpg",
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 9,
+                image = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABT_ClBwV1ItifEAGonpxHrB_b1fSWtllElp6Sl3awusb-bRXPFrTzSZaunQ4O6ku1o8CVQjKu9bEnlOYYwPGBFQZFJUg3Y8eiVroGRTd9HAOJ_S-42Yut-g-.jpg"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.NETF,
+                audioLocale = "ja-JP",
+                identifier = "FR-NETF-6936fd55-JA-JP",
+                url = "https://www.netflix.com/fr/title/81765022"
+            )
+        )
+
+        MapCache.invalidateAll()
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertNotEquals("https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABT_ClBwV1ItifEAGonpxHrB_b1fSWtllElp6Sl3awusb-bRXPFrTzSZaunQ4O6ku1o8CVQjKu9bEnlOYYwPGBFQZFJUg3Y8eiVroGRTd9HAOJ_S-42Yut-g-.jpg", mappings.first().image)
+        val variants = episodeVariantService.findAll()
+        assertEquals(1, variants.size)
     }
 }

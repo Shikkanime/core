@@ -18,6 +18,7 @@ import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 
@@ -135,6 +136,7 @@ class UpdateAnimeJob : AbstractJob {
             when (it.platform!!) {
                 Platform.ANIM -> list.add(it.platform to fetchADNAnime(it))
                 Platform.CRUN -> list.add(it.platform to fetchCrunchyrollAnime(it))
+                Platform.NETF -> list.add(it.platform to fetchNetflixAnime(it))
                 else -> logger.warning("Platform ${it.platform} not supported")
             }
         }
@@ -182,6 +184,28 @@ class UpdateAnimeJob : AbstractJob {
             banner = series.fullHDBanner!!,
             description = series.description,
             episodeSize = objects.size
+        )
+    }
+
+    private fun fetchNetflixAnime(animePlatform: AnimePlatform): UpdatableAnime {
+        val episodes = runCatching {
+            NetflixCachedWrapper.getShowVideos(
+                animePlatform.anime!!.countryCode!!,
+                animePlatform.platformId!!
+            )
+        }.getOrNull()
+
+        if (episodes.isNullOrEmpty())
+            throw Exception("No episode found for Netflix anime ${animePlatform.anime!!.name}")
+
+        val show = episodes.first().show
+
+        return UpdatableAnime(
+            lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
+            image = animePlatform.anime!!.image!!,
+            banner = show.banner,
+            description = show.description,
+            episodeSize = episodes.size
         )
     }
 }

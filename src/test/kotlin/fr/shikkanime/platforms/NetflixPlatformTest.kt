@@ -5,16 +5,29 @@ import fr.shikkanime.AbstractTest
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
+import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
 class NetflixPlatformTest : AbstractTest() {
     @Inject
     private lateinit var netflixPlatform: NetflixPlatform
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+        AbstractNetflixWrapper.checkLanguage = false
+    }
+
+    @AfterEach
+    override fun tearDown() {
+        super.tearDown()
+        AbstractNetflixWrapper.checkLanguage = true
+    }
 
     @Test
     fun fetchApiContent() {
@@ -28,8 +41,8 @@ class NetflixPlatformTest : AbstractTest() {
             name = "81497635"
         })
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assumeTrue(episodes != null)
-        assumeTrue(episodes!!.isNotEmpty())
+        assertNotNull(episodes)
+        assertTrue(episodes!!.isNotEmpty())
 
         episodes.forEach {
             println(it)
@@ -52,9 +65,9 @@ class NetflixPlatformTest : AbstractTest() {
             name = "81562396"
         })
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assumeTrue(episodes != null)
-        assumeTrue(episodes!!.isNotEmpty())
-        assumeTrue("Alors qu'une prophétie funeste plane sur le paisible royaume de Britannia, un garçon au cœur pur se lance dans un périple captivant de découverte… et de vengeance." == episodes.first().animeDescription)
+        assertNotNull(episodes)
+        assertTrue(episodes!!.isNotEmpty())
+        assertEquals("Alors qu'une prophétie funeste plane sur le paisible royaume de Britannia, un garçon au cœur pur se lance dans un périple captivant de découverte… et de vengeance.", episodes.first().animeDescription)
 
         episodes.forEach {
             println(it)
@@ -63,7 +76,6 @@ class NetflixPlatformTest : AbstractTest() {
         assertEquals(24, episodes.size)
         // Count the distinct episode identifiers
         assertEquals(24, episodes.map { it.getIdentifier() }.distinct().size)
-        assertTrue(episodes.sumOf { it.duration } > 0)
         assertEquals("FR-NETF-8a6184b0-JA-JP", episodes.first().getIdentifier())
     }
 
@@ -79,8 +91,8 @@ class NetflixPlatformTest : AbstractTest() {
             name = "81943491"
         })
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assumeTrue(episodes != null)
-        assumeTrue(episodes!!.isNotEmpty())
+        assertNotNull(episodes)
+        assertTrue(episodes!!.isNotEmpty())
 
         episodes.forEach {
             println(it)

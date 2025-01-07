@@ -1,12 +1,14 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.utils.*
-import fr.shikkanime.utils.ObjectParser.getAsInt
-import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.wrappers.NetflixWrapper
+import fr.shikkanime.utils.isEqualOrAfter
+import fr.shikkanime.utils.withUTC
+import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
+import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -24,32 +26,18 @@ class NetflixPlatform :
         zonedDateTime: ZonedDateTime
     ): List<Episode>? {
         val id = key.netflixSimulcast.name
+        val releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z")
         val episodes = NetflixWrapper.getShowVideos(key.countryCode, id, key.netflixSimulcast.seasonName, key.netflixSimulcast.season) ?: return null
 
         return key.netflixSimulcast.audioLocales.flatMap { audioLocale ->
             episodes.map {
-                Episode(
-                    countryCode = key.countryCode,
-                    animeId = id,
-                    anime = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" },
-                    animeImage = key.netflixSimulcast.image,
-                    animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" },
-                    animeDescription = it.getAsJsonObject("show").getAsString("description"),
-                    releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z"),
-                    episodeType = key.netflixSimulcast.episodeType,
-                    seasonId = it.getAsInt("season")!!.toString(),
-                    season = it.getAsInt("season")!!,
-                    number = it.getAsInt("number")!!,
-                    duration = it.getAsInt("duration")?.toLong() ?: -1,
-                    title = it.getAsString("title"),
-                    description = it.getAsString("description"),
-                    image = requireNotNull(it.getAsString("image")) { "Image is null" },
-                    platform = getPlatform(),
-                    audioLocale = audioLocale,
-                    id = requireNotNull(it.getAsString("id")) { "Id is null" },
-                    url = requireNotNull(it.getAsString("url")) { "Url is null" },
-                    uncensored = false,
-                    original = true,
+                convertEpisode(
+                    key.countryCode,
+                    key.netflixSimulcast.image,
+                    it,
+                    releaseDateTime,
+                    key.netflixSimulcast.episodeType,
+                    audioLocale
                 )
             }
         }
@@ -71,4 +59,38 @@ class NetflixPlatform :
 
         return list
     }
+
+    fun getShowId(url: String) =
+        "https://www\\.netflix\\.com/[a-z]{2}/title/([0-9]{8})".toRegex().find(url)?.groupValues?.get(1)
+
+    fun convertEpisode(
+        countryCode: CountryCode,
+        showImage: String,
+        episode: AbstractNetflixWrapper.Episode,
+        zonedDateTime: ZonedDateTime,
+        episodeType: EpisodeType,
+        audioLocale: String,
+    ) = Episode(
+        countryCode = countryCode,
+        animeId = episode.show.id,
+        anime = episode.show.name,
+        animeImage = showImage,
+        animeBanner = episode.show.banner,
+        animeDescription = episode.show.description,
+        releaseDateTime = zonedDateTime,
+        episodeType = episodeType,
+        seasonId = episode.season.toString(),
+        season = episode.season,
+        number = episode.number,
+        duration = episode.duration,
+        title = episode.title,
+        description = episode.description,
+        image = episode.image,
+        platform = getPlatform(),
+        audioLocale = audioLocale,
+        id = episode.id,
+        url = episode.url,
+        uncensored = false,
+        original = true,
+    )
 }
