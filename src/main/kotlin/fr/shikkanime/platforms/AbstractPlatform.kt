@@ -33,8 +33,6 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val url: String,
         val uncensored: Boolean,
         val original: Boolean,
-        val isConfigurationSimulcasted: Boolean? = null,
-        val isSimulcasted: Boolean? = null,
     ) {
         fun getIdentifier() = StringUtils.getIdentifier(countryCode, platform, id, audioLocale, uncensored)
     }

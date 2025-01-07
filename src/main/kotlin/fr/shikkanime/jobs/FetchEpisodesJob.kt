@@ -6,7 +6,9 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EmailService
 import fr.shikkanime.services.EpisodeVariantService
@@ -113,10 +115,7 @@ class FetchEpisodesJob : AbstractJob {
                 try {
                     val savedEpisode = episodeVariantService.save(it)
                     identifiers.add(it.getIdentifier())
-
-                    if (it.isConfigurationSimulcasted == true && it.isSimulcasted == false)
-                        Constant.abstractPlatforms.forEach { abstractPlatform -> abstractPlatform.updateAnimeSimulcastConfiguration(it.anime) }
-
+                    Constant.abstractPlatforms.forEach { abstractPlatform -> abstractPlatform.updateAnimeSimulcastConfiguration(it.animeId) }
                     savedEpisode
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while saving episode ${it.getIdentifier()} (${it.anime})", e)
