@@ -221,8 +221,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             animeImage = crunchyrollAnimeContent.fullHDImage!!,
             animeBanner = crunchyrollAnimeContent.fullHDBanner!!,
             animeDescription = crunchyrollAnimeContent.description.normalize(),
-            isConfigurationSimulcasted = isConfigurationSimulcasted,
-            isSimulcasted = isSimulcasted,
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
             seasonId = browseObject.episodeMetadata.seasonId,

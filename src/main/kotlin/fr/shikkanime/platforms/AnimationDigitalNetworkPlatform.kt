@@ -102,8 +102,6 @@ class AnimationDigitalNetworkPlatform :
                 animeImage = video.show.image2x,
                 animeBanner = video.show.imageHorizontal2x,
                 animeDescription = video.show.summary.normalize(),
-                isConfigurationSimulcasted = isConfigurationSimulcasted,
-                isSimulcasted = isSimulcasted,
                 releaseDateTime = video.releaseDate,
                 episodeType = episodeType,
                 seasonId = video.season ?: "1",
