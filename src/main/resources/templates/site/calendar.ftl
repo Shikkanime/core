@@ -66,7 +66,8 @@
 
                                             <div class="platforms">
                                                 <#list release.platforms as platform>
-                                                    <img loading="lazy" src="${baseUrl}/assets/img/platforms/${platform.image}"
+                                                    <img loading="lazy"
+                                                         src="${baseUrl}/assets/img/platforms/${platform.image}"
                                                          alt="${platform.name}"
                                                          class="rounded-circle ms-1" width="20"
                                                          height="20">
@@ -83,7 +84,8 @@
                                         </div>
 
                                         <div class="d-flex align-items-center mt-2">
-                                            <span class="text-muted" data-release-date-time="${release.releaseDateTime}"></span>
+                                            <span class="text-muted"
+                                                  data-release-date-time="${release.releaseDateTime}"></span>
                                             <div class="vr mx-2"></div>
                                             <div class="d-block">
                                                 <div class="h6 text-truncate-2 mb-0 fw-bold">${animeSanitized}</div>
@@ -108,11 +110,8 @@
 
                                         <#if isReleased>
                                             <span class="text-muted mt-0 d-flex align-items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                                     class="bi bi-calendar4 me-2" viewBox="0 0 16 16">
-                                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M2 2a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1zm13 3H1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/>
-                                                </svg>
-
+                                                <img src="${baseUrl}/assets/img/icons/calendar.svg" alt="Calendar"
+                                                     class="me-2">
                                                 ${release.mappings?first.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
                                             </span>
                                         </#if>
@@ -124,24 +123,16 @@
                                         </#if>
 
                                         <#if description??>
-                                            <div class="text-truncate-4<#if isReleased> my-2</#if>" style="font-size: 0.9rem;">
+                                            <div class="text-truncate-4<#if isReleased> my-2</#if>"
+                                                 style="font-size: 0.9rem;">
                                                 ${description?html}
                                             </div>
                                         </#if>
 
                                         <#if isReleased>
                                             <div class="mt-3 text-warning fw-bold d-flex align-items-center">
-                                                <i class="me-2">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                         fill="currentColor"
-                                                         class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                                                        <path fill-rule="evenodd"
-                                                              d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
-                                                        <path fill-rule="evenodd"
-                                                              d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
-                                                    </svg>
-                                                </i>
-
+                                                <img src="${baseUrl}/assets/img/icons/redirect.svg" alt="Redirect"
+                                                     class="me-2">
                                                 Regarder maintenant
                                             </div>
                                         </#if>

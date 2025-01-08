@@ -64,7 +64,7 @@
                 ${additionalHeadTags}
             </#if>
 
-            <link rel="alternate" type="application/rss+xml" title="Shikkanime - Flux" href="${baseUrl}/feed/episodes" />
+            <link rel="alternate" type="application/rss+xml" title="Shikkanime - Flux" href="${baseUrl}/feed/episodes"/>
         </head>
         <body>
         <#nested 0>

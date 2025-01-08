@@ -78,7 +78,8 @@
                 <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
                     <#list anime.seasons as season>
                         <li><a class="dropdown-item"
-                               href="/animes/${anime.slug}/season-${season.number}">${su.toSeasonString(anime.countryCode, season.number)}</a></li>
+                               href="/animes/${anime.slug}/season-${season.number}">${su.toSeasonString(anime.countryCode, season.number)}</a>
+                        </li>
                     </#list>
                 </ul>
             </div>
@@ -106,12 +107,12 @@
         <div class="d-flex justify-content-center mt-3">
             <#if showLess?? && showLess>
                 <a href="/animes/${anime.slug}/season-${currentSeason}/page-${currentPage - 1}"
-                   class="btn btn-light ms-0 me-auto">Page précédente</a>
+                   class="btn btn-dark ms-0 me-auto">Page précédente</a>
             </#if>
 
             <#if showMore?? && showMore>
                 <a href="/animes/${anime.slug}/season-${currentSeason}/page-${currentPage + 1}"
-                   class="btn btn-light ms-auto me-0">Page suivante</a>
+                   class="btn btn-dark ms-auto me-0">Page suivante</a>
             </#if>
         </div>
     </#if>
