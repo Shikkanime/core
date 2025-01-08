@@ -32,7 +32,7 @@
 
                     <div class="col-6 d-flex flex-column justify-content-center">
                         <div class="h6 mt-2 mb-0 text-truncate-2 fw-bold">
-                            ${su.toEpisodeMappingString(episodeMapping, false, false)} - ${(episodeMapping.title!"＞︿＜")?html}
+                            ${su.toEpisodeMappingString(episodeMapping, false, false)}&NonBreakingSpace;-&NonBreakingSpace;${(episodeMapping.title!"＞︿＜")?html}
                         </div>
 
                         <#list episodeMapping.langTypes as langTypes>
