@@ -135,7 +135,7 @@
         </div>
 
         <div class="text-center" x-show="hasMore">
-            <button class="btn btn-light" @click="loadMore">
+            <button class="btn btn-dark" @click="loadMore">
                 Voir plus
             </button>
         </div>

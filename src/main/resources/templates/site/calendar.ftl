@@ -5,7 +5,7 @@
 <@navigation.display canonicalUrl="${baseUrl}/calendar">
     <div class="d-flex">
         <a href="${baseUrl}/calendar?date=${previousWeek}"
-           class="btn btn-light mt-3 ms-0 me-auto d-flex align-items-center">
+           class="btn btn-dark mt-3 ms-0 me-auto d-flex align-items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                  class="bi bi-chevron-left me-1" viewBox="0 0 16 16">
                 <path fill-rule="evenodd"
@@ -16,7 +16,7 @@
 
         <#if nextWeek??>
             <a href="${baseUrl}/calendar?date=${nextWeek}"
-               class="btn btn-light mt-3 ms-auto me-0 d-flex align-items-center">
+               class="btn btn-dark mt-3 ms-auto me-0 d-flex align-items-center">
                 Semaine suivante
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                      class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
