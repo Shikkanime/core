@@ -44,9 +44,9 @@ object StringUtils {
                 val firstPart = split[0].trim()
                 val lastPart = split.subList(1, split.size).joinToString(" ").trim()
 
-                if (lastPart.count { it == ' ' } >= 2 && firstPart.length > 5 && (separator == ":" || !isAllPartsHaveSameAmountOfWords(
-                        split
-                    ))) {
+                if (lastPart.count { it == ' ' } >= 2 &&
+                    ((separator != "," && firstPart.length > 5) || (separator == "," && firstPart.length > 6)) &&
+                    (separator == ":" || !isAllPartsHaveSameAmountOfWords(split))) {
                     shortName = firstPart
                 }
             }
