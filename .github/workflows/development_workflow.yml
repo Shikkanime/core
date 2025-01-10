@@ -1,4 +1,4 @@
-name: Development workflow
+name: Development Workflow
 
 on:
   pull_request:
@@ -11,6 +11,7 @@ env:
 
 jobs:
   test:
+    name: Test and analyze
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +38,7 @@ jobs:
         run: ./gradlew clean test --info
 
   test-compose:
+    name: Test docker image (${{ matrix.platform }})
     runs-on: ubuntu-latest
     needs: [test]
     strategy:

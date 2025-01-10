@@ -1,4 +1,4 @@
-name: Check Tokens and Update
+name: Check and update Crunchyroll token
 
 on:
   schedule:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   check-and-update:
+    name: Check and update Crunchyroll token
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

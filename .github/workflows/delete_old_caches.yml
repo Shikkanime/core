@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   delete_cache:
+    name: Delete old caches
     runs-on: ubuntu-latest
     steps:
       - name: Clear cache
