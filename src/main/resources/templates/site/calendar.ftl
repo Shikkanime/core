@@ -116,13 +116,17 @@
                                             </span>
                                         </#if>
 
-                                        <#assign description = release.anime.description>
+                                        <#assign description = "" />
+
+                                        <#if release.anime.description??>
+                                            <#assign description = release.anime.description>
+                                        </#if>
 
                                         <#if isReleased && !isMultipleReleased && release.mappings?first.description??>
                                             <#assign description = release.mappings?first.description>
                                         </#if>
 
-                                        <#if description??>
+                                        <#if description?? && description?length gt 0>
                                             <div class="text-truncate-4<#if isReleased> my-2</#if>"
                                                  style="font-size: 0.9rem;">
                                                 ${description?html}
@@ -152,59 +156,5 @@
             const releaseDateTime = new Date(element.getAttribute('data-release-date-time'));
             element.textContent = releaseDateTime.toLocaleTimeString().split(':').slice(0, 2).join(':');
         });
-
-        document.querySelectorAll('.img-fluid').forEach(img => {
-            const closest = img.closest('.shikk-element');
-            if (!closest.querySelector('[data-multiple-released]')) return;
-
-            img.crossOrigin = 'Anonymous';
-
-            const processImage = () => {
-                const rgb = getAverageRGB(img);
-                closest.querySelectorAll('.shikk-element-collection-1, .shikk-element-collection-2')
-                    .forEach(collection => {
-                        collection.style.backgroundColor = 'rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')';
-                    });
-            };
-
-            img.complete ? processImage() : img.onload = processImage;
-        });
-
-        function getAverageRGB(imgEl) {
-            const blockSize = 5;
-            const defaultRGB = {r: 0, g: 0, b: 0};
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            if (!context) return defaultRGB;
-
-            const width = canvas.width = imgEl.naturalWidth || imgEl.width;
-            const height = canvas.height = imgEl.naturalHeight || imgEl.height;
-            context.drawImage(imgEl, 0, 0);
-
-            let data;
-            try {
-                data = context.getImageData(0, 0, width, height);
-            } catch (e) {
-                console.error(e);
-                return defaultRGB;
-            }
-
-            const length = data.data.length;
-            let rgb = {r: 0, g: 0, b: 0};
-            let count = 0;
-
-            for (let i = 0; i < length; i += blockSize * 4) {
-                count++;
-                rgb.r += data.data[i];
-                rgb.g += data.data[i + 1];
-                rgb.b += data.data[i + 2];
-            }
-
-            rgb.r = Math.floor(rgb.r / count);
-            rgb.g = Math.floor(rgb.g / count);
-            rgb.b = Math.floor(rgb.b / count);
-
-            return rgb;
-        }
     </script>
 </@navigation.display>
