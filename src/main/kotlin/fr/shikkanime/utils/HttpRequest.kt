@@ -1,10 +1,6 @@
 package fr.shikkanime.utils
 
-import com.microsoft.playwright.Browser
-import com.microsoft.playwright.BrowserContext
-import com.microsoft.playwright.BrowserType
-import com.microsoft.playwright.Page
-import com.microsoft.playwright.Playwright
+import com.microsoft.playwright.*
 import fr.shikkanime.entities.enums.CountryCode
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -136,10 +132,13 @@ class HttpRequest(
 
     companion object {
         fun <T> retry(times: Int, delay: Long = 500, operation: suspend () -> T): T {
+            var lastException: Exception? = null
+
             repeat(times) { attempt ->
                 try {
                     return runBlocking { operation() }
                 } catch (e: Exception) {
+                    lastException = e
                     logger.warning("Attempt $attempt failed: ${e.message}")
 
                     if (attempt < times - 1) {
@@ -149,7 +148,7 @@ class HttpRequest(
                 }
             }
 
-            throw Exception("Failed after $times attempts")
+            throw (lastException ?: Exception("Failed after $times attempts"))
         }
     }
 }
