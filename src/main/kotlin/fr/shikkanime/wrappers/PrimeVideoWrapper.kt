@@ -11,6 +11,8 @@ object PrimeVideoWrapper {
 
     fun getShowVideos(countryCode: CountryCode, locale: String, id: String): List<JsonObject> {
         val document = HttpRequest(countryCode).use { it.getBrowser("$BASE_URL/-/${countryCode.name.lowercase()}/detail/$id?language=$locale") }
+        val showName = document.selectFirst("h1[data-automation-id=\"title\"]")?.text() ?: document.selectFirst("img.ljcPsM")?.attr("alt") ?: throw Exception("Show name not found")
+        require(showName.isNotBlank()) { "Show name not found" }
         val domEpisodes = document.selectFirst("ol.SIGk7D")?.select("li.c5qQpO") ?: return emptyList()
 
         return domEpisodes.mapNotNull { domEpisode ->
@@ -20,7 +22,7 @@ object PrimeVideoWrapper {
 
             JsonObject().apply {
                 add("show", JsonObject().apply {
-                    addProperty("name", document.selectFirst("h1[data-automation-id=\"title\"]")!!.text())
+                    addProperty("name", showName)
                     addProperty("banner", document.selectFirst("img[data-testid=\"base-image\"]")!!.attr("src"))
                     addProperty("description", document.selectFirst(".dv-dp-node-synopsis")!!.text().normalize())
                 })
