@@ -19,6 +19,7 @@ import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.PrimeVideoCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 
@@ -137,6 +138,7 @@ class UpdateAnimeJob : AbstractJob {
                 Platform.ANIM -> list.add(it.platform to fetchADNAnime(it))
                 Platform.CRUN -> list.add(it.platform to fetchCrunchyrollAnime(it))
                 Platform.NETF -> list.add(it.platform to fetchNetflixAnime(it))
+                Platform.PRIM -> list.add(it.platform to fetchPrimeVideoAnime(it))
                 else -> logger.warning("Platform ${it.platform} not supported")
             }
         }
@@ -145,14 +147,14 @@ class UpdateAnimeJob : AbstractJob {
     }
 
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform) = AnimationDigitalNetworkCachedWrapper.getShow(animePlatform.platformId!!.toInt())
-        .let {
+        .let { show ->
             val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(animePlatform.platformId!!.toInt())
 
             UpdatableAnime(
                 lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
-                image = it.image2x,
-                banner = it.imageHorizontal2x,
-                description = it.summary,
+                image = show.image2x,
+                banner = show.imageHorizontal2x,
+                description = show.summary,
                 episodeSize = showVideos.size
             )
         }
@@ -197,6 +199,28 @@ class UpdateAnimeJob : AbstractJob {
 
         if (episodes.isNullOrEmpty())
             throw Exception("No episode found for Netflix anime ${animePlatform.anime!!.name}")
+
+        val show = episodes.first().show
+
+        return UpdatableAnime(
+            lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
+            image = animePlatform.anime!!.image!!,
+            banner = show.banner,
+            description = show.description,
+            episodeSize = episodes.size
+        )
+    }
+
+    private fun fetchPrimeVideoAnime(animePlatform: AnimePlatform): UpdatableAnime {
+        val episodes = runCatching {
+            PrimeVideoCachedWrapper.getShowVideos(
+                animePlatform.anime!!.countryCode!!,
+                animePlatform.platformId!!
+            )
+        }.getOrNull()
+
+        if (episodes.isNullOrEmpty())
+            throw Exception("No episode found for Prime Video anime ${animePlatform.anime!!.name}")
 
         val show = episodes.first().show
 

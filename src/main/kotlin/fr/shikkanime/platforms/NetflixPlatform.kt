@@ -25,9 +25,8 @@ class NetflixPlatform :
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode>? {
-        val id = key.netflixSimulcast.name
         val releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z")
-        val episodes = NetflixWrapper.getShowVideos(key.countryCode, id, key.netflixSimulcast.seasonName, key.netflixSimulcast.season) ?: return null
+        val episodes = NetflixWrapper.getShowVideos(key.countryCode,  key.netflixSimulcast.name, key.netflixSimulcast.seasonName, key.netflixSimulcast.season) ?: return null
 
         return key.netflixSimulcast.audioLocales.flatMap { audioLocale ->
             episodes.map {

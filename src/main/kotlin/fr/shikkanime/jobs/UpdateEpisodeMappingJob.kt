@@ -12,6 +12,7 @@ import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.platforms.NetflixPlatform
+import fr.shikkanime.platforms.PrimeVideoPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
@@ -23,13 +24,14 @@ import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.PrimeVideoCachedWrapper
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.NETF)
+    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.NETF, Platform.PRIM)
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -54,6 +56,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     @Inject
     private lateinit var netflixPlatform: NetflixPlatform
+
+    @Inject
+    private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
     @Inject
     private lateinit var traceActionService: TraceActionService
@@ -385,6 +390,23 @@ class UpdateEpisodeMappingJob : AbstractJob {
                             ZonedDateTime.now(),
                             episodeMapping.episodeType!!,
                             episodeVariant.audioLocale!!,
+                        )
+                    }?.find { it.getIdentifier() == episodeVariant.identifier }
+                        ?.also { episodes.add(it) }
+                }
+            }
+
+            Platform.PRIM -> {
+                runCatching {
+                    val showId = primeVideoPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
+                    val primeVideoEpisodes = PrimeVideoCachedWrapper.getShowVideos(countryCode, showId)
+
+                    primeVideoEpisodes?.map { episode ->
+                        primeVideoPlatform.convertEpisode(
+                            countryCode,
+                            episodeMapping.anime!!.image!!,
+                            episode,
+                            ZonedDateTime.now(),
                         )
                     }?.find { it.getIdentifier() == episodeVariant.identifier }
                         ?.also { episodes.add(it) }

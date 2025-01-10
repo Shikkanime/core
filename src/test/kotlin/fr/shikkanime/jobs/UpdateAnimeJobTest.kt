@@ -325,4 +325,32 @@ class UpdateAnimeJobTest : AbstractTest() {
             anime.description
         )
     }
+
+    @Test
+    fun `run Ninja Kamui multiple platforms`() {
+        val zonedDateTime = ZonedDateTime.parse("2024-02-11T15:00:00Z")
+
+        val tmpAnime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                name = "Ninja Kamui",
+                slug = "ninja-kamui",
+                image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
+                banner = "https://m.media-amazon.com/images/S/pv-target-images/3c8f2a486dc00aab40c25ffc6cf4445f2e9ea295682fade1ce466a5c22e4feba._SX1080_FMjpg_.jpg",
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.PRIM,
+                platformId = "0QN9ZXJ935YBTNK8U9FV5OAX5B"
+            )
+        )
+
+        updateAnimeJob.run()
+    }
 }

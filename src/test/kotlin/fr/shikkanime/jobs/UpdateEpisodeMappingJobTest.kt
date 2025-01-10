@@ -783,4 +783,56 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val variants = episodeVariantService.findAll()
         assertEquals(1, variants.size)
     }
+
+    @Test
+    fun `run update with prime video platform`() {
+        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+
+        val anime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                name = "Ninja Kamui",
+                slug = "ninja-kamui",
+                image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
+                banner = "https://m.media-amazon.com/images/S/pv-target-images/3c8f2a486dc00aab40c25ffc6cf4445f2e9ea295682fade1ce466a5c22e4feba._SX1080_FMjpg_.jpg",
+            )
+        )
+
+        val episodeMapping = episodeMappingService.save(
+            EpisodeMapping(
+                anime = anime,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                number = 10,
+                image = "https://m.media-amazon.com/images/S/pv-target-images/e2a2062260d7f35cc714079ae69ca846ca9e28364f9f1fcd92411e8d60b36315._AC_SX1920_FMjpg_.jpg"
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                releaseDateTime = zonedDateTime,
+                platform = Platform.PRIM,
+                audioLocale = "ja-JP",
+                identifier = "FR-PRIM-0bdc4c77-JA-JP",
+                url = "https://www.primevideo.com/-/fr/detail/0QN9ZXJ935YBTNK8U9FV5OAX5B"
+            )
+        )
+
+        MapCache.invalidateAll()
+
+        updateEpisodeMappingJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        val variants = episodeVariantService.findAll()
+        assertEquals(1, variants.size)
+    }
 }

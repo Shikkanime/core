@@ -28,8 +28,9 @@ class PrimeVideoPlatformTest : AbstractTest() {
         })
         val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }
 
-        assumeTrue(episodes.isNotEmpty())
-        assumeTrue(episodes.size == 13)
+        assertNotNull(episodes)
+        assumeTrue(episodes!!.isNotEmpty())
+        assertEquals(13, episodes.size)
 
         episodes.forEach {
             assertEquals("Ninja Kamui", it.anime)
@@ -53,7 +54,8 @@ class PrimeVideoPlatformTest : AbstractTest() {
         })
         val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }
 
-        assumeTrue(episodes.isNotEmpty())
+        assertNotNull(episodes)
+        assumeTrue(episodes!!.isNotEmpty())
 
         episodes.forEach {
             assertEquals("Übel Blatt", it.anime)
@@ -71,13 +73,14 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
             1,
             "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-            "16:01:00"
+            "15:31:00"
         ).apply {
             name = "0QA3P8T387P0WAV0KXUYBWDDYR"
         })
         val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }
 
-        assumeTrue(episodes.isNotEmpty())
+        assertNotNull(episodes)
+        assumeTrue(episodes!!.isNotEmpty())
 
         episodes.forEach {
             assertEquals("Magilumière Co. Ltd.", it.anime)
