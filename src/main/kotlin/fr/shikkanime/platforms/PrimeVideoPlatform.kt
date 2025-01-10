@@ -1,21 +1,21 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
-import fr.shikkanime.utils.ObjectParser.getAsInt
-import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.isEqualOrAfter
 import fr.shikkanime.utils.withUTC
-import fr.shikkanime.wrappers.PrimeVideoWrapper
+import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
+import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class PrimeVideoPlatform :
-    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
+    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>?>() {
     override fun getPlatform(): Platform = Platform.PRIM
 
     override fun getConfigurationClass() = PrimeVideoConfiguration::class.java
@@ -23,33 +23,16 @@ class PrimeVideoPlatform :
     override suspend fun fetchApiContent(
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ): List<Episode> {
-        val id = key.primeVideoSimulcast.name
-        val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode, key.countryCode.locale, id)
+    ): List<Episode>? {
+        val releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.primeVideoSimulcast.releaseTime}Z")
+        val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode, key.primeVideoSimulcast.name) ?: return null
 
         return episodes.map {
-            Episode(
-                countryCode = key.countryCode,
-                animeId = id,
-                anime = requireNotNull(it.getAsJsonObject("show").getAsString("name")) { "Name is null" },
-                animeImage = key.primeVideoSimulcast.image,
-                animeBanner = requireNotNull(it.getAsJsonObject("show").getAsString("banner")) { "Banner is null" },
-                animeDescription = it.getAsJsonObject("show").getAsString("description"),
-                releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.primeVideoSimulcast.releaseTime}Z"),
-                episodeType = EpisodeType.EPISODE,
-                seasonId = it.getAsInt("season")!!.toString(),
-                season = it.getAsInt("season")!!,
-                number = it.getAsInt("number")!!,
-                duration = it.getAsInt("duration")?.toLong() ?: -1,
-                title = it.getAsString("title"),
-                description = it.getAsString("description"),
-                image = requireNotNull(it.getAsString("image")) { "Image is null" },
-                platform = getPlatform(),
-                audioLocale = "ja-JP",
-                id = requireNotNull(it.getAsString("id")) { "Id is null" },
-                url = requireNotNull(it.getAsString("url")) { "Url is null" },
-                uncensored = false,
-                original = true,
+            convertEpisode(
+                key.countryCode,
+                key.primeVideoSimulcast.image,
+                it,
+                releaseDateTime
             )
         }
     }
@@ -63,12 +46,43 @@ class PrimeVideoPlatform :
                     .isEqualOrAfter(LocalTime.parse(it.releaseTime))
             }
                 .forEach { simulcast ->
-                    val api =
-                        getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
-                    list.addAll(api)
+                    getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
+                        ?.let { list.addAll(it) }
                 }
         }
 
         return list
     }
+
+    fun getShowId(url: String) =
+        "https://www\\.primevideo\\.com/-/[a-z]{2}/detail/([A-Z0-9]{26})".toRegex().find(url)?.groupValues?.get(1)
+
+    fun convertEpisode(
+        countryCode: CountryCode,
+        showImage: String,
+        episode: AbstractPrimeVideoWrapper.Episode,
+        zonedDateTime: ZonedDateTime,
+    ) = Episode(
+        countryCode = countryCode,
+        animeId = episode.show.id,
+        anime = episode.show.name,
+        animeImage = showImage,
+        animeBanner = episode.show.banner,
+        animeDescription = episode.show.description,
+        releaseDateTime = zonedDateTime,
+        episodeType = EpisodeType.EPISODE,
+        seasonId = episode.season.toString(),
+        season = episode.season,
+        number = episode.number,
+        duration = episode.duration,
+        title = episode.title,
+        description = episode.description,
+        image = episode.image,
+        platform = getPlatform(),
+        audioLocale = "ja-JP",
+        id = episode.id,
+        url = episode.url,
+        uncensored = false,
+        original = true,
+    )
 }

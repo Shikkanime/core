@@ -7,15 +7,13 @@ import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 
 object NetflixWrapper : AbstractNetflixWrapper(){
     override fun getShowVideos(countryCode: CountryCode, showId: String, seasonName: String, season: Int): List<Episode>? {
-        val document = loadContent(showId, countryCode) ?: return null
+        val document = loadContent(countryCode, showId) ?: return null
         val seasonsOption = document.select("#season-selector-container").select("option")
         val seasons = document.select(".season")
 
         // Group episodes by season
         val episodesBySeason = seasons.mapIndexed { index, seasonElement ->
-            val seasonName = seasonsOption.getOrNull(index)?.text()
-            val seasonEpisodes = seasonElement.select("li.episode")
-            seasonName to seasonEpisodes
+            seasonsOption.getOrNull(index)?.text() to seasonElement.select("li.episode")
         }.toMap()
 
         var useAllSeasons = false

@@ -26,7 +26,7 @@ abstract class AbstractNetflixWrapper {
 
     private val maxRetry = 3
 
-    internal fun loadContent(showId: String, countryCode: CountryCode, i: Int = 1): Document? {
+    internal fun loadContent(countryCode: CountryCode, showId: String, i: Int = 1): Document? {
         if (i >= maxRetry) {
             return null
         }
@@ -37,12 +37,12 @@ abstract class AbstractNetflixWrapper {
         ).use { it.getBrowser("$BASE_URL${countryCode.name.lowercase()}/title/$showId") }
 
         if (checkLanguage && document.getElementsByTag("html").attr("lang") != countryCode.name.lowercase()) {
-            return loadContent(showId, countryCode, i + 1)
+            return loadContent(countryCode, showId, i + 1)
         }
 
         // Is new design?
         if (document.selectXpath("//*[@id=\"appMountPoint\"]/div/div[2]/div/header").isNotEmpty()) {
-            return loadContent(showId, countryCode, i + 1)
+            return loadContent(countryCode, showId, i + 1)
         }
 
         return document
