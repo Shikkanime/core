@@ -178,6 +178,11 @@ object BskyWrapper {
         .results()
         .toList()
 
+    private fun countAccent(text: String): List<MatchResult> = Pattern.compile("[À-ÖØ-öø-ÿ]+")
+        .matcher(text)
+        .results()
+        .toList()
+
     private fun getFacets(text: String): Pair<String, List<Facet>> {
         var tmpText = text
 
@@ -188,23 +193,21 @@ object BskyWrapper {
                     link.startsWith("http") -> {
                         val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "").trim()
                         tmpText = tmpText.replace(link, beautifulLink)
+                        val substringEmojiCount = countEmoji(tmpText.substringBeforeLast(link)).sumOf { it.group().length }
+                        val substringAccentCount = countAccent(tmpText.substringBefore(link)).sumOf { it.group().length }
 
-                        val emojiCount = countEmoji(tmpText.substringBeforeLast(beautifulLink))
-                        val added =
-                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it.group().length } + emojiCount.size else 0
-
-                        val start = tmpText.indexOf(beautifulLink) + added
+                        val start = tmpText.indexOf(beautifulLink) + substringEmojiCount + substringAccentCount
                         val end = start + beautifulLink.length
                         Facet(start, end, link, FacetType.LINK)
                     }
 
                     link.startsWith("#") -> {
-                        val emojiCount = countEmoji(tmpText.substringBeforeLast(link))
-                        val added =
-                            if (emojiCount.isNotEmpty()) emojiCount.sumOf { it.group().length } + emojiCount.size else 1
+                        val substringEmojiCount = countEmoji(tmpText.substringBeforeLast(link)).sumOf { it.group().length }
+                        val substringAccentCount = countAccent(tmpText.substringBefore(link)).sumOf { it.group().length }
 
-                        val start = tmpText.indexOf(link) + added
-                        val end = start + link.length
+                        val accentCount = countAccent(link).sumOf { it.group().length }
+                        val start = tmpText.indexOf(link) + substringEmojiCount + substringAccentCount
+                        val end = start + link.length + accentCount
                         Facet(start, end, link.substring(1), FacetType.HASHTAG)
                     }
 
@@ -214,5 +217,4 @@ object BskyWrapper {
 
         return tmpText to facets
     }
-
 }
