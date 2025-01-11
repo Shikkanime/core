@@ -28,9 +28,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField
 import java.util.*
-import kotlin.collections.zipWithNext
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
@@ -106,8 +104,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         startOfWeekDay: LocalDate
     ): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
-        val dateFormatter = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
-        val currentWeek = startOfWeekDay[ChronoField.ALIGNED_WEEK_OF_YEAR]
+        val dayCountryPattern = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
+        val endOfWeekDay = startOfWeekDay.atEndOfWeek()
+        val weekRange = startOfWeekDay..endOfWeekDay
 
         val variantReleaseDtos =
             episodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocale(
@@ -117,28 +116,27 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 zoneId
             )
 
-        val releases = processReleases(variantReleaseDtos, zoneId, startOfWeekDay, startOfWeekDay.atEndOfWeek()).let { releases ->
-            releases.filterNot { hasCurrentWeekRelease(it, releases, currentWeek) }
+        val releases = processReleases(variantReleaseDtos, zoneId, weekRange).let { releases ->
+            releases.filterNot { hasCurrentWeekRelease(it, releases, weekRange) }
         }
 
-        return groupAndSortReleases(startOfWeekDay, releases, zoneId, dateFormatter)
+        return groupAndSortReleases(startOfWeekDay, releases, zoneId, dayCountryPattern)
     }
 
     private fun processReleases(
         variantReleaseDtos: List<VariantReleaseDto>,
         zoneId: ZoneId,
-        startOfWeekDay: LocalDate,
-        endOfWeekDay: LocalDate
+        weekRange: ClosedRange<LocalDate>
     ): List<WeeklyAnimeDto> {
-        val isCurrentWeek: (VariantReleaseDto) -> Boolean = { variantReleaseDto ->
-            variantReleaseDto.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in startOfWeekDay..endOfWeekDay
-        }
+        val isCurrentWeek: (VariantReleaseDto) -> Boolean = { it.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in weekRange }
+        val dayPattern = DateTimeFormatter.ofPattern("EEEE")
+        val hourPattern = DateTimeFormatter.ofPattern("HH")
 
         return variantReleaseDtos.groupBy { variantReleaseDto ->
-            variantReleaseDto.releaseDateTime.format(DateTimeFormatter.ofPattern("EEEE")) to variantReleaseDto.anime
+            variantReleaseDto.releaseDateTime.format(dayPattern) to variantReleaseDto.anime
         }.flatMap { (pair, values) ->
             values.groupBy { variantReleaseDto ->
-                variantReleaseDto.releaseDateTime.format(DateTimeFormatter.ofPattern("HH"))
+                variantReleaseDto.releaseDateTime.format(hourPattern)
             }.flatMap { (_, hourValues) ->
                 val filter = hourValues.filter(isCurrentWeek)
                 createWeeklyAnimeDtos(filter, hourValues, pair)
@@ -208,20 +206,20 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     private fun hasCurrentWeekRelease(
         weeklyAnimeDto: WeeklyAnimeDto,
         releases: Collection<WeeklyAnimeDto>,
-        currentWeek: Int
+        weekRange: ClosedRange<LocalDate>
     ): Boolean {
         val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.releaseDateTime).withUTC()
         val toLocalTime = withZoneSameInstant.toLocalTime()
         val closedRange = toLocalTime.minusHours(1)..toLocalTime.plusHours(1)
 
-        if (withZoneSameInstant[ChronoField.ALIGNED_WEEK_OF_YEAR] == currentWeek) {
+        if (withZoneSameInstant.toLocalDate() in weekRange) {
             return false
         }
 
         return releases.associateWith { ZonedDateTime.parse(it.releaseDateTime).withUTC() }
             .filter { (it, releaseDateTime) ->
                 it != weeklyAnimeDto &&
-                        releaseDateTime[ChronoField.ALIGNED_WEEK_OF_YEAR] == currentWeek &&
+                        releaseDateTime.toLocalDate() in weekRange &&
                         releaseDateTime.dayOfWeek == withZoneSameInstant.dayOfWeek &&
                         it.anime.uuid == weeklyAnimeDto.anime.uuid &&
                         it.langTypes == weeklyAnimeDto.langTypes
@@ -317,13 +315,17 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             }
 
         return PageableDto(
-            data = invalidAnimes.map { (anime, pair) ->
+            data = invalidAnimes.asSequence()
+                .map { (anime, pair) ->
                 AnimeAlertDto(
                     AbstractConverter.convert(anime, AnimeDto::class.java),
                     pair.first.withUTCString(),
                     pair.second
                 )
-            }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }.drop((page - 1) * limit).take(limit).toSet(),
+            }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }
+                .drop((page - 1) * limit)
+                .take(limit)
+                .toSet(),
             page = page,
             limit = limit,
             total = invalidAnimes.size.toLong()
