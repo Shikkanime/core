@@ -40,7 +40,7 @@ object NetflixWrapper : AbstractNetflixWrapper(){
                 episodeNumber,
                 episodeTitleAndNumber?.substringAfter(".").normalize(),
                 episode.selectFirst(".epsiode-synopsis")?.text(),
-                "$BASE_URL/${countryCode.name.lowercase()}/title/$showId",
+                "$BASE_URL${countryCode.name.lowercase()}/title/$showId",
                 episode.selectFirst(".episode-thumbnail-image")!!.attr("src").substringBefore("?"),
                 episode.selectFirst(".episode-runtime")?.text()?.substringBefore(" ")?.trim()?.toLongOrNull()?.times(60) ?: -1
             )
