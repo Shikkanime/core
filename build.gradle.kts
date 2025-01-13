@@ -1,6 +1,6 @@
 val ktorVersion = "3.0.3"
 val ktorSwaggerUiVersion = "4.0.0"
-val schemaKenerator = "1.6.2"
+val schemaKenerator = "1.6.3"
 val hibernateCoreVersion = "6.6.4.Final"
 val ehcacheVersion = "3.10.8"
 val hibernateSearchVersion = "7.2.2.Final"
