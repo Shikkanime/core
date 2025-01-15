@@ -43,7 +43,7 @@ class AnimeControllerTest : AbstractControllerTest() {
                 assertEquals(anime.uuid, followedAnimesUUID.first())
             }
 
-            client.get("/api/v2/animes/weekly?date=2024-01-01") {
+            client.get("/api/v1/animes/weekly?date=2024-01-01") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
@@ -54,7 +54,7 @@ class AnimeControllerTest : AbstractControllerTest() {
                 assertTrue(weeklyAnimesDto.all { !it.anime.seasons.isNullOrEmpty() })
             }
 
-            client.get("/api/v2/animes/weekly?date=2024-01-01") {
+            client.get("/api/v1/animes/weekly?date=2024-01-01") {
                 header(HttpHeaders.Authorization, "Bearer $token")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }.apply {
