@@ -74,12 +74,8 @@
                                                 </#list>
                                             </div>
 
-                                            <#if isReleased>
-                                                <#assign totalDuration = 0>
-                                                <#list release.mappings as mapping>
-                                                    <#assign totalDuration = totalDuration + mapping.duration>
-                                                </#list>
-                                                <@durationComponent.display duration=totalDuration />
+                                            <#if isReleased && !isMultipleReleased>
+                                                <@durationComponent.display duration=release.mappings?first.duration />
                                             </#if>
                                         </div>
 
