@@ -44,7 +44,7 @@ fun main(args: Array<String>) {
         // Every 20 seconds
         JobManager.scheduleJob("*/20 * * * * ?", FetchEpisodesJob::class.java)
         // Every 10 minutes
-        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java)
+        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java, UpdateImageJob::class.java)
         // Every hour
         JobManager.scheduleJob("0 0 * * * ?", SavingImageCacheJob::class.java, UpdateAnimeJob::class.java)
         // Every day at midnight

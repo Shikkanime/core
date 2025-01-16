@@ -4,7 +4,10 @@ import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import java.io.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.Serializable
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,7 +29,10 @@ object ImageService {
         val url: String? = null,
         var bytes: ByteArray = byteArrayOf(),
         var originalSize: Long = 0,
+        var width: Int? = null,
+        var height: Int? = null,
         var size: Long = 0,
+        var lastUpdateDateTime: Long? = null
     ) : Serializable {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -40,6 +46,7 @@ object ImageService {
             if (!bytes.contentEquals(other.bytes)) return false
             if (originalSize != other.originalSize) return false
             if (size != other.size) return false
+            if (lastUpdateDateTime != other.lastUpdateDateTime) return false
 
             return true
         }
@@ -51,7 +58,12 @@ object ImageService {
             result = 31 * result + bytes.contentHashCode()
             result = 31 * result + originalSize.hashCode()
             result = 31 * result + size.hashCode()
+            result = 31 * result + (lastUpdateDateTime?.hashCode() ?: 0)
             return result
+        }
+
+        companion object {
+            const val serialVersionUID: Long = 7637105310009708039
         }
     }
 
@@ -265,8 +277,11 @@ object ImageService {
                 }
 
                 image.bytes = webp
+                image.width = width
+                image.height = height
                 image.originalSize = bytes.size.toLong()
                 image.size = webp.size.toLong()
+                image.lastUpdateDateTime = System.currentTimeMillis()
 
                 cache[uuid.toString() to type] = image
                 change.set(true)
@@ -312,7 +327,7 @@ object ImageService {
         addAll(true)
     }
 
-    private fun removeUnusedImages() {
+    fun removeUnusedImages() {
         Constant.injector.getInstance(Database::class.java).entityManager.use {
             val query = it.createNativeQuery(
                 """
