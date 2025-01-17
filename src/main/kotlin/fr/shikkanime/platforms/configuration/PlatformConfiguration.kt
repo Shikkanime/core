@@ -38,7 +38,6 @@ open class PlatformSimulcast(
 
         if (uuid != other.uuid) return false
         if (name != other.name) return false
-        if (lastUsageDateTime != other.lastUsageDateTime) return false
 
         return true
     }
@@ -46,7 +45,6 @@ open class PlatformSimulcast(
     override fun hashCode(): Int {
         var result = uuid?.hashCode() ?: 0
         result = 31 * result + name.hashCode()
-        result = 31 * result + (lastUsageDateTime?.hashCode() ?: 0)
         return result
     }
 }
