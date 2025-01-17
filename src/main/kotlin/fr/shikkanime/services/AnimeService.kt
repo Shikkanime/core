@@ -120,14 +120,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             releases.filterNot { hasCurrentWeekRelease(it, releases, weekRange) }
         }
 
-        return groupAndSortReleases(startOfWeekDay, releases, zoneId, dayCountryPattern)
+        return groupAndSortReleases(startOfWeekDay, releases.map { it.first }, zoneId, dayCountryPattern)
     }
 
     private fun processReleases(
         variantReleaseDtos: List<VariantReleaseDto>,
         zoneId: ZoneId,
         weekRange: ClosedRange<LocalDate>
-    ): List<WeeklyAnimeDto> {
+    ): List<Pair<WeeklyAnimeDto, Int>> {
         val isCurrentWeek: (VariantReleaseDto) -> Boolean = { it.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in weekRange }
         val dayPattern = DateTimeFormatter.ofPattern("EEEE")
         val hourPattern = DateTimeFormatter.ofPattern("HH")
@@ -148,7 +148,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         filter: List<VariantReleaseDto>,
         hourValues: List<VariantReleaseDto>,
         pair: Pair<String, Anime>
-    ): List<WeeklyAnimeDto> {
+    ): List<Pair<WeeklyAnimeDto, Int>> {
         val mappings = filter.asSequence()
             .map { it.episodeMapping }
             .distinctBy { it.uuid }
@@ -168,7 +168,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         pair: Pair<String, Anime>,
         episodeType: EpisodeType?,
         episodeMappings: Set<EpisodeMapping>
-    ): WeeklyAnimeDto {
+    ): Pair<WeeklyAnimeDto, Int> {
         val platforms = filter.map { it.platform }.ifEmpty { hourValues.map { it.platform } }.sortedBy { it.name }.toSet()
         val releaseDateTime = filter.minOfOrNull { it.releaseDateTime } ?: hourValues.minOf { it.releaseDateTime }
         val langTypes = filter.map {
@@ -200,15 +200,15 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 episodeMappings.takeIf { it.isNotEmpty() },
                 EpisodeMappingWithoutAnimeDto::class.java
             )
-        )
+        ) to filter.ifEmpty { hourValues }.distinctBy { it.episodeMapping.uuid }.size
     }
 
     private fun hasCurrentWeekRelease(
-        weeklyAnimeDto: WeeklyAnimeDto,
-        releases: Collection<WeeklyAnimeDto>,
+        weeklyAnimeDto: Pair<WeeklyAnimeDto, Int>,
+        releases: Collection<Pair<WeeklyAnimeDto, Int>>,
         weekRange: ClosedRange<LocalDate>
     ): Boolean {
-        val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.releaseDateTime).withUTC()
+        val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.first.releaseDateTime).withUTC()
         val toLocalTime = withZoneSameInstant.toLocalTime()
         val closedRange = toLocalTime.minusHours(1)..toLocalTime.plusHours(1)
 
@@ -216,13 +216,17 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             return false
         }
 
-        return releases.associateWith { ZonedDateTime.parse(it.releaseDateTime).withUTC() }
+        if (weeklyAnimeDto.second > 5) {
+            return true
+        }
+
+        return releases.associateWith { ZonedDateTime.parse(it.first.releaseDateTime).withUTC() }
             .filter { (it, releaseDateTime) ->
                 it != weeklyAnimeDto &&
                         releaseDateTime.toLocalDate() in weekRange &&
                         releaseDateTime.dayOfWeek == withZoneSameInstant.dayOfWeek &&
-                        it.anime.uuid == weeklyAnimeDto.anime.uuid &&
-                        it.langTypes == weeklyAnimeDto.langTypes
+                        it.first.anime.uuid == weeklyAnimeDto.first.anime.uuid &&
+                        it.first.langTypes == weeklyAnimeDto.first.langTypes
             }
             .any { it.value.toLocalTime() in closedRange }
     }
