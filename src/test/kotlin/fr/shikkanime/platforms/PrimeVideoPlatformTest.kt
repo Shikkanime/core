@@ -90,4 +90,33 @@ class PrimeVideoPlatformTest : AbstractTest() {
             assertFalse(it.getIdentifier().contains("https://"))
         }
     }
+
+    @Test
+    fun `fix bug on getApiContent`() {
+        val zonedDateTime = ZonedDateTime.parse("2024-04-22T18:15:00Z")
+
+        val primeVideoSimulcast = PrimeVideoConfiguration.PrimeVideoSimulcast(
+            zonedDateTime.dayOfWeek.value,
+            "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
+            "15:31:00"
+        ).apply {
+            name = "0QA3P8T387P0WAV0KXUYBWDDYR"
+        }
+
+        primeVideoPlatform.configuration!!.availableCountries = setOf(CountryCode.FR)
+        primeVideoPlatform.configuration!!.addPlatformSimulcast(primeVideoSimulcast)
+        primeVideoPlatform.configuration!!.apiCheckDelayInMinutes = 5
+        primeVideoPlatform.saveConfiguration()
+
+        runBlocking { primeVideoPlatform.fetchEpisodes(zonedDateTime, null) }
+        primeVideoPlatform.updateAnimeSimulcastConfiguration(primeVideoSimulcast.name)
+        assertEquals(1, primeVideoPlatform.apiCache.size)
+
+        runBlocking { primeVideoPlatform.fetchEpisodes(zonedDateTime.plusMinutes(5), null) }
+        primeVideoPlatform.updateAnimeSimulcastConfiguration("test")
+        assertEquals(1, primeVideoPlatform.apiCache.size)
+
+        runBlocking { primeVideoPlatform.fetchEpisodes(zonedDateTime.plusMinutes(5).plusSeconds(20), null) }
+        assertEquals(1, primeVideoPlatform.apiCache.size)
+    }
 }
