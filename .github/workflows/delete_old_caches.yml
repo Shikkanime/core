@@ -2,10 +2,7 @@ name: Delete old caches
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  delete:
-    branches-ignore:
-      - master
+    - cron: '0 8 * * 1'  # Runs every Monday at 8:00 AM
 
 permissions:
   actions: write
@@ -24,14 +21,18 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
             })
+            let i = 0
             for (const cache of caches.data.actions_caches) {
               console.log(cache)
-              if (cache.ref != 'refs/heads/master') {
+              if (cache.ref != 'refs/heads/master' || (i > 0 && cache.name.includes('setup-java'))) {
                 github.rest.actions.deleteActionsCacheById({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   cache_id: cache.id,
                 })
+              }
+              if (cache.name.includes('setup-java')) {
+                i++
               }
             }
             console.log("Clear completed")
