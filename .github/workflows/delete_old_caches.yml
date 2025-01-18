@@ -3,6 +3,7 @@ name: Delete old caches
 on:
   schedule:
     - cron: '0 8 * * 1'  # Runs every Monday at 8:00 AM
+  workflow_dispatch:
 
 permissions:
   actions: write
