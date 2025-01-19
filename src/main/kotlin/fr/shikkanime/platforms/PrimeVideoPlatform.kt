@@ -5,14 +5,10 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import java.io.File
-import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 class PrimeVideoPlatform :
     AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>?>() {
@@ -24,7 +20,6 @@ class PrimeVideoPlatform :
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode>? {
-        val releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.primeVideoSimulcast.releaseTime}Z")
         val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode, key.primeVideoSimulcast.name) ?: return null
 
         return episodes.map {
@@ -32,7 +27,7 @@ class PrimeVideoPlatform :
                 key.countryCode,
                 key.primeVideoSimulcast.image,
                 it,
-                releaseDateTime
+                zonedDateTime
             )
         }
     }
@@ -41,10 +36,7 @@ class PrimeVideoPlatform :
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter {
-                it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
-                    .isEqualOrAfter(LocalTime.parse(it.releaseTime))
-            }
+            configuration!!.simulcasts.filter { it.releaseDay == zonedDateTime.dayOfWeek.value }
                 .forEach { simulcast ->
                     getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
                         ?.let { list.addAll(it) }

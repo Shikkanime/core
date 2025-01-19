@@ -5,12 +5,10 @@ import io.ktor.http.*
 class DisneyPlusConfiguration : PlatformConfiguration<DisneyPlusConfiguration.DisneyPlusSimulcast>() {
     data class DisneyPlusSimulcast(
         var releaseDay: Int = 1,
-        var releaseTime: String = "",
     ) : PlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["releaseDay"]?.let { releaseDay = it.toInt() }
-            parameters["releaseTime"]?.let { releaseTime = it }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
@@ -23,15 +21,6 @@ class DisneyPlusConfiguration : PlatformConfiguration<DisneyPlusConfiguration.Di
                     value = releaseDay
                 ),
             )
-            add(
-                ConfigurationField(
-                    label = "Release time",
-                    caption = "Format: HH:mm:ss (In UTC)",
-                    name = "releaseTime",
-                    type = "time",
-                    value = releaseTime
-                ),
-            )
         }
 
         override fun equals(other: Any?): Boolean {
@@ -40,7 +29,6 @@ class DisneyPlusConfiguration : PlatformConfiguration<DisneyPlusConfiguration.Di
             if (!super.equals(other)) return false
 
             if (releaseDay != other.releaseDay) return false
-            if (releaseTime != other.releaseTime) return false
 
             return true
         }
@@ -48,7 +36,6 @@ class DisneyPlusConfiguration : PlatformConfiguration<DisneyPlusConfiguration.Di
         override fun hashCode(): Int {
             var result = super.hashCode()
             result = 31 * result + releaseDay
-            result = 31 * result + releaseTime.hashCode()
             return result
         }
     }
