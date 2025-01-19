@@ -22,7 +22,6 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
             1,
             "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-            "16:01:00"
         ).apply {
             name = "0QN9ZXJ935YBTNK8U9FV5OAX5B"
         })
@@ -48,7 +47,6 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
             1,
             "https://cdn.myanimelist.net/images/anime/1850/144045l.jpg",
-            "16:31:00"
         ).apply {
             name = "0TRGLGKLJS99OYM9647IM6Y1N0"
         })
@@ -73,7 +71,6 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
             1,
             "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-            "15:31:00"
         ).apply {
             name = "0QA3P8T387P0WAV0KXUYBWDDYR"
         })
@@ -98,7 +95,6 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val primeVideoSimulcast = PrimeVideoConfiguration.PrimeVideoSimulcast(
             zonedDateTime.dayOfWeek.value,
             "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-            "15:31:00"
         ).apply {
             name = "0QA3P8T387P0WAV0KXUYBWDDYR"
         }

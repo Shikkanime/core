@@ -11,17 +11,17 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.DisneyPlusWrapper
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.Duration
-import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 
 class DisneyPlusPlatform :
@@ -87,34 +87,32 @@ class DisneyPlusPlatform :
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter {
-                it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
-                    .isEqualOrAfter(LocalTime.parse(it.releaseTime))
-            }.forEach { simulcast ->
-                val (animeDetails, episodes) = if (bypassFileContent != null && bypassFileContent.exists()) {
-                    getFileApiContent(
-                        bypassFileContent,
-                        simulcast
-                    )
-                } else {
-                    getApiContent(
-                        CountryCodeDisneyPlusSimulcastKeyCache(
-                            countryCode,
+            configuration!!.simulcasts.filter { it.releaseDay == zonedDateTime.dayOfWeek.value }
+                .forEach { simulcast ->
+                    val (animeDetails, episodes) = if (bypassFileContent != null && bypassFileContent.exists()) {
+                        getFileApiContent(
+                            bypassFileContent,
                             simulcast
-                        ), zonedDateTime
-                    )
-                }
+                        )
+                    } else {
+                        getApiContent(
+                            CountryCodeDisneyPlusSimulcastKeyCache(
+                                countryCode,
+                                simulcast
+                            ), zonedDateTime
+                        )
+                    }
 
-                episodes.forEach {
-                    try {
-                        list.add(convertEpisode(countryCode, simulcast, animeDetails, it, zonedDateTime))
-                    } catch (_: AnimeException) {
-                        // Ignore
-                    } catch (e: Exception) {
-                        logger.log(Level.SEVERE, "Error on converting episode", e)
+                    episodes.forEach {
+                        try {
+                            list.add(convertEpisode(countryCode, simulcast, animeDetails, it, zonedDateTime))
+                        } catch (_: AnimeException) {
+                            // Ignore
+                        } catch (e: Exception) {
+                            logger.log(Level.SEVERE, "Error on converting episode", e)
+                        }
                     }
                 }
-            }
         }
 
         return list
@@ -150,7 +148,7 @@ class DisneyPlusPlatform :
         val url = "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id"
         val imageId =
             visualsObject.getAsJsonObject("artwork")?.getAsJsonObject("standard")?.getAsJsonObject("thumbnail")
-            ?.getAsJsonObject("1.78")?.getAsString("imageId") ?: throw Exception("Image is null")
+                ?.getAsJsonObject("1.78")?.getAsString("imageId") ?: throw Exception("Image is null")
         val image = DisneyPlusWrapper.getImageUrl(imageId)
         var duration = visualsObject.getAsLong("durationMs", -1)
 
@@ -158,11 +156,7 @@ class DisneyPlusPlatform :
             duration /= 1000
         }
 
-        val description =
-            visualsObject.getAsJsonObject("description")?.getAsString("medium")
-        val releaseDateTimeUTC =
-            zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${simulcast.releaseTime}Z"
-        val releaseDateTime = ZonedDateTime.parse(releaseDateTimeUTC)
+        val description = visualsObject.getAsJsonObject("description")?.getAsString("medium")
 
         val computedId = EncryptionManager.toSHA512("$animeName-$season-$number").substring(0..<8)
 
@@ -179,7 +173,7 @@ class DisneyPlusPlatform :
             animeImage = animeImage,
             animeBanner = animeBanner,
             animeDescription = animeDescription.normalize(),
-            releaseDateTime = releaseDateTime,
+            releaseDateTime = zonedDateTime,
             episodeType = EpisodeType.EPISODE,
             seasonId = season.toString(),
             season = season,

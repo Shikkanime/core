@@ -7,14 +7,11 @@ open class ReleaseDayPlatformSimulcast(
     open var releaseDay: Int,
     @Transient
     open var image: String,
-    @Transient
-    open var releaseTime: String,
 ) : PlatformSimulcast() {
     override fun of(parameters: Parameters) {
         super.of(parameters)
         parameters["releaseDay"]?.let { releaseDay = it.toInt() }
         parameters["image"]?.let { image = it }
-        parameters["releaseTime"]?.let { releaseTime = it }
     }
 
     override fun toConfigurationFields() = super.toConfigurationFields().apply {
@@ -35,15 +32,6 @@ open class ReleaseDayPlatformSimulcast(
                 value = image
             ),
         )
-        add(
-            ConfigurationField(
-                label = "Release time",
-                caption = "Format: HH:mm:ss (In UTC)",
-                name = "releaseTime",
-                type = "time",
-                value = releaseTime
-            ),
-        )
     }
 
     override fun equals(other: Any?): Boolean {
@@ -53,7 +41,6 @@ open class ReleaseDayPlatformSimulcast(
 
         if (releaseDay != other.releaseDay) return false
         if (image != other.image) return false
-        if (releaseTime != other.releaseTime) return false
 
         return true
     }
@@ -62,7 +49,6 @@ open class ReleaseDayPlatformSimulcast(
         var result = super.hashCode()
         result = 31 * result + releaseDay
         result = 31 * result + image.hashCode()
-        result = 31 * result + releaseTime.hashCode()
         return result
     }
 }

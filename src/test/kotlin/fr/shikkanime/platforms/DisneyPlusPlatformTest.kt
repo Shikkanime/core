@@ -13,7 +13,7 @@ import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -51,7 +51,6 @@ class DisneyPlusPlatformTest : AbstractTest() {
         platform.configuration!!.simulcasts.add(
             DisneyPlusConfiguration.DisneyPlusSimulcast(
                 releaseDay = zonedDateTime.dayOfWeek.value,
-                releaseTime = "00:00:00"
             ).apply {
                 name = entityId
             }

@@ -4,8 +4,7 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
     data class PrimeVideoSimulcast(
         override var releaseDay: Int = 1,
         override var image: String = "",
-        override var releaseTime: String = "",
-    ) : ReleaseDayPlatformSimulcast(releaseDay, image, releaseTime) {
+    ) : ReleaseDayPlatformSimulcast(releaseDay, image) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is PrimeVideoSimulcast) return false
@@ -13,7 +12,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
 
             if (releaseDay != other.releaseDay) return false
             if (image != other.image) return false
-            if (releaseTime != other.releaseTime) return false
 
             return true
         }
@@ -22,7 +20,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
             var result = super.hashCode()
             result = 31 * result + releaseDay
             result = 31 * result + image.hashCode()
-            result = 31 * result + releaseTime.hashCode()
             return result
         }
     }

@@ -5,14 +5,10 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.utils.isEqualOrAfter
-import fr.shikkanime.utils.withUTC
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
-import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 class NetflixPlatform :
     AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>?>() {
@@ -25,7 +21,6 @@ class NetflixPlatform :
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode>? {
-        val releaseDateTime = ZonedDateTime.parse(zonedDateTime.withUTC().format(DateTimeFormatter.ISO_LOCAL_DATE) + "T${key.netflixSimulcast.releaseTime}Z")
         val episodes = NetflixWrapper.getShowVideos(key.countryCode,  key.netflixSimulcast.name, key.netflixSimulcast.seasonName, key.netflixSimulcast.season) ?: return null
 
         return key.netflixSimulcast.audioLocales.flatMap { audioLocale ->
@@ -34,7 +29,7 @@ class NetflixPlatform :
                     key.countryCode,
                     key.netflixSimulcast.image,
                     it,
-                    releaseDateTime,
+                    zonedDateTime,
                     key.netflixSimulcast.episodeType,
                     audioLocale
                 )
@@ -46,10 +41,7 @@ class NetflixPlatform :
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter {
-                it.releaseDay == zonedDateTime.dayOfWeek.value && zonedDateTime.toLocalTime()
-                    .isEqualOrAfter(LocalTime.parse(it.releaseTime))
-            }
+            configuration!!.simulcasts.filter { it.releaseDay == zonedDateTime.dayOfWeek.value }
                 .forEach { simulcast ->
                     getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
                         ?.let { list.addAll(it) }

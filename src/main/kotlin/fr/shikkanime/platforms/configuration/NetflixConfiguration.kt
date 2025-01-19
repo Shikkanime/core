@@ -7,12 +7,11 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
     data class NetflixSimulcastDay(
         override var releaseDay: Int = 1,
         override var image: String = "",
-        override var releaseTime: String = "",
         var seasonName: String = "",
         var season: Int = 1,
         var episodeType: EpisodeType = EpisodeType.EPISODE,
-        var audioLocales: MutableSet<String> = mutableSetOf<String>("ja-JP"),
-    ) : ReleaseDayPlatformSimulcast(releaseDay, image, releaseTime) {
+        var audioLocales: MutableSet<String> = mutableSetOf("ja-JP"),
+    ) : ReleaseDayPlatformSimulcast(releaseDay, image) {
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["seasonName"]?.let { seasonName = it }
