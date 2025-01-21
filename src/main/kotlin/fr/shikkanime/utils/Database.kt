@@ -85,4 +85,6 @@ class Database {
 
     val entityManager: EntityManager
         get() = sessionFactory.createEntityManager()
+
+    fun clearCache() = sessionFactory.cache.evictAllRegions()
 }

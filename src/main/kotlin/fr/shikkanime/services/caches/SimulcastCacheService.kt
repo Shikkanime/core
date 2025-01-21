@@ -7,24 +7,23 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
+import java.util.*
 
 class SimulcastCacheService : AbstractCacheService {
-    companion object {
-        private const val DEFAULT_ALL_KEY = "all"
-    }
-
     @Inject
     private lateinit var simulcastService: SimulcastService
 
-    private val cache = MapCache(
-        "SimulcastCacheService.cache",
+    fun findAll() = MapCache.getOrCompute(
+        "SimulcastCacheService.findAll",
         classes = listOf(Simulcast::class.java, Anime::class.java),
-        fn = { listOf(DEFAULT_ALL_KEY) }
-    ) {
-        simulcastService.findAllModified()
-    }
+        key = "all"
+    ) { AbstractConverter.convert(simulcastService.findAllModified(), SimulcastDto::class.java) }
 
-    fun findAll() = AbstractConverter.convert(cache[DEFAULT_ALL_KEY], SimulcastDto::class.java)
+    fun find(uuid: UUID) = MapCache.getOrCompute(
+        "SimulcastCacheService.find",
+        classes = listOf(Simulcast::class.java),
+        key = uuid
+    ) { simulcastService.find(uuid) }
 
     val currentSimulcast: SimulcastDto?
         get() = findAll()?.firstOrNull()

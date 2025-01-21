@@ -14,7 +14,6 @@ import fr.shikkanime.services.EmailService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.inject.Inject
 import java.io.ByteArrayOutputStream
@@ -36,9 +35,6 @@ class FetchEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
@@ -80,8 +76,8 @@ class FetchEpisodesJob : AbstractJob {
         lock = 0
 
         if (!isInitialized) {
-            identifiers.addAll(episodeVariantCacheService.findAllIdentifiers())
-            val variants = episodeVariantCacheService.findAll()
+            val variants = episodeVariantService.findAll()
+            identifiers.addAll(variants.map { it.identifier!! })
             Constant.abstractPlatforms.forEach { addHashCaches(it, variants) }
             variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
             isInitialized = true

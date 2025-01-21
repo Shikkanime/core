@@ -209,6 +209,48 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
+    fun findAllAudioLocales(): Map<UUID, Set<String>> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            query.distinct(true)
+                .multiselect(
+                    root[Anime_.uuid],
+                    root.join(Anime_.mappings).join(EpisodeMapping_.variants)[EpisodeVariant_.audioLocale]
+                )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .asSequence()
+                .groupBy({ tuple -> tuple[0] as UUID }, { tuple -> tuple[1] as String })
+                .mapValues { (_, locales) -> locales.toSet() }
+        }
+    }
+
+    fun findAllSeasons(): Map<UUID, Map<Int, ZonedDateTime>> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            val mappingJoin = root.join(Anime_.mappings)
+
+            query.multiselect(
+                root[Anime_.uuid],
+                mappingJoin[EpisodeMapping_.season],
+                cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
+            ).groupBy(root[Anime_.uuid], mappingJoin[EpisodeMapping_.season])
+                .orderBy(cb.asc(mappingJoin[EpisodeMapping_.season]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .asSequence()
+                .groupBy({ tuple -> tuple[0] as UUID }, { tuple -> tuple[1] as Int to tuple[2] as ZonedDateTime })
+                .mapValues { (_, seasons) -> seasons.toMap() }
+        }
+    }
+
     override fun find(uuid: UUID): Anime? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

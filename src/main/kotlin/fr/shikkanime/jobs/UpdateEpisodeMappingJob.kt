@@ -15,7 +15,6 @@ import fr.shikkanime.platforms.NetflixPlatform
 import fr.shikkanime.platforms.PrimeVideoPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
@@ -41,9 +40,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var languageCacheService: LanguageCacheService
@@ -89,7 +85,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
-        val identifiers = episodeVariantCacheService.findAllIdentifiers().toMutableSet()
+        val mappingUuids = episodeMappingService.findAllUuids()
+        val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -123,17 +120,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     needRefreshCache.set(true)
                 }
 
-            episodeVariantService.findAllByMapping(mapping)
-                .filter { episodeVariant -> episodeVariant.platform in availableUpdatePlatforms }
-                .forEach { episodeVariant ->
-                    if (episodes.none { it.getIdentifier() == episodeVariant.identifier }) {
-                        episodeVariantService.delete(episodeVariant)
-                        logger.info("Deleted episode ${episodeVariant.identifier} for $mappingIdentifier")
-                        needRecalculate.set(true)
-                        needRefreshCache.set(true)
-                    }
-                }
-
             val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.first()
             val hasChanged = AtomicBoolean(false)
 
@@ -160,7 +146,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
             .takeIf { it.isNotEmpty() }
             ?.also { logger.info("Found ${it.size} new previous and next episodes") }
             ?.map { episode -> episodeVariantService.save(episode, false) }
+            ?.toMutableList()
             ?.also { episodeVariants ->
+                episodeVariants.removeIf { it.mapping!!.uuid in mappingUuids }
+
                 identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
                 allNewEpisodes.addAll(episodeVariants)
                 logger.info("Added ${episodeVariants.size} previous and next episodes")

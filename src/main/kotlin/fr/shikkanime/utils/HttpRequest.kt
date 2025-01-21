@@ -95,7 +95,7 @@ class HttpRequest(
         isBrowserInitialized = true
     }
 
-    fun getBrowser(url: String, selector: String? = null, retry: Int = 3): Document {
+    fun getBrowser(url: String, selector: String? = null, `try`: Int = 1): Document {
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 
@@ -109,9 +109,9 @@ class HttpRequest(
                     page?.waitForLoadState()
                 }
             } catch (e: Exception) {
-                if (retry > 0) {
+                if (`try` < 3) {
                     logger.info("Retrying...")
-                    return getBrowser(url, selector, retry - 1)
+                    return getBrowser(url, selector, `try` + 1)
                 }
 
                 throw e

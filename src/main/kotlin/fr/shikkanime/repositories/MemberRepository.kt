@@ -32,11 +32,11 @@ class MemberRepository : AbstractRepository<Member>() {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
-            val root = query.from(MemberFollowAnime::class.java)
+            val root = query.from(getEntityClass())
+            val followedAnimesJoin = root.join(Member_.followedAnimes)
 
             query.distinct(true)
-                .select(root[MemberFollowAnime_.member])
-                .where(cb.equal(root[MemberFollowAnime_.anime][Anime_.uuid], animeUuid))
+                .where(cb.equal(followedAnimesJoin[MemberFollowAnime_.anime][Anime_.uuid], animeUuid))
 
             createReadOnlyQuery(it, query)
                 .resultList
@@ -112,7 +112,7 @@ class MemberRepository : AbstractRepository<Member>() {
     override fun find(uuid: UUID): Member? {
         return database.entityManager.use {
             it.find(getEntityClass(), uuid)
-                .apply { Hibernate.initialize(roles) }
+                ?.apply { Hibernate.initialize(roles) }
         }
     }
 

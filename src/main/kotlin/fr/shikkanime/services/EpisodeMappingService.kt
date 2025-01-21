@@ -1,10 +1,13 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
-import fr.shikkanime.entities.*
+import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
@@ -34,6 +37,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun getRepository() = episodeMappingRepository
 
+    fun findAllUuids() = episodeMappingRepository.findAllUuids()
+
     fun findAllBy(
         countryCode: CountryCode?,
         anime: Anime?,
@@ -46,10 +51,14 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllAnimeUuidImageBannerAndUuidImage() = episodeMappingRepository.findAllAnimeUuidImageBannerAndUuidImage()
 
-    fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime)
+    fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
+
+    fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
 
     fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime) =
         episodeMappingRepository.findAllNeedUpdateByPlatform(platform, lastDateTime)
+
+    fun findAllSeo() = episodeMappingRepository.findAllSeo()
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
@@ -59,6 +68,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeMapping) =
         episodeMappingRepository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)
+
+    fun findMinimalReleaseDateTime() = episodeMappingRepository.findMinimalReleaseDateTime()
 
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
@@ -87,14 +98,22 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             updateAllEpisodeMappingDto.season?.let { episode.season = it }
 
             startDate?.let { sd ->
-                episodeVariantService.findAllByMapping(episode)
-                    .filter { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) == LangType.SUBTITLES }
-                    .minByOrNull { it.releaseDateTime }
-                    ?.let { originalVariant ->
-                        originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(sd)
-                        episodeVariantService.update(originalVariant)
-                        if (updateAllEpisodeMappingDto.incrementDate == true) startDate = sd.plusWeeks(1)
+                val variants = episodeVariantService.findAllByMapping(episode)
+                val langTypes = variants.map { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) }.toSet()
+
+                val filteredVariants = if (langTypes.size > 1) {
+                    variants.filter { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) == LangType.SUBTITLES }
+                } else {
+                    variants
+                }
+
+                filteredVariants.minByOrNull { it.releaseDateTime }?.let { originalVariant ->
+                    originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(sd)
+                    episodeVariantService.update(originalVariant)
+                    if (updateAllEpisodeMappingDto.incrementDate == true) {
+                        startDate = sd.plusWeeks(1)
                     }
+                }
             }
 
             findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!)
@@ -192,7 +211,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     }
 
     private fun updateEpisodeMappingAnime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
-        if (entity.anime.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
+        if (entity.anime!!.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
             val oldAnimeId = episode.anime!!.uuid!!
             val findByName = requireNotNull(
                 animeService.findByName(

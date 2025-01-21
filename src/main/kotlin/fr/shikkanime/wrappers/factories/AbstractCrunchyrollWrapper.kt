@@ -6,12 +6,12 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 
 abstract class AbstractCrunchyrollWrapper {
     enum class SortType {
@@ -145,9 +145,11 @@ abstract class AbstractCrunchyrollWrapper {
     protected val baseUrl = "https://www.crunchyroll.com/"
     protected val httpRequest = HttpRequest()
 
-    private val accessTokenCache = MapCache<String, String>(
-        "CrunchyrollWrapper.accessTokenCache",
-        duration = Duration.ofMinutes(30)
+    @Synchronized
+    private fun getAnonymousAccessToken() = MapCache.getOrCompute(
+        "CrunchyrollWrapper.getAnonymousAccessToken",
+        duration = Duration.ofMinutes(30),
+        key = ""
     ) {
         runBlocking {
             val response = httpRequest.post(
@@ -164,7 +166,6 @@ abstract class AbstractCrunchyrollWrapper {
         }
     }
 
-    private fun getAnonymousAccessToken() = accessTokenCache[""] ?: throw Exception("Access token not found")
     protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf("Authorization" to "Bearer ${getAnonymousAccessToken()}"))
 
     abstract suspend fun getBrowse(locale: String, sortBy: SortType = SortType.NEWLY_ADDED, type: MediaType = MediaType.EPISODE, size: Int = 25, start: Int = 0, simulcast: String? = null): List<BrowseObject>

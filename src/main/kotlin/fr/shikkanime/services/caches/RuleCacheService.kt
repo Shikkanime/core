@@ -7,25 +7,15 @@ import fr.shikkanime.services.RuleService
 import fr.shikkanime.utils.MapCache
 
 class RuleCacheService : AbstractCacheService {
-    companion object {
-        private const val DEFAULT_ALL_KEY = "all"
-    }
-
     @Inject
     private lateinit var ruleService: RuleService
 
-    private val cache = MapCache(
-        "RuleCacheService.cache",
+    fun findAll() = MapCache.getOrCompute(
+        "RuleCacheService.findAll",
         classes = listOf(Rule::class.java),
-        fn = { listOf(DEFAULT_ALL_KEY) }
-    ) {
-        ruleService.findAll()
-    }
-
-    fun findAll() = cache[DEFAULT_ALL_KEY] ?: emptyList()
+        key = "all",
+    ) { ruleService.findAll() }
 
     fun findAllByPlatformSeriesIdAndSeasonId(platform: Platform, seriesId: String, seasonId: String) =
-        findAll().filter {
-            it.platform == platform && it.seriesId == seriesId && it.seasonId == seasonId
-        }
+        findAll().filter { it.platform == platform && it.seriesId == seriesId && it.seasonId == seasonId }
 }

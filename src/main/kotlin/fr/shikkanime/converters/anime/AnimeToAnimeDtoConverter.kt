@@ -2,9 +2,9 @@ package fr.shikkanime.converters.anime
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.dtos.SeasonDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.LangType
@@ -24,8 +24,8 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
 
     @Converter
     fun convert(from: Anime): AnimeDto {
-        val (audioLocales, seasons) = animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(from)
-            ?: Pair(emptySet(), sortedMapOf())
+        val audioLocales = animeCacheService.getAudioLocales(from) ?: emptySet()
+        val seasons = animeCacheService.getSeasons(from) ?: emptyMap()
 
         return AnimeDto(
             uuid = from.uuid,
@@ -47,7 +47,7 @@ class AnimeToAnimeDtoConverter : AbstractConverter<Anime, AnimeDto>() {
             langTypes = audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),
             status = from.status,
-            platformIds = convert(animePlatformCacheService.findAllByAnime(from).sortedBy { it.platform?.name }.toSet(), AnimePlatformDto::class.java)
+            platformIds = convert(animePlatformCacheService.getAll(from).sortedBy { it.platform?.name }.toSet(), AnimePlatformDto::class.java)
         )
     }
 }

@@ -19,8 +19,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.repositories.AnimeRepository
-import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
@@ -41,9 +39,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     private lateinit var episodeMappingService: EpisodeMappingService
 
     @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
-
-    @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
     @Inject
@@ -57,9 +52,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
-
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
 
     override fun getRepository() = animeRepository
 
@@ -91,6 +83,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
 
+    fun findAllAudioLocales() = animeRepository.findAllAudioLocales()
+
+    fun findAllSeasons() = animeRepository.findAllSeasons()
+
     fun preIndex() = animeRepository.preIndex()
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
@@ -108,13 +104,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val endOfWeekDay = startOfWeekDay.atEndOfWeek()
         val weekRange = startOfWeekDay..endOfWeekDay
 
-        val variantReleaseDtos =
-            episodeVariantCacheService.findAllAnimeEpisodeMappingReleaseDateTimePlatformAudioLocale(
-                countryCode,
-                member,
-                startOfWeekDay,
-                zoneId
-            )
+        val variantReleaseDtos = episodeVariantCacheService.findAllVariantReleases(
+            countryCode,
+            member,
+            startOfWeekDay,
+            zoneId
+        )
 
         val releases = processReleases(variantReleaseDtos, zoneId, weekRange).let { releases ->
             releases.filterNot { hasCurrentWeekRelease(it, releases, weekRange) }
@@ -256,37 +251,34 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     fun getAlerts(page: Int, limit: Int): PageableDto<AnimeAlertDto> {
+        val allSeasons = findAllSeasons()
+        val allAudioLocales = findAllAudioLocales()
         val invalidAnimes = mutableMapOf<Anime, Pair<ZonedDateTime, MutableSet<AnimeError>>>()
 
-        val sortedWith = episodeMappingCacheService.findAll().sortedWith(
-            compareBy(
-                { it.releaseDateTime },
-                { it.season },
-                { it.episodeType },
-                { it.number }
-            )
-        )
+        findAll().forEach { anime ->
+            val animeSeasons = allSeasons[anime.uuid!!] ?: return@forEach
 
-        sortedWith.mapNotNull { it.anime }
-            .distinctBy { it.uuid }
-            .forEach { anime ->
-                val seasons = sortedWith.filter { it.anime!!.uuid == anime.uuid }
-                    .mapNotNull { it.season }
-                    .distinct()
-                    .sorted()
-
-                seasons.zipWithNext().forEach { (current, next) ->
-                    if (current + 1 != next) {
-                        invalidAnimes.getOrPut(anime) { animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(anime)!!.second[current]!! to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_CHAIN_SEASON, "$current -> $next"))
-                    }
+            animeSeasons.map { it.key }.toSortedSet().zipWithNext().forEach { (current, next) ->
+                if (current + 1 != next) {
+                    invalidAnimes.getOrPut(anime) { (animeSeasons[current] ?: ZonedDateTime.now()) to mutableSetOf() }.second
+                        .add(AnimeError(ErrorType.INVALID_CHAIN_SEASON, "$current -> $next"))
                 }
             }
+        }
 
-        sortedWith.groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
+        episodeMappingService.findAll()
+            .asSequence()
+            .sortedWith(
+                compareBy(
+                    { it.releaseDateTime },
+                    { it.season },
+                    { it.episodeType },
+                    { it.number }
+                )
+            ).groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
             .values.forEach { episodes ->
                 val anime = episodes.first().anime!!
-                val (audioLocales, _) = animeCacheService.findAudioLocalesAndSeasonsByAnimeCache(anime)!!
+                val audioLocales = allAudioLocales[anime.uuid!!] ?: return@forEach
 
                 if (episodes.first().episodeType == EpisodeType.EPISODE) {
                     episodes.groupBy { it.releaseDateTime.toLocalDate() }
@@ -321,12 +313,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return PageableDto(
             data = invalidAnimes.asSequence()
                 .map { (anime, pair) ->
-                AnimeAlertDto(
-                    AbstractConverter.convert(anime, AnimeDto::class.java),
-                    pair.first.withUTCString(),
-                    pair.second
-                )
-            }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }
+                    AnimeAlertDto(
+                        AbstractConverter.convert(anime, AnimeDto::class.java),
+                        pair.first.withUTCString(),
+                        pair.second
+                    )
+                }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }
                 .drop((page - 1) * limit)
                 .take(limit)
                 .toSet(),

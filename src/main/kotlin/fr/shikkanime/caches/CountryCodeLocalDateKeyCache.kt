@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.util.*
 
 data class CountryCodeLocalDateKeyCache(
-    val member: UUID?,
     val countryCode: CountryCode,
+    val member: UUID?,
     val localDate: LocalDate
 )

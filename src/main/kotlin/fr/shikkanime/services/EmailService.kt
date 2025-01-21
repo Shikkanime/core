@@ -7,7 +7,6 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
-import org.simplejavamail.api.mailer.Mailer
 import org.simplejavamail.api.mailer.config.TransportStrategy
 import org.simplejavamail.email.EmailBuilder
 import org.simplejavamail.mailer.MailerBuilder
@@ -25,22 +24,6 @@ class EmailService {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
 
-    private val cache = MapCache<SMTPConfig, Mailer>(
-        "EmailService.cache",
-        classes = listOf(Config::class.java)
-    ) {
-        MailerBuilder
-            .withSMTPServer(
-                it.emailHost,
-                it.emailPort,
-                it.emailUsername,
-                it.emailPassword
-            )
-            .withTransportStrategy(TransportStrategy.SMTP_TLS)
-            .withConnectionPoolCoreSize(10)
-            .buildMailer()
-    }
-
     private fun sendEmail(
         emailHost: String,
         emailPort: Int,
@@ -50,7 +33,17 @@ class EmailService {
         title: String,
         body: String
     ) {
-        val mailer = cache[SMTPConfig(emailHost, emailPort, emailUsername, emailPassword)] ?: throw Exception("Failed to create mailer")
+        val mailer = MapCache.getOrCompute(
+            "EmailService.mailerConfig",
+            classes = listOf(Config::class.java),
+            key = SMTPConfig(emailHost, emailPort, emailUsername, emailPassword)
+        ) {
+            MailerBuilder.withSMTPServer(it.emailHost, it.emailPort, it.emailUsername, it.emailPassword)
+                .withTransportStrategy(TransportStrategy.SMTP_TLS)
+                .withConnectionPoolCoreSize(10)
+                .buildMailer()
+        } ?: throw Exception("Failed to create mailer")
+
         mailer.testConnection()
 
         mailer.sendMail(

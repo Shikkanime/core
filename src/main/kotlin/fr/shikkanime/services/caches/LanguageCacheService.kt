@@ -6,9 +6,8 @@ import org.apache.tika.language.detect.LanguageDetector
 class LanguageCacheService : AbstractCacheService {
     private val languageDetector: LanguageDetector = LanguageDetector.getDefaultLanguageDetector().loadModels()
 
-    private val detectCache = MapCache<String, String>("LanguageCacheService.detectCache") {
-        languageDetector.detect(it).language.lowercase()
-    }
-
-    fun detectLanguage(text: String?) = text?.let { detectCache[it] }
+    fun detectLanguage(text: String?) = MapCache.getOrCompute(
+        "LanguageCacheService.detectLanguage",
+        key = text ?: "",
+    ) { languageDetector.detect(it).language.lowercase() }
 }

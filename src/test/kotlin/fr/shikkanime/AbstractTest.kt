@@ -78,10 +78,12 @@ abstract class AbstractTest {
             transaction.commit()
         }
     }
+
     @AfterEach
     open fun tearDown() {
         deleteAll()
         ImageService.clearPool()
+        database.clearCache()
     }
 
     companion object {
