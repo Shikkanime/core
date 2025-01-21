@@ -137,8 +137,8 @@ class UpdateAnimeJob : AbstractJob {
             when (it.platform!!) {
                 Platform.ANIM -> list.add(it.platform to fetchADNAnime(it))
                 Platform.CRUN -> list.add(it.platform to fetchCrunchyrollAnime(it))
-                Platform.NETF -> list.add(it.platform to fetchNetflixAnime(it))
-                Platform.PRIM -> list.add(it.platform to fetchPrimeVideoAnime(it))
+                Platform.NETF -> runCatching { list.add(it.platform to fetchNetflixAnime(it)) }
+                Platform.PRIM -> runCatching { list.add(it.platform to fetchPrimeVideoAnime(it)) }
                 else -> logger.warning("Platform ${it.platform} not supported")
             }
         }

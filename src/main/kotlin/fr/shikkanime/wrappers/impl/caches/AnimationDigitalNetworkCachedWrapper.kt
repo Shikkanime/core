@@ -13,37 +13,28 @@ object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWra
     private val videoCache = MapCache<Int, Video>(
         "AnimationDigitalNetworkCachedWrapper.videoCache",
         duration = defaultCacheDuration
-    ) {
-        runBlocking { AnimationDigitalNetworkWrapper.getVideo(it) }
-    }
+    ) { runBlocking { AnimationDigitalNetworkWrapper.getVideo(it) } }
 
-    private val latestVideosCache = MapCache<LocalDate, Array<Video>>(
-        "AnimationDigitalNetworkCachedWrapper.latestVideosCache",
-        duration = defaultCacheDuration
+    override suspend fun getLatestVideos(date: LocalDate) = MapCache.getOrCompute(
+        "AnimationDigitalNetworkCachedWrapper.getLatestVideos",
+        duration = defaultCacheDuration,
+        key = date
     ) {
         runBlocking { AnimationDigitalNetworkWrapper.getLatestVideos(it) }
             .apply { forEach { video -> videoCache.setIfNotExists(video.id, video) } }
     }
 
-    private val showCache = MapCache<Int, Show>(
-        "AnimationDigitalNetworkCachedWrapper.showCache",
-        duration = defaultCacheDuration
-    ) {
-        runBlocking { AnimationDigitalNetworkWrapper.getShow(it) }
-    }
+    override suspend fun getShow(id: Int) = MapCache.getOrCompute(
+        "AnimationDigitalNetworkCachedWrapper.getShow",
+        duration = defaultCacheDuration,
+        key = id
+    ) { runBlocking { AnimationDigitalNetworkWrapper.getShow(it) } }
 
-    private val showVideosCache = MapCache<Int, Array<Video>>(
-        "AnimationDigitalNetworkCachedWrapper.showVideosCache",
-        duration = defaultCacheDuration
-    ) {
-        runBlocking { AnimationDigitalNetworkWrapper.getShowVideos(it) }
-    }
-
-    override suspend fun getLatestVideos(date: LocalDate) = latestVideosCache[date] ?: emptyArray()
-
-    override suspend fun getShow(id: Int) = showCache[id] ?: throw Exception("Show not found")
-
-    override suspend fun getShowVideos(id: Int) = showVideosCache[id] ?: emptyArray()
+    override suspend fun getShowVideos(id: Int) = MapCache.getOrCompute(
+        "AnimationDigitalNetworkCachedWrapper.getShowVideos",
+        duration = defaultCacheDuration,
+        key = id
+    ) { runBlocking { AnimationDigitalNetworkWrapper.getShowVideos(it) } }
 
     override suspend fun getVideo(id: Int) = videoCache[id] ?: throw Exception("Video not found")
 }

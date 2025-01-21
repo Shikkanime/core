@@ -17,17 +17,14 @@ object NetflixCachedWrapper : AbstractNetflixWrapper() {
 
     private val defaultCacheDuration = Duration.ofDays(1)
 
-    private val showVideosCache = MapCache<Key, List<Episode>?>(
-        "NetflixCachedWrapper.showVideosCache",
-        duration = defaultCacheDuration
-    ) {
-        runBlocking { NetflixWrapper.getShowVideos(it.countryCode, it.showId, it.seasonName, it.season) }
-    }
-
     override fun getShowVideos(
         countryCode: CountryCode,
         showId: String,
         seasonName: String,
         season: Int
-    ) = showVideosCache[Key(countryCode, showId, seasonName, season)]
+    ) = MapCache.getOrCompute(
+        "NetflixCachedWrapper.getShowVideos",
+        duration = defaultCacheDuration,
+        key = Key(countryCode, showId, seasonName, season)
+    ) { runBlocking { NetflixWrapper.getShowVideos(it.countryCode, it.showId, it.seasonName, it.season) } }
 }

@@ -32,4 +32,7 @@ class Member(
     )
     @Enumerated(EnumType.STRING)
     val roles: MutableSet<Role> = mutableSetOf(),
+    @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var followedAnimes: MutableSet<MemberFollowAnime> = mutableSetOf(),
 ) : ShikkEntity(uuid)

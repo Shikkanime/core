@@ -13,32 +13,19 @@ class MemberCacheService : AbstractCacheService {
     @Inject
     private lateinit var memberService: MemberService
 
-    private val cache = MapCache<UUID, Member?>(
-        "MemberCacheService.cache",
-        classes = listOf(Member::class.java)
-    ) {
-        memberService.find(it)
-    }
+    fun find(uuid: UUID) = MapCache.getOrCompute(
+        "MemberCacheService.find",
+        classes = listOf(Member::class.java),
+        key = uuid
+    ) { memberService.find(it) }
 
-    private val refreshMemberCache = MapCache<UUIDPaginationKeyCache, RefreshMemberDto?>(
-        "MemberCacheService.refreshMemberCache",
-        classes = listOf(
-            Member::class.java,
-            Anime::class.java,
-            MemberFollowAnime::class.java,
-            EpisodeMapping::class.java,
-            MemberFollowEpisode::class.java,
-        )
+    fun getRefreshMember(uuid: UUID, limit: Int) = MapCache.getOrCompute(
+        "MemberCacheService.getRefreshMember",
+        classes = listOf(Member::class.java, Anime::class.java, MemberFollowAnime::class.java, EpisodeMapping::class.java, MemberFollowEpisode::class.java),
+        key = UUIDPaginationKeyCache(uuid, 1, limit)
     ) {
-        try {
-            find(it.uuid)?.let { member -> AbstractConverter.convert(member, RefreshMemberDto::class.java, it.limit) }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+        find(it.uuid)?.let {
+            member -> AbstractConverter.convert(member, RefreshMemberDto::class.java, it.limit)
         }
     }
-
-    fun find(uuid: UUID) = cache[uuid]
-
-    fun getRefreshMember(uuid: UUID, limit: Int) = refreshMemberCache[UUIDPaginationKeyCache(uuid, 1, limit)]
 }

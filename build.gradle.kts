@@ -10,7 +10,6 @@ val reflectionsVersion = "0.10.2"
 val guiceVersion = "7.0.0"
 val liquibaseCoreVersion = "4.31.0"
 val quartzVersion = "2.5.0"
-val guavaVersion = "33.4.0-jre"
 val playwrightVersion = "1.49.0"
 val jsoupVersion = "1.18.3"
 val gsonVersion = "2.11.0"
@@ -93,7 +92,6 @@ dependencies {
     implementation("com.google.inject:guice:$guiceVersion")
     implementation("org.liquibase:liquibase-core:$liquibaseCoreVersion")
     implementation("org.quartz-scheduler:quartz:$quartzVersion")
-    implementation("com.google.guava:guava:$guavaVersion")
     implementation("com.microsoft.playwright:playwright:$playwrightVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.gson:gson:$gsonVersion")

@@ -1,113 +1,73 @@
 package fr.shikkanime.utils
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
 import java.time.Duration
-import kotlin.time.measureTimedValue
 
 class MapCache<K : Any, V>(
-    private val name: String,
+    name: String,
     private var duration: Duration? = null,
     private val classes: List<Class<*>> = emptyList(),
-    private val fn: () -> List<K> = { emptyList() },
-    private val requiredCaches: () -> List<MapCache<*, *>> = { emptyList() },
     private val block: (K) -> V,
 ) {
-    private lateinit var cache: LoadingCache<K, V>
+    private val cache: MutableMap<K, Pair<Long, V>> = mutableMapOf()
 
     init {
-        setCache()
-        globalCaches.add(this)
+        globalCaches[name] = this
     }
 
-    private fun MapCache<K, V>.setCache() {
-        val builder = CacheBuilder.newBuilder().apply {
-            duration?.let { expireAfterWrite(it) }
+    fun containsKey(key: K) = cache.containsKey(key)
+
+    private fun needInvalidation(key: K): Boolean {
+        if (duration != null) {
+            val (timestamp, _) = cache[key] ?: return false
+            return System.currentTimeMillis() - timestamp > duration!!.toMillis()
         }
 
-        cache = builder.build(object : CacheLoader<K, V & Any>() {
-            override fun load(key: K): V & Any {
-                return block(key)!!
-            }
-        })
+        return false
     }
-
-    private fun loadDefaultKeys(): Boolean {
-        val fn = fn()
-        fn.forEach { this[it] }
-        return fn.isNotEmpty()
-    }
-
-    fun containsKey(key: K) = cache.getIfPresent(key) != null
 
     operator fun get(key: K): V? {
-        return try {
-            cache.getUnchecked(key)
-        } catch (_: Exception) {
-            null
+        val cachedValue = cache[key]
+
+        if (cachedValue == null || needInvalidation(key)) {
+            val newValue = block(key)
+            cache[key] = System.currentTimeMillis() to newValue
+            return newValue
         }
+
+        return cachedValue.second
     }
 
     fun setIfNotExists(key: K, value: V & Any) {
         if (!containsKey(key))
-            cache.put(key, value)
+            cache.put(key, System.currentTimeMillis() to value)
     }
 
-    fun invalidate(): Boolean {
-        cache.invalidateAll()
-        return loadDefaultKeys()
+    fun invalidate() {
+        cache.clear()
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
-        private val globalCaches: MutableList<MapCache<*, *>> = mutableListOf()
+        private val globalCaches: MutableMap<String, MapCache<*, *>> = mutableMapOf()
 
-        fun loadAll() {
-            val loadedCaches = mutableSetOf<MapCache<*, *>>()
-
-            globalCaches
-                .sortedBy { it.requiredCaches().size }
-                .flatMap { it.requiredCaches() + it }
-                .filter { loadedCaches.add(it) }
-                .forEach {
-                    val take = measureTimedValue { it.loadDefaultKeys() }
-
-                    if (take.value)
-                        logger.info("Cache ${it.name} loaded in ${take.duration.inWholeMilliseconds} ms")
-                }
-        }
-
-        @Synchronized
         fun invalidate(vararg classes: Class<*>) {
-            val loadedCaches = mutableSetOf<MapCache<*, *>>()
-
-            globalCaches.sortedBy { it.requiredCaches().size }
-                .flatMap { it.requiredCaches() + it }
-                .filter { it.classes.any { clazz -> classes.contains(clazz) } }
-                .filter { loadedCaches.add(it) }
-                .forEach {
-                    val take = measureTimedValue { it.invalidate() }
-
-                    if (take.value)
-                        logger.info("Cache ${it.name} invalidated in ${take.duration.inWholeMilliseconds} ms")
-                }
+            globalCaches.filter { (_, cache) -> cache.classes.any { clazz -> classes.contains(clazz) } }
+                .forEach { (_, cache) -> cache.invalidate() }
         }
 
         // For test only
-        @Synchronized
         fun invalidateAll() {
-            val loadedCaches = mutableSetOf<MapCache<*, *>>()
+            globalCaches.forEach { (_, cache) ->
+                cache.invalidate()
+            }
+        }
 
-            globalCaches.sortedBy { it.requiredCaches().size }
-                .flatMap { it.requiredCaches() + it }
-                .filter { loadedCaches.add(it) }
-                .forEach {
-                    val take = measureTimedValue { it.invalidate() }
-
-                    if (take.value)
-                        logger.info("Cache ${it.name} invalidated in ${take.duration.inWholeMilliseconds} ms")
-                }
+        fun <K : Any, V> getOrCompute(name: String, duration: Duration? = null, classes: List<Class<*>> = emptyList(), key: K, block: (K) -> V): V {
+            return if (globalCaches.containsKey(name)) {
+                @Suppress("UNCHECKED_CAST")
+                (globalCaches[name] as MapCache<K, V>)[key]!!
+            } else {
+                synchronized(MapCache) { MapCache(name, duration, classes, block) }[key]!!
+            }
         }
     }
 }

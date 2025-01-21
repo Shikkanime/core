@@ -1,6 +1,7 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.dtos.enums.Status
+import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -13,6 +14,19 @@ import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
+
+    fun findAllUuids(): List<UUID> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(UUID::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(root[EpisodeMapping_.uuid])
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -74,13 +88,19 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllByAnime(anime: Anime): List<EpisodeMapping> {
+    fun findAllByAnime(animeUuid: UUID): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
-            query.where(cb.equal(root[EpisodeMapping_.anime], anime))
+            query.where(cb.equal(root[EpisodeMapping_.anime][Anime_.uuid], animeUuid))
+                .orderBy(
+                    cb.asc(root[EpisodeMapping_.releaseDateTime]),
+                    cb.asc(root[EpisodeMapping_.season]),
+                    cb.asc(root[EpisodeMapping_.episodeType]),
+                    cb.asc(root[EpisodeMapping_.number])
+                )
 
             createReadOnlyQuery(it, query)
                 .resultList
@@ -91,21 +111,43 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
-            val root = query.from(EpisodeVariant::class.java)
+            val root = query.from(getEntityClass())
+            val variantJoin = root.join(EpisodeMapping_.variants)
 
             query.distinct(true)
-                .select(root[EpisodeVariant_.mapping])
                 .where(
-                    cb.equal(root[EpisodeVariant_.platform], platform),
+                    cb.equal(variantJoin[EpisodeVariant_.platform], platform),
                     cb.or(
                         cb.lessThanOrEqualTo(
-                            root[EpisodeVariant_.mapping][EpisodeMapping_.lastUpdateDateTime],
+                            root[EpisodeMapping_.lastUpdateDateTime],
                             lastDateTime
                         ),
-                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
+                        cb.equal(root[EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
                     ),
                 )
-                .orderBy(cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.lastUpdateDateTime]))
+                .orderBy(cb.asc(root[EpisodeMapping_.lastUpdateDateTime]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllSeo(): List<EpisodeMappingSeoDto> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(EpisodeMappingSeoDto::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(
+                cb.construct(
+                    EpisodeMappingSeoDto::class.java,
+                    root[EpisodeMapping_.anime][Anime_.slug],
+                    root[EpisodeMapping_.season],
+                    root[EpisodeMapping_.episodeType],
+                    root[EpisodeMapping_.number],
+                    root[EpisodeMapping_.lastReleaseDateTime]
+                )
+            )
 
             createReadOnlyQuery(it, query)
                 .resultList
@@ -148,21 +190,22 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Int::class.java)
-            val root = query.from(EpisodeVariant::class.java)
+            val root = query.from(getEntityClass())
+            val variantJoin = root.join(EpisodeMapping_.variants)
 
-            query.select(root[EpisodeVariant_.mapping][EpisodeMapping_.number])
+            query.select(root[EpisodeMapping_.number])
 
             query.where(
                 cb.and(
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime),
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.season], season),
-                    cb.equal(root[EpisodeVariant_.platform], platform),
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], episodeType),
-                    cb.equal(root[EpisodeVariant_.audioLocale], audioLocale)
+                    cb.equal(root[EpisodeMapping_.anime], anime),
+                    cb.equal(root[EpisodeMapping_.season], season),
+                    cb.equal(variantJoin[EpisodeVariant_.platform], platform),
+                    cb.equal(root[EpisodeMapping_.episodeType], episodeType),
+                    cb.equal(variantJoin[EpisodeVariant_.audioLocale], audioLocale)
                 )
             )
 
-            query.orderBy(cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.number]))
+            query.orderBy(cb.desc(root[EpisodeMapping_.number]))
 
             createReadOnlyQuery(it, query)
                 .resultList
@@ -177,27 +220,41 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(ZonedDateTime::class.java)
-            val root = query.from(EpisodeVariant::class.java)
-            query.select(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime])
+            val root = query.from(getEntityClass())
+            val variantJoin = root.join(EpisodeMapping_.variants)
+            query.select(root[EpisodeMapping_.releaseDateTime])
 
             query.where(
                 cb.and(
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime], anime),
+                    cb.equal(root[EpisodeMapping_.anime], anime),
                     cb.lessThan(
-                        root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime],
+                        root[EpisodeMapping_.releaseDateTime],
                         episodeMapping.releaseDateTime
                     ),
-                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], episodeMapping.episodeType),
-                    cb.notEqual(root[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
+                    cb.equal(root[EpisodeMapping_.episodeType], episodeMapping.episodeType),
+                    cb.notEqual(variantJoin[EpisodeVariant_.audioLocale], anime.countryCode!!.locale),
                 )
             )
 
-            query.orderBy(cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]))
+            query.orderBy(cb.desc(root[EpisodeMapping_.releaseDateTime]))
 
             createReadOnlyQuery(it, query)
                 .setMaxResults(1)
                 .resultList
                 .firstOrNull()
+        }
+    }
+
+    fun findMinimalReleaseDateTime(): ZonedDateTime {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(ZonedDateTime::class.java)
+            val root = query.from(getEntityClass())
+            query.select(cb.least(root[EpisodeMapping_.releaseDateTime]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull() ?: ZonedDateTime.now()
         }
     }
 

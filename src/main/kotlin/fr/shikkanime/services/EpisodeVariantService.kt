@@ -4,7 +4,9 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.variants.SeparateVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -46,6 +48,23 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     override fun getRepository() = episodeVariantRepository
 
     fun findAllByMapping(mapping: EpisodeMapping) = episodeVariantRepository.findAllByMapping(mapping)
+
+    fun findAllVariantReleases(countryCode: CountryCode, member: Member?, startZonedDateTime: ZonedDateTime, endZonedDateTime: ZonedDateTime) =
+        episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime)
+
+    fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
+
+    fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+        countryCode: CountryCode,
+        platform: Platform,
+        startZonedDateTime: ZonedDateTime,
+        endZonedDateTime: ZonedDateTime
+    ) = episodeVariantRepository.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+        countryCode,
+        platform,
+        startZonedDateTime,
+        endZonedDateTime
+    )
 
     fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)

@@ -6,15 +6,13 @@ import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
 import java.util.*
@@ -28,118 +26,16 @@ class AnimeCacheService : AbstractCacheService {
     private lateinit var animeService: AnimeService
 
     @Inject
-    private lateinit var simulcastService: SimulcastService
+    private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Inject
     private lateinit var memberCacheService: MemberCacheService
 
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
-    private val findAllByCache =
-        MapCache<CountryCodeUUIDSortPaginationKeyCache, PageableDto<AnimeDto>>(
-            "AnimeCacheService.findAllByCache",
-            classes = listOf(Anime::class.java)
-        ) {
-            PageableDto.fromPageable(
-                animeService.findAllBy(
-                    it.countryCode,
-                    simulcastService.find(it.uuid),
-                    it.sort,
-                    it.page,
-                    it.limit,
-                    it.searchTypes,
-                    it.status
-                ),
-                AnimeDto::class.java
-            )
-        }
-
-    private val findAllByNameCache =
-        MapCache<CountryCodeNamePaginationKeyCache, PageableDto<AnimeDto>>(
-            "AnimeCacheService.findAllByNameCache",
-            classes = listOf(Anime::class.java)
-        ) {
-            try {
-                PageableDto.fromPageable(
-                    animeService.findAllByName(it.countryCode, it.name, it.page, it.limit, it.searchTypes),
-                    AnimeDto::class.java
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-                PageableDto.empty()
-            }
-        }
-
-    val findAllByCountryCodeCache = MapCache(
-        "AnimeCacheService.findAllByCountryCodeCache",
-        classes = listOf(Anime::class.java, EpisodeMapping::class.java),
-        fn = { CountryCode.entries },
-        requiredCaches = { listOf(episodeVariantCacheService.findAllCache) }
-    ) {
-        (episodeVariantCacheService.findAllCache[DEFAULT_ALL_KEY] ?: emptyList()).asSequence()
-            .map { it.mapping!!.anime!! }
-            .distinctBy { it.uuid }
-            .filter { anime -> anime.countryCode == it }
-            .toList()
-    }
-
-    private val weeklyMemberCache =
-        MapCache<CountryCodeLocalDateKeyCache, List<WeeklyAnimesDto>>(
-            "AnimeCacheService.weeklyMemberV2Cache",
-            classes = listOf(
-                Anime::class.java,
-                EpisodeMapping::class.java,
-                EpisodeVariant::class.java,
-                MemberFollowAnime::class.java
-            )
-        ) {
-            try {
-                animeService.getWeeklyAnimes(
-                    it.countryCode,
-                    it.member?.let { uuid -> memberCacheService.find(uuid) },
-                    it.localDate
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-                emptyList()
-            }
-        }
-
-    val findAllAudioLocalesAndSeasonsCache = MapCache(
-        "AnimeCacheService.findAllAudioLocalesAndSeasonsCache",
-        classes = listOf(
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java
-        ),
-        fn = { listOf(DEFAULT_ALL_KEY) },
-        requiredCaches = { listOf(episodeVariantCacheService.findAllCache) }
-    ) {
-        (episodeVariantCacheService.findAllCache[DEFAULT_ALL_KEY] ?: emptyList())
-            .groupBy { it.mapping!!.anime!!.uuid!! }
-            .mapValues { entry ->
-                val audioLocales = entry.value.map { it.audioLocale!! }.toSet()
-                val seasons = entry.value.groupBy { it.mapping!!.season!! }
-                    .mapValues { it.value.maxOfOrNull { variant -> variant.releaseDateTime }!! }
-                    .toSortedMap()
-
-                audioLocales to seasons
-            }
-    }
-
-    private val findBySlugCache = MapCache<CountryCodeIdKeyCache, AnimeDto?>(
-        "AnimeCacheService.findBySlugCache",
-        classes = listOf(
-            Anime::class.java,
-            EpisodeMapping::class.java,
-            EpisodeVariant::class.java
-        ),
-    ) {
-        animeService.findBySlug(it.countryCode, it.id)?.let { anime ->
-            AbstractConverter.convert(anime, AnimeDto::class.java)
-        }
-    }
+    fun findAll() = MapCache.getOrCompute(
+        "AnimeCacheService.findAll",
+        classes = listOf(Anime::class.java),
+        key = DEFAULT_ALL_KEY,
+    ) { animeService.findAll() }
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -149,20 +45,75 @@ class AnimeCacheService : AbstractCacheService {
         limit: Int,
         searchTypes: Array<LangType>? = null,
         status: Status? = null,
-    ) = findAllByCache[CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes, status)]
+    ) = MapCache.getOrCompute(
+        "AnimeCacheService.findAllBy",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes, status),
+    ) {
+        PageableDto.fromPageable(
+            animeService.findAllBy(
+                it.countryCode,
+                it.uuid?.let { uuid -> simulcastCacheService.find(uuid) },
+                it.sort,
+                it.page,
+                it.limit,
+                it.searchTypes,
+                it.status
+            ),
+            AnimeDto::class.java
+        )
+    }
 
     fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: Array<LangType>?) =
-        findAllByNameCache[CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes)]
+        MapCache.getOrCompute(
+            "AnimeCacheService.findAllByName",
+            classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+            key = CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes),
+        ) {
+            PageableDto.fromPageable(
+                animeService.findAllByName(it.countryCode, it.name, it.page, it.limit, it.searchTypes),
+                AnimeDto::class.java
+            )
+        }
 
-    fun findAll() = CountryCode.entries.flatMap { findAllByCountryCodeCache[it]!! }
+    fun getAudioLocales(anime: Anime) = MapCache.getOrCompute(
+        "AnimeCacheService.getAudioLocales",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        key = DEFAULT_ALL_KEY,
+    ) { animeService.findAllAudioLocales() }[anime.uuid!!]
 
-    fun find(uuid: UUID?) = findAll().firstOrNull { it.uuid == uuid }
+    fun getSeasons(anime: Anime) = MapCache.getOrCompute(
+        "AnimeCacheService.getSeasons",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        key = DEFAULT_ALL_KEY,
+    ) { animeService.findAllSeasons() }[anime.uuid!!]
 
-    fun findBySlug(countryCode: CountryCode, slug: String) = findBySlugCache[CountryCodeIdKeyCache(countryCode, slug)]
+    fun find(uuid: UUID) = MapCache.getOrCompute(
+        "AnimeCacheService.find",
+        classes = listOf(Anime::class.java),
+        key = uuid,
+    ) { animeService.find(it) }
+
+    fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrCompute(
+        "AnimeCacheService.findBySlug",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        key = CountryCodeIdKeyCache(countryCode, slug),
+    ) {
+        animeService.findBySlug(it.countryCode, it.id)?.let { anime ->
+            AbstractConverter.convert(anime, AnimeDto::class.java)
+        }
+    }
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
-        weeklyMemberCache[CountryCodeLocalDateKeyCache(memberUuid, countryCode, startOfWeekDay)]
-
-    fun findAudioLocalesAndSeasonsByAnimeCache(anime: Anime) =
-        findAllAudioLocalesAndSeasonsCache[DEFAULT_ALL_KEY]?.get(anime.uuid!!)
+        MapCache.getOrCompute(
+            "AnimeCacheService.getWeeklyAnimes",
+            classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, MemberFollowAnime::class.java),
+            key = CountryCodeLocalDateKeyCache(countryCode, memberUuid, startOfWeekDay),
+        ) {
+            animeService.getWeeklyAnimes(
+                it.countryCode,
+                it.member?.let { uuid -> memberCacheService.find(uuid) },
+                it.localDate
+            )
+        }
 }

@@ -48,7 +48,7 @@ class SEOController {
             listOf(SortParameter("lastReleaseDateTime", SortParameter.Order.DESC)),
             1,
             1
-        )?.data?.firstOrNull()?.lastReleaseDateTime?.replace("Z", "+00:00") ?: globalLastModification
+        ).data.firstOrNull()?.lastReleaseDateTime?.replace("Z", "+00:00") ?: globalLastModification
 
         val urls = mutableSetOf(
             URLDto(Constant.baseUrl, lastReleaseDateTime),
@@ -60,21 +60,23 @@ class SEOController {
             URLDto("${Constant.baseUrl}/catalog/${it.slug}", it.lastReleaseDateTime!!)
         }
 
-        episodeMappingCacheService.findAllSeo()?.groupBy { it.animeSlug }?.forEach { (animeSlug, episodes) ->
-            val seasonMap = episodes.groupBy { it.season }
-            val firstSeasonDateTime = seasonMap.values.flatten().maxOf { it.lastReleaseDateTime }
+        episodeMappingCacheService.findAllSeo()
+            .groupBy { it.animeSlug }
+            .forEach { (animeSlug, episodes) ->
+                val seasonMap = episodes.groupBy { it.season }
+                val firstSeasonDateTime = seasonMap.values.flatten().maxOf { it.lastReleaseDateTime }
 
-            urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug", firstSeasonDateTime.formatDateTime()))
+                urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug", firstSeasonDateTime.formatDateTime()))
 
-            seasonMap.forEach { (season, seasonEpisodes) ->
-                val lastSeasonDateTime = seasonEpisodes.maxOf { it.lastReleaseDateTime }
-                urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season", lastSeasonDateTime.formatDateTime()))
+                seasonMap.forEach { (season, seasonEpisodes) ->
+                    val lastSeasonDateTime = seasonEpisodes.maxOf { it.lastReleaseDateTime }
+                    urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season", lastSeasonDateTime.formatDateTime()))
 
-                seasonEpisodes.forEach {
-                    urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season/${it.episodeType.slug}-${it.number}", it.lastReleaseDateTime.formatDateTime()))
+                    seasonEpisodes.forEach {
+                        urls.add(URLDto("${Constant.baseUrl}/animes/$animeSlug/season-$season/${it.episodeType.slug}-${it.number}", it.lastReleaseDateTime.formatDateTime()))
+                    }
                 }
             }
-        }
 
         Link.entries.filter { !it.href.startsWith("/admin") && it.footer }
             .mapTo(urls) { URLDto("${Constant.baseUrl}${it.href}", globalLastModification) }

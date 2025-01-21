@@ -17,7 +17,7 @@ class EpisodeMappingToEpisodeMappingWithoutAnimeDtoConverter :
 
     @Converter
     fun convert(from: EpisodeMapping): EpisodeMappingWithoutAnimeDto {
-        val variants = episodeVariantCacheService.findAllByMapping(from) ?: emptySet()
+        val variants = episodeVariantCacheService.findAllByMapping(from)
 
         return EpisodeMappingWithoutAnimeDto(
             uuid = from.uuid!!,

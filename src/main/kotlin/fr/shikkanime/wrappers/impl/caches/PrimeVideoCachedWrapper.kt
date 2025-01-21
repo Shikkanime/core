@@ -10,12 +10,9 @@ import java.time.Duration
 object PrimeVideoCachedWrapper : AbstractPrimeVideoWrapper() {
     private val defaultCacheDuration = Duration.ofDays(1)
 
-    private val showVideosCache = MapCache<Pair<CountryCode, String>, List<Episode>?>(
-        "PrimeVideoCachedWrapper.showVideosCache",
-        duration = defaultCacheDuration
-    ) {
-        runBlocking { PrimeVideoWrapper.getShowVideos(it.first, it.second) }
-    }
-
-    override fun getShowVideos(countryCode: CountryCode, showId: String) = showVideosCache[countryCode to showId]
+    override fun getShowVideos(countryCode: CountryCode, showId: String) = MapCache.getOrCompute(
+        "PrimeVideoCachedWrapper.getShowVideos",
+        duration = defaultCacheDuration,
+        key = countryCode to showId
+    ) { runBlocking { PrimeVideoWrapper.getShowVideos(it.first, it.second) } }
 }

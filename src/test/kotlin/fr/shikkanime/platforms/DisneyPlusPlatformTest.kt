@@ -10,7 +10,6 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.jobs.FetchEpisodesJob
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,9 +19,6 @@ import java.io.File
 import java.time.ZonedDateTime
 
 class DisneyPlusPlatformTest : AbstractTest() {
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
     @Inject
     private lateinit var fetchEpisodesJob: FetchEpisodesJob
 
@@ -91,7 +87,7 @@ class DisneyPlusPlatformTest : AbstractTest() {
         )
 
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
-        val variants = episodeVariantCacheService.findAll()
+        val variants = episodeVariantService.findAll()
         fetchEpisodesJob.addHashCaches(platform, variants)
 
         val episodes = platform.fetchEpisodes(

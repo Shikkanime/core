@@ -3,7 +3,10 @@ package fr.shikkanime.controllers.site
 import com.google.inject.Inject
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.SortParameter
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
@@ -16,7 +19,6 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.ktor.http.*
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -44,7 +46,7 @@ class SiteController {
             listOf(SortParameter("name", SortParameter.Order.ASC)),
             1,
             animeSimulcastLimit
-        )!!.data.toMutableList()
+        ).data.toMutableList()
 
         val simulcasts = simulcastCacheService.findAll()
 
@@ -55,7 +57,7 @@ class SiteController {
                 listOf(SortParameter("name", SortParameter.Order.ASC)),
                 1,
                 animeSimulcastLimit - animes.size
-            )!!.data
+            ).data
 
             animes.addAll(previousSimulcastAnimes)
         }
@@ -231,11 +233,8 @@ class SiteController {
             LocalDate.now()
         }.atStartOfWeek()
 
-        val min = episodeMappingCacheService.findAll().minByOrNull { it.releaseDateTime }?.releaseDateTime?.toLocalDate()?.atStartOfWeek()
-
-        if (startOfWeekDay < min) {
+        if (startOfWeekDay < episodeMappingCacheService.findMinimalReleaseDateTime().toLocalDate().atStartOfWeek())
             return Response.notFound()
-        }
 
         return Response.template(
             Link.CALENDAR,

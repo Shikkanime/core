@@ -9,9 +9,8 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     override fun getShowVideos(countryCode: CountryCode, showId: String): List<Episode>? {
         val document = loadContent(countryCode, showId)
         val showName = (document.selectFirst("h1[data-automation-id=\"title\"]")?.text() ?: document.selectFirst("img.ljcPsM")?.attr("alt")).takeIf { it.isNullOrBlank().not() } ?: return null
-        val episodes = document.select("li.c5qQpO")
 
-        return episodes.map { episode ->
+        return document.select("li.c5qQpO").map { episode ->
             val episodeSeasonAndNumber = episode.select("span.izvPPq > span").text()
             val season = episodeSeasonAndNumber.substringAfter("S. ").substringBefore(" ").trim().toIntOrNull() ?: 1
             val episodeNumber = episodeSeasonAndNumber.substringAfter("ÉP. ").substringBefore(" ").trim().toIntOrNull() ?: -1
