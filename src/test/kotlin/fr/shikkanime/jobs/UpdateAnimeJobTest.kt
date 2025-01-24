@@ -260,9 +260,9 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assumeTrue("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/affiche_350x500.jpg" == anime.image)
+        assumeTrue("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/affiche_1560x2340.jpg" == anime.image)
         assertEquals(
-            "https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/license_640x360.jpg",
+            "https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/license_1920x1080.jpg",
             anime.banner
         )
         assertEquals(
