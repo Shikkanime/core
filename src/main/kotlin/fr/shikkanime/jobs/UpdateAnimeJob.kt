@@ -152,8 +152,8 @@ class UpdateAnimeJob : AbstractJob {
 
             UpdatableAnime(
                 lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
-                image = show.image2x,
-                banner = show.imageHorizontal2x,
+                image = show.fullHDImage,
+                banner = show.fullHDBanner,
                 description = show.summary,
                 episodeSize = showVideos.size
             )

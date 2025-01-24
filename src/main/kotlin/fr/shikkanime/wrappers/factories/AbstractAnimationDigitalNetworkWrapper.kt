@@ -5,6 +5,10 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 
 abstract class AbstractAnimationDigitalNetworkWrapper {
+    companion object {
+        private val sizeRegex = "\\d*x\\d*".toRegex()
+    }
+
     data class Microdata(
         val startDate: ZonedDateTime,
     )
@@ -20,7 +24,12 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val simulcast: Boolean,
         val firstReleaseYear: String,
         val microdata: Microdata? = null,
-    )
+    ) {
+        val fullHDImage: String
+            get() = image2x.replace(sizeRegex, "1560x2340")
+        val fullHDBanner: String
+            get() = imageHorizontal2x.replace(sizeRegex, "1920x1080")
+    }
 
     data class Video(
         val id: Int,
@@ -36,7 +45,10 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val duration: Long,
         val languages: List<String> = emptyList(),
         val show: Show,
-    )
+    ) {
+        val fullHDImage: String
+            get() = image2x.replace(sizeRegex, "1920x1080")
+    }
 
     protected val baseUrl = "https://gw.api.animationdigitalnetwork.com/"
     protected val httpRequest = HttpRequest()
