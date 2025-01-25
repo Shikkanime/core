@@ -3,54 +3,41 @@ package fr.shikkanime.services
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.FileManager
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.resize
-import io.ktor.client.statement.readRawBytes
+import fr.shikkanime.utils.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
-import java.awt.AlphaComposite
-import java.awt.Color
-import java.awt.Font
-import java.awt.Graphics2D
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
+import java.awt.image.ConvolveOp
+import java.awt.image.Kernel
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import javax.imageio.ImageIO
 
 object MediaImage {
-    private data class Dimensions(
-        val whiteLinesSize: Int,
-        val margin: Int,
-        val animeImageWidth: Int,
-        val animeImageHeight: Int,
-        val episodeInformationHeight: Int,
-        val roundedCorner: Int
-    )
+    private const val BLUR_SIZE = 25
+    private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
 
     fun toMediaImage(episodes: List<EpisodeVariantDto>): BufferedImage {
-        val dimensions = Dimensions(
-            whiteLinesSize = 25,
-            margin = 50,
-            animeImageWidth = 480,
-            animeImageHeight = 720,
-            episodeInformationHeight = 75,
-            roundedCorner = 32
-        )
-
         val bannerImage = loadAndResizeBannerImage()
         val font = loadCustomFont()
 
-        val mediaImage = createMediaImage(dimensions, bannerImage)
+        val mediaImage = BufferedImage(768, 768, BufferedImage.TYPE_INT_RGB)
         val graphics = setupGraphics(mediaImage)
 
-        drawBackground(graphics, mediaImage, dimensions)
-        drawAnimeImage(graphics, dimensions, episodes.first().mapping.anime)
-        drawEpisodeInformation(graphics, dimensions, font, episodes.first().mapping.anime.countryCode, episodes)
-        drawBanner(graphics, mediaImage, bannerImage, dimensions)
+        drawBackground(mediaImage, graphics)
+        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, episodes.first().mapping.anime)
+        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, episodes.first().mapping.anime.countryCode, episodes)
+
+        graphics.drawImage(
+            bannerImage,
+            (mediaImage.width - bannerImage.width) / 2,
+            mediaImage.height - bannerImage.height - 25,
+            null
+        )
 
         graphics.dispose()
         return mediaImage
@@ -76,16 +63,6 @@ object MediaImage {
             }
         }
 
-    private fun Graphics2D.adjustFontSizeToFit(text: String, maxWidth: Int): Font {
-        var size = font.size2D
-
-        while (fontMetrics.stringWidth(text) > maxWidth && size > 12) {
-            font = font.deriveFont(--size)
-        }
-
-        return font
-    }
-
     private fun loadAndResizeBannerImage(): BufferedImage {
         val mediaImageFolder = File(Constant.dataFolder, "media-image")
         require(mediaImageFolder.exists()) { "The media image folder does not exist" }
@@ -101,13 +78,6 @@ object MediaImage {
         }
     }
 
-    private fun createMediaImage(dimensions: Dimensions, bannerImage: BufferedImage): BufferedImage {
-        val width = dimensions.whiteLinesSize + dimensions.margin + dimensions.animeImageWidth + dimensions.margin
-        val height = dimensions.whiteLinesSize + dimensions.margin + dimensions.animeImageHeight +
-                dimensions.episodeInformationHeight + (dimensions.margin / 2) + bannerImage.height
-        return BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
-    }
-
     private fun setupGraphics(mediaImage: BufferedImage): Graphics2D {
         return mediaImage.createGraphics().apply {
             setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
@@ -117,79 +87,96 @@ object MediaImage {
         }
     }
 
-    private fun drawBackground(graphics: Graphics2D, mediaImage: BufferedImage, dimensions: Dimensions) {
-        graphics.color = Color.WHITE
+    private fun drawBackground(mediaImage: BufferedImage, graphics: Graphics2D) {
+        val gradientPaint = GradientPaint(0f, mediaImage.height.toFloat(), Color(0x000000), mediaImage.width.toFloat(), 0f, Color(0x1F1F1F))
+        graphics.paint = gradientPaint
         graphics.fillRect(0, 0, mediaImage.width, mediaImage.height)
-        graphics.color = Color.BLACK
-        graphics.fillRoundRect(
-            dimensions.whiteLinesSize, dimensions.whiteLinesSize, mediaImage.width, mediaImage.height,
-            dimensions.roundedCorner, dimensions.roundedCorner
-        )
     }
 
     fun getLongTimeoutImage(url: String): BufferedImage =
         ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
 
-    private fun drawAnimeImage(graphics: Graphics2D, dimensions: Dimensions, anime: AnimeDto) {
-        val animeImage = getLongTimeoutImage(anime.image)
-            .resize(dimensions.animeImageWidth, dimensions.animeImageHeight)
+    private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: AnimeDto): Int {
+        val animeBanner = getLongTimeoutImage(anime.banner)
+        val scaleBannerRatio = mediaImage.width.toDouble() / (animeBanner.width + BLUR_SIZE * 2)
+        val scaleBannerResize = (animeBanner.height * scaleBannerRatio).toInt()
+        val resizedBanner = animeBanner.resize(mediaImage.width, scaleBannerResize)
 
+        val paddedImage = BufferedImage(
+            resizedBanner.width + BLUR_SIZE * 2,
+            resizedBanner.height + BLUR_SIZE * 2,
+            BufferedImage.TYPE_INT_ARGB
+        )
+        val paddedGraphics = paddedImage.createGraphics()
+        // Remove background
+        paddedGraphics.color = Color(0, 0, 0, 0)
+        paddedGraphics.fillRect(0, 0, paddedImage.width, paddedImage.height)
+        paddedGraphics.drawImage(resizedBanner, BLUR_SIZE, BLUR_SIZE, null)
+        paddedGraphics.dispose()
+
+        val bluredImage = ConvolveOp(Kernel(BLUR_SIZE, BLUR_SIZE, blurKernel), ConvolveOp.EDGE_NO_OP, null)
+            .filter(paddedImage, null)
+        // Dessiner l'image en compensant le padding
         graphics.drawImage(
-            animeImage.makeRoundedCorner(dimensions.roundedCorner),
-            dimensions.whiteLinesSize + dimensions.margin,
-            dimensions.whiteLinesSize + dimensions.margin,
+            bluredImage,
+            -BLUR_SIZE, // Compenser le padding à gauche
+            100 - BLUR_SIZE, // Compenser le padding en haut
+            bluredImage.width,
+            bluredImage.height,
             null
         )
 
-        graphics.color = Color(1.0f, 1.0f, 1.0f, 0.05f)
+        val animeImage = getLongTimeoutImage(anime.image)
+        val scaleThumbnailRatio = resizedBanner.height.toDouble() / animeImage.height.toDouble()
+        val scaleThumbnailResize = (animeImage.width * scaleThumbnailRatio).toInt()
+        val resizedThumbnail = animeImage.resize(scaleThumbnailResize, resizedBanner.height)
+
+        graphics.color = Color.WHITE
         graphics.fillRoundRect(
-            dimensions.whiteLinesSize + dimensions.margin,
-            dimensions.whiteLinesSize + dimensions.margin,
-            dimensions.animeImageWidth,
-            dimensions.animeImageHeight + dimensions.episodeInformationHeight,
-            dimensions.roundedCorner,
-            dimensions.roundedCorner
+            ((mediaImage.width - resizedThumbnail.width) / 2) - 5,
+            95,
+            resizedThumbnail.width + 10,
+            resizedThumbnail.height + 10,
+            8,
+            8
         )
+
+        graphics.drawImage(
+            resizedThumbnail.makeRoundedCorner(8),
+            (mediaImage.width - resizedThumbnail.width) / 2,
+            100,
+            resizedThumbnail.width,
+            resizedThumbnail.height,
+            null
+        )
+
+        return resizedThumbnail.height
     }
 
     private fun drawEpisodeInformation(
+        mediaImage: BufferedImage,
         graphics: Graphics2D,
-        dimensions: Dimensions,
+        thumbnailHeight: Int,
         font: Font,
         countryCode: CountryCode,
         episodes: List<EpisodeVariantDto>
     ) {
         graphics.color = Color.WHITE
-        graphics.font = font.deriveFont(32f).deriveFont(Font.BOLD)
+        graphics.font = font.deriveFont(16f).deriveFont(Font.BOLD)
+        val dateLabel = ZonedDateTime.parse(episodes.first().releaseDateTime).format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy")).uppercase()
+        val dateLabelWidth = graphics.fontMetrics.stringWidth(dateLabel)
+        graphics.drawString(
+            dateLabel,
+            mediaImage.width - dateLabelWidth - 20,
+            40
+        )
 
-        val text = buildString {
-            append("S${episodes.first().mapping.season} ")
-            append(StringUtils.getEpisodeTypePrefixLabel(countryCode, episodes.first().mapping.episodeType))
-            append(episodes.first().mapping.number)
-            append(" ")
-            append(episodes.map { it.audioLocale }.distinct().joinToString(" & ") { StringUtils.toLangTypeString(countryCode, it) })
-            append(" | DISPONIBLE")
-        }
-
-        graphics.font = graphics.adjustFontSizeToFit(text, dimensions.animeImageWidth - (dimensions.margin / 2) * 2)
-
-        val x =
-            dimensions.whiteLinesSize + dimensions.margin + (dimensions.animeImageWidth - graphics.fontMetrics.stringWidth(
-                text
-            )) / 2
-        val y = dimensions.whiteLinesSize + dimensions.margin + dimensions.animeImageHeight +
-                (dimensions.episodeInformationHeight + graphics.fontMetrics.height / 2) / 2
-        graphics.drawString(text, x, y)
-    }
-
-    private fun drawBanner(
-        graphics: Graphics2D,
-        mediaImage: BufferedImage,
-        bannerImage: BufferedImage,
-        dimensions: Dimensions
-    ) {
-        val x = dimensions.whiteLinesSize + (mediaImage.width - dimensions.whiteLinesSize - bannerImage.width) / 2
-        val y = mediaImage.height - bannerImage.height
-        graphics.drawImage(bannerImage, x, y, null)
+        graphics.font = font.deriveFont(24f).deriveFont(Font.BOLD)
+        val label1 = "SAISON ${episodes.first().mapping.season} • ${StringUtils.getEpisodeTypePrefixLabel(countryCode, episodes.first().mapping.episodeType)} ${episodes.first().mapping.number} ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { StringUtils.toLangTypeString(countryCode, it) }}"
+        val labelWidth = graphics.fontMetrics.stringWidth(label1)
+        graphics.drawString(label1, (mediaImage.width - labelWidth) / 2, 100 + thumbnailHeight + 80)
+        val label2 = "MAINTENANT DISPONIBLE"
+        val label2Width = graphics.fontMetrics.stringWidth(label2)
+        graphics.drawString(label2, (mediaImage.width - label2Width) / 2, 100 + thumbnailHeight + 120)
     }
 }
