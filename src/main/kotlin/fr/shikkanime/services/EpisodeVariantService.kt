@@ -47,7 +47,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     override fun getRepository() = episodeVariantRepository
 
-    fun findAllByMapping(mapping: EpisodeMapping) = episodeVariantRepository.findAllByMapping(mapping)
+    fun findAllByMapping(mappingUUID: UUID) = episodeVariantRepository.findAllByMapping(mappingUUID)
+
+    fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
     fun findAllVariantReleases(countryCode: CountryCode, member: Member?, startZonedDateTime: ZonedDateTime, endZonedDateTime: ZonedDateTime) =
         episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime)
