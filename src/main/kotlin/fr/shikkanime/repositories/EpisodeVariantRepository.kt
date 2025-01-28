@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
+import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     override fun getEntityClass() = EpisodeVariant::class.java
@@ -24,13 +25,13 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllByMapping(mapping: EpisodeMapping): List<EpisodeVariant> {
+    fun findAllByMapping(mappingUUID: UUID): List<EpisodeVariant> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
-            query.where(cb.equal(root[EpisodeVariant_.mapping], mapping))
+            query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.uuid], mappingUUID))
 
             createReadOnlyQuery(it, query)
                 .resultList

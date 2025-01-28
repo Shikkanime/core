@@ -28,7 +28,7 @@ class EpisodeVariantCacheService : AbstractCacheService {
         "EpisodeVariantCacheService.findAllByMapping",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = episodeMapping.uuid!!,
-    ) { episodeVariantService.findAllByMapping(episodeMapping) }.toSet()
+    ) { episodeVariantService.findAllByMapping(it) }.toSet()
 
     fun findAllVariantReleases(
         countryCode: CountryCode,
@@ -52,5 +52,5 @@ class EpisodeVariantCacheService : AbstractCacheService {
         "EpisodeVariantCacheService.find",
         classes = listOf(EpisodeVariant::class.java),
         key = uuid,
-    ) { episodeVariantService.find(uuid)?.let { AbstractConverter.convert(it, EpisodeVariantDto::class.java) } }
+    ) { episodeVariantService.find(it)?.let { AbstractConverter.convert(it, EpisodeVariantDto::class.java) } }
 }
