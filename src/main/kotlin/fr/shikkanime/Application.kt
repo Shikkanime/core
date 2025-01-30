@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
 private fun updateAndDeleteData() {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
-    val seasonRegex = " Saison (\\d)| ([MDCLXVI]+$)".toRegex()
+    val seasonRegex = " Saison (\\d)| ([${StringUtils.ROMAN_NUMBERS_CHECK}]+$)".toRegex()
     val animes = animeService.findAll()
 
     animes.forEach { anime ->

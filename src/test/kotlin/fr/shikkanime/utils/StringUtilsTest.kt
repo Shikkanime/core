@@ -71,6 +71,7 @@ class StringUtilsTest {
             "Power of Hope ~Precure Full Bloom~" to "Power of Hope",
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "I'm a Noble on the Brink of Ruin",
             "Anyway, I'm Falling in Love with You." to "Anyway, I'm Falling in Love with You.",
+            "Sonic X" to "Sonic X",
         )
 
         list.forEach { (input, expected) ->
