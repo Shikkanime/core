@@ -23,7 +23,7 @@ class SimulcastCacheService : AbstractCacheService {
         "SimulcastCacheService.find",
         classes = listOf(Simulcast::class.java),
         key = uuid
-    ) { simulcastService.find(uuid) }
+    ) { simulcastService.find(it) }
 
     val currentSimulcast: SimulcastDto?
         get() = findAll()?.firstOrNull()
