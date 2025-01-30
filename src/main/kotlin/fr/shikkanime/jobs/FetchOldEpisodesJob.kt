@@ -220,6 +220,6 @@ class FetchOldEpisodesJob : AbstractJob {
                 )
                 null
             }
-        }
+        }.distinctBy { it.getIdentifier() }
     }
 }
