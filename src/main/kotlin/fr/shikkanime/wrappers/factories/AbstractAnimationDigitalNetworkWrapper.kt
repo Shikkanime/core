@@ -6,7 +6,7 @@ import java.time.ZonedDateTime
 
 abstract class AbstractAnimationDigitalNetworkWrapper {
     companion object {
-        private val sizeRegex = "\\d*x\\d*".toRegex()
+        private val sizeRegex = "\\d+x\\d+".toRegex()
     }
 
     data class Microdata(
