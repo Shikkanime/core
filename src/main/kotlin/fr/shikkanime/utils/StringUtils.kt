@@ -15,9 +15,11 @@ import java.util.*
 import java.util.regex.Pattern
 
 object StringUtils {
+    const val ROMAN_NUMBERS_CHECK = "VI"
+
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
-    private val regex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([MDCLXVI]+$)".toRegex()
+    private val regex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([$ROMAN_NUMBERS_CHECK]+$)".toRegex()
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
     private val encasedRegex = "<.*> ?.*".toRegex()
     private val duplicateSpaceRegex = " +".toRegex()

@@ -11,6 +11,7 @@ import fr.shikkanime.exceptions.NotSimulcastedMediaException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractAnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.impl.AnimationDigitalNetworkWrapper
@@ -70,7 +71,7 @@ class AnimationDigitalNetworkPlatform :
         val season = video.season?.toIntOrNull() ?: 1
 
         val animeName = (video.show.shortTitle ?: video.show.title)
-            .replace("(?: -)? Saison \\d|Part.*|$season$| [MDCLXVI]+$".toRegex(), "")
+            .replace("(?: -)? Saison \\d|Part.*|$season$| [${StringUtils.ROMAN_NUMBERS_CHECK}]+$".toRegex(), "")
             .trim()
 
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")

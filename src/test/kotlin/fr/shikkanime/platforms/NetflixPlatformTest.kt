@@ -74,9 +74,9 @@ class NetflixPlatformTest : AbstractTest() {
             println(it)
         }
 
-        assertEquals(24, episodes.size)
+        assertEquals(36, episodes.size)
         // Count the distinct episode identifiers
-        assertEquals(24, episodes.map { it.getIdentifier() }.distinct().size)
+        assertEquals(36, episodes.map { it.getIdentifier() }.distinct().size)
         assertEquals("FR-NETF-8a6184b0-JA-JP", episodes.first().getIdentifier())
     }
 
