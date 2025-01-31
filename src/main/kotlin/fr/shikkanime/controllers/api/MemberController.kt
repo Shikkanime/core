@@ -321,6 +321,6 @@ class MemberController : HasPageableRoute() {
         limitParam: Int?,
     ): Response {
         val (_, limit, _) = pageableRoute(null, limitParam, null, null, defaultLimit = 9)
-        return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit))
+        return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return Response.notFound())
     }
 }

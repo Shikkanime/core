@@ -88,13 +88,13 @@ class AnimeCacheService : AbstractCacheService {
         key = DEFAULT_ALL_KEY,
     ) { animeService.findAllSeasons() }[anime.uuid!!]
 
-    fun find(uuid: UUID) = MapCache.getOrCompute(
+    fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "AnimeCacheService.find",
         classes = listOf(Anime::class.java),
         key = uuid,
     ) { animeService.find(it) }
 
-    fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrCompute(
+    fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrComputeNullable(
         "AnimeCacheService.findBySlug",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeIdKeyCache(countryCode, slug),

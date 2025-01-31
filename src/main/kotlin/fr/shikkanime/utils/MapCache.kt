@@ -61,13 +61,27 @@ class MapCache<K : Any, V>(
             }
         }
 
-        fun <K : Any, V> getOrCompute(name: String, duration: Duration? = null, classes: List<Class<*>> = emptyList(), key: K, block: (K) -> V): V {
-            return if (globalCaches.containsKey(name)) {
+        fun <K : Any, V : Any?> getOrComputeNullable(
+            name: String,
+            duration: Duration? = null,
+            classes: List<Class<*>> = emptyList(),
+            key: K,
+            block: (K) -> V
+        ): V? {
+            return globalCaches[name]?.let {
                 @Suppress("UNCHECKED_CAST")
-                (globalCaches[name] as MapCache<K, V>)[key]!!
-            } else {
-                synchronized(MapCache) { MapCache(name, duration, classes, block) }[key]!!
+                (it as MapCache<K, V>)[key]
+            } ?: synchronized(MapCache) {
+                MapCache(name, duration, classes, block)[key]
             }
         }
+
+        fun <K : Any, V> getOrCompute(
+            name: String,
+            duration: Duration? = null,
+            classes: List<Class<*>> = emptyList(),
+            key: K,
+            block: (K) -> V
+        ) = getOrComputeNullable(name, duration, classes, key, block)!!
     }
 }

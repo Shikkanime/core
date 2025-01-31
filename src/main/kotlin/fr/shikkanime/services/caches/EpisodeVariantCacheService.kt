@@ -48,7 +48,7 @@ class EpisodeVariantCacheService : AbstractCacheService {
         )
     }
 
-    fun find(uuid: UUID) = MapCache.getOrCompute(
+    fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "EpisodeVariantCacheService.find",
         classes = listOf(EpisodeVariant::class.java),
         key = uuid,

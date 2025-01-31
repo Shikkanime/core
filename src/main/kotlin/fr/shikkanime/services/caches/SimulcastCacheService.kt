@@ -19,12 +19,12 @@ class SimulcastCacheService : AbstractCacheService {
         key = "all"
     ) { AbstractConverter.convert(simulcastService.findAllModified(), SimulcastDto::class.java) }
 
-    fun find(uuid: UUID) = MapCache.getOrCompute(
+    fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "SimulcastCacheService.find",
         classes = listOf(Simulcast::class.java),
         key = uuid
     ) { simulcastService.find(it) }
 
     val currentSimulcast: SimulcastDto?
-        get() = findAll()?.firstOrNull()
+        get() = findAll().firstOrNull()
 }
