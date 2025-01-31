@@ -94,7 +94,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
 
-            val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant) } }
+            val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime) } }
                 .sortedBy { it.platform.sortIndex }
 
             allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
@@ -331,11 +331,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     private suspend fun retrievePlatformEpisode(
         episodeMapping: EpisodeMapping,
-        episodeVariant: EpisodeVariant
+        episodeVariant: EpisodeVariant,
+        lastDateTime: ZonedDateTime
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
-        val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
+        val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime >= lastDateTime
 
         when (episodeVariant.platform) {
             Platform.ANIM -> {
