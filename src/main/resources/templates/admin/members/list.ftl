@@ -71,7 +71,10 @@
             <template x-for="member in pageable.data">
                 <tr>
                     <td>
-                        <img x-show="member.hasProfilePicture" x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE'" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
+                        <template x-if="member.hasProfilePicture">
+                            <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE&v=' + new Date(member.lastUpdateDateTime).getTime()" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
+                        </template>
+
                         <span class="me-1 badge" :class="member.isActive ? 'bg-success' : 'bg-danger'" x-text="member.isActive ? 'Active' : 'Inactive'"></span>
                         <span x-text="member.email || 'N/A'"></span>
                     </td>

@@ -122,7 +122,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                             root[EpisodeMapping_.lastUpdateDateTime],
                             lastDateTime
                         ),
-                        cb.equal(root[EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
+                        cb.and(
+                            cb.equal(root[EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
+                            cb.greaterThanOrEqualTo(root[EpisodeMapping_.releaseDateTime], lastDateTime),
+                        ),
                     ),
                 )
                 .orderBy(cb.asc(root[EpisodeMapping_.lastUpdateDateTime]))
