@@ -2,7 +2,6 @@ package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.UUIDPaginationKeyCache
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
@@ -23,33 +22,22 @@ class MemberFollowAnimeCacheService : AbstractCacheService {
 
     fun getMissedAnimes(member: UUID, page: Int, limit: Int) = MapCache.getOrCompute(
         "MemberFollowAnimeCacheService.getMissedAnimes",
-        classes = listOf(MemberFollowAnime::class.java, MemberFollowEpisode::class.java, Anime::class.java, EpisodeMapping::class.java),
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, MemberFollowAnime::class.java, MemberFollowEpisode::class.java),
         key = UUIDPaginationKeyCache(member, page, limit),
     ) {
-        val pageable = memberFollowAnimeService.findAllMissedAnimes(
-            memberCacheService.find(it.uuid) ?: return@getOrCompute PageableDto.empty(),
-            it.page,
-            it.limit
-        )
-
-        val dtos = pageable.data.map { tuple ->
-            MissedAnimeDto(
-                AbstractConverter.convert(tuple[0], AnimeDto::class.java),
-                tuple[1] as Long
-            )
-        }.toSet()
-
-        PageableDto(
-            data = dtos,
-            page = pageable.page,
-            limit = pageable.limit,
-            total = pageable.total,
+        PageableDto.fromPageable(
+            memberFollowAnimeService.findAllMissedAnimes(
+                memberCacheService.find(it.uuid) ?: return@getOrCompute PageableDto.empty(),
+                it.page,
+                it.limit
+            ),
+            MissedAnimeDto::class.java
         )
     }
 
     fun findAllBy(member: UUID, page: Int, limit: Int) = MapCache.getOrCompute(
         "MemberFollowAnimeCacheService.findAllBy",
-        classes = listOf(MemberFollowAnime::class.java, Anime::class.java),
+        classes = listOf(Anime::class.java, MemberFollowAnime::class.java),
         key = UUIDPaginationKeyCache(member, page, limit),
     ) {
         PageableDto.fromPageable(

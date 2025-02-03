@@ -72,8 +72,8 @@ class MapCache<K : Any, V>(
                 @Suppress("UNCHECKED_CAST")
                 (it as MapCache<K, V>)[key]
             } ?: synchronized(MapCache) {
-                MapCache(name, duration, classes, block)[key]
-            }
+                MapCache(name, duration, classes, block)
+            }[key]
         }
 
         fun <K : Any, V> getOrCompute(

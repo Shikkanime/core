@@ -2,9 +2,9 @@ package fr.shikkanime.converters.member
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
+import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
-import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.Member
@@ -25,20 +25,8 @@ class MemberToRefreshMemberDtoConverter : AbstractConverter<Member, RefreshMembe
         val followedEpisodesPageable = memberFollowEpisodeService.findAllFollowedEpisodes(from, 1, limit)
         val (totalDuration, totalUnseenDuration) = memberFollowEpisodeService.getSeenAndUnseenDuration(from)
 
-        val missedAnimeDtos = missedAnimesPageable.data.map { tuple ->
-            MissedAnimeDto(
-                convert(tuple[0], AnimeDto::class.java),
-                tuple[1] as Long
-            )
-        }.toSet()
-
         return RefreshMemberDto(
-            missedAnimes = PageableDto(
-                data = missedAnimeDtos,
-                page = missedAnimesPageable.page,
-                limit = missedAnimesPageable.limit,
-                total = missedAnimesPageable.total,
-            ),
+            missedAnimes = PageableDto.fromPageable(missedAnimesPageable, MissedAnimeDto::class.java),
             followedAnimes = PageableDto.fromPageable(followedAnimesPageable, AnimeDto::class.java),
             followedEpisodes = PageableDto.fromPageable(followedEpisodesPageable, EpisodeMappingDto::class.java),
             totalDuration = totalDuration,
