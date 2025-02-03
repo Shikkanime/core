@@ -10,7 +10,9 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.jobs.AbstractJob
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
@@ -134,6 +136,21 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getAnimes(): Response {
         return Response.template(Link.ANIMES)
+    }
+
+    @Path("/animes/force-update-all")
+    @Get
+    @AdminSessionAuthenticated
+    private fun forceUpdateAllAnimes(): Response {
+        val animes = animeService.findAll()
+
+        animes.forEach {
+            it.lastUpdateDateTime = null
+        }
+
+        animeService.updateAll(animes)
+
+        return Response.redirect(Link.ANIMES.href)
     }
 
     @Path("/animes/{uuid}")

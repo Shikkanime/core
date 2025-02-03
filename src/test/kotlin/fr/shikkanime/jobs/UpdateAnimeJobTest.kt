@@ -31,7 +31,7 @@ class UpdateAnimeJobTest : AbstractTest() {
     }
 
     @Test
-    fun `run old Crunchyroll anime`() {
+    fun `update Crunchyroll anime Date A Live`() {
         val zonedDateTime = ZonedDateTime.parse("2015-08-22T01:00:00Z")
 
         val tmpAnime = animeService.save(
@@ -76,7 +76,7 @@ class UpdateAnimeJobTest : AbstractTest() {
     }
 
     @Test
-    fun `run old ADN and Crunchyroll anime`() {
+    fun `update ADN and Crunchyroll anime My Deer Friend Nokotan`() {
         val zonedDateTime = ZonedDateTime.parse("2024-07-07T15:00:00Z")
 
         val tmpAnime = animeService.save(
@@ -115,21 +115,21 @@ class UpdateAnimeJobTest : AbstractTest() {
         val anime = animes.first()
 
         assertEquals(
-            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/6533e54a54f7a69c806920607bc8238e.jpg",
+            "https://image.animationdigitalnetwork.fr/license/mydeerfriendnokotan/tv/web/affiche_1560x2340.jpg",
             anime.image
         )
         assertEquals(
-            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9137d9a835d85f965d7a87886878c630.jpg",
+            "https://image.animationdigitalnetwork.fr/license/mydeerfriendnokotan/tv/web/license_1920x1080.jpg",
             anime.banner
         )
         assertEquals(
-            "Torako Koshi est une lycéenne modèle, mais personne ne sait qu’auparavant, elle était une délinquante. Un jour, elle croise la route d’une drôle de fille avec des bois sur la tête, coincée dans des lignes électriques : Shikanoko, alias Nokotan. Qui est-elle ? Un humain ? Un cerf ? En tous cas, elle connaît le secret de Torako et l’embarque dans une aventure complètement folle.",
+            "Adulée par ses camarades pour son assiduité et sa beauté, Torako cache pour autant un lourd passé de délinquante. Mais lorsque la pétillante Nokotan est transférée dans sa classe, c’est la panique. Avec son nez capable de flairer les reliquats de sa vie antérieure, le chaos s’immisce peu à peu dans son quotidien. Qui est cette mystérieuse jeune fille aux bois de cerf ? Une comédie déjantée à découvrir dès maintenant !",
             anime.description
         )
     }
 
     @Test
-    fun `run old Crunchyroll anime My Hero Academia`() {
+    fun `update Crunchyroll anime My Hero Academia`() {
         val zonedDateTime = ZonedDateTime.parse("2015-08-22T01:00:00Z")
 
         val tmpAnime = animeService.save(
@@ -167,14 +167,13 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assumeTrue(anime.image == "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/6e008ad5211c3998b8f3e4bc166821cd.jpg")
-        assumeTrue(anime.banner == "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9ca680632ac63f44c7220f61ace9a81b.jpg")
-        assumeTrue(anime.description == "Super héros, super pouvoirs… On a tous déjà rêvé secrètement de posséder une qualité hors du commun, de briller ou d’être LA personne la plus puissante de l’univers. Dans ce nouveau monde, ce rêve est à la portée de quasiment toute la population car les humains peuvent désormais naître avec un pouvoir : le « alter ». Mais certains malchanceux naissent sans alter.")
+        assertEquals("https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/6e008ad5211c3998b8f3e4bc166821cd.jpg", anime.image)
+        assertEquals("https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9ca680632ac63f44c7220f61ace9a81b.jpg", anime.banner)
+        assertEquals("Super héros, super pouvoirs… On a tous déjà rêvé secrètement de posséder une qualité hors du commun, de briller ou d’être LA personne la plus puissante de l’univers. Dans ce nouveau monde, ce rêve est à la portée de quasiment toute la population car les humains peuvent désormais naître avec un pouvoir : le « alter ». Mais certains malchanceux naissent sans alter.", anime.description)
     }
 
     @Test
-    fun `run old Crunchyroll anime Konosuba`() {
-
+    fun `update Crunchyroll anime KONOSUBA`() {
         val tmpAnime = animeService.save(
             Anime(
                 countryCode = CountryCode.FR,
@@ -211,18 +210,12 @@ class UpdateAnimeJobTest : AbstractTest() {
         val anime = animes.first()
 
         assumeTrue("https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/041fa9860f09efb08b3c8a3af712b985.jpg" == anime.image)
-        assertEquals(
-            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/131f32cf27743b9c95b78b4b3fb1c6ee.jpg",
-            anime.banner
-        )
-        assertEquals(
-            "Après avoir perdu la vie dans un accident de la route, Kazuma Satô voit apparaître devant lui une ravissante déesse, Aqua. Elle lui propose d’être réincarné dans un autre monde et d’emporter une seule chose avec lui. Kazuma choisit… la déesse ! Les voici transportés dans un pays sous la coupe d’un terrible roi démon. C’est le début de nombreuses aventures, car si Kazuma n’aspire qu’à la paix et au calme, Aqua se préoccupe beaucoup des problèmes des gens qu’ils croisent. Et cela ne plaît pas du tout au roi…",
-            anime.description
-        )
+        assertEquals("https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/131f32cf27743b9c95b78b4b3fb1c6ee.jpg", anime.banner)
+        assertEquals("Après avoir perdu la vie dans un accident de la route, Kazuma Satô voit apparaître devant lui une ravissante déesse, Aqua. Elle lui propose d’être réincarné dans un autre monde et d’emporter une seule chose avec lui. Kazuma choisit… la déesse ! Les voici transportés dans un pays sous la coupe d’un terrible roi démon. C’est le début de nombreuses aventures, car si Kazuma n’aspire qu’à la paix et au calme, Aqua se préoccupe beaucoup des problèmes des gens qu’ils croisent. Et cela ne plaît pas du tout au roi…", anime.description)
     }
 
     @Test
-    fun `run old ADN and Crunchyroll anime One Piece Log`() {
+    fun `update ADN and Crunchyroll anime ONE PIECE Log Fish-Man Island Saga`() {
         val zonedDateTime = ZonedDateTime.parse("2024-11-03T08:00:00Z")
 
         val tmpAnime = animeService.save(
@@ -260,19 +253,13 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assumeTrue("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/affiche_1560x2340.jpg" == anime.image)
-        assertEquals(
-            "https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/license_1920x1080.jpg",
-            anime.banner
-        )
-        assertEquals(
-            "Après deux ans de séparation, le grand jour est enfin arrivé : l’équipage du Chapeau de paille se réunit à nouveau sur l’archipel Sabaody. Forts de leur expérience et prêts à affronter le Nouveau Monde, ils se préparent à naviguer sous l’eau, avec un Thousand Sunny désormais équipé pour atteindre leur prochaine destination : l’Île des Hommes-Poissons, un paradis sous-marin à plus de 10 000 mètres de profondeur !",
-            anime.description
-        )
+        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/affiche_1560x2340.jpg", anime.image)
+        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/license_1920x1080.jpg", anime.banner)
+        assertEquals("Après deux ans de séparation, le grand jour est enfin arrivé : l’équipage du Chapeau de paille se réunit à nouveau sur l’archipel Sabaody. Forts de leur expérience et prêts à affronter le Nouveau Monde, ils se préparent à naviguer sous l’eau, avec un Thousand Sunny désormais équipé pour atteindre leur prochaine destination : l’Île des Hommes-Poissons, un paradis sous-marin à plus de 10 000 mètres de profondeur !", anime.description)
     }
 
     @Test
-    fun `run DAN DA DAN multiple platforms`() {
+    fun `update DAN DA DAN on multiple platforms`() {
         val zonedDateTime = ZonedDateTime.parse("2024-11-03T08:00:00Z")
 
         val tmpAnime = animeService.save(
@@ -318,16 +305,13 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assertEquals("https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/13839ea2b48b0323417b23813a090c93.jpg", anime.image)
-        assertEquals("https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fa62dd1fc7a9bc0b587f36f53bf572c1.jpg", anime.banner)
-        assertEquals(
-            "Quand Momo, issue d'une lignée de médiums, rencontre son camarade de classe Okarun, fasciné par l’occulte, ils se disputent. Lorsqu'il s'avère que les deux phénomènes sont bien réels, Momo réveille en elle un pouvoir caché tandis qu'une malédiction s'abat sur Okarun. Ensemble, ils doivent affronter les forces du paranormal qui menacent notre monde...",
-            anime.description
-        )
+        assertEquals("https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/affiche_1560x2340.jpg", anime.image)
+        assertEquals("https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/license_1920x1080.jpg", anime.banner)
+        assertEquals("Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…", anime.description)
     }
 
     @Test
-    fun `run Ninja Kamui multiple platforms`() {
+    fun `update Prime Video anime Ninja Kamui`() {
         val zonedDateTime = ZonedDateTime.parse("2024-02-11T15:00:00Z")
 
         val tmpAnime = animeService.save(
@@ -352,5 +336,49 @@ class UpdateAnimeJobTest : AbstractTest() {
         )
 
         updateAnimeJob.run()
+    }
+
+    @Test
+    fun `update ADN and Crunchyroll anime One Piece Fan Letter`() {
+        val zonedDateTime = ZonedDateTime.parse("2024-10-20T07:00:00Z")
+
+        val tmpAnime = animeService.save(
+            Anime(
+                countryCode = CountryCode.FR,
+                releaseDateTime = zonedDateTime,
+                lastReleaseDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
+                name = "ONE PIECE FAN LETTER",
+                slug = "one-piece-fan-letter",
+                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
+                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg",
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.ANIM,
+                platformId = "1258"
+            )
+        )
+
+        animePlatformService.save(
+            AnimePlatform(
+                anime = tmpAnime,
+                platform = Platform.CRUN,
+                platformId = "GRMG8ZQZR"
+            )
+        )
+
+        updateAnimeJob.run()
+
+        val animes = animeService.findAll()
+        assertEquals(1, animes.size)
+        val anime = animes.first()
+
+        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefanletter/tv/web/affiche_1560x2340.jpg", anime.image)
+        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefanletter/tv/web/license_1920x1080.jpg", anime.banner)
+        assertEquals("L’intrigue se déroule sur l’île de Sabaody, deux ans après la bataille de Marine Ford, où Luffy a tragiquement perdu son frère, Ace. Une jeune fille, fascinée par Nami, entreprend alors une aventure hors du commun.", anime.description)
     }
 }

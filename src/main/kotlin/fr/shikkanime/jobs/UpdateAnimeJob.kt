@@ -25,6 +25,7 @@ import java.time.ZonedDateTime
 
 class UpdateAnimeJob : AbstractJob {
     data class UpdatableAnime(
+        val platform: Platform,
         val lastReleaseDateTime: ZonedDateTime,
         val image: String,
         val banner: String,
@@ -72,11 +73,18 @@ class UpdateAnimeJob : AbstractJob {
             // Compare platform sort index and anime release date descending
             val updatedAnimes = runCatching { runBlocking { fetchAnime(anime) } }
                 .getOrNull()
+                ?.groupBy { it.platform }
+                ?.toList()
                 ?.sortedWith(
-                compareByDescending<Pair<Platform, UpdatableAnime>> { it.second.lastReleaseDateTime }
-                    .thenBy { it.second.episodeSize }
-                    .thenBy { it.first.sortIndex }
-                )?.map { it.second } ?: emptyList()
+                    compareBy<Pair<Platform, List<UpdatableAnime>>> { it.second.size }
+                        .thenBy { it.first.sortIndex }
+                )
+                ?.flatMap { pair ->
+                    pair.second.sortedWith(
+                        compareByDescending<UpdatableAnime> { it.lastReleaseDateTime }
+                            .thenBy { it.episodeSize }
+                    )
+                } ?: emptyList()
 
             if (updatedAnimes.isEmpty()) {
                 logger.warning("No platform found for anime $shortName")
@@ -130,34 +138,42 @@ class UpdateAnimeJob : AbstractJob {
         MapCache.invalidate(Anime::class.java)
     }
 
-    private suspend fun fetchAnime(anime: Anime): List<Pair<Platform, UpdatableAnime>> {
-        val list = mutableListOf<Pair<Platform, UpdatableAnime>>()
+    private suspend fun fetchAnime(anime: Anime): List<UpdatableAnime> {
+        val list = mutableListOf<UpdatableAnime>()
 
         animePlatformService.findAllByAnime(anime).forEach {
-            when (it.platform!!) {
-                Platform.ANIM -> list.add(it.platform to fetchADNAnime(it))
-                Platform.CRUN -> list.add(it.platform to fetchCrunchyrollAnime(it))
-                Platform.NETF -> runCatching { list.add(it.platform to fetchNetflixAnime(it)) }
-                Platform.PRIM -> runCatching { list.add(it.platform to fetchPrimeVideoAnime(it)) }
-                else -> logger.warning("Platform ${it.platform} not supported")
+            runCatching {
+                when (it.platform!!) {
+                    Platform.ANIM -> list.add(fetchADNAnime(it))
+                    Platform.CRUN -> list.add(fetchCrunchyrollAnime(it))
+                    Platform.NETF -> list.add(fetchNetflixAnime(it))
+                    Platform.PRIM -> list.add(fetchPrimeVideoAnime(it))
+                    else -> logger.warning("Platform ${it.platform} not supported")
+                }
+            }.onFailure { e ->
+                logger.warning("Error while fetching anime ${anime.name} on platform ${it.platform}: ${e.message}")
             }
         }
 
         return list
     }
 
-    private suspend fun fetchADNAnime(animePlatform: AnimePlatform) = AnimationDigitalNetworkCachedWrapper.getShow(animePlatform.platformId!!.toInt())
-        .let { show ->
-            val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(animePlatform.platformId!!.toInt())
+    private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
+        val show = AnimationDigitalNetworkCachedWrapper.getShow(animePlatform.platformId!!.toInt())
+        val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(animePlatform.platformId!!.toInt())
 
-            UpdatableAnime(
-                lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
-                image = show.fullHDImage,
-                banner = show.fullHDBanner,
-                description = show.summary,
-                episodeSize = showVideos.size
-            )
-        }
+        if (showVideos.isEmpty())
+            throw Exception("No episode found for ADN anime ${show.title}")
+
+        return UpdatableAnime(
+            platform = Platform.ANIM,
+            lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
+            image = show.fullHDImage,
+            banner = show.fullHDBanner,
+            description = show.summary,
+            episodeSize = showVideos.size
+        )
+    }
 
     private suspend fun fetchCrunchyrollAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val countryCode = animePlatform.anime!!.countryCode!!
@@ -181,6 +197,7 @@ class UpdateAnimeJob : AbstractJob {
             throw Exception("No episode found for Crunchyroll anime ${series.title}")
 
         return UpdatableAnime(
+            platform = Platform.CRUN,
             lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
             image = series.fullHDImage!!,
             banner = series.fullHDBanner!!,
@@ -203,6 +220,7 @@ class UpdateAnimeJob : AbstractJob {
         val show = episodes.first().show
 
         return UpdatableAnime(
+            platform = Platform.NETF,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
             image = animePlatform.anime!!.image!!,
             banner = show.banner,
@@ -225,6 +243,7 @@ class UpdateAnimeJob : AbstractJob {
         val show = episodes.first().show
 
         return UpdatableAnime(
+            platform = Platform.PRIM,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
             image = animePlatform.anime!!.image!!,
             banner = show.banner,
