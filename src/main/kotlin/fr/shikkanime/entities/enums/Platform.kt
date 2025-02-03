@@ -6,8 +6,8 @@ enum class Platform(
     var image: String,
     val sortIndex: Short,
 ) {
-    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 1),
-    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 0),
+    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 0),
+    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 1),
     DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", 2),
     NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", 3),
     PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg", 4),
@@ -21,7 +21,7 @@ enum class Platform(
         fun fromNullable(string: String?): Platform? {
             return if (string == null) null else try {
                 Platform.valueOf(string.uppercase())
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
         }
