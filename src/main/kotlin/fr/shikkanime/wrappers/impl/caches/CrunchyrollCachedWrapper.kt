@@ -180,12 +180,11 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         }
 
         episodeIds.addAll(
-            seriesIds.parallelStream()
-                .flatMap { seriesId -> HttpRequest.retry(3) { getSeasonsBySeriesId(countryCode.locale, seriesId) }.stream() }
-                .flatMap { season -> HttpRequest.retry(3) { getEpisodesBySeasonId(countryCode.locale, season.id) }.stream() }
-                .flatMap { episode -> (listOf(episode.id!!) + episode.getVariants(null)).stream() }
+            seriesIds.asSequence()
+                .flatMap { seriesId -> HttpRequest.retry(3) { getSeasonsBySeriesId(countryCode.locale, seriesId) } }
+                .flatMap { season -> HttpRequest.retry(3) { getEpisodesBySeasonId(countryCode.locale, season.id) } }
+                .flatMap { episode -> (listOf(episode.id!!) + episode.getVariants(null)) }
                 .distinct()
-                .toList()
         )
 
         return episodeIds.chunked(CRUNCHYROLL_CHUNK).parallelStream()

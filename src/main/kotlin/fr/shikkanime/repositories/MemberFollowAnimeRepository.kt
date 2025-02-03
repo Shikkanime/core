@@ -2,7 +2,6 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.EpisodeType
-import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.util.*
 
@@ -46,10 +45,10 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         member: Member,
         page: Int,
         limit: Int,
-    ): Pageable<Tuple> {
+    ): Pageable<MissedAnime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(MissedAnime::class.java)
             val root = query.from(getEntityClass())
             val anime = root.join(MemberFollowAnime_.anime)
             val episodeMapping = anime.join(Anime_.mappings, JoinType.LEFT)
@@ -61,11 +60,16 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             val memberPredicate = cb.equal(root[MemberFollowAnime_.member], member)
             val memberFollowEpisodePredicate = cb.and(cb.isNull(memberFollowEpisode[MemberFollowEpisode_.episode]))
 
-            query.multiselect(anime, cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]).`as`(Long::class.java))
-            query.where(memberPredicate, memberFollowEpisodePredicate)
-            query.groupBy(anime)
-            query.having(cb.greaterThan(cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]), 0))
-            query.orderBy(cb.desc(anime[Anime_.lastReleaseDateTime]))
+            query.select(
+                cb.construct(
+                    MissedAnime::class.java,
+                    anime,
+                    cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]).`as`(Long::class.java)
+                )
+            ).where(memberPredicate, memberFollowEpisodePredicate)
+                .groupBy(anime)
+                .having(cb.greaterThan(cb.countDistinct(episodeMapping[EpisodeMapping_.uuid]), 0))
+                .orderBy(cb.desc(anime[Anime_.lastReleaseDateTime]))
 
             buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
         }
