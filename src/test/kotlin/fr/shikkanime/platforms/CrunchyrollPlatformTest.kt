@@ -211,6 +211,8 @@ class CrunchyrollPlatformTest : AbstractTest() {
             emptyList(),
             ZonedDateTime.now(),
             "",
+            "",
+            null,
             null,
             null,
             "",
@@ -223,6 +225,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             false,
             null,
             "nextId",
+            "",
         )
         val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
@@ -268,6 +271,8 @@ class CrunchyrollPlatformTest : AbstractTest() {
             emptyList(),
             ZonedDateTime.now().minusDays(1),
             "seasonId",
+            "",
+            null,
             null,
             null,
             "",
@@ -280,6 +285,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             false,
             null,
             null,
+            "",
         )
         val nextEpisode = mockkClass(AbstractCrunchyrollWrapper.Episode::class)
         every { nextEpisode.id } returns "nextId"
@@ -337,6 +343,8 @@ class CrunchyrollPlatformTest : AbstractTest() {
             emptyList(),
             ZonedDateTime.now().minusDays(1),
             "seasonId",
+            "",
+            null,
             null,
             null,
             "",
@@ -349,6 +357,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             false,
             null,
             null,
+            "",
         )
 
         mockkStatic(CrunchyrollWrapper::class) {

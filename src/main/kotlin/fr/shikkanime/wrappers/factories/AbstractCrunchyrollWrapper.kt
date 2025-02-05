@@ -61,9 +61,14 @@ abstract class AbstractCrunchyrollWrapper {
 
     data class Season(
         val id: String,
+        val title: String,
         @SerializedName("subtitle_locales")
         val subtitleLocales: List<String>,
         val keywords: List<String>,
+        @SerializedName("versions")
+        val versions: List<Version>?,
+        @SerializedName("identifier")
+        val identifier: String,
     )
 
     data class Episode(
@@ -80,8 +85,12 @@ abstract class AbstractCrunchyrollWrapper {
         val premiumAvailableDate: ZonedDateTime,
         @SerializedName("season_id")
         val seasonId: String,
+        @SerializedName("season_title")
+        val seasonTitle: String,
         @SerializedName("season_number")
         val seasonNumber: Int?,
+        @SerializedName("season_display_number")
+        val seasonDisplayNumber: String?,
         @SerializedName("season_slug_title")
         val seasonSlugTitle: String?,
         @SerializedName("episode")
@@ -100,6 +109,8 @@ abstract class AbstractCrunchyrollWrapper {
         val versions: List<Version>?,
         @SerializedName("next_episode_id")
         val nextEpisodeId: String?,
+        @SerializedName("identifier")
+        val identifier: String,
     ) {
         fun convertToBrowseObject() = BrowseObject(
             id = id!!,

@@ -4,12 +4,8 @@ import nu.pattern.OpenCV
 import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import java.io.*
+import java.util.zip.GZIPInputStream
 
 object FileManager {
     init {
@@ -64,6 +60,19 @@ object FileManager {
         } catch (e: Exception) {
             e.printStackTrace()
             throw Exception("Failed to write file")
+        }
+    }
+
+    fun decompressGzip(bytes: ByteArray): ByteArray {
+        return try {
+            ByteArrayInputStream(bytes).use { bais ->
+                GZIPInputStream(bais).use { gis ->
+                    gis.readBytes()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Failed to decompress GZIP")
         }
     }
 }

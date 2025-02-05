@@ -17,6 +17,7 @@ import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
+import fr.shikkanime.wrappers.AniDBWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
@@ -89,6 +90,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
         val allPreviousAndNext = mutableListOf<Episode>()
 
+//        val aniDbAnimeTitles = AniDBWrapper.getAniDBAnimeTitles()
+        val testAniDB = mutableMapOf<String, Set<Long>>()
+
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
@@ -137,6 +141,13 @@ class UpdateEpisodeMappingJob : AbstractJob {
             }
 
             logger.info("Episode $mappingIdentifier updated")
+
+            episodes.asSequence()
+                .filter { it.platform == Platform.CRUN }
+                .forEach { episode ->
+                    val exactMatches = AniDBWrapper.searchAniDBAnimeTitle(setOf("en-US"), episode.id)
+                    testAniDB[episode.id] = exactMatches.keys.map { it.key }.toSet()
+                }
         }
 
         val allNewEpisodes = mutableSetOf<EpisodeVariant>()
@@ -168,6 +179,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
 
         logger.info("Episodes updated")
+
+        testAniDB.forEach { (episodeId, aniDbAnimeIds) ->
+            logger.info("Episode $episodeId has AniDB anime IDs: $aniDbAnimeIds")
+        }
 
         if (needRefreshCache.get()) {
             MapCache.invalidate(
