@@ -73,7 +73,7 @@
                 <label class="form-check-label" for="invalidInput">Only invalid</label>
             </div>
             <div class="col-auto ms-auto">
-                <a class="btn btn-primary" href="/admin/animes/force-update-all">
+                <a class="btn btn-primary" href="/admin/api/animes/force-update-all">
                     <i class="bi bi-check-all me-2"></i>
                     Force update all
                 </a>

@@ -1,5 +1,6 @@
 package fr.shikkanime.modules
 
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.LinkObject
@@ -10,8 +11,6 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
-
-private const val ADMIN = "/admin"
 
 private fun <T> List<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else null
 private fun <T> List<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter(predicate).randomIfNotEmpty()
@@ -24,7 +23,7 @@ fun setGlobalAttributes(
     replacedPath: String,
     title: String?
 ) {
-    if (!replacedPath.startsWith("/admin") && !isSitePath(replacedPath)) {
+    if (!replacedPath.startsWith(ADMIN) && !isSitePath(replacedPath)) {
         return
     }
 

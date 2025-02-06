@@ -1,10 +1,8 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.TraceActionDto
 import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberFollowAnimeService
@@ -21,12 +19,10 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
-import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import java.time.LocalDate
 import java.util.*
 
 @Controller("/api/v1/members")
@@ -42,77 +38,6 @@ class MemberController : HasPageableRoute() {
 
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Path
-    @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun getMembers(
-        @QueryParam("page", description = "Page number for pagination")
-        pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
-        limitParam: Int?,
-    ): Response {
-        val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(memberService.findAllWithLastLogin(page, limit))
-    }
-
-    @Path("/{memberUuid}/login-activities")
-    @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun getMemberLoginActivities(
-        @PathParam("memberUuid", description = "Member UUID")
-        memberUuid: UUID
-    ): Response {
-        val now = LocalDate.now()
-        val after = now.minusMonths(1)
-        val actions = memberService.findMemberLoginActivities(memberUuid, after)
-
-        return Response.ok(
-            after.datesUntil(now.plusDays(1))
-                .toList()
-                .associateWith { date -> AbstractConverter.convert(actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }, TraceActionDto::class.java) }
-        )
-    }
-
-    @Path("/{memberUuid}/follow-anime-activities")
-    @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun getMemberFollowAnimeActivities(
-        @PathParam("memberUuid", description = "Member UUID")
-        memberUuid: UUID
-    ): Response {
-        val now = LocalDate.now()
-        val after = now.minusMonths(1)
-        val actions = memberService.findMemberFollowAnimeActivities(memberUuid, after)
-
-        return Response.ok(
-            after.datesUntil(now.plusDays(1))
-                .toList()
-                .associateWith { date -> AbstractConverter.convert(actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }, TraceActionDto::class.java) }
-        )
-    }
-
-    @Path("/{memberUuid}/follow-episode-activities")
-    @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun getMemberFollowEpisodeActivities(
-        @PathParam("memberUuid", description = "Member UUID")
-        memberUuid: UUID
-    ): Response {
-        val now = LocalDate.now()
-        val after = now.minusMonths(1)
-        val actions = memberService.findMemberFollowEpisodeActivities(memberUuid, after)
-
-        return Response.ok(
-            after.datesUntil(now.plusDays(1))
-                .toList()
-                .associateWith { date -> AbstractConverter.convert(actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }, TraceActionDto::class.java) }
-        )
-    }
 
     @Path("/register")
     @Post

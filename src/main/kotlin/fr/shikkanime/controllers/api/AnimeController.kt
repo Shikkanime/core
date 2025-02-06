@@ -1,30 +1,19 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.*
-import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.MessageDto
+import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
-import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
-import fr.shikkanime.utils.routes.param.BodyParam
-import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -34,9 +23,6 @@ import java.util.*
 class AnimeController : HasPageableRoute() {
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var animeService: AnimeService
 
     @Inject
     private lateinit var memberFollowAnimeCacheService: MemberFollowAnimeCacheService
@@ -142,50 +128,6 @@ class AnimeController : HasPageableRoute() {
         )
     }
 
-    @Path("/alerts")
-    @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun getAlerts(
-        @QueryParam("page", description = "Page number for pagination")
-        pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
-        limitParam: Int?,
-    ): Response {
-        val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(animeService.getAlerts(page, limit))
-    }
-
-    @Path("/{uuid}")
-    @Get
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun animeDetails(
-        @PathParam("uuid") uuid: UUID,
-    ): Response {
-        return Response.ok(AbstractConverter.convert(animeService.find(uuid) ?: return Response.notFound(), AnimeDto::class.java))
-    }
-
-    @Path("/{uuid}")
-    @Put
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
-        val updated = animeService.update(uuid, animeDto)
-        MapCache.invalidate(Anime::class.java)
-        return Response.ok(AbstractConverter.convert(updated, AnimeDto::class.java))
-    }
-
-    @Path("/{uuid}")
-    @Delete
-    @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
-    private fun deleteAnime(@PathParam("uuid") uuid: UUID): Response {
-        animeService.delete(animeService.find(uuid) ?: return Response.notFound())
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
-        return Response.noContent()
-    }
-
     @Path("/weekly")
     @Get
     @JWTAuthenticated(optional = true)
@@ -248,9 +190,6 @@ class AnimeController : HasPageableRoute() {
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-
-        return Response.ok(
-            memberFollowAnimeCacheService.getMissedAnimes(uuid, page, limit) ?: return Response.notFound()
-        )
+        return Response.ok(memberFollowAnimeCacheService.getMissedAnimes(uuid, page, limit))
     }
 }

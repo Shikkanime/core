@@ -3,6 +3,7 @@ package fr.shikkanime.modules
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.Role
@@ -14,8 +15,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.sessions.Sessions
-import io.ktor.server.sessions.cookie
+import io.ktor.server.sessions.*
 import java.util.*
 
 private val memberCacheService = Constant.injector.getInstance(MemberCacheService::class.java)
@@ -75,7 +75,7 @@ private fun AuthenticationConfig.setupAdminSessionAuthentication(jwtVerifier: JW
                     MessageDto(MessageDto.Type.ERROR, "You are not authorized to access this page")
                 )
             } else {
-                call.respondRedirect("/admin?error=2", permanent = true)
+                call.respondRedirect("$ADMIN?error=2", permanent = true)
             }
         }
     }

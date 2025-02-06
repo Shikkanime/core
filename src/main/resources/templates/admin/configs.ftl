@@ -73,13 +73,13 @@
                 params = '?name=' + name;
             }
 
-            return await axios.get('/api/configs' + params)
+            return await axios.get('/admin/api/configs' + params)
                 .then(response => response.data)
                 .catch(() => []);
         }
 
         async function updateConfig(config) {
-            await axios.put('/api/configs/' + config.uuid, config)
+            await axios.put('/admin/api/configs/' + config.uuid, config)
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

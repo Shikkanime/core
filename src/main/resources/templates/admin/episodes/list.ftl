@@ -270,7 +270,7 @@
         }
 
         async function updateAllSelected(updateAll) {
-            await axios.put('/api/v1/episode-mappings/update-all', updateAll);
+            await axios.put('/admin/api/episode-mappings/update-all', updateAll);
         }
     </script>
 </@navigation.display>

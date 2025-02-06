@@ -1,6 +1,7 @@
-package fr.shikkanime.controllers.api
+package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
@@ -17,7 +18,7 @@ import fr.shikkanime.utils.routes.param.QueryParam
 import fr.shikkanime.wrappers.ThreadsWrapper
 import kotlinx.coroutines.runBlocking
 
-@Controller("/api/threads")
+@Controller("$ADMIN/api/threads")
 class ThreadsCallbackController {
     @Inject
     private lateinit var configCacheService: ConfigCacheService
@@ -51,13 +52,13 @@ class ThreadsCallbackController {
                 configCacheService.findByName(ConfigPropertyKey.THREADS_ACCESS_TOKEN.key)?.let {
                     it.propertyValue = longLivedAccessToken
                     configService.update(it)
-                    MapCache.invalidate(Config::class.java)
+                    MapCache.Companion.invalidate(Config::class.java)
                 }
 
-                Response.redirect("${Link.THREADS.href}?success=1")
+                Response.Companion.redirect("${Link.THREADS.href}?success=1")
             } catch (e: Exception) {
                 e.printStackTrace()
-                Response.badRequest("Impossible to get token with code $code")
+                Response.Companion.badRequest("Impossible to get token with code $code")
             }
         }
     }

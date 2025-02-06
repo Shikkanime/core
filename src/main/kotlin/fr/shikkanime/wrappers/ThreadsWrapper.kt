@@ -1,12 +1,11 @@
 package fr.shikkanime.wrappers
 
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -21,7 +20,7 @@ object ThreadsWrapper {
     private const val API_URL = "https://graph.threads.net"
     private val httpRequest = HttpRequest()
 
-    private fun getRedirectUri() = "${Constant.baseUrl}/api/threads".replace("http://", "https://")
+    private fun getRedirectUri() = "${Constant.baseUrl}$ADMIN/api/threads".replace("http://", "https://")
 
     fun getCode(appId: String) = "$AUTHORIZATION_URL/oauth/authorize?" +
             "client_id=$appId&" +

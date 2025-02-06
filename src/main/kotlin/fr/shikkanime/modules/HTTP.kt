@@ -1,5 +1,6 @@
 package fr.shikkanime.modules
 
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.controllers.site.SiteController
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -10,7 +11,8 @@ import io.github.smiley4.ktorswaggerui.data.AuthScheme
 import io.github.smiley4.ktorswaggerui.data.AuthType
 import io.github.smiley4.schemakenerator.core.connectSubTypes
 import io.github.smiley4.schemakenerator.core.handleNameAnnotation
-import io.github.smiley4.schemakenerator.reflection.*
+import io.github.smiley4.schemakenerator.reflection.collectSubTypes
+import io.github.smiley4.schemakenerator.reflection.processReflection
 import io.github.smiley4.schemakenerator.swagger.compileReferencingRoot
 import io.github.smiley4.schemakenerator.swagger.data.TitleType
 import io.github.smiley4.schemakenerator.swagger.generateSwaggerSchema
@@ -27,8 +29,8 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.util.toMap
-import java.util.UUID
+import io.ktor.util.*
+import java.util.*
 import java.util.logging.Level
 
 private val logger = LoggerFactory.getLogger("HTTP")
@@ -117,5 +119,5 @@ fun Application.configureHTTP() {
 }
 
 fun isSitePath(path: String): Boolean {
-    return !path.startsWith("/api") && !path.startsWith("/admin") && !path.startsWith("/assets") && !path.startsWith("/feed") && !path.startsWith("/sitemap.xml")
+    return !path.startsWith("/api") && !path.startsWith(ADMIN) && !path.startsWith("/assets") && !path.startsWith("/feed") && !path.startsWith("/sitemap.xml")
 }

@@ -1,5 +1,6 @@
 package fr.shikkanime.entities.enums
 
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.utils.Constant
 
 enum class Link(
@@ -11,17 +12,17 @@ enum class Link(
     val footer: Boolean = false
 ) {
     // Admin
-    DASHBOARD("/admin/dashboard", "/admin/dashboard.ftl", "bi bi-pc-display", "Dashboard"),
-    PLATFORMS("/admin/platforms", "/admin/platforms/list.ftl", "bi bi-display", "Platforms"),
-    ANIMES("/admin/animes", "/admin/animes/list.ftl", "bi bi-file-earmark-play", "Animes"),
-    EPISODES("/admin/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
-    TRACE_ACTIONS("/admin/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
-    ANIME_ALERTS("/admin/anime-alerts", "/admin/anime-alerts.ftl", "bi bi-bug", "Anime alerts"),
-    MEMBERS("/admin/members", "/admin/members/list.ftl", "bi bi-people", "Members"),
-    RULES("/admin/rules", "/admin/rules.ftl", "bi bi-rulers", "Rules"),
-    JOBS("/admin/jobs", "/admin/jobs.ftl", "bi bi-gear-wide-connected", "Jobs"),
-    THREADS("/admin/threads", "/admin/threads.ftl", "bi bi-threads", "Threads"),
-    CONFIG("/admin/config", "/admin/configs.ftl", "bi bi-gear", "Configurations"),
+    DASHBOARD("$ADMIN/dashboard", "/admin/dashboard.ftl", "bi bi-pc-display", "Dashboard"),
+    PLATFORMS("$ADMIN/platforms", "/admin/platforms/list.ftl", "bi bi-display", "Platforms"),
+    ANIMES("$ADMIN/animes", "/admin/animes/list.ftl", "bi bi-file-earmark-play", "Animes"),
+    EPISODES("$ADMIN/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
+    TRACE_ACTIONS("$ADMIN/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
+    ANIME_ALERTS("$ADMIN/anime-alerts", "/admin/anime-alerts.ftl", "bi bi-bug", "Anime alerts"),
+    MEMBERS("$ADMIN/members", "/admin/members/list.ftl", "bi bi-people", "Members"),
+    RULES("$ADMIN/rules", "/admin/rules.ftl", "bi bi-rulers", "Rules"),
+    JOBS("$ADMIN/jobs", "/admin/jobs.ftl", "bi bi-gear-wide-connected", "Jobs"),
+    THREADS("$ADMIN/threads", "/admin/threads.ftl", "bi bi-threads", "Threads"),
+    CONFIG("$ADMIN/config", "/admin/configs.ftl", "bi bi-gear", "Configurations"),
 
     // Site
     HOME("/", "/site/home.ftl", "", "Accueil", "${Constant.NAME} : Ne manquez plus jamais un épisode d'animé !"),

@@ -142,16 +142,16 @@
 
     <script>
         async function getRules() {
-            const response = await axios.get(`/api/rules`);
+            const response = await axios.get(`/admin/api/rules`);
             return response.data;
         }
 
         async function createRule(dto) {
-            await axios.post('/api/rules', dto);
+            await axios.post('/admin/api/rules', dto);
         }
 
         async function deleteRule(dto) {
-            await axios.delete('/api/rules/' + dto.uuid);
+            await axios.delete('/admin/api/rules/' + dto.uuid);
         }
     </script>
 </@navigation.display>

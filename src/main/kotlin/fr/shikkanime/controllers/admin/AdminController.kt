@@ -30,7 +30,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
-private const val ADMIN = "/admin"
+const val ADMIN = "/admin"
 
 @Controller(ADMIN)
 class AdminController {
@@ -136,21 +136,6 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getAnimes(): Response {
         return Response.template(Link.ANIMES)
-    }
-
-    @Path("/animes/force-update-all")
-    @Get
-    @AdminSessionAuthenticated
-    private fun forceUpdateAllAnimes(): Response {
-        val animes = animeService.findAll()
-
-        animes.forEach {
-            it.lastUpdateDateTime = null
-        }
-
-        animeService.updateAll(animes)
-
-        return Response.redirect(Link.ANIMES.href)
     }
 
     @Path("/animes/{uuid}")

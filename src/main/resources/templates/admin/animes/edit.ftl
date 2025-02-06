@@ -299,7 +299,7 @@
         async function loadAnime() {
             const uuid = getUuid();
 
-            return await axios.get('/api/v1/animes/' + uuid)
+            return await axios.get('/admin/api/animes/' + uuid)
                 .then(response => response.data)
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
@@ -313,7 +313,7 @@
         async function updateAnime(anime) {
             const uuid = getUuid();
 
-            await axios.put('/api/v1/animes/' + uuid, anime)
+            await axios.put('/admin/api/animes/' + uuid, anime)
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -329,7 +329,7 @@
         async function deleteAnime() {
             const uuid = getUuid();
 
-            await axios.delete('/api/v1/animes/' + uuid)
+            await axios.delete('/admin/api/animes/' + uuid)
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

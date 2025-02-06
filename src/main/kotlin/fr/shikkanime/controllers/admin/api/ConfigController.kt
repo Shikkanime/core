@@ -1,6 +1,7 @@
-package fr.shikkanime.controllers.api
+package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.Config
@@ -19,7 +20,7 @@ import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.util.*
 
-@Controller("/api/configs")
+@Controller("$ADMIN/api/configs")
 class ConfigController {
     @Inject
     private lateinit var configService: ConfigService
@@ -37,7 +38,7 @@ class ConfigController {
             configService.findAll()
         }
 
-        return Response.ok(AbstractConverter.convert(configs, ConfigDto::class.java))
+        return Response.Companion.ok(AbstractConverter.Companion.convert(configs, ConfigDto::class.java))
     }
 
     @Path("/{uuid}")
@@ -46,8 +47,8 @@ class ConfigController {
     @OpenAPI(hidden = true)
     private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
         configService.update(uuid, configDto)
-        MapCache.invalidate(Config::class.java)
+        MapCache.Companion.invalidate(Config::class.java)
         Constant.abstractSocialNetworks.forEach { it.logout() }
-        return Response.ok(AbstractConverter.convert(configService.find(uuid), ConfigDto::class.java))
+        return Response.Companion.ok(AbstractConverter.Companion.convert(configService.find(uuid), ConfigDto::class.java))
     }
 }

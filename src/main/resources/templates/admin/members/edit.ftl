@@ -1,28 +1,74 @@
 <#import "../_navigation.ftl" as navigation />
 
 <@navigation.display>
-    <div x-data="{titleSize: 2}">
+    <div x-data="{
+        member: {},
+        animes: {},
+        episodes: {},
+        titleSize: 2
+    }" x-init="member = await loadMember(); animes = await getAnimes(); episodes = await getEpisodes()">
         <div class="d-flex mb-3">
             <a href="/admin/members" class="btn btn-secondary ms-0">Back</a>
         </div>
 
         <div class="card">
             <div class="card-body">
+                <div class="d-flex">
+                    <template x-if="member.hasProfilePicture">
+                        <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE&v=' + new Date(member.lastUpdateDateTime).getTime()" class="rounded me-2" width="64" height="64" alt="Profile picture">
+                    </template>
+                    <div>
+                        <p class="my-0">Email: <span class="fw-bold" x-text="member.email || 'N/A'"></span></p>
+                        <p class="text-muted my-0">Created at: <span x-text="new Date(member.creationDateTime).toLocaleString()"></span></p>
+                        <p class="text-muted mt-0">Last updated at: <span x-text="member.lastUpdateDateTime ? new Date(member.lastUpdateDateTime).toLocaleString() : 'N/A'"></span></p>
+                        <p class="text-muted">Last login at: <span x-text="member.lastLoginDateTime ? new Date(member.lastLoginDateTime).toLocaleString() : 'N/A'"></span></p>
+                    </div>
+                </div>
+
                 <div class="row g-3">
                     <div class="col-md-4">
                         <div style="height: 50vh;">
                             <canvas id="loginActivitiesChart"></canvas>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div style="height: 50vh;">
-                            <canvas id="followAnimeActivitiesChart"></canvas>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div style="height: 25vh;">
+                                    <canvas id="followAnimeActivitiesChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div style="height: 25vh;">
+                                    <canvas id="followEpisodeActivitiesChart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div style="height: 50vh;">
-                            <canvas id="followEpisodeActivitiesChart"></canvas>
-                        </div>
+
+                    <div class="col-md-6 border rounded p-3">
+                        <template x-for="anime in animes.data">
+                            <div class="d-flex align-items-center mb-3">
+                                <img x-bind:src="'/api/v1/attachments?uuid=' + anime.uuid + '&type=IMAGE&v=' + new Date(anime.lastUpdateDateTime).getTime()" class="rounded me-2" style="width: 15%">
+                                <div>
+                                    <p class="my-0"><span class="fw-bold" x-text="anime.shortName"></span></p>
+                                    <p class="text-muted my-0" x-text="anime.description || 'N/A'"></p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="col-md-6 border rounded p-3">
+                        <template x-for="episode in episodes.data">
+                            <div class="d-flex align-items-center mb-3">
+                                <img x-bind:src="'/api/v1/attachments?uuid=' + episode.uuid + '&type=IMAGE&v=' + new Date(episode.lastUpdateDateTime).getTime()" class="rounded me-2" style="width: 15%">
+
+                                <div>
+                                    <p class="my-0"><span class="fw-bold" x-text="episode.anime.shortName"></span></p>
+                                    <p class="text-muted my-0">Season <span x-text="episode.season"></span> - <span x-text="episode.episodeType"></span> <span x-text="episode.number"></span></p>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -37,20 +83,39 @@
             return url.pathname.split('/').pop();
         }
 
+        async function loadMember() {
+            const uuid = getUuid();
+
+            return await axios.get('/admin/api/members/' + uuid)
+                .then(response => response.data);
+        }
+
         async function getMemberLoginActivities() {
-            return await axios.get('/api/v1/members/' + getUuid() + '/login-activities')
+            return await axios.get('/admin/api/members/' + getUuid() + '/login-activities')
                 .then(response => response.data)
                 .catch(() => []);
         }
 
         async function getMemberFollowAnimeActivities() {
-            return await axios.get('/api/v1/members/' + getUuid() + '/follow-anime-activities')
+            return await axios.get('/admin/api/members/' + getUuid() + '/follow-anime-activities')
                 .then(response => response.data)
                 .catch(() => []);
         }
 
         async function getMemberFollowEpisodeActivities() {
-            return await axios.get('/api/v1/members/' + getUuid() + '/follow-episode-activities')
+            return await axios.get('/admin/api/members/' + getUuid() + '/follow-episode-activities')
+                .then(response => response.data)
+                .catch(() => []);
+        }
+
+        async function getAnimes() {
+            return await axios.get('/admin/api/members/' + getUuid() + '/animes?limit=6')
+                .then(response => response.data)
+                .catch(() => []);
+        }
+
+        async function getEpisodes() {
+            return await axios.get('/admin/api/members/' + getUuid() + '/episode-mappings?limit=14')
                 .then(response => response.data)
                 .catch(() => []);
         }

@@ -1,6 +1,7 @@
 package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.URLDto
 import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
@@ -78,7 +79,7 @@ class SEOController {
                 }
             }
 
-        Link.entries.filter { !it.href.startsWith("/admin") && it.footer }
+        Link.entries.filter { !it.href.startsWith(ADMIN) && it.footer }
             .mapTo(urls) { URLDto("${Constant.baseUrl}${it.href}", globalLastModification) }
 
         return Response.template(
