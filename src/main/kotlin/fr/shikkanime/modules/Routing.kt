@@ -1,5 +1,6 @@
 package fr.shikkanime.modules
 
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -17,7 +18,10 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.github.smiley4.ktorswaggerui.dsl.routing.*
+import io.github.smiley4.ktorswaggerui.dsl.routing.delete
+import io.github.smiley4.ktorswaggerui.dsl.routing.get
+import io.github.smiley4.ktorswaggerui.dsl.routing.post
+import io.github.smiley4.ktorswaggerui.dsl.routing.put
 import io.github.smiley4.ktorswaggerui.routing.openApiSpec
 import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.http.*
@@ -198,7 +202,7 @@ private suspend fun handleRequest(
         when (response.type) {
             ResponseType.MULTIPART -> handleMultipartResponse(call, response)
             ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
-            ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith("/admin"))
+            ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
             else -> call.respond(response.status, response.data ?: "")
         }
     } catch (e: Exception) {

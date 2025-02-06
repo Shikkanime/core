@@ -103,7 +103,7 @@
                 limit: 4
             });
 
-            const response = await axios.get(`/api/v1/animes/alerts?` + params.toString());
+            const response = await axios.get(`/admin/api/animes/alerts?` + params.toString());
             return response.data;
         }
     </script>

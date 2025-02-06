@@ -1,6 +1,7 @@
-package fr.shikkanime.controllers.api
+package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.MetricDto
 import fr.shikkanime.services.MetricService
@@ -13,7 +14,7 @@ import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.ZonedDateTime
 
-@Controller("/api/metrics")
+@Controller("$ADMIN/api/metrics")
 class MetricController {
     @Inject
     private lateinit var metricService: MetricService
@@ -26,6 +27,6 @@ class MetricController {
         @QueryParam("hours") hours: Int?,
     ): Response {
         val xHourAgo = ZonedDateTime.now().minusHours(hours?.toLong() ?: 1)
-        return Response.ok(AbstractConverter.convert(metricService.findAllAfter(xHourAgo), MetricDto::class.java))
+        return Response.Companion.ok(AbstractConverter.Companion.convert(metricService.findAllAfter(xHourAgo), MetricDto::class.java))
     }
 }

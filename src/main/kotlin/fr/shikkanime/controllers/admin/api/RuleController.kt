@@ -1,6 +1,7 @@
-package fr.shikkanime.controllers.api
+package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.RuleDto
 import fr.shikkanime.entities.Rule
@@ -18,7 +19,7 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
 
-@Controller("/api/rules")
+@Controller("$ADMIN/api/rules")
 class RuleController {
     @Inject
     private lateinit var ruleService: RuleService
@@ -28,7 +29,7 @@ class RuleController {
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun getRules(): Response {
-        return Response.ok(AbstractConverter.convert(ruleService.findAll(), RuleDto::class.java))
+        return Response.Companion.ok(AbstractConverter.Companion.convert(ruleService.findAll(), RuleDto::class.java))
     }
 
     @Path
@@ -37,13 +38,13 @@ class RuleController {
     @OpenAPI(hidden = true)
     private fun createRule(@BodyParam ruleDto: RuleDto): Response {
         if (ruleDto.uuid != null) {
-            return Response.badRequest("UUID must be null")
+            return Response.Companion.badRequest("UUID must be null")
         }
 
-        val rule = ruleService.save(AbstractConverter.convert(ruleDto, Rule::class.java))
-        MapCache.invalidate(Rule::class.java)
+        val rule = ruleService.save(AbstractConverter.Companion.convert(ruleDto, Rule::class.java))
+        MapCache.Companion.invalidate(Rule::class.java)
 
-        return Response.ok(AbstractConverter.convert(rule, RuleDto::class.java))
+        return Response.Companion.ok(AbstractConverter.Companion.convert(rule, RuleDto::class.java))
     }
 
     @Path("/{uuid}")
@@ -51,9 +52,9 @@ class RuleController {
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun deleteRule(@PathParam("uuid") uuid: UUID): Response {
-        val rule = ruleService.find(uuid) ?: return Response.notFound()
+        val rule = ruleService.find(uuid) ?: return Response.Companion.notFound()
         ruleService.delete(rule)
-        MapCache.invalidate(Rule::class.java)
-        return Response.noContent()
+        MapCache.Companion.invalidate(Rule::class.java)
+        return Response.Companion.noContent()
     }
 }

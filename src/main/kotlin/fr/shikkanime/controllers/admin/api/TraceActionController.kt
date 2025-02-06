@@ -1,6 +1,7 @@
-package fr.shikkanime.controllers.api
+package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
+import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.TraceActionDto
 import fr.shikkanime.services.TraceActionService
@@ -9,7 +10,7 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.QueryParam
 
-@Controller("/api/trace-actions")
+@Controller("$ADMIN/api/trace-actions")
 class TraceActionController : HasPageableRoute() {
     @Inject
     private lateinit var traceActionService: TraceActionService
@@ -29,7 +30,7 @@ class TraceActionController : HasPageableRoute() {
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
+        return Response.Companion.ok(PageableDto.Companion.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
     }
 
     @Path("/login-counts")
@@ -37,6 +38,6 @@ class TraceActionController : HasPageableRoute() {
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
     private fun getLoginCounts(): Response {
-        return Response.ok(traceActionService.getLoginCounts())
+        return Response.Companion.ok(traceActionService.getLoginCounts())
     }
 }

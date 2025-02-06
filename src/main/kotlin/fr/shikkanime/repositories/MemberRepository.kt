@@ -116,6 +116,63 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
+    fun findDetailedMember(uuid: UUID): DetailedMemberDto? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            val maxActionDateTimeSubquery = query.subquery(ZonedDateTime::class.java).apply {
+                val traceActionRoot = from(TraceAction::class.java)
+                select(cb.greatest(traceActionRoot[TraceAction_.actionDateTime]))
+                    .where(
+                        cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
+                        cb.or(
+                            cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
+                            cb.isNull(traceActionRoot[TraceAction_.action])
+                        )
+                    )
+            }
+
+            val followedAnimesSubquery = query.subquery(Long::class.java).apply {
+                val followedAnimesRoot = from(MemberFollowAnime::class.java)
+                select(cb.count(followedAnimesRoot[MemberFollowAnime_.anime]))
+                    .where(cb.equal(followedAnimesRoot[MemberFollowAnime_.member], root))
+            }
+
+            val followedEpisodesSubquery = query.subquery(Long::class.java).apply {
+                val followedEpisodesRoot = from(MemberFollowEpisode::class.java)
+                select(cb.count(followedEpisodesRoot[MemberFollowEpisode_.episode]))
+                    .where(cb.equal(followedEpisodesRoot[MemberFollowEpisode_.member], root))
+            }
+
+            query.multiselect(
+                root[Member_.uuid],
+                root[Member_.email],
+                root[Member_.creationDateTime],
+                root[Member_.lastUpdateDateTime],
+                maxActionDateTimeSubquery,
+                followedAnimesSubquery,
+                followedEpisodesSubquery
+            ).where(cb.equal(root[Member_.uuid], uuid))
+
+            val tuple = createReadOnlyQuery(it, query).resultList.firstOrNull() ?: return null
+
+            return DetailedMemberDto(
+                tuple[0, UUID::class.java],
+                tuple[1, String::class.java],
+                tuple[2, ZonedDateTime::class.java].withUTCString(),
+                tuple[3, ZonedDateTime::class.java]?.withUTCString(),
+                tuple[4, ZonedDateTime::class.java]?.withUTCString(),
+                tuple[5, Long::class.java],
+                tuple[6, Long::class.java]
+            ).apply {
+                hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
+                isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
+            }
+        }
+    }
+
     private fun findBy(vararg pairs: Pair<SingularAttribute<Member, *>, Any>): Member? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

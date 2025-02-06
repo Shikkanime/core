@@ -294,7 +294,7 @@
         async function loadEpisode() {
             const uuid = getUuid();
 
-            return axios.get('/api/v1/episode-mappings/' + uuid)
+            return axios.get('/admin/api/episode-mappings/' + uuid)
                 .then(response => response.data)
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
@@ -308,7 +308,7 @@
         async function updateEpisode(episode) {
             const uuid = getUuid();
 
-            await axios.put('/api/v1/episode-mappings/' + uuid, episode)
+            await axios.put('/admin/api/episode-mappings/' + uuid, episode)
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -324,7 +324,7 @@
         async function deleteEpisode() {
             const uuid = getUuid();
 
-            await axios.delete('/api/v1/episode-mappings/' + uuid)
+            await axios.delete('/admin/api/episode-mappings/' + uuid)
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -333,7 +333,7 @@
         }
 
         async function separateVariant(dto) {
-            await axios.post('/api/v1/episode-variants/' + dto.uuid + '/separate', dto);
+            await axios.post('/admin/api/episode-variants/' + dto.uuid + '/separate', dto);
         }
     </script>
 </@navigation.display>

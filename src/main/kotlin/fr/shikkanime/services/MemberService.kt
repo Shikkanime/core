@@ -11,10 +11,8 @@ import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.RandomManager
-import io.ktor.http.content.MultiPartData
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.utils.io.readRemaining
+import io.ktor.http.content.*
+import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import java.io.ByteArrayInputStream
 import java.time.LocalDate
@@ -41,6 +39,8 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     fun findAllByAnimeUUID(animeUuid: UUID) = memberRepository.findAllByAnimeUUID(animeUuid)
 
     fun findAllWithLastLogin(page: Int, limit: Int) = memberRepository.findAllWithLastLogin(page, limit)
+
+    fun findDetailedMember(uuid: UUID) = memberRepository.findDetailedMember(uuid)
 
     fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))

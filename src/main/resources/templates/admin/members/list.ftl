@@ -121,7 +121,7 @@
             });
 
             try {
-                const response = await axios.get(`/api/v1/members?` + params.toString());
+                const response = await axios.get(`/admin/api/members?` + params.toString());
                 return response.data;
             } catch (error) {
                 console.error('Error fetching members:', error);

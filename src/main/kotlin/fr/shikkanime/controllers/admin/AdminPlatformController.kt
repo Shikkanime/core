@@ -16,7 +16,7 @@ import io.ktor.http.*
 import java.util.*
 import java.util.logging.Level
 
-@Controller("/admin/platforms")
+@Controller("$ADMIN/platforms")
 class AdminPlatformController {
     private val logger = LoggerFactory.getLogger(javaClass)
 
