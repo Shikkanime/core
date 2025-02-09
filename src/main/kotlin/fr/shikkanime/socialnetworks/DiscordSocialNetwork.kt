@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.interactions.InteractionContextType
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
@@ -57,7 +58,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
                 .addOption(OptionType.CHANNEL, "channel", "The channel to receive notifications", true)
                 .addOption(OptionType.STRING, "anime", "The anime to receive notifications for, by default: all", false)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
-                .setGuildOnly(true)
+                .setContexts(InteractionContextType.GUILD)
         )
 
         commands.submit()
