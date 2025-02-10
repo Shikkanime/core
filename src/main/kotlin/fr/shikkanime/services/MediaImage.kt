@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import javax.imageio.ImageIO
 
 object MediaImage {
@@ -108,21 +109,21 @@ object MediaImage {
             BufferedImage.TYPE_INT_ARGB
         )
         val paddedGraphics = paddedImage.createGraphics()
-        // Remove background
+
         paddedGraphics.color = Color(0, 0, 0, 0)
         paddedGraphics.fillRect(0, 0, paddedImage.width, paddedImage.height)
         paddedGraphics.drawImage(resizedBanner, BLUR_SIZE, BLUR_SIZE, null)
         paddedGraphics.dispose()
 
-        val bluredImage = ConvolveOp(Kernel(BLUR_SIZE, BLUR_SIZE, blurKernel), ConvolveOp.EDGE_NO_OP, null)
+        val blurredImage = ConvolveOp(Kernel(BLUR_SIZE, BLUR_SIZE, blurKernel), ConvolveOp.EDGE_NO_OP, null)
             .filter(paddedImage, null)
-        // Dessiner l'image en compensant le padding
+
         graphics.drawImage(
-            bluredImage,
-            -BLUR_SIZE, // Compenser le padding à gauche
-            100 - BLUR_SIZE, // Compenser le padding en haut
-            bluredImage.width,
-            bluredImage.height,
+            blurredImage,
+            -BLUR_SIZE,
+            100 - BLUR_SIZE,
+            blurredImage.width,
+            blurredImage.height,
             null
         )
 
@@ -163,7 +164,7 @@ object MediaImage {
     ) {
         graphics.color = Color.WHITE
         graphics.font = font.deriveFont(16f).deriveFont(Font.BOLD)
-        val dateLabel = ZonedDateTime.parse(episodes.first().releaseDateTime).format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy")).uppercase()
+        val dateLabel = ZonedDateTime.parse(episodes.first().releaseDateTime).format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH)).uppercase()
         val dateLabelWidth = graphics.fontMetrics.stringWidth(dateLabel)
         graphics.drawString(
             dateLabel,
