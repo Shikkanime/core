@@ -52,7 +52,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             val orders = sort.mapNotNull { sortParameter ->
                 val field = when (sortParameter.field) {
-                    "name" -> root[Anime_.name]
+                    "name" -> root[Anime_.slug]
                     "releaseDateTime" -> root[Anime_.releaseDateTime]
                     "lastReleaseDateTime" -> root[Anime_.lastReleaseDateTime]
                     else -> null
@@ -172,7 +172,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
             )
 
-            query.orderBy(cb.asc(root[Anime_.name]))
+            query.orderBy(cb.asc(root[Anime_.slug]))
 
             buildPageableQuery(createReadOnlyQuery(it, query), page, limit)
         }
