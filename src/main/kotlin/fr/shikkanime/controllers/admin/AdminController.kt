@@ -94,9 +94,9 @@ class AdminController {
             Link.DASHBOARD,
             mapOf(
                 "simulcasts" to simulcastCacheService.findAll(),
-                "size" to ImageService.size,
+                "size" to ImageService.cache.size,
                 "originalSize" to ImageService.originalSize,
-                "compressedSize" to ImageService.compressedSize,
+                "encodedSize" to ImageService.encodedSize,
             )
         )
     }

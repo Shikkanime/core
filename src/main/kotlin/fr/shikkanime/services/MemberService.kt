@@ -122,12 +122,12 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         require(imageReader.formatName.lowercase() in authorizedFormats) { "Invalid file format, only png and jpeg are allowed. Received ${imageReader.formatName}" }
 
         ImageService.add(
-            member.uuid!!,
-            ImageService.Type.IMAGE,
-            bytes,
-            128,
-            128,
-            true
+            uuid = member.uuid!!,
+            type = ImageService.Type.MEMBER_PROFILE,
+            url = null,
+            bytes = bytes,
+            bypass = true,
+            async = false
         )
 
         member.lastUpdateDateTime = ZonedDateTime.now()

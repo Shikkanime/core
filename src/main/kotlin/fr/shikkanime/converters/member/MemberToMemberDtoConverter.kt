@@ -33,7 +33,7 @@ class MemberToMemberDtoConverter : AbstractConverter<Member, MemberDto>() {
             followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(from).toSet(),
             totalDuration = seenAndUnseenDuration.first,
             totalUnseenDuration = seenAndUnseenDuration.second,
-            hasProfilePicture = ImageService[from.uuid, ImageService.Type.IMAGE] != null
+            hasProfilePicture = ImageService[from.uuid, ImageService.Type.MEMBER_PROFILE] != null
         )
     }
 }
