@@ -17,7 +17,10 @@ import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.miscellaneous.Pageable
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
@@ -88,6 +91,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllSeasons() = animeRepository.findAllSeasons()
 
     fun preIndex() = animeRepository.preIndex()
+
+    fun findAllUuidThumbnailAndBanner() = animeRepository.findAllUuidThumbnailAndBanner()
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
@@ -335,12 +340,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         )
     }
 
-    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720, bypass)
+    fun addThumbnail(uuid: UUID, image: String, bypass: Boolean = false) {
+        ImageService.add(uuid, ImageType.THUMBNAIL, image, null, bypass)
     }
 
     fun addBanner(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360, bypass)
+        ImageService.add(uuid, ImageType.BANNER, image, null, bypass)
     }
 
     fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
@@ -399,7 +404,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val uuid = savedEntity.uuid!!
 
         if (!Constant.disableImageConversion) {
-            addImage(uuid, savedEntity.image!!)
+            addThumbnail(uuid, savedEntity.image!!)
             addBanner(uuid, savedEntity.banner!!)
         }
 
@@ -430,7 +435,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         if (animeDto.image.isNotBlank() && animeDto.image != anime.image) {
             anime.image = animeDto.image
-            addImage(anime.uuid!!, anime.image!!, true)
+            addThumbnail(anime.uuid!!, anime.image!!, true)
         }
 
         if (animeDto.banner.isNotBlank() && animeDto.banner != anime.banner) {

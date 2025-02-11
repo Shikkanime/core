@@ -1,8 +1,8 @@
 package fr.shikkanime.caches
 
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import java.util.*
 
 data class CountryCodeUUIDSeasonSortPaginationKeyCache(

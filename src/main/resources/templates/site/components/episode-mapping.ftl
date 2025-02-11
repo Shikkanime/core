@@ -10,7 +10,7 @@
             <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}/${episodeMapping.episodeType.slug}-${episodeMapping.number?c}">
                 <div class="shikk-element-content">
                     <div class="position-relative">
-                        <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image"
+                        <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=BANNER"
                              alt="${animeSanitized} episode preview"
                              class="shikk-element-content-img <#if cover>responsive</#if>"
                              width="640" height="360">

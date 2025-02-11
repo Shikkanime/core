@@ -10,7 +10,7 @@
             <a href="${groupedEpisode.internalUrl}">
                 <div class="shikk-element-content">
                     <div class="position-relative">
-                        <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${groupedEpisode.mappings?first}&type=image"
+                        <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${groupedEpisode.mappings?first}&type=BANNER"
                              alt="${animeSanitized} episode preview"
                              class="shikk-element-content-img <#if cover>responsive</#if>"
                              width="640" height="360">

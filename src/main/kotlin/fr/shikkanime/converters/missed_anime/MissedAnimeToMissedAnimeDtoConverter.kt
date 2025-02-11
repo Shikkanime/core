@@ -3,7 +3,7 @@ package fr.shikkanime.converters.missed_anime
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
-import fr.shikkanime.entities.MissedAnime
+import fr.shikkanime.entities.miscellaneous.MissedAnime
 
 class MissedAnimeToMissedAnimeDtoConverter : AbstractConverter<MissedAnime, MissedAnimeDto>() {
     @Converter

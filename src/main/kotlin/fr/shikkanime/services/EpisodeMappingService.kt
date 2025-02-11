@@ -6,12 +6,9 @@ import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
@@ -37,7 +34,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun getRepository() = episodeMappingRepository
 
-    fun findAllUuids() = episodeMappingRepository.findAllUuids()
+    fun findAllUuidImage() = episodeMappingRepository.findAllUuidImage()
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -79,7 +76,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
     fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360, bypass)
+        ImageService.add(uuid, ImageType.BANNER, image, null, bypass)
     }
 
     override fun save(entity: EpisodeMapping): EpisodeMapping {

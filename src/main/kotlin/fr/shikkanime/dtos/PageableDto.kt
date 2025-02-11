@@ -1,7 +1,7 @@
 package fr.shikkanime.dtos
 
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.entities.Pageable
+import fr.shikkanime.entities.miscellaneous.Pageable
 
 data class PageableDto<T>(
     val data: Set<T>,

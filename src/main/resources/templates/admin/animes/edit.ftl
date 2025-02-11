@@ -197,7 +197,7 @@
                                 </a>
                             </div>
 
-                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=image'" class="w-25" alt="Anime image">
+                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=THUMBNAIL'" class="w-25" alt="Anime thumbnail">
                         </div>
                     </div>
                     <div class="row">
@@ -217,7 +217,7 @@
                                 </a>
                             </div>
 
-                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=banner'" class="w-25" alt="Anime image">
+                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=BANNER'" class="w-25" alt="Anime banner">
                         </div>
                     </div>
                 </div>

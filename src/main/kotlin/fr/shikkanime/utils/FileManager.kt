@@ -4,12 +4,9 @@ import nu.pattern.OpenCV
 import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import java.io.*
+import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.typeOf
 
 object FileManager {
     init {
@@ -39,18 +36,13 @@ object FileManager {
     }
 
     inline fun <reified T> readFile(file: File): T {
-        try {
-            val value = ByteArrayInputStream(file.readBytes()).use { bais ->
-                ObjectInputStream(bais).use {
-                    it.readObject()
-                }
-            }
-            require(value is T) { "Invalid type" }
-            return value
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw Exception("Failed to read file")
+        val value = ObjectInputStream(ByteArrayInputStream(file.readBytes())).use { it.readObject() }
+
+        require(value is T && (T::class != List::class || typeOf<T>().arguments[0].type == (value as List<*>).firstOrNull()?.let { it::class.starProjectedType })) {
+            "Invalid type"
         }
+
+        return value
     }
 
     fun writeFile(file: File, `object`: Any) {

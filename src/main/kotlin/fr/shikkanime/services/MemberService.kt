@@ -6,6 +6,7 @@ import fr.shikkanime.dtos.member.MemberDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.EncryptionManager
@@ -122,12 +123,12 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         require(imageReader.formatName.lowercase() in authorizedFormats) { "Invalid file format, only png and jpeg are allowed. Received ${imageReader.formatName}" }
 
         ImageService.add(
-            member.uuid!!,
-            ImageService.Type.IMAGE,
-            bytes,
-            128,
-            128,
-            true
+            uuid = member.uuid!!,
+            type = ImageType.MEMBER_PROFILE,
+            url = null,
+            bytes = bytes,
+            bypass = true,
+            async = false
         )
 
         member.lastUpdateDateTime = ZonedDateTime.now()
