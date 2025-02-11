@@ -1,6 +1,6 @@
 package fr.shikkanime.utils.routes
 
-import fr.shikkanime.entities.SortParameter
+import fr.shikkanime.entities.miscellaneous.SortParameter
 
 open class HasPageableRoute {
     protected fun pageableRoute(

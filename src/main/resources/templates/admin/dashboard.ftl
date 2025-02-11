@@ -95,9 +95,9 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label" for="compressedSize">Compressed size</label>
-                            <input id="compressedSize" name="compressedSize" type="text" class="form-control disabled"
-                                   value="${compressedSize}" disabled>
+                            <label class="form-label" for="encodedSize">Encoded size</label>
+                            <input id="encodedSize" name="encodedSize" type="text" class="form-control disabled"
+                                   value="${encodedSize}" disabled>
                         </div>
                     </div>
                 </div>

@@ -9,9 +9,13 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate

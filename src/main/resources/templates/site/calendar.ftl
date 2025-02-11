@@ -48,10 +48,10 @@
                             <#assign isReleased = (release.mappings?? && release.mappings?size > 0)>
                             <#assign isMultipleReleased = isReleased && (release.mappings?size > 1)>
 
-                            <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=banner">
+                            <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.anime.uuid}&type=BANNER">
 
                             <#if isReleased>
-                                <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.mappings?first.uuid}&type=image">
+                                <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.mappings?first.uuid}&type=BANNER">
                             </#if>
 
                             <article x-data="{ hover: false }" class="shikk-element mb-3">

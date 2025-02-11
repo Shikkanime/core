@@ -12,7 +12,7 @@
                 <div class="row">
                     <div class="col-6">
                         <div class="position-relative">
-                            <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image"
+                            <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=BANNER"
                                  alt="${animeSanitized} episode preview"
                                  class="shikk-element-content-img"
                                  width="640" height="360">

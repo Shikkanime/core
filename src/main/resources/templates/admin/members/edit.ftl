@@ -15,7 +15,7 @@
             <div class="card-body">
                 <div class="d-flex">
                     <template x-if="member.hasProfilePicture">
-                        <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=IMAGE&v=' + new Date(member.lastUpdateDateTime).getTime()" class="rounded me-2" width="64" height="64" alt="Profile picture">
+                        <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=MEMBER_PROFILE&v=' + new Date(member.lastUpdateDateTime).getTime()" class="rounded me-2" width="64" height="64" alt="Profile picture">
                     </template>
                     <div>
                         <p class="my-0">Email: <span class="fw-bold" x-text="member.email || 'N/A'"></span></p>
@@ -49,7 +49,7 @@
                     <div class="col-md-6 border rounded p-3">
                         <template x-for="anime in animes.data">
                             <div class="d-flex align-items-center mb-3">
-                                <img x-bind:src="'/api/v1/attachments?uuid=' + anime.uuid + '&type=IMAGE&v=' + new Date(anime.lastUpdateDateTime).getTime()" class="rounded me-2" style="width: 15%">
+                                <img x-bind:src="'/api/v1/attachments?uuid=' + anime.uuid + '&type=THUMBNAIL&v=' + new Date(anime.lastUpdateDateTime).getTime()" class="rounded me-2" style="width: 15%">
                                 <div>
                                     <p class="my-0"><span class="fw-bold" x-text="anime.shortName"></span></p>
                                     <p class="text-muted my-0" x-text="anime.description || 'N/A'"></p>
@@ -61,7 +61,7 @@
                     <div class="col-md-6 border rounded p-3">
                         <template x-for="episode in episodes.data">
                             <div class="d-flex align-items-center mb-3">
-                                <img x-bind:src="'/api/v1/attachments?uuid=' + episode.uuid + '&type=IMAGE&v=' + new Date(episode.lastUpdateDateTime).getTime()" class="rounded me-2" style="width: 15%">
+                                <img x-bind:src="'/api/v1/attachments?uuid=' + episode.uuid + '&type=BANNER&v=' + new Date(episode.lastUpdateDateTime).getTime()" class="rounded me-2" style="width: 15%">
 
                                 <div>
                                     <p class="my-0"><span class="fw-bold" x-text="episode.anime.shortName"></span></p>

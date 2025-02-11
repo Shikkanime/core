@@ -22,17 +22,21 @@ fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
 
     logger.info("Pre-indexing anime data...")
-    Constant.injector.getInstance(AnimeService::class.java).preIndex()
+    val animeService = Constant.injector.getInstance(AnimeService::class.java)
+    val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
+    val memberService = Constant.injector.getInstance(MemberService::class.java)
+
+    animeService.preIndex()
 
     logger.info("Loading images cache...")
-    ImageService.loadCache()
+    ImageService.loadCache(animeService.findAllUuidThumbnailAndBanner(), episodeMappingService.findAllUuidImage(), memberService.findAllUuids())
     ImageService.addAll()
 
     logger.info("Updating and deleting data...")
     updateAndDeleteData()
 
     try {
-        Constant.injector.getInstance(MemberService::class.java).initDefaultAdminUser()
+        memberService.initDefaultAdminUser()
     } catch (_: IllegalStateException) {
         logger.info("Admin user already exists")
     }

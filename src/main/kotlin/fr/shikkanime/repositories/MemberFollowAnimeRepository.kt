@@ -2,6 +2,8 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.miscellaneous.MissedAnime
+import fr.shikkanime.entities.miscellaneous.Pageable
 import jakarta.persistence.criteria.JoinType
 import java.util.*
 

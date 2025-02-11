@@ -1,5 +1,6 @@
-package fr.shikkanime.entities
+package fr.shikkanime.entities.miscellaneous
 
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import java.time.ZonedDateTime
