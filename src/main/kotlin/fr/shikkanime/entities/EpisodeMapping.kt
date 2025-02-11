@@ -58,6 +58,7 @@ class EpisodeMapping(
     @Column(nullable = true, name = "status")
     @Enumerated(EnumType.STRING)
     var status: Status = Status.VALID,
+    // -----------------------------------------------------------------
     @OneToMany(mappedBy = "mapping", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var variants: MutableSet<EpisodeVariant> = mutableSetOf(),

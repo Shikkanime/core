@@ -5,12 +5,12 @@
 <#assign canonicalUrl = baseUrl + "/animes/" + episodeMapping.anime.slug + "/season-" + episodeMapping.season?c + "/" + episodeMapping.episodeType.slug + "-" + episodeMapping.number?c />
 <#assign animeSanitized = episodeMapping.anime.shortName?html />
 
-<@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image">
+<@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=BANNER">
     <div class="position-relative">
         <#-- Bottom to top background gradient -->
         <div class="position-absolute w-100"
              style="background: linear-gradient(0deg, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0)); height: 400px;"></div>
-        <div style="background-image: url('${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=image'); background-size: cover; background-position: center; height: 400px;"></div>
+        <div style="background-image: url('${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&type=BANNER'); background-size: cover; background-position: center; height: 400px;"></div>
     </div>
 
     <div class="container mb-3 anime-infos">
@@ -18,7 +18,7 @@
             <div class="col-md-4 col-12 mt-0 text-center">
                 <a class="text-decoration-none"
                    href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}">
-                    <img src="${apiUrl}/v1/attachments?uuid=${episodeMapping.anime.uuid}&type=image"
+                    <img src="${apiUrl}/v1/attachments?uuid=${episodeMapping.anime.uuid}&type=THUMBNAIL"
                          alt="${animeSanitized} anime" class="img-fluid w-50 rounded-4"
                          width="480"
                          height="720">

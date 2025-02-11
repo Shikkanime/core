@@ -4,8 +4,8 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
-import fr.shikkanime.entities.GroupedEpisode
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.withUTCString
 

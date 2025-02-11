@@ -8,7 +8,7 @@
             <a href="/animes/${anime.slug}" @mouseenter="hover = true" @mouseleave="hover = false">
                 <div class="shikk-element-content">
                     <div class="position-relative">
-                        <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=image"
+                        <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=THUMBNAIL"
                              alt="${animeSanitized} anime" width="480" height="720" class="shikk-element-content-img">
 
                         <div class="platforms">

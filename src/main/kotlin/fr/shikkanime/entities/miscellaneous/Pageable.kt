@@ -1,4 +1,4 @@
-package fr.shikkanime.entities
+package fr.shikkanime.entities.miscellaneous
 
 data class Pageable<T>(
     var data: Set<T>,

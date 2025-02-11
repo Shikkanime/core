@@ -14,7 +14,7 @@
             <pubDate>${groupedEpisode.releaseDateTime?replace("Z", "+0000")}</pubDate>
             <lastBuildDate>${groupedEpisode.releaseDateTime?replace("Z", "+0000")}</lastBuildDate>
             <link>${groupedEpisode.internalUrl}</link>
-            <image>${apiUrl}/v1/attachments?uuid=${groupedEpisode.mappings?first}&amp;type=image</image>
+            <image>${apiUrl}/v1/attachments?uuid=${groupedEpisode.mappings?first}&amp;type=BANNER</image>
         </item>
         </#list>
     </channel>

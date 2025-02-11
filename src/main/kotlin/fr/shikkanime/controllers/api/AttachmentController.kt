@@ -1,6 +1,7 @@
 package fr.shikkanime.controllers.api
 
 import fr.shikkanime.dtos.MessageDto
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.Cached
@@ -46,8 +47,8 @@ class AttachmentController {
         @QueryParam(
             "type",
             description = "Type of the attachment",
-            example = "IMAGE",
-            type = ImageService.Type::class
+            example = "THUMBNAIL",
+            type = ImageType ::class
         )
         typeString: String?
     ): Response {
@@ -60,9 +61,16 @@ class AttachmentController {
             )
         }
 
-        val type = ImageService.Type.entries.find { it.name.equals(typeString, true) } ?: ImageService.Type.IMAGE
+        val tmpTypes = buildSet {
+            ImageType.entries.find { it.name.equals(typeString, true) }?.let { add(it) }
+            add(ImageType.THUMBNAIL)
+            add(ImageType.BANNER)
+            add(ImageType.MEMBER_PROFILE)
+        }
 
-        val image = ImageService[uuid, type] ?: return Response.notFound(
+        val image = tmpTypes.asSequence()
+            .mapNotNull { ImageService[uuid, it] }
+            .firstOrNull() ?: return Response.notFound(
             MessageDto(
                 MessageDto.Type.ERROR,
                 "Attachment not found"

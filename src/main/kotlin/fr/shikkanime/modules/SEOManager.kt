@@ -3,8 +3,8 @@ package fr.shikkanime.modules
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
-import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.miscellaneous.LinkObject
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService

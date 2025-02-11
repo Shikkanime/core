@@ -4,6 +4,8 @@ import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.miscellaneous.Pageable
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.JoinType
@@ -22,6 +24,19 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val searchSession = Search.session(it)
             val indexer = searchSession.massIndexer(getEntityClass())
             indexer.startAndWait()
+        }
+    }
+
+    fun findAllUuidThumbnailAndBanner(): List<Triple<UUID, String, String>> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .map { tuple -> Triple(tuple[0, UUID::class.java], tuple[1, String::class.java], tuple[2, String::class.java]) }
         }
     }
 

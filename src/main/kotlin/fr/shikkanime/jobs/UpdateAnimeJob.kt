@@ -93,7 +93,7 @@ class UpdateAnimeJob : AbstractJob {
 
             if (updatableImage != anime.image && !updatableImage.isNullOrBlank()) {
                 anime.image = updatableImage
-                animeService.addImage(anime.uuid!!, updatableImage, true)
+                animeService.addThumbnail(anime.uuid!!, updatableImage, true)
                 logger.info("Image updated for anime $shortName to $updatableImage")
                 hasChanged = true
             }

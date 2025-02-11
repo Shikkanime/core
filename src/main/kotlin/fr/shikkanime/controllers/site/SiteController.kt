@@ -2,11 +2,11 @@ package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService

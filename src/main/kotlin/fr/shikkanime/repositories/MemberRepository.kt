@@ -3,6 +3,7 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.member.DetailedMemberDto
 import fr.shikkanime.entities.*
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.Constant
@@ -102,7 +103,7 @@ class MemberRepository : AbstractRepository<Member>() {
                     tuple[5, Long::class.java],
                     tuple[6, Long::class.java]
                 ).apply {
-                    hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
+                    hasProfilePicture = ImageService[uuid, ImageType.MEMBER_PROFILE] != null
                     isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
                 }
             }
@@ -167,7 +168,7 @@ class MemberRepository : AbstractRepository<Member>() {
                 tuple[5, Long::class.java],
                 tuple[6, Long::class.java]
             ).apply {
-                hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
+                hasProfilePicture = ImageService[uuid, ImageType.MEMBER_PROFILE] != null
                 isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
             }
         }

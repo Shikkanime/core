@@ -41,6 +41,12 @@ class Anime(
     var banner: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(2000)")
     var description: String? = null,
+    @Column(nullable = false)
+    var slug: String? = null,
+    @Column(nullable = true, name = "status")
+    @Enumerated(EnumType.STRING)
+    var status: Status = Status.VALID,
+    // -----------------------------------------------------------------
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "anime_simulcast",
@@ -49,11 +55,6 @@ class Anime(
     )
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var simulcasts: MutableSet<Simulcast> = mutableSetOf(),
-    @Column(nullable = false)
-    var slug: String? = null,
-    @Column(nullable = true, name = "status")
-    @Enumerated(EnumType.STRING)
-    var status: Status = Status.VALID,
     @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var platformIds: MutableSet<AnimePlatform> = mutableSetOf(),
