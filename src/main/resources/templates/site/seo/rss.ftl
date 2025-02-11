@@ -14,7 +14,7 @@
             <pubDate>${episodeMapping.releaseDateTime?replace("Z", "+0000")}</pubDate>
             <lastBuildDate>${episodeMapping.lastReleaseDateTime?replace("Z", "+0000")}</lastBuildDate>
             <link>${baseUrl}/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}/${episodeMapping.episodeType.slug}-${episodeMapping.number?c}</link>
-            <image>${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&amp;type=image</image>
+            <image>${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&amp;type=BANNER</image>
         </item>
         </#list>
     </channel>

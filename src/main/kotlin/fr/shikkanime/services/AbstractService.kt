@@ -10,6 +10,8 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     open fun findAll() = getRepository().findAll()
 
+    fun findAllUuids() = getRepository().findAllUuids()
+
     fun find(uuid: UUID?) = if (uuid != null) getRepository().find(uuid) else null
 
     open fun save(entity: E) = getRepository().save(entity)
