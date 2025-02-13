@@ -98,7 +98,7 @@ object MediaImage {
         ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
 
     private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: AnimeDto): Int {
-        val animeBanner = getLongTimeoutImage(anime.banner)
+        val animeBanner = getLongTimeoutImage(anime.banner).resize(1920, 1080)
         val scaleBannerRatio = mediaImage.width.toDouble() / (animeBanner.width + BLUR_SIZE * 2)
         val scaleBannerResize = (animeBanner.height * scaleBannerRatio).toInt()
         val resizedBanner = animeBanner.resize(mediaImage.width, scaleBannerResize)
@@ -127,7 +127,7 @@ object MediaImage {
             null
         )
 
-        val animeImage = getLongTimeoutImage(anime.image)
+        val animeImage = getLongTimeoutImage(anime.image).resize(1560, 2340)
         val scaleThumbnailRatio = resizedBanner.height.toDouble() / animeImage.height.toDouble()
         val scaleThumbnailResize = (animeImage.width * scaleThumbnailRatio).toInt()
         val resizedThumbnail = animeImage.resize(scaleThumbnailResize, resizedBanner.height)
