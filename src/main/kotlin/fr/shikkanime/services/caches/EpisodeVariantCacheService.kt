@@ -2,6 +2,7 @@ package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeMemberUUIDWeekKeyCache
+import fr.shikkanime.caches.CountryCodePlatformWeekKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.EpisodeMapping
@@ -9,12 +10,14 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.atEndOfTheDay
 import fr.shikkanime.utils.atEndOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantCacheService : AbstractCacheService {
@@ -43,6 +46,24 @@ class EpisodeVariantCacheService : AbstractCacheService {
         episodeVariantService.findAllVariantReleases(
             it.countryCode,
             it.member?.let { uuid -> memberCacheService.find(uuid) },
+            it.startZonedDateTime,
+            it.endZonedDateTime
+        )
+    }
+
+    fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+        countryCode: CountryCode,
+        platform: Platform,
+        startZonedDateTime: ZonedDateTime,
+        endZonedDateTime: ZonedDateTime,
+    ) = MapCache.getOrCompute(
+        "EpisodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween",
+        classes = listOf(EpisodeVariant::class.java),
+        key = CountryCodePlatformWeekKeyCache(countryCode, platform, startZonedDateTime, endZonedDateTime),
+    ) {
+        episodeVariantService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+            it.countryCode,
+            it.platform,
             it.startZonedDateTime,
             it.endZonedDateTime
         )
