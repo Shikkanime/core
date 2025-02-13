@@ -4,6 +4,7 @@ import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
+import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
 import java.util.*
@@ -103,23 +104,34 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         platform: Platform,
         startZonedDateTime: ZonedDateTime,
         endZonedDateTime: ZonedDateTime
-    ): List<EpisodeVariant> {
+    ): List<Pair<String, ZonedDateTime>> {
         return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(Anime::class.java)
-            val mappingsJoin = root.join(Anime_.mappings)
-            val variantsJoin = mappingsJoin.join(EpisodeMapping_.variants)
+            val query = it.createQuery("""
+                SELECT ev.identifier, ev.releaseDateTime
+                FROM EpisodeVariant ev
+                    JOIN ev.mapping m
+                    JOIN m.anime a
+                WHERE a.countryCode = :countryCode
+                    AND ev.platform = :platform
+                    AND ev.releaseDateTime BETWEEN :startZonedDateTime AND :endZonedDateTime
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM EpisodeMapping em
+                        WHERE em.anime.uuid = a.uuid
+                            AND (em.releaseDateTime, em.season, em.episodeType, em.number) > 
+                                    (m.releaseDateTime, m.season, m.episodeType, m.number)
+                    )
+                ORDER BY ev.releaseDateTime ASC
+            """.trimIndent(), Tuple::class.java)
 
-            query.select(variantsJoin)
-                .where(
-                    cb.equal(root[Anime_.countryCode], countryCode),
-                    cb.equal(variantsJoin[EpisodeVariant_.platform], platform),
-                    cb.between(variantsJoin[EpisodeVariant_.releaseDateTime], startZonedDateTime, endZonedDateTime)
-                )
+            query.setParameter("countryCode", countryCode)
+            query.setParameter("platform", platform)
+            query.setParameter("startZonedDateTime", startZonedDateTime)
+            query.setParameter("endZonedDateTime", endZonedDateTime)
 
-            createReadOnlyQuery(it, query)
+            createReadOnlyQuery(query)
                 .resultList
+                .map { it[0] as String to it[1] as ZonedDateTime }
         }
     }
 }

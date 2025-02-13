@@ -7,9 +7,9 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
-import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
@@ -24,7 +24,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     private lateinit var configCacheService: ConfigCacheService
 
     @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
@@ -100,37 +100,33 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         alreadyFetched: List<Episode>
     ): List<Episode> {
         val list = mutableListOf<Episode>()
+        val previousWeek = zonedDateTime.minusWeeks(1)
+        val previousWeekLocalDate = previousWeek.toLocalDate()
 
-        episodeVariantService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+        episodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
             countryCode,
             getPlatform(),
-            zonedDateTime.minusWeeks(1).toLocalDate().atStartOfDay(Constant.utcZoneId),
-            zonedDateTime.minusWeeks(1).plusSeconds(1).withUTC()
-        ).filter {
-            episodeMappingCacheService.findPreviousAndNextBy(
-                it.mapping!!.anime!!.uuid!!,
-                it.mapping!!.season!!,
-                it.mapping!!.episodeType!!,
-                it.mapping!!.number!!
-            )?.third == null
-        }.forEach { episodeVariant ->
-            val crunchyrollId = getCrunchyrollId(episodeVariant.identifier!!) ?: run {
-                logger.warning("Crunchyroll ID not found in ${episodeVariant.identifier}")
-                return@forEach
-            }
+            previousWeekLocalDate.atStartOfDay(Constant.utcZoneId),
+            previousWeekLocalDate.atEndOfTheDay(Constant.utcZoneId)
+        ).filter { (_, releaseDateTime) -> releaseDateTime.isEqualOrBefore(previousWeek) }
+            .forEach { (identifier, _) ->
+                val crunchyrollId = getCrunchyrollId(identifier) ?: run {
+                    logger.warning("Crunchyroll ID not found in $identifier")
+                    return@forEach
+                }
 
-            val nextEpisode = getNextEpisode(countryCode, crunchyrollId) ?: run {
-                logger.warning("Next episode not found for $crunchyrollId")
-                return@forEach
-            }
+                val nextEpisode = getNextEpisode(countryCode, crunchyrollId) ?: run {
+                    logger.warning("Next episode not found for $crunchyrollId")
+                    return@forEach
+                }
 
-            if (alreadyFetched.any { it.id == nextEpisode.id }) {
-                logger.warning("Episode ${nextEpisode.id} already fetched")
-                return@forEach
-            }
+                if (alreadyFetched.any { it.id == nextEpisode.id }) {
+                    logger.warning("Episode ${nextEpisode.id} already fetched")
+                    return@forEach
+                }
 
-            addToList(list, countryCode, nextEpisode)
-        }
+                addToList(list, countryCode, nextEpisode)
+            }
 
         return list
     }
