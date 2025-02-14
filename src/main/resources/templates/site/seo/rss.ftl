@@ -3,18 +3,18 @@
     <channel>
         <title>Shikkanime - Flux</title>
         <description>Shikkanime RSS Feed</description>
-        <#if episodeMappings?size != 0>
-        <lastBuildDate>${episodeMappings[0].lastReleaseDateTime?replace("Z", "+0000")}</lastBuildDate>
+        <#if groupedEpisodes?size != 0>
+        <lastBuildDate>${groupedEpisodes[0].releaseDateTime?replace("Z", "+0000")}</lastBuildDate>
         </#if>
         <link>${baseUrl}</link>
-        <#list episodeMappings as episodeMapping>
+        <#list groupedEpisodes as groupedEpisode>
         <item>
-            <title>${episodeMapping.anime.shortName?html} - ${su.toEpisodeMappingString(episodeMapping, true, false)}<#if episodeMapping.title??> - ${episodeMapping.title?html}</#if></title>
-            <description>${(episodeMapping.description!"")?html}</description>
-            <pubDate>${episodeMapping.releaseDateTime?replace("Z", "+0000")}</pubDate>
-            <lastBuildDate>${episodeMapping.lastReleaseDateTime?replace("Z", "+0000")}</lastBuildDate>
-            <link>${baseUrl}/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}/${episodeMapping.episodeType.slug}-${episodeMapping.number?c}</link>
-            <image>${apiUrl}/v1/attachments?uuid=${episodeMapping.uuid}&amp;type=image</image>
+            <title>${groupedEpisode.anime.name?html} - ${su.toEpisodeGroupedString(groupedEpisode, true, false)}<#if groupedEpisode.title??> - ${groupedEpisode.title?html}</#if></title>
+            <description>${(groupedEpisode.description!"")?html}</description>
+            <pubDate>${groupedEpisode.releaseDateTime?replace("Z", "+0000")}</pubDate>
+            <lastBuildDate>${groupedEpisode.releaseDateTime?replace("Z", "+0000")}</lastBuildDate>
+            <link>${groupedEpisode.internalUrl}</link>
+            <image>${apiUrl}/v1/attachments?uuid=${groupedEpisode.mappings?first}&amp;type=image</image>
         </item>
         </#list>
     </channel>

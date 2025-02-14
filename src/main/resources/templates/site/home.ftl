@@ -1,26 +1,27 @@
 <#import "_navigation.ftl" as navigation />
 <#import "components/episode-mapping.ftl" as episodeMappingComponent />
+<#import "components/grouped-episode.ftl" as groupedEpisodeComponent />
 <#import "components/anime.ftl" as animeComponent />
 
 <@navigation.display canonicalUrl="${baseUrl}">
     <h1 class="h3 my-3">Nouveaux épisodes</h1>
 
-    <#if episodeMappings?? && episodeMappings?size != 0>
+    <#if groupedEpisodes?? && groupedEpisodes?size != 0>
         <div class="row g-3">
-            <#list episodeMappings as episodeMapping>
+            <#list groupedEpisodes as groupedEpisode>
             <#-- If episode is the first element -->
                 <#assign col="col-md-2">
                 <#assign firstRow=false>
 
-                <#if episodeMapping?index == 0>
+                <#if groupedEpisode?index == 0>
                     <#assign col="col-md-7">
                     <#assign firstRow=true>
-                <#elseif episodeMapping?index == 1>
+                <#elseif groupedEpisode?index == 1>
                     <#assign col="col-md-5">
                     <#assign firstRow=true>
                 </#if>
 
-                <@episodeMappingComponent.display episodeMapping=episodeMapping desktopColSize=col mobileColSize="col-6" cover=firstRow />
+                <@groupedEpisodeComponent.display groupedEpisode=groupedEpisode desktopColSize=col mobileColSize="col-6" cover=firstRow />
             </#list>
         </div>
     <#else>

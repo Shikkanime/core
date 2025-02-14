@@ -2,6 +2,7 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
@@ -80,7 +81,7 @@ object StringUtils {
         }
     }
 
-    fun toSeasonString(countryCode: CountryCode, season: Int): String {
+    fun toSeasonString(countryCode: CountryCode, season: String): String {
         return when(countryCode) {
             CountryCode.FR -> "Saison $season"
         }
@@ -113,7 +114,7 @@ object StringUtils {
         }
     }
 
-    private fun toEpisodeString(countryCode: CountryCode, season: Int, showSeason: Boolean, showSeparator: Boolean, episodeType: EpisodeType, number: Int): String {
+    private fun toEpisodeString(countryCode: CountryCode, season: String, showSeason: Boolean, showSeparator: Boolean, episodeType: EpisodeType, number: String): String {
         return buildString {
             append(if (showSeason) toSeasonString(countryCode, season) else EMPTY_STRING)
             append(if (showSeason && showSeparator) " • " else SPACE_STRING)
@@ -122,8 +123,9 @@ object StringUtils {
         }.trim()
     }
 
-    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
-    fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!, true, true, episode.episodeType!!, episode.number!!)
+    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season.toString(), showSeason, separator, episode.episodeType, episode.number.toString())
+    fun toEpisodeGroupedString(episode: GroupedEpisodeDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
+    fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), true, true, episode.episodeType!!, episode.number!!.toString())
 
     fun toEpisodeVariantString(episodes: List<EpisodeVariantDto>): String {
         val mapping = episodes.first().mapping

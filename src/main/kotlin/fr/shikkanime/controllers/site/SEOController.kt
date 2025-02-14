@@ -99,17 +99,8 @@ class SEOController {
     @Path("/feed/episodes")
     @Get
     private fun feedRss(): Response {
-        val data = episodeMappingCacheService.findAllBy(
+        val data = episodeMappingCacheService.findAllGroupedBy(
             CountryCode.FR,
-            null,
-            null,
-            listOf(
-                SortParameter("lastReleaseDateTime", SortParameter.Order.DESC),
-                SortParameter("animeName", SortParameter.Order.DESC),
-                SortParameter("season", SortParameter.Order.DESC),
-                SortParameter("episodeType", SortParameter.Order.DESC),
-                SortParameter("number", SortParameter.Order.DESC),
-            ),
             1,
             50
         ).data
@@ -117,33 +108,7 @@ class SEOController {
         return Response.template(
             "/site/seo/rss.ftl",
             null,
-            mutableMapOf("episodeMappings" to data),
-            contentType = ContentType.Text.Xml
-        )
-    }
-
-    @Path("/feed/episodes-news")
-    @Get
-    private fun feedEpisodesNews(): Response {
-        val data = episodeMappingCacheService.findAllBy(
-            CountryCode.FR,
-            null,
-            null,
-            listOf(
-                SortParameter("releaseDateTime", SortParameter.Order.DESC),
-                SortParameter("animeName", SortParameter.Order.DESC),
-                SortParameter("season", SortParameter.Order.DESC),
-                SortParameter("episodeType", SortParameter.Order.DESC),
-                SortParameter("number", SortParameter.Order.DESC),
-            ),
-            1,
-            25
-        ).data
-
-        return Response.template(
-            "/site/seo/episodes-news.ftl",
-            null,
-            mutableMapOf("episodeMappings" to data),
+            mutableMapOf("groupedEpisodes" to data),
             contentType = ContentType.Text.Xml
         )
     }

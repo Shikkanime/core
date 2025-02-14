@@ -72,17 +72,8 @@ class SiteController {
             Link.HOME,
             mutableMapOf(
                 "animes" to getFullAnimesSimulcast(),
-                "episodeMappings" to episodeMappingCacheService.findAllBy(
+                "groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
                     CountryCode.FR,
-                    null,
-                    null,
-                    listOf(
-                        SortParameter("lastReleaseDateTime", SortParameter.Order.DESC),
-                        SortParameter("animeName", SortParameter.Order.DESC),
-                        SortParameter("season", SortParameter.Order.DESC),
-                        SortParameter("episodeType", SortParameter.Order.DESC),
-                        SortParameter("number", SortParameter.Order.DESC),
-                    ),
                     1,
                     8
                 ).data,
@@ -131,7 +122,7 @@ class SiteController {
             limit
         )
 
-        val title = dto.shortName + (season?.let { " - ${StringUtils.toSeasonString(dto.countryCode, it)}" } ?: "")
+        val title = dto.shortName + (season?.let { " - ${StringUtils.toSeasonString(dto.countryCode, it.toString())}" } ?: "")
         val showMore = ((((page ?: 1) - 1) * limit) + findAllBy.data.size < findAllBy.total.toInt())
 
         return Response.template(
