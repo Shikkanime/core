@@ -1,11 +1,13 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.CountryCodePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.SortParameter
@@ -50,6 +52,24 @@ class EpisodeMappingCacheService : AbstractCacheService {
                 it.status
             ),
             EpisodeMappingDto::class.java
+        )
+    }
+
+    fun findAllGroupedBy(
+        countryCode: CountryCode,
+        page: Int,
+        limit: Int,
+    ) = MapCache.getOrCompute(
+        "EpisodeMappingCacheService.findAllGroupedBy",
+        key = CountryCodePaginationKeyCache(countryCode, page, limit),
+    ) {
+        PageableDto.fromPageable(
+            episodeMappingService.findAllGrouped(
+                it.countryCode!!,
+                it.page,
+                it.limit,
+            ),
+            GroupedEpisodeDto::class.java
         )
     }
 

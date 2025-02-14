@@ -182,9 +182,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 releaseDateTime.withUTCString(),
                 buildString {
                     append("/animes/${pair.second.slug}")
-                    episodeMappings.firstOrNull()?.let {
-                        append("/season-${it.season}")
-                        if (episodeMappings.size <= 1) append("/${it.episodeType!!.slug}-${it.number}")
+
+                    episodeMappings.takeIf { it.isNotEmpty() }?.let {
+                        if (it.minOf { it.season!! } == it.maxOf { it.season!! }) {
+                            append("/season-${it.first().season}")
+                            if (it.size <= 1) append("/${it.first().episodeType!!.slug}-${it.first().number}")
+                        }
                     }
                 },
                 langTypes,

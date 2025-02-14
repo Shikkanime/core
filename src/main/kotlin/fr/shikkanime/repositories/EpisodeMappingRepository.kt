@@ -192,6 +192,118 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
+    private fun findAllTitleDescriptionAndDurationByUUIDs(
+        uuids: List<UUID>
+    ): List<Tuple> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            query.multiselect(
+                root[EpisodeMapping_.uuid],
+                root[EpisodeMapping_.title],
+                root[EpisodeMapping_.description],
+                root[EpisodeMapping_.duration]
+            )
+
+            query.where(root[EpisodeMapping_.uuid].`in`(uuids))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllGrouped(
+        countryCode: CountryCode,
+        page: Int,
+        limit: Int,
+    ): Pageable<GroupedEpisode> {
+        return database.entityManager.use {
+            val query = it.createQuery("""
+                WITH grouped_data AS (
+                    SELECT a AS anime,
+                         MIN(ev.releaseDateTime) AS min_release_date_time,
+                         MIN(em.season) AS min_season,
+                         MAX(em.season) AS max_season,
+                         em.episodeType AS episodeType,
+                         MIN(em.number) AS min_number,
+                         MAX(em.number) AS max_number,
+                         ARRAY_AGG(DISTINCT ev.platform) WITHIN GROUP (ORDER BY ev.platform) AS platforms,
+                         ARRAY_AGG(DISTINCT ev.audioLocale) WITHIN GROUP (ORDER BY ev.audioLocale) AS audioLocales,
+                         ARRAY_AGG(DISTINCT ev.url) WITHIN GROUP (ORDER BY ev.url) AS urls,
+                         ARRAY_AGG(DISTINCT em.uuid) WITHIN GROUP (ORDER BY em.uuid) AS mappings
+                    FROM EpisodeVariant ev
+                        JOIN ev.mapping em
+                        JOIN em.anime a
+                    WHERE a.countryCode = :countryCode
+                    GROUP BY a,
+                            em.episodeType,
+                            DATE_TRUNC("hour", ev.releaseDateTime)
+                )
+                SELECT gd.anime,
+                    gd.min_release_date_time,
+                    gd.min_season,
+                    gd.max_season,
+                    gd.episodeType,
+                    gd.min_number,
+                    gd.max_number,
+                    gd.platforms,
+                    gd.audioLocales,
+                    gd.urls,
+                    gd.mappings
+                FROM grouped_data gd
+                ORDER BY gd.min_release_date_time DESC,
+                    gd.anime.name DESC,
+                    gd.min_season DESC,
+                    gd.episodeType DESC,
+                    gd.min_number DESC
+            """.trimIndent(), Tuple::class.java)
+
+            query.setParameter("countryCode", countryCode)
+
+            val tmpPage = buildPageableQuery(createReadOnlyQuery(query), page, limit)
+            val page = Pageable<GroupedEpisode>(
+                tmpPage.data.map {
+                    GroupedEpisode(
+                        countryCode,
+                        it[0, Anime::class.java],
+                        it[1, ZonedDateTime::class.java],
+                        it[2, Int::class.java],
+                        it[3, Int::class.java],
+                        it[4, EpisodeType::class.java],
+                        it[5, Int::class.java],
+                        it[6, Int::class.java],
+                        it[7, Array::class.java].filterIsInstance<Platform>().toSet(),
+                        it[8, Array::class.java].filterIsInstance<String>().toSet(),
+                        it[9, Array::class.java].filterIsInstance<String>().toSet(),
+                        it[10, Array::class.java].filterIsInstance<UUID>().toSet()
+                    )
+                }.toSet(),
+                tmpPage.page,
+                tmpPage.limit,
+                tmpPage.total
+            )
+
+
+            val singleMappingEpisodes = page.data.filter { it.mappings.size == 1 }
+            val uuids = singleMappingEpisodes.map { it.mappings.first() }
+            val titleDescriptionAndDuration = findAllTitleDescriptionAndDurationByUUIDs(uuids).associateBy(
+                { it[0, UUID::class.java] },
+                { Triple(it[1, String::class.java], it[2, String::class.java], it[3, Long::class.java]) }
+            )
+
+            singleMappingEpisodes.forEach { groupedEpisode ->
+                val (title, description, duration) = titleDescriptionAndDuration[groupedEpisode.mappings.first()]!!
+                groupedEpisode.title = title
+                groupedEpisode.description = description
+                groupedEpisode.duration = duration
+            }
+
+            page
+        }
+    }
+
     fun findByAnimeSeasonEpisodeTypeNumber(
         animeUuid: UUID,
         season: Int,
