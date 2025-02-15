@@ -10,7 +10,7 @@
 [#-- @ftlvariable name="simulcast_config" type="fr.shikkanime.platforms.configuration.PlatformSimulcast" --]
 [#-- @ftlvariable name="animes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.animes.AnimeDto>" --]
 [#-- @ftlvariable name="originalSize" type="java.lang.String" --]
-[#-- @ftlvariable name="compressedSize" type="java.lang.String" --]
+[#-- @ftlvariable name="encodedSize" type="java.lang.String" --]
 [#-- @ftlvariable name="simulcasts" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.simulcasts.SimulcastDto>" --]
 [#-- @ftlvariable name="selectedSimulcast" type="fr.shikkanime.dtos.simulcasts.SimulcastDto" --]
 [#-- @ftlvariable name="googleSiteVerification" type="java.lang.String" --]

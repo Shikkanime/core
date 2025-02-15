@@ -332,12 +332,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         )
     }
 
-    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageService.Type.IMAGE, image, 480, 720, bypass)
+    fun addThumbnail(uuid: UUID, image: String, bypass: Boolean = false, async: Boolean = true) {
+        ImageService.add(uuid, ImageService.Type.THUMBNAIL, image, null, bypass, async)
     }
 
-    fun addBanner(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageService.Type.BANNER, image, 640, 360, bypass)
+    fun addBanner(uuid: UUID, image: String, bypass: Boolean = false, async: Boolean = true) {
+        ImageService.add(uuid, ImageService.Type.BANNER, image, null, bypass, async)
     }
 
     fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
@@ -400,7 +400,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val uuid = savedEntity.uuid!!
 
         if (!Constant.disableImageConversion) {
-            addImage(uuid, savedEntity.image!!)
+            addThumbnail(uuid, savedEntity.image!!)
             addBanner(uuid, savedEntity.banner!!)
         }
 
@@ -431,8 +431,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         if (animeDto.image.isNotBlank() && animeDto.image != anime.image) {
             anime.image = animeDto.image
-            ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
-            addImage(anime.uuid, anime.image!!)
+            ImageService.remove(anime.uuid!!, ImageService.Type.THUMBNAIL)
+            addThumbnail(anime.uuid, anime.image!!)
         }
 
         if (animeDto.banner.isNotBlank() && animeDto.banner != anime.banner) {

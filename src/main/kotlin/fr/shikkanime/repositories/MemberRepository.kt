@@ -102,7 +102,7 @@ class MemberRepository : AbstractRepository<Member>() {
                     tuple[5, Long::class.java],
                     tuple[6, Long::class.java]
                 ).apply {
-                    hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
+                    hasProfilePicture = ImageService[uuid, ImageService.Type.MEMBER_PROFILE] != null
                     isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
                 }
             }
@@ -167,7 +167,7 @@ class MemberRepository : AbstractRepository<Member>() {
                 tuple[5, Long::class.java],
                 tuple[6, Long::class.java]
             ).apply {
-                hasProfilePicture = ImageService[uuid, ImageService.Type.IMAGE] != null
+                hasProfilePicture = ImageService[uuid, ImageService.Type.MEMBER_PROFILE] != null
                 isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
             }
         }
