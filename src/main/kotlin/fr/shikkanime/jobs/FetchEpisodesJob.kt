@@ -2,16 +2,13 @@ package fr.shikkanime.jobs
 
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
-import fr.shikkanime.services.EmailService
 import fr.shikkanime.services.EpisodeVariantService
+import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
@@ -40,7 +37,7 @@ class FetchEpisodesJob : AbstractJob {
     private lateinit var configCacheService: ConfigCacheService
 
     @Inject
-    private lateinit var emailService: EmailService
+    private lateinit var mailService: MailService
 
     fun addHashCaches(
         it: AbstractPlatform<*, *, *>,
@@ -173,7 +170,18 @@ class FetchEpisodesJob : AbstractJob {
                 logger.log(Level.SEVERE, title, e)
                 val stringWriter = StringWriter()
                 e.printStackTrace(PrintWriter(stringWriter))
-                emailService.sendAdminEmail(title, stringWriter.toString().replace("\n", "<br>"))
+
+                try {
+                    mailService.save(
+                        Mail(
+                            recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                            title = title,
+                            body = stringWriter.toString().replace("\n", "<br>")
+                        )
+                    )
+                } catch (e: Exception) {
+                    logger.warning("Error while sending mail for $title: ${e.message}")
+                }
             }
         }
     }

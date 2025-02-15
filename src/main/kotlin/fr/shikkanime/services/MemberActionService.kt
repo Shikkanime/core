@@ -1,12 +1,16 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
+import fr.shikkanime.entities.Mail
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.repositories.MemberActionRepository
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import freemarker.cache.ClassTemplateLoader
 import freemarker.template.Configuration
 import java.io.StringWriter
@@ -30,7 +34,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     private lateinit var memberService: MemberService
 
     @Inject
-    private lateinit var emailService: EmailService
+    private lateinit var mailService: MailService
 
     @Inject
     private lateinit var traceActionService: TraceActionService
@@ -97,13 +101,23 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     private fun doAction(memberAction: MemberAction, code: String, email: String) {
         when (memberAction.action) {
             Action.VALIDATE_EMAIL -> {
-                val stringWriter = getFreemarkerContent("/mail/associate-email.ftl", code, model = mapOf("webToken" to toWebToken(memberAction)))
-                emailService.sendEmail(email, "${Constant.NAME} - Vérification d'adresse email", stringWriter.toString())
+                mailService.save(
+                    Mail(
+                        recipient = email,
+                        title = "${Constant.NAME} - Vérification d'adresse email",
+                        body = getFreemarkerContent("/mail/associate-email.ftl", code, model = mapOf("webToken" to toWebToken(memberAction))).toString()
+                    )
+                )
             }
 
             Action.FORGOT_IDENTIFIER -> {
-                val stringWriter = getFreemarkerContent("/mail/forgot-identifier.ftl", code)
-                emailService.sendEmail(email, "${Constant.NAME} - Récupération d'identifiant", stringWriter.toString())
+                mailService.save(
+                    Mail(
+                        recipient = email,
+                        title = "${Constant.NAME} - Récupération d'identifiant",
+                        body = getFreemarkerContent("/mail/forgot-identifier.ftl", code).toString()
+                    )
+                )
             }
 
             else -> TODO("Action not implemented")
@@ -117,15 +131,13 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                 memberService.update(memberAction.member!!)
                 traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
 
-                try {
-                    emailService.sendEmail(
-                        memberAction.email!!,
-                        "${Constant.NAME} - Adresse email validée",
-                        getFreemarkerContent("/mail/email-associated.ftl").toString()
+                mailService.save(
+                    Mail(
+                        recipient = memberAction.email!!,
+                        title = "${Constant.NAME} - Adresse email validée",
+                        body = getFreemarkerContent("/mail/email-associated.ftl").toString()
                     )
-                } catch (e: Exception) {
-                    logger.log(Level.WARNING, "Failed to send email", e)
-                }
+                )
             }
 
             Action.FORGOT_IDENTIFIER -> {
@@ -139,15 +151,13 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                 memberService.update(memberAction.member!!)
                 traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
 
-                try {
-                    emailService.sendEmail(
-                        memberAction.email!!,
-                        "${Constant.NAME} - Votre nouvel identifiant",
-                        getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
+                mailService.save(
+                    Mail(
+                        recipient = memberAction.email!!,
+                        title = "${Constant.NAME} - Votre nouvel identifiant",
+                        body = getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
                     )
-                } catch (e: Exception) {
-                    logger.log(Level.WARNING, "Failed to send email", e)
-                }
+                )
             }
 
             else -> TODO("Action not implemented")

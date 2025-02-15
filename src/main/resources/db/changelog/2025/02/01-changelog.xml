@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1739659119707"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="mail"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="mail">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_mail"/>
+            </column>
+            <column name="creation_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_update_date_time" type="timestamp"/>
+            <column name="recipient" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="body" type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error" type="VARCHAR(10000)"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

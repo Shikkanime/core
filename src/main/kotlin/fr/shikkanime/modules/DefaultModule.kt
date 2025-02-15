@@ -5,7 +5,6 @@ import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
-import fr.shikkanime.services.EmailService
 import fr.shikkanime.services.caches.AbstractCacheService
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
 import fr.shikkanime.utils.Constant
@@ -15,7 +14,6 @@ import fr.shikkanime.utils.routes.Controller
 class DefaultModule : AbstractModule() {
     override fun configure() {
         bind(Database::class.java).asEagerSingleton()
-        bind(EmailService::class.java).asEagerSingleton()
 
         setOf(
             Constant.reflections.getSubTypesOf(AbstractRepository::class.java),

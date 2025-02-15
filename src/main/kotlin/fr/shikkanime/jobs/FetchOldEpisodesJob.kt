@@ -46,7 +46,7 @@ class FetchOldEpisodesJob : AbstractJob {
     private lateinit var traceActionService: TraceActionService
 
     @Inject
-    private lateinit var emailService: EmailService
+    private lateinit var mailService: MailService
 
     private fun log(stringBuilder: StringBuilder, level: Level, message: String) {
         logger.log(level, message)
@@ -150,10 +150,17 @@ class FetchOldEpisodesJob : AbstractJob {
 
         log(emailLogs, Level.INFO, "Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
 
-        emailService.sendAdminEmail(
-            "FetchOldEpisodesJob - ${dates.first()} to ${dates.last()}",
-            emailLogs.toString(),
-        )
+        try {
+            mailService.save(
+                Mail(
+                    recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                    title = "FetchOldEpisodesJob - ${dates.first()} to ${dates.last()}",
+                    body = emailLogs.toString(),
+                )
+            )
+        } catch (e: Exception) {
+            logger.warning("Error while sending mail for FetchOldEpisodesJob: ${e.message}")
+        }
     }
 
     private fun fetchAnimationDigitalNetwork(
