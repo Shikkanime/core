@@ -66,7 +66,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private lateinit var configCacheService: ConfigCacheService
 
     @Inject
-    private lateinit var emailService: EmailService
+    private lateinit var mailService: MailService
 
     override fun run() {
         val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
@@ -190,10 +190,17 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 logger.info("- $line")
             }
 
-            emailService.sendAdminEmail(
-                "UpdateEpisodeMappingJob - ${dtos.size} new episodes",
-                lines.joinToString("<br>") { "- $it" }
-            )
+            try {
+                mailService.save(
+                    Mail(
+                        recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                        title = "UpdateEpisodeMappingJob - ${dtos.size} new episodes",
+                        body = lines.joinToString("<br>") { "- $it" }
+                    )
+                )
+            } catch (e: Exception) {
+                logger.warning("Error while sending mail for UpdateEpisodeMappingJob: ${e.message}")
+            }
         }
     }
 

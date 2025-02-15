@@ -1,7 +1,10 @@
 package fr.shikkanime.utils
 
+import fr.shikkanime.entities.Mail
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.jobs.AbstractJob
-import fr.shikkanime.services.EmailService
+import fr.shikkanime.services.MailService
+import fr.shikkanime.services.caches.ConfigCacheService
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
 import java.time.ZonedDateTime
@@ -64,15 +67,23 @@ object JobManager {
                     val errors = jobErrors[jobClassName] ?: return
                     errors.forEach { it.end = now }
                     jobErrors.remove(jobClassName)
-                    val emailService = Constant.injector.getInstance(EmailService::class.java)
+                    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+                    val mailService = Constant.injector.getInstance(MailService::class.java)
 
-                    emailService.sendAdminEmail(
-                        "$jobClassName is now working",
-                        """
+                    try {
+                        mailService.save(
+                            Mail(
+                                recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                                title = "$jobClassName is now working",
+                                body = """
                         The job was previously failing with the following errors:
                         ${errors.joinToString("\n") { it.toString() }}
                         """.trimIndent()
-                    )
+                            )
+                        )
+                    } catch (e: Exception) {
+                        logger.warning("Error while sending mail for job $jobClassName: ${e.message}")
+                    }
 
                     logger.info("$jobClassName is now working")
                     logger.info("The job was previously failing with the following errors:")
@@ -87,15 +98,23 @@ object JobManager {
                 if (errors.none { it.stackTrace == stackTraceToString }) {
                     errors.add(JobError(now, null, stackTraceToString))
                     jobErrors[jobClassName] = errors
-                    val emailService = Constant.injector.getInstance(EmailService::class.java)
+                    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+                    val mailService = Constant.injector.getInstance(MailService::class.java)
 
-                    emailService.sendAdminEmail(
-                        "$jobClassName failed",
-                        """
+                    try {
+                        mailService.save(
+                            Mail(
+                                recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                                title =  "$jobClassName failed",
+                                body = """
                         $jobClassName failed with the following error:
                         $stackTraceToString
                         """.trimIndent()
-                    )
+                            )
+                        )
+                    } catch (e: Exception) {
+                        logger.warning("Error while sending mail for job $jobClassName: ${e.message}")
+                    }
                 }
             }
         }
