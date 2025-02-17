@@ -46,7 +46,7 @@ class AttachmentController {
         @QueryParam(
             "type",
             description = "Type of the attachment",
-            example = "IMAGE",
+            example = "THUMBNAIL",
             type = ImageService.Type::class
         )
         typeString: String?
@@ -60,9 +60,16 @@ class AttachmentController {
             )
         }
 
-        val type = ImageService.Type.entries.find { it.name.equals(typeString, true) } ?: ImageService.Type.IMAGE
+        val tmpTypes = buildSet {
+            ImageService.Type.entries.find { it.name.equals(typeString, true) }?.let { add(it) }
+            add(ImageService.Type.THUMBNAIL)
+            add(ImageService.Type.BANNER)
+            add(ImageService.Type.MEMBER_PROFILE)
+        }
 
-        val image = ImageService[uuid, type] ?: return Response.notFound(
+        val image = tmpTypes.asSequence()
+            .mapNotNull { ImageService[uuid, it] }
+            .firstOrNull() ?: return Response.notFound(
             MessageDto(
                 MessageDto.Type.ERROR,
                 "Attachment not found"

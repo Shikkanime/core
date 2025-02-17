@@ -18,11 +18,18 @@ import kotlin.system.measureTimeMillis
 private const val FAILED_TO_ENCODE_MESSAGE = "Failed to encode image to WebP"
 
 object ImageService {
-    enum class Type {
-        IMAGE,
-        BANNER,
+    enum class Type(val width: Int, val height: Int) {
+        @Deprecated("Use THUMBNAIL or BANNER instead", ReplaceWith("THUMBNAIL or BANNER"))
+        IMAGE(0, 0),
+
+        THUMBNAIL(1560, 2340),
+        BANNER(1920, 1080),
+        MEMBER_PROFILE(128, 128),
+        TITLE(1920, 0),
+        CAROUSEL(1920, 1080),
     }
 
+    @Deprecated("Use Media instead", ReplaceWith("Media"))
     data class Image(
         val uuid: String,
         val type: Type,
@@ -34,6 +41,19 @@ object ImageService {
         var size: Long = 0,
         var lastUpdateDateTime: Long? = null
     ) : Serializable {
+        fun toMedia(animeUuids: List<UUID>, episodeUuids: List<UUID>, memberUuids: List<UUID>): Media {
+            val uuidFromString = UUID.fromString(uuid)
+
+            val newType = when {
+                type == Type.IMAGE && uuidFromString in animeUuids -> Type.THUMBNAIL
+                type == Type.IMAGE && uuidFromString in episodeUuids -> Type.BANNER
+                type == Type.IMAGE && uuidFromString in memberUuids -> Type.MEMBER_PROFILE
+                else -> type
+            }
+
+            return Media(uuid, newType, url, bytes, originalSize.toInt(), lastUpdateDateTime)
+        }
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -67,10 +87,49 @@ object ImageService {
         }
     }
 
+    data class Media(
+        val uuid: String,
+        val type: Type,
+        val url: String? = null,
+        var bytes: ByteArray = byteArrayOf(),
+        var originalSize: Int = 0,
+        var lastUpdateDateTime: Long? = null
+    ) : Serializable {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Media
+
+            if (uuid != other.uuid) return false
+            if (type != other.type) return false
+            if (url != other.url) return false
+            if (!bytes.contentEquals(other.bytes)) return false
+            if (originalSize != other.originalSize) return false
+            if (lastUpdateDateTime != other.lastUpdateDateTime) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = uuid.hashCode()
+            result = 31 * result + type.hashCode()
+            result = 31 * result + (url?.hashCode() ?: 0)
+            result = 31 * result + bytes.contentHashCode()
+            result = 31 * result + originalSize.hashCode()
+            result = 31 * result + (lastUpdateDateTime?.hashCode() ?: 0)
+            return result
+        }
+
+        companion object {
+            const val serialVersionUID: Long = 0
+        }
+    }
+
     private val logger = LoggerFactory.getLogger(javaClass)
     private val nThreads = Runtime.getRuntime().availableProcessors()
     private var threadPool = Executors.newFixedThreadPool(nThreads)
-    val cache = mutableMapOf<Pair<String, Type>, Image>()
+    val cache = mutableMapOf<Pair<String, Type>, Media>()
     private val change = AtomicBoolean(false)
     private const val CACHE_FILE_NUMBER = 4
 
@@ -89,13 +148,13 @@ object ImageService {
         }
     }
 
-    fun loadCache() {
+    fun loadCache(animeUuids: List<UUID>, episodeUuids: List<UUID>, memberUuids: List<UUID>) {
         logger.info("Loading images cache...")
-        val cachePart = mutableListOf<Image>()
+        val cachePart = mutableListOf<Media>()
 
         val take = measureTimeMillis {
             (0..<CACHE_FILE_NUMBER).toList().parallelStream().forEach { index ->
-                val part = loadCachePart(File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                val part = loadCachePart(animeUuids, episodeUuids, memberUuids, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 cachePart.addAll(part)
             }
         }
@@ -104,16 +163,22 @@ object ImageService {
         logger.info("Loaded images cache in $take ms (${this.cache.size} images)")
     }
 
-    private fun loadCachePart(file: File): List<Image> {
+    private fun loadCachePart(animeUuids: List<UUID>, episodeUuids: List<UUID>, memberUuids: List<UUID>, file: File): List<Media> {
         if (!file.exists()) {
             return emptyList()
         }
 
         logger.info("Loading images cache part...")
-        val cache = mutableListOf<Image>()
+        val cache = mutableListOf<Media>()
 
         val take = measureTimeMillis {
-            val deserializedCache = FileManager.readFile<List<Image>>(file)
+            val deserializedCache = try {
+                FileManager.readFile<List<Media>>(file)
+            } catch (e: Exception) {
+                logger.log(Level.WARNING, "Failed to load images cache part, falling back to old cache")
+                FileManager.readFile<List<Image>>(file).map { it.toMedia(animeUuids, episodeUuids, memberUuids) }
+            }
+
             cache.addAll(deserializedCache)
         }
 
@@ -121,12 +186,12 @@ object ImageService {
         return cache
     }
 
-    private fun distributeImages(images: Collection<Image>): List<List<Image>> {
+    private fun distributeImages(images: Collection<Media>): List<List<Media>> {
         // Sort images by size in descending order for a more balanced distribution
-        val sortedImages = images.sortedByDescending { it.size }
+        val sortedImages = images.sortedByDescending { it.bytes.size }
 
         // Initialize lists to hold the distributed images
-        val resultLists = MutableList(CACHE_FILE_NUMBER) { mutableListOf<Image>() }
+        val resultLists = MutableList(CACHE_FILE_NUMBER) { mutableListOf<Media>() }
 
         // Distribute images using round-robin approach
         sortedImages.forEachIndexed { index, image ->
@@ -161,10 +226,10 @@ object ImageService {
             }
         }
 
-        logger.info("Saved images cache in $take ms ($originalSize -> $compressedSize)")
+        logger.info("Saved images cache in $take ms ($originalSize -> $encodedSize)")
     }
 
-    private fun saveCachePart(cache: List<Image>, file: File) {
+    private fun saveCachePart(cache: List<Media>, file: File) {
         if (!file.exists()) {
             file.createNewFile()
         }
@@ -173,89 +238,71 @@ object ImageService {
         val take = measureTimeMillis { FileManager.writeFile(file, cache) }
 
         logger.info(
-            "Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize })} -> ${
+            "Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize.toLong() })} -> ${
                 toHumanReadable(
-                    cache.sumOf { it.size })
+                    cache.sumOf { it.bytes.size.toLong() })
             })"
         )
     }
 
-    fun add(uuid: UUID, type: Type, url: String, width: Int, height: Int, bypass: Boolean = false) {
-        if (!bypass && (get(uuid, type) != null || url.isBlank())) {
-            return
-        }
-
-        val image = if (!bypass) {
-            val image = Image(uuid.toString(), type, url)
-            cache[uuid.toString() to type] = image
-            image
-        } else {
-            get(uuid, type) ?: run {
-                val image = Image(uuid.toString(), type, url)
-                cache[uuid.toString() to type] = image
-                image
+    private fun taskEncode(uuid: UUID, type: Type, url: String?, bytes: ByteArray?, media: Media) {
+        val imageBytes = if (!url.isNullOrBlank() && (bytes == null || bytes.isEmpty())) {
+            val (httpResponse, urlBytes) = runBlocking {
+                val response = HttpRequest().get(url)
+                response to response.readRawBytes()
             }
+
+            if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty()) {
+                logger.warning("Failed to load image $url")
+                remove(uuid, type)
+                return
+            }
+
+            urlBytes
+        } else {
+            bytes ?: return
         }
 
-        threadPool.submit { encodeImage(url, uuid, type, width, height, image) }
+        encodeImage(imageBytes, uuid, type, media)
     }
 
-    fun add(uuid: UUID, type: Type, bytes: ByteArray, width: Int, height: Int, bypass: Boolean = false) {
-        if (!bypass && (get(uuid, type) != null || bytes.isEmpty())) {
-            return
-        }
-
-        val image = if (!bypass) {
-            val image = Image(uuid.toString(), type)
-            cache[uuid.toString() to type] = image
-            image
-        } else {
-            get(uuid, type) ?: run {
-                val image = Image(uuid.toString(), type)
-                cache[uuid.toString() to type] = image
-                image
-            }
-        }
-
-        encodeImage(bytes, uuid, type, width, height, image)
-    }
-
-    private fun encodeImage(
-        url: String,
+    fun add(
         uuid: UUID,
         type: Type,
-        width: Int,
-        height: Int,
-        image: Image
+        url: String?,
+        bytes: ByteArray?,
+        bypass: Boolean = false,
+        async: Boolean = true
     ) {
-        val (httpResponse, bytes) = runBlocking {
-            val response = HttpRequest().get(url)
-            response to response.readRawBytes()
-        }
+        val isEmpty = url.isNullOrBlank() && (bytes == null || bytes.isEmpty())
 
-        if (httpResponse.status != HttpStatusCode.OK || bytes.isEmpty()) {
-            logger.warning("Failed to load image $url")
-            remove(uuid, type)
+        if (!bypass && (get(uuid, type) != null || isEmpty)) {
             return
         }
 
-        encodeImage(
-            bytes,
-            uuid,
-            type,
-            width,
-            height,
-            image
-        )
+        val media = if (!bypass) {
+            val media = Media(uuid.toString(), type, url)
+            cache[uuid.toString() to type] = media
+            media
+        } else {
+            get(uuid, type) ?: run {
+                val media = Media(uuid.toString(), type, url)
+                cache[uuid.toString() to type] = media
+                media
+            }
+        }
+
+        if (async)
+            threadPool.submit { taskEncode(uuid, type, url, bytes, media) }
+        else
+            taskEncode(uuid, type, url, bytes, media)
     }
 
     private fun encodeImage(
         bytes: ByteArray,
         uuid: UUID,
         type: Type,
-        width: Int,
-        height: Int,
-        image: Image
+        media: Media
     ) {
         val take = measureTimeMillis {
             try {
@@ -265,10 +312,8 @@ object ImageService {
                     return@measureTimeMillis
                 }
 
-                val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(width, height)
-                val webp =
-                    FileManager.encodeToWebP(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }
-                        .toByteArray())
+                val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(type.width, type.height)
+                val webp = FileManager.encodeToWebP(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
 
                 if (webp.isEmpty()) {
                     logger.warning(FAILED_TO_ENCODE_MESSAGE)
@@ -276,14 +321,11 @@ object ImageService {
                     return@measureTimeMillis
                 }
 
-                image.bytes = webp
-                image.width = width
-                image.height = height
-                image.originalSize = bytes.size.toLong()
-                image.size = webp.size.toLong()
-                image.lastUpdateDateTime = System.currentTimeMillis()
+                media.bytes = webp
+                media.originalSize = bytes.size
+                media.lastUpdateDateTime = System.currentTimeMillis()
 
-                cache[uuid.toString() to type] = image
+                cache[uuid.toString() to type] = media
                 change.set(true)
             } catch (e: Exception) {
                 when (e) {
@@ -298,9 +340,9 @@ object ImageService {
         }
 
         logger.info(
-            "Encoded image to WebP in ${take}ms (${toHumanReadable(image.originalSize)} -> ${
+            "Encoded image to WebP in ${take}ms (${toHumanReadable(media.originalSize.toLong())} -> ${
                 toHumanReadable(
-                    image.size
+                    media.bytes.size.toLong()
                 )
             })"
         )
@@ -311,16 +353,13 @@ object ImageService {
         change.set(true)
     }
 
-    operator fun get(uuid: UUID, type: Type): Image? = cache[uuid.toString() to type]
-
-    val size: Int
-        get() = cache.size
+    operator fun get(uuid: UUID, type: Type): Media? = cache[uuid.toString() to type]
 
     val originalSize: String
-        get() = toHumanReadable(cache.values.sumOf { it.originalSize })
+        get() = toHumanReadable(cache.values.sumOf { it.originalSize.toLong() })
 
-    val compressedSize: String
-        get() = toHumanReadable(cache.values.sumOf { it.size })
+    val encodedSize: String
+        get() = toHumanReadable(cache.values.sumOf { it.bytes.size.toLong() })
 
     fun invalidate() {
         removeUnusedImages()
@@ -350,12 +389,12 @@ object ImageService {
 
             // Calculate the difference between the cache and the UUIDs
             val difference = cache.filter { entry -> entry.key.first !in uuids }.values
-            logger.warning("Removing ${difference.size} images from cache, not found in database")
-            logger.warning("${toHumanReadable(difference.sumOf { img -> img.size })} will be free")
-
-            cache.keys.removeAll { pair -> pair.first !in uuids }
 
             if (difference.isNotEmpty()) {
+                logger.warning("Removing ${difference.size} images from cache, not found in database")
+                logger.warning("${toHumanReadable(difference.sumOf { img -> img.bytes.size.toLong() })} will be free")
+
+                cache.keys.removeAll { pair -> pair.first !in uuids }
                 change.set(true)
             }
         }
@@ -367,21 +406,22 @@ object ImageService {
         cache.clear()
     }
 
-    fun addAll(bypass: Boolean = false) {
+    fun addAll(bypass: Boolean = false, async: Boolean = true) {
         val animeService = Constant.injector.getInstance(AnimeService::class.java)
         val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
 
         episodeMappingService.findAllAnimeUuidImageBannerAndUuidImage().asSequence()
             .groupBy { Triple(it[0] as UUID, it[1] as String, it[2] as String) }
             .forEach { (animeGroup, mappings) ->
-                animeService.addImage(animeGroup.first, animeGroup.second, bypass)
-                animeService.addBanner(animeGroup.first, animeGroup.third, bypass)
+                animeService.addThumbnail(animeGroup.first, animeGroup.second, bypass, async)
+                animeService.addBanner(animeGroup.first, animeGroup.third, bypass, async)
 
                 mappings.forEach {
                     episodeMappingService.addImage(
                         it[3] as UUID,
                         (it[4] as String).ifBlank { null } ?: Constant.DEFAULT_IMAGE_PREVIEW,
-                        bypass
+                        bypass,
+                        async
                     )
                 }
             }

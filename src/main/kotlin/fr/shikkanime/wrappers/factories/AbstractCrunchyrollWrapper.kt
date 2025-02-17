@@ -57,6 +57,10 @@ abstract class AbstractCrunchyrollWrapper {
             get() = images.posterTall.firstOrNull()?.maxByOrNull { it.width }?.source
         val fullHDBanner: String?
             get() = images.posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
+        val fullHDTitle: String
+            get() = "https://imgsrv.crunchyroll.com/cdn-cgi/image/format=png,quality=100,width=1920/keyart/$id-title_logo-en-us"
+        val fullHDCarousel: String
+            get() = "https://imgsrv.crunchyroll.com/cdn-cgi/image/format=auto,quality=100,width=1920/keyart/$id-backdrop_wide"
     }
 
     data class Season(

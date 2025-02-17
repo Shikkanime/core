@@ -57,7 +57,7 @@
         <template x-for="animeAlert in pageable.data">
             <div class="card p-3 mb-3">
                 <div class="d-flex align-items-center my-3">
-                    <img :src="'${apiUrl}/v1/attachments?uuid=' + animeAlert.anime.uuid + '&type=image'" class="img-fluid" style="width: 5rem; border-radius: 8px">
+                    <img :src="'${apiUrl}/v1/attachments?uuid=' + animeAlert.anime.uuid + '&type=THUMBNAIL'" class="img-fluid" style="width: 5rem; border-radius: 8px">
 
                     <div class="ms-3">
                         <a x-bind:href="'/admin/animes/' + animeAlert.anime.uuid"
