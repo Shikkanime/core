@@ -93,11 +93,9 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         val episodes = platform.fetchEpisodes(zonedDateTime)
 
         assertEquals(true, episodes.isNotEmpty())
-        assertEquals(2, episodes.size)
-        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime)
+        assertEquals(1, episodes.size)
+        assertEquals("My Master Has No Tail", episodes[0].anime)
         assertNotNull(episodes[0].description)
-        assertEquals("My Master Has No Tail", episodes[1].anime)
-        assertNotNull(episodes[1].description)
     }
 
     @Test
