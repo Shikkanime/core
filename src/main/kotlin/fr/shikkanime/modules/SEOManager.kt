@@ -6,7 +6,6 @@ import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.LinkObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
@@ -16,8 +15,7 @@ private fun <T> List<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else
 private fun <T> List<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter(predicate).randomIfNotEmpty()
 
 fun setGlobalAttributes(
-    ipAddress: String,
-    userAgent: String,
+    isBot: Boolean,
     modelMap: MutableMap<Any?, Any?>,
     controller: Any,
     replacedPath: String,
@@ -30,7 +28,6 @@ fun setGlobalAttributes(
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
     val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
     val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
-    val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
 
     modelMap["su"] = StringUtils
     modelMap["links"] = getLinks(controller, replacedPath, simulcastCacheService)
@@ -42,7 +39,7 @@ fun setGlobalAttributes(
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl
 
-    if (configCacheService.getValueAsBoolean(ConfigPropertyKey.DISABLE_BOT_DETECTION) || !botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
+    if (!isBot) {
         modelMap["additionalHeadTags"] = configCacheService.getValueAsString(ConfigPropertyKey.ADDITIONAL_HEAD_TAGS)
     }
 

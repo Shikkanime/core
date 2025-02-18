@@ -20,7 +20,8 @@ class BotDetectorCache : AbstractCacheService {
     }
 
     private val httpRequest = HttpRequest()
-    private val ipv4Regex = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$")
+    private val ipv4Regex = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?:/[0-9]+)*")
+    private val duration = Duration.ofDays(1)
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
@@ -44,9 +45,9 @@ class BotDetectorCache : AbstractCacheService {
         return true
     }
 
-    private fun getGoodBotsIP() = MapCache.getOrCompute(
-        "BotDetectorCache.getGoodBotsIP",
-        duration = Duration.ofDays(1),
+    private fun getGoodBotsIPs() = MapCache.getOrCompute(
+        "BotDetectorCache.getGoodBotsIPs",
+        duration = duration,
         key = DEFAULT_ALL_KEY
     ) {
         runBlocking {
@@ -57,13 +58,13 @@ class BotDetectorCache : AbstractCacheService {
                 return@runBlocking emptyList()
             }
 
-            response.bodyAsText().split("\n").filter { it.isNotBlank() || !ipv4Regex.matches(it) }
+            response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) }
         }
     }
 
     private fun getGoodBotsRegex() = MapCache.getOrCompute(
         "BotDetectorCache.getGoodBotsRegex",
-        duration = Duration.ofDays(1),
+        duration = duration,
         key = DEFAULT_ALL_KEY
     ) {
         runBlocking {
@@ -81,34 +82,42 @@ class BotDetectorCache : AbstractCacheService {
         }
     }
 
-    fun isBot(clientIp: String? = null, userAgent: String? = null): Boolean {
-        if (!clientIp.isNullOrBlank()) {
-            val clientIpBytes = InetAddress.getByName(clientIp).address
+    private fun getAbuseIPs() = MapCache.getOrCompute(
+        "BotDetectorCache.getAbuseIPs",
+        duration = duration,
+        key = DEFAULT_ALL_KEY
+    ) {
+        runBlocking {
+            val response =
+                httpRequest.get("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4")
 
-            getGoodBotsIP().forEach { botIp ->
-                if (botIp.contains("/")) {
-                    val (ip, cidr) = botIp.split("/")
-                    val mask = createMask(cidr.toInt())
-                    val networkIpBytes = InetAddress.getByName(ip).address
-
-                    if (isInRange(clientIpBytes, networkIpBytes, mask)) {
-                        return true
-                    }
-                } else if (clientIp == botIp) {
-                    return true
-                }
+            if (response.status != HttpStatusCode.OK) {
+                return@runBlocking emptyList()
             }
+
+            response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) }
+        }
+    }
+
+    private fun isIpInRange(clientIp: String, botIp: String): Boolean {
+        return if (botIp.contains("/")) {
+            val (ip, cidr) = botIp.split("/")
+            val mask = createMask(cidr.toInt())
+            isInRange(InetAddress.getByName(clientIp).address, InetAddress.getByName(ip).address, mask)
+        } else clientIp == botIp
+    }
+
+    fun isBot(clientIp: String? = null, userAgent: String? = null): Boolean {
+        clientIp?.let {
+            if (getGoodBotsIPs().any { botIp -> isIpInRange(it, botIp) }) return true
+            if (getAbuseIPs().contains(it)) return true
         }
 
-        if (!userAgent.isNullOrBlank()) {
+        userAgent?.let {
             val regexes = getGoodBotsRegex().toMutableSet()
             configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.toRegex()?.let { regexes.add(it) }
 
-            regexes.forEach { regex ->
-                if (userAgent.contains(regex)) {
-                    return true
-                }
-            }
+            if (regexes.any { regex -> it.contains(regex) }) return true
         }
 
         return false

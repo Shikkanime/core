@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -51,6 +52,7 @@ import kotlin.reflect.jvm.jvmErasure
 
 private val logger = LoggerFactory.getLogger("Routing")
 private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
+private val attributeKey = AttributeKey<Boolean>("isBot")
 
 fun Application.configureRouting() {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
@@ -118,8 +120,9 @@ fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
     val path = call.request.path()
     val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
     val userAgent = call.request.userAgent() ?: "Unknown"
+    val isBot = call.attributes.getOrNull(attributeKey) == true
 
-    logger.info("[$ipAddress - $userAgent] ($status - $duration ms) $httpMethod ${call.request.origin.uri} -> $path")
+    logger.info("[$ipAddress - $userAgent${if (isBot) " (BOT)" else ""}] ($status - $duration ms) $httpMethod ${call.request.origin.uri} -> $path")
 }
 
 private fun Routing.createRoutes() {
@@ -229,7 +232,17 @@ suspend fun handleTemplateResponse(
     val model = response.data["model"]
     require(model is Map<*, *>) { "Model must be a map" }
     val mutableMap = model.toMutableMap()
-    setGlobalAttributes(ipAddress, userAgent, mutableMap, controller, replacedPath, response.data["title"] as String?)
+
+    var isBot = false
+    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+    val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
+
+    if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.DISABLE_BOT_DETECTION) && botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
+        isBot = true
+        call.attributes.put(attributeKey, true)
+    }
+
+    setGlobalAttributes(isBot, mutableMap, controller, replacedPath, response.data["title"] as String?)
     call.respond(response.status, FreeMarkerContent(response.data["template"] as String, mutableMap, "", response.contentType))
 }
 
