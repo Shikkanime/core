@@ -29,6 +29,10 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
             get() = image2x.replace(sizeRegex, "1560x2340")
         val fullHDBanner: String
             get() = imageHorizontal2x.replace(sizeRegex, "1920x1080")
+        val fullHDTitle: String
+            get() = imageHorizontal2x.replace("license_\\d+x\\d+.jpg".toRegex(), "title_1920x0.png")
+        val fullHDCarousel: String
+            get() = imageHorizontal2x.replace("license_\\d+x\\d+".toRegex(), "carousel169_1920x1080")
     }
 
     data class Video(

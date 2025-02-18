@@ -94,7 +94,7 @@
                         <a x-bind:href="'/animes/' + anime.slug" @mouseenter="hover = true" @mouseleave="hover = false">
                             <div class="shikk-element-content">
                                 <div class="position-relative">
-                                    <img x-bind:src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=image'"
+                                    <img x-bind:src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=THUMBNAIL'"
                                          x-bind:alt="anime.shortName + ' anime'"
                                          loading="lazy"
                                          class="shikk-element-content-img"

@@ -21,14 +21,13 @@ class ImageServiceTest : AbstractTest() {
         val uuid = UUID.randomUUID()
         ImageService.add(
             uuid,
-            ImageService.Type.IMAGE,
+            ImageService.Type.BANNER,
             "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8bfa5ecce45d2d497f88f0b1a0f511df.jpe",
-            128,
-            128
+            null,
         )
         var i = 0
 
-        while (ImageService[uuid, ImageService.Type.IMAGE] == null || ImageService[uuid, ImageService.Type.IMAGE]?.bytes?.isEmpty() == true) {
+        while (ImageService[uuid, ImageService.Type.BANNER] == null || ImageService[uuid, ImageService.Type.BANNER]?.bytes?.isEmpty() == true) {
             runBlocking { delay(1000) }
 
             if (i++ > 10) {

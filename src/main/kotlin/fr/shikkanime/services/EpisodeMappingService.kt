@@ -37,8 +37,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun getRepository() = episodeMappingRepository
 
-    fun findAllUuids() = episodeMappingRepository.findAllUuids()
-
     fun findAllBy(
         countryCode: CountryCode?,
         anime: Anime?,
@@ -73,8 +71,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
-    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageService.Type.IMAGE, image, 640, 360, bypass)
+    fun addImage(uuid: UUID, image: String, bypass: Boolean = false, async: Boolean = true) {
+        ImageService.add(uuid, ImageService.Type.BANNER, image, null, bypass, async)
     }
 
     override fun save(entity: EpisodeMapping): EpisodeMapping {
@@ -168,7 +166,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
         if (entity.image.isNotBlank() && entity.image != episode.image) {
             episode.image = entity.image
-            ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
+            ImageService.remove(episode.uuid!!, ImageService.Type.BANNER)
             addImage(episode.uuid, episode.image!!)
         }
 
