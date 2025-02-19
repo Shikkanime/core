@@ -147,7 +147,7 @@ abstract class AbstractCrunchyrollWrapper {
 
     @Synchronized
     private fun getAnonymousAccessToken() = MapCache.getOrCompute(
-        "CrunchyrollWrapper.getAnonymousAccessToken",
+        "AbstractCrunchyrollWrapper.getAnonymousAccessToken",
         duration = Duration.ofMinutes(30),
         key = ""
     ) {
@@ -155,8 +155,8 @@ abstract class AbstractCrunchyrollWrapper {
             val response = httpRequest.post(
                 "${baseUrl}auth/v1/token",
                 headers = mapOf(
-                    "Content-Type" to "application/x-www-form-urlencoded",
-                    "Authorization" to "Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=",
+                    HttpHeaders.ContentType to "application/x-www-form-urlencoded",
+                    HttpHeaders.Authorization to "Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=",
                     "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
                 ),
                 body = "grant_type=client_id&client_id=offline_access"
@@ -166,7 +166,7 @@ abstract class AbstractCrunchyrollWrapper {
         }
     }
 
-    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf("Authorization" to "Bearer ${getAnonymousAccessToken()}"))
+    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAnonymousAccessToken()}"))
 
     abstract suspend fun getBrowse(locale: String, sortBy: SortType = SortType.NEWLY_ADDED, type: MediaType = MediaType.EPISODE, size: Int = 25, start: Int = 0, simulcast: String? = null): List<BrowseObject>
     abstract suspend fun getSeries(locale: String, id: String): Series

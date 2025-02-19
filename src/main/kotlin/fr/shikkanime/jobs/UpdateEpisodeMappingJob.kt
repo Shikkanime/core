@@ -8,11 +8,8 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
-import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
-import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.platforms.NetflixPlatform
-import fr.shikkanime.platforms.PrimeVideoPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
@@ -20,17 +17,14 @@ import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
-import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
-import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
-import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
-import fr.shikkanime.wrappers.impl.caches.PrimeVideoCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.*
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.NETF, Platform.PRIM)
+    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.DISN, Platform.NETF, Platform.PRIM)
 
     @Inject
     private lateinit var animeService: AnimeService
@@ -49,6 +43,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     @Inject
     private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+
+    @Inject
+    private lateinit var disneyPlusPlatform: DisneyPlusPlatform
 
     @Inject
     private lateinit var netflixPlatform: NetflixPlatform
@@ -71,10 +68,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
     override fun run() {
         val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
 
-        val allPlatformEpisodes = availableUpdatePlatforms.flatMap { episodeMappingService.findAllNeedUpdateByPlatform(it, lastDateTime) }.distinctBy { it.uuid }
+        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdateByPlatforms(availableUpdatePlatforms, lastDateTime)
         logger.info("Found ${allPlatformEpisodes.size} episodes to update")
 
-        val needUpdateEpisodes = allPlatformEpisodes.distinctBy { it.uuid }
+        val needUpdateEpisodes = allPlatformEpisodes
             .shuffled()
             .take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_SIZE, 15))
 
@@ -94,7 +91,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
 
-            val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime) } }
+            val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
                 .sortedBy { it.platform.sortIndex }
 
             allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
@@ -339,7 +336,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private suspend fun retrievePlatformEpisode(
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant,
-        lastDateTime: ZonedDateTime
+        lastDateTime: ZonedDateTime,
+        identifiers: MutableSet<String>
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
@@ -374,12 +372,42 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 }
             }
 
+            Platform.DISN -> {
+                runCatching {
+                    val disneyPlusId = disneyPlusPlatform.getDisneyPlusId(episodeVariant.identifier!!)!!
+                    val (currentId, showId) = DisneyPlusCachedWrapper.getShowIdByEpisodeId(disneyPlusId)
+
+                    if (currentId != disneyPlusId) {
+                        val oldIdentifier = episodeVariant.identifier!!
+                        logger.warning("Updating Disney+ episode $disneyPlusId to $currentId")
+                        episodeVariant.identifier = oldIdentifier.replace(disneyPlusId, currentId)
+                        episodeVariant.url = episodeVariant.url!!.replace(disneyPlusId, currentId)
+                        episodeVariantService.update(episodeVariant)
+
+                        identifiers.remove(oldIdentifier)
+                        identifiers.add(episodeVariant.identifier!!)
+                    }
+
+                    val disneyPlusEpisodes = DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, showId)
+
+                    disneyPlusEpisodes.map { episode ->
+                        disneyPlusPlatform.convertEpisode(
+                            countryCode,
+                            episode,
+                            ZonedDateTime.now(),
+                            false,
+                        )
+                    }.find { it.getIdentifier() == episodeVariant.identifier }
+                        ?.also { episodes.add(it) }
+                }
+            }
+
             Platform.NETF -> {
                 runCatching {
                     val showId = netflixPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
                     val netflixEpisodes = NetflixCachedWrapper.getShowVideos(countryCode, showId)
 
-                    netflixEpisodes?.map { episode ->
+                    netflixEpisodes.map { episode ->
                         netflixPlatform.convertEpisode(
                             countryCode,
                             episodeMapping.anime!!.image!!,
@@ -388,7 +416,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                             episodeMapping.episodeType!!,
                             episodeVariant.audioLocale!!,
                         )
-                    }?.find { it.getIdentifier() == episodeVariant.identifier }
+                    }.find { it.getIdentifier() == episodeVariant.identifier }
                         ?.also { episodes.add(it) }
                 }
             }
@@ -398,14 +426,14 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     val showId = primeVideoPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
                     val primeVideoEpisodes = PrimeVideoCachedWrapper.getShowVideos(countryCode, showId)
 
-                    primeVideoEpisodes?.map { episode ->
+                    primeVideoEpisodes.map { episode ->
                         primeVideoPlatform.convertEpisode(
                             countryCode,
                             episodeMapping.anime!!.image!!,
                             episode,
                             ZonedDateTime.now(),
                         )
-                    }?.find { it.getIdentifier() == episodeVariant.identifier }
+                    }.find { it.getIdentifier() == episodeVariant.identifier }
                         ?.also { episodes.add(it) }
                 }
             }
