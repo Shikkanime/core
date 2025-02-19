@@ -431,14 +431,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         if (animeDto.image.isNotBlank() && animeDto.image != anime.image) {
             anime.image = animeDto.image
-            ImageService.remove(anime.uuid!!, ImageService.Type.IMAGE)
-            addImage(anime.uuid, anime.image!!)
+            addImage(anime.uuid!!, anime.image!!, true)
         }
 
         if (animeDto.banner.isNotBlank() && animeDto.banner != anime.banner) {
             anime.banner = animeDto.banner
-            ImageService.remove(anime.uuid!!, ImageService.Type.BANNER)
-            addBanner(anime.uuid, anime.banner!!)
+            addBanner(anime.uuid!!, anime.banner!!, true)
         }
 
         updateAnimeSimulcast(animeDto, anime)

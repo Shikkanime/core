@@ -107,7 +107,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime): List<EpisodeMapping> {
+    fun findAllNeedUpdateByPlatforms(platforms: List<Platform>, lastDateTime: ZonedDateTime): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
@@ -116,7 +116,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.distinct(true)
                 .where(
-                    cb.equal(variantJoin[EpisodeVariant_.platform], platform),
+                    variantJoin[EpisodeVariant_.platform].`in`(platforms),
                     cb.or(
                         cb.lessThanOrEqualTo(
                             root[EpisodeMapping_.lastUpdateDateTime],

@@ -16,10 +16,7 @@ import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
-import fr.shikkanime.wrappers.impl.caches.AnimationDigitalNetworkCachedWrapper
-import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
-import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
-import fr.shikkanime.wrappers.impl.caches.PrimeVideoCachedWrapper
+import fr.shikkanime.wrappers.impl.caches.*
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 
@@ -146,9 +143,9 @@ class UpdateAnimeJob : AbstractJob {
                 when (it.platform!!) {
                     Platform.ANIM -> list.add(fetchADNAnime(it))
                     Platform.CRUN -> list.add(fetchCrunchyrollAnime(it))
+                    Platform.DISN -> list.add(fetchDisneyPlusAnime(it))
                     Platform.NETF -> list.add(fetchNetflixAnime(it))
                     Platform.PRIM -> list.add(fetchPrimeVideoAnime(it))
-                    else -> logger.warning("Platform ${it.platform} not supported")
                 }
             }.onFailure { e ->
                 logger.warning("Error while fetching anime ${anime.name} on platform ${it.platform}: ${e.message}")
@@ -203,6 +200,23 @@ class UpdateAnimeJob : AbstractJob {
             banner = series.fullHDBanner!!,
             description = series.description,
             episodeSize = objects.size
+        )
+    }
+
+    private suspend fun fetchDisneyPlusAnime(animePlatform: AnimePlatform): UpdatableAnime {
+        val show = DisneyPlusCachedWrapper.getShow(animePlatform.platformId!!)
+        val episodes = DisneyPlusCachedWrapper.getEpisodesByShowId(animePlatform.anime!!.countryCode!!.locale, animePlatform.platformId!!)
+
+        if (episodes.isEmpty())
+            throw Exception("No episode found for Disney+ anime ${animePlatform.anime!!.name}")
+
+        return UpdatableAnime(
+            platform = Platform.DISN,
+            lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
+            image = show.image,
+            banner = show.banner,
+            description = show.description,
+            episodeSize = episodes.size
         )
     }
 

@@ -55,8 +55,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
 
-    fun findAllNeedUpdateByPlatform(platform: Platform, lastDateTime: ZonedDateTime) =
-        episodeMappingRepository.findAllNeedUpdateByPlatform(platform, lastDateTime)
+    fun findAllNeedUpdateByPlatforms(platforms: List<Platform>, lastDateTime: ZonedDateTime) =
+        episodeMappingRepository.findAllNeedUpdateByPlatforms(platforms, lastDateTime)
 
     fun findAllSeo() = episodeMappingRepository.findAllSeo()
 
@@ -168,8 +168,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
         if (entity.image.isNotBlank() && entity.image != episode.image) {
             episode.image = entity.image
-            ImageService.remove(episode.uuid!!, ImageService.Type.IMAGE)
-            addImage(episode.uuid, episode.image!!)
+            addImage(episode.uuid!!, episode.image!!, true)
         }
 
         if (entity.duration != episode.duration) {
@@ -211,7 +210,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     }
 
     private fun updateEpisodeMappingAnime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
-        if (entity.anime!!.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
+        if (entity.anime.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
             val oldAnimeId = episode.anime!!.uuid!!
             val findByName = requireNotNull(
                 animeService.findByName(
