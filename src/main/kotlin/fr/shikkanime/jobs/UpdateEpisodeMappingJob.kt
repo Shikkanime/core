@@ -12,6 +12,7 @@ import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
@@ -34,6 +35,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var languageCacheService: LanguageCacheService
@@ -82,8 +86,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
-        val mappingUuids = episodeMappingService.findAllUuids()
-        val identifiers = episodeVariantService.findAllIdentifiers().toMutableSet()
+        val identifiers = episodeVariantCacheService.findAllIdentifiers().toMutableSet()
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -91,8 +94,14 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
             logger.info("Updating episode $mappingIdentifier...")
 
+            val tmpIdentifiers = identifiers.toMutableSet()
+
             val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
                 .sortedBy { it.platform.sortIndex }
+
+            if (tmpIdentifiers != identifiers) {
+                needRefreshCache.set(true)
+            }
 
             allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
             saveAnimePlatformIfNotExists(episodes, mapping)
@@ -138,26 +147,30 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val allNewEpisodes = mutableSetOf<EpisodeVariant>()
 
-        allPreviousAndNext.distinctBy { it.getIdentifier() }
-            .filter { it.getIdentifier() !in identifiers }
-            .takeIf { it.isNotEmpty() }
-            ?.also { logger.info("Found ${it.size} new previous and next episodes") }
-            ?.map { episode -> episodeVariantService.save(episode, false) }
-            ?.toMutableList()
-            ?.also { episodeVariants ->
-                episodeVariants.removeIf { it.mapping!!.uuid in mappingUuids }
+        if (allPreviousAndNext.isNotEmpty()) {
+            val mappingUuids = episodeMappingService.findAllUuids()
 
-                identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
-                allNewEpisodes.addAll(episodeVariants)
-                logger.info("Added ${episodeVariants.size} previous and next episodes")
-                needRecalculate.set(true)
-                needRefreshCache.set(true)
+            allPreviousAndNext.distinctBy { it.getIdentifier() }
+                .filter { it.getIdentifier() !in identifiers }
+                .takeIf { it.isNotEmpty() }
+                ?.also { logger.info("Found ${it.size} new previous and next episodes") }
+                ?.map { episode -> episodeVariantService.save(episode, false) }
+                ?.toMutableList()
+                ?.also { episodeVariants ->
+                    episodeVariants.removeIf { it.mapping!!.uuid in mappingUuids }
 
-                episodeVariants.forEach {
-                    it.mapping!!.lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
-                    episodeMappingService.update(it.mapping!!)
+                    identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
+                    allNewEpisodes.addAll(episodeVariants)
+                    logger.info("Added ${episodeVariants.size} previous and next episodes")
+                    needRecalculate.set(true)
+                    needRefreshCache.set(true)
+
+                    episodeVariants.forEach {
+                        it.mapping!!.lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
+                        episodeMappingService.update(it.mapping!!)
+                    }
                 }
-            }
+        }
 
         if (needRecalculate.get()) {
             logger.info("Recalculating simulcasts...")
@@ -395,7 +408,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
                             countryCode,
                             episode,
                             ZonedDateTime.now(),
-                            false,
                         )
                     }.find { it.getIdentifier() == episodeVariant.identifier }
                         ?.also { episodes.add(it) }

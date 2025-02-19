@@ -5,5 +5,6 @@ import java.time.ZonedDateTime
 
 data class SimulcastModifiedDto(
     val simulcast: Simulcast,
-    val lastReleaseDateTime: ZonedDateTime
+    val lastReleaseDateTime: ZonedDateTime,
+    val animesCount: Long
 )

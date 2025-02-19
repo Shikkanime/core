@@ -38,7 +38,7 @@ class ConfigController {
             configService.findAll()
         }
 
-        return Response.Companion.ok(AbstractConverter.Companion.convert(configs, ConfigDto::class.java))
+        return Response.ok(AbstractConverter.convert(configs, ConfigDto::class.java))
     }
 
     @Path("/{uuid}")
@@ -47,8 +47,8 @@ class ConfigController {
     @OpenAPI(hidden = true)
     private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
         configService.update(uuid, configDto)
-        MapCache.Companion.invalidate(Config::class.java)
+        MapCache.invalidate(Config::class.java)
         Constant.abstractSocialNetworks.forEach { it.logout() }
-        return Response.Companion.ok(AbstractConverter.Companion.convert(configService.find(uuid), ConfigDto::class.java))
+        return Response.ok(AbstractConverter.convert(configService.find(uuid), ConfigDto::class.java))
     }
 }

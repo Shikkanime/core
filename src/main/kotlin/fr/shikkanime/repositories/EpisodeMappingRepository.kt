@@ -157,6 +157,41 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
+    fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String): List<EpisodeMapping> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            root.fetch(EpisodeMapping_.anime)
+
+            val subQuery = query.subquery(Long::class.java)
+            val subRoot = subQuery.from(EpisodeVariant::class.java)
+
+            subQuery.select(cb.literal(1L))
+                .where(
+                    cb.and(
+                        cb.equal(subRoot[EpisodeVariant_.mapping][EpisodeMapping_.uuid], root[EpisodeMapping_.uuid]),
+                        cb.notEqual(subRoot[EpisodeVariant_.audioLocale], ignoreAudioLocale)
+                    )
+                )
+
+            query.where(
+                cb.and(
+                    cb.not(root[EpisodeMapping_.episodeType].`in`(ignoreEpisodeTypes)),
+                    cb.exists(subQuery)
+                )
+            ).orderBy(
+                cb.asc(root[EpisodeMapping_.releaseDateTime]),
+                cb.asc(root[EpisodeMapping_.season]),
+                cb.asc(root[EpisodeMapping_.episodeType]),
+                cb.asc(root[EpisodeMapping_.number])
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByAnimeSeasonEpisodeTypeNumber(
         animeUuid: UUID,
         season: Int,

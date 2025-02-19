@@ -91,7 +91,7 @@
         }
     }" x-init="init">
         <div class="modal fade" id="updateAllModal" tabindex="-1" aria-labelledby="updateAllModalLabel"
-             aria-hidden="true">
+             aria-hidden="true" x-data="{ updateAllLoading: false }">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -130,8 +130,8 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 
-                        <button class="btn btn-success"
-                                @click="await updateAllSelected(updateAll); location.reload();">
+                        <button class="btn btn-success" x-bind:disabled="updateAllLoading"
+                                @click="updateAllLoading = true; await updateAllSelected(updateAll); location.reload();">
                             Confirm
                         </button>
                     </div>

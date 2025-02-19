@@ -20,7 +20,8 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
                 cb.construct(
                     SimulcastModifiedDto::class.java,
                     root,
-                    cb.greatest(animeJoin[Anime_.releaseDateTime])
+                    cb.greatest(animeJoin[Anime_.releaseDateTime]),
+                    cb.count(animeJoin)
                 )
             )
 

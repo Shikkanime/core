@@ -69,6 +69,12 @@ class EpisodeVariantCacheService : AbstractCacheService {
         )
     }
 
+    fun findAllIdentifiers() = MapCache.getOrCompute(
+        "EpisodeVariantCacheService.findAllIdentifiers",
+        classes = listOf(EpisodeVariant::class.java),
+        key = "",
+    ) { episodeVariantService.findAllIdentifiers() }
+
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "EpisodeVariantCacheService.find",
         classes = listOf(EpisodeVariant::class.java),
