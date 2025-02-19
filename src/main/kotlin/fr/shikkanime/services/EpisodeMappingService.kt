@@ -60,6 +60,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllSeo() = episodeMappingRepository.findAllSeo()
 
+    fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String) =
+        episodeMappingRepository.findAllSimulcasted(ignoreEpisodeTypes, ignoreAudioLocale)
+
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
@@ -97,35 +100,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             updateAllEpisodeMappingDto.episodeType?.let { episode.episodeType = it }
             updateAllEpisodeMappingDto.season?.let { episode.season = it }
 
-            startDate?.let { sd ->
-                val variants = episodeVariantService.findAllByMapping(episode)
-                val langTypes = variants.map { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) }.toSet()
-
-                val filteredVariants = if (langTypes.size > 1) {
-                    variants.filter { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) == LangType.SUBTITLES }
-                } else {
-                    variants
-                }
-
-                filteredVariants.minByOrNull { it.releaseDateTime }?.let { originalVariant ->
-                    originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(sd)
-                    episodeVariantService.update(originalVariant)
-                    if (updateAllEpisodeMappingDto.incrementDate == true) {
-                        startDate = sd.plusWeeks(1)
-                    }
-                }
-            }
-
-            findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!)
-                ?.takeIf { it.uuid != episode.uuid }
-                ?.let { existing ->
-                    mergeEpisodeMapping(episode, existing)?.apply {
-                        if (forcedUpdate) lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
-                        super.update(this)
-                    }
-
-                    return@forEach
-                }
+            startDate = incrementReleaseDate(startDate, episode, updateAllEpisodeMappingDto)
+            if (hasBeenMerged(updateAllEpisodeMappingDto, episode, forcedUpdate)) return@forEach
 
             episode.status = StringUtils.getStatus(episode)
             episode.lastUpdateDateTime = if (forcedUpdate) ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
@@ -136,6 +112,56 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         if (startDate != null) {
             animeService.recalculateSimulcasts()
         }
+    }
+
+    private fun hasBeenMerged(
+        updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto,
+        episode: EpisodeMapping,
+        forcedUpdate: Boolean
+    ): Boolean {
+        if (updateAllEpisodeMappingDto.season != null || updateAllEpisodeMappingDto.episodeType != null) {
+            findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!)
+                ?.takeIf { it.uuid != episode.uuid }
+                ?.let { existing ->
+                    mergeEpisodeMapping(episode, existing)?.apply {
+                        if (forcedUpdate) lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
+                        super.update(this)
+                    }
+
+                    return true
+                }
+        }
+
+        return false
+    }
+
+    private fun incrementReleaseDate(
+        startDate: LocalDate?,
+        episode: EpisodeMapping,
+        updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto
+    ): LocalDate? {
+        var startDate1 = startDate
+
+        startDate1?.let { sd ->
+            val variants = episodeVariantService.findAllByMapping(episode)
+            val langTypes = variants.map { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) }.toSet()
+
+            val filteredVariants = if (langTypes.size > 1) {
+                variants.filter { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) == LangType.SUBTITLES }
+            } else {
+                variants
+            }
+
+            filteredVariants.minByOrNull { it.releaseDateTime }?.let { originalVariant ->
+                originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(sd)
+                episodeVariantService.update(originalVariant)
+                if (updateAllEpisodeMappingDto.incrementDate == true) {
+                    startDate1 = sd.plusWeeks(1)
+                }
+            }
+        }
+
+        return startDate1
     }
 
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {

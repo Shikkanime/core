@@ -26,6 +26,27 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
+    fun findAllTypeIdentifier(): List<Tuple> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            query.distinct(true)
+                .multiselect(
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode],
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.season],
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.number],
+                    root[EpisodeVariant_.audioLocale],
+                )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllByMapping(mappingUUID: UUID): List<EpisodeVariant> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

@@ -28,7 +28,7 @@ class EpisodeVariantController : HasPageableRoute() {
         @BodyParam separateVariantDto: SeparateVariantDto
     ): Response {
         episodeVariantService.separate(uuid, separateVariantDto)
-        MapCache.Companion.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
-        return Response.Companion.created()
+        MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
+        return Response.created()
     }
 }

@@ -20,7 +20,8 @@ class SimulcastModifiedDtoToSimulcastDtoConverter : AbstractConverter<SimulcastM
                 "AUTUMN" -> "Automne"
                 else -> "Inconnu"
             } + " ${from.simulcast.year}",
-            lastReleaseDateTime = from.lastReleaseDateTime.withUTCString()
+            lastReleaseDateTime = from.lastReleaseDateTime.withUTCString(),
+            animesCount = from.animesCount
         )
     }
 }

@@ -47,6 +47,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     override fun getRepository() = episodeVariantRepository
 
+    fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
+
     fun findAllByMapping(mappingUUID: UUID) = episodeVariantRepository.findAllByMapping(mappingUUID)
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
@@ -68,21 +70,17 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         endZonedDateTime
     )
 
-    fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null): Simulcast {
+    fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
-        val adjustedDates =
-            (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
-        val simulcasts =
-            adjustedDates.map { Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year) }
+        val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
+        val simulcasts = adjustedDates.map { Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year) }
         val (previousSimulcast, currentSimulcast, nextSimulcast) = simulcasts
-
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates.first())
 
-        val diff = (previousReleaseDateTime ?: episodeMappingService.findPreviousReleaseDateOfSimulcastedEpisodeMapping(
-            anime,
-            entity
-        ))
-            ?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
+        val diff = (previousReleaseDateTime ?: if (sqlCheck) {
+            episodeMappingService.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, entity)
+        } else null)?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
+
         val chosenSimulcast = when {
             anime.simulcasts.any { it.year == nextSimulcast.year && it.season == nextSimulcast.season } -> nextSimulcast
             entity.number!! <= 1 && currentSimulcast != nextSimulcast -> nextSimulcast

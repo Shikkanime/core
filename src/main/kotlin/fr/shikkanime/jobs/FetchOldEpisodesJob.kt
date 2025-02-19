@@ -10,6 +10,7 @@ import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.MapCache
@@ -35,6 +36,9 @@ class FetchOldEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
+
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     @Inject
     private lateinit var configService: ConfigService
@@ -113,7 +117,7 @@ class FetchOldEpisodesJob : AbstractJob {
         log(emailLogs, Level.INFO, "Found ${episodes.size} episodes, saving...")
         var realSaved = 0
         val realSavedAnimes = mutableSetOf<String>()
-        val identifiers = episodeVariantService.findAllIdentifiers()
+        val identifiers = episodeVariantCacheService.findAllIdentifiers()
 
         episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
             if (identifiers.none { it == episode.getIdentifier() }) {

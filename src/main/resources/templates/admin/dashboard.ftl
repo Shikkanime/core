@@ -61,18 +61,10 @@
                                     <div class="fw-bold">${simulcast.season} ${simulcast.year?c}</div>
                                 </div>
 
-                                <span class="badge text-bg-primary rounded-pill"
-                                      id="simulcast-${simulcast.uuid}"></span>
+                                <span class="badge text-bg-primary rounded-pill">
+                                    ${simulcast.animesCount}
+                                </span>
                             </li>
-
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function () {
-                                    axios.get('/api/v1/animes?simulcast=${simulcast.uuid}')
-                                        .then(response => {
-                                            document.getElementById('simulcast-${simulcast.uuid}').innerText = response.data.total;
-                                        });
-                                });
-                            </script>
                         </#list>
                     </ul>
                 </div>

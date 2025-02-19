@@ -4,19 +4,23 @@ import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.inject.Inject
+import jakarta.persistence.Tuple
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.ZonedDateTime
+import java.util.*
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
@@ -27,35 +31,19 @@ class FetchEpisodesJob : AbstractJob {
     private var lock = 0
     private val maxLock = 5
 
-    private val identifiers = mutableSetOf<String>()
     private val typeIdentifiers = mutableSetOf<String>()
 
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
     @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+
+    @Inject
     private lateinit var configCacheService: ConfigCacheService
 
     @Inject
     private lateinit var mailService: MailService
-
-    fun addHashCaches(
-        it: AbstractPlatform<*, *, *>,
-        variants: List<EpisodeVariant>
-    ) {
-        if (it.getPlatform() == Platform.DISN) {
-            val episodeVariants = variants.filter { variant -> variant.platform == it.getPlatform() }
-
-            it.hashCache.addAll(episodeVariants.map { variant ->
-                ".{2}-.{4}-(.*)-.{2}-.{2}".toRegex().find(variant.identifier!!)!!.groupValues[1]
-            })
-
-            it.hashCache.addAll(episodeVariants.map { variant ->
-                EncryptionManager.toSHA512("${variant.mapping!!.anime!!.name}-${variant.mapping!!.season}-${variant.mapping!!.number}")
-                    .substring(0..<8)
-            })
-        }
-    }
 
     override fun run() {
         if (isRunning) {
@@ -73,9 +61,7 @@ class FetchEpisodesJob : AbstractJob {
         lock = 0
 
         if (!isInitialized) {
-            val variants = episodeVariantService.findAll()
-            identifiers.addAll(variants.map { it.identifier!! })
-            Constant.abstractPlatforms.forEach { addHashCaches(it, variants) }
+            val variants = episodeVariantService.findAllTypeIdentifier()
             variants.forEach { typeIdentifiers.add(getTypeIdentifier(it)) }
             isInitialized = true
         }
@@ -93,6 +79,13 @@ class FetchEpisodesJob : AbstractJob {
             }
         }
 
+        if (episodes.isEmpty()) {
+            isRunning = false
+            return
+        }
+
+        val identifiers = episodeVariantCacheService.findAllIdentifiers()
+
         val savedEpisodes = episodes
             .sortedWith(
                 compareBy(
@@ -107,7 +100,6 @@ class FetchEpisodesJob : AbstractJob {
             .mapNotNull {
                 try {
                     val savedEpisode = episodeVariantService.save(it)
-                    identifiers.add(it.getIdentifier())
                     Constant.abstractPlatforms.forEach { abstractPlatform -> abstractPlatform.updateAnimeSimulcastConfiguration(it.animeId) }
                     savedEpisode
                 } catch (e: Exception) {
@@ -130,9 +122,16 @@ class FetchEpisodesJob : AbstractJob {
         sendToNetworks(savedEpisodes)
     }
 
+    private fun getTypeIdentifier(tuple: Tuple): String {
+        val countryCode = tuple[0, CountryCode::class.java]
+        val langType = LangType.fromAudioLocale(countryCode, tuple[5, String::class.java])
+        return "${countryCode}_${tuple[1, UUID::class.java]}_${tuple[2, Int::class.java]}_${tuple[3, EpisodeType::class.java]}_${tuple[4, Int::class.java]}_$langType"
+    }
+
     private fun getTypeIdentifier(episodeVariant: EpisodeVariant): String {
-        val langType = LangType.fromAudioLocale(episodeVariant.mapping!!.anime!!.countryCode!!, episodeVariant.audioLocale!!)
-        return "${episodeVariant.mapping!!.anime!!.countryCode!!}_${episodeVariant.mapping!!.anime!!.uuid!!}_${episodeVariant.mapping!!.season!!}_${episodeVariant.mapping!!.episodeType!!}_${episodeVariant.mapping!!.number!!}_$langType"
+        val countryCode = episodeVariant.mapping!!.anime!!.countryCode!!
+        val langType = LangType.fromAudioLocale(countryCode, episodeVariant.audioLocale!!)
+        return "${countryCode}_${episodeVariant.mapping!!.anime!!.uuid!!}_${episodeVariant.mapping!!.season!!}_${episodeVariant.mapping!!.episodeType!!}_${episodeVariant.mapping!!.number!!}_$langType"
     }
 
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {

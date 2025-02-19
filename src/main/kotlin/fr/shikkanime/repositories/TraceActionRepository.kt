@@ -5,6 +5,7 @@ import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.TraceAction_
 import java.time.LocalDate
+import java.time.ZonedDateTime
 
 class TraceActionRepository : AbstractRepository<TraceAction>() {
     override fun getEntityClass() = TraceAction::class.java
@@ -26,7 +27,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getLoginCounts(): List<LoginCountDto> {
+    fun getLoginCountsAfter(date: ZonedDateTime): List<LoginCountDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
@@ -38,6 +39,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
                 cb.countDistinct(root[TraceAction_.entityUuid]),
                 cb.count(root[TraceAction_.entityUuid]),
             ).where(
+                cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], date),
                 cb.equal(root[TraceAction_.entityType], "Member"),
                 cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
             ).groupBy(function)

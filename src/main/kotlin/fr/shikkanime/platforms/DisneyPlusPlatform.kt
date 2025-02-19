@@ -6,7 +6,6 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
-import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper.Episode
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
@@ -59,42 +58,29 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         countryCode: CountryCode,
         episode: AbstractDisneyPlusWrapper.Episode,
         zonedDateTime: ZonedDateTime,
-        checkHash: Boolean = true
-    ): Episode {
-        if (checkHash) {
-            val computedId = EncryptionManager.toSHA512("${episode.show.name}-${episode.season}-${episode.number}").substring(0..<8)
-
-            if (hashCache.contains(episode.oldId) || hashCache.contains(episode.id) || hashCache.contains(computedId)) {
-                throw AnimeException("Episode already exists")
-            }
-
-            hashCache.addAll(mutableListOf(episode.oldId, episode.id, computedId))
-        }
-
-        return Episode(
-            countryCode = countryCode,
-            animeId = episode.show.id,
-            anime = episode.show.name,
-            animeImage = episode.show.image,
-            animeBanner = episode.show.banner,
-            animeDescription = episode.show.description,
-            releaseDateTime = zonedDateTime,
-            episodeType = EpisodeType.EPISODE,
-            seasonId = episode.seasonId,
-            season = episode.season,
-            number = episode.number,
-            duration = episode.duration,
-            title = episode.title,
-            description = episode.description,
-            image = episode.image,
-            platform = getPlatform(),
-            audioLocale = "ja-JP",
-            id = episode.id,
-            url = episode.url,
-            uncensored = false,
-            original = true,
-        )
-    }
+    ) = Episode(
+        countryCode = countryCode,
+        animeId = episode.show.id,
+        anime = episode.show.name,
+        animeImage = episode.show.image,
+        animeBanner = episode.show.banner,
+        animeDescription = episode.show.description,
+        releaseDateTime = zonedDateTime,
+        episodeType = EpisodeType.EPISODE,
+        seasonId = episode.seasonId,
+        season = episode.season,
+        number = episode.number,
+        duration = episode.duration,
+        title = episode.title,
+        description = episode.description,
+        image = episode.image,
+        platform = getPlatform(),
+        audioLocale = "ja-JP",
+        id = episode.id,
+        url = episode.url,
+        uncensored = false,
+        original = true,
+    )
 
     fun getDisneyPlusId(identifier: String) =
         "[A-Z]{2}-DISN-(.*)-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)

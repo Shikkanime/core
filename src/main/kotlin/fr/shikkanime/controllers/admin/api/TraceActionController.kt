@@ -9,6 +9,7 @@ import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.QueryParam
+import java.time.ZonedDateTime
 
 @Controller("$ADMIN/api/trace-actions")
 class TraceActionController : HasPageableRoute() {
@@ -30,14 +31,17 @@ class TraceActionController : HasPageableRoute() {
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.Companion.ok(PageableDto.Companion.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
+        return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
     }
 
     @Path("/login-counts")
     @Get
     @AdminSessionAuthenticated
     @OpenAPI(hidden = true)
-    private fun getLoginCounts(): Response {
-        return Response.Companion.ok(traceActionService.getLoginCounts())
+    private fun getLoginCounts(
+        @QueryParam("days") days: Int?,
+    ): Response {
+        val xDayAgo = ZonedDateTime.now().minusDays(days?.toLong() ?: 30)
+        return Response.ok(traceActionService.getLoginCountsAfter(xDayAgo))
     }
 }

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => setChartData());
 datemenuElement.addEventListener('change', () => setChartData());
 
 const getMetrics = async () => (await axios.get('/admin/api/metrics?hours=' + datemenuElement.value)).data;
-const getLoginCounts = async () => (await axios.get('/admin/api/trace-actions/login-counts')).data;
+const getLoginCounts = async () => (await axios.get('/admin/api/trace-actions/login-counts?days=30')).data;
 
 const setChartData = async () => {
     const metricsData = await getMetrics();
