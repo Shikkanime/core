@@ -57,7 +57,7 @@ class SEOController {
             URLDto("${Constant.baseUrl}/search", globalLastModification)
         )
 
-        simulcastCacheService.findAll()?.mapTo(urls) {
+        simulcastCacheService.findAll().mapTo(urls) {
             URLDto("${Constant.baseUrl}/catalog/${it.slug}", it.lastReleaseDateTime!!)
         }
 
@@ -112,7 +112,7 @@ class SEOController {
             ),
             1,
             50
-        )?.data ?: emptyList()
+        ).data
 
         return Response.template(
             "/site/seo/rss.ftl",
@@ -138,7 +138,7 @@ class SEOController {
             ),
             1,
             25
-        )?.data ?: emptyList()
+        ).data
 
         return Response.template(
             "/site/seo/episodes-news.ftl",
