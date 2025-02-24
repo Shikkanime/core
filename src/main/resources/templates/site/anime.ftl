@@ -8,10 +8,6 @@
     <#assign canonicalUrl = canonicalUrl + "/season-" + season.number>
 </#if>
 
-<#if page??>
-    <#assign canonicalUrl = canonicalUrl + "/page-" + page>
-</#if>
-
 <#assign animeSanitized = anime.shortName?html />
 
 <@navigation.display canonicalUrl=canonicalUrl openGraphImage="${apiUrl}/v1/attachments?uuid=${anime.uuid}&type=banner">
@@ -106,12 +102,12 @@
 
         <div class="d-flex justify-content-center mt-3">
             <#if showLess?? && showLess>
-                <a href="/animes/${anime.slug}/season-${currentSeason}/page-${currentPage - 1}"
+                <a href="/animes/${anime.slug}/season-${currentSeason}?page=${currentPage - 1}"
                    class="btn btn-dark ms-0 me-auto">Page précédente</a>
             </#if>
 
             <#if showMore?? && showMore>
-                <a href="/animes/${anime.slug}/season-${currentSeason}/page-${currentPage + 1}"
+                <a href="/animes/${anime.slug}/season-${currentSeason}?page=${currentPage + 1}"
                    class="btn btn-dark ms-auto me-0">Page suivante</a>
             </#if>
         </div>

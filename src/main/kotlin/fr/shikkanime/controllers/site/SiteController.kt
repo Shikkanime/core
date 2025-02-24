@@ -50,7 +50,7 @@ class SiteController {
 
         val simulcasts = simulcastCacheService.findAll()
 
-        if (animes.size in 1..<animeSimulcastLimit && simulcasts!!.size > 1) {
+        if (animes.size in 1..<animeSimulcastLimit && simulcasts.size > 1) {
             val previousSimulcastAnimes = animeCacheService.findAllBy(
                 CountryCode.FR,
                 simulcasts[1].uuid,
@@ -85,7 +85,7 @@ class SiteController {
                     ),
                     1,
                     8
-                )!!.data,
+                ).data,
             )
         )
     }
@@ -93,7 +93,7 @@ class SiteController {
     @Path("catalog/{slug}")
     @Get
     private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
-        val findAll = simulcastCacheService.findAll()!!
+        val findAll = simulcastCacheService.findAll()
         val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
 
         return Response.template(
@@ -108,7 +108,7 @@ class SiteController {
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     102
-                )!!.data,
+                ).data,
             )
         )
     }
@@ -129,7 +129,7 @@ class SiteController {
             ),
             page ?: 1,
             limit
-        )!!
+        )
 
         val title = dto.shortName + (season?.let { " - ${StringUtils.toSeasonString(dto.countryCode, it)}" } ?: "")
         val showMore = ((((page ?: 1) - 1) * limit) + findAllBy.data.size < findAllBy.total.toInt())
@@ -159,16 +159,18 @@ class SiteController {
     @Get
     private fun animeDetailBySeason(
         @PathParam("slug") slug: String,
-        @PathParam("season") season: Int
-    ) = getAnimeDetail(slug, season)
+        @PathParam("season") season: Int,
+        @QueryParam("page") page: Int?
+    ) = getAnimeDetail(slug, season, page)
 
+    @Deprecated("Use animeDetailBySeason instead with page parameter")
     @Path("animes/{slug}/season-{season}/page-{page}")
     @Get
     private fun animeDetailBySeasonAndPage(
         @PathParam("slug") slug: String,
         @PathParam("season") season: Int,
         @PathParam("page") page: Int
-    ) = getAnimeDetail(slug, season, page)
+    ) = Response.redirect("/animes/$slug/season-$season?page=$page")
 
     @Path("animes/{slug}/season-{season}/{episodeSlug}")
     @Get
