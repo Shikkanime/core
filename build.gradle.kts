@@ -24,7 +24,7 @@ val jdaVersion = "5.3.0"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.4"
 
-val junitVersion = "5.11.4"
+val junitVersion = "5.12.0"
 val h2Version = "2.3.232"
 val mockkVersion = "1.13.16"
 
@@ -111,11 +111,11 @@ dependencies {
 
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
-
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation("com.h2database:h2:$h2Version")
     testImplementation("io.mockk:mockk:$mockkVersion")
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 kotlin {
