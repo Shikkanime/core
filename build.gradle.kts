@@ -1,4 +1,4 @@
-val ktorVersion = "3.1.0"
+val ktorVersion = "3.1.1"
 val ktorSwaggerUiVersion = "4.0.0"
 val schemaKenerator = "1.6.5"
 val hibernateCoreVersion = "6.6.9.Final"
@@ -35,7 +35,7 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     kotlin("kapt") version kotlinVersion
 
-    id("io.ktor.plugin") version "3.1.0"
+    id("io.ktor.plugin") version "3.1.1"
     id("org.sonarqube") version "6.0.1.5171"
 
     jacoco
