@@ -58,6 +58,8 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         countryCode: CountryCode,
         episode: AbstractDisneyPlusWrapper.Episode,
         zonedDateTime: ZonedDateTime,
+        audioLocale: String = "ja-JP",
+        original: Boolean = true
     ) = Episode(
         countryCode = countryCode,
         animeId = episode.show.id,
@@ -75,11 +77,11 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         description = episode.description,
         image = episode.image,
         platform = getPlatform(),
-        audioLocale = "ja-JP",
+        audioLocale = audioLocale,
         id = episode.id,
         url = episode.url,
         uncensored = false,
-        original = true,
+        original = original,
     )
 
     fun getDisneyPlusId(identifier: String) =

@@ -29,4 +29,10 @@ object DisneyPlusCachedWrapper : AbstractDisneyPlusWrapper() {
         duration = defaultCacheDuration,
         key = episodeId
     ) { runBlocking { DisneyPlusWrapper.getShowIdByEpisodeId(it) } }
+
+    override suspend fun getAudioLocales(resourceId: String) = MapCache.getOrCompute(
+        "DisneyPlusCachedWrapper.getAudioLocales",
+        duration = defaultCacheDuration,
+        key = resourceId
+    ) { runBlocking { DisneyPlusWrapper.getAudioLocales(it) } }
 }

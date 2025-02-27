@@ -34,7 +34,13 @@ abstract class AbstractDisneyPlusWrapper {
         val description: String?,
         val url: String,
         val image: String,
-        val duration: Long,
+        val duration: Long
+    )
+
+    data class PlayerVideo(
+        val id: String,
+        val showId: String,
+        val resourceId: String,
     )
 
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
@@ -76,10 +82,12 @@ abstract class AbstractDisneyPlusWrapper {
     }
 
     protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}"))
+    protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}").plus(headers), body = body)
 
     abstract suspend fun getShow(id: String): Show
     abstract suspend fun getEpisodesByShowId(locale: String, showId: String): List<Episode>
-    abstract suspend fun getShowIdByEpisodeId(episodeId: String): Pair<String, String>
+    abstract suspend fun getShowIdByEpisodeId(episodeId: String): PlayerVideo
+    abstract suspend fun getAudioLocales(resourceId: String): Set<String>
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
 }

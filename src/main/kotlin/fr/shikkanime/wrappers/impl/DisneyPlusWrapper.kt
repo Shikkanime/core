@@ -9,6 +9,7 @@ import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.util.*
 
 object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
     override suspend fun getShow(id: String): Show {
@@ -92,7 +93,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         return episodes
     }
 
-    override suspend fun getShowIdByEpisodeId(episodeId: String): Pair<String, String> {
+    override suspend fun getShowIdByEpisodeId(episodeId: String): PlayerVideo {
         val types = listOf("deeplinkId", "dmcContentId")
 
         val response = types.firstNotNullOfOrNull { type ->
@@ -112,7 +113,59 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             .getAsJsonObject("deeplink")
             .getAsJsonArray("actions")[0].asJsonObject
 
-        return jsonObject.getAsString("deeplinkId")!! to jsonObject.getAsJsonObject("partnerFeed")
-            .getAsString("evaSeriesEntityId")!!
+        return PlayerVideo(
+            jsonObject.getAsString("deeplinkId")!!,
+            jsonObject.getAsJsonObject("partnerFeed").getAsString("evaSeriesEntityId")!!,
+            jsonObject.getAsString("resourceId")!!
+        )
+    }
+
+    override suspend fun getAudioLocales(resourceId: String): Set<String> {
+        val headers = mapOf(
+            "x-application-version" to "1.1.2",
+            "x-bamsdk-client-id" to "disney-svod-3d9324fc",
+            "x-bamsdk-platform" to "javascript/windows/chrome",
+            "x-bamsdk-version" to "31.1",
+            "x-dss-edge-accept" to "vnd.dss.edge+json; version=2",
+            "x-dss-feature-filtering" to "true"
+        )
+        val body = """
+        {
+            "playback": {
+                "attributes": {
+                    "resolution": {"max": ["1280x720"]},
+                    "protocol": "HTTPS",
+                    "assetInsertionStrategies": {"point": "SGAI", "range": "SGAI"},
+                    "playbackInitiationContext": "ONLINE",
+                    "frameRates": [30]
+                },
+                "adTracking": {
+                    "limitAdTrackingEnabled": "NOT_SUPPORTED",
+                    "deviceAdId": "00000000-0000-0000-0000-000000000000"
+                },
+                "tracking": {
+                    "playbackSessionId": "${UUID.randomUUID()}"
+                }
+            },
+            "playbackId": "$resourceId"
+        }
+    """.trimIndent()
+
+        val response = httpRequest.postWithAccessToken("https://disney.playback.edge.bamgrid.com/v7/playback/ctr-regular", headers, body)
+        require(response.status == HttpStatusCode.OK) { "Failed to fetch video data (${response.status.value} - ${response.bodyAsText()})" }
+
+        val videoUrl = ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonObject("stream")
+            .getAsJsonArray("sources")[0].asJsonObject
+            .getAsJsonObject("complete")
+            .getAsString("url")!!
+
+        val rawVideoData = httpRequest.get(videoUrl)
+        require(rawVideoData.status == HttpStatusCode.OK) { "Failed to fetch raw video data (${rawVideoData.status.value})" }
+
+        return "#EXT-X-MEDIA:TYPE=AUDIO,.*,LANGUAGE=\"([a-zA-Z0-9\\-]*)\".*".toRegex()
+            .findAll(rawVideoData.bodyAsText())
+            .map { it.groupValues[1] }
+            .toSet()
     }
 }
