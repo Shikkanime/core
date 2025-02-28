@@ -116,14 +116,18 @@
                                        x-model="updateAll.startDate">
                             </div>
                             <div class="col-md-6">
-                                <input class="form-check-input" type="checkbox" id="incrementDate"
-                                       x-model="updateAll.incrementDate">
-                                <label for="incrementDate" class="form-label">Increment date</label>
-                            </div>
-                            <div class="col-md-6">
-                                <input class="form-check-input" type="checkbox" id="forceUpdate"
-                                       x-model="updateAll.forceUpdate">
-                                <label class="form-check-label" for="forceUpdate">Force update</label>
+                                <div>
+                                    <input class="form-check-input" type="checkbox" id="incrementDate" x-model="updateAll.incrementDate">
+                                    <label class="form-check-label" for="incrementDate">Increment date</label>
+                                </div>
+                                <div>
+                                    <input class="form-check-input" type="checkbox" id="forceUpdate" x-model="updateAll.forceUpdate">
+                                    <label class="form-check-label" for="forceUpdate">Force update</label>
+                                </div>
+                                <div>
+                                    <input class="form-check-input" type="checkbox" id="bindVoiceVariants" x-model="updateAll.bindVoiceVariants">
+                                    <label class="form-check-label" for="bindVoiceVariants">Bind voice variants</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -270,7 +274,15 @@
         }
 
         async function updateAllSelected(updateAll) {
-            await axios.put('/admin/api/episode-mappings/update-all', updateAll);
+            if (updateAll.season === '' || updateAll.season === 0) {
+                updateAll.season = null;
+            }
+
+            try {
+                await axios.put('/admin/api/episode-mappings/update-all', updateAll);
+            } catch (e) {
+                console.error(e);
+            }
         }
     </script>
 </@navigation.display>

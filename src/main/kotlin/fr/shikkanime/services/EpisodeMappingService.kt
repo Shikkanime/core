@@ -140,28 +140,54 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         episode: EpisodeMapping,
         updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto
     ): LocalDate? {
-        var startDate1 = startDate
-
-        startDate1?.let { sd ->
+        if (startDate == null && updateAllEpisodeMappingDto.bindVoiceVariants == true) {
             val variants = episodeVariantService.findAllByMapping(episode)
-            val langTypes = variants.map { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) }.toSet()
-
-            val filteredVariants = if (langTypes.size > 1) {
-                variants.filter { LangType.fromAudioLocale(episode.anime!!.countryCode!!, it.audioLocale!!) == LangType.SUBTITLES }
-            } else {
-                variants
-            }
-
-            filteredVariants.minByOrNull { it.releaseDateTime }?.let { originalVariant ->
-                originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(sd)
-                episodeVariantService.update(originalVariant)
-                if (updateAllEpisodeMappingDto.incrementDate == true) {
-                    startDate1 = sd.plusWeeks(1)
-                }
-            }
+            val date = variants.minOfOrNull { it.releaseDateTime } ?: return null
+            variants.forEach { it.releaseDateTime = date }
+            episodeVariantService.updateAll(variants)
+            return null
         }
 
-        return startDate1
+        var tmpDate = startDate ?: return null
+        val variants = episodeVariantService.findAllByMapping(episode)
+
+        if (variants.isEmpty()) {
+            return tmpDate
+        }
+
+        val getLangType = { audioLocale: String -> LangType.fromAudioLocale(episode.anime!!.countryCode!!, audioLocale) }
+        val langTypes = variants.mapTo(HashSet()) { getLangType(it.audioLocale!!) }
+
+        val filteredVariants = if (langTypes.size > 1 && updateAllEpisodeMappingDto.bindVoiceVariants != true) {
+            variants.filter { getLangType(it.audioLocale!!) == LangType.SUBTITLES }
+        } else {
+            variants
+        }
+
+        if (filteredVariants.isEmpty()) {
+            return tmpDate
+        }
+
+        val needIncrement = if (updateAllEpisodeMappingDto.bindVoiceVariants != true) {
+            filteredVariants.minByOrNull { it.releaseDateTime }?.let { originalVariant ->
+                originalVariant.releaseDateTime = originalVariant.releaseDateTime.with(tmpDate)
+                episodeVariantService.update(originalVariant)
+                true
+            } == true
+        } else {
+            filteredVariants.forEach { variant ->
+                variant.releaseDateTime = variant.releaseDateTime.with(tmpDate)
+                episodeVariantService.update(variant)
+            }
+
+            true
+        }
+
+        return if (updateAllEpisodeMappingDto.incrementDate == true && needIncrement) {
+            tmpDate.plusWeeks(1)
+        } else {
+            tmpDate
+        }
     }
 
     fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {
