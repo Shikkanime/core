@@ -43,7 +43,8 @@ class EpisodeMappingController {
             updateAllEpisodeMappingDto.season == null &&
             updateAllEpisodeMappingDto.startDate == null &&
             updateAllEpisodeMappingDto.incrementDate == null &&
-            updateAllEpisodeMappingDto.forceUpdate == null) {
+            updateAllEpisodeMappingDto.forceUpdate == null &&
+            updateAllEpisodeMappingDto.bindVoiceVariants == null) {
             return Response.badRequest("At least one field must be set")
         }
 
