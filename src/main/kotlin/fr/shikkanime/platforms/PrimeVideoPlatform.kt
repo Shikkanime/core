@@ -8,6 +8,7 @@ import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import java.io.File
+import java.time.LocalTime
 import java.time.ZonedDateTime
 
 class PrimeVideoPlatform :
@@ -22,13 +23,17 @@ class PrimeVideoPlatform :
     ): List<Episode>? {
         val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode, key.primeVideoSimulcast.name) ?: return null
 
-        return episodes.map {
-            convertEpisode(
-                key.countryCode,
-                key.primeVideoSimulcast.image,
-                it,
-                zonedDateTime
-            )
+        return key.primeVideoSimulcast.audioLocales.flatMap { audioLocale ->
+            episodes.map {
+                convertEpisode(
+                    key.countryCode,
+                    key.primeVideoSimulcast.image,
+                    it,
+                    zonedDateTime,
+                    key.primeVideoSimulcast.episodeType,
+                    audioLocale,
+                )
+            }
         }
     }
 
@@ -36,7 +41,10 @@ class PrimeVideoPlatform :
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter { it.releaseDay == zonedDateTime.dayOfWeek.value }
+            configuration!!.simulcasts.filter {
+                it.releaseDay == zonedDateTime.dayOfWeek.value &&
+                        (it.releaseTime.isBlank() || LocalTime.parse(it.releaseTime) >= zonedDateTime.toLocalTime())
+            }
                 .forEach { simulcast ->
                     getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
                         ?.let { list.addAll(it) }
@@ -54,6 +62,8 @@ class PrimeVideoPlatform :
         showImage: String,
         episode: AbstractPrimeVideoWrapper.Episode,
         zonedDateTime: ZonedDateTime,
+        episodeType: EpisodeType,
+        audioLocale: String,
     ) = Episode(
         countryCode = countryCode,
         animeId = episode.show.id,
@@ -62,7 +72,7 @@ class PrimeVideoPlatform :
         animeBanner = episode.show.banner,
         animeDescription = episode.show.description,
         releaseDateTime = zonedDateTime,
-        episodeType = EpisodeType.EPISODE,
+        episodeType = episodeType,
         seasonId = episode.season.toString(),
         season = episode.season,
         number = episode.number,
@@ -71,7 +81,7 @@ class PrimeVideoPlatform :
         description = episode.description,
         image = episode.image,
         platform = getPlatform(),
-        audioLocale = "ja-JP",
+        audioLocale = audioLocale,
         id = episode.id,
         url = episode.url,
         uncensored = false,

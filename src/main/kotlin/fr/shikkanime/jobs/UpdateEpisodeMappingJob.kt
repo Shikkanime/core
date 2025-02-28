@@ -352,42 +352,40 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
         val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime >= lastDateTime
-
-        fun updateIdentifiers(oldId: String, newId: String) {
-            identifiers.remove(oldId)
-            identifiers.add(newId)
-        }
+        val animeImage = episodeMapping.anime!!.image!!
+        val episodeType = episodeMapping.episodeType!!
+        val audioLocale = episodeVariant.audioLocale!!
+        val releaseDateTime = episodeVariant.releaseDateTime
+        val identifier = episodeVariant.identifier!!
 
         when (episodeVariant.platform) {
             Platform.ANIM -> runCatching {
-                val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(episodeVariant.identifier!!)!!.toInt()
-                episodes.addAll(animationDigitalNetworkPlatform.convertEpisode(
-                    countryCode,
-                    AnimationDigitalNetworkCachedWrapper.getVideo(videoId),
-                    ZonedDateTime.now(),
-                    needSimulcast = false,
-                    checkAnimation = false
-                ))
+                val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(identifier)!!.toInt()
+                val video = AnimationDigitalNetworkCachedWrapper.getVideo(videoId)
+                episodes.addAll(
+                    animationDigitalNetworkPlatform.convertEpisode(
+                        countryCode, video, ZonedDateTime.now(),
+                        needSimulcast = false, checkAnimation = false
+                    )
+                )
             }
 
             Platform.CRUN -> runCatching {
-                episodes.addAll(getCrunchyrollEpisodeAndVariants(
-                    countryCode,
-                    crunchyrollPlatform.getCrunchyrollId(episodeVariant.identifier!!)!!,
-                    isImageUpdate
-                ))
+                val crunchyrollId = crunchyrollPlatform.getCrunchyrollId(identifier)!!
+                episodes.addAll(getCrunchyrollEpisodeAndVariants(countryCode, crunchyrollId, isImageUpdate))
             }
 
             Platform.DISN -> runCatching {
-                val disneyPlusId = disneyPlusPlatform.getDisneyPlusId(episodeVariant.identifier!!)!!
+                val disneyPlusId = disneyPlusPlatform.getDisneyPlusId(identifier)!!
                 val playerVideo = DisneyPlusCachedWrapper.getShowIdByEpisodeId(disneyPlusId)
 
                 if (playerVideo.id != disneyPlusId) {
-                    val oldIdentifier = episodeVariant.identifier!!
+                    val oldIdentifier = identifier
                     logger.warning("Updating Disney+ episode $disneyPlusId to ${playerVideo.id}")
                     episodeVariant.identifier = oldIdentifier.replace(disneyPlusId, playerVideo.id)
                     episodeVariantService.update(episodeVariant)
-                    updateIdentifiers(oldIdentifier, episodeVariant.identifier!!)
+                    identifiers.remove(oldIdentifier)
+                    identifiers.add(episodeVariant.identifier!!)
                 }
 
                 val disneyPlusEpisodes = DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, playerVideo.showId)
@@ -395,11 +393,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     val convertedEpisode = disneyPlusPlatform.convertEpisode(
                         countryCode,
                         episode,
-                        episodeVariant.releaseDateTime
+                        releaseDateTime
                     )
 
                     if (convertedEpisode.getIdentifier() == episodeVariant.identifier) {
                         episodes.add(convertedEpisode)
+
                         if (convertedEpisode.url != episodeVariant.url) {
                             episodeVariant.url = convertedEpisode.url
                             episodeVariantService.update(episodeVariant)
@@ -407,14 +406,16 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
                         DisneyPlusCachedWrapper.getAudioLocales(playerVideo.resourceId)
                             .filter { LangType.fromAudioLocale(countryCode, it) == LangType.VOICE }
-                            .forEach { audioLocale ->
-                                episodes.add(disneyPlusPlatform.convertEpisode(
-                                    countryCode,
-                                    episode,
-                                    episodeVariant.releaseDateTime,
-                                    audioLocale = audioLocale,
-                                    original = false
-                                ))
+                            .forEach { locale ->
+                                episodes.add(
+                                    disneyPlusPlatform.convertEpisode(
+                                        countryCode,
+                                        episode,
+                                        releaseDateTime,
+                                        audioLocale = locale,
+                                        original = false
+                                    )
+                                )
                             }
                     }
                 }
@@ -423,32 +424,42 @@ class UpdateEpisodeMappingJob : AbstractJob {
             Platform.NETF -> runCatching {
                 val showId = netflixPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
                 val netflixEpisodes = NetflixCachedWrapper.getShowVideos(countryCode, showId)
-                netflixEpisodes.map { episode ->
-                    netflixPlatform.convertEpisode(
-                        countryCode,
-                        episodeMapping.anime!!.image!!,
-                        episode,
-                        ZonedDateTime.now(),
-                        episodeMapping.episodeType!!,
-                        episodeVariant.audioLocale!!
-                    )
-                }.find { it.getIdentifier() == episodeVariant.identifier }?.also { episodes.add(it) }
+
+                netflixEpisodes
+                    .map { episode ->
+                        netflixPlatform.convertEpisode(
+                            countryCode,
+                            animeImage,
+                            episode,
+                            releaseDateTime,
+                            episodeType,
+                            audioLocale
+                        )
+                    }
+                    .find { it.getIdentifier() == episodeVariant.identifier }
+                    ?.also { episodes.add(it) }
             }
 
             Platform.PRIM -> runCatching {
                 val showId = primeVideoPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
                 val primeVideoEpisodes = PrimeVideoCachedWrapper.getShowVideos(countryCode, showId)
-                primeVideoEpisodes.map { episode ->
-                    primeVideoPlatform.convertEpisode(
-                        countryCode,
-                        episodeMapping.anime!!.image!!,
-                        episode,
-                        ZonedDateTime.now()
-                    )
-                }.find { it.getIdentifier() == episodeVariant.identifier }?.also { episodes.add(it) }
+
+                primeVideoEpisodes
+                    .map { episode ->
+                        primeVideoPlatform.convertEpisode(
+                            countryCode,
+                            animeImage,
+                            episode,
+                            releaseDateTime,
+                            episodeType,
+                            audioLocale
+                        )
+                    }
+                    .find { it.getIdentifier() == episodeVariant.identifier }
+                    ?.also { episodes.add(it) }
             }
 
-            else -> logger.warning("Error while getting episode ${episodeVariant.identifier} : Invalid platform")
+            else -> logger.warning("Error while getting episode $identifier : Invalid platform")
         }
 
         return episodes
