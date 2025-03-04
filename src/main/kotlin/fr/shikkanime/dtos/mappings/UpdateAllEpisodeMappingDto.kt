@@ -9,6 +9,7 @@ data class UpdateAllEpisodeMappingDto(
     val season: Int?,
     val startDate: String?,
     val incrementDate: Boolean?,
-    val forceUpdate: Boolean?,
     val bindVoiceVariants: Boolean?,
+    val forceUpdate: Boolean?,
+    val bindNumber: Boolean?,
 )

@@ -121,12 +121,18 @@
                                     <label class="form-check-label" for="incrementDate">Increment date</label>
                                 </div>
                                 <div>
+                                    <input class="form-check-input" type="checkbox" id="bindVoiceVariants" x-model="updateAll.bindVoiceVariants">
+                                    <label class="form-check-label" for="bindVoiceVariants">Bind voice variants</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div>
                                     <input class="form-check-input" type="checkbox" id="forceUpdate" x-model="updateAll.forceUpdate">
                                     <label class="form-check-label" for="forceUpdate">Force update</label>
                                 </div>
                                 <div>
-                                    <input class="form-check-input" type="checkbox" id="bindVoiceVariants" x-model="updateAll.bindVoiceVariants">
-                                    <label class="form-check-label" for="bindVoiceVariants">Bind voice variants</label>
+                                    <input class="form-check-input" type="checkbox" id="bindNumber" x-model="updateAll.bindNumber">
+                                    <label class="form-check-label" for="bindNumber">Bind number</label>
                                 </div>
                             </div>
                         </div>

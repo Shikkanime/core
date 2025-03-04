@@ -18,7 +18,7 @@ open class ReleaseDayPlatformSimulcast(
         add(
             ConfigurationField(
                 label = "Release day",
-                caption = "1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday, 7 = Sunday",
+                caption = "0 = All days, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday, 7 = Sunday",
                 name = "releaseDay",
                 type = "number",
                 value = releaseDay

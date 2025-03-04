@@ -1,8 +1,6 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.*
@@ -67,7 +65,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private lateinit var mailService: MailService
 
     override fun run() {
-        val lastDateTime = ZonedDateTime.now().minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
+        val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
+        val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
 
         val allPlatformEpisodes = episodeMappingService.findAllNeedUpdateByPlatforms(availableUpdatePlatforms, lastDateTime)
         logger.info("Found ${allPlatformEpisodes.size} episodes to update")
@@ -88,7 +87,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         needUpdateEpisodes.forEach { mapping ->
             val variants = episodeVariantService.findAllByMapping(mapping)
-            val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} - S${mapping.season} ${mapping.episodeType} ${mapping.number}"
+            val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(mapping)}"
             logger.info("Updating episode $mappingIdentifier...")
 
             val tmpIdentifiers = identifiers.toMutableSet()
@@ -105,7 +104,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
             if (episodes.isEmpty()) {
                 logger.warning("No episode found for $mappingIdentifier")
-                mapping.lastUpdateDateTime = ZonedDateTime.now()
+                mapping.lastUpdateDateTime = zonedDateTime
                 episodeMappingService.update(mapping)
                 logger.info("Episode $mappingIdentifier updated")
                 return@forEach
@@ -132,7 +131,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             updateEpisodeMappingDuration(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
 
             mapping.status = StringUtils.getStatus(mapping)
-            mapping.lastUpdateDateTime = ZonedDateTime.now()
+            mapping.lastUpdateDateTime = zonedDateTime
             episodeMappingService.update(mapping)
 
             if (hasChanged.get()) {
@@ -186,23 +185,23 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
 
         if (allNewEpisodes.isNotEmpty()) {
-            val dtos = AbstractConverter.convert(allNewEpisodes.mapNotNull { it.mapping }.distinctBy { it.uuid }, EpisodeMappingDto::class.java)!!
+            val newMappings = allNewEpisodes.mapNotNull { it.mapping }.distinctBy { it.uuid }
 
             logger.info("New episodes:")
             val lines = mutableSetOf<String>()
 
-            dtos.forEach {
-                val line = "${it.anime.shortName} | ${StringUtils.toEpisodeMappingString(it)}"
+            newMappings.forEach {
+                val line = "- ${StringUtils.getShortName(it.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(it)}"
                 lines.add(line)
-                logger.info("- $line")
+                logger.info(line)
             }
 
             try {
                 mailService.save(
                     Mail(
                         recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                        title = "UpdateEpisodeMappingJob - ${dtos.size} new episodes",
-                        body = lines.joinToString("<br>") { "- $it" }
+                        title = "UpdateEpisodeMappingJob - ${newMappings.size} new episodes",
+                        body = lines.joinToString("<br>")
                     )
                 )
             } catch (e: Exception) {

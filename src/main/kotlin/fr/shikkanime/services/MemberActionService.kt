@@ -54,7 +54,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     fun validateAction(uuid: UUID, code: String) {
         val memberAction = memberActionRepository.findByUuidAndCode(uuid, code)
         checkNotNull(memberAction) { "Invalid action" }
-        require(ZonedDateTime.now().isBefore(memberAction.creationDateTime.plusMinutes(ACTION_EXPIRED_AFTER))) { "Action expired" }
+        require(ZonedDateTime.now() < memberAction.creationDateTime.plusMinutes(ACTION_EXPIRED_AFTER)) { "Action expired" }
         doValidateAction(memberAction)
     }
 

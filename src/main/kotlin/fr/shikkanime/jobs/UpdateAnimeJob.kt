@@ -12,10 +12,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.LanguageCacheService
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.normalize
+import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
 import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
@@ -51,8 +48,8 @@ class UpdateAnimeJob : AbstractJob {
     private lateinit var languageCacheService: LanguageCacheService
 
     override fun run() {
-        val lastDateTime = ZonedDateTime.now()
-            .minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY, 30).toLong())
+        val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
+        val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY, 30).toLong())
         val animes = animeService.findAllNeedUpdate(lastDateTime)
         logger.info("Found ${animes.size} animes to update")
 
@@ -86,7 +83,7 @@ class UpdateAnimeJob : AbstractJob {
             if (updatedAnimes.isEmpty()) {
                 logger.warning("No platform found for anime $shortName")
                 anime.status = StringUtils.getStatus(anime)
-                anime.lastUpdateDateTime = ZonedDateTime.now()
+                anime.lastUpdateDateTime = zonedDateTime
                 animeService.update(anime)
                 return@forEach
             }
@@ -122,7 +119,7 @@ class UpdateAnimeJob : AbstractJob {
             }
 
             anime.status = StringUtils.getStatus(anime)
-            anime.lastUpdateDateTime = ZonedDateTime.now()
+            anime.lastUpdateDateTime = zonedDateTime
             animeService.update(anime)
 
             if (hasChanged) {

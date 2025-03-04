@@ -8,7 +8,6 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
@@ -25,9 +24,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     @Inject
     private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     override fun getPlatform(): Platform = Platform.CRUN
 
@@ -108,7 +104,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             getPlatform(),
             previousWeekLocalDate.atStartOfDay(Constant.utcZoneId),
             previousWeekLocalDate.atEndOfTheDay(Constant.utcZoneId)
-        ).filter { (_, releaseDateTime) -> releaseDateTime.isEqualOrBefore(previousWeek) }
+        ).filter { (_, releaseDateTime) -> releaseDateTime <= previousWeek }
             .forEach { (identifier, _) ->
                 val crunchyrollId = getCrunchyrollId(identifier) ?: run {
                     logger.warning("Crunchyroll ID not found in $identifier")

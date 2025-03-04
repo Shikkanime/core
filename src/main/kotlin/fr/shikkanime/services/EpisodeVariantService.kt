@@ -75,7 +75,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
         val simulcasts = adjustedDates.map { Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year) }
         val (previousSimulcast, currentSimulcast, nextSimulcast) = simulcasts
-        val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime.isBefore(adjustedDates.first())
+        val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime < adjustedDates.first()
 
         val diff = (previousReleaseDateTime ?: if (sqlCheck) {
             episodeMappingService.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, entity)
@@ -146,7 +146,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         val mapping = episodeMapping ?: getEpisodeMapping(anime, episode)
 
-        if (updateMappingDateTime && episode.releaseDateTime.isAfter(mapping.lastReleaseDateTime)) {
+        if (updateMappingDateTime && episode.releaseDateTime > mapping.lastReleaseDateTime) {
             mapping.lastReleaseDateTime = episode.releaseDateTime
             episodeMappingService.update(mapping)
         }
@@ -252,7 +252,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     ) {
         var needAnimeUpdate = false
 
-        if (episode.releaseDateTime.isAfter(anime.lastReleaseDateTime)) {
+        if (episode.releaseDateTime > anime.lastReleaseDateTime) {
             anime.lastReleaseDateTime = episode.releaseDateTime
             needAnimeUpdate = true
         }

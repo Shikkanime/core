@@ -17,7 +17,6 @@ abstract class AbstractCrunchyrollWrapper {
     enum class SortType {
         NEWLY_ADDED,
         POPULARITY,
-        ALPHABETICAL,
     }
 
     enum class MediaType {
