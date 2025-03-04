@@ -93,8 +93,16 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
 
         var startDate = updateAllEpisodeMappingDto.startDate?.let { LocalDate.parse(it) }
+        val counter = mutableMapOf<Pair<Int, EpisodeType>, Int>()
 
         episodes.forEach { episode ->
+            if (updateAllEpisodeMappingDto.bindNumber == true) {
+                val key = Pair(episode.season!!, episode.episodeType!!)
+                val value = counter.getOrDefault(key, 0) + 1
+                episode.number = value
+                counter[key] = value
+            }
+
             val forcedUpdate = updateAllEpisodeMappingDto.forceUpdate == true
 
             updateAllEpisodeMappingDto.episodeType?.let { episode.episodeType = it }
@@ -250,7 +258,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         traceActionService.createTraceAction(episode, TraceAction.Action.DELETE)
         super.delete(episode)
 
-        if (existing.lastReleaseDateTime.isBefore(episode.lastReleaseDateTime)) {
+        if (existing.lastReleaseDateTime < episode.lastReleaseDateTime) {
             existing.lastReleaseDateTime = episode.lastReleaseDateTime
         }
 

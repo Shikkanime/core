@@ -3,12 +3,12 @@ package fr.shikkanime.controllers.api
 import com.google.inject.Inject
 import fr.shikkanime.dtos.simulcasts.SimulcastDto
 import fr.shikkanime.services.caches.SimulcastCacheService
-import fr.shikkanime.utils.routes.*
+import fr.shikkanime.utils.routes.Controller
+import fr.shikkanime.utils.routes.Path
+import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
-import io.ktor.http.*
-import java.util.*
 
 @Controller("/api/v1/simulcasts")
 class SimulcastController {

@@ -51,8 +51,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
                     ConfigPropertyKey.BSKY_SESSION_TIMEOUT,
                     10
                 ).toLong()
-            )
-                .isAfter(ZonedDateTime.now())
+            ) > ZonedDateTime.now()
         ) {
             return
         }

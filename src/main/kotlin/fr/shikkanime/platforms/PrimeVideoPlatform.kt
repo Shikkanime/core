@@ -42,7 +42,7 @@ class PrimeVideoPlatform :
 
         configuration!!.availableCountries.forEach { countryCode ->
             configuration!!.simulcasts.filter {
-                it.releaseDay == zonedDateTime.dayOfWeek.value &&
+                (it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value) &&
                         (it.releaseTime.isBlank() || LocalTime.parse(it.releaseTime) >= zonedDateTime.toLocalTime())
             }
                 .forEach { simulcast ->

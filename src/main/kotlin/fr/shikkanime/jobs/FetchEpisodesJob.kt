@@ -13,7 +13,10 @@ import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.withUTC
 import jakarta.inject.Inject
 import jakarta.persistence.Tuple
 import java.io.ByteArrayOutputStream
@@ -96,7 +99,7 @@ class FetchEpisodesJob : AbstractJob {
                     { it.number },
                     { LangType.fromAudioLocale(it.countryCode, it.audioLocale) })
             )
-            .filter { (zonedDateTime.isEqualOrAfter(it.releaseDateTime)) && !identifiers.contains(it.getIdentifier()) }
+            .filter { (zonedDateTime >= it.releaseDateTime) && !identifiers.contains(it.getIdentifier()) }
             .mapNotNull {
                 try {
                     val savedEpisode = episodeVariantService.save(it)

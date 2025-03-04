@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -31,7 +30,7 @@ object MediaImage {
 
         drawBackground(mediaImage, graphics)
         val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, episodes.first().mapping.anime)
-        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, episodes.first().mapping.anime.countryCode, episodes)
+        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, episodes)
 
         graphics.drawImage(
             bannerImage,
@@ -159,7 +158,6 @@ object MediaImage {
         graphics: Graphics2D,
         thumbnailHeight: Int,
         font: Font,
-        countryCode: CountryCode,
         episodes: List<EpisodeVariantDto>
     ) {
         graphics.color = Color.WHITE
@@ -173,7 +171,7 @@ object MediaImage {
         )
 
         graphics.font = font.deriveFont(24f).deriveFont(Font.BOLD)
-        val label1 = "SAISON ${episodes.first().mapping.season} • ${StringUtils.getEpisodeTypePrefixLabel(countryCode, episodes.first().mapping.episodeType)} ${episodes.first().mapping.number} ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { StringUtils.toLangTypeString(countryCode, it) }}"
+        val label1 = StringUtils.toEpisodeVariantString(episodes).uppercase()
         val labelWidth = graphics.fontMetrics.stringWidth(label1)
         graphics.drawString(label1, (mediaImage.width - labelWidth) / 2, 100 + thumbnailHeight + 80)
         val label2 = "MAINTENANT DISPONIBLE"

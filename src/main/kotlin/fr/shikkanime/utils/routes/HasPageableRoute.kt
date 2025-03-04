@@ -14,7 +14,7 @@ open class HasPageableRoute {
         val limit = limitParam?.coerceIn(1, 30) ?: defaultLimit
 
         val sortParameters = sortParam?.split(",")?.map { sort ->
-            val desc = descParam?.split(",")?.contains(sort) ?: false
+            val desc = descParam?.split(",")?.contains(sort) == true
             SortParameter(sort, if (desc) SortParameter.Order.DESC else SortParameter.Order.ASC)
         } ?: mutableListOf()
 

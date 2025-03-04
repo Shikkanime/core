@@ -41,7 +41,7 @@ class NetflixPlatform :
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter { it.releaseDay == zonedDateTime.dayOfWeek.value }
+            configuration!!.simulcasts.filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
                 .forEach { simulcast ->
                     getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
                         ?.let { list.addAll(it) }

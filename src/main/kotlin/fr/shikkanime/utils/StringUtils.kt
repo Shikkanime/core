@@ -15,6 +15,10 @@ import java.util.*
 import java.util.regex.Pattern
 
 object StringUtils {
+    private const val ANIME_STRING = "Anime "
+    private const val EMPTY_STRING = ""
+    private const val SPACE_STRING = " "
+    private const val DASH_STRING = "-"
     const val ROMAN_NUMBERS_CHECK = "VI"
 
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
@@ -23,42 +27,43 @@ object StringUtils {
     private val separators = listOf(":", ",", "!", "–", " so ", " - ")
     private val encasedRegex = "<.*> ?.*".toRegex()
     private val duplicateSpaceRegex = " +".toRegex()
+    private val wordSeparatorRegex = "[ \\-']".toRegex()
 
-    fun removeAnimeNamePart(name: String) = name.replace("Anime ", "").trim()
+    fun removeAnimeNamePart(name: String) = name.replace(ANIME_STRING, EMPTY_STRING).trim()
 
-    private fun isAllPartsHaveSameAmountOfWords(parts: List<String>): Boolean {
-        val words = parts.map { it.trim().split(" ", "-", "'").size }.distinct()
-        return words.size == 1
-    }
+    private fun isAllPartsHaveSameAmountOfWords(parts: List<String>) = parts.map { it.trim().split(wordSeparatorRegex).size }.distinct().size == 1
 
     fun getShortName(fullName: String): String {
-        var shortName = fullName
-
-        if (encasedRegex.matches(shortName)) {
-            shortName = shortName.replace("<", "").replace(">", ": ").trim()
+        val normalizedName = when {
+            fullName.contains(encasedRegex) -> fullName.replace("<", EMPTY_STRING).replace(">", ": ").trim()
+            fullName.contains(ANIME_STRING) -> removeAnimeNamePart(fullName)
+            else -> regex.replace(fullName, SPACE_STRING).trim()
         }
 
-        shortName = regex.replace(removeAnimeNamePart(shortName), " ").trim()
+        for (separator in separators) {
+            if (!normalizedName.contains(separator)) {
+                continue
+            }
 
-        separators.forEach { separator ->
-            if (shortName.contains(separator)) {
-                val split = shortName.split(separator)
-                val firstPart = split[0].trim()
-                val lastPart = split.subList(1, split.size).joinToString(" ").trim()
+            val split = normalizedName.split(separator)
+            val firstPart = split[0].trim()
+            val lastPart = split.drop(1).joinToString(SPACE_STRING).trim()
 
-                if (lastPart.count { it == ' ' } >= 2 &&
-                    ((separator != "," && firstPart.length > 5) || (separator == "," && firstPart.length > 6)) &&
-                    (separator == ":" || !isAllPartsHaveSameAmountOfWords(split))) {
-                    shortName = firstPart
-                }
+            // Check if the last part of the name contains at least two spaces
+            // and if the first part meets certain length conditions based on the separator
+            // and if the parts do not have the same amount of words when the separator is not a colon
+            if (lastPart.count { it == ' ' } >= 2 &&
+                firstPart.length > (if (separator == ",") 6 else 5) &&
+                (separator == ":" || !isAllPartsHaveSameAmountOfWords(split))) {
+                return firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
             }
         }
 
-        return shortName.replace(duplicateSpaceRegex, " ").trim()
+        return normalizedName.replace(duplicateSpaceRegex, SPACE_STRING).trim()
     }
 
     fun getHashtag(shortName: String) =
-        normalized(shortName.replace("1/2", "")).lowercase().capitalizeWords()
+        normalized(shortName.replace("1/2", EMPTY_STRING)).lowercase().capitalizeWords()
         .replace(" S ", " s ")
         .replace(" T ", " t ")
         .filter { it.isLetterOrDigit() }
@@ -66,7 +71,7 @@ object StringUtils {
     fun String.capitalizeWords(): String {
         val pattern = "[ ,\\-:/\"&<]|(^')".toPattern()
 
-        return this.split(pattern).joinToString(" ") {
+        return this.split(pattern).joinToString(SPACE_STRING) {
             it.replaceFirstChar { char ->
                 if (char.isLowerCase()) char.titlecase(
                     Locale.getDefault()
@@ -95,20 +100,6 @@ object StringUtils {
         }
     }
 
-    fun getEpisodeTypePrefixLabel(countryCode: CountryCode, episodeType: EpisodeType): String {
-        return when(countryCode) {
-            CountryCode.FR -> {
-                when (episodeType) {
-                    EpisodeType.EPISODE -> "ÉP"
-                    EpisodeType.SPECIAL -> "SP"
-                    EpisodeType.FILM -> "FILM "
-                    EpisodeType.SUMMARY -> "RÉCAP"
-                    EpisodeType.SPIN_OFF -> "SPIN-OFF"
-                }
-            }
-        }
-    }
-
     fun toLangTypeString(countryCode: CountryCode, audioLocale: String): String {
         val langType = LangType.fromAudioLocale(countryCode, audioLocale)
 
@@ -122,38 +113,35 @@ object StringUtils {
         }
     }
 
-    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true): String {
-        val countryCode = episode.anime.countryCode
-
+    private fun toEpisodeString(countryCode: CountryCode, season: Int, showSeason: Boolean, showSeparator: Boolean, episodeType: EpisodeType, number: Int): String {
         return buildString {
-            append(if (showSeason) toSeasonString(countryCode, episode.season) else "")
-            append(if (showSeason && separator) " • " else " ")
-            append(getEpisodeTypeLabel(countryCode, episode.episodeType))
-            append(" ${episode.number}")
+            append(if (showSeason) toSeasonString(countryCode, season) else EMPTY_STRING)
+            append(if (showSeason && showSeparator) " • " else SPACE_STRING)
+            append(getEpisodeTypeLabel(countryCode, episodeType))
+            append(" $number")
         }.trim()
     }
 
+    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
+    fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!, true, true, episode.episodeType!!, episode.number!!)
+
     fun toEpisodeVariantString(episodes: List<EpisodeVariantDto>): String {
         val mapping = episodes.first().mapping
-        val countryCode = mapping.anime.countryCode
 
         return buildString {
-            append(toSeasonString(countryCode, mapping.season))
-            append(" • ")
-            append(getEpisodeTypeLabel(countryCode, mapping.episodeType))
-            append(" ${mapping.number}")
-            append(" ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { toLangTypeString(countryCode, it) }}")
+            append(toEpisodeMappingString(mapping))
+            append(" ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { toLangTypeString(mapping.anime.countryCode, it) }}")
         }
     }
 
     fun toSlug(input: String): String {
-        val nowhitespace: String = whitespacePattern.matcher(normalized(input)).replaceAll("-")
+        val nowhitespace: String = whitespacePattern.matcher(normalized(input)).replaceAll(DASH_STRING)
         val normalized: String = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD)
-        val slug: String = nonLatinPattern.matcher(normalized).replaceAll("").replace("-+".toRegex(), "-").trim('-')
+        val slug: String = nonLatinPattern.matcher(normalized).replaceAll(EMPTY_STRING).replace("-+".toRegex(), DASH_STRING).trim('-')
         return slug.lowercase()
     }
 
-    fun computeAnimeHashcode(slug: String) = EncryptionManager.toSHA512(slug.replace("-", ""))
+    fun computeAnimeHashcode(slug: String) = EncryptionManager.toSHA512(slug.replace(DASH_STRING, EMPTY_STRING))
 
     private fun normalized(input: String) = input.replace("œ", "oe").replace("@", "a")
 
@@ -163,7 +151,7 @@ object StringUtils {
         id: String,
         audioLocale: String,
         uncensored: Boolean = false
-    ) = "${countryCode}-${platform}-$id-${audioLocale.uppercase()}${if (uncensored) "-UNC" else ""}"
+    ) = "${countryCode}-${platform}-$id-${audioLocale.uppercase()}${if (uncensored) "-UNC" else EMPTY_STRING}"
 
     private fun isInvalid(
         image: String?,
@@ -203,7 +191,7 @@ object StringUtils {
         val source = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         return (1..length)
             .map { source.random() }
-            .joinToString("")
+            .joinToString(EMPTY_STRING)
     }
 
     fun isValidEmail(email: String): Boolean {

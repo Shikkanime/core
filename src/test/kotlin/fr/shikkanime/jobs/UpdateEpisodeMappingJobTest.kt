@@ -195,14 +195,13 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
 
         MapCache.invalidateAll()
 
-        val now = ZonedDateTime.now()
         updateEpisodeMappingJob.run()
 
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
         assertEquals(3, mappings.size)
-        assertTrue(mappings.first().lastUpdateDateTime.isAfter(now))
+        assertTrue(mappings.first().lastUpdateDateTime >= zonedDateTime)
         val variants = episodeVariantService.findAll()
         assertEquals(3, variants.size)
     }
