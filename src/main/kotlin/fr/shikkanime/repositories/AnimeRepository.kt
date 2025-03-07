@@ -154,17 +154,16 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             val predicates = mutableListOf<Predicate>(
                 cb.equal(
-                    cb.upper(
-                        cb.function(
-                            "REGEXP_REPLACE", String::class.java,
-                            cb.upper(cb.substring(root[Anime_.name], 1, 1)),
-                            cb.literal("[^A-Z]"),
-                            cb.literal("#"),
-                        )
+                    cb.function(
+                        "REGEXP_REPLACE", String::class.java,
+                        cb.upper(cb.substring(root[Anime_.slug], 1, 1)),
+                        cb.literal("[^A-Z]"),
+                        cb.literal("#"),
                     ),
                     firstLetter
                 )
             )
+
             val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
 
             query.where(
