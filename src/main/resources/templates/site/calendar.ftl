@@ -108,7 +108,7 @@
                                             <span class="text-muted mt-0 d-flex align-items-center">
                                                 <img src="${baseUrl}/assets/img/icons/calendar.svg" alt="Calendar"
                                                      class="me-2">
-                                                ${release.mappings?first.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
+                                                ${release.releaseDateTime?datetime("yyyy-MM-dd'T'HH:mm:ss")?string("dd/MM/yyyy")}
                                             </span>
                                         </#if>
 
