@@ -28,7 +28,7 @@
             </div>
 
             <div class="col-md-8 col-12 text-start mt-md-0 mt-3 d-flex flex-column justify-content-center">
-                <h1 class="h6 fw-bold mb-0 text-uppercase">${animeSanitized}<#if season??> - ${su.toSeasonString(anime.countryCode, season.number)}</#if></h1>
+                <h1 class="h6 fw-bold mb-0 text-uppercase">${animeSanitized}<#if season??> - ${su.toSeasonString(anime.countryCode, season.number?string)}</#if></h1>
 
                 <div class="mt-1">
                     <#list anime.langTypes as langType>
@@ -68,13 +68,13 @@
                         <#assign selectedSeason = season.number>
                     </#if>
 
-                    ${su.toSeasonString(anime.countryCode, selectedSeason)}
+                    ${su.toSeasonString(anime.countryCode, selectedSeason?string)}
                 </button>
 
                 <ul class="dropdown-menu dropdown-menu-dark" style="max-height: 300px; overflow-y: auto;">
                     <#list anime.seasons as season>
                         <li><a class="dropdown-item"
-                               href="/animes/${anime.slug}/season-${season.number}">${su.toSeasonString(anime.countryCode, season.number)}</a>
+                               href="/animes/${anime.slug}/season-${season.number}">${su.toSeasonString(anime.countryCode, season.number?string)}</a>
                         </li>
                     </#list>
                 </ul>
