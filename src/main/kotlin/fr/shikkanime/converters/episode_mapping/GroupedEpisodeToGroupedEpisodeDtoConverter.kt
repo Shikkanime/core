@@ -2,12 +2,11 @@ package fr.shikkanime.converters.episode_mapping
 
 import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PlatformDto
-import fr.shikkanime.dtos.UUIDAndNameDto
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.entities.GroupedEpisode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.withUTCString
 
 class GroupedEpisodeToGroupedEpisodeDtoConverter : AbstractConverter<GroupedEpisode, GroupedEpisodeDto>() {
@@ -30,14 +29,14 @@ class GroupedEpisodeToGroupedEpisodeDtoConverter : AbstractConverter<GroupedEpis
         } else null
 
         return GroupedEpisodeDto(
-            countryCode = from.countryCode,
-            anime = UUIDAndNameDto(from.anime.uuid!!, StringUtils.getShortName(from.anime.name!!)),
+            anime = convert(from.anime, AnimeDto::class.java),
             platforms = convert(from.platforms.sorted().toSet(), PlatformDto::class.java)!!,
             releaseDateTime = from.releaseDateTime.withUTCString(),
+            lastUpdateDateTime = from.lastUpdateDateTime.withUTCString(),
             season = season,
             episodeType = from.episodeType,
             number = number,
-            langTypes = from.audioLocales.map { LangType.fromAudioLocale(from.countryCode, it) }.sorted().toSet(),
+            langTypes = from.audioLocales.map { LangType.fromAudioLocale(from.anime.countryCode!!, it) }.sorted().toSet(),
             title = from.title,
             description = from.description,
             duration = from.duration,

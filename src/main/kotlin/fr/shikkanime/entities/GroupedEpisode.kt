@@ -1,15 +1,14 @@
 package fr.shikkanime.entities
 
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import java.time.ZonedDateTime
 import java.util.*
 
 data class GroupedEpisode(
-    val countryCode: CountryCode,
     val anime: Anime,
     val releaseDateTime: ZonedDateTime,
+    val lastUpdateDateTime: ZonedDateTime,
     val minSeason: Int,
     val maxSeason: Int,
     val episodeType: EpisodeType,

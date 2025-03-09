@@ -2,7 +2,7 @@
 <#import "langType.ftl" as langTypeComponent />
 
 <#macro display groupedEpisode desktopColSize mobileColSize cover>
-    <#assign animeSanitized = groupedEpisode.anime.name?html />
+    <#assign animeSanitized = groupedEpisode.anime.shortName?html />
 
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">

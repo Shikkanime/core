@@ -224,6 +224,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 WITH grouped_data AS (
                     SELECT a AS anime,
                          MIN(ev.releaseDateTime) AS min_release_date_time,
+                         MAX(em.lastUpdateDateTime) AS last_update_date_time,
                          MIN(em.season) AS min_season,
                          MAX(em.season) AS max_season,
                          em.episodeType AS episodeType,
@@ -243,6 +244,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 )
                 SELECT gd.anime,
                     gd.min_release_date_time,
+                    gd.last_update_date_time,
                     gd.min_season,
                     gd.max_season,
                     gd.episodeType,
@@ -266,18 +268,18 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             val page = Pageable<GroupedEpisode>(
                 tmpPage.data.map {
                     GroupedEpisode(
-                        countryCode,
                         it[0, Anime::class.java],
                         it[1, ZonedDateTime::class.java],
-                        it[2, Int::class.java],
+                        it[2, ZonedDateTime::class.java],
                         it[3, Int::class.java],
-                        it[4, EpisodeType::class.java],
-                        it[5, Int::class.java],
+                        it[4, Int::class.java],
+                        it[5, EpisodeType::class.java],
                         it[6, Int::class.java],
-                        it[7, Array::class.java].filterIsInstance<Platform>().toSet(),
-                        it[8, Array::class.java].filterIsInstance<String>().toSet(),
+                        it[7, Int::class.java],
+                        it[8, Array::class.java].filterIsInstance<Platform>().toSet(),
                         it[9, Array::class.java].filterIsInstance<String>().toSet(),
-                        it[10, Array::class.java].filterIsInstance<UUID>().toSet()
+                        it[10, Array::class.java].filterIsInstance<String>().toSet(),
+                        it[11, Array::class.java].filterIsInstance<UUID>().toSet()
                     )
                 }.toSet(),
                 tmpPage.page,
