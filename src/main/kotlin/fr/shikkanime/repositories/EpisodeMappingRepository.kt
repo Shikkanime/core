@@ -6,6 +6,9 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
+import fr.shikkanime.entities.miscellaneous.Pageable
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
@@ -15,16 +18,16 @@ import java.util.*
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
 
-    fun findAllUuids(): List<UUID> {
+    fun findAllUuidImage(): List<Pair<UUID, String>> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(UUID::class.java)
+            val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
-
-            query.select(root[EpisodeMapping_.uuid])
+            query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
 
             createReadOnlyQuery(it, query)
                 .resultList
+                .map { tuple -> Pair(tuple[0, UUID::class.java], tuple[1, String::class.java]) }
         }
     }
 
@@ -81,7 +84,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 root[EpisodeMapping_.anime][Anime_.banner],
                 root[EpisodeMapping_.uuid],
                 root[EpisodeMapping_.image]
-            )
+            ).orderBy(cb.desc(root[EpisodeMapping_.lastReleaseDateTime]))
 
             createReadOnlyQuery(it, query)
                 .resultList

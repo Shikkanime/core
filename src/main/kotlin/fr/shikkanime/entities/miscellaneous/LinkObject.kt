@@ -1,4 +1,4 @@
-package fr.shikkanime.entities
+package fr.shikkanime.entities.miscellaneous
 
 import fr.shikkanime.entities.enums.Link
 

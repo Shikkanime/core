@@ -3,9 +3,9 @@ package fr.shikkanime.controllers.site
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.URLDto
-import fr.shikkanime.entities.SortParameter
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant

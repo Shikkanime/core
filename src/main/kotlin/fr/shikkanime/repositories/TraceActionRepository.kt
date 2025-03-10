@@ -1,9 +1,9 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.dtos.LoginCountDto
-import fr.shikkanime.entities.Pageable
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.TraceAction_
+import fr.shikkanime.entities.miscellaneous.Pageable
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
