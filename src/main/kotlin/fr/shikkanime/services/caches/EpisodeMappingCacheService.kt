@@ -61,6 +61,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
         limit: Int,
     ) = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllGroupedBy",
+        classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
     ) {
         PageableDto.fromPageable(
