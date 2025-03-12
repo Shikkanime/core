@@ -35,29 +35,8 @@ object FileManager {
         }
     }
 
-    fun File.readBytesBuffered(): ByteArray {
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        val bytes = ByteArrayOutputStream()
-
-        try {
-            FileInputStream(this).use { fis ->
-                var bytesRead = fis.read(buffer)
-
-                while (bytesRead != -1) {
-                    bytes.write(buffer, 0, bytesRead)
-                    bytesRead = fis.read(buffer)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw Exception("Failed to read file")
-        }
-
-        return bytes.toByteArray()
-    }
-
     inline fun <reified T> readFile(file: File): T {
-        val value = ObjectInputStream(ByteArrayInputStream(file.readBytesBuffered())).use { it.readObject() }
+        val value = ObjectInputStream(FileInputStream(file)).use { it.readObject() }
 
         require(value is T && (T::class != List::class || typeOf<T>().arguments[0].type == (value as List<*>).firstOrNull()?.let { it::class.starProjectedType })) {
             "Invalid type"
@@ -66,32 +45,13 @@ object FileManager {
         return value
     }
 
-    private fun File.writeBytesBuffered(bytes: ByteArray) {
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-
-        try {
-            ByteArrayInputStream(bytes).use { bais ->
-                var bytesRead = bais.read(buffer)
-
-                FileOutputStream(this).use { fos ->
-                    while (bytesRead != -1) {
-                        fos.write(buffer, 0, bytesRead)
-                        bytesRead = bais.read(buffer)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw Exception("Failed to write file")
-        }
-    }
 
     fun writeFile(file: File, `object`: Any) {
         try {
-            ByteArrayOutputStream().use { baos ->
+            FileOutputStream (file).use { baos ->
                 ObjectOutputStream(baos).use { oos ->
                     oos.writeObject(`object`)
-                    file.writeBytesBuffered(baos.toByteArray())
+                    oos.flush()
                 }
             }
         } catch (e: Exception) {
