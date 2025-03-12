@@ -169,7 +169,7 @@ object ImageService {
         val cachePart = mutableListOf<Media>()
 
         val take = measureTimeMillis {
-            (0..<CACHE_FILE_NUMBER).toList().parallelStream().forEach { index ->
+            (0..<CACHE_FILE_NUMBER).forEach { index ->
                 val part = loadCachePart(animeUuids, episodeUuids, memberUuids, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 cachePart.addAll(part)
             }
@@ -227,26 +227,24 @@ object ImageService {
             return
         }
 
-        change.set(false)
-
         val parts = distributeImages(cache.values)
-
         logger.info("Saving images cache...")
 
         val take = measureTimeMillis {
             if (parts.isNotEmpty()) {
-                parts.parallelStream().forEach { part ->
+                parts.forEach { part ->
                     val index = parts.indexOf(part)
                     saveCachePart(part, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 }
             } else {
-                (0..<CACHE_FILE_NUMBER).toList().parallelStream().forEach { index ->
+                (0..<CACHE_FILE_NUMBER).forEach { index ->
                     saveCachePart(emptyList(), File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 }
             }
         }
 
         logger.info("Saved images cache in $take ms ($originalSize -> $encodedSize)")
+        change.set(false)
     }
 
     private fun saveCachePart(cache: List<Media>, file: File) {
