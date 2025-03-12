@@ -172,6 +172,7 @@ object ImageService {
             (0..<CACHE_FILE_NUMBER).forEach { index ->
                 val part = loadCachePart(animeUuids, episodeUuids, memberUuids, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 cachePart.addAll(part)
+                System.gc()
             }
         }
 
@@ -235,10 +236,12 @@ object ImageService {
                 parts.forEach { part ->
                     val index = parts.indexOf(part)
                     saveCachePart(part, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                    System.gc()
                 }
             } else {
                 (0..<CACHE_FILE_NUMBER).forEach { index ->
                     saveCachePart(emptyList(), File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                    System.gc()
                 }
             }
         }
