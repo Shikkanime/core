@@ -92,8 +92,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun preIndex() = animeRepository.preIndex()
 
-    fun findAllUuidThumbnailAndBanner() = animeRepository.findAllUuidThumbnailAndBanner()
-
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
 
     fun findByName(countryCode: CountryCode, name: String?) =

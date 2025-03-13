@@ -18,16 +18,13 @@ import java.util.*
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
 
-    fun findAllUuidImage(): List<Pair<UUID, String>> {
+    fun findAllUuids(): List<UUID> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
-            query.multiselect(root[EpisodeMapping_.uuid], root[EpisodeMapping_.image])
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .map { tuple -> Pair(tuple[0, UUID::class.java], tuple[1, String::class.java]) }
+            query.select(root[EpisodeMapping_.uuid])
+            createReadOnlyQuery(it, query).resultList
         }
     }
 

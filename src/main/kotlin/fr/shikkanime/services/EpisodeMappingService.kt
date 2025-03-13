@@ -34,7 +34,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun getRepository() = episodeMappingRepository
 
-    fun findAllUuidImage() = episodeMappingRepository.findAllUuidImage()
+    fun findAllUuids() = episodeMappingRepository.findAllUuids()
 
     fun findAllBy(
         countryCode: CountryCode?,
