@@ -11,6 +11,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.isAfterOrEqual
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -201,7 +202,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
         assertEquals(3, mappings.size)
-        assertTrue(mappings.first().lastUpdateDateTime >= zonedDateTime)
+        assertTrue(mappings.first().lastUpdateDateTime.isAfterOrEqual(zonedDateTime))
         val variants = episodeVariantService.findAll()
         assertEquals(3, variants.size)
     }

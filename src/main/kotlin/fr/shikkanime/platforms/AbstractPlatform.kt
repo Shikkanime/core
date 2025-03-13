@@ -53,7 +53,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     fun getApiContent(key: K, zonedDateTime: ZonedDateTime): V {
         val entry = apiCache.entries.firstOrNull { it.key.first == key }
 
-        if (entry == null || zonedDateTime >= entry.key.second.plusMinutes(configuration!!.apiCheckDelayInMinutes)) {
+        if (entry == null || zonedDateTime.isAfterOrEqual(entry.key.second.plusMinutes(configuration!!.apiCheckDelayInMinutes))) {
             val values = runBlocking { fetchApiContent(key, zonedDateTime) }
 
             if (values == null) {

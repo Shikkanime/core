@@ -9,6 +9,8 @@ fun ZonedDateTime.withUTC(): ZonedDateTime = this.withZoneSameInstant(Constant.u
 
 fun ZonedDateTime.withUTCString(): String = withUTC().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
+fun ZonedDateTime.isAfterOrEqual(other: ZonedDateTime): Boolean = this.isAfter(other) || this.isEqual(other)
+
 fun LocalDate.atStartOfWeek(): LocalDate = this.with(DayOfWeek.MONDAY)
 
 fun LocalDate.atEndOfWeek(): LocalDate = this.with(DayOfWeek.SUNDAY)
