@@ -350,7 +350,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
-        val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime >= lastDateTime
+        val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime.isAfterOrEqual(lastDateTime)
         val animeImage = episodeMapping.anime!!.image!!
         val episodeType = episodeMapping.episodeType!!
         val audioLocale = episodeVariant.audioLocale!!

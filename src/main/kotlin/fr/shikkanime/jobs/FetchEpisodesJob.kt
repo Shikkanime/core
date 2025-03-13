@@ -13,10 +13,7 @@ import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.withUTC
+import fr.shikkanime.utils.*
 import jakarta.inject.Inject
 import jakarta.persistence.Tuple
 import java.io.ByteArrayOutputStream
@@ -69,7 +66,7 @@ class FetchEpisodesJob : AbstractJob {
             isInitialized = true
         }
 
-        val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
+        val zonedDateTime = ZonedDateTime.now().withNano(0).withUTC()
         val episodes = mutableListOf<AbstractPlatform.Episode>()
 
         Constant.abstractPlatforms.forEach { abstractPlatform ->
@@ -99,7 +96,7 @@ class FetchEpisodesJob : AbstractJob {
                     { it.number },
                     { LangType.fromAudioLocale(it.countryCode, it.audioLocale) })
             )
-            .filter { (zonedDateTime >= it.releaseDateTime) && !identifiers.contains(it.getIdentifier()) }
+            .filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) && !identifiers.contains(it.getIdentifier()) }
             .mapNotNull {
                 try {
                     val savedEpisode = episodeVariantService.save(it)

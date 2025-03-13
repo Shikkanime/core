@@ -104,7 +104,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             getPlatform(),
             previousWeekLocalDate.atStartOfDay(Constant.utcZoneId),
             previousWeekLocalDate.atEndOfTheDay(Constant.utcZoneId)
-        ).filter { (_, releaseDateTime) -> releaseDateTime <= previousWeek }
+        ).filter { (_, releaseDateTime) -> previousWeek.isAfterOrEqual(releaseDateTime) }
             .forEach { (identifier, _) ->
                 val crunchyrollId = getCrunchyrollId(identifier) ?: run {
                     logger.warning("Crunchyroll ID not found in $identifier")
