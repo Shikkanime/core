@@ -23,13 +23,11 @@ fun main(args: Array<String>) {
 
     logger.info("Pre-indexing anime data...")
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     val memberService = Constant.injector.getInstance(MemberService::class.java)
-
     animeService.preIndex()
 
     logger.info("Loading images cache...")
-    ImageService.loadCache(animeService.findAllUuidThumbnailAndBanner(), episodeMappingService.findAllUuidImage(), memberService.findAllUuids())
+    ImageService.loadCache()
     ImageService.addAll()
 
     logger.info("Updating and deleting data...")

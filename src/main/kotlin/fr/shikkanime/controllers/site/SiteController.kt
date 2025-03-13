@@ -154,15 +154,6 @@ class SiteController {
         @QueryParam("page") page: Int?
     ) = getAnimeDetail(slug, season, page)
 
-    @Deprecated("Use animeDetailBySeason instead with page parameter")
-    @Path("animes/{slug}/season-{season}/page-{page}")
-    @Get
-    private fun animeDetailBySeasonAndPage(
-        @PathParam("slug") slug: String,
-        @PathParam("season") season: Int,
-        @PathParam("page") page: Int
-    ) = Response.redirect("/animes/$slug/season-$season?page=$page")
-
     @Path("animes/{slug}/season-{season}/{episodeSlug}")
     @Get
     private fun episodeDetails(

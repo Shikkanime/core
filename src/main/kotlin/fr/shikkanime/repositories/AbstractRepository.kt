@@ -2,7 +2,6 @@ package fr.shikkanime.repositories
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.ShikkEntity
-import fr.shikkanime.entities.ShikkEntity_
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
@@ -71,16 +70,6 @@ abstract class AbstractRepository<E : ShikkEntity> {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             query.from(getEntityClass())
-            createReadOnlyQuery(it, query).resultList
-        }
-    }
-    
-    fun findAllUuids(): List<UUID> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
-            query.select(root[ShikkEntity_.uuid])
             createReadOnlyQuery(it, query).resultList
         }
     }

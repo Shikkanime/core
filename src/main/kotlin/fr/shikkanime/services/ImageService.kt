@@ -19,90 +19,6 @@ import kotlin.system.measureTimeMillis
 private const val FAILED_TO_ENCODE_MESSAGE = "Failed to encode image to WebP"
 
 object ImageService {
-    @Deprecated("Use ImageType instead", ReplaceWith("ImageType"))
-    enum class Type {
-        IMAGE,
-        BANNER,
-    }
-
-    @Deprecated("Use Media instead", ReplaceWith("Media"))
-    data class Image(
-        val uuid: String,
-        val type: Type,
-        val url: String? = null,
-        var bytes: ByteArray = byteArrayOf(),
-        var originalSize: Long = 0,
-        var width: Int? = null,
-        var height: Int? = null,
-        var size: Long = 0,
-        var lastUpdateDateTime: Long? = null
-    ) : Serializable {
-        fun toMedia(animeUuids: List<Triple<UUID, String, String>>, episodeUuids: List<Pair<UUID, String>>, memberUuids: List<UUID>): Media {
-            val uuidFromString = UUID.fromString(uuid)
-
-            val isAnime = animeUuids.any { it.first == uuidFromString }
-            val isEpisode = episodeUuids.any { it.first == uuidFromString }
-            val isMember = memberUuids.contains(uuidFromString)
-            require (isAnime || isEpisode || isMember) { "Image not available" }
-
-            val newType: ImageType
-            var newUrl: String? = null
-
-            when {
-                type == Type.IMAGE && isAnime -> {
-                    newType = ImageType.THUMBNAIL
-                    newUrl = animeUuids.first { it.first == uuidFromString }.second
-                }
-                type == Type.BANNER && isAnime -> {
-                    newType = ImageType.BANNER
-                    newUrl = animeUuids.first { it.first == uuidFromString }.third
-                }
-                type == Type.IMAGE && isEpisode -> {
-                    newType = ImageType.BANNER
-                    newUrl = episodeUuids.first { it.first == uuidFromString }.second
-                }
-                type == Type.IMAGE && isMember -> {
-                    newType = ImageType.MEMBER_PROFILE
-                }
-                else -> throw IllegalArgumentException("Invalid image type")
-            }
-
-            return Media(uuidFromString, newType, newUrl, bytes, originalSize.toInt(), lastUpdateDateTime)
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Image
-
-            if (uuid != other.uuid) return false
-            if (type != other.type) return false
-            if (url != other.url) return false
-            if (!bytes.contentEquals(other.bytes)) return false
-            if (originalSize != other.originalSize) return false
-            if (size != other.size) return false
-            if (lastUpdateDateTime != other.lastUpdateDateTime) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = uuid.hashCode()
-            result = 31 * result + type.hashCode()
-            result = 31 * result + (url?.hashCode() ?: 0)
-            result = 31 * result + bytes.contentHashCode()
-            result = 31 * result + originalSize.hashCode()
-            result = 31 * result + size.hashCode()
-            result = 31 * result + (lastUpdateDateTime?.hashCode() ?: 0)
-            return result
-        }
-
-        companion object {
-            const val serialVersionUID: Long = 7637105310009708039
-        }
-    }
-
     data class Media(
         val uuid: UUID,
         val type: ImageType,
@@ -164,13 +80,13 @@ object ImageService {
         }
     }
 
-    fun loadCache(animeUuids: List<Triple<UUID, String, String>>, episodeUuids: List<Pair<UUID, String>>, memberUuids: List<UUID>) {
+    fun loadCache() {
         logger.info("Loading images cache...")
         val cachePart = mutableListOf<Media>()
 
         val take = measureTimeMillis {
             (0..<CACHE_FILE_NUMBER).forEach { index ->
-                val part = loadCachePart(animeUuids, episodeUuids, memberUuids, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
+                val part = loadCachePart(File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 cachePart.addAll(part)
                 System.gc()
             }
@@ -180,7 +96,7 @@ object ImageService {
         logger.info("Loaded images cache in $take ms (${this.cache.size} images)")
     }
 
-    private fun loadCachePart(animeUuids: List<Triple<UUID, String, String>>, episodeUuids: List<Pair<UUID, String>>, memberUuids: List<UUID>, file: File): List<Media> {
+    private fun loadCachePart(file: File): List<Media> {
         if (!file.exists()) {
             return emptyList()
         }
@@ -189,17 +105,7 @@ object ImageService {
         val cache = mutableListOf<Media>()
 
         val take = measureTimeMillis {
-            val deserializedCache = try {
-                FileManager.readFile<List<Media>>(file)
-            } catch (_: Exception) {
-                logger.log(Level.WARNING, "Failed to load images cache part, falling back to old cache")
-                FileManager.readFile<List<Image>>(file).mapNotNull {
-                    runCatching {
-                        it.toMedia(animeUuids, episodeUuids, memberUuids)
-                    }.getOrNull()
-                }
-            }
-
+            val deserializedCache = FileManager.readFile<List<Media>>(file)
             cache.addAll(deserializedCache)
         }
 

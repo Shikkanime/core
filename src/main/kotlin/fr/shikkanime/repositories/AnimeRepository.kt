@@ -27,19 +27,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllUuidThumbnailAndBanner(): List<Triple<UUID, String, String>> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
-            query.multiselect(root[Anime_.uuid], root[Anime_.image], root[Anime_.banner])
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .map { tuple -> Triple(tuple[0, UUID::class.java], tuple[1, String::class.java], tuple[2, String::class.java]) }
-        }
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
         simulcast: Simulcast?,
