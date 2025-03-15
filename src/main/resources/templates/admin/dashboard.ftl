@@ -77,7 +77,6 @@
 
                         <div class="ms-md-auto me-md-0">
                             <a id="images-invalidate" href="/admin/images-invalidate" class="btn btn-danger">Invalidate</a>
-                            <a href="/admin/images-save" class="btn btn-success">Save</a>
                         </div>
                     </div>
 
@@ -86,18 +85,6 @@
                             <label class="form-label" for="size">Size</label>
                             <input id="size" name="size" type="number" class="form-control disabled" value="${size?c}"
                                    disabled>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="originalSize">Original size</label>
-                            <input id="originalSize" name="originalSize" type="text" class="form-control disabled"
-                                   value="${originalSize}" disabled>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="encodedSize">Encoded size</label>
-                            <input id="encodedSize" name="encodedSize" type="text" class="form-control disabled"
-                                   value="${encodedSize}" disabled>
                         </div>
                     </div>
                 </div>

@@ -17,20 +17,21 @@ object Constant {
     val injector: Injector = Guice.createInjector(DefaultModule())
     val abstractPlatforms = reflections.getSubTypesOf(AbstractPlatform::class.java).map { injector.getInstance(it) }
     val seasons = listOf("WINTER", "SPRING", "SUMMER", "AUTUMN")
-    val dataFolder: File
+
+    val dataFolder: File = File("data").apply { if (!exists()) mkdirs() }
+    val configFolder: File = File(dataFolder, "config").apply { if (!exists()) mkdirs() }
+    val imagesFolder: File
         get() {
-            val folder = File("data")
-            if (!folder.exists()) folder.mkdirs()
-            return folder
+            val file = File(dataFolder, "images")
+
+            if (!file.exists()) {
+                file.mkdirs()
+            }
+
+            return file
         }
-    val configFolder: File
-        get() {
-            val folder = File(dataFolder, "config")
-            if (!folder.exists()) folder.mkdirs()
-            return folder
-        }
-    val abstractSocialNetworks =
-        reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
+
+    val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
     val utcZoneId: ZoneId = ZoneId.of("UTC")
     val jwtAudience: String = System.getenv("JWT_AUDIENCE") ?: "jwt-audience"
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"

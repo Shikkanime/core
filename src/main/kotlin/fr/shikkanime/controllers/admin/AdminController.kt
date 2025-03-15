@@ -90,23 +90,14 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun getDashboard(): Response {
+
         return Response.template(
             Link.DASHBOARD,
             mapOf(
                 "simulcasts" to simulcastCacheService.findAll(),
-                "size" to ImageService.cache.size,
-                "originalSize" to ImageService.originalSize,
-                "encodedSize" to ImageService.encodedSize,
+                "size" to Constant.imagesFolder.listFiles().size
             )
         )
-    }
-
-    @Path("/images-save")
-    @Get
-    @AdminSessionAuthenticated
-    private fun saveImages(): Response {
-        ImageService.saveCache()
-        return Response.redirect(Link.DASHBOARD.href)
     }
 
     @Path("/images-invalidate")
