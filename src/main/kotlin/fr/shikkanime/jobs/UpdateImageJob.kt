@@ -14,14 +14,8 @@ class UpdateImageJob : AbstractJob {
 
     override fun run() {
         val delay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_DELAY, 30) * 24 * 60 * 60 * 1000L
-        val now = System.currentTimeMillis()
-
         ImageService.removeUnusedImages()
-
-        val images = ImageService.cache.asSequence()
-            .filter { entry -> (entry.value.lastUpdateDateTime == null || now - entry.value.lastUpdateDateTime!! >= delay) && !entry.value.url.isNullOrBlank() }
-            .shuffled()
-            .toList()
+        val images = ImageService.getNeededUpdate(delay).shuffled().toList()
 
         logger.info("Found ${images.size} images to update")
 
@@ -31,11 +25,11 @@ class UpdateImageJob : AbstractJob {
         }
 
         images.take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_SIZE, 100))
-            .forEach { entry ->
+            .forEach { media ->
                 ImageService.add(
-                    uuid = entry.key.first,
-                    type = entry.key.second,
-                    url = entry.value.url!!,
+                    uuid = media.uuid,
+                    type = media.type,
+                    url = media.url,
                     bytes = null,
                     bypass = true
                 )

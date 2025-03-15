@@ -11,7 +11,6 @@ import java.io.File
 import java.io.Serializable
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
@@ -27,32 +26,6 @@ object ImageService {
         var originalSize: Int = 0,
         var lastUpdateDateTime: Long? = null
     ) : Serializable {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as Media
-
-            if (uuid != other.uuid) return false
-            if (type != other.type) return false
-            if (url != other.url) return false
-            if (!bytes.contentEquals(other.bytes)) return false
-            if (originalSize != other.originalSize) return false
-            if (lastUpdateDateTime != other.lastUpdateDateTime) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = uuid.hashCode()
-            result = 31 * result + type.hashCode()
-            result = 31 * result + (url?.hashCode() ?: 0)
-            result = 31 * result + bytes.contentHashCode()
-            result = 31 * result + originalSize.hashCode()
-            result = 31 * result + (lastUpdateDateTime?.hashCode() ?: 0)
-            return result
-        }
-
         companion object {
             const val serialVersionUID: Long = 0
         }
@@ -61,9 +34,9 @@ object ImageService {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val nThreads = Runtime.getRuntime().availableProcessors()
     private var threadPool = Executors.newFixedThreadPool(nThreads)
-    val cache = mutableMapOf<Pair<UUID, ImageType>, Media>()
-    private val change = AtomicBoolean(false)
-    private const val CACHE_FILE_NUMBER = 4
+    private val cache = mutableMapOf<Pair<UUID, ImageType>, Pair<Media, Long>>()
+    private const val INVALIDATE_DELAY = 10 * 60 * 1000L
+    private const val MAX_CACHE_SIZE = 100
 
     private fun toHumanReadable(bytes: Long): String {
         val kiloByte = 1024L
@@ -80,96 +53,43 @@ object ImageService {
         }
     }
 
+    private fun getPath(uuid: UUID, type: ImageType) = "${uuid}_${type.name.lowercase()}.shikk"
+    private fun getFile(uuid: UUID, type: ImageType) = File(Constant.imagesFolder, getPath(uuid, type))
+
     fun loadCache() {
+        if (Constant.imagesFolder.listFiles().isNotEmpty()) {
+            logger.info("No need to load images cache, new system in place")
+            return
+        }
+
         logger.info("Loading images cache...")
-        val cachePart = mutableListOf<Media>()
 
         val take = measureTimeMillis {
-            (0..<CACHE_FILE_NUMBER).forEach { index ->
-                val part = loadCachePart(File(Constant.dataFolder, "images-cache-part-$index.shikk"))
-                cachePart.addAll(part)
+            (0..<4).forEach { index ->
+                loadCachePart(File(Constant.dataFolder, "images-cache-part-$index.shikk"))
                 System.gc()
             }
         }
 
-        this.cache.putAll(cachePart.associateBy { it.uuid to it.type })
-        logger.info("Loaded images cache in $take ms (${this.cache.size} images)")
+        logger.info("Loaded images cache in $take ms")
     }
 
-    private fun loadCachePart(file: File): List<Media> {
+    private fun loadCachePart(file: File) {
         if (!file.exists()) {
-            return emptyList()
-        }
-
-        logger.info("Loading images cache part...")
-        val cache = mutableListOf<Media>()
-
-        val take = measureTimeMillis {
-            val deserializedCache = FileManager.readFile<List<Media>>(file)
-            cache.addAll(deserializedCache)
-        }
-
-        logger.info("Loaded images cache part in $take ms (${cache.size} images)")
-        return cache
-    }
-
-    private fun distributeImages(images: Collection<Media>): List<List<Media>> {
-        // Sort images by size in descending order for a more balanced distribution
-        val sortedImages = images.sortedByDescending { it.bytes.size }
-
-        // Initialize lists to hold the distributed images
-        val resultLists = MutableList(CACHE_FILE_NUMBER) { mutableListOf<Media>() }
-
-        // Distribute images using round-robin approach
-        sortedImages.forEachIndexed { index, image ->
-            resultLists[index % CACHE_FILE_NUMBER].add(image)
-        }
-
-        return resultLists
-    }
-
-    fun saveCache() {
-        if (!change.get()) {
-            logger.info("No changes detected in images cache")
             return
         }
 
-        val parts = distributeImages(cache.values)
-        logger.info("Saving images cache...")
+        logger.info("Loading images cache part...")
 
         val take = measureTimeMillis {
-            if (parts.isNotEmpty()) {
-                parts.forEach { part ->
-                    val index = parts.indexOf(part)
-                    saveCachePart(part, File(Constant.dataFolder, "images-cache-part-$index.shikk"))
-                    System.gc()
-                }
-            } else {
-                (0..<CACHE_FILE_NUMBER).forEach { index ->
-                    saveCachePart(emptyList(), File(Constant.dataFolder, "images-cache-part-$index.shikk"))
-                    System.gc()
-                }
+            val deserializedCache = FileManager.readFile<List<Media>>(file)
+
+            deserializedCache.forEach { media ->
+                FileManager.writeFile(getFile(media.uuid, media.type), media)
             }
         }
 
-        logger.info("Saved images cache in $take ms ($originalSize -> $encodedSize)")
-        change.set(false)
-    }
-
-    private fun saveCachePart(cache: List<Media>, file: File) {
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-
-        logger.info("Saving images cache part...")
-        val take = measureTimeMillis { FileManager.writeFile(file, cache) }
-
-        logger.info(
-            "Saved images cache part in $take ms (${toHumanReadable(cache.sumOf { it.originalSize.toLong() })} -> ${
-                toHumanReadable(
-                    cache.sumOf { it.bytes.size.toLong() })
-            })"
-        )
+        logger.info("Loaded images cache part in $take ms")
     }
 
     private fun taskEncode(uuid: UUID, type: ImageType, url: String?, bytes: ByteArray?, media: Media) {
@@ -203,20 +123,14 @@ object ImageService {
     ) {
         val isEmpty = url.isNullOrBlank() && (bytes == null || bytes.isEmpty())
 
-        if (!bypass && (get(uuid, type) != null || isEmpty)) {
+        if (!bypass && (getFile(uuid, type).exists() || isEmpty)) {
             return
         }
 
         val media = if (!bypass) {
-            val media = Media(uuid, type, url)
-            cache[uuid to type] = media
-            media
+            Media(uuid, type, url)
         } else {
-            get(uuid, type) ?: run {
-                val media = Media(uuid, type, url)
-                cache[uuid to type] = media
-                media
-            }
+            get(uuid, type) ?: Media(uuid, type, url)
         }
 
         if (async)
@@ -254,8 +168,8 @@ object ImageService {
                 media.originalSize = bytes.size
                 media.lastUpdateDateTime = System.currentTimeMillis()
 
-                cache[uuid to type] = media
-                change.set(true)
+                FileManager.writeFile(getFile(uuid, type), media)
+                if (cache.containsKey(uuid to type)) cache[uuid to type] = media to System.currentTimeMillis()
             } catch (e: Exception) {
                 when (e) {
                     is InterruptedException, is RuntimeException -> {
@@ -279,16 +193,46 @@ object ImageService {
 
     fun remove(uuid: UUID, type: ImageType) {
         cache.remove(uuid to type)
-        change.set(true)
+        Constant.imagesFolder.listFiles { it.name == getPath(uuid, type) }
+            ?.forEach { it.delete() }
     }
 
-    operator fun get(uuid: UUID, type: ImageType): Media? = cache[uuid to type]
+    operator fun get(uuid: UUID, type: ImageType, bypass: Boolean = false): Media? {
+        val cacheKey = uuid to type
 
-    val originalSize: String
-        get() = toHumanReadable(cache.values.sumOf { it.originalSize.toLong() })
+        if (!bypass) {
+            cache[cacheKey]?.let { (media, lastAccessDateTime) ->
+                if (System.currentTimeMillis() - lastAccessDateTime < INVALIDATE_DELAY) {
+                    return media
+                }
 
-    val encodedSize: String
-        get() = toHumanReadable(cache.values.sumOf { it.bytes.size.toLong() })
+                cache.remove(cacheKey)
+                return get(uuid, type)
+            }
+        }
+
+        val file = getFile(uuid, type)
+        if (!file.exists()) return null
+
+        val media = FileManager.readFile<Media>(file)
+
+        if (cache.size >= MAX_CACHE_SIZE) {
+            cache.entries.minByOrNull { it.value.second }?.key?.let { cache.remove(it) }
+        }
+
+        cache[cacheKey] = media to System.currentTimeMillis()
+        return media
+    }
+
+    fun getNeededUpdate(delay: Long): List<Media> {
+        val now = System.currentTimeMillis()
+
+        return Constant.imagesFolder.walk().asSequence()
+            .filter { it.extension == "shikk" }
+            .map { FileManager.readFile<Media>(it) }
+            .filter { (it.lastUpdateDateTime == null || now - it.lastUpdateDateTime!! >= delay) && !it.url.isNullOrBlank() }
+            .toList()
+    }
 
     fun invalidate() {
         removeUnusedImages()
@@ -315,15 +259,15 @@ object ImageService {
                 .filterIsInstance<UUID>()
                 .toSet()
 
-            // Calculate the difference between the cache and the UUIDs
-            val difference = cache.filter { entry -> entry.key.first !in uuids }.values
+            cache.keys.asSequence()
+                .filter { it.first !in uuids }
+                .forEach { remove(it.first, it.second) }
 
-            if (difference.isNotEmpty()) {
-                logger.warning("Removing ${difference.size} images from cache, not found in database")
-                logger.warning("${toHumanReadable(difference.sumOf { img -> img.bytes.size.toLong() })} will be free")
+            val files = Constant.imagesFolder.listFiles { UUID.fromString(it.name.substringBefore('_')) !in uuids }
 
-                cache.keys.removeAll { pair -> pair.first !in uuids }
-                change.set(true)
+            if (files.isNotEmpty()) {
+                logger.warning("Removing ${files.size} images from cache, not found in database")
+                files.forEach { it.delete() }
             }
         }
     }
@@ -331,6 +275,7 @@ object ImageService {
     fun clearPool() {
         threadPool.shutdownNow()
         threadPool = Executors.newFixedThreadPool(nThreads)
+        Constant.imagesFolder.deleteRecursively()
         cache.clear()
     }
 
