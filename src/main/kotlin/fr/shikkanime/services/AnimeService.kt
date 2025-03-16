@@ -26,6 +26,7 @@ import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -214,8 +215,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         weekRange: ClosedRange<LocalDate>
     ): Boolean {
         val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.first.releaseDateTime).withUTC()
-        val toLocalTime = withZoneSameInstant.toLocalTime()
-        val closedRange = toLocalTime.minusHours(1)..toLocalTime.plusHours(1)
+        val minusHour = withZoneSameInstant.minusHours(1).toLocalTime()
+        val plusHour = if (withZoneSameInstant.plusHours(1).toLocalTime() == LocalTime.MIDNIGHT) LocalTime.MAX else withZoneSameInstant.plusHours(1).toLocalTime()
+        val closedRange = minusHour..plusHour
 
         if (withZoneSameInstant.toLocalDate() in weekRange) {
             return false
