@@ -27,7 +27,6 @@ fun main(args: Array<String>) {
     animeService.preIndex()
 
     logger.info("Loading images cache...")
-    ImageService.loadCache()
     ImageService.addAll()
 
     logger.info("Updating and deleting data...")

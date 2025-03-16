@@ -56,42 +56,6 @@ object ImageService {
     private fun getPath(uuid: UUID, type: ImageType) = "${uuid}_${type.name.lowercase()}.shikk"
     private fun getFile(uuid: UUID, type: ImageType) = File(Constant.imagesFolder, getPath(uuid, type))
 
-    fun loadCache() {
-        if (Constant.imagesFolder.listFiles().isNotEmpty()) {
-            logger.info("No need to load images cache, new system in place")
-            return
-        }
-
-        logger.info("Loading images cache...")
-
-        val take = measureTimeMillis {
-            (0..<4).forEach { index ->
-                loadCachePart(File(Constant.dataFolder, "images-cache-part-$index.shikk"))
-                System.gc()
-            }
-        }
-
-        logger.info("Loaded images cache in $take ms")
-    }
-
-    private fun loadCachePart(file: File) {
-        if (!file.exists()) {
-            return
-        }
-
-        logger.info("Loading images cache part...")
-
-        val take = measureTimeMillis {
-            val deserializedCache = FileManager.readFile<List<Media>>(file)
-
-            deserializedCache.forEach { media ->
-                FileManager.writeFile(getFile(media.uuid, media.type), media)
-            }
-        }
-
-        logger.info("Loaded images cache part in $take ms")
-    }
-
     private fun taskEncode(uuid: UUID, type: ImageType, url: String?, bytes: ByteArray?, media: Media) {
         val imageBytes = if (!url.isNullOrBlank() && (bytes == null || bytes.isEmpty())) {
             val (httpResponse, urlBytes) = runBlocking {
