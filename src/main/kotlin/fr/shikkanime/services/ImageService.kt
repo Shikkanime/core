@@ -4,6 +4,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.util.collections.*
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -34,7 +35,7 @@ object ImageService {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val nThreads = Runtime.getRuntime().availableProcessors()
     private var threadPool = Executors.newFixedThreadPool(nThreads)
-    private val cache = mutableMapOf<Pair<UUID, ImageType>, Pair<Media, Long>>()
+    private val cache = ConcurrentMap<Pair<UUID, ImageType>, Pair<Media, Long>>()
     private const val INVALIDATE_DELAY = 10 * 60 * 1000L
     private const val MAX_CACHE_SIZE = 100
 
@@ -162,15 +163,13 @@ object ImageService {
     }
 
     operator fun get(uuid: UUID, type: ImageType, bypass: Boolean = false): Media? {
-        val cacheKey = uuid to type
-
         if (!bypass) {
-            cache[cacheKey]?.let { (media, lastAccessDateTime) ->
+            cache[uuid to type]?.let { (media, lastAccessDateTime) ->
                 if (System.currentTimeMillis() - lastAccessDateTime < INVALIDATE_DELAY) {
                     return media
                 }
 
-                cache.remove(cacheKey)
+                cache.remove(uuid to type)
                 return get(uuid, type)
             }
         }
@@ -181,10 +180,12 @@ object ImageService {
         val media = FileManager.readFile<Media>(file)
 
         if (cache.size >= MAX_CACHE_SIZE) {
-            cache.entries.minByOrNull { it.value.second }?.key?.let { cache.remove(it) }
+            cache.entries.minByOrNull { it.value.second }?.key?.let {
+                cache.remove(it)
+            }
         }
 
-        cache[cacheKey] = media to System.currentTimeMillis()
+        cache[uuid to type] = media to System.currentTimeMillis()
         return media
     }
 
