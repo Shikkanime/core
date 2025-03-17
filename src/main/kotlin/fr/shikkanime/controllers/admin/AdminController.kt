@@ -1,7 +1,6 @@
 package fr.shikkanime.controllers.admin
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
@@ -76,7 +75,7 @@ class AdminController {
             Response.redirect("$ADMIN?error=1")
         }
 
-        return Response.redirect(Link.DASHBOARD.href, AbstractConverter.convert(user, TokenDto::class.java))
+        return Response.redirect(Link.DASHBOARD.href, TokenDto.build(user))
     }
 
     @Path("/logout")

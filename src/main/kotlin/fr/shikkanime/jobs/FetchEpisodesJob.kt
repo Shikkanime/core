@@ -1,12 +1,13 @@
 package fr.shikkanime.jobs
 
-import fr.shikkanime.converters.AbstractConverter
+import com.google.inject.Inject
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
@@ -14,7 +15,6 @@ import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
-import jakarta.inject.Inject
 import jakarta.persistence.Tuple
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
@@ -44,6 +44,9 @@ class FetchEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var mailService: MailService
+
+    @Inject
+    private lateinit var episodeVariantFactory: EpisodeVariantFactory
 
     override fun run() {
         if (isRunning) {
@@ -145,8 +148,7 @@ class FetchEpisodesJob : AbstractJob {
                     .takeIf { it.size < sizeLimit }
                     ?.groupBy { it.mapping?.uuid }
                     ?.forEach { (_, groupedEpisodes) ->
-                        val dtos = AbstractConverter.convert(groupedEpisodes, EpisodeVariantDto::class.java)!!
-                        sendToSocialNetworks(dtos)
+                        sendToSocialNetworks(groupedEpisodes.map { episodeVariantFactory.toDto(it) })
                     }
             }
     }

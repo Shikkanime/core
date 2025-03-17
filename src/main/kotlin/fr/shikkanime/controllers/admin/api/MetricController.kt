@@ -2,8 +2,7 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.MetricDto
+import fr.shikkanime.factories.impl.MetricFactory
 import fr.shikkanime.services.MetricService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
@@ -18,6 +17,9 @@ class MetricController {
     @Inject
     private lateinit var metricService: MetricService
 
+    @Inject
+    private lateinit var metricFactory: MetricFactory
+
     @Path
     @Get
     @AdminSessionAuthenticated
@@ -25,6 +27,6 @@ class MetricController {
         @QueryParam("hours") hours: Int?,
     ): Response {
         val xHourAgo = ZonedDateTime.now().minusHours(hours?.toLong() ?: 1)
-        return Response.ok(AbstractConverter.convert(metricService.findAllAfter(xHourAgo), MetricDto::class.java))
+        return Response.ok(metricService.findAllAfter(xHourAgo).map { metricFactory.toDto(it) })
     }
 }

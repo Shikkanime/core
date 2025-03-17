@@ -2,11 +2,10 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.TraceActionDto
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import fr.shikkanime.factories.impl.AnimeFactory
+import fr.shikkanime.factories.impl.EpisodeMappingFactory
+import fr.shikkanime.factories.impl.TraceActionFactory
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
@@ -27,6 +26,15 @@ class MemberController : HasPageableRoute() {
 
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+
+    @Inject
+    private lateinit var animeFactory: AnimeFactory
+
+    @Inject
+    private lateinit var traceActionFactory: TraceActionFactory
+
+    @Inject
+    private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     @Path
     @Get
@@ -65,7 +73,7 @@ class MemberController : HasPageableRoute() {
         return Response.ok(
             after.datesUntil(now.plusDays(1))
                 .toList()
-                .associateWith { date -> AbstractConverter.convert(actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }, TraceActionDto::class.java) }
+                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
         )
     }
 
@@ -83,7 +91,7 @@ class MemberController : HasPageableRoute() {
         return Response.ok(
             after.datesUntil(now.plusDays(1))
                 .toList()
-                .associateWith { date -> AbstractConverter.convert(actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }, TraceActionDto::class.java) }
+                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
         )
     }
 
@@ -101,7 +109,7 @@ class MemberController : HasPageableRoute() {
         return Response.ok(
             after.datesUntil(now.plusDays(1))
                 .toList()
-                .associateWith { date -> AbstractConverter.convert(actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }, TraceActionDto::class.java) }
+                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
         )
     }
 
@@ -125,7 +133,7 @@ class MemberController : HasPageableRoute() {
                     page,
                     limit,
                 ),
-                AnimeDto::class.java
+                animeFactory
             )
         )
     }
@@ -150,7 +158,7 @@ class MemberController : HasPageableRoute() {
                     page,
                     limit,
                 ),
-                EpisodeMappingDto::class.java
+                episodeMappingFactory
             )
         )
     }

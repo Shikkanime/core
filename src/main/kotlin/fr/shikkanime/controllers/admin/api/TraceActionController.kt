@@ -3,7 +3,7 @@ package fr.shikkanime.controllers.admin.api
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.TraceActionDto
+import fr.shikkanime.factories.impl.TraceActionFactory
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
@@ -14,6 +14,9 @@ import java.time.ZonedDateTime
 class TraceActionController : HasPageableRoute() {
     @Inject
     private lateinit var traceActionService: TraceActionService
+
+    @Inject
+    private lateinit var traceActionFactory: TraceActionFactory
 
     @Path
     @Get
@@ -29,7 +32,7 @@ class TraceActionController : HasPageableRoute() {
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), TraceActionDto::class.java))
+        return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), traceActionFactory))
     }
 
     @Path("/login-counts")

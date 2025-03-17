@@ -10,6 +10,7 @@ import fr.shikkanime.socialnetworks.AbstractSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.routes.Controller
+import org.reflections.Reflections
 
 class DefaultModule : AbstractModule() {
     override fun configure() {
@@ -24,6 +25,10 @@ class DefaultModule : AbstractModule() {
             Constant.reflections.getSubTypesOf(AbstractSocialNetwork::class.java),
             Constant.reflections.getSubTypesOf(AbstractCacheService::class.java),
         ).flatten().forEach {
+            bind(it).asEagerSingleton()
+        }
+
+        Reflections("fr.shikkanime.factories.impl").getSubTypesOf(Any::class.java).forEach {
             bind(it).asEagerSingleton()
         }
     }

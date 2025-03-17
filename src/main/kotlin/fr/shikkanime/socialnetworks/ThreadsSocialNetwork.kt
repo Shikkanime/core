@@ -54,7 +54,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                     ThreadsWrapper.PostType.IMAGE,
                     message,
                     imageUrl = "${Constant.apiUrl}/v1/episode-mappings/${episodes.first().uuid}/media-image",
-                    altText = "Image de l'épisode ${episodes.first().mapping.number} de ${episodes.first().mapping.anime.shortName}"
+                    altText = "Image de l'épisode ${episodes.first().mapping!!.number} de ${episodes.first().mapping!!.anime!!.shortName}"
                 )
 
                 val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)

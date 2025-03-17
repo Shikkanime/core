@@ -1,8 +1,8 @@
 package fr.shikkanime.dtos.weekly
 
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.PlatformDto
-import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
+import fr.shikkanime.dtos.animes.AnimeDto
+import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 
@@ -17,5 +17,5 @@ data class WeeklyAnimeDto(
     val minNumber: Int? = null,
     val maxNumber: Int? = null,
     val number: Int? = null,
-    val mappings: Set<EpisodeMappingWithoutAnimeDto>? = null
+    val mappings: Set<EpisodeMappingDto>? = null
 )

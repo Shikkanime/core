@@ -5,10 +5,7 @@ import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
@@ -16,6 +13,7 @@ import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
@@ -35,6 +33,9 @@ class AnimeCacheService : AbstractCacheService {
     @Inject
     private lateinit var memberCacheService: MemberCacheService
 
+    @Inject
+    private lateinit var animeFactory: AnimeFactory
+
     fun findAll() = MapCache.getOrCompute(
         "AnimeCacheService.findAll",
         classes = listOf(Anime::class.java),
@@ -48,11 +49,10 @@ class AnimeCacheService : AbstractCacheService {
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>? = null,
-        status: Status? = null,
     ) = MapCache.getOrCompute(
         "AnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes, status),
+        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes),
     ) {
         PageableDto.fromPageable(
             animeService.findAllBy(
@@ -62,9 +62,8 @@ class AnimeCacheService : AbstractCacheService {
                 it.page,
                 it.limit,
                 it.searchTypes,
-                it.status
             ),
-            AnimeDto::class.java
+            animeFactory
         )
     }
 
@@ -76,7 +75,7 @@ class AnimeCacheService : AbstractCacheService {
         ) {
             PageableDto.fromPageable(
                 animeService.findAllByName(it.countryCode, it.name, it.page, it.limit, it.searchTypes),
-                AnimeDto::class.java
+                animeFactory
             )
         }
 
@@ -103,9 +102,7 @@ class AnimeCacheService : AbstractCacheService {
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeIdKeyCache(countryCode, slug),
     ) {
-        animeService.findBySlug(it.countryCode, it.id)?.let { anime ->
-            AbstractConverter.convert(anime, AnimeDto::class.java)
-        }
+        animeService.findBySlug(it.countryCode, it.id)?.let { anime -> animeFactory.toDto(anime) }
     }
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =

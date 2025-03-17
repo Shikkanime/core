@@ -1,5 +1,6 @@
 package fr.shikkanime.platforms
 
+import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -7,7 +8,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.MapCache
-import jakarta.inject.Inject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

@@ -177,7 +177,7 @@ class SiteController {
         ) ?: return Response.notFound()
 
         val title =
-            currentDto.anime.shortName + " - ${StringUtils.toEpisodeMappingString(currentDto, separator = false)}"
+            currentDto.anime!!.shortName + " - ${StringUtils.toEpisodeMappingString(currentDto, separator = false)}"
 
         return Response.template(
             "/site/episodeDetails.ftl",

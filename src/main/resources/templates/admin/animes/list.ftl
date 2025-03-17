@@ -7,7 +7,6 @@
         page: 1,
         maxPage: 1,
         search: '',
-        invalid: false,
         pages: [],
         async init() {
             await this.fetchAnimes();
@@ -19,7 +18,7 @@
             }
 
             this.loading = true;
-            this.pageable = await getAnimes(this.search, this.page, this.invalid);
+            this.pageable = await getAnimes(this.search, this.page);
             this.loading = false;
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
         },
@@ -67,11 +66,6 @@
                 <input type="text" class="form-control" id="nameInput"
                        x-model="search" @input="applyFilters">
             </div>
-            <div class="col-auto">
-                <input class="form-check-input" type="checkbox" id="invalidInput"
-                       x-model="invalid" @change="applyFilters">
-                <label class="form-check-label" for="invalidInput">Only invalid</label>
-            </div>
             <div class="col-auto ms-auto">
                 <a class="btn btn-primary" href="/admin/api/animes/force-update-all">
                     <i class="bi bi-check-all me-2"></i>
@@ -91,11 +85,7 @@
             <tbody class="table-group-divider">
             <template x-for="anime in pageable.data">
                 <tr>
-                    <th scope="row">
-                        <span class="me-1 badge"
-                              :class="anime.status === 'INVALID' ? 'bg-danger' : 'bg-success'"
-                              x-text="anime.status === 'INVALID' ? 'Invalid' : 'Valid'"></span>
-                        <span x-text="anime.shortName"></span>
+                    <th scope="row" x-text="anime.shortName">
                     </th>
                     <td x-text="anime.description"></td>
                     <td>
@@ -129,17 +119,13 @@
     </div>
 
     <script>
-        async function getAnimes(name, page, invalid) {
+        async function getAnimes(name, page) {
             let params = new URLSearchParams({
                 sort: 'releaseDateTime',
                 desc: 'releaseDateTime',
                 page: page || 1,
                 limit: 7
             });
-
-            if (invalid) {
-                params.append('status', 'INVALID');
-            }
 
             if (name) {
                 params = new URLSearchParams({

@@ -6,7 +6,7 @@ import java.util.*
 
 data class EpisodeVariantDto(
     val uuid: UUID,
-    val mapping: EpisodeMappingDto,
+    val mapping: EpisodeMappingDto?,
     val releaseDateTime: String,
     val platform: PlatformDto,
     val audioLocale: String,

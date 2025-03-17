@@ -3,10 +3,7 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.dtos.variants.SeparateVariantDto
 import fr.shikkanime.entities.*
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -73,7 +70,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
         val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
-        val simulcasts = adjustedDates.map { Simulcast(season = Constant.seasons[(it.monthValue - 1) / 3], year = it.year) }
+        val simulcasts = adjustedDates.map { Simulcast(season = Season.entries[(it.monthValue - 1) / 3], year = it.year) }
         val (previousSimulcast, currentSimulcast, nextSimulcast) = simulcasts
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime < adjustedDates.first()
 
@@ -129,9 +126,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     banner = episode.animeBanner,
                     description = episode.animeDescription,
                     slug = slug
-                ).apply {
-                    status = StringUtils.getStatus(this)
-                }
+                )
             )
 
         if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null && (rules.isEmpty() || rules.any { rule -> rule.action != Rule.Action.REPLACE_ANIME_NAME })) {
@@ -207,9 +202,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 title = episode.title,
                 description = episode.description?.take(Constant.MAX_DESCRIPTION_LENGTH),
                 image = episode.image,
-            ).apply {
-                status = StringUtils.getStatus(this)
-            }
+            )
         )
 
         episode.number.takeIf { it == -1 }?.let {
@@ -264,7 +257,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         }
 
         if (needAnimeUpdate) {
-            anime.status = StringUtils.getStatus(anime)
             animeService.update(anime)
         }
     }

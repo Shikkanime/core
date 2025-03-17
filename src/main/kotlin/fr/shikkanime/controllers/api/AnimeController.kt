@@ -2,7 +2,6 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.MessageDto
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.caches.AnimeCacheService
@@ -43,8 +42,6 @@ class AnimeController : HasPageableRoute() {
         sortParam: String?,
         @QueryParam("desc")
         descParam: String?,
-        @QueryParam("status")
-        statusParam: Status?,
         @QueryParam("searchTypes")
         searchTypes: Array<LangType>?,
     ): Response {
@@ -88,8 +85,7 @@ class AnimeController : HasPageableRoute() {
                     sortParameters,
                     page,
                     limit,
-                    searchTypes,
-                    statusParam
+                    searchTypes
                 )
             }
         )
