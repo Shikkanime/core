@@ -9,7 +9,6 @@ import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Post
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
@@ -22,7 +21,6 @@ class EpisodeVariantController : HasPageableRoute() {
     @Path("/{uuid}/separate")
     @Post
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun separateVariant(
         @PathParam("uuid") uuid: UUID,
         @BodyParam separateVariantDto: SeparateVariantDto

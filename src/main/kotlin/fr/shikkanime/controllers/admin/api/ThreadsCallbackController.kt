@@ -15,7 +15,6 @@ import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.QueryParam
 import fr.shikkanime.wrappers.ThreadsWrapper
 import kotlinx.coroutines.runBlocking
@@ -31,7 +30,6 @@ class ThreadsCallbackController {
     @Path
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun callback(
         @QueryParam("code") code: String,
     ): Response {

@@ -10,7 +10,6 @@ import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.ZonedDateTime
 
@@ -22,7 +21,6 @@ class MetricController {
     @Path
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMetrics(
         @QueryParam("hours") hours: Int?,
     ): Response {

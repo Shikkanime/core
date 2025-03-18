@@ -15,7 +15,6 @@ import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Put
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
@@ -40,7 +39,6 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
@@ -50,7 +48,6 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
         val updated = animeService.update(uuid, animeDto)
         MapCache.invalidate(Anime::class.java)
@@ -60,7 +57,6 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Delete
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun deleteAnime(@PathParam("uuid") uuid: UUID): Response {
         animeService.delete(animeService.find(uuid) ?: return Response.notFound())
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
@@ -70,11 +66,10 @@ class AnimeController : HasPageableRoute() {
     @Path("/alerts")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getAlerts(
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
