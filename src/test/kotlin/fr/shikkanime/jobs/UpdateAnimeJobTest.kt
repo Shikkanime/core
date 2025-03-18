@@ -115,11 +115,11 @@ class UpdateAnimeJobTest : AbstractTest() {
         val anime = animes.first()
 
         assertEquals(
-            "https://image.animationdigitalnetwork.fr/license/mydeerfriendnokotan/tv/web/affiche_1560x2340.jpg",
+            "https://image.animationdigitalnetwork.com/license/mydeerfriendnokotan/tv/web/affiche_1560x2340.jpg",
             anime.image
         )
         assertEquals(
-            "https://image.animationdigitalnetwork.fr/license/mydeerfriendnokotan/tv/web/license_1920x1080.jpg",
+            "https://image.animationdigitalnetwork.com/license/mydeerfriendnokotan/tv/web/license_1920x1080.jpg",
             anime.banner
         )
         assertEquals(
@@ -253,8 +253,8 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/affiche_1560x2340.jpg", anime.image)
-        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefishmansaga/tv/web/license_1920x1080.jpg", anime.banner)
+        assertEquals("https://image.animationdigitalnetwork.com/license/onepiecefishmansaga/tv/web/affiche_1560x2340.jpg", anime.image)
+        assertEquals("https://image.animationdigitalnetwork.com/license/onepiecefishmansaga/tv/web/license_1920x1080.jpg", anime.banner)
         assertEquals("Après deux ans de séparation, le grand jour est enfin arrivé : l’équipage du Chapeau de paille se réunit à nouveau sur l’archipel Sabaody. Forts de leur expérience et prêts à affronter le Nouveau Monde, ils se préparent à naviguer sous l’eau, avec un Thousand Sunny désormais équipé pour atteindre leur prochaine destination : l’Île des Hommes-Poissons, un paradis sous-marin à plus de 10 000 mètres de profondeur !", anime.description)
     }
 
@@ -305,8 +305,8 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assertEquals("https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/affiche_1560x2340.jpg", anime.image)
-        assertEquals("https://image.animationdigitalnetwork.fr/license/dandadan/tv/web/license_1920x1080.jpg", anime.banner)
+        assertEquals("https://image.animationdigitalnetwork.com/license/dandadan/tv/web/affiche_1560x2340.jpg", anime.image)
+        assertEquals("https://image.animationdigitalnetwork.com/license/dandadan/tv/web/license_1920x1080.jpg", anime.banner)
         assertEquals("Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…", anime.description)
     }
 
@@ -377,8 +377,8 @@ class UpdateAnimeJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val anime = animes.first()
 
-        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefanletter/tv/web/affiche_1560x2340.jpg", anime.image)
-        assertEquals("https://image.animationdigitalnetwork.fr/license/onepiecefanletter/tv/web/license_1920x1080.jpg", anime.banner)
+        assertEquals("https://image.animationdigitalnetwork.com/license/onepiecefanletter/tv/web/affiche_1560x2340.jpg", anime.image)
+        assertEquals("https://image.animationdigitalnetwork.com/license/onepiecefanletter/tv/web/license_1920x1080.jpg", anime.banner)
         assertEquals("L’intrigue se déroule sur l’île de Sabaody, deux ans après la bataille de Marine Ford, où Luffy a tragiquement perdu son frère, Ace. Une jeune fille, fascinée par Nami, entreprend alors une aventure hors du commun.", anime.description)
     }
 }
