@@ -2,9 +2,7 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.MessageDto
-import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.caches.AnimeCacheService
@@ -12,8 +10,6 @@ import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.openapi.OpenAPI
-import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -30,55 +26,26 @@ class AnimeController : HasPageableRoute() {
     @Path
     @Get
     @JWTAuthenticated(optional = true)
-    @OpenAPI(
-        "Get animes",
-        [
-            OpenAPIResponse(
-                200,
-                "Animes found",
-                PageableDto::class,
-            ),
-            OpenAPIResponse(401, "Unauthorized"),
-            OpenAPIResponse(
-                409,
-                "You can't use simulcast and name at the same time OR You can't use sort and desc with name",
-                MessageDto::class
-            ),
-        ],
-        security = true
-    )
     private fun getAll(
         @JWTUser
         memberUuid: UUID?,
-        @QueryParam("name", description = "Name to filter by")
+        @QueryParam("name")
         name: String?,
-        @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
+        @QueryParam("country")
         countryParam: CountryCode?,
-        @QueryParam("simulcast", description = "UUID of the simulcast to filter by", type = UUID::class)
+        @QueryParam("simulcast")
         simulcastParam: UUID?,
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
-        @QueryParam(
-            "sort",
-            description = "Comma separated list of fields\n" +
-                    "\n" +
-                    "Possible values:\n" +
-                    "- name\n" +
-                    "- releaseDateTime\n" +
-                    "- lastReleaseDateTime",
-            example = "name"
-        )
+        @QueryParam("sort")
         sortParam: String?,
-        @QueryParam(
-            "desc",
-            description = "A comma-separated list of fields to sort in descending order",
-        )
+        @QueryParam("desc")
         descParam: String?,
-        @QueryParam("status", description = "Status to filter by", type = Status::class)
+        @QueryParam("status")
         statusParam: Status?,
-        @QueryParam("searchTypes", description = "Search types to filter by", type = LangType::class)
+        @QueryParam("searchTypes")
         searchTypes: Array<LangType>?,
     ): Response {
         if (simulcastParam != null && name != null) {
@@ -131,25 +98,12 @@ class AnimeController : HasPageableRoute() {
     @Path("/weekly")
     @Get
     @JWTAuthenticated(optional = true)
-    @OpenAPI(
-        "Get weekly anime",
-        [
-            OpenAPIResponse(200, "Weekly anime found", Array<WeeklyAnimesDto>::class),
-            OpenAPIResponse(400, "Invalid week format", MessageDto::class),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
     fun getWeekly(
         @JWTUser
         memberUuid: UUID?,
-        @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
+        @QueryParam("country")
         countryParam: CountryCode?,
-        @QueryParam(
-            "date",
-            description = "Date to filter by. Format: yyyy-MM-dd",
-            example = "2021-01-01"
-        )
+        @QueryParam("date")
         dateParam: String?,
     ): Response {
         val startOfWeekDay = try {
@@ -170,23 +124,11 @@ class AnimeController : HasPageableRoute() {
     @Path("/missed")
     @Get
     @JWTAuthenticated
-    @OpenAPI(
-        "Get missed animes",
-        [
-            OpenAPIResponse(
-                200,
-                "Get missed animes",
-                PageableDto::class,
-            ),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
     private fun getMissedAnimes(
         @JWTUser uuid: UUID,
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)

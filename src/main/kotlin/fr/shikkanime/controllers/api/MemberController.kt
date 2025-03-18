@@ -1,9 +1,7 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.AllFollowedEpisodeDto
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
@@ -16,8 +14,6 @@ import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.method.Put
-import fr.shikkanime.utils.routes.openapi.OpenAPI
-import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
@@ -41,12 +37,6 @@ class MemberController : HasPageableRoute() {
 
     @Path("/register")
     @Post
-    @OpenAPI(
-        description = "Register member",
-        responses = [
-            OpenAPIResponse(201, "Member registered", Map::class),
-        ]
-    )
     private fun registerMember(): Response {
         var identifier: String
 
@@ -61,13 +51,10 @@ class MemberController : HasPageableRoute() {
 
     @Path("/login")
     @Post
-    @OpenAPI(
-        description = "Login member",
-        responses = [
-            OpenAPIResponse(200, "Member logged in"),
-        ]
-    )
-    private fun loginMember(@BodyParam identifier: String): Response {
+    private fun loginMember(
+        @BodyParam
+        identifier: String
+    ): Response {
         return Response.ok(memberService.login(identifier) ?: return runBlocking {
             delay(1000)
             Response.notFound()
@@ -77,15 +64,11 @@ class MemberController : HasPageableRoute() {
     @Path("/associate-email")
     @Post
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Associate email to member",
-        responses = [
-            OpenAPIResponse(201, "Member action created", GenericDto::class),
-            OpenAPIResponse(401, "Unauthorized"),
-        ],
-        security = true
-    )
-    private fun associateEmail(@JWTUser memberUuid: UUID, @BodyParam email: String): Response {
+    private fun associateEmail(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam email: String
+    ): Response {
         // Verify email
         if (!StringUtils.isValidEmail(email)) {
             return Response.badRequest("Invalid email")
@@ -101,15 +84,12 @@ class MemberController : HasPageableRoute() {
     @Path("/forgot-identifier")
     @Post
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Forgot identifier",
-        responses = [
-            OpenAPIResponse(200, "Code to reset identifier sent", GenericDto::class),
-            OpenAPIResponse(401, "Unauthorized"),
-        ],
-        security = true
-    )
-    private fun forgotIdentifier(@JWTUser memberUuid: UUID, @BodyParam email: String): Response {
+    private fun forgotIdentifier(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        email: String
+    ): Response {
         // Verify email
         if (!StringUtils.isValidEmail(email)) {
             return Response.badRequest("Invalid email")
@@ -133,91 +113,72 @@ class MemberController : HasPageableRoute() {
     @Path("/animes")
     @Put
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Follow an anime",
-        responses = [
-            OpenAPIResponse(200, "Anime followed successfully"),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
-    private fun followAnime(@JWTUser memberUuid: UUID, @BodyParam anime: GenericDto): Response {
+    private fun followAnime(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        anime: GenericDto
+    ): Response {
         return memberFollowAnimeService.follow(memberUuid, anime)
     }
 
     @Path("/animes")
     @Delete
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Unfollow an anime",
-        responses = [
-            OpenAPIResponse(200, "Anime unfollowed successfully"),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
-    private fun unfollowAnime(@JWTUser memberUuid: UUID, @BodyParam anime: GenericDto): Response {
+    private fun unfollowAnime(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        anime: GenericDto
+    ): Response {
         return memberFollowAnimeService.unfollow(memberUuid, anime)
     }
 
     @Path("/follow-all-episodes")
     @Put
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Follow all episodes of an anime",
-        responses = [
-            OpenAPIResponse(200, "Episodes followed successfully", AllFollowedEpisodeDto::class),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
-    private fun followAllEpisodes(@JWTUser memberUuid: UUID, @BodyParam anime: GenericDto): Response {
+    private fun followAllEpisodes(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        anime: GenericDto
+    ): Response {
         return memberFollowEpisodeService.followAll(memberUuid, anime)
     }
 
     @Path("/episodes")
     @Put
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Follow an episode",
-        responses = [
-            OpenAPIResponse(200, "Episode followed successfully"),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
-    private fun followEpisode(@JWTUser memberUuid: UUID, @BodyParam episode: GenericDto): Response {
+    private fun followEpisode(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        episode: GenericDto
+    ): Response {
         return memberFollowEpisodeService.follow(memberUuid, episode)
     }
 
     @Path("/episodes")
     @Delete
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Unfollow an episode",
-        responses = [
-            OpenAPIResponse(200, "Episode unfollowed successfully"),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
-    private fun unfollowEpisode(@JWTUser memberUuid: UUID, @BodyParam episode: GenericDto): Response {
+    private fun unfollowEpisode(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        episode: GenericDto
+    ): Response {
         return memberFollowEpisodeService.unfollow(memberUuid, episode)
     }
 
     @Path("/image")
     @Post
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Upload an profile image",
-        responses = [
-            OpenAPIResponse(200, "Profile image uploaded successfully"),
-            OpenAPIResponse(400, "Invalid file format"),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
-    private fun uploadProfileImage(@JWTUser memberUuid: UUID, @BodyParam multiPartData: MultiPartData): Response {
+    private fun uploadProfileImage(
+        @JWTUser
+        memberUuid: UUID,
+        @BodyParam
+        multiPartData: MultiPartData
+    ): Response {
         try {
             runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
         } catch (e: Exception) {
@@ -231,18 +192,10 @@ class MemberController : HasPageableRoute() {
     @Path("/refresh")
     @Get
     @JWTAuthenticated
-    @OpenAPI(
-        description = "Get member data after a watchlist modification",
-        responses = [
-            OpenAPIResponse(200, "Member data refreshed", RefreshMemberDto::class),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
     private fun getRefreshMember(
         @JWTUser
         memberUuid: UUID,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "9")
+        @QueryParam("limit")
         limitParam: Int?,
     ): Response {
         val (_, limit, _) = pageableRoute(null, limitParam, null, null, defaultLimit = 9)

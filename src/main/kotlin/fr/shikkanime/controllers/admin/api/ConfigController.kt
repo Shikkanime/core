@@ -14,7 +14,6 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Put
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
@@ -28,7 +27,6 @@ class ConfigController {
     @Path
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getConfigs(
         @QueryParam("name") nameParam: String?,
     ): Response {
@@ -44,7 +42,6 @@ class ConfigController {
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
         configService.update(uuid, configDto)
         MapCache.invalidate(Config::class.java)

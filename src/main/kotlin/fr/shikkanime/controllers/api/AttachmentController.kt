@@ -9,8 +9,6 @@ import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.openapi.OpenAPI
-import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 import java.util.*
@@ -20,36 +18,10 @@ class AttachmentController {
     @Path
     @Get
     @Cached(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION)
-    @OpenAPI(
-        "Get attachment",
-        [
-            OpenAPIResponse(
-                200,
-                "Attachment found",
-                ByteArray::class,
-                "image/webp"
-            ),
-            OpenAPIResponse(
-                404,
-                "Attachment not found",
-                MessageDto::class,
-            ),
-        ]
-    )
     private fun getAttachment(
-        @QueryParam(
-            "uuid",
-            description = "UUID of the attachment",
-            required = true,
-            type = UUID::class
-        )
+        @QueryParam("uuid")
         uuid: UUID?,
-        @QueryParam(
-            "type",
-            description = "Type of the attachment",
-            example = "THUMBNAIL",
-            type = ImageType ::class
-        )
+        @QueryParam("type")
         typeString: String?
     ): Response {
         if (uuid == null) {

@@ -1,6 +1,4 @@
 val ktorVersion = "3.1.1"
-val ktorSwaggerUiVersion = "4.0.0"
-val schemaKenerator = "1.6.5"
 val hibernateCoreVersion = "6.6.10.Final"
 val ehcacheVersion = "3.10.8"
 val hibernateSearchVersion = "7.2.2.Final"
@@ -78,10 +76,6 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
 
-    implementation("io.github.smiley4:ktor-swagger-ui:$ktorSwaggerUiVersion")
-    implementation("io.github.smiley4:schema-kenerator-core:$schemaKenerator")
-    implementation("io.github.smiley4:schema-kenerator-reflection:$schemaKenerator")
-    implementation("io.github.smiley4:schema-kenerator-swagger:$schemaKenerator")
     implementation("org.hibernate.orm:hibernate-core:$hibernateCoreVersion")
     implementation("org.hibernate.orm:hibernate-jcache:$hibernateCoreVersion")
     implementation("org.ehcache:ehcache:$ehcacheVersion")

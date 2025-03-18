@@ -12,7 +12,6 @@ import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.LocalDate
@@ -32,11 +31,10 @@ class MemberController : HasPageableRoute() {
     @Path
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMembers(
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
@@ -46,9 +44,8 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMember(
-        @PathParam("memberUuid", description = "Member UUID")
+        @PathParam("memberUuid")
         memberUuid: UUID
     ): Response {
         return Response.ok(memberService.findDetailedMember(memberUuid) ?: return Response.notFound())
@@ -57,9 +54,8 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/login-activities")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMemberLoginActivities(
-        @PathParam("memberUuid", description = "Member UUID")
+        @PathParam("memberUuid")
         memberUuid: UUID
     ): Response {
         val now = LocalDate.now()
@@ -76,9 +72,8 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/follow-anime-activities")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMemberFollowAnimeActivities(
-        @PathParam("memberUuid", description = "Member UUID")
+        @PathParam("memberUuid")
         memberUuid: UUID
     ): Response {
         val now = LocalDate.now()
@@ -95,9 +90,8 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/follow-episode-activities")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMemberFollowEpisodeActivities(
-        @PathParam("memberUuid", description = "Member UUID")
+        @PathParam("memberUuid")
         memberUuid: UUID
     ): Response {
         val now = LocalDate.now()
@@ -114,13 +108,12 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/animes")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMemberAnimes(
-        @PathParam("memberUuid", description = "Member UUID")
+        @PathParam("memberUuid")
         memberUuid: UUID,
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
@@ -140,13 +133,12 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/episode-mappings")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getMemberEpisodeMappings(
-        @PathParam("memberUuid", description = "Member UUID")
+        @PathParam("memberUuid")
         memberUuid: UUID,
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)

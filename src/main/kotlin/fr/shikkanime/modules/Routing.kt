@@ -19,12 +19,6 @@ import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.github.smiley4.ktorswaggerui.dsl.routing.delete
-import io.github.smiley4.ktorswaggerui.dsl.routing.get
-import io.github.smiley4.ktorswaggerui.dsl.routing.post
-import io.github.smiley4.ktorswaggerui.dsl.routing.put
-import io.github.smiley4.ktorswaggerui.routing.openApiSpec
-import io.github.smiley4.ktorswaggerui.routing.swaggerUI
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -72,14 +66,6 @@ fun Application.configureRouting() {
         staticResources("/assets", "assets") {
             preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
             cacheControl { listOf(CacheControl.MaxAge(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION)) }
-        }
-
-        route("/api/openapi.json") {
-            openApiSpec()
-        }
-
-        route("/api/swagger") {
-            swaggerUI("/api/openapi.json")
         }
 
         createRoutes()
@@ -168,17 +154,14 @@ private fun Route.handleMethods(
     controller: Any,
     path: String,
 ) {
-    val routeTags = listOf(controller.javaClass.simpleName.replace("Controller", ""))
-    val hiddenRoute = !"$prefix$path".startsWith("/api")
-    val swaggerBuilder = swagger(method, routeTags, hiddenRoute)
     val routeHandler: suspend RoutingContext.() -> Unit =
         { handleRequest(call, method, prefix, controller, path) }
 
     when {
-        method.hasAnnotation<Get>() -> get(path, swaggerBuilder, routeHandler)
-        method.hasAnnotation<Post>() -> post(path, swaggerBuilder, routeHandler)
-        method.hasAnnotation<Put>() -> put(path, swaggerBuilder, routeHandler)
-        method.hasAnnotation<Delete>() -> delete(path, swaggerBuilder, routeHandler)
+        method.hasAnnotation<Get>() -> get(path, routeHandler)
+        method.hasAnnotation<Post>() -> post(path, routeHandler)
+        method.hasAnnotation<Put>() -> put(path, routeHandler)
+        method.hasAnnotation<Delete>() -> delete(path, routeHandler)
     }
 }
 

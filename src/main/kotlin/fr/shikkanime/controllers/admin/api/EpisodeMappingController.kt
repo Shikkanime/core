@@ -18,7 +18,6 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Put
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
@@ -31,7 +30,6 @@ class EpisodeMappingController {
     @Path("/update-all")
     @Put
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun updateAllEpisode(
         @BodyParam updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto
     ): Response {
@@ -57,7 +55,6 @@ class EpisodeMappingController {
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun read(@PathParam("uuid") uuid: UUID): Response {
         val find = episodeMappingService.find(uuid) ?: return Response.notFound()
         return Response.ok(AbstractConverter.convert(find, EpisodeMappingDto::class.java))
@@ -66,7 +63,6 @@ class EpisodeMappingController {
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun updateEpisode(
         @PathParam("uuid") uuid: UUID,
         @BodyParam episodeMappingDto: EpisodeMappingDto
@@ -79,7 +75,6 @@ class EpisodeMappingController {
     @Path("/{uuid}")
     @Delete
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun deleteEpisode(@PathParam("uuid") uuid: UUID): Response {
         episodeMappingService.delete(episodeMappingService.find(uuid) ?: return Response.notFound())
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)

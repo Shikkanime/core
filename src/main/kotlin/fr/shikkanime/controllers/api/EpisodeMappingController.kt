@@ -2,7 +2,6 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.CountryCode
@@ -12,8 +11,6 @@ import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.openapi.OpenAPI
-import fr.shikkanime.utils.routes.openapi.OpenAPIResponse
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
@@ -35,52 +32,24 @@ class EpisodeMappingController : HasPageableRoute() {
     @Path
     @Get
     @JWTAuthenticated(optional = true)
-    @OpenAPI(
-        "Get episode mappings",
-        [
-            OpenAPIResponse(
-                200,
-                "Episode mappings found",
-                PageableDto::class,
-            ),
-            OpenAPIResponse(401, "Unauthorized")
-        ],
-        security = true
-    )
     private fun getAll(
         @JWTUser
         memberUuid: UUID?,
-        @QueryParam("country", description = "Country code to filter by", example = "FR", type = CountryCode::class)
+        @QueryParam("country")
         countryParam: CountryCode?,
-        @QueryParam("anime", description = "UUID of the anime to filter by")
+        @QueryParam("anime")
         animeParam: UUID?,
-        @QueryParam("season", description = "Season number to filter by")
+        @QueryParam("season")
         seasonParam: Int?,
-        @QueryParam("page", description = "Page number for pagination")
+        @QueryParam("page")
         pageParam: Int?,
-        @QueryParam("limit", description = "Number of items per page. Must be between 1 and 30", example = "15")
+        @QueryParam("limit")
         limitParam: Int?,
-        @QueryParam(
-            "sort",
-            description = "Comma separated list of fields\n" +
-                    "\n" +
-                    "Possible values:\n" +
-                    "- episodeType\n" +
-                    "- releaseDateTime\n" +
-                    "- lastReleaseDateTime\n" +
-                    "- season\n" +
-                    "- number\n" +
-                    "- animeName",
-            example = "lastReleaseDateTime,animeName,season,episodeType,number"
-        )
+        @QueryParam("sort")
         sortParam: String?,
-        @QueryParam(
-            "desc",
-            description = "A comma-separated list of fields to sort in descending order",
-            example = "lastReleaseDateTime,animeName,season,episodeType,number"
-        )
+        @QueryParam("desc")
         descParam: String?,
-        @QueryParam("status", description = "Status to filter by", type = Status::class)
+        @QueryParam("status")
         statusParam: Status?,
     ): Response {
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
@@ -110,15 +79,9 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/{uuid}/media-image")
     @Get
-    @OpenAPI(
-        "Get episode variant image published on social networks",
-        [
-            OpenAPIResponse(200, "Image found", contentType = "image/jpeg"),
-            OpenAPIResponse(404, "Image not found")
-        ]
-    )
     private fun getMediaImage(
-        @PathParam("uuid", description = "UUID of the episode variant") uuid: UUID
+        @PathParam("uuid")
+        uuid: UUID
     ): Response {
         val episodeVariant = episodeVariantService.find(uuid) ?: return Response.notFound()
 

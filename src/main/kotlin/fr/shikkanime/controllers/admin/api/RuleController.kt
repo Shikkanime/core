@@ -14,7 +14,6 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
-import fr.shikkanime.utils.routes.openapi.OpenAPI
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
@@ -27,7 +26,6 @@ class RuleController {
     @Path
     @Get
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun getRules(): Response {
         return Response.ok(AbstractConverter.convert(ruleService.findAll(), RuleDto::class.java))
     }
@@ -35,7 +33,6 @@ class RuleController {
     @Path
     @Post
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun createRule(@BodyParam ruleDto: RuleDto): Response {
         if (ruleDto.uuid != null) {
             return Response.badRequest("UUID must be null")
@@ -50,7 +47,6 @@ class RuleController {
     @Path("/{uuid}")
     @Delete
     @AdminSessionAuthenticated
-    @OpenAPI(hidden = true)
     private fun deleteRule(@PathParam("uuid") uuid: UUID): Response {
         val rule = ruleService.find(uuid) ?: return Response.notFound()
         ruleService.delete(rule)
