@@ -10,11 +10,15 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.RuleCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeVariantService")
+
     @Inject
     private lateinit var episodeVariantRepository: EpisodeVariantRepository
 
@@ -51,7 +55,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
     fun findAllVariantReleases(countryCode: CountryCode, member: Member?, startZonedDateTime: ZonedDateTime, endZonedDateTime: ZonedDateTime) =
-        episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime)
+        tracer.span { episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime) }
 
     fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
 

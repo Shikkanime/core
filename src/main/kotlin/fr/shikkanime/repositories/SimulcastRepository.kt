@@ -5,29 +5,36 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.Simulcast_
 import fr.shikkanime.entities.enums.Season
 import jakarta.persistence.Tuple
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 
 class SimulcastRepository : AbstractRepository<Simulcast>() {
+    private val tracer = TelemetryConfig.getTracer("SimulcastRepository")
+
     override fun getEntityClass() = Simulcast::class.java
 
     fun findAllModified(): List<Tuple> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+        return tracer.span {
+            database.entityManager.use {
+                val cb = it.criteriaBuilder
+                val query = cb.createTupleQuery()
 
-            val root = query.from(getEntityClass())
-            val animeJoin = root.join(Simulcast_.animes)
+                val root = query.from(getEntityClass())
+                val animeJoin = root.join(Simulcast_.animes)
 
-            query.multiselect(
-                root,
-                cb.greatest(animeJoin[Anime_.releaseDateTime]),
-                cb.count(animeJoin)
-            )
+                query.multiselect(
+                        root,
+                        cb.greatest(animeJoin[Anime_.releaseDateTime]),
+                        cb.count(animeJoin)
+                    )
 
-            query.groupBy(root)
-            query.orderBy(cb.desc(cb.greatest(animeJoin[Anime_.releaseDateTime])))
 
-            createReadOnlyQuery(it, query)
-                .resultList
+                query.groupBy(root)
+                query.orderBy(cb.desc(cb.greatest(animeJoin[Anime_.releaseDateTime])))
+
+                createReadOnlyQuery(it, query)
+                    .resultList
+            }
         }
     }
 

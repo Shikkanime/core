@@ -8,8 +8,13 @@ import fr.shikkanime.factories.impl.SimulcastFactory
 import fr.shikkanime.repositories.SimulcastRepository
 import fr.shikkanime.utils.withUTCString
 import java.time.ZonedDateTime
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
+    private val tracer = TelemetryConfig.getTracer("SimulcastService")
+
     @Inject
     private lateinit var simulcastRepository: SimulcastRepository
 
@@ -21,13 +26,15 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun getRepository() = simulcastRepository
 
-    fun findAllModified() = simulcastRepository.findAllModified()
-        .sortedWith(compareBy({ it[0, Simulcast::class.java].year }, { Season.entries.indexOf(it[0, Simulcast::class.java].season) }))
-        .reversed()
-        .map { simulcastFactory.toDto(it[0, Simulcast::class.java]).apply {
-            lastReleaseDateTime = it[1, ZonedDateTime::class.java].withUTCString()
-            animesCount = it[2, Long::class.java]
-        } }
+    fun findAllModified() = tracer.span {
+        simulcastRepository.findAllModified()
+            .sortedWith(compareBy({ it[0, Simulcast::class.java].year }, { Season.entries.indexOf(it[0, Simulcast::class.java].season) }))
+            .reversed()
+            .map { simulcastFactory.toDto(it[0, Simulcast::class.java]).apply {
+                lastReleaseDateTime = it[1, ZonedDateTime::class.java].withUTCString()
+                animesCount = it[2, Long::class.java]
+            } }
+    }
 
     fun findBySeasonAndYear(season: Season, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 

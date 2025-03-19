@@ -12,6 +12,8 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import fr.shikkanime.utils.atEndOfTheDay
 import fr.shikkanime.utils.atEndOfWeek
 import java.time.LocalDate
@@ -20,6 +22,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantCacheService : AbstractCacheService {
+    private val tracer = TelemetryConfig.getTracer("EpisodeVariantCacheService")
+
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
@@ -44,14 +48,14 @@ class EpisodeVariantCacheService : AbstractCacheService {
         "EpisodeVariantCacheService.findAllVariantReleases",
         classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java),
         key = CountryCodeMemberUUIDWeekKeyCache(countryCode, member?.uuid, startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId), startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId)),
-    ) {
+    ) { tracer.span {
         episodeVariantService.findAllVariantReleases(
             it.countryCode,
             it.member?.let { uuid -> memberCacheService.find(uuid) },
             it.startZonedDateTime,
             it.endZonedDateTime
         )
-    }
+    } }
 
     fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
         countryCode: CountryCode,

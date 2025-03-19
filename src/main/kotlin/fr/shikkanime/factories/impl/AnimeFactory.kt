@@ -29,7 +29,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
     override fun toDto(entity: Anime): AnimeDto {
         val audioLocales = animeCacheService.getAudioLocales(entity) ?: emptySet()
         val seasons = animeCacheService.getSeasons(entity) ?: emptyMap()
-        val platforms = animePlatformCacheService.getAll(entity)
+        val platforms = animePlatformCacheService.findAllByAnimeUUID(entity.uuid!!)
 
         return AnimeDto(
             uuid = entity.uuid,

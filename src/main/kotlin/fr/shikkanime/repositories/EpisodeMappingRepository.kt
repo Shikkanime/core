@@ -9,12 +9,16 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingRepository")
+
     override fun getEntityClass() = EpisodeMapping::class.java
 
     fun findAllUuids(): List<UUID> {
@@ -35,34 +39,36 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         page: Int,
         limit: Int,
     ): Pageable<EpisodeMapping> {
-        return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+        return tracer.span {
+            database.entityManager.use { entityManager ->
+                val cb = entityManager.criteriaBuilder
+                val query = cb.createQuery(getEntityClass())
+                val root = query.from(getEntityClass())
 
-            val predicates = mutableListOf<Predicate>()
-            anime?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime], it)) }
-            season?.let { predicates.add(cb.equal(root[EpisodeMapping_.season], it)) }
-            countryCode?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it)) }
-            query.where(*predicates.toTypedArray())
+                val predicates = mutableListOf<Predicate>()
+                anime?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime], it)) }
+                season?.let { predicates.add(cb.equal(root[EpisodeMapping_.season], it)) }
+                countryCode?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it)) }
+                query.where(*predicates.toTypedArray())
 
-            val orders = sort.mapNotNull { sortParameter ->
+                val orders = sort.mapNotNull { sortParameter ->
 
-                val field = when (sortParameter.field) {
-                    "episodeType" -> root[EpisodeMapping_.episodeType]
-                    "releaseDateTime" -> root[EpisodeMapping_.releaseDateTime]
-                    "lastReleaseDateTime" -> root[EpisodeMapping_.lastReleaseDateTime]
-                    "season" -> root[EpisodeMapping_.season]
-                    "number" -> root[EpisodeMapping_.number]
-                    "animeName" -> root[EpisodeMapping_.anime][Anime_.name]
-                    else -> null
+                    val field = when (sortParameter.field) {
+                        "episodeType" -> root[EpisodeMapping_.episodeType]
+                        "releaseDateTime" -> root[EpisodeMapping_.releaseDateTime]
+                        "lastReleaseDateTime" -> root[EpisodeMapping_.lastReleaseDateTime]
+                        "season" -> root[EpisodeMapping_.season]
+                        "number" -> root[EpisodeMapping_.number]
+                        "animeName" -> root[EpisodeMapping_.anime][Anime_.name]
+                        else -> null
+                    }
+
+                    field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
                 }
 
-                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
+                query.orderBy(orders)
+                buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
             }
-
-            query.orderBy(orders)
-            buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
         }
     }
 
@@ -189,13 +195,14 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllGrouped(
+    fun findAllGroupedBy(
         countryCode: CountryCode,
         page: Int,
         limit: Int,
     ): Pageable<GroupedEpisode> {
-        return database.entityManager.use {
-            val query = it.createQuery("""
+        return tracer.span {
+            database.entityManager.use {
+                val query = it.createQuery("""
             WITH grouped_data AS (
                 SELECT a AS anime,
                      MIN(ev.releaseDateTime) AS minReleaseDateTime,
@@ -245,9 +252,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 gd.minNumber DESC
         """.trimIndent(), GroupedEpisode::class.java)
 
-            query.setParameter("countryCode", countryCode)
+                query.setParameter("countryCode", countryCode)
 
-            buildPageableQuery(createReadOnlyQuery(query), page, limit)
+                buildPageableQuery(createReadOnlyQuery(query), page, limit)
+            }
         }
     }
 

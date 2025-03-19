@@ -4,6 +4,8 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.utils.Database
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import jakarta.persistence.EntityManager
 import jakarta.persistence.TypedQuery
 import jakarta.persistence.criteria.CriteriaQuery
@@ -13,6 +15,8 @@ import org.hibernate.query.Query
 import java.util.*
 
 abstract class AbstractRepository<E : ShikkEntity> {
+    private val tracer = TelemetryConfig.getTracer("AbstractRepository")
+
     @Inject
     protected lateinit var database: Database
 
@@ -66,57 +70,73 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     open fun findAll(): List<E> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            query.from(getEntityClass())
-            createReadOnlyQuery(it, query).resultList
+        return tracer.span {
+            database.entityManager.use {
+                val cb = it.criteriaBuilder
+                val query = cb.createQuery(getEntityClass())
+                query.from(getEntityClass())
+                createReadOnlyQuery(it, query).resultList
+            }
         }
     }
 
     open fun find(uuid: UUID): E? {
-        return database.entityManager.use {
-            it.find(getEntityClass(), uuid)
+        return tracer.span {
+            database.entityManager.use {
+                it.find(getEntityClass(), uuid)
+            }
         }
     }
 
     fun save(entity: E): E {
-        return inTransaction {
-            it.persist(entity)
-            entity
+        return tracer.span {
+            inTransaction {
+                it.persist(entity)
+                entity
+            }
         }
     }
 
     fun saveAll(entities: List<E>) {
-        return inTransaction { entityManager ->
-            entities.forEach { entityManager.persist(it) }
+        return tracer.span {
+            inTransaction { entityManager ->
+                entities.forEach { entityManager.persist(it) }
+            }
         }
     }
 
     fun update(entity: E): E {
-        return inTransaction {
-            it.merge(entity)
-            entity
+        return tracer.span {
+            inTransaction {
+                it.merge(entity)
+                entity
+            }
         }
     }
 
     fun updateAll(entities: List<E>) {
-        return inTransaction { entityManager ->
-            entities.forEach { entityManager.merge(it) }
+        return tracer.span {
+            inTransaction { entityManager ->
+                entities.forEach { entityManager.merge(it) }
+            }
         }
     }
 
     fun delete(entity: E) {
-        inTransaction {
-            it.remove(entity)
+        tracer.span {
+            inTransaction {
+                it.remove(entity)
+            }
         }
     }
 
     fun deleteAll(entityManager: EntityManager) {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createCriteriaDelete(getEntityClass())
-        query.from(getEntityClass())
+        tracer.span {
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createCriteriaDelete(getEntityClass())
+            query.from(getEntityClass())
 
-        entityManager.createQuery(query).executeUpdate()
+            entityManager.createQuery(query).executeUpdate()
+        }
     }
 }

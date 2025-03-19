@@ -4,12 +4,16 @@ import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeVariantRepository")
+
     override fun getEntityClass() = EpisodeVariant::class.java
 
     override fun findAll(): List<EpisodeVariant> {
@@ -66,43 +70,45 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         startZonedDateTime: ZonedDateTime,
         endZonedDateTime: ZonedDateTime
     ): List<VariantReleaseDto> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(VariantReleaseDto::class.java)
-            val root = query.from(Anime::class.java)
-            val mappingsJoin = root.join(Anime_.mappings)
-            val variantsJoin = mappingsJoin.join(EpisodeMapping_.variants)
+        return tracer.span {
+            database.entityManager.use {
+                val cb = it.criteriaBuilder
+                val query = cb.createQuery(VariantReleaseDto::class.java)
+                val root = query.from(Anime::class.java)
+                val mappingsJoin = root.join(Anime_.mappings)
+                val variantsJoin = mappingsJoin.join(EpisodeMapping_.variants)
 
-            query.select(
-                cb.construct(
-                    VariantReleaseDto::class.java,
-                    root,
-                    mappingsJoin,
-                    variantsJoin[EpisodeVariant_.releaseDateTime],
-                    variantsJoin[EpisodeVariant_.platform],
-                    variantsJoin[EpisodeVariant_.audioLocale],
+                query.select(
+                    cb.construct(
+                        VariantReleaseDto::class.java,
+                        root,
+                        mappingsJoin,
+                        variantsJoin[EpisodeVariant_.releaseDateTime],
+                        variantsJoin[EpisodeVariant_.platform],
+                        variantsJoin[EpisodeVariant_.audioLocale],
+                    )
                 )
-            )
 
-            val predicate = mutableListOf(cb.equal(root[Anime_.countryCode], countryCode), cb.between(variantsJoin[EpisodeVariant_.releaseDateTime], startZonedDateTime, endZonedDateTime))
+                val predicate = mutableListOf(cb.equal(root[Anime_.countryCode], countryCode), cb.between(variantsJoin[EpisodeVariant_.releaseDateTime], startZonedDateTime, endZonedDateTime))
 
-            member?.let {
-                val followedJoin = root.join(Anime_.followings)
-                val members = followedJoin.join(MemberFollowAnime_.member)
-                predicate.add(cb.equal(members, it))
+                member?.let {
+                    val followedJoin = root.join(Anime_.followings)
+                    val members = followedJoin.join(MemberFollowAnime_.member)
+                    predicate.add(cb.equal(members, it))
+                }
+
+                query.where(*predicate.toTypedArray())
+
+                query.orderBy(
+                    cb.asc(variantsJoin[EpisodeVariant_.releaseDateTime]),
+                    cb.asc(mappingsJoin[EpisodeMapping_.season]),
+                    cb.asc(mappingsJoin[EpisodeMapping_.episodeType]),
+                    cb.asc(mappingsJoin[EpisodeMapping_.number])
+                )
+
+                createReadOnlyQuery(it, query)
+                    .resultList
             }
-
-            query.where(*predicate.toTypedArray())
-
-            query.orderBy(
-                cb.asc(variantsJoin[EpisodeVariant_.releaseDateTime]),
-                cb.asc(mappingsJoin[EpisodeMapping_.season]),
-                cb.asc(mappingsJoin[EpisodeMapping_.episodeType]),
-                cb.asc(mappingsJoin[EpisodeMapping_.number])
-            )
-
-            createReadOnlyQuery(it, query)
-                .resultList
         }
     }
 

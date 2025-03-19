@@ -16,10 +16,15 @@ import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
+import fr.shikkanime.utils.TelemetryConfig.spanWithAttributes
 import java.time.LocalDate
 import java.util.*
 
 class AnimeCacheService : AbstractCacheService {
+    private val tracer = TelemetryConfig.getTracer("AnimeCacheService")
+
     companion object {
         private const val DEFAULT_ALL_KEY = "all"
     }
@@ -40,7 +45,7 @@ class AnimeCacheService : AbstractCacheService {
         "AnimeCacheService.findAll",
         classes = listOf(Anime::class.java),
         key = DEFAULT_ALL_KEY,
-    ) { animeService.findAll() }
+    ) { tracer.span { animeService.findAll() } }
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -54,17 +59,26 @@ class AnimeCacheService : AbstractCacheService {
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes),
     ) {
-        PageableDto.fromPageable(
-            animeService.findAllBy(
-                it.countryCode,
-                it.uuid?.let { uuid -> simulcastCacheService.find(uuid) },
-                it.sort,
-                it.page,
-                it.limit,
-                it.searchTypes,
-            ),
-            animeFactory
-        )
+        tracer.spanWithAttributes { span ->
+            span.setAttribute("countryCode", countryCode?.name ?: "")
+            span.setAttribute("uuid", uuid?.toString() ?: "")
+            span.setAttribute("sort", sort.toTypedArray().contentToString())
+            span.setAttribute("page", page.toLong())
+            span.setAttribute("limit", limit.toLong())
+            span.setAttribute("searchTypes", searchTypes?.contentToString() ?: "")
+
+            PageableDto.fromPageable(
+                animeService.findAllBy(
+                    it.countryCode,
+                    it.uuid?.let { uuid -> simulcastCacheService.find(uuid) },
+                    it.sort,
+                    it.page,
+                    it.limit,
+                    it.searchTypes,
+                    ),
+                animeFactory
+            )
+        }
     }
 
     fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: Array<LangType>?) =
@@ -83,13 +97,13 @@ class AnimeCacheService : AbstractCacheService {
         "AnimeCacheService.getAudioLocales",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = DEFAULT_ALL_KEY,
-    ) { animeService.findAllAudioLocales() }[anime.uuid!!]
+    ) { tracer.span { animeService.findAllAudioLocales() } }[anime.uuid!!]
 
     fun getSeasons(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getSeasons",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = DEFAULT_ALL_KEY,
-    ) { animeService.findAllSeasons() }[anime.uuid!!]
+    ) { tracer.span { animeService.findAllSeasons() } }[anime.uuid!!]
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "AnimeCacheService.find",
@@ -101,20 +115,18 @@ class AnimeCacheService : AbstractCacheService {
         "AnimeCacheService.findBySlug",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeIdKeyCache(countryCode, slug),
-    ) {
-        animeService.findBySlug(it.countryCode, it.id)?.let { anime -> animeFactory.toDto(anime) }
-    }
+    ) { tracer.span { animeService.findBySlug(it.countryCode, it.id)?.let { anime -> animeFactory.toDto(anime) } } }
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate) =
         MapCache.getOrCompute(
             "AnimeCacheService.getWeeklyAnimes",
             classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, MemberFollowAnime::class.java),
             key = CountryCodeLocalDateKeyCache(countryCode, memberUuid, startOfWeekDay),
-        ) {
+        ) { tracer.span {
             animeService.getWeeklyAnimes(
                 it.countryCode,
                 it.member?.let { uuid -> memberCacheService.find(uuid) },
                 it.localDate
             )
-        }
+        } }
 }

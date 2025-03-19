@@ -12,6 +12,9 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
+import fr.shikkanime.utils.TelemetryConfig.spanWithAttributes
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -25,6 +28,8 @@ import java.time.format.DateTimeFormatter
 
 @Controller("/")
 class SiteController {
+    private val tracer = TelemetryConfig.getTracer("SiteController")
+
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
 
@@ -67,8 +72,8 @@ class SiteController {
 
     @Path
     @Get
-    private fun home(): Response {
-        return Response.template(
+    private fun home() = tracer.span("GET /") {
+        Response.template(
             Link.HOME,
             mutableMapOf(
                 "animes" to getFullAnimesSimulcast(),
@@ -83,11 +88,18 @@ class SiteController {
 
     @Path("catalog/{slug}")
     @Get
-    private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
-        val findAll = simulcastCacheService.findAll()
-        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
+    private fun catalogSimulcast(
+        @PathParam("slug")
+        slug: String
+    ) = tracer.spanWithAttributes("GET /catalog/${slug}") { span ->
+        span.setAttribute("slug", slug)
 
-        return Response.template(
+        val findAll = simulcastCacheService.findAll()
+        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return@spanWithAttributes Response.notFound()
+
+        span.setAttribute("simulcast", selectedSimulcast.uuid.toString())
+
+        Response.template(
             Link.CATALOG.template,
             selectedSimulcast.label,
             mutableMapOf(
@@ -144,7 +156,10 @@ class SiteController {
     @Get
     private fun animeDetail(
         @PathParam("slug") slug: String
-    ) = getAnimeDetail(slug)
+    ) = tracer.spanWithAttributes("GET /animes/${slug}") { span ->
+        span.setAttribute("slug", slug)
+        getAnimeDetail(slug)
+    }
 
     @Path("animes/{slug}/season-{season}")
     @Get
@@ -152,7 +167,12 @@ class SiteController {
         @PathParam("slug") slug: String,
         @PathParam("season") season: Int,
         @QueryParam("page") page: Int?
-    ) = getAnimeDetail(slug, season, page)
+    ) = tracer.spanWithAttributes("GET /animes/${slug}/season-${season}") { span ->
+        span.setAttribute("slug", slug)
+        span.setAttribute("season", season.toString())
+
+        getAnimeDetail(slug, season, page)
+    }
 
     @Path("animes/{slug}/season-{season}/{episodeSlug}")
     @Get
@@ -161,34 +181,40 @@ class SiteController {
         @PathParam("season") season: Int,
         @PathParam("episodeSlug") episodeSlug: String
     ): Response {
-        val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
-        if (dto.seasons.isNullOrEmpty()) return Response.notFound()
-        if (dto.seasons!!.none { it.number == season }) return Response.redirect("/animes/$slug/season-${dto.seasons!!.last().number}/$episodeSlug")
+        return tracer.spanWithAttributes("GET /animes/${slug}/season-${season}/$episodeSlug") { span ->
+            span.setAttribute("slug", slug)
+            span.setAttribute("season", season.toString())
+            span.setAttribute("episodeSlug", episodeSlug)
 
-        val match = "(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)".toRegex().find(episodeSlug) ?: return Response.notFound()
-        val episodeType = EpisodeType.fromSlug(match.groupValues[1])
-        val episodeNumber = match.groupValues[2].toInt()
+            val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return@spanWithAttributes Response.notFound()
+            if (dto.seasons.isNullOrEmpty()) return@spanWithAttributes Response.notFound()
+            if (dto.seasons!!.none { it.number == season }) return@spanWithAttributes Response.redirect("/animes/$slug/season-${dto.seasons!!.last().number}/$episodeSlug")
 
-        val (previousDto, currentDto, nextDto) = episodeMappingCacheService.findPreviousAndNextBy(
-            dto.uuid!!,
-            season,
-            episodeType,
-            episodeNumber
-        ) ?: return Response.notFound()
+            val match = "(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)".toRegex().find(episodeSlug) ?: return@spanWithAttributes Response.notFound()
+            val episodeType = EpisodeType.fromSlug(match.groupValues[1])
+            val episodeNumber = match.groupValues[2].toInt()
 
-        val title =
-            currentDto.anime!!.shortName + " - ${StringUtils.toEpisodeMappingString(currentDto, separator = false)}"
+            val (previousDto, currentDto, nextDto) = episodeMappingCacheService.findPreviousAndNextBy(
+                dto.uuid!!,
+                season,
+                episodeType,
+                episodeNumber
+            ) ?: return@spanWithAttributes Response.notFound()
 
-        return Response.template(
-            "/site/episodeDetails.ftl",
-            title,
-            mutableMapOf(
-                "description" to currentDto.description,
-                "episodeMapping" to currentDto,
-                "previousEpisode" to previousDto,
-                "nextEpisode" to nextDto,
+            val title =
+                currentDto.anime!!.shortName + " - ${StringUtils.toEpisodeMappingString(currentDto, separator = false)}"
+
+            return@spanWithAttributes Response.template(
+                "/site/episodeDetails.ftl",
+                title,
+                mutableMapOf(
+                    "description" to currentDto.description,
+                    "episodeMapping" to currentDto,
+                    "previousEpisode" to previousDto,
+                    "nextEpisode" to nextDto,
+                )
             )
-        )
+        }
     }
 
     @Path("search")
@@ -197,8 +223,12 @@ class SiteController {
         @QueryParam("q") query: String?,
         @QueryParam("searchTypes") searchTypes: String?,
         @QueryParam("page") pageParam: Int?,
-    ): Response {
-        return Response.template(
+    ) = tracer.spanWithAttributes("GET /search") { span ->
+        span.setAttribute("query", query ?: "")
+        span.setAttribute("searchTypes", searchTypes ?: "")
+        span.setAttribute("page", pageParam?.toLong() ?: 1)
+
+        Response.template(
             Link.SEARCH,
             mutableMapOf(
                 "query" to query,
@@ -210,7 +240,9 @@ class SiteController {
 
     @Path("calendar")
     @Get
-    private fun calendar(@QueryParam("date") date: String?): Response {
+    private fun calendar(@QueryParam("date") date: String?) = tracer.spanWithAttributes("GET /calendar") { span ->
+        span.setAttribute("date", date ?: "")
+
         val startOfWeekDay = try {
             date?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
         } catch (_: Exception) {
@@ -218,9 +250,9 @@ class SiteController {
         }.atStartOfWeek()
 
         if (startOfWeekDay < episodeMappingCacheService.findMinimalReleaseDateTime().toLocalDate().atStartOfWeek())
-            return Response.notFound()
+            return@spanWithAttributes Response.notFound()
 
-        return Response.template(
+        Response.template(
             Link.CALENDAR,
             mutableMapOf(
                 "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay),

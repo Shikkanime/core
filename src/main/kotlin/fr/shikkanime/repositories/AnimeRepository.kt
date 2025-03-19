@@ -5,6 +5,8 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.JoinType
@@ -16,6 +18,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeRepository : AbstractRepository<Anime>() {
+    private val tracer = TelemetryConfig.getTracer("AnimeRepository")
+
     override fun getEntityClass() = Anime::class.java
 
     fun preIndex() {
@@ -34,34 +38,37 @@ class AnimeRepository : AbstractRepository<Anime>() {
         limit: Int,
         searchTypes: Array<LangType>?,
     ): Pageable<Anime> {
-        return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            query.distinct(true).select(root)
+        return tracer.span {
+            database.entityManager.use { entityManager ->
+                val cb = entityManager.criteriaBuilder
+                val query = cb.createQuery(getEntityClass())
+                val root = query.from(getEntityClass())
+                query.distinct(true).select(root)
 
-            val predicates = mutableListOf<Predicate>()
-            simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
-            val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
+                val predicates = mutableListOf<Predicate>()
+                simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
 
-            query.where(
-                *predicates.toTypedArray(),
-                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
-            )
+                val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
 
-            val orders = sort.mapNotNull { sortParameter ->
-                val field = when (sortParameter.field) {
-                    "name" -> root[Anime_.slug]
-                    "releaseDateTime" -> root[Anime_.releaseDateTime]
-                    "lastReleaseDateTime" -> root[Anime_.lastReleaseDateTime]
-                    else -> null
+                query.where(
+                    *predicates.toTypedArray(),
+                    if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
+                )
+
+                val orders = sort.mapNotNull { sortParameter ->
+                    val field = when (sortParameter.field) {
+                        "name" -> root[Anime_.slug]
+                        "releaseDateTime" -> root[Anime_.releaseDateTime]
+                        "lastReleaseDateTime" -> root[Anime_.lastReleaseDateTime]
+                        else -> null
+                    }
+
+                    field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
                 }
 
-                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
+                query.orderBy(orders)
+                buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
             }
-
-            query.orderBy(orders)
-            buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
         }
     }
 
@@ -208,27 +215,29 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun findAllAudioLocales(): Map<UUID, Set<String>> {
-        return database.entityManager.use {
+        return tracer.span { database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(EpisodeVariant::class.java)
 
-            query.distinct(true)
-                .multiselect(
-                    root[Anime_.uuid],
-                    root.join(Anime_.mappings).join(EpisodeMapping_.variants)[EpisodeVariant_.audioLocale]
-                )
+            query.multiselect(
+                root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                root[EpisodeVariant_.audioLocale]
+            ).groupBy(
+                root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                root[EpisodeVariant_.audioLocale]
+            )
 
             createReadOnlyQuery(it, query)
                 .resultList
                 .asSequence()
                 .groupBy({ tuple -> tuple[0] as UUID }, { tuple -> tuple[1] as String })
                 .mapValues { (_, locales) -> locales.toSet() }
-        }
+        } }
     }
 
     fun findAllSeasons(): Map<UUID, Map<Int, ZonedDateTime>> {
-        return database.entityManager.use {
+        return tracer.span { database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -246,7 +255,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 .asSequence()
                 .groupBy({ tuple -> tuple[0] as UUID }, { tuple -> tuple[1] as Int to tuple[2] as ZonedDateTime })
                 .mapValues { (_, seasons) -> seasons.toMap() }
-        }
+        } }
     }
 
     override fun find(uuid: UUID): Anime? {

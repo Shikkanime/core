@@ -6,9 +6,13 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.factories.impl.RefreshMemberFactory
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import java.util.*
 
 class MemberCacheService : AbstractCacheService {
+    private val tracer = TelemetryConfig.getTracer("MemberCacheService")
+
     @Inject
     private lateinit var memberService: MemberService
 
@@ -19,7 +23,7 @@ class MemberCacheService : AbstractCacheService {
         "MemberCacheService.find",
         classes = listOf(Member::class.java),
         key = uuid
-    ) { memberService.find(it) }
+    ) { tracer.span { memberService.find(it) } }
 
     fun getRefreshMember(uuid: UUID, limit: Int) = MapCache.getOrComputeNullable(
         "MemberCacheService.getRefreshMember",

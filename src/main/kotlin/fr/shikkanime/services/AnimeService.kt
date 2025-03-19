@@ -23,6 +23,7 @@ import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
+import fr.shikkanime.utils.TelemetryConfig.span
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -31,6 +32,8 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
+    private val tracer = TelemetryConfig.getTracer("AnimeService")
+
     @Inject
     private lateinit var animeRepository: AnimeRepository
 
@@ -73,7 +76,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>?,
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes)
+    ) = tracer.span { animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes) }
 
     fun findAllByName(
         countryCode: CountryCode?,
@@ -93,9 +96,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
 
-    fun findAllAudioLocales() = animeRepository.findAllAudioLocales()
+    fun findAllAudioLocales() = tracer.span { animeRepository.findAllAudioLocales() }
 
-    fun findAllSeasons() = animeRepository.findAllSeasons()
+    fun findAllSeasons() = tracer.span { animeRepository.findAllSeasons() }
 
     fun preIndex() = animeRepository.preIndex()
 
@@ -133,18 +136,20 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         zoneId: ZoneId,
         weekRange: ClosedRange<LocalDate>
     ): List<Triple<WeeklyAnimeDto, Int, EpisodeType>> {
-        val isCurrentWeek: (VariantReleaseDto) -> Boolean = { it.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in weekRange }
-        val dayPattern = DateTimeFormatter.ofPattern("EEEE")
-        val hourPattern = DateTimeFormatter.ofPattern("HH")
+        return tracer.span {
+            val isCurrentWeek: (VariantReleaseDto) -> Boolean = { it.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in weekRange }
+            val dayPattern = DateTimeFormatter.ofPattern("EEEE")
+            val hourPattern = DateTimeFormatter.ofPattern("HH")
 
-        return variantReleaseDtos.groupBy { variantReleaseDto ->
-            variantReleaseDto.releaseDateTime.format(dayPattern) to variantReleaseDto.anime
-        }.flatMap { (pair, values) ->
-            values.groupBy { variantReleaseDto ->
-                variantReleaseDto.releaseDateTime.format(hourPattern)
-            }.flatMap { (_, hourValues) ->
-                val filter = hourValues.filter(isCurrentWeek)
-                createWeeklyAnimeDtos(filter, hourValues, pair)
+            variantReleaseDtos.groupBy { variantReleaseDto ->
+                variantReleaseDto.releaseDateTime.format(dayPattern) to variantReleaseDto.anime
+            }.flatMap { (pair, values) ->
+                values.groupBy { variantReleaseDto ->
+                    variantReleaseDto.releaseDateTime.format(hourPattern)
+                }.flatMap { (_, hourValues) ->
+                    val filter = hourValues.filter(isCurrentWeek)
+                    createWeeklyAnimeDtos(filter, hourValues, pair)
+                }
             }
         }
     }
@@ -154,17 +159,19 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         hourValues: List<VariantReleaseDto>,
         pair: Pair<String, Anime>
     ): List<Triple<WeeklyAnimeDto, Int, EpisodeType>> {
-        val mappings = filter.asSequence()
-            .map { it.episodeMapping }
-            .distinctBy { it.uuid }
-            .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
-            .toSet()
+        return tracer.span {
+            val mappings = filter.asSequence()
+                .map { it.episodeMapping }
+                .distinctBy { it.uuid }
+                .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
+                .toSet()
 
-        return mappings.groupBy { it.episodeType }
-            .ifEmpty { mapOf(null to mappings) }
-            .map { (episodeType, episodeMappings) ->
-                createWeeklyAnimeDto(filter, hourValues, pair, episodeType, episodeMappings.toSet())
-            }
+            mappings.groupBy { it.episodeType }
+                .ifEmpty { mapOf(null to mappings) }
+                .map { (episodeType, episodeMappings) ->
+                    createWeeklyAnimeDto(filter, hourValues, pair, episodeType, episodeMappings.toSet())
+                }
+        }
     }
 
     private fun createWeeklyAnimeDto(
@@ -174,42 +181,44 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeType: EpisodeType?,
         episodeMappings: Set<EpisodeMapping>
     ): Triple<WeeklyAnimeDto, Int, EpisodeType> {
-        val platforms = filter.map { it.platform }.ifEmpty { hourValues.map { it.platform } }.sortedBy { it.name }.toSet()
-        val releaseDateTime = filter.minOfOrNull { it.releaseDateTime } ?: hourValues.minOf { it.releaseDateTime }
-        val langTypes = filter.map {
-            LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale)
-        }
-            .sorted()
-            .ifEmpty {
-                hourValues.map { LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale) }
-                    .sorted()
-            }.toSet()
+        return tracer.span {
+            val platforms = filter.map { it.platform }.ifEmpty { hourValues.map { it.platform } }.sortedBy { it.name }.toSet()
+            val releaseDateTime = filter.minOfOrNull { it.releaseDateTime } ?: hourValues.minOf { it.releaseDateTime }
+            val langTypes = filter.map {
+                LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale)
+            }
+                .sorted()
+                .ifEmpty {
+                    hourValues.map { LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale) }
+                        .sorted()
+                }.toSet()
 
-        return Triple(
-            WeeklyAnimeDto(
-                animeFactory.toDto(pair.second),
-                platforms.map { platformFactory.toDto(it) }.toSet(),
-                releaseDateTime.withUTCString(),
-                buildString {
-                    append("/animes/${pair.second.slug}")
+            Triple(
+                WeeklyAnimeDto(
+                    animeFactory.toDto(pair.second),
+                    platforms.map { platformFactory.toDto(it) }.toSet(),
+                    releaseDateTime.withUTCString(),
+                    buildString {
+                        append("/animes/${pair.second.slug}")
 
-                    episodeMappings.takeIf { it.isNotEmpty() }?.let {
-                        if (it.minOf { it.season!! } == it.maxOf { it.season!! }) {
-                            append("/season-${it.first().season}")
-                            if (it.size <= 1) append("/${it.first().episodeType!!.slug}-${it.first().number}")
+                        episodeMappings.takeIf { it.isNotEmpty() }?.let {
+                            if (it.minOf { it.season!! } == it.maxOf { it.season!! }) {
+                                append("/season-${it.first().season}")
+                                if (it.size <= 1) append("/${it.first().episodeType!!.slug}-${it.first().number}")
+                            }
                         }
-                    }
-                },
-                langTypes,
-                episodeType,
-                episodeMappings.minOfOrNull { it.number!! },
-                episodeMappings.maxOfOrNull { it.number!! },
-                episodeMappings.firstOrNull()?.number,
-                episodeMappings.takeIf { it.isNotEmpty() }?.map { episodeMappingFactory.toDto(it) }?.toSet()
-            ),
-            filter.ifEmpty { hourValues }.distinctBy { it.episodeMapping.uuid }.size,
-            hourValues.first().episodeMapping.episodeType!!
-        )
+                    },
+                    langTypes,
+                    episodeType,
+                    episodeMappings.minOfOrNull { it.number!! },
+                    episodeMappings.maxOfOrNull { it.number!! },
+                    episodeMappings.firstOrNull()?.number,
+                    episodeMappings.takeIf { it.isNotEmpty() }?.map { episodeMappingFactory.toDto(it) }?.toSet()
+                ),
+                filter.ifEmpty { hourValues }.distinctBy { it.episodeMapping.uuid }.size,
+                hourValues.first().episodeMapping.episodeType!!
+            )
+        }
     }
 
     private fun isReleaseInCurrentWeek(
@@ -217,28 +226,30 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         releases: Collection<Triple<WeeklyAnimeDto, Int, EpisodeType>>,
         weekRange: ClosedRange<LocalDate>
     ): Boolean {
-        val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.first.releaseDateTime).withUTC()
-        val minusHour = withZoneSameInstant.minusHours(1).toLocalTime()
-        val plusHour = if (withZoneSameInstant.plusHours(1).toLocalTime() == LocalTime.MIDNIGHT) LocalTime.MAX else withZoneSameInstant.plusHours(1).toLocalTime()
-        val closedRange = minusHour..plusHour
+        return tracer.span {
+            val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.first.releaseDateTime).withUTC()
+            val minusHour = withZoneSameInstant.minusHours(1).toLocalTime()
+            val plusHour = if (withZoneSameInstant.plusHours(1).toLocalTime() == LocalTime.MIDNIGHT) LocalTime.MAX else withZoneSameInstant.plusHours(1).toLocalTime()
+            val closedRange = minusHour..plusHour
 
-        if (withZoneSameInstant.toLocalDate() in weekRange) {
-            return false
-        }
-
-        if (weeklyAnimeDto.second > 5 || weeklyAnimeDto.third == EpisodeType.FILM) {
-            return true
-        }
-
-        return releases.associateWith { ZonedDateTime.parse(it.first.releaseDateTime).withUTC() }
-            .filter { (it, releaseDateTime) ->
-                it != weeklyAnimeDto &&
-                        releaseDateTime.toLocalDate() in weekRange &&
-                        releaseDateTime.dayOfWeek == withZoneSameInstant.dayOfWeek &&
-                        it.first.anime.uuid == weeklyAnimeDto.first.anime.uuid &&
-                        it.first.langTypes == weeklyAnimeDto.first.langTypes
+            if (withZoneSameInstant.toLocalDate() in weekRange) {
+                return@span false
             }
-            .any { it.value.toLocalTime() in closedRange }
+
+            if (weeklyAnimeDto.second > 5 || weeklyAnimeDto.third == EpisodeType.FILM) {
+                return@span true
+            }
+
+            releases.associateWith { ZonedDateTime.parse(it.first.releaseDateTime).withUTC() }
+                .filter { (it, releaseDateTime) ->
+                    it != weeklyAnimeDto &&
+                            releaseDateTime.toLocalDate() in weekRange &&
+                            releaseDateTime.dayOfWeek == withZoneSameInstant.dayOfWeek &&
+                            it.first.anime.uuid == weeklyAnimeDto.first.anime.uuid &&
+                            it.first.langTypes == weeklyAnimeDto.first.langTypes
+                }
+                .any { it.value.toLocalTime() in closedRange }
+        }
     }
 
     private fun groupAndSortReleases(
@@ -247,21 +258,23 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         zoneId: ZoneId,
         dateFormatter: DateTimeFormatter
     ): List<WeeklyAnimesDto> {
-        return (0..6).map { dayOffset ->
-            val date = startOfWeekDay.plusDays(dayOffset.toLong())
-            val tuplesDay = releases.filter {
-                ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).dayOfWeek.value == dayOffset + 1
-            }
+        return tracer.span {
+            (0..6).map { dayOffset ->
+                val date = startOfWeekDay.plusDays(dayOffset.toLong())
+                val tuplesDay = releases.filter {
+                    ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).dayOfWeek.value == dayOffset + 1
+                }
 
-            WeeklyAnimesDto(
-                date.format(dateFormatter).capitalizeWords(),
-                tuplesDay.sortedWith(
-                    compareBy(
-                        { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
-                        { it.anime.shortName }
-                    )
-                ).toSet()
-            )
+                WeeklyAnimesDto(
+                    date.format(dateFormatter).capitalizeWords(),
+                    tuplesDay.sortedWith(
+                        compareBy(
+                            { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
+                            { it.anime.shortName }
+                        )
+                    ).toSet()
+                )
+            }
         }
     }
 
