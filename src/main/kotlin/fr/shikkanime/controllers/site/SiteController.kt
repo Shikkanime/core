@@ -12,6 +12,8 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -25,6 +27,8 @@ import java.time.format.DateTimeFormatter
 
 @Controller("/")
 class SiteController {
+    private val tracer = TelemetryConfig.getTracer("SiteController")
+
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
 
@@ -67,8 +71,8 @@ class SiteController {
 
     @Path
     @Get
-    private fun home(): Response {
-        return Response.template(
+    private fun home() = tracer.span {
+        Response.template(
             Link.HOME,
             mutableMapOf(
                 "animes" to getFullAnimesSimulcast(),
@@ -87,21 +91,23 @@ class SiteController {
         val findAll = simulcastCacheService.findAll()
         val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
 
-        return Response.template(
-            Link.CATALOG.template,
-            selectedSimulcast.label,
-            mutableMapOf(
-                "simulcasts" to findAll,
-                "selectedSimulcast" to selectedSimulcast,
-                "animes" to animeCacheService.findAllBy(
-                    CountryCode.FR,
-                    selectedSimulcast.uuid,
-                    listOf(SortParameter("name", SortParameter.Order.ASC)),
-                    1,
-                    102
-                ).data,
+        return tracer.span {
+            Response.template(
+                Link.CATALOG.template,
+                selectedSimulcast.label,
+                mutableMapOf(
+                    "simulcasts" to findAll,
+                    "selectedSimulcast" to selectedSimulcast,
+                    "animes" to animeCacheService.findAllBy(
+                        CountryCode.FR,
+                        selectedSimulcast.uuid,
+                        listOf(SortParameter("name", SortParameter.Order.ASC)),
+                        1,
+                        102
+                    ).data,
+                )
             )
-        )
+        }
     }
 
     private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null): Response {

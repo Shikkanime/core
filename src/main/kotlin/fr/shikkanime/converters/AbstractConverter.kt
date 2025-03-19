@@ -1,6 +1,8 @@
 package fr.shikkanime.converters
 
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import java.lang.reflect.ParameterizedType
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.declaredFunctions
@@ -13,6 +15,7 @@ abstract class AbstractConverter<F, T> {
     annotation class Converter
 
     companion object {
+        val tracer = TelemetryConfig.getTracer("AbstractConverter")
         val converters: MutableMap<Pair<Class<*>, Class<*>>, Pair<AbstractConverter<*, *>, KFunction<*>>> = mutableMapOf()
 
         init {
@@ -52,11 +55,11 @@ abstract class AbstractConverter<F, T> {
         }
 
         inline fun <reified T> convert(list: Collection<Any>?, to: Class<T>): List<T>? {
-            return list?.map { convert(it, to) }
+            return tracer.span("AbstractConverter.convert") { list?.map { convert(it, to) } }
         }
 
         inline fun <reified T> convert(set: Set<Any>?, to: Class<T>): MutableSet<T>? {
-            return set?.map { convert(it, to) }?.toMutableSet()
+            return tracer.span("AbstractConverter.convert") { set?.map { convert(it, to) }?.toMutableSet() }
         }
     }
 }

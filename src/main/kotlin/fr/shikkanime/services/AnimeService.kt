@@ -25,6 +25,7 @@ import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
+import fr.shikkanime.utils.TelemetryConfig.span
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -33,6 +34,8 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
+    private val tracer = TelemetryConfig.getTracer("AnimeService")
+
     @Inject
     private lateinit var animeRepository: AnimeRepository
 
@@ -67,7 +70,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         limit: Int,
         searchTypes: Array<LangType>?,
         status: Status? = null,
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes, status)
+    ) = tracer.span { animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes, status) }
 
     fun findAllByName(
         countryCode: CountryCode?,
@@ -87,9 +90,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
 
-    fun findAllAudioLocales() = animeRepository.findAllAudioLocales()
+    fun findAllAudioLocales() = tracer.span { animeRepository.findAllAudioLocales() }
 
-    fun findAllSeasons() = animeRepository.findAllSeasons()
+    fun findAllSeasons() = tracer.span { animeRepository.findAllSeasons() }
 
     fun preIndex() = animeRepository.preIndex()
 

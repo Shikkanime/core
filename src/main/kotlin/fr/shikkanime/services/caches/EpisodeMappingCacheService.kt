@@ -15,9 +15,13 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import java.util.*
 
 class EpisodeMappingCacheService : AbstractCacheService {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingCacheService")
+
     companion object {
         private const val DEFAULT_ALL_KEY = "all"
     }
@@ -64,14 +68,16 @@ class EpisodeMappingCacheService : AbstractCacheService {
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
     ) {
-        PageableDto.fromPageable(
-            episodeMappingService.findAllGrouped(
-                it.countryCode!!,
-                it.page,
-                it.limit,
-            ),
-            GroupedEpisodeDto::class.java
-        )
+        tracer.span {
+            PageableDto.fromPageable(
+                episodeMappingService.findAllGroupedBy(
+                    it.countryCode!!,
+                    it.page,
+                    it.limit,
+                ),
+                GroupedEpisodeDto::class.java
+            )
+        }
     }
 
     fun findAllSeo() = MapCache.getOrCompute(

@@ -4,32 +4,38 @@ import fr.shikkanime.dtos.simulcasts.SimulcastModifiedDto
 import fr.shikkanime.entities.Anime_
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.Simulcast_
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 
 class SimulcastRepository : AbstractRepository<Simulcast>() {
+    private val tracer = TelemetryConfig.getTracer("SimulcastRepository")
+
     override fun getEntityClass() = Simulcast::class.java
 
     fun findAllModified(): List<SimulcastModifiedDto> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(SimulcastModifiedDto::class.java)
+        return tracer.span {
+            database.entityManager.use {
+                val cb = it.criteriaBuilder
+                val query = cb.createQuery(SimulcastModifiedDto::class.java)
 
-            val root = query.from(getEntityClass())
-            val animeJoin = root.join(Simulcast_.animes)
+                val root = query.from(getEntityClass())
+                val animeJoin = root.join(Simulcast_.animes)
 
-            query.select(
-                cb.construct(
-                    SimulcastModifiedDto::class.java,
-                    root,
-                    cb.greatest(animeJoin[Anime_.releaseDateTime]),
-                    cb.count(animeJoin)
+                query.select(
+                    cb.construct(
+                        SimulcastModifiedDto::class.java,
+                        root,
+                        cb.greatest(animeJoin[Anime_.releaseDateTime]),
+                        cb.count(animeJoin)
+                    )
                 )
-            )
 
-            query.groupBy(root)
-            query.orderBy(cb.desc(cb.greatest(animeJoin[Anime_.releaseDateTime])))
+                query.groupBy(root)
+                query.orderBy(cb.desc(cb.greatest(animeJoin[Anime_.releaseDateTime])))
 
-            createReadOnlyQuery(it, query)
-                .resultList
+                createReadOnlyQuery(it, query)
+                    .resultList
+            }
         }
     }
 

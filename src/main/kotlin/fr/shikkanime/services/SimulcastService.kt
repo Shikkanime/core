@@ -6,8 +6,12 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.SimulcastRepository
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
+    private val tracer = TelemetryConfig.getTracer("SimulcastService")
+
     @Inject
     private lateinit var simulcastRepository: SimulcastRepository
 
@@ -16,7 +20,10 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun getRepository() = simulcastRepository
 
-    fun findAllModified() = simulcastRepository.findAllModified().sortBySeasonAndYear()
+    fun List<SimulcastModifiedDto>.sortBySeasonAndYear(): List<SimulcastModifiedDto> =
+        tracer.span { this.sortedWith(compareBy({ it.simulcast.year }, { Constant.seasons.indexOf(it.simulcast.season) })).reversed() }
+
+    fun findAllModified() = tracer.span { simulcastRepository.findAllModified().sortBySeasonAndYear() }
 
     fun findBySeasonAndYear(season: String, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 
@@ -34,8 +41,5 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     companion object {
         fun Set<Simulcast>.sortBySeasonAndYear(): Set<Simulcast> =
             this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed().toSet()
-
-        fun List<SimulcastModifiedDto>.sortBySeasonAndYear(): List<SimulcastModifiedDto> =
-            this.sortedWith(compareBy({ it.simulcast.year }, { Constant.seasons.indexOf(it.simulcast.season) })).reversed()
     }
 }

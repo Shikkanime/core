@@ -10,12 +10,16 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.span
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingRepository")
+
     override fun getEntityClass() = EpisodeMapping::class.java
 
     fun findAllUuids(): List<UUID> {
@@ -214,13 +218,14 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllGrouped(
+    fun findAllGroupedBy(
         countryCode: CountryCode,
         page: Int,
         limit: Int,
     ): Pageable<GroupedEpisode> {
-        return database.entityManager.use {
-            val query = it.createQuery("""
+        return tracer.span {
+            database.entityManager.use {
+                val query = it.createQuery("""
                 WITH grouped_data AS (
                     SELECT a AS anime,
                          MIN(ev.releaseDateTime) AS min_release_date_time,
@@ -262,47 +267,48 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                     gd.min_number DESC
             """.trimIndent(), Tuple::class.java)
 
-            query.setParameter("countryCode", countryCode)
+                query.setParameter("countryCode", countryCode)
 
-            val tmpPage = buildPageableQuery(createReadOnlyQuery(query), page, limit)
-            val page = Pageable<GroupedEpisode>(
-                tmpPage.data.map {
-                    GroupedEpisode(
-                        it[0, Anime::class.java],
-                        it[1, ZonedDateTime::class.java],
-                        it[2, ZonedDateTime::class.java],
-                        it[3, Int::class.java],
-                        it[4, Int::class.java],
-                        it[5, EpisodeType::class.java],
-                        it[6, Int::class.java],
-                        it[7, Int::class.java],
-                        it[8, Array::class.java].filterIsInstance<Platform>().toSet(),
-                        it[9, Array::class.java].filterIsInstance<String>().toSet(),
-                        it[10, Array::class.java].filterIsInstance<String>().toSet(),
-                        it[11, Array::class.java].filterIsInstance<UUID>().toSet()
-                    )
-                }.toSet(),
-                tmpPage.page,
-                tmpPage.limit,
-                tmpPage.total
-            )
+                val tmpPage = buildPageableQuery(createReadOnlyQuery(query), page, limit)
+                val page = Pageable<GroupedEpisode>(
+                    tmpPage.data.map {
+                        GroupedEpisode(
+                            it[0, Anime::class.java],
+                            it[1, ZonedDateTime::class.java],
+                            it[2, ZonedDateTime::class.java],
+                            it[3, Int::class.java],
+                            it[4, Int::class.java],
+                            it[5, EpisodeType::class.java],
+                            it[6, Int::class.java],
+                            it[7, Int::class.java],
+                            it[8, Array::class.java].filterIsInstance<Platform>().toSet(),
+                            it[9, Array::class.java].filterIsInstance<String>().toSet(),
+                            it[10, Array::class.java].filterIsInstance<String>().toSet(),
+                            it[11, Array::class.java].filterIsInstance<UUID>().toSet()
+                        )
+                    }.toSet(),
+                    tmpPage.page,
+                    tmpPage.limit,
+                    tmpPage.total
+                )
 
 
-            val singleMappingEpisodes = page.data.filter { it.mappings.size == 1 }
-            val uuids = singleMappingEpisodes.map { it.mappings.first() }
-            val titleDescriptionAndDuration = findAllTitleDescriptionAndDurationByUUIDs(uuids).associateBy(
-                { it[0, UUID::class.java] },
-                { Triple(it[1, String::class.java], it[2, String::class.java], it[3, Long::class.java]) }
-            )
+                val singleMappingEpisodes = page.data.filter { it.mappings.size == 1 }
+                val uuids = singleMappingEpisodes.map { it.mappings.first() }
+                val titleDescriptionAndDuration = findAllTitleDescriptionAndDurationByUUIDs(uuids).associateBy(
+                    { it[0, UUID::class.java] },
+                    { Triple(it[1, String::class.java], it[2, String::class.java], it[3, Long::class.java]) }
+                )
 
-            singleMappingEpisodes.forEach { groupedEpisode ->
-                val (title, description, duration) = titleDescriptionAndDuration[groupedEpisode.mappings.first()]!!
-                groupedEpisode.title = title
-                groupedEpisode.description = description
-                groupedEpisode.duration = duration
+                singleMappingEpisodes.forEach { groupedEpisode ->
+                    val (title, description, duration) = titleDescriptionAndDuration[groupedEpisode.mappings.first()]!!
+                    groupedEpisode.title = title
+                    groupedEpisode.description = description
+                    groupedEpisode.duration = duration
+                }
+
+                page
             }
-
-            page
         }
     }
 
