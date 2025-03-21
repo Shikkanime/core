@@ -1,16 +1,11 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.animes.AnimeAlertDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.AnimeError
 import fr.shikkanime.dtos.animes.ErrorType
-import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.mappings.EpisodeMappingDto
-import fr.shikkanime.dtos.mappings.EpisodeMappingWithoutAnimeDto
 import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
@@ -21,6 +16,9 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import fr.shikkanime.factories.impl.AnimeFactory
+import fr.shikkanime.factories.impl.EpisodeMappingFactory
+import fr.shikkanime.factories.impl.PlatformFactory
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
@@ -57,6 +55,15 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
 
+    @Inject
+    private lateinit var animeFactory: AnimeFactory
+
+    @Inject
+    private lateinit var platformFactory: PlatformFactory
+
+    @Inject
+    private lateinit var episodeMappingFactory: EpisodeMappingFactory
+
     override fun getRepository() = animeRepository
 
     fun findAllBy(
@@ -66,8 +73,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>?,
-        status: Status? = null,
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes, status)
+    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes)
 
     fun findAllByName(
         countryCode: CountryCode?,
@@ -181,8 +187,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         return Triple(
             WeeklyAnimeDto(
-                AbstractConverter.convert(pair.second, AnimeDto::class.java),
-                AbstractConverter.convert(platforms, PlatformDto::class.java)!!,
+                animeFactory.toDto(pair.second),
+                platforms.map { platformFactory.toDto(it) }.toSet(),
                 releaseDateTime.withUTCString(),
                 buildString {
                     append("/animes/${pair.second.slug}")
@@ -199,10 +205,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 episodeMappings.minOfOrNull { it.number!! },
                 episodeMappings.maxOfOrNull { it.number!! },
                 episodeMappings.firstOrNull()?.number,
-                AbstractConverter.convert(
-                    episodeMappings.takeIf { it.isNotEmpty() },
-                    EpisodeMappingWithoutAnimeDto::class.java
-                )
+                episodeMappings.takeIf { it.isNotEmpty() }?.map { episodeMappingFactory.toDto(it) }?.toSet()
             ),
             filter.ifEmpty { hourValues }.distinctBy { it.episodeMapping.uuid }.size,
             hourValues.first().episodeMapping.episodeType!!
@@ -308,16 +311,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 episodes.filter { it.number!! < 0 }
                     .forEach { episodeMapping ->
                         invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_EPISODE_NUMBER, StringUtils.toEpisodeMappingString(AbstractConverter.convert(episodeMapping,
-                                EpisodeMappingDto::class.java))))
+                            .add(AnimeError(ErrorType.INVALID_EPISODE_NUMBER, StringUtils.toEpisodeMappingString(episodeMapping)))
                     }
 
                 episodes.zipWithNext().forEach { (current, next) ->
                     if (current.number!! + 1 != next.number!!) {
                         invalidAnimes.getOrPut(current.anime!!) { current.releaseDateTime to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_CHAIN_EPISODE_NUMBER, "${StringUtils.toEpisodeMappingString(AbstractConverter.convert(current,
-                                EpisodeMappingDto::class.java))} -> ${StringUtils.toEpisodeMappingString(AbstractConverter.convert(next,
-                                EpisodeMappingDto::class.java))}"))
+                            .add(AnimeError(ErrorType.INVALID_CHAIN_EPISODE_NUMBER, "${StringUtils.toEpisodeMappingString(current)} -> ${StringUtils.toEpisodeMappingString(next)}"))
                     }
                 }
             }
@@ -326,7 +326,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             data = invalidAnimes.asSequence()
                 .map { (anime, pair) ->
                     AnimeAlertDto(
-                        AbstractConverter.convert(anime, AnimeDto::class.java),
+                        animeFactory.toDto(anime),
                         pair.first.withUTCString(),
                         pair.second
                     )
@@ -399,11 +399,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         entity.description = entity.description?.replace("\n", "")
             ?.replace("\r", "")
-        entity.status = StringUtils.getStatus(entity)
         val savedEntity = super.save(entity)
         val uuid = savedEntity.uuid!!
 
-        if (!Constant.disableImageConversion) {
+        if (!Constant.isTest) {
             addThumbnail(uuid, savedEntity.image!!)
             addBanner(uuid, savedEntity.banner!!)
         }
@@ -445,7 +444,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         updateAnimeSimulcast(animeDto, anime)
 
-        anime.status = StringUtils.getStatus(anime)
         val update = super.update(anime)
         traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
         return update

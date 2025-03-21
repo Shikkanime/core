@@ -3,16 +3,14 @@ package fr.shikkanime.services.caches
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.mappings.EpisodeMappingDto
-import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import fr.shikkanime.factories.impl.EpisodeMappingFactory
+import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import java.util.*
@@ -28,6 +26,12 @@ class EpisodeMappingCacheService : AbstractCacheService {
     @Inject
     private lateinit var animeCacheService: AnimeCacheService
 
+    @Inject
+    private lateinit var episodeMappingFactory: EpisodeMappingFactory
+
+    @Inject
+    private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
+
     fun findAllBy(
         countryCode: CountryCode?,
         anime: UUID?,
@@ -35,11 +39,10 @@ class EpisodeMappingCacheService : AbstractCacheService {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        status: Status? = null
     ) = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllBy",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit, status),
+        key = CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             episodeMappingService.findAllBy(
@@ -49,9 +52,8 @@ class EpisodeMappingCacheService : AbstractCacheService {
                 it.sort,
                 it.page,
                 it.limit,
-                it.status
             ),
-            EpisodeMappingDto::class.java
+            episodeMappingFactory
         )
     }
 
@@ -70,7 +72,7 @@ class EpisodeMappingCacheService : AbstractCacheService {
                 it.page,
                 it.limit,
             ),
-            GroupedEpisodeDto::class.java
+            groupedEpisodeFactory
         )
     }
 
@@ -94,9 +96,9 @@ class EpisodeMappingCacheService : AbstractCacheService {
 
         result.mapIndexed { index, current ->
             Triple(current.season!!, current.episodeType!!, current.number!!) to Triple(
-                result.getOrNull(index - 1)?.let { AbstractConverter.convert(it, EpisodeMappingDto::class.java) },
-                AbstractConverter.convert(current, EpisodeMappingDto::class.java),
-                result.getOrNull(index + 1)?.let { AbstractConverter.convert(it, EpisodeMappingDto::class.java) }
+                result.getOrNull(index - 1)?.let { episodeMappingFactory.toDto(it) },
+                episodeMappingFactory.toDto(current),
+                result.getOrNull(index + 1)?.let { episodeMappingFactory.toDto(it) }
             )
         }.toMap()
     }[Triple(season, episodeType, number)]

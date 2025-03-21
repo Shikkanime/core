@@ -1,10 +1,8 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.enums.Status
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
@@ -29,6 +27,9 @@ class EpisodeMappingController : HasPageableRoute() {
     @Inject
     private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
 
+    @Inject
+    private lateinit var episodeVariantFactory: EpisodeVariantFactory
+
     @Path
     @Get
     @JWTAuthenticated(optional = true)
@@ -49,8 +50,6 @@ class EpisodeMappingController : HasPageableRoute() {
         sortParam: String?,
         @QueryParam("desc")
         descParam: String?,
-        @QueryParam("status")
-        statusParam: Status?,
     ): Response {
         val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
 
@@ -71,8 +70,7 @@ class EpisodeMappingController : HasPageableRoute() {
                 seasonParam,
                 sortParameters,
                 page,
-                limit,
-                statusParam
+                limit
             )
         )
     }
@@ -84,13 +82,7 @@ class EpisodeMappingController : HasPageableRoute() {
         uuid: UUID
     ): Response {
         val episodeVariant = episodeVariantService.find(uuid) ?: return Response.notFound()
-
-        val image = MediaImage.toMediaImage(
-            AbstractConverter.convert(
-                listOf(episodeVariant),
-                EpisodeVariantDto::class.java
-            )!!
-        )
+        val image = MediaImage.toMediaImage(listOf(episodeVariantFactory.toDto(episodeVariant)))
 
         val baos = ByteArrayOutputStream()
         ImageIO.write(image, "jpg", baos)

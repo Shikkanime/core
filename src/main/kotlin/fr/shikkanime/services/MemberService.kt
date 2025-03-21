@@ -1,13 +1,13 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.member.MemberDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
+import fr.shikkanime.factories.impl.MemberFactory
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
@@ -32,6 +32,9 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     @Inject
     private lateinit var traceActionService: TraceActionService
+
+    @Inject
+    private lateinit var memberFactory: MemberFactory
 
     override fun getRepository() = memberRepository
 
@@ -88,7 +91,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     fun login(identifier: String): MemberDto? {
         val member = findByIdentifier(identifier) ?: return null
         traceActionService.createTraceAction(member, TraceAction.Action.LOGIN)
-        return AbstractConverter.convert(member, MemberDto::class.java)
+        return memberFactory.toDto(member)
     }
 
     fun associateEmail(memberUuid: UUID, email: String): UUID {

@@ -1,7 +1,6 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
@@ -11,7 +10,6 @@ import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -43,8 +41,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        status: Status? = null
-    ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit, status)
+    ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit)
 
     fun findAllAnimeUuidImageBannerAndUuidImage() = episodeMappingRepository.findAllAnimeUuidImageBannerAndUuidImage()
 
@@ -81,7 +78,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     override fun save(entity: EpisodeMapping): EpisodeMapping {
         val save = super.save(entity)
-        if (!Constant.disableImageConversion) addImage(save.uuid!!, save.image!!)
+        if (!Constant.isTest) addImage(save.uuid!!, save.image!!)
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return save
     }
@@ -110,7 +107,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             startDate = incrementReleaseDate(startDate, episode, updateAllEpisodeMappingDto)
             if (hasBeenMerged(updateAllEpisodeMappingDto, episode, forcedUpdate)) return@forEach
 
-            episode.status = StringUtils.getStatus(episode)
             episode.lastUpdateDateTime = if (forcedUpdate) ZonedDateTime.parse("2000-01-01T00:00:00Z") else ZonedDateTime.now()
             super.update(episode)
             traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
@@ -234,7 +230,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
             episode.duration = entity.duration
         }
 
-        episode.status = StringUtils.getStatus(episode)
         episode.lastUpdateDateTime = ZonedDateTime.now()
         val update = super.update(episode)
         updateEpisodeMappingVariants(entity, episode, update)
@@ -269,7 +264,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     }
 
     private fun updateEpisodeMappingAnime(entity: EpisodeMappingDto, episode: EpisodeMapping) {
-        if (entity.anime.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
+        if (entity.anime!!.name.isNotBlank() && entity.anime.name != episode.anime?.name) {
             val oldAnimeId = episode.anime!!.uuid!!
             val findByName = requireNotNull(
                 animeService.findByName(

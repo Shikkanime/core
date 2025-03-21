@@ -2,7 +2,6 @@ val ktorVersion = "3.1.1"
 val hibernateCoreVersion = "6.6.11.Final"
 val ehcacheVersion = "3.10.8"
 val hibernateSearchVersion = "7.2.3.Final"
-val tikaVersion = "3.1.0"
 val postgresqlVersion = "42.7.5"
 val reflectionsVersion = "0.10.2"
 val guiceVersion = "7.0.0"
@@ -92,8 +91,6 @@ dependencies {
     implementation("org.openpnp:opencv:$openCvVersion")
     implementation("org.bouncycastle:bcprov-jdk18on:$bcprovVersion")
     implementation("com.mortennobel:java-image-scaling:$javaImageScalingVersion")
-    implementation("org.apache.tika:tika-core:$tikaVersion")
-    implementation("org.apache.tika:tika-langdetect-optimaize:$tikaVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")

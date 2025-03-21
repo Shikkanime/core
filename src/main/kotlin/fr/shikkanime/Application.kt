@@ -104,8 +104,6 @@ private fun updateAndDeleteData() {
                 return@forEach
             }
         }
-
-        anime.status = StringUtils.getStatus(anime)
     }
 
     animeService.updateAll(animes)

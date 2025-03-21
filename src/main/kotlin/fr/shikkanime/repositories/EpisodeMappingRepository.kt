@@ -1,6 +1,5 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
@@ -35,7 +34,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        status: Status? = null
     ): Pageable<EpisodeMapping> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
@@ -46,7 +44,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             anime?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime], it)) }
             season?.let { predicates.add(cb.equal(root[EpisodeMapping_.season], it)) }
             countryCode?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it)) }
-            status?.let { predicates.add(cb.equal(root[EpisodeMapping_.status], it)) }
             query.where(*predicates.toTypedArray())
 
             val orders = sort.mapNotNull { sortParameter ->

@@ -1,6 +1,5 @@
 package fr.shikkanime.caches
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -13,7 +12,6 @@ data class CountryCodeUUIDSortPaginationKeyCache(
     override val page: Int,
     override val limit: Int,
     val searchTypes: Array<LangType>?,
-    val status: Status? = null,
 ) : CountryCodePaginationKeyCache(countryCode, page, limit) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -27,7 +25,6 @@ data class CountryCodeUUIDSortPaginationKeyCache(
         if (uuid != other.uuid) return false
         if (sort != other.sort) return false
         if (!searchTypes.contentEquals(other.searchTypes)) return false
-        if (status != other.status) return false
 
         return true
     }
@@ -39,11 +36,10 @@ data class CountryCodeUUIDSortPaginationKeyCache(
         result = 31 * result + (uuid?.hashCode() ?: 0)
         result = 31 * result + sort.hashCode()
         result = 31 * result + (searchTypes?.contentHashCode() ?: 0)
-        result = 31 * result + (status?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "CountryCodeUUIDSortPaginationKeyCache(countryCode=$countryCode, uuid=$uuid, sort=$sort, page=$page, limit=$limit, searchTypes=${searchTypes?.contentToString()}, status=$status)"
+        return "CountryCodeUUIDSortPaginationKeyCache(countryCode=$countryCode, uuid=$uuid, sort=$sort, page=$page, limit=$limit, searchTypes=${searchTypes?.contentToString()})"
     }
 }

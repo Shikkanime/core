@@ -8,7 +8,6 @@ import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
-import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
@@ -33,9 +32,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     @Inject
     private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
-    @Inject
-    private lateinit var languageCacheService: LanguageCacheService
 
     @Inject
     private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
@@ -130,7 +126,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
             updateEpisodeMappingDescription(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
             updateEpisodeMappingDuration(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
 
-            mapping.status = StringUtils.getStatus(mapping)
             mapping.lastUpdateDateTime = zonedDateTime
             episodeMappingService.update(mapping)
 
@@ -299,10 +294,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ) {
         val trimmedDescription = originalEpisode.description?.take(Constant.MAX_DESCRIPTION_LENGTH).normalize()
 
-        if (trimmedDescription != mapping.description &&
-            !trimmedDescription.isNullOrBlank() &&
-            languageCacheService.detectLanguage(trimmedDescription) == mapping.anime!!.countryCode!!.name.lowercase()
-        ) {
+        if (trimmedDescription != mapping.description && !trimmedDescription.isNullOrBlank()) {
             mapping.description = trimmedDescription
             logger.info("Description updated for $mappingIdentifier to $trimmedDescription")
             hasChanged.set(true)

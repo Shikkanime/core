@@ -8,7 +8,6 @@
         maxPage: 1,
         filter: {
             anime: '',
-            invalid: false,
             season: ''
         },
         pages: [],
@@ -30,7 +29,7 @@
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
         },
         applyFilterParameters() {
-            if (this.filter.anime === '' && this.filter.season === '' && !this.filter.invalid && this.page === 1) {
+            if (this.filter.anime === '' && this.filter.season === '' && this.page === 1) {
                 window.history.pushState({}, '', '/admin/episodes');
             } else {
                 const params = new URLSearchParams();
@@ -41,10 +40,6 @@
 
                 if (this.filter.season) {
                     params.append('season', this.filter.season);
-                }
-
-                if (this.filter.invalid) {
-                    params.append('invalid', 'true');
                 }
 
                 if (this.page !== 1) {
@@ -160,11 +155,6 @@
                 <input type="number" class="form-control" id="seasonInput"
                        x-model="filter.season" @input="applyFilters">
             </div>
-            <div class="col-auto">
-                <input class="form-check-input" type="checkbox" id="invalidInput"
-                       x-model="filter.invalid" @change="applyFilters">
-                <label class="form-check-label" for="invalidInput">Only invalid</label>
-            </div>
             <div class="col-auto ms-auto">
                 <button class="btn btn-primary" type="button" @click="updateAll.uuids.push(...pageable.data.map(episode => episode.uuid));">
                     <i class="bi bi-check-all me-2"></i>
@@ -201,10 +191,6 @@
                 <tr @dblclick="if (updateAll.uuids.includes(episode.uuid)) { updateAll.uuids = updateAll.uuids.filter(uuid => uuid !== episode.uuid); } else { updateAll.uuids.push(episode.uuid); }">
                     <th scope="row">
                         <i class="bi bi-check2 me-2" x-show="updateAll.uuids.includes(episode.uuid)"></i>
-
-                        <span class="me-1 badge"
-                              :class="episode.status === 'INVALID' ? 'bg-danger' : 'bg-success'"
-                              x-text="episode.status === 'INVALID' ? 'Invalid' : 'Valid'"></span>
                         <span x-text="episode.anime.shortName"></span>
                     </th>
                     <td>
@@ -265,10 +251,6 @@
 
             if (filter.anime) {
                 params.append('anime', filter.anime);
-            }
-
-            if (filter.invalid) {
-                params.append('status', 'INVALID');
             }
 
             if (filter.season) {

@@ -1,6 +1,5 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
@@ -34,7 +33,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>?,
-        status: Status? = null
     ): Pageable<Anime> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
@@ -44,7 +42,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             val predicates = mutableListOf<Predicate>()
             simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
-            status?.let { predicates.add(cb.equal(root[Anime_.status], it)) }
             val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
 
             query.where(

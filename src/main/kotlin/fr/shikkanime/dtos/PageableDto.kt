@@ -1,7 +1,7 @@
 package fr.shikkanime.dtos
 
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.entities.miscellaneous.Pageable
+import fr.shikkanime.factories.IGenericFactory
 
 data class PageableDto<T>(
     val data: Set<T>,
@@ -19,9 +19,9 @@ data class PageableDto<T>(
             )
         }
 
-        inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, dtoClass: Class<D>): PageableDto<D> {
+        inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, factory: IGenericFactory<T, D>): PageableDto<D> {
             return PageableDto(
-                data = AbstractConverter.convert(pageable.data, dtoClass)!!,
+                data = pageable.data.map { factory.toDto(it) }.toSet(),
                 page = pageable.page,
                 limit = pageable.limit,
                 total = pageable.total,

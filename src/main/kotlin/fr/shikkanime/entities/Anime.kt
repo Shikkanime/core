@@ -1,6 +1,5 @@
 package fr.shikkanime.entities
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.CountryCode
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
@@ -43,9 +42,6 @@ class Anime(
     var description: String? = null,
     @Column(nullable = false)
     var slug: String? = null,
-    @Column(nullable = true, name = "status")
-    @Enumerated(EnumType.STRING)
-    var status: Status = Status.VALID,
     // -----------------------------------------------------------------
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

@@ -90,10 +90,10 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         login()
         if (!isInitialized) return
         val mapping = episodes.first().mapping
-        if (mapping.image.isBlank()) return
+        if (mapping!!.image.isBlank()) return
 
         val embedMessage = EmbedBuilder()
-        embedMessage.setTitle(mapping.anime.shortName, getShikkanimeUrl(episodes))
+        embedMessage.setTitle(mapping.anime!!.shortName, getShikkanimeUrl(episodes))
         embedMessage.setThumbnail(mapping.anime.image)
         embedMessage.setDescription(
             "**${mapping.title ?: "Untitled"}**\n${StringUtils.toEpisodeVariantString(episodes)}"

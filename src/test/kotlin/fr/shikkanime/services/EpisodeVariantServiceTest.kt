@@ -2,10 +2,7 @@ package fr.shikkanime.services
 
 import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.*
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.utils.MapCache
 import io.mockk.every
@@ -36,7 +33,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
         animeService.save(anime)
         val simulcast = episodeVariantService.getSimulcast(anime, episode)
 
-        assertEquals("WINTER", simulcast.season)
+        assertEquals(Season.WINTER, simulcast.season)
         assertEquals(2024, simulcast.year)
     }
 
@@ -47,7 +44,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
         val finalRelease = ZonedDateTime.parse("2024-01-03T16:00:00Z")
 
         anime.releaseDateTime = finalRelease.minusWeeks(12)
-        anime.simulcasts.add(Simulcast(season = "AUTUMN", year = 2023))
+        anime.simulcasts.add(Simulcast(season = Season.AUTUMN, year = 2023))
         animeService.save(anime)
 
         (1..<12).map { i ->
@@ -79,7 +76,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
 
         val simulcast = episodeVariantService.getSimulcast(anime, episode)
 
-        assertEquals("AUTUMN", simulcast.season)
+        assertEquals(Season.AUTUMN, simulcast.season)
         assertEquals(2023, simulcast.year)
     }
 

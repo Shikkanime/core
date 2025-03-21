@@ -29,7 +29,7 @@ object MediaImage {
         val graphics = setupGraphics(mediaImage)
 
         drawBackground(mediaImage, graphics)
-        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, episodes.first().mapping.anime)
+        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, episodes.first().mapping!!.anime!!)
         drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, episodes)
 
         graphics.drawImage(

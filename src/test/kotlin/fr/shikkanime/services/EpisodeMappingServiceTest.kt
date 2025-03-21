@@ -1,7 +1,7 @@
 package fr.shikkanime.services
 
+import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
@@ -9,11 +9,15 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.utils.ObjectParser
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class EpisodeMappingServiceTest : AbstractTest() {
+    @Inject
+    private lateinit var episodeMappingFactory: EpisodeMappingFactory
+
     @Test
     fun update() {
         val anime = animeService.save(
@@ -35,7 +39,7 @@ class EpisodeMappingServiceTest : AbstractTest() {
             )
         )
 
-        val dto = AbstractConverter.convert(episodeMapping, EpisodeMappingDto::class.java)
+        val dto = episodeMappingFactory.toDto(episodeMapping)
         dto.episodeType = EpisodeType.FILM
 
         val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)
@@ -73,7 +77,7 @@ class EpisodeMappingServiceTest : AbstractTest() {
             )
         )
 
-        val dto = AbstractConverter.convert(episodeMapping, EpisodeMappingDto::class.java)
+        val dto = episodeMappingFactory.toDto(episodeMapping)
         dto.episodeType = EpisodeType.FILM
 
         val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)

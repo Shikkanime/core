@@ -1,6 +1,5 @@
 package fr.shikkanime.entities
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.entities.enums.EpisodeType
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
@@ -55,9 +54,6 @@ class EpisodeMapping(
     var description: String? = null,
     @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
     var image: String? = null,
-    @Column(nullable = true, name = "status")
-    @Enumerated(EnumType.STRING)
-    var status: Status = Status.VALID,
     // -----------------------------------------------------------------
     @OneToMany(mappedBy = "mapping", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)

@@ -1,16 +1,13 @@
 package fr.shikkanime.utils
 
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
-import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.caches.LanguageCacheService
 import java.text.Normalizer
 import java.util.*
 import java.util.regex.Pattern
@@ -123,16 +120,16 @@ object StringUtils {
         }.trim()
     }
 
-    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season.toString(), showSeason, separator, episode.episodeType, episode.number.toString())
+    fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime!!.countryCode, episode.season.toString(), showSeason, separator, episode.episodeType, episode.number.toString())
     fun toEpisodeGroupedString(episode: GroupedEpisodeDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
     fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), true, true, episode.episodeType!!, episode.number!!.toString())
 
     fun toEpisodeVariantString(episodes: List<EpisodeVariantDto>): String {
-        val mapping = episodes.first().mapping
+        val mapping = episodes.first().mapping!!
 
         return buildString {
             append(toEpisodeMappingString(mapping))
-            append(" ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { toLangTypeString(mapping.anime.countryCode, it) }}")
+            append(" ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { toLangTypeString(mapping.anime!!.countryCode, it) }}")
         }
     }
 
@@ -154,40 +151,6 @@ object StringUtils {
         audioLocale: String,
         uncensored: Boolean = false
     ) = "${countryCode}-${platform}-$id-${audioLocale.uppercase()}${if (uncensored) "-UNC" else EMPTY_STRING}"
-
-    private fun isInvalid(
-        image: String?,
-        description: String?,
-        countryCode: CountryCode,
-        languageCacheService: LanguageCacheService
-    ) = image.isNullOrBlank() ||
-            description.isNullOrBlank() ||
-            description.startsWith("(") ||
-            (description.isNotBlank() && languageCacheService.detectLanguage(description) != countryCode.name.lowercase())
-
-    fun getStatus(anime: Anime): Status {
-        val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
-
-        return if (
-            isInvalid(anime.image, anime.description, anime.countryCode!!, languageCacheService) ||
-            anime.banner.isNullOrBlank()
-        ) Status.INVALID else Status.VALID
-    }
-
-    fun getStatus(episodeMapping: EpisodeMapping): Status {
-        val languageCacheService = Constant.injector.getInstance(LanguageCacheService::class.java)
-
-        return if (
-            isInvalid(
-                episodeMapping.image,
-                episodeMapping.description,
-                episodeMapping.anime!!.countryCode!!,
-                languageCacheService
-            ) ||
-            episodeMapping.title.isNullOrBlank() ||
-            episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW
-        ) Status.INVALID else Status.VALID
-    }
 
     fun generateRandomString(length: Int): String {
         val source = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"

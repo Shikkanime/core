@@ -2,13 +2,13 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -26,6 +26,9 @@ import java.util.*
 class EpisodeMappingController {
     @Inject
     private lateinit var episodeMappingService: EpisodeMappingService
+
+    @Inject
+    private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     @Path("/update-all")
     @Put
@@ -57,7 +60,7 @@ class EpisodeMappingController {
     @AdminSessionAuthenticated
     private fun read(@PathParam("uuid") uuid: UUID): Response {
         val find = episodeMappingService.find(uuid) ?: return Response.notFound()
-        return Response.ok(AbstractConverter.convert(find, EpisodeMappingDto::class.java))
+        return Response.ok(episodeMappingFactory.toDto(find))
     }
 
     @Path("/{uuid}")
@@ -67,9 +70,9 @@ class EpisodeMappingController {
         @PathParam("uuid") uuid: UUID,
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
-        val updated = episodeMappingService.update(uuid, episodeMappingDto)
+        val updated = episodeMappingService.update(uuid, episodeMappingDto) ?: return Response.notFound()
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
-        return Response.ok(AbstractConverter.convert(updated, EpisodeMappingDto::class.java))
+        return Response.ok(episodeMappingFactory.toDto(updated))
     }
 
     @Path("/{uuid}")

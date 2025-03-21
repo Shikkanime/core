@@ -1,5 +1,6 @@
 package fr.shikkanime.entities
 
+import fr.shikkanime.entities.enums.Season
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -19,7 +20,8 @@ import java.util.*
 class Simulcast(
     uuid: UUID? = null,
     @Column(nullable = false)
-    val season: String? = null,
+    @Enumerated(EnumType.STRING)
+    val season: Season? = null,
     @Column(nullable = false, name = "year_")
     val year: Int? = null,
     @ManyToMany(mappedBy = "simulcasts", fetch = FetchType.LAZY)

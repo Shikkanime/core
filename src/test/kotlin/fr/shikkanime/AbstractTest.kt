@@ -90,7 +90,7 @@ abstract class AbstractTest {
         @BeforeAll
         @JvmStatic
         fun beforeAll() {
-            Constant.disableImageConversion = true
+            System.setProperty("isTest", "true")
         }
     }
 }

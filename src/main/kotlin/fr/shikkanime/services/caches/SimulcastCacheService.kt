@@ -1,8 +1,7 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
-import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.simulcasts.SimulcastDto
+import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.services.SimulcastService
@@ -17,7 +16,7 @@ class SimulcastCacheService : AbstractCacheService {
         "SimulcastCacheService.findAll",
         classes = listOf(Simulcast::class.java, Anime::class.java),
         key = "all"
-    ) { AbstractConverter.convert(simulcastService.findAllModified(), SimulcastDto::class.java) }
+    ) { simulcastService.findAllModified() }
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "SimulcastCacheService.find",

@@ -2,13 +2,13 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.*
@@ -24,6 +24,9 @@ import java.util.*
 class AnimeController : HasPageableRoute() {
     @Inject
     private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var animeFactory: AnimeFactory
 
     @Path("/force-update-all")
     @Get
@@ -42,16 +45,16 @@ class AnimeController : HasPageableRoute() {
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
-        return Response.ok(AbstractConverter.convert(animeService.find(uuid) ?: return Response.notFound(), AnimeDto::class.java))
+        return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()))
     }
 
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
     private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
-        val updated = animeService.update(uuid, animeDto)
+        val updated = animeService.update(uuid, animeDto) ?: return Response.notFound()
         MapCache.invalidate(Anime::class.java)
-        return Response.ok(AbstractConverter.convert(updated, AnimeDto::class.java))
+        return Response.ok(animeFactory.toDto(updated))
     }
 
     @Path("/{uuid}")

@@ -2,9 +2,9 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.RuleDto
 import fr.shikkanime.entities.Rule
+import fr.shikkanime.factories.impl.RuleFactory
 import fr.shikkanime.services.RuleService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -23,11 +23,14 @@ class RuleController {
     @Inject
     private lateinit var ruleService: RuleService
 
+    @Inject
+    private lateinit var ruleFactory: RuleFactory
+
     @Path
     @Get
     @AdminSessionAuthenticated
     private fun getRules(): Response {
-        return Response.ok(AbstractConverter.convert(ruleService.findAll(), RuleDto::class.java))
+        return Response.ok(ruleService.findAll().map { ruleFactory.toDto(it) })
     }
 
     @Path
@@ -38,10 +41,9 @@ class RuleController {
             return Response.badRequest("UUID must be null")
         }
 
-        val rule = ruleService.save(AbstractConverter.convert(ruleDto, Rule::class.java))
+        val rule = ruleService.save(ruleFactory.toEntity(ruleDto))
         MapCache.invalidate(Rule::class.java)
-
-        return Response.ok(AbstractConverter.convert(rule, RuleDto::class.java))
+        return Response.ok(ruleFactory.toDto(rule))
     }
 
     @Path("/{uuid}")

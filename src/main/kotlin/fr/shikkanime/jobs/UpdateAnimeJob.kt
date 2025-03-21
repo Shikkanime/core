@@ -11,7 +11,6 @@ import fr.shikkanime.services.AnimePlatformService
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.LanguageCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
 import kotlinx.coroutines.runBlocking
@@ -43,9 +42,6 @@ class UpdateAnimeJob : AbstractJob {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var languageCacheService: LanguageCacheService
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
@@ -82,7 +78,6 @@ class UpdateAnimeJob : AbstractJob {
 
             if (updatedAnimes.isEmpty()) {
                 logger.warning("No platform found for anime $shortName")
-                anime.status = StringUtils.getStatus(anime)
                 anime.lastUpdateDateTime = zonedDateTime
                 animeService.update(anime)
                 return@forEach
@@ -109,16 +104,12 @@ class UpdateAnimeJob : AbstractJob {
 
             val updatableDescription = updatedAnimes.firstOrNull { !it.description.isNullOrBlank() }?.description?.normalize()
 
-            if (updatableDescription != anime.description && !updatableDescription.isNullOrBlank() && languageCacheService.detectLanguage(
-                    updatableDescription
-                ) == anime.countryCode!!.name.lowercase()
-            ) {
+            if (updatableDescription != anime.description && !updatableDescription.isNullOrBlank()) {
                 anime.description = updatableDescription
                 logger.info("Description updated for anime $shortName to $updatableDescription")
                 hasChanged = true
             }
 
-            anime.status = StringUtils.getStatus(anime)
             anime.lastUpdateDateTime = zonedDateTime
             animeService.update(anime)
 

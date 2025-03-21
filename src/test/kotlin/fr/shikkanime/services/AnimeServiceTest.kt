@@ -1,22 +1,28 @@
 package fr.shikkanime.services
 
+import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.converters.AbstractConverter
-import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.GenericDto
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 import java.time.ZonedDateTime
 import kotlin.test.assertTrue
 
 class AnimeServiceTest : AbstractTest() {
+    @Inject
+    private lateinit var animeFactory: AnimeFactory
+
     @Test
     fun `update with no episodes`() {
         animeService.save(
@@ -40,10 +46,11 @@ class AnimeServiceTest : AbstractTest() {
         )
 
         val anime = animeService.findByName(CountryCode.FR, "DRAGON QUEST The Adventure of Dai")
-        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
+        assertNotNull(anime)
+        val dto = animeFactory.toDto(anime)
         dto.slug = "dragon-quest"
 
-        animeService.update(anime!!.uuid!!, dto)
+        animeService.update(anime.uuid!!, dto)
 
         assertEquals(1, animeService.findAll().size)
         assertEquals("Dragon Quest", animeService.findAll()[0].name)
@@ -122,10 +129,11 @@ class AnimeServiceTest : AbstractTest() {
         )
 
         val anime = animeService.findByName(CountryCode.FR, "DRAGON QUEST The Adventure of Dai")
-        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
+        assertNotNull(anime)
+        val dto = animeFactory.toDto(anime)
         dto.slug = "dragon-quest"
 
-        animeService.update(anime!!.uuid!!, dto)
+        animeService.update(anime.uuid!!, dto)
 
         assertEquals(1, animeService.findAll().size)
         assertEquals("Dragon Quest", animeService.findAll()[0].name)
@@ -235,10 +243,11 @@ class AnimeServiceTest : AbstractTest() {
         assertEquals(3, episodeVariantService.findAll().size)
 
         val anime = animeService.findByName(CountryCode.FR, "DRAGON QUEST The Adventure of Dai")
-        val dto = AbstractConverter.convert(anime, AnimeDto::class.java)
+        assertNotNull(anime)
+        val dto = animeFactory.toDto(anime)
         dto.slug = "dragon-quest"
 
-        animeService.update(anime!!.uuid!!, dto)
+        animeService.update(anime.uuid!!, dto)
 
         assertEquals(1, animeService.findAll().size)
         assertEquals("Dragon Quest", animeService.findAll()[0].name)

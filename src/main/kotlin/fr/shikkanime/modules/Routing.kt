@@ -1,7 +1,6 @@
 package fr.shikkanime.modules
 
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.dtos.enums.Status
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -269,7 +268,6 @@ private fun fromString(value: String?, type: KType): Any? {
         UUID::class to { it?.let(UUID::fromString) },
         CountryCode::class to { CountryCode.fromNullable(it) },
         Platform::class to { Platform.fromNullable(it) },
-        Status::class to { Status.fromNullable(it) },
         String::class to { it },
         Int::class to { it?.toIntOrNull() },
     )

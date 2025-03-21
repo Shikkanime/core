@@ -1,11 +1,13 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.simulcasts.SimulcastModifiedDto
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.TraceAction
+import fr.shikkanime.entities.enums.Season
+import fr.shikkanime.factories.impl.SimulcastFactory
 import fr.shikkanime.repositories.SimulcastRepository
-import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.withUTCString
+import java.time.ZonedDateTime
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     @Inject
@@ -14,11 +16,20 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     @Inject
     private lateinit var traceActionService: TraceActionService
 
+    @Inject
+    private lateinit var simulcastFactory: SimulcastFactory
+
     override fun getRepository() = simulcastRepository
 
-    fun findAllModified() = simulcastRepository.findAllModified().sortBySeasonAndYear()
+    fun findAllModified() = simulcastRepository.findAllModified()
+        .sortedWith(compareBy({ it[0, Simulcast::class.java].year }, { Season.entries.indexOf(it[0, Simulcast::class.java].season) }))
+        .reversed()
+        .map { simulcastFactory.toDto(it[0, Simulcast::class.java]).apply {
+            lastReleaseDateTime = it[1, ZonedDateTime::class.java].withUTCString()
+            animesCount = it[2, Long::class.java]
+        } }
 
-    fun findBySeasonAndYear(season: String, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
+    fun findBySeasonAndYear(season: Season, year: Int) = simulcastRepository.findBySeasonAndYear(season, year)
 
     override fun save(entity: Simulcast): Simulcast {
         val save = super.save(entity)
@@ -33,9 +44,6 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     companion object {
         fun Set<Simulcast>.sortBySeasonAndYear(): Set<Simulcast> =
-            this.sortedWith(compareBy({ it.year }, { Constant.seasons.indexOf(it.season) })).reversed().toSet()
-
-        fun List<SimulcastModifiedDto>.sortBySeasonAndYear(): List<SimulcastModifiedDto> =
-            this.sortedWith(compareBy({ it.simulcast.year }, { Constant.seasons.indexOf(it.simulcast.season) })).reversed()
+            this.sortedWith(compareBy({ it.year }, { Season.entries.indexOf(it.season) })).reversed().toSet()
     }
 }

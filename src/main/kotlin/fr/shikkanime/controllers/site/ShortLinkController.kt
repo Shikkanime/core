@@ -12,7 +12,7 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
-import java.util.UUID
+import java.util.*
 
 @Controller("/")
 class ShortLinkController {
@@ -23,7 +23,7 @@ class ShortLinkController {
     private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     private fun getUrl(episodeDto: EpisodeVariantDto) =
-        "${Constant.baseUrl}/animes/${episodeDto.mapping.anime.slug}/season-${episodeDto.mapping.season}/${episodeDto.mapping.episodeType.slug}-${episodeDto.mapping.number}"
+        "${Constant.baseUrl}/animes/${episodeDto.mapping!!.anime!!.slug}/season-${episodeDto.mapping.season}/${episodeDto.mapping.episodeType.slug}-${episodeDto.mapping.number}"
 
     @Path("r/{episodeVariantUuid}")
     @Get

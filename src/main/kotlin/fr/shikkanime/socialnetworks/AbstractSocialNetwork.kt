@@ -28,7 +28,7 @@ abstract class AbstractSocialNetwork {
 
     fun getEpisodeMessage(episodes: List<EpisodeVariantDto>, baseMessage: String): String {
         val mapping = episodes.first().mapping
-        val shortName = mapping.anime.shortName
+        val shortName = mapping!!.anime!!.shortName
         val isVoice = " en ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { StringUtils.toLangTypeString(mapping.anime.countryCode, it) }} "
 
         return baseMessage

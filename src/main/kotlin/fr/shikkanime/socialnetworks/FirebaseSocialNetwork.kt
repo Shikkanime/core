@@ -53,10 +53,10 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
         if (!isInitialized) return
 
         val mapping = episodes.first().mapping
-        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping.uuid}&type=image"
+        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping!!.uuid}&type=image"
 
         val notification = Notification.builder()
-            .setTitle(mapping.anime.shortName)
+            .setTitle(mapping.anime!!.shortName)
             .setBody(StringUtils.toEpisodeVariantString(episodes))
             .setImage(image)
             .build()

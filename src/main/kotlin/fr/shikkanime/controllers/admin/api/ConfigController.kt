@@ -2,9 +2,9 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
-import fr.shikkanime.converters.AbstractConverter
 import fr.shikkanime.dtos.ConfigDto
 import fr.shikkanime.entities.Config
+import fr.shikkanime.factories.impl.ConfigFactory
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
@@ -24,6 +24,9 @@ class ConfigController {
     @Inject
     private lateinit var configService: ConfigService
 
+    @Inject
+    private lateinit var configFactory: ConfigFactory
+
     @Path
     @Get
     @AdminSessionAuthenticated
@@ -36,16 +39,16 @@ class ConfigController {
             configService.findAll()
         }
 
-        return Response.ok(AbstractConverter.convert(configs, ConfigDto::class.java))
+        return Response.ok(configs.map { configFactory.toDto(it) })
     }
 
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
     private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
-        configService.update(uuid, configDto)
+        val config = configService.update(uuid, configDto) ?: return Response.notFound()
         MapCache.invalidate(Config::class.java)
         Constant.abstractSocialNetworks.forEach { it.logout() }
-        return Response.ok(AbstractConverter.convert(configService.find(uuid), ConfigDto::class.java))
+        return Response.ok(configFactory.toDto(config))
     }
 }
