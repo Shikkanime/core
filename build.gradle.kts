@@ -1,7 +1,7 @@
 val ktorVersion = "3.1.1"
 val hibernateCoreVersion = "6.6.11.Final"
 val ehcacheVersion = "3.10.8"
-val hibernateSearchVersion = "7.2.2.Final"
+val hibernateSearchVersion = "7.2.3.Final"
 val postgresqlVersion = "42.7.5"
 val reflectionsVersion = "0.10.2"
 val guiceVersion = "7.0.0"
@@ -26,7 +26,7 @@ val h2Version = "2.3.232"
 val mockkVersion = "1.13.17"
 
 plugins {
-    val kotlinVersion = "2.1.10"
+    val kotlinVersion = "2.1.20"
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
