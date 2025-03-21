@@ -45,8 +45,8 @@ class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto>
             description = entity.description,
             duration = entity.duration,
             internalUrl = internalUrl,
-            mappings = entity.mappings,
-            urls = entity.urls
+            mappings = entity.mappings.toSet(),
+            urls = entity.urls.toSet()
         )
     }
 }

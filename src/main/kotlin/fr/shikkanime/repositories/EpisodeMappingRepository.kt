@@ -189,28 +189,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    private fun findAllTitleDescriptionAndDurationByUUIDs(
-        uuids: List<UUID>
-    ): List<Tuple> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
-
-            query.multiselect(
-                root[EpisodeMapping_.uuid],
-                root[EpisodeMapping_.title],
-                root[EpisodeMapping_.description],
-                root[EpisodeMapping_.duration]
-            )
-
-            query.where(root[EpisodeMapping_.uuid].`in`(uuids))
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
     fun findAllGrouped(
         countryCode: CountryCode,
         page: Int,
@@ -218,88 +196,58 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     ): Pageable<GroupedEpisode> {
         return database.entityManager.use {
             val query = it.createQuery("""
-                WITH grouped_data AS (
-                    SELECT a AS anime,
-                         MIN(ev.releaseDateTime) AS min_release_date_time,
-                         MAX(em.lastUpdateDateTime) AS last_update_date_time,
-                         MIN(em.season) AS min_season,
-                         MAX(em.season) AS max_season,
-                         em.episodeType AS episodeType,
-                         MIN(em.number) AS min_number,
-                         MAX(em.number) AS max_number,
-                         ARRAY_AGG(DISTINCT ev.platform) WITHIN GROUP (ORDER BY ev.platform) AS platforms,
-                         ARRAY_AGG(DISTINCT ev.audioLocale) WITHIN GROUP (ORDER BY ev.audioLocale) AS audioLocales,
-                         ARRAY_AGG(DISTINCT ev.url) WITHIN GROUP (ORDER BY ev.url) AS urls,
-                         ARRAY_AGG(DISTINCT em.uuid) WITHIN GROUP (ORDER BY em.uuid) AS mappings
-                    FROM EpisodeVariant ev
-                        JOIN ev.mapping em
-                        JOIN em.anime a
-                    WHERE a.countryCode = :countryCode
-                    GROUP BY a,
-                            em.episodeType,
-                            DATE_TRUNC("hour", ev.releaseDateTime)
-                )
-                SELECT gd.anime,
-                    gd.min_release_date_time,
-                    gd.last_update_date_time,
-                    gd.min_season,
-                    gd.max_season,
-                    gd.episodeType,
-                    gd.min_number,
-                    gd.max_number,
-                    gd.platforms,
-                    gd.audioLocales,
-                    gd.urls,
-                    gd.mappings
-                FROM grouped_data gd
-                ORDER BY gd.min_release_date_time DESC,
-                    gd.anime.name DESC,
-                    gd.min_season DESC,
-                    gd.episodeType DESC,
-                    gd.min_number DESC
-            """.trimIndent(), Tuple::class.java)
+            WITH grouped_data AS (
+                SELECT a AS anime,
+                     MIN(ev.releaseDateTime) AS minReleaseDateTime,
+                     MAX(em.lastUpdateDateTime) AS lastUpdateDateTime,
+                     MIN(em.season) AS minSeason,
+                     MAX(em.season) AS maxSeason,
+                     em.episodeType AS episodeType,
+                     MIN(em.number) AS minNumber,
+                     MAX(em.number) AS maxNumber,
+                     ARRAY_AGG(DISTINCT ev.platform) WITHIN GROUP (ORDER BY ev.platform) AS platforms,
+                     ARRAY_AGG(DISTINCT ev.audioLocale) WITHIN GROUP (ORDER BY ev.audioLocale) AS audioLocales,
+                     ARRAY_AGG(DISTINCT ev.url) WITHIN GROUP (ORDER BY ev.url) AS urls,
+                     ARRAY_AGG(em.uuid) WITHIN GROUP (ORDER BY em.season, em.episodeType, em.number) AS mappings,
+                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.title) ELSE NULL END AS title,
+                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.description) ELSE NULL END AS description,
+                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.duration) ELSE NULL END AS duration
+                FROM EpisodeVariant ev
+                    JOIN ev.mapping em
+                    JOIN em.anime a
+                WHERE a.countryCode = :countryCode
+                GROUP BY a,
+                        em.episodeType,
+                        DATE_TRUNC('hour', ev.releaseDateTime)
+            )
+            SELECT NEW fr.shikkanime.entities.miscellaneous.GroupedEpisode(
+                gd.anime,
+                gd.minReleaseDateTime,
+                gd.lastUpdateDateTime,
+                gd.minSeason,
+                gd.maxSeason,
+                gd.episodeType,
+                gd.minNumber,
+                gd.maxNumber,
+                gd.platforms,
+                gd.audioLocales,
+                gd.urls,
+                gd.mappings,
+                gd.title,
+                gd.description,
+                gd.duration
+            )
+            FROM grouped_data gd
+            ORDER BY gd.minReleaseDateTime DESC,
+                gd.anime.name DESC,
+                gd.minSeason DESC,
+                gd.episodeType DESC,
+                gd.minNumber DESC
+        """.trimIndent(), GroupedEpisode::class.java)
 
             query.setParameter("countryCode", countryCode)
 
-            val tmpPage = buildPageableQuery(createReadOnlyQuery(query), page, limit)
-            val page = Pageable<GroupedEpisode>(
-                tmpPage.data.map {
-                    GroupedEpisode(
-                        it[0, Anime::class.java],
-                        it[1, ZonedDateTime::class.java],
-                        it[2, ZonedDateTime::class.java],
-                        it[3, Int::class.java],
-                        it[4, Int::class.java],
-                        it[5, EpisodeType::class.java],
-                        it[6, Int::class.java],
-                        it[7, Int::class.java],
-                        it[8, Array::class.java].filterIsInstance<Platform>().toSet(),
-                        it[9, Array::class.java].filterIsInstance<String>().toSet(),
-                        it[10, Array::class.java].filterIsInstance<String>().toSet(),
-                        it[11, Array::class.java].filterIsInstance<UUID>().toSet()
-                    )
-                }.toSet(),
-                tmpPage.page,
-                tmpPage.limit,
-                tmpPage.total
-            )
-
-
-            val singleMappingEpisodes = page.data.filter { it.mappings.size == 1 }
-            val uuids = singleMappingEpisodes.map { it.mappings.first() }
-            val titleDescriptionAndDuration = findAllTitleDescriptionAndDurationByUUIDs(uuids).associateBy(
-                { it[0, UUID::class.java] },
-                { Triple(it[1, String::class.java], it[2, String::class.java], it[3, Long::class.java]) }
-            )
-
-            singleMappingEpisodes.forEach { groupedEpisode ->
-                val (title, description, duration) = titleDescriptionAndDuration[groupedEpisode.mappings.first()]!!
-                groupedEpisode.title = title
-                groupedEpisode.description = description
-                groupedEpisode.duration = duration
-            }
-
-            page
+            buildPageableQuery(createReadOnlyQuery(query), page, limit)
         }
     }
 
