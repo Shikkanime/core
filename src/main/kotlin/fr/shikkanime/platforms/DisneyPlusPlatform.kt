@@ -1,6 +1,6 @@
 package fr.shikkanime.platforms
 
-import fr.shikkanime.caches.CountryCodeDisneyPlusSimulcastKeyCache
+import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
@@ -13,17 +13,17 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
-class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeDisneyPlusSimulcastKeyCache, List<Episode>>() {
+class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<Episode>>() {
     override fun getPlatform(): Platform = Platform.DISN
 
     override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
 
     override suspend fun fetchApiContent(
-        key: CountryCodeDisneyPlusSimulcastKeyCache,
+        key: CountryCodeReleaseDayPlatformSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ) = DisneyPlusWrapper.getEpisodesByShowId(
         key.countryCode.locale,
-        key.disneyPlusSimulcast.name
+        key.releaseDayPlatformSimulcast.name
     )
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
@@ -33,7 +33,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
             configuration!!.simulcasts.filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
                 .forEach { simulcast ->
                     val episodes = getApiContent(
-                        CountryCodeDisneyPlusSimulcastKeyCache(
+                        CountryCodeReleaseDayPlatformSimulcastKeyCache(
                             countryCode,
                             simulcast
                         ), zonedDateTime
