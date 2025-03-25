@@ -1,19 +1,21 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.ThreadsWrapper
 import kotlinx.coroutines.runBlocking
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.logging.Level
 
 class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(ThreadsSocialNetwork::class.java)
     private var token: String? = null
     private var isInitialized = false
-
-    override fun utmSource() = "threads"
 
     override fun login() {
         if (isInitialized) return
@@ -39,12 +41,15 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+        require(variants.isNotEmpty()) { "Variants must not be empty" }
+        require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
+
         checkSession()
         if (!isInitialized) return
         val message =
             getEpisodeMessage(
-                episodes,
+                variants,
                 configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: ""
             )
 
@@ -53,8 +58,9 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                     token!!,
                     ThreadsWrapper.PostType.IMAGE,
                     message,
-                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/${episodes.first().uuid}/media-image",
-                    altText = "Image de l'épisode ${episodes.first().mapping!!.number} de ${episodes.first().mapping!!.anime!!.shortName}"
+                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=${URLEncoder.encode(EncryptionManager.toGzip(variants.joinToString(",") { it.uuid.toString() }),
+                        StandardCharsets.UTF_8)}",
+                    altText = "Image de l'épisode ${variants.first().mapping!!.number} de ${StringUtils.getShortName(variants.first().mapping!!.anime!!.name!!)}"
                 )
 
                 val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)
@@ -63,7 +69,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                     ThreadsWrapper.post(
                         token!!,
                         ThreadsWrapper.PostType.TEXT,
-                        getEpisodeMessage(episodes, secondMessage),
+                        getEpisodeMessage(variants, secondMessage),
                         replyToId = firstPost
                     )
                 }

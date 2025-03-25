@@ -2,14 +2,13 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
+import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
-import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
 import java.io.ByteArrayOutputStream
@@ -26,9 +25,6 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Inject
     private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
-
-    @Inject
-    private lateinit var episodeVariantFactory: EpisodeVariantFactory
 
     @Path
     @Get
@@ -75,18 +71,24 @@ class EpisodeMappingController : HasPageableRoute() {
         )
     }
 
-    @Path("/{uuid}/media-image")
+    @Path("/media-image")
     @Get
     private fun getMediaImage(
-        @PathParam("uuid")
-        uuid: UUID
+        @QueryParam("uuids")
+        uuidsGzip: String?
     ): Response {
-        val episodeVariant = episodeVariantService.find(uuid) ?: return Response.notFound()
-        val image = MediaImage.toMediaImage(listOf(episodeVariantFactory.toDto(episodeVariant)))
+        if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
 
+        val uuids = EncryptionManager.fromGzip(uuidsGzip).split(",").mapNotNull { UUID.fromString(it) }.distinct()
+        val variants = uuids.mapNotNull { episodeVariantService.find(it) }
+        if (variants.isEmpty()) return Response.notFound()
+
+        val distinctAnimeUuids = variants.map { it.mapping!!.anime!!.uuid }.distinct()
+        if (distinctAnimeUuids.size != 1) return Response.badRequest()
+
+        val image = MediaImage.toMediaImage(*variants.toTypedArray())
         val baos = ByteArrayOutputStream()
         ImageIO.write(image, "jpg", baos)
-        val bytes = baos.toByteArray()
-        return Response.multipart(bytes, ContentType.Image.JPEG)
+        return Response.multipart(baos.toByteArray(), ContentType.Image.JPEG)
     }
 }

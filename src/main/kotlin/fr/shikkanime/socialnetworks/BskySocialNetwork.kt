@@ -1,6 +1,6 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -17,8 +17,6 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     private var initializedAt: ZonedDateTime? = null
     private var accessJwt: String? = null
     private var did: String? = null
-
-    override fun utmSource() = "bsky"
 
     override fun login() {
         if (isInitialized) return
@@ -60,13 +58,13 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
 
         val firstMessage =
             getEpisodeMessage(
-                episodes,
+                variants,
                 configCacheService.getValueAsString(ConfigPropertyKey.BSKY_FIRST_MESSAGE) ?: ""
             )
 
@@ -96,9 +94,9 @@ class BskySocialNetwork : AbstractSocialNetwork() {
                 BskyWrapper.createRecord(
                     accessJwt!!,
                     did!!,
-                    getEpisodeMessage(episodes, secondMessage.replace("{EMBED}", "")).trim(),
+                    getEpisodeMessage(variants, secondMessage.replace("{EMBED}", "")).trim(),
                     replyTo = firstRecord,
-                    embed = getShikkanimeUrl(episodes).takeIf { secondMessage.contains("{EMBED}") }
+                    embed = getInternalUrl(variants).takeIf { secondMessage.contains("{EMBED}") }
                 )
             }
         }

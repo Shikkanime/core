@@ -1,6 +1,6 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import twitter4j.Twitter
@@ -15,8 +15,6 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(TwitterSocialNetwork::class.java)
     private var isInitialized = false
     private var twitter: Twitter? = null
-
-    override fun utmSource() = "twitter"
 
     override fun login() {
         if (isInitialized) return
@@ -61,13 +59,13 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
         if (twitter == null) return
 
         val firstMessage = getEpisodeMessage(
-            episodes,
+            variants,
             configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: ""
         )
         val firstTweet = twitter!!.v2.createTweet(mediaIds = mediaImage?.let {
@@ -78,7 +76,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         if (!secondMessage.isNullOrBlank()) {
             twitter!!.v2.createTweet(
                 inReplyToTweetId = firstTweet.id,
-                text = getEpisodeMessage(episodes, secondMessage)
+                text = getEpisodeMessage(variants, secondMessage)
             )
         }
     }

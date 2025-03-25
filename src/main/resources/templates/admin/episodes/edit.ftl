@@ -230,8 +230,7 @@
                                         <th scope="row">
                                             <span x-text="variant.identifier"></span>
 
-                                            <a :href="'/api/v1/episode-mappings/' + variant.uuid + '/media-image'"
-                                               target="_blank">
+                                            <a style="cursor: pointer" @click="goToMediaImage(variant.uuid)">
                                                 <i class="ms-2 bi bi-image"></i>
                                             </a>
                                         </th>
@@ -334,6 +333,27 @@
 
         async function separateVariant(dto) {
             await axios.post('/admin/api/episode-variants/' + dto.uuid + '/separate', dto);
+        }
+
+        const compress = string => {
+            const blobToBase64 = blob => new Promise((resolve, _) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(blob);
+            });
+            const byteArray = new TextEncoder().encode(string);
+            const cs = new CompressionStream('gzip');
+            const writer = cs.writable.getWriter();
+            writer.write(byteArray);
+            writer.close();
+            return new Response(cs.readable).blob().then(blobToBase64);
+        };
+
+        function goToMediaImage(uuid) {
+            compress(uuid).then(base64 => {
+                const url = '/api/v1/episode-mappings/media-image?uuids=' + base64;
+                window.open(url, '_blank');
+            });
         }
     </script>
 </@navigation.display>
