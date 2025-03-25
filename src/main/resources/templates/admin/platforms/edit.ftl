@@ -31,7 +31,7 @@
                             <input id="${fieldNameForm}" name="${configurationField.name}"
                                    type="${configurationField.type}"
                                    class="form-control"
-                                   value="${configurationField.value}">
+                                   value="<#if configurationField.value??>${configurationField.value}</#if>">
 
                             <#if configurationField.caption??>
                                 <div class="form-text">${configurationField.caption}</div>
