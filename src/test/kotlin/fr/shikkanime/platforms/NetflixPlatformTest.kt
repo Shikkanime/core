@@ -34,12 +34,10 @@ class NetflixPlatformTest : AbstractTest() {
     fun fetchApiContent() {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse("2024-07-17T07:00:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay(
-            3,
-            "https://cdn.myanimelist.net/images/anime/1003/142645l.jpg",
-            "07:00:00"
-        ).apply {
+        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay("07:00:00").apply {
             name = "81497635"
+            releaseDay = 3
+            image = "https://cdn.myanimelist.net/images/anime/1003/142645l.jpg"
         })
         val episodes = runCatching { runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) } }.getOrNull() ?: emptyList()
         assertNotNull(episodes)
@@ -58,12 +56,10 @@ class NetflixPlatformTest : AbstractTest() {
     fun `fetchApiContentFor The Seven Deadly Sins Four Knights of the Apocalypse`() {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse("2024-09-22T00:00:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay(
-            7,
-            "https://www.manga-news.com/public/upload/2024/02/Four-Knights-of-the-Apocalypse-visual-3.jpg",
-            "00:00:00"
-        ).apply {
+        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay("00:00:00").apply {
             name = "81562396"
+            releaseDay = 7
+            image = "https://www.manga-news.com/public/upload/2024/02/Four-Knights-of-the-Apocalypse-visual-3.jpg"
         })
         val episodes = runCatching { runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) } }.getOrNull() ?: emptyList()
         assertNotNull(episodes)
@@ -84,12 +80,10 @@ class NetflixPlatformTest : AbstractTest() {
     fun `fetchApiContent for Dragon Ball DAIMA`() {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse("2024-08-11T16:45:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay(
-            5,
-            "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=85,width=480,height=720/catalog/crunchyroll/298acc932735d9a731ea39a3db6a613c.jpg",
-            "16:45:00"
-        ).apply {
+        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay("16:45:00").apply {
             name = "81943491"
+            releaseDay = 5
+            image = "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=85,width=480,height=720/catalog/crunchyroll/298acc932735d9a731ea39a3db6a613c.jpg"
         })
         val episodes = runCatching { runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) } }.getOrNull() ?: emptyList()
         assertNotNull(episodes)

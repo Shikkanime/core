@@ -19,11 +19,10 @@ class PrimeVideoPlatformTest : AbstractTest() {
     fun fetchApiContent() {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse("2024-04-22T18:15:00Z")
-        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
-            1,
-            "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-        ).apply {
+        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast().apply {
             name = "0QN9ZXJ935YBTNK8U9FV5OAX5B"
+            releaseDay = 1
+            image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
         })
         val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } } .getOrNull() ?: emptyList()
 
@@ -44,11 +43,10 @@ class PrimeVideoPlatformTest : AbstractTest() {
     fun `fetchApiContent #2`() {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse("2025-01-10T16:31:00Z")
-        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
-            1,
-            "https://cdn.myanimelist.net/images/anime/1850/144045l.jpg",
-        ).apply {
+        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast().apply {
             name = "0TRGLGKLJS99OYM9647IM6Y1N0"
+            releaseDay = 1
+            image = "https://cdn.myanimelist.net/images/anime/1850/144045l.jpg"
         })
         val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } } .getOrNull() ?: emptyList()
 
@@ -68,11 +66,10 @@ class PrimeVideoPlatformTest : AbstractTest() {
     fun `fetchApiContent #3`() {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse("2024-04-22T18:15:00Z")
-        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast(
-            1,
-            "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-        ).apply {
+        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast().apply {
             name = "0QA3P8T387P0WAV0KXUYBWDDYR"
+            releaseDay = 1
+            image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
         })
         val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } } .getOrNull() ?: emptyList()
 
@@ -92,11 +89,10 @@ class PrimeVideoPlatformTest : AbstractTest() {
     fun `fix bug on getApiContent`() {
         val zonedDateTime = ZonedDateTime.parse("2024-04-22T18:15:00Z")
 
-        val primeVideoSimulcast = PrimeVideoConfiguration.PrimeVideoSimulcast(
-            zonedDateTime.dayOfWeek.value,
-            "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-        ).apply {
+        val primeVideoSimulcast = PrimeVideoConfiguration.PrimeVideoSimulcast().apply {
             name = "0QA3P8T387P0WAV0KXUYBWDDYR"
+            releaseDay = zonedDateTime.dayOfWeek.value
+            image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
         }
 
         primeVideoPlatform.configuration!!.availableCountries = setOf(CountryCode.FR)
