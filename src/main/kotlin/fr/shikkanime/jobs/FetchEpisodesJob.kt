@@ -1,13 +1,11 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
@@ -44,9 +42,6 @@ class FetchEpisodesJob : AbstractJob {
 
     @Inject
     private lateinit var mailService: MailService
-
-    @Inject
-    private lateinit var episodeVariantFactory: EpisodeVariantFactory
 
     override fun run() {
         if (isRunning) {
@@ -138,25 +133,22 @@ class FetchEpisodesJob : AbstractJob {
     }
 
     private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
-        val sizeLimit = configCacheService.getValueAsInt(ConfigPropertyKey.SOCIAL_NETWORK_EPISODES_SIZE_LIMIT)
-
         savedEpisodes
             .groupBy { it.mapping?.anime?.uuid }
             .values
             .forEach { episodes ->
                 episodes.filter { typeIdentifiers.add(getTypeIdentifier(it)) }
-                    .takeIf { it.size < sizeLimit }
-                    ?.groupBy { it.mapping?.uuid }
-                    ?.forEach { (_, groupedEpisodes) ->
-                        sendToSocialNetworks(groupedEpisodes.map { episodeVariantFactory.toDto(it) })
+                    .groupBy { it.mapping!!.episodeType!! }
+                    .forEach { (_, variants) ->
+                        sendToSocialNetworks(variants)
                     }
             }
     }
 
-    private fun sendToSocialNetworks(episodes: List<EpisodeVariantDto>) {
+    private fun sendToSocialNetworks(episodes: List<EpisodeVariant>) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(MediaImage.toMediaImage(episodes), "jpg", byteArrayOutputStream)
+            ImageIO.write(MediaImage.toMediaImage(*episodes.toTypedArray()), "jpg", byteArrayOutputStream)
             byteArrayOutputStream.toByteArray()
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while converting episode image for social networks", e)

@@ -29,7 +29,7 @@ class PrimeVideoPlatform :
                     key.countryCode,
                     key.primeVideoSimulcast.image,
                     it,
-                    zonedDateTime,
+                    zonedDateTime.minusMinutes(1),
                     key.primeVideoSimulcast.episodeType,
                     audioLocale,
                 )

@@ -2,8 +2,8 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
@@ -124,13 +124,25 @@ object StringUtils {
     fun toEpisodeGroupedString(episode: GroupedEpisodeDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
     fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), true, true, episode.episodeType!!, episode.number!!.toString())
 
-    fun toEpisodeVariantString(episodes: List<EpisodeVariantDto>): String {
-        val mapping = episodes.first().mapping!!
+    fun toVariantsString(vararg variant: EpisodeVariant): String {
+        require(variant.map { it.mapping!!.anime!! }.distinctBy { it.uuid }.size == 1) { "The variants list must be from the same anime" }
+        require(variant.map { it.mapping!!.episodeType }.distinct().size == 1) { "The variants list must be from the same episode type" }
 
-        return buildString {
-            append(toEpisodeMappingString(mapping))
-            append(" ${episodes.map { it.audioLocale }.distinct().joinToString(" & ") { toLangTypeString(mapping.anime!!.countryCode, it) }}")
-        }
+        val countryCode = variant.first().mapping!!.anime!!.countryCode!!
+        val episodeType = variant.first().mapping!!.episodeType!!
+
+        val (minSeason, maxSeason) = variant.map { it.mapping!!.season!! }.let { it.minOrNull()!! to it.maxOrNull()!! }
+        val seasonLabel = toSeasonString(countryCode, if (minSeason == maxSeason) minSeason.toString() else "$minSeason-$maxSeason")
+
+        val (minNumber, maxNumber) = variant.map { it.mapping!!.number!! }.let { it.minOrNull()!! to it.maxOrNull()!! }
+        val numberLabel = if (minNumber == maxNumber) minNumber.toString() else "$minNumber-$maxNumber"
+
+        val langTypeLabel = variant.sortedBy { LangType.fromAudioLocale(countryCode, it.audioLocale!!) }
+            .map { toLangTypeString(countryCode, it.audioLocale!!) }
+            .distinct()
+            .joinToString(" & ")
+
+        return "$seasonLabel • ${getEpisodeTypeLabel(countryCode, episodeType)} $numberLabel $langTypeLabel"
     }
 
     fun toSlug(input: String): String {

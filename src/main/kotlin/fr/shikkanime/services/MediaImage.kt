@@ -1,7 +1,7 @@
 package fr.shikkanime.services
 
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -12,7 +12,6 @@ import java.awt.image.ConvolveOp
 import java.awt.image.Kernel
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.imageio.ImageIO
@@ -21,7 +20,11 @@ object MediaImage {
     private const val BLUR_SIZE = 25
     private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
 
-    fun toMediaImage(episodes: List<EpisodeVariantDto>): BufferedImage {
+    fun toMediaImage(vararg variant: EpisodeVariant): BufferedImage {
+        require(variant.isNotEmpty()) { "The variants list is empty" }
+        require(variant.map { it.mapping!!.anime!! }.distinctBy { it.uuid!! }.size == 1) { "The variants list must be from the same anime" }
+        require(variant.map { it.mapping!!.episodeType }.distinct().size == 1) { "The variants list must be from the same episode type" }
+
         val bannerImage = loadAndResizeBannerImage()
         val font = loadCustomFont()
 
@@ -29,8 +32,8 @@ object MediaImage {
         val graphics = setupGraphics(mediaImage)
 
         drawBackground(mediaImage, graphics)
-        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, episodes.first().mapping!!.anime!!)
-        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, episodes)
+        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, variant.first().mapping!!.anime!!)
+        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, *variant)
 
         graphics.drawImage(
             bannerImage,
@@ -96,8 +99,8 @@ object MediaImage {
     fun getLongTimeoutImage(url: String): BufferedImage =
         ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
 
-    private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: AnimeDto): Int {
-        val animeBanner = getLongTimeoutImage(anime.banner).resize(1920, 1080)
+    private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
+        val animeBanner = getLongTimeoutImage(anime.banner!!).resize(1920, 1080)
         val scaleBannerRatio = mediaImage.width.toDouble() / (animeBanner.width + BLUR_SIZE * 2)
         val scaleBannerResize = (animeBanner.height * scaleBannerRatio).toInt()
         val resizedBanner = animeBanner.resize(mediaImage.width, scaleBannerResize)
@@ -126,7 +129,7 @@ object MediaImage {
             null
         )
 
-        val animeImage = getLongTimeoutImage(anime.image).resize(1560, 2340)
+        val animeImage = getLongTimeoutImage(anime.image!!).resize(1560, 2340)
         val scaleThumbnailRatio = resizedBanner.height.toDouble() / animeImage.height.toDouble()
         val scaleThumbnailResize = (animeImage.width * scaleThumbnailRatio).toInt()
         val resizedThumbnail = animeImage.resize(scaleThumbnailResize, resizedBanner.height)
@@ -158,11 +161,12 @@ object MediaImage {
         graphics: Graphics2D,
         thumbnailHeight: Int,
         font: Font,
-        episodes: List<EpisodeVariantDto>
+        vararg variant: EpisodeVariant
     ) {
         graphics.color = Color.WHITE
         graphics.font = font.deriveFont(16f).deriveFont(Font.BOLD)
-        val dateLabel = ZonedDateTime.parse(episodes.first().releaseDateTime).format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH)).uppercase()
+        val releaseDateTime = variant.minOf { it.releaseDateTime }
+        val dateLabel = releaseDateTime.format(DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy", Locale.FRENCH)).uppercase()
         val dateLabelWidth = graphics.fontMetrics.stringWidth(dateLabel)
         graphics.drawString(
             dateLabel,
@@ -171,7 +175,7 @@ object MediaImage {
         )
 
         graphics.font = font.deriveFont(24f).deriveFont(Font.BOLD)
-        val label1 = StringUtils.toEpisodeVariantString(episodes).uppercase()
+        val label1 = StringUtils.toVariantsString(*variant).uppercase()
         val labelWidth = graphics.fontMetrics.stringWidth(label1)
         graphics.drawString(label1, (mediaImage.width - labelWidth) / 2, 100 + thumbnailHeight + 80)
         val label2 = "MAINTENANT DISPONIBLE"

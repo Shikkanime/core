@@ -5,7 +5,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.*
 import com.google.inject.Inject
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -20,8 +20,6 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
 
     @Inject
     private lateinit var memberService: MemberService
-
-    override fun utmSource() = "firebase"
 
     override fun login() {
         if (isInitialized)
@@ -48,16 +46,26 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
         // Do nothing
     }
 
-    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+        require(variants.isNotEmpty()) { "Variants must not be empty" }
+        require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
+
         login()
         if (!isInitialized) return
 
-        val mapping = episodes.first().mapping
-        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping!!.uuid}&type=image"
+        val anime = variants.first().mapping!!.anime!!
+
+        val mapping = variants.asSequence()
+            .map { it.mapping!! }
+            .distinctBy { it.uuid!! }
+            .sortedWith(compareBy({ it.releaseDateTime}, { it.season }, { it.episodeType }, { it.number }))
+            .first()
+
+        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping.uuid}&type=image"
 
         val notification = Notification.builder()
-            .setTitle(mapping.anime!!.shortName)
-            .setBody(StringUtils.toEpisodeVariantString(episodes))
+            .setTitle(StringUtils.getShortName(anime.name!!))
+            .setBody(StringUtils.toVariantsString(*variants.toTypedArray()))
             .setImage(image)
             .build()
 
@@ -72,7 +80,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
             .build()
 
         val topics = mutableSetOf("global")
-        memberService.findAllByAnimeUUID(mapping.anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
+        memberService.findAllByAnimeUUID(anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
         // Chunked topics to avoid the 500 topics limit (due to the limit of the Firebase API)
         val chunkedTopics = topics.chunked(500)
 

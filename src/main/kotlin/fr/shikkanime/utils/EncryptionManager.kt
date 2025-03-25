@@ -2,8 +2,12 @@ package fr.shikkanime.utils
 
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.*
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 object EncryptionManager {
     private val salt = Constant.NAME.toByteArray(StandardCharsets.UTF_8)
@@ -34,5 +38,19 @@ object EncryptionManager {
         val digest = MessageDigest.getInstance("SHA-512")
         val hash = digest.digest(source.toByteArray(StandardCharsets.UTF_8))
         return hash.fold("") { str, it -> str + "%02x".format(it) }
+    }
+
+    fun toGzip(source: String): String {
+        val bytes = source.toByteArray(StandardCharsets.UTF_8)
+        val outputStream = ByteArrayOutputStream()
+        GZIPOutputStream(outputStream).use { it.write(bytes) }
+        return Base64.getEncoder().encodeToString(outputStream.toByteArray())
+    }
+
+    fun fromGzip(source: String): String {
+        val bytes = Base64.getDecoder().decode(source)
+        val outputStream = ByteArrayOutputStream()
+        bytes.inputStream().use { GZIPInputStream(it).copyTo(outputStream) }
+        return outputStream.toString(StandardCharsets.UTF_8)
     }
 }

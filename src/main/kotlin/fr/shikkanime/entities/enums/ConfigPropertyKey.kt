@@ -31,7 +31,6 @@ enum class ConfigPropertyKey(val key: String) {
     LAST_FETCH_OLD_EPISODES("last_fetch_old_episodes"),
     PREVIOUS_NEXT_EPISODES_DEPTH("previous_next_episodes_depth"),
     SEO_DESCRIPTION("seo_description"),
-    SOCIAL_NETWORK_EPISODES_SIZE_LIMIT("social_network_episodes_size_limit"),
     THREADS_ACCESS_TOKEN("threads_access_token"),
     THREADS_APP_ID("threads_app_id"),
     THREADS_APP_SECRET("threads_app_secret"),

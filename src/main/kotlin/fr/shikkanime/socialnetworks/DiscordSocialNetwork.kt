@@ -1,6 +1,6 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.socialnetworks.listeners.SlashCommandInteractionListener
 import fr.shikkanime.utils.Constant
@@ -18,7 +18,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.utils.FileUpload
 import java.io.File
-import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class DiscordSocialNetwork : AbstractSocialNetwork() {
@@ -31,8 +30,6 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(DiscordSocialNetwork::class.java)
     private var isInitialized = false
     private var jda: JDA? = null
-
-    override fun utmSource() = "discord"
 
     override fun login() {
         if (isInitialized) return
@@ -86,27 +83,28 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(episodes: List<EpisodeVariantDto>, mediaImage: ByteArray?) {
+    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+        require(variants.isNotEmpty()) { "Variants must not be empty" }
+        require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
+
         login()
         if (!isInitialized) return
-        val mapping = episodes.first().mapping
-        if (mapping!!.image.isBlank()) return
+
+        val anime = variants.first().mapping!!.anime!!
+        val shortName = StringUtils.getShortName(anime.name!!)
 
         val embedMessage = EmbedBuilder()
-        embedMessage.setTitle(mapping.anime!!.shortName, getShikkanimeUrl(episodes))
-        embedMessage.setThumbnail(mapping.anime.image)
-        embedMessage.setDescription(
-            "**${mapping.title ?: "Untitled"}**\n${StringUtils.toEpisodeVariantString(episodes)}"
-        )
+        embedMessage.setTitle(shortName, getInternalUrl(variants))
+        embedMessage.setThumbnail(anime.image)
         embedMessage.setImage("attachment://media-image.jpg")
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
-        embedMessage.setTimestamp(ZonedDateTime.parse(episodes.first().releaseDateTime).toInstant())
+        embedMessage.setTimestamp(variants.minOf { it.releaseDateTime }.toInstant())
         val embed = embedMessage.build()
         val channels = getChannels(getFile())
         val fileUpload = FileUpload.fromData(mediaImage ?: byteArrayOf(), "media-image.jpg")
 
         channels.forEach { channel ->
-            if (channel.releaseType == "ALL" || channel.animes.contains(mapping.anime.shortName)) {
+            if (channel.releaseType == "ALL" || channel.animes.contains(shortName)) {
                 jda?.getTextChannelById(channel.id)
                     ?.sendFiles(fileUpload)
                     ?.setEmbeds(embed)
