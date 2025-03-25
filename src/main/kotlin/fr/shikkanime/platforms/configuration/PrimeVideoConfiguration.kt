@@ -5,7 +5,9 @@ import io.ktor.http.*
 
 class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.PrimeVideoSimulcast>() {
     data class PrimeVideoSimulcast(
+        @Transient
         override var releaseDay: Int = 1,
+        @Transient
         override var image: String = "",
         var releaseTime: String = "",
         var episodeType: EpisodeType = EpisodeType.EPISODE,

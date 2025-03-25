@@ -5,7 +5,9 @@ import io.ktor.http.*
 
 class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixSimulcastDay>() {
     data class NetflixSimulcastDay(
+        @Transient
         override var releaseDay: Int = 1,
+        @Transient
         override var image: String = "",
         var seasonName: String = "",
         var season: Int = 1,

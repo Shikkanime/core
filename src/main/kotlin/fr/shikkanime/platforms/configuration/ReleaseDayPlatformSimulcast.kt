@@ -3,9 +3,7 @@ package fr.shikkanime.platforms.configuration
 import io.ktor.http.*
 
 open class ReleaseDayPlatformSimulcast(
-    @Transient
     open var releaseDay: Int,
-    @Transient
     open var image: String,
 ) : PlatformSimulcast() {
     override fun of(parameters: Parameters) {
