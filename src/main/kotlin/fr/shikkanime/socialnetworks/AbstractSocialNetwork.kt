@@ -60,6 +60,8 @@ abstract class AbstractSocialNetwork {
             .replace("{ANIME_TITLE}", shortName)
             .replace("{EPISODE_INFORMATION}", information(variants.map { it.mapping!! }.distinctBy { it.uuid!! }))
             .replace("{VOICE}", isVoice)
+            .replace("{BE}", if (variants.map { it.mapping!!.uuid }.distinct().size <= 1) "est" else "sont")
+            .replace("{AVAILABLE}", if (variants.size == 1) "disponible" else "disponibles")
             .replace("\\n", "\n")
             .trim()
     }
