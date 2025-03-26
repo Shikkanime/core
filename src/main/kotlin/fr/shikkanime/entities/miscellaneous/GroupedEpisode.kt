@@ -62,4 +62,8 @@ data class GroupedEpisode(
         result = 31 * result + (description?.hashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String {
+        return "GroupedEpisode(anime=$anime, releaseDateTime=$releaseDateTime, lastUpdateDateTime=$lastUpdateDateTime, minSeason=$minSeason, maxSeason=$maxSeason, episodeType=$episodeType, minNumber=$minNumber, maxNumber=$maxNumber, platforms=${platforms.contentToString()}, audioLocales=${audioLocales.contentToString()}, urls=${urls.contentToString()}, mappings=${mappings.contentToString()}, title=$title, description=$description, duration=$duration)"
+    }
 }
