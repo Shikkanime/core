@@ -30,7 +30,7 @@ class SimulcastCacheService : AbstractCacheService {
         "SimulcastCacheService.findBySeasonAndYear",
         classes = listOf(Simulcast::class.java),
         key = SeasonYearKeyCache(season, year),
-    ) { simulcastService.findBySeasonAndYear(season, year) }
+    ) { simulcastService.findBySeasonAndYear(it.season, it.year) }
 
     val currentSimulcast: SimulcastDto?
         get() = findAll().firstOrNull()
