@@ -35,7 +35,8 @@ abstract class AbstractDisneyPlusWrapper {
         val url: String,
         val image: String,
         val duration: Long,
-        val resourceId: String
+        val resourceId: String,
+        val audioLocales: Set<String>
     )
 
     data class PlayerVideo(

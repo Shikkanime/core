@@ -9,7 +9,6 @@ import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper.Episode
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -44,21 +43,19 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
 
                     episodes.forEach {
                         try {
-                            runBlocking {
-                                DisneyPlusWrapper.getAudioLocales(it.resourceId)
+                            list.addAll(
+                                it.audioLocales
                                     .filter { it in locales }
-                                    .forEach { locale ->
-                                        list.add(
-                                            convertEpisode(
-                                                countryCode,
-                                                it,
-                                                zonedDateTime,
-                                                locale,
-                                                locale == "ja-JP"
-                                            )
+                                    .map { locale ->
+                                        convertEpisode(
+                                            countryCode,
+                                            it,
+                                            zonedDateTime,
+                                            locale,
+                                            locale == "ja-JP"
                                         )
                                     }
-                            }
+                            )
                         } catch (_: AnimeException) {
                             // Ignore
                         } catch (e: Exception) {

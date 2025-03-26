@@ -70,6 +70,8 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                         }
 
                         val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
+                        val resourceId = actionJsonObject.getAsString("resourceId")!!
+                        val audioLocales = getAudioLocales(resourceId)
 
                         episodes.add(
                             Episode(
@@ -84,7 +86,8 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                                 "https://www.disneyplus.com/${locale.lowercase()}/play/$id",
                                 getImageUrl(visualsObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!.getAsJsonObject("thumbnail")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
                                 duration,
-                                actionJsonObject.getAsString("resourceId")!!
+                                resourceId,
+                                audioLocales
                             )
                         )
                     }
