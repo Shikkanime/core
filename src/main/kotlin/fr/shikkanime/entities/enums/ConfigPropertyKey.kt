@@ -49,4 +49,5 @@ enum class ConfigPropertyKey(val key: String) {
     USE_SECURITY_HEADERS("use_security_headers"),
     UPDATE_IMAGE_DELAY("update_image_delay"),
     UPDATE_IMAGE_SIZE("update_image_size"),
+    CHECK_DISNEY_PLUS_AUDIO_LOCALES("check_disney_plus_audio_locales"),
 }

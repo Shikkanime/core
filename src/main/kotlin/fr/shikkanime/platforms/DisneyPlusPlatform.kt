@@ -1,11 +1,14 @@
 package fr.shikkanime.platforms
 
+import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper.Episode
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
@@ -14,6 +17,9 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<Episode>>() {
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
+
     override fun getPlatform(): Platform = Platform.DISN
 
     override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
@@ -23,7 +29,8 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         zonedDateTime: ZonedDateTime
     ) = DisneyPlusWrapper.getEpisodesByShowId(
         key.countryCode.locale,
-        key.releaseDayPlatformSimulcast.name
+        key.releaseDayPlatformSimulcast.name,
+        configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
     )
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {

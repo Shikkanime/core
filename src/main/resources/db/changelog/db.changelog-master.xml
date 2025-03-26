@@ -91,4 +91,5 @@
     <!-- March 2025 -->
     <include file="/db/changelog/2025/03/01-changelog.xml"/>
     <include file="/db/changelog/2025/03/02-changelog.xml"/>
+    <include file="/db/changelog/2025/03/03-changelog.xml"/>
 </databaseChangeLog>

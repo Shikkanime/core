@@ -193,7 +193,8 @@ class UpdateAnimeJob : AbstractJob {
 
     private suspend fun fetchDisneyPlusAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val show = DisneyPlusCachedWrapper.getShow(animePlatform.platformId!!)
-        val episodes = DisneyPlusCachedWrapper.getEpisodesByShowId(animePlatform.anime!!.countryCode!!.locale, animePlatform.platformId!!)
+        val episodes = DisneyPlusCachedWrapper.getEpisodesByShowId(animePlatform.anime!!.countryCode!!.locale, animePlatform.platformId!!, configCacheService.getValueAsBoolean(
+            ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES))
 
         if (episodes.isEmpty())
             throw Exception("No episode found for Disney+ anime ${animePlatform.anime!!.name}")

@@ -17,12 +17,13 @@ object DisneyPlusCachedWrapper : AbstractDisneyPlusWrapper() {
 
     override suspend fun getEpisodesByShowId(
         locale: String,
-        showId: String
+        showId: String,
+        checkAudioLocales: Boolean,
     ) = MapCache.getOrCompute(
         "DisneyPlusCachedWrapper.getEpisodesByShowId",
         duration = defaultCacheDuration,
-        key = locale to showId
-    ) { runBlocking { DisneyPlusWrapper.getEpisodesByShowId(it.first, it.second) } }
+        key = Triple(locale, showId, checkAudioLocales)
+    ) { runBlocking { DisneyPlusWrapper.getEpisodesByShowId(it.first, it.second, it.third) } }
 
     override suspend fun getShowIdByEpisodeId(episodeId: String) = MapCache.getOrCompute(
         "DisneyPlusCachedWrapper.getShowIdByEpisodeId",

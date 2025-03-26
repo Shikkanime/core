@@ -40,7 +40,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, showId: String): List<Episode> {
+    override suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): List<Episode> {
         val show = getShow(showId)
         val episodes = mutableListOf<Episode>()
 
@@ -71,7 +71,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
                         val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
                         val resourceId = actionJsonObject.getAsString("resourceId")!!
-                        val audioLocales = getAudioLocales(resourceId)
+                        val audioLocales = if (checkAudioLocales) getAudioLocales(resourceId) else setOf("ja-JP")
 
                         episodes.add(
                             Episode(

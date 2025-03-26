@@ -379,7 +379,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     identifiers.add(episodeVariant.identifier!!)
                 }
 
-                val disneyPlusEpisodes = DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, playerVideo.showId)
+                val disneyPlusEpisodes = DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, playerVideo.showId, configCacheService.getValueAsBoolean(
+                    ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES))
                 disneyPlusEpisodes.forEach { episode ->
                     val convertedEpisode = disneyPlusPlatform.convertEpisode(
                         countryCode,
