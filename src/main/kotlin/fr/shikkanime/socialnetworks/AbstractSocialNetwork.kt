@@ -48,7 +48,9 @@ abstract class AbstractSocialNetwork {
     fun getEpisodeMessage(variants: List<EpisodeVariant>, baseMessage: String): String {
         require(variants.isNotEmpty()) { "Variants must not be empty" }
         require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
-        val anime = variants.first().mapping!!.anime!!
+        val mappings = variants.map { it.mapping!! }.distinctBy { it.uuid!! }
+        require(mappings.map { it.episodeType!! }.distinct().size == 1) { "All mappings must have the same episode type" }
+        val anime = mappings.first().anime!!
 
         val shortName = StringUtils.getShortName(anime.name!!)
         val isVoice = " en ${variants.map { it.audioLocale!! }.distinct().sortedBy { LangType.fromAudioLocale(anime.countryCode!!, it) }.joinToString(" & ") { StringUtils.toLangTypeString(anime.countryCode!!, it) }} "
@@ -60,8 +62,8 @@ abstract class AbstractSocialNetwork {
             .replace("{ANIME_TITLE}", shortName)
             .replace("{EPISODE_INFORMATION}", information(variants.map { it.mapping!! }.distinctBy { it.uuid!! }))
             .replace("{VOICE}", isVoice)
-            .replace("{BE}", if (variants.map { it.mapping!!.uuid }.distinct().size <= 1) "est" else "sont")
-            .replace("{AVAILABLE}", if (variants.size == 1) "disponible" else "disponibles")
+            .replace("{BE}", if (mappings.size <= 1) "est" else "sont")
+            .replace("{AVAILABLE}", if (mappings.size <= 1) "disponible" else "disponibles")
             .replace("\\n", "\n")
             .trim()
     }
