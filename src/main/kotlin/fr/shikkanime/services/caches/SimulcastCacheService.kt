@@ -1,9 +1,11 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
+import fr.shikkanime.caches.SeasonYearKeyCache
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.util.*
@@ -23,6 +25,12 @@ class SimulcastCacheService : AbstractCacheService {
         classes = listOf(Simulcast::class.java),
         key = uuid
     ) { simulcastService.find(it) }
+
+    fun findBySeasonAndYear(season: Season, year: Int) = MapCache.getOrComputeNullable(
+        "SimulcastCacheService.findBySeasonAndYear",
+        classes = listOf(Simulcast::class.java),
+        key = SeasonYearKeyCache(season, year),
+    ) { simulcastService.findBySeasonAndYear(season, year) }
 
     val currentSimulcast: SimulcastDto?
         get() = findAll().firstOrNull()

@@ -158,31 +158,18 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            root.fetch(EpisodeMapping_.anime)
-
-            val subQuery = query.subquery(Long::class.java)
-            val subRoot = subQuery.from(EpisodeVariant::class.java)
-
-            subQuery.select(cb.literal(1L))
-                .where(
-                    cb.and(
-                        cb.equal(subRoot[EpisodeVariant_.mapping][EpisodeMapping_.uuid], root[EpisodeMapping_.uuid]),
-                        cb.notEqual(subRoot[EpisodeVariant_.audioLocale], ignoreAudioLocale)
-                    )
-                )
+            val root = query.from(EpisodeVariant::class.java)
+            query.select(root[EpisodeVariant_.mapping])
 
             query.where(
-                cb.and(
-                    cb.not(root[EpisodeMapping_.episodeType].`in`(ignoreEpisodeTypes)),
-                    cb.exists(subQuery)
-                )
+                cb.not(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType].`in`(ignoreEpisodeTypes)),
+                cb.notEqual(root[EpisodeVariant_.audioLocale], ignoreAudioLocale)
             ).orderBy(
-                cb.asc(root[EpisodeMapping_.releaseDateTime]),
-                cb.asc(root[EpisodeMapping_.season]),
-                cb.asc(root[EpisodeMapping_.episodeType]),
-                cb.asc(root[EpisodeMapping_.number])
-            )
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number])
+            ).groupBy(root[EpisodeVariant_.mapping])
 
             createReadOnlyQuery(it, query)
                 .resultList

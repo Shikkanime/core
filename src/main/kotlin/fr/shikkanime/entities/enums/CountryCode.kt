@@ -19,7 +19,7 @@ enum class CountryCode(
         fun fromNullable(string: String?): CountryCode? {
             return if (string == null) null else try {
                 valueOf(string.uppercase())
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
         }
