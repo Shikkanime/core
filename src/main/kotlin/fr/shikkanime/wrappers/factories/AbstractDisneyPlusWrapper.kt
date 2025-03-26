@@ -34,13 +34,14 @@ abstract class AbstractDisneyPlusWrapper {
         val description: String?,
         val url: String,
         val image: String,
-        val duration: Long
+        val duration: Long,
+        val resourceId: String
     )
 
     data class PlayerVideo(
         val id: String,
         val showId: String,
-        val resourceId: String,
+        val resourceId: String
     )
 
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"

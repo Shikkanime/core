@@ -69,11 +69,13 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                             duration /= 1000
                         }
 
+                        val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
+
                         episodes.add(
                             Episode(
                                 show,
                                 id,
-                                it.getAsJsonArray("actions")[0].asJsonObject.getAsJsonObject("legacyPartnerFeed").getAsString("dmcContentId")!!,
+                                actionJsonObject.getAsJsonObject("legacyPartnerFeed").getAsString("dmcContentId")!!,
                                 seasonId,
                                 visualsObject.getAsInt("seasonNumber")!!,
                                 visualsObject.getAsInt("episodeNumber") ?: -1,
@@ -81,7 +83,8 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                                 visualsObject.getAsJsonObject("description")?.getAsString("medium")?.normalize(),
                                 "https://www.disneyplus.com/${locale.lowercase()}/play/$id",
                                 getImageUrl(visualsObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!.getAsJsonObject("thumbnail")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
-                                duration
+                                duration,
+                                actionJsonObject.getAsString("resourceId")!!
                             )
                         )
                     }

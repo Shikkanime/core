@@ -359,7 +359,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     fun recalculateSimulcasts() {
-        val ignoreEpisodeTypes = setOf(EpisodeType.FILM, EpisodeType.SUMMARY)
+        val ignoreEpisodeTypes = setOf(EpisodeType.SUMMARY)
 
         episodeMappingService.updateAllReleaseDate()
         animeRepository.updateAllReleaseDate()

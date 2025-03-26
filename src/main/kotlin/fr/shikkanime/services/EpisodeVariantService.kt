@@ -8,6 +8,7 @@ import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.EpisodeVariantRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.RuleCacheService
+import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
@@ -19,7 +20,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     private lateinit var episodeVariantRepository: EpisodeVariantRepository
 
     @Inject
-    private lateinit var simulcastService: SimulcastService
+    private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
@@ -89,7 +90,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             else -> currentSimulcast
         }
 
-        return simulcastService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
+        return simulcastCacheService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
             ?: chosenSimulcast
     }
 

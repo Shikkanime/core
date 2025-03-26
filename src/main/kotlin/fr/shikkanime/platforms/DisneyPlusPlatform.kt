@@ -9,6 +9,7 @@ import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper.Episode
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -30,6 +31,8 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
+            val locales = listOf("ja-JP", countryCode.locale)
+
             configuration!!.simulcasts.filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
                 .forEach { simulcast ->
                     val episodes = getApiContent(
@@ -41,7 +44,21 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
 
                     episodes.forEach {
                         try {
-                            list.add(convertEpisode(countryCode, it, zonedDateTime))
+                            runBlocking {
+                                DisneyPlusWrapper.getAudioLocales(it.resourceId)
+                                    .filter { it in locales }
+                                    .forEach { locale ->
+                                        list.add(
+                                            convertEpisode(
+                                                countryCode,
+                                                it,
+                                                zonedDateTime,
+                                                locale,
+                                                locale == "ja-JP"
+                                            )
+                                        )
+                                    }
+                            }
                         } catch (_: AnimeException) {
                             // Ignore
                         } catch (e: Exception) {
