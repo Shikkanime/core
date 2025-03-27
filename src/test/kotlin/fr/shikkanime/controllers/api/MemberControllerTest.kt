@@ -7,7 +7,6 @@ import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.module
-import fr.shikkanime.services.ImageService
 import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
@@ -115,8 +114,6 @@ class MemberControllerTest : AbstractControllerTest() {
 
     @Test
     fun associateEmailAndLogin() {
-        ImageService.clearPool()
-
         testApplication {
             application {
                 module()
@@ -413,8 +410,6 @@ class MemberControllerTest : AbstractControllerTest() {
 
     @Test
     fun uploadProfileImage() {
-        ImageService.clearPool()
-
         testApplication {
             application {
                 module()

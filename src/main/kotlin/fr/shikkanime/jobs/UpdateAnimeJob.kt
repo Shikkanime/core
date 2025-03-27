@@ -5,10 +5,12 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.AnimePlatformService
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
@@ -42,6 +44,9 @@ class UpdateAnimeJob : AbstractJob {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
@@ -88,7 +93,7 @@ class UpdateAnimeJob : AbstractJob {
 
             if (updatableImage != anime.image && !updatableImage.isNullOrBlank()) {
                 anime.image = updatableImage
-                animeService.addThumbnail(anime.uuid!!, updatableImage, true)
+                attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.THUMBNAIL, url = updatableImage)
                 logger.info("Image updated for anime $shortName to $updatableImage")
                 hasChanged = true
             }
@@ -97,7 +102,7 @@ class UpdateAnimeJob : AbstractJob {
 
             if (updatableBanner != anime.banner && !updatableBanner.isNullOrBlank()) {
                 anime.banner = updatableBanner
-                animeService.addBanner(anime.uuid!!, updatableBanner, true)
+                attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.THUMBNAIL, url = updatableBanner)
                 logger.info("Banner updated for anime $shortName to $updatableBanner")
                 hasChanged = true
             }

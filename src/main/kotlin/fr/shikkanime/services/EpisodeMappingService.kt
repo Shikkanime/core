@@ -30,6 +30,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     @Inject
     private lateinit var traceActionService: TraceActionService
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     override fun getRepository() = episodeMappingRepository
 
     fun findAllUuids() = episodeMappingRepository.findAllUuids()
@@ -42,8 +45,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         page: Int,
         limit: Int,
     ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit)
-
-    fun findAllAnimeUuidImageBannerAndUuidImage() = episodeMappingRepository.findAllAnimeUuidImageBannerAndUuidImage()
 
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
 
@@ -72,13 +73,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
-    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageType.BANNER, image, null, bypass)
-    }
-
     override fun save(entity: EpisodeMapping): EpisodeMapping {
         val save = super.save(entity)
-        if (!Constant.isTest) addImage(save.uuid!!, save.image!!)
+        if (!Constant.isTest) attachmentService.createAttachmentOrMarkAsActive(entity.uuid!!, ImageType.BANNER, url = entity.image)
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
         return save
     }
@@ -223,7 +220,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
         if (entity.image.isNotBlank() && entity.image != episode.image) {
             episode.image = entity.image
-            addImage(episode.uuid!!, episode.image!!, true)
+            attachmentService.createAttachmentOrMarkAsActive(episode.uuid!!, ImageType.BANNER, url = entity.image)
         }
 
         if (entity.duration != episode.duration) {

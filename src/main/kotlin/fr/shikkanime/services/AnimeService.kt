@@ -64,6 +64,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject
     private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     override fun getRepository() = animeRepository
 
     fun findAllBy(
@@ -340,14 +343,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         )
     }
 
-    fun addThumbnail(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageType.THUMBNAIL, image, null, bypass)
-    }
-
-    fun addBanner(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageType.BANNER, image, null, bypass)
-    }
-
     fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
         if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
             simulcast.uuid ?: simulcastService.save(simulcast)
@@ -403,8 +398,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val uuid = savedEntity.uuid!!
 
         if (!Constant.isTest) {
-            addThumbnail(uuid, savedEntity.image!!)
-            addBanner(uuid, savedEntity.banner!!)
+            attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.THUMBNAIL, url = savedEntity.image!!)
+            attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = savedEntity.banner!!)
         }
 
         traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
@@ -434,12 +429,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         if (animeDto.image.isNotBlank() && animeDto.image != anime.image) {
             anime.image = animeDto.image
-            addThumbnail(anime.uuid!!, anime.image!!, true)
+            attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.THUMBNAIL, url = animeDto.image)
         }
 
         if (animeDto.banner.isNotBlank() && animeDto.banner != anime.banner) {
             anime.banner = animeDto.banner
-            addBanner(anime.uuid!!, anime.banner!!, true)
+            attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = animeDto.banner)
         }
 
         updateAnimeSimulcast(animeDto, anime)

@@ -9,7 +9,6 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
-import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
@@ -63,25 +62,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.orderBy(orders)
             buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
-        }
-    }
-
-    fun findAllAnimeUuidImageBannerAndUuidImage(): List<Tuple> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
-
-            query.multiselect(
-                root[EpisodeMapping_.anime][Anime_.uuid],
-                root[EpisodeMapping_.anime][Anime_.image],
-                root[EpisodeMapping_.anime][Anime_.banner],
-                root[EpisodeMapping_.uuid],
-                root[EpisodeMapping_.image]
-            ).orderBy(cb.desc(root[EpisodeMapping_.lastReleaseDateTime]))
-
-            createReadOnlyQuery(it, query)
-                .resultList
         }
     }
 

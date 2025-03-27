@@ -26,8 +26,8 @@ fun main(args: Array<String>) {
     val memberService = Constant.injector.getInstance(MemberService::class.java)
     animeService.preIndex()
 
-    logger.info("Loading images cache...")
-    ImageService.addAll()
+    logger.info("Converting files to attachments...")
+    ImageService.convertFilesToAttachment()
 
     logger.info("Updating and deleting data...")
     updateAndDeleteData()
@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
         // Every 20 seconds
         JobManager.scheduleJob("*/20 * * * * ?", FetchEpisodesJob::class.java, SendMailJob::class.java)
         // Every 10 minutes
-        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java, UpdateImageJob::class.java)
+        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java, UpdateAttachmentJob::class.java)
         // Every hour
         JobManager.scheduleJob("0 0 * * * ?", UpdateAnimeJob::class.java)
         // Every day at midnight

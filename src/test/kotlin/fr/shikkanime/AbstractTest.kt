@@ -46,6 +46,9 @@ abstract class AbstractTest {
     protected lateinit var ruleService: RuleService
 
     @Inject
+    protected lateinit var attachmentService: AttachmentService
+
+    @Inject
     private lateinit var database: Database
 
     @BeforeEach
@@ -82,7 +85,7 @@ abstract class AbstractTest {
     @AfterEach
     open fun tearDown() {
         deleteAll()
-        ImageService.clearPool()
+        attachmentService.clearPool()
         database.clearCache()
     }
 

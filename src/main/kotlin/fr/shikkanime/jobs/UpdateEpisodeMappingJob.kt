@@ -60,6 +60,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
     @Inject
     private lateinit var mailService: MailService
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
@@ -263,7 +266,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ) {
         if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
             mapping.image = originalEpisode.image
-            episodeMappingService.addImage(mapping.uuid!!, originalEpisode.image, true)
+            attachmentService.createAttachmentOrMarkAsActive(mapping.uuid!!, ImageType.BANNER, url = originalEpisode.image)
             logger.info("Image updated for $mappingIdentifier to ${originalEpisode.image}")
             hasChanged.set(true)
             needRefreshCache.set(true)
