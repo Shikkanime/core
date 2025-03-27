@@ -5,10 +5,12 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.AnimePlatformService
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
@@ -20,8 +22,7 @@ class UpdateAnimeJob : AbstractJob {
     data class UpdatableAnime(
         val platform: Platform,
         val lastReleaseDateTime: ZonedDateTime,
-        val image: String,
-        val banner: String,
+        val attachments: Map<ImageType, String>,
         val description: String?,
         val episodeSize: Int
     )
@@ -42,6 +43,9 @@ class UpdateAnimeJob : AbstractJob {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
@@ -84,22 +88,16 @@ class UpdateAnimeJob : AbstractJob {
             }
 
             var hasChanged = false
-            val updatableImage = updatedAnimes.firstOrNull { it.image.isNotBlank() }?.image
 
-            if (updatableImage != anime.image && !updatableImage.isNullOrBlank()) {
-                anime.image = updatableImage
-                animeService.addThumbnail(anime.uuid!!, updatableImage, true)
-                logger.info("Image updated for anime $shortName to $updatableImage")
-                hasChanged = true
-            }
+            val updateAttachments = updatedAnimes.flatMap { it.attachments.entries }
+                .groupBy { it.key }
+                .mapValues { it.value.first().value }
 
-            val updatableBanner = updatedAnimes.firstOrNull { it.banner.isNotBlank() }?.banner
-
-            if (updatableBanner != anime.banner && !updatableBanner.isNullOrBlank()) {
-                anime.banner = updatableBanner
-                animeService.addBanner(anime.uuid!!, updatableBanner, true)
-                logger.info("Banner updated for anime $shortName to $updatableBanner")
-                hasChanged = true
+            updateAttachments.forEach { (type, url) ->
+                if (attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, type)?.url != url && url.isNotBlank()) {
+                    attachmentService.createAttachmentOrMarkAsActive(anime.uuid, type, url = url)
+                    logger.info("Attachment $type updated for anime $shortName to $url")
+                }
             }
 
             val updatableDescription = updatedAnimes.firstOrNull { !it.description.isNullOrBlank() }?.description?.normalize()
@@ -153,8 +151,10 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.ANIM,
             lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
-            image = show.fullHDImage,
-            banner = show.fullHDBanner,
+            attachments = buildMap {
+                put(ImageType.THUMBNAIL, show.fullHDImage)
+                put(ImageType.BANNER, show.fullHDBanner)
+            },
             description = show.summary,
             episodeSize = showVideos.size
         )
@@ -184,8 +184,10 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.CRUN,
             lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
-            image = series.fullHDImage!!,
-            banner = series.fullHDBanner!!,
+            attachments = buildMap {
+                put(ImageType.THUMBNAIL, series.fullHDImage!!)
+                put(ImageType.BANNER, series.fullHDBanner!!)
+            },
             description = series.description,
             episodeSize = objects.size
         )
@@ -202,8 +204,10 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.DISN,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            image = show.image,
-            banner = show.banner,
+            attachments = buildMap {
+                put(ImageType.THUMBNAIL, show.image)
+                put(ImageType.BANNER, show.banner)
+            },
             description = show.description,
             episodeSize = episodes.size
         )
@@ -225,8 +229,7 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.NETF,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            image = animePlatform.anime!!.image!!,
-            banner = show.banner,
+            attachments = buildMap { put(ImageType.BANNER, show.banner) },
             description = show.description,
             episodeSize = episodes.size
         )
@@ -248,8 +251,7 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.PRIM,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            image = animePlatform.anime!!.image!!,
-            banner = show.banner,
+            attachments = buildMap { put(ImageType.BANNER, show.banner) },
             description = show.description,
             episodeSize = episodes.size
         )

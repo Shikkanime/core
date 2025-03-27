@@ -22,7 +22,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
 
     @Test
     fun `getSimulcasts get next`() {
-        val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", image = "test.jpg", banner = "test.jpg", slug = "test-anime")
+        val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", slug = "test-anime")
         val episode = mockkClass(EpisodeMapping::class)
 
         anime.releaseDateTime = ZonedDateTime.parse("2023-12-20T16:00:00Z")
@@ -39,7 +39,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
 
     @Test
     fun `getSimulcasts continue on current`() {
-        val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", image = "test.jpg", banner = "test.jpg", slug = "test-anime")
+        val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", slug = "test-anime")
         val episode = mockkClass(EpisodeMapping::class)
         val finalRelease = ZonedDateTime.parse("2024-01-03T16:00:00Z")
 
@@ -55,7 +55,6 @@ class EpisodeVariantServiceTest : AbstractTest() {
                     season = 1,
                     number = i,
                     releaseDateTime = anime.releaseDateTime.plusWeeks(i.toLong()),
-                    image = "test.jpg",
                 )
             ).apply {
                 episodeVariantService.save(

@@ -4,12 +4,12 @@ import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
-import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
@@ -66,25 +66,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllAnimeUuidImageBannerAndUuidImage(): List<Tuple> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
-
-            query.multiselect(
-                root[EpisodeMapping_.anime][Anime_.uuid],
-                root[EpisodeMapping_.anime][Anime_.image],
-                root[EpisodeMapping_.anime][Anime_.banner],
-                root[EpisodeMapping_.uuid],
-                root[EpisodeMapping_.image]
-            ).orderBy(cb.desc(root[EpisodeMapping_.lastReleaseDateTime]))
-
-            createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
     fun findAllByAnime(animeUuid: UUID): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
@@ -111,6 +92,17 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             val root = query.from(getEntityClass())
             val variantJoin = root.join(EpisodeMapping_.variants)
 
+            val attachmentSubquery = query.subquery(Long::class.java)
+            val attachmentRoot = attachmentSubquery.from(Attachment::class.java)
+
+            attachmentSubquery.select(cb.literal(1L))
+                .where(
+                    cb.equal(attachmentRoot[Attachment_.entityUuid], root[EpisodeMapping_.uuid]),
+                    cb.equal(attachmentRoot[Attachment_.type], ImageType.BANNER),
+                    cb.equal(attachmentRoot[Attachment_.url], Constant.DEFAULT_IMAGE_PREVIEW),
+                    cb.equal(attachmentRoot[Attachment_.active], true)
+                )
+
             query.distinct(true)
                 .where(
                     variantJoin[EpisodeVariant_.platform].`in`(platforms),
@@ -120,7 +112,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                             lastDateTime
                         ),
                         cb.and(
-                            cb.equal(root[EpisodeMapping_.image], Constant.DEFAULT_IMAGE_PREVIEW),
+                            cb.equal(attachmentSubquery, 1L),
                             cb.greaterThanOrEqualTo(root[EpisodeMapping_.releaseDateTime], lastDateTime),
                         ),
                     ),

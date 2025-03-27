@@ -10,7 +10,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
@@ -44,6 +44,9 @@ class AdminController {
 
     @Inject
     private lateinit var configCacheService: ConfigCacheService
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     @Path
     @Get
@@ -103,7 +106,7 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun invalidateImages(): Response {
-        ImageService.invalidate()
+        attachmentService.encodeAllActive()
         return Response.redirect(Link.DASHBOARD.href)
     }
 

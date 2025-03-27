@@ -24,8 +24,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "Test Anime",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "test-anime"
             )
         )
@@ -35,7 +33,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
                 episodeType = EpisodeType.SPECIAL,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -52,8 +49,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "Test Anime",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "test-anime"
             )
         )
@@ -63,7 +58,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
                 episodeType = EpisodeType.FILM,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -73,7 +67,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
                 episodeType = EpisodeType.SPECIAL,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -93,8 +86,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
                 countryCode = CountryCode.FR,
                 name = "Oshi no Ko",
                 slug = "oshi-no-ko",
-                image = "https://image.animationdigitalnetwork.fr/license/oshinoko/tv/web/affiche_350x500.jpg",
-                banner = "https://image.animationdigitalnetwork.fr/license/oshinoko/tv/web/license_640x360.jpg",
                 description = "Gorô Amemiya, un obstétricien exerçant dans un hôpital de campagne, n’a d’yeux que pour la sublime Aï Hoshino, une célèbre et talentueuse idole. Au détour d’une rencontre fortuite, la découverte d’un terrible secret va changer leur destin à tout jamais…"
             )
         )
@@ -105,7 +96,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 2,
                 number = 17,
-                image = "https://image.animationdigitalnetwork.fr/license/oshinoko/tv/web/eps17_640x360.jpg",
                 title = "Grandir",
                 description = "La première de « Tokyo Blade » commence sous le regard inquisiteur de Kichijôji. Conscient de ses lacunes et du fossé qui le sépare du reste du casting, Melt parviendra-t-il à la faire changer d'opinion ?",
                 duration = 1530,

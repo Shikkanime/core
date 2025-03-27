@@ -2,6 +2,7 @@ package fr.shikkanime.services
 
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
@@ -100,7 +101,14 @@ object MediaImage {
         ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
 
     private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
-        val animeBanner = getLongTimeoutImage(anime.banner!!).resize(1920, 1080)
+        val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
+        val thumbnailAttachment = attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, ImageType.THUMBNAIL)
+        val bannerAttachment = attachmentService.findByEntityUuidTypeAndActive(anime.uuid, ImageType.BANNER)
+
+        checkNotNull(thumbnailAttachment) { "The anime does not have a thumbnail" }
+        checkNotNull(bannerAttachment) { "The anime does not have a banner" }
+
+        val animeBanner = getLongTimeoutImage(bannerAttachment.url!!).resize(1920, 1080)
         val scaleBannerRatio = mediaImage.width.toDouble() / (animeBanner.width + BLUR_SIZE * 2)
         val scaleBannerResize = (animeBanner.height * scaleBannerRatio).toInt()
         val resizedBanner = animeBanner.resize(mediaImage.width, scaleBannerResize)
@@ -129,7 +137,7 @@ object MediaImage {
             null
         )
 
-        val animeImage = getLongTimeoutImage(anime.image!!).resize(1560, 2340)
+        val animeImage = getLongTimeoutImage(thumbnailAttachment.url!!).resize(1560, 2340)
         val scaleThumbnailRatio = resizedBanner.height.toDouble() / animeImage.height.toDouble()
         val scaleThumbnailResize = (animeImage.width * scaleThumbnailRatio).toInt()
         val resizedThumbnail = animeImage.resize(scaleThumbnailResize, resizedBanner.height)

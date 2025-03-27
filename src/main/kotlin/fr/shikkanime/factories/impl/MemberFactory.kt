@@ -6,7 +6,7 @@ import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.factories.IGenericFactory
-import fr.shikkanime.services.ImageService
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.utils.withUTCString
@@ -17,6 +17,9 @@ class MemberFactory : IGenericFactory<Member, MemberDto> {
 
     @Inject
     private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     override fun toDto(entity: Member): MemberDto {
         val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(entity)
@@ -32,7 +35,7 @@ class MemberFactory : IGenericFactory<Member, MemberDto> {
             followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(entity).toSet(),
             totalDuration = seenAndUnseenDuration.first,
             totalUnseenDuration = seenAndUnseenDuration.second,
-            hasProfilePicture = ImageService[entity.uuid, ImageType.MEMBER_PROFILE] != null
+            hasProfilePicture = attachmentService.findByEntityUuidTypeAndActive(entity.uuid, ImageType.MEMBER_PROFILE) != null
         )
     }
 }

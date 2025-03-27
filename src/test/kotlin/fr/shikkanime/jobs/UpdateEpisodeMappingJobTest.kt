@@ -6,10 +6,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.isAfterOrEqual
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
@@ -55,8 +52,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Rent-a-Girlfriend",
                 slug = "rent-a-girlfriend",
-                image = "test.jpg",
-                banner = "test.jpg",
             )
         )
 
@@ -69,7 +64,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 1,
-                image = "test.jpg"
             )
         )
 
@@ -97,7 +91,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
 
         assertEquals(
             "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/97ab10f90157c828a591cd4ec66e851c.jpg",
-            mappings.first().image
+            attachmentService.findByEntityUuidTypeAndActive(mappings.first().uuid!!, ImageType.BANNER)?.url
         )
         assertEquals("Petite amie à louer", mappings.first().title)
         assertEquals(
@@ -116,8 +110,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "The Eminence in Shadow",
                 slug = "the-eminence-in-shadow",
-                image = "test.jpg",
-                banner = "test.jpg"
             )
         )
         val episodeMapping = episodeMappingService.save(
@@ -129,7 +121,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 1,
-                image = "test.jpg",
             )
         )
         episodeVariantService.save(
@@ -164,9 +155,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 releaseDateTime = zonedDateTime,
                 lastReleaseDateTime = zonedDateTime,
                 name = "Pon no Michi",
-                slug = "pon-no-michi",
-                image = "https://image.animationdigitalnetwork.fr/license/ponnomichi/tv/web/affiche_350x500.jpg",
-                banner = "https://image.animationdigitalnetwork.fr/license/ponnomichi/tv/web/license_640x360.jpg"
+                slug = "pon-no-michi"
             )
         )
         val episodeMapping = episodeMappingService.save(
@@ -178,7 +167,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 5,
-                image = "https://image.animationdigitalnetwork.fr/license/ponnomichi/tv/web/eps5_640x360.jpg",
                 title = "Une arrivée inattendue",
                 description = "Nashiko et ses amies reçoivent la visite de la personne contre qui elles jouaient en ligne : Haneru Emi. Cette dernière est déterminée à jouer à nouveau contre Riche pour la battre, mais avant ça, elle fait la connaissance des quatre filles. Et quoi de mieux pour cela qu’un barbecue sous le ciel bleu ?"
             )
@@ -218,8 +206,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Berserk : L'Âge d'or - Memorial Edition",
                 slug = "berserk",
-                image = "test.jpg",
-                banner = "test.jpg",
             )
         )
         val episodeMapping = episodeMappingService.save(
@@ -231,7 +217,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 4,
-                image = "test.jpg"
             )
         )
 
@@ -280,8 +265,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Berserk : L'Âge d'or - Memorial Edition",
                 slug = "berserk",
-                image = "test.jpg",
-                banner = "test.jpg",
             )
         )
 
@@ -294,7 +277,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 4,
-                image = "test.jpg"
             )
         )
 
@@ -343,8 +325,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Isekai Cheat Magician",
                 slug = "isekai-cheat-magician",
-                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/affiche_350x500.jpg",
-                banner = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/license_640x360.jpg"
             )
         )
 
@@ -357,7 +337,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 13,
-                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/eps13_640x360.jpg",
                 title = "La Nuit aux étoiles",
                 description = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts."
             )
@@ -397,8 +376,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Let's Make a Mug Too",
                 slug = "lets-make-a-mug-too",
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/4baa218403d5aa914114eb001e406f9a.jpe",
-                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/509536f6e1d4757907762591182fd845.jpe"
             )
         )
 
@@ -411,7 +388,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 9,
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/820b8839ea3260a5ca82a9ecaf25de96.jpe",
                 title = "Écraser, étirer, reculer, compléter",
                 description = "Himeno n'a toujours pas trouvé l'idée ultime pour le concours. Elle essaie donc plusieurs formes pour créer le coussin qu'elle désire."
             )
@@ -451,8 +427,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "One Piece",
                 slug = "one-piece",
-                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/affiche_350x500.jpg",
-                banner = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/license_640x360.jpg"
             )
         )
 
@@ -465,7 +439,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 816,
-                image = "https://image.animationdigitalnetwork.fr/license/cheatmagician/tv/web/eps13_640x360.jpg",
                 title = "La Nuit aux étoiles",
                 description = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts."
             )
@@ -505,8 +478,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "One Piece",
                 slug = "one-piece",
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
-                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg"
             )
         )
 
@@ -519,7 +490,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 566,
-                image = "https://image.animationdigitalnetwork.fr/license/onepiece/tv/web/eps566_640x360.jpg",
                 title = "Conclusion. L'affrontement final contre Hody !",
                 description = null
             )
@@ -582,8 +552,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "DAN DA DAN",
                 slug = "dan-da-dan",
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/13839ea2b48b0323417b23813a090c93.jpg",
-                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fa62dd1fc7a9bc0b587f36f53bf572c1.jpg",
             )
         )
 
@@ -596,7 +564,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 1,
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/39d31aee335444ba382668b17b85c429.jpg"
             )
         )
 
@@ -689,8 +656,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Garôden : La voie du loup solitaire",
                 slug = "garoden",
-                image = "https://resizing.flixster.com/XksHj1sbnxReEwu8UxxkTQPgsaM=/fit-in/705x460/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p27251158_b_v9_ac.jpg",
-                banner = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/6AYY37jfdO6hpXcMjf9Yu5cnmO0/AAAABW4lOpbtZJEWTEWnn5Pg9mXu5wD-zf4SwbqsPGuk_pckstx2SsWMcNRxGC_kI7xv6CgGNKj9MiI8RBUFojGDKmvJNnqw0X4vVFmJ.jpg",
             )
         )
 
@@ -703,7 +668,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 7,
-                image = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABeDPj8bjJgkLhwSHPXEEJggZGtaq_iSBmLsNP4DcgMrzUEuUVFe9rVuJROQpB4DNuPk5vyC4qd0VnmOu3YhOm4L2tw2ScA6a8T7VCxjCniE77CXmSGemQzno.jpg"
             )
         )
 
@@ -741,8 +705,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Du mouvement de la Terre",
                 slug = "du-mouvement-de-la-terre",
-                image = "https://cdn.myanimelist.net/images/anime/1713/144437l.jpg",
-                banner = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/6AYY37jfdO6hpXcMjf9Yu5cnmO0/AAAABTkMGRnW-6lH_YEXhGdcFKZM-rO0bZCKzA8846_wW3Xy_s1NN72RFbddfuh9-2L_nr5lvAlFxB6i7uvUEY49CTFLoAJZA2Ag_hY6.jpg",
             )
         )
 
@@ -755,7 +717,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 9,
-                image = "https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABT_ClBwV1ItifEAGonpxHrB_b1fSWtllElp6Sl3awusb-bRXPFrTzSZaunQ4O6ku1o8CVQjKu9bEnlOYYwPGBFQZFJUg3Y8eiVroGRTd9HAOJ_S-42Yut-g-.jpg"
             )
         )
 
@@ -778,7 +739,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         assertEquals(1, animes.size)
         val mappings = episodeMappingService.findAll()
         assertEquals(1, mappings.size)
-        assumeFalse("https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABT_ClBwV1ItifEAGonpxHrB_b1fSWtllElp6Sl3awusb-bRXPFrTzSZaunQ4O6ku1o8CVQjKu9bEnlOYYwPGBFQZFJUg3Y8eiVroGRTd9HAOJ_S-42Yut-g-.jpg" == mappings.first().image)
+        assumeFalse("https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABT_ClBwV1ItifEAGonpxHrB_b1fSWtllElp6Sl3awusb-bRXPFrTzSZaunQ4O6ku1o8CVQjKu9bEnlOYYwPGBFQZFJUg3Y8eiVroGRTd9HAOJ_S-42Yut-g-.jpg" == attachmentService.findByEntityUuidTypeAndActive(mappings.first().uuid!!, ImageType.BANNER)?.url)
         val variants = episodeVariantService.findAll()
         assertEquals(1, variants.size)
     }
@@ -794,8 +755,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 name = "Ninja Kamui",
                 slug = "ninja-kamui",
-                image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-                banner = "https://m.media-amazon.com/images/S/pv-target-images/3c8f2a486dc00aab40c25ffc6cf4445f2e9ea295682fade1ce466a5c22e4feba._SX1080_FMjpg_.jpg",
             )
         )
 
@@ -808,7 +767,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 season = 1,
                 episodeType = EpisodeType.EPISODE,
                 number = 10,
-                image = "https://m.media-amazon.com/images/S/pv-target-images/e2a2062260d7f35cc714079ae69ca846ca9e28364f9f1fcd92411e8d60b36315._AC_SX1920_FMjpg_.jpg"
             )
         )
 

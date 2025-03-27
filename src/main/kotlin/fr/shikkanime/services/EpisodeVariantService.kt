@@ -43,6 +43,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject
     private lateinit var ruleService: RuleService
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     override fun getRepository() = episodeVariantRepository
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
@@ -125,12 +128,15 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     name = animeName,
                     releaseDateTime = episode.releaseDateTime,
                     lastReleaseDateTime = episode.releaseDateTime,
-                    image = episode.animeImage,
-                    banner = episode.animeBanner,
                     description = episode.animeDescription,
                     slug = slug
                 )
-            )
+            ).apply {
+                if (!Constant.isTest) {
+                    attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.THUMBNAIL, url = episode.animeImage)
+                    attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = episode.animeBanner)
+                }
+            }
 
         if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null && (rules.isEmpty() || rules.any { rule -> rule.action != Rule.Action.REPLACE_ANIME_NAME })) {
             animePlatformService.save(
@@ -204,9 +210,11 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 duration = episode.duration,
                 title = episode.title,
                 description = episode.description?.take(Constant.MAX_DESCRIPTION_LENGTH),
-                image = episode.image,
             )
-        )
+        ).apply {
+            if (!Constant.isTest)
+                attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.BANNER, url = episode.image)
+        }
 
         episode.number.takeIf { it == -1 }?.let {
             val number = episodeMappingService.findLastNumber(
@@ -278,7 +286,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             duration = mapping.duration,
             title = mapping.title,
             description = mapping.description,
-            image = mapping.image,
         )
 
         val existing = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
@@ -293,7 +300,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             update(episodeVariant)
             return
         } else {
+            val image = attachmentService.findByEntityUuidTypeAndActive(mapping.uuid!!, ImageType.BANNER)
             val saved = episodeMappingService.save(entity)
+            attachmentService.createAttachmentOrMarkAsActive(saved.uuid!!, ImageType.BANNER, url = image?.url)
             episodeVariant.mapping = saved
             update(episodeVariant)
         }

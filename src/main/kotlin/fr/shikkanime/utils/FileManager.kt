@@ -4,7 +4,10 @@ import nu.pattern.OpenCV
 import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfInt
 import org.opencv.imgcodecs.Imgcodecs
-import java.io.*
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.ObjectInputStream
 import kotlin.reflect.full.starProjectedType
 import kotlin.reflect.typeOf
 
@@ -43,20 +46,5 @@ object FileManager {
         }
 
         return value
-    }
-
-
-    fun writeFile(file: File, `object`: Any) {
-        try {
-            FileOutputStream (file).use { baos ->
-                ObjectOutputStream(baos).use { oos ->
-                    oos.writeObject(`object`)
-                    oos.flush()
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw Exception("Failed to write file")
-        }
     }
 }

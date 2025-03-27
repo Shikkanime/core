@@ -171,7 +171,16 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
         return "#EXT-X-MEDIA:TYPE=AUDIO,.*,LANGUAGE=\"([a-zA-Z0-9\\-]*)\".*".toRegex()
             .findAll(rawVideoData.bodyAsText())
-            .map { it.groupValues[1] }
+            // If audio locale is equals to "ja", replace it with "ja-JP"
+            .map {
+                val locale = it.groupValues[1]
+
+                if (locale == "ja") {
+                    "ja-JP"
+                } else {
+                    locale
+                }
+            }
             .toSet()
     }
 }

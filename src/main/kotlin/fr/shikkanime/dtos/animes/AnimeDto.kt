@@ -16,8 +16,6 @@ data class AnimeDto(
     var releaseDateTime: String,
     val lastReleaseDateTime: String,
     val lastUpdateDateTime: String?,
-    val image: String,
-    val banner: String,
     val description: String?,
     val simulcasts: Set<SimulcastDto>?,
     var audioLocales: Set<String>? = null,

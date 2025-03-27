@@ -12,7 +12,6 @@ import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -21,8 +20,11 @@ import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.factories.impl.PlatformFactory
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.StringUtils.capitalizeWords
+import fr.shikkanime.utils.atEndOfWeek
+import fr.shikkanime.utils.withUTC
+import fr.shikkanime.utils.withUTCString
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -340,14 +342,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         )
     }
 
-    fun addThumbnail(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageType.THUMBNAIL, image, null, bypass)
-    }
-
-    fun addBanner(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageType.BANNER, image, null, bypass)
-    }
-
     fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
         if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
             simulcast.uuid ?: simulcastService.save(simulcast)
@@ -392,22 +386,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     override fun save(entity: Anime): Anime {
         entity.simulcasts = entity.simulcasts.map { simulcast ->
-            simulcastService.findBySeasonAndYear(simulcast.season!!, simulcast.year!!) ?: simulcastService.save(
-                simulcast
-            )
+            simulcastService.findBySeasonAndYear(simulcast.season!!, simulcast.year!!) ?: simulcastService.save(simulcast)
         }.toMutableSet()
 
-        entity.description = entity.description?.replace("\n", "")
-            ?.replace("\r", "")
+        entity.description = entity.description?.replace("\n", "")?.replace("\r", "")
         val savedEntity = super.save(entity)
-        val uuid = savedEntity.uuid!!
-
-        if (!Constant.isTest) {
-            addThumbnail(uuid, savedEntity.image!!)
-            addBanner(uuid, savedEntity.banner!!)
-        }
-
-        traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
+        traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
         return savedEntity
     }
 
@@ -430,16 +414,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
             anime.description = animeDto.description
-        }
-
-        if (animeDto.image.isNotBlank() && animeDto.image != anime.image) {
-            anime.image = animeDto.image
-            addThumbnail(anime.uuid!!, anime.image!!, true)
-        }
-
-        if (animeDto.banner.isNotBlank() && animeDto.banner != anime.banner) {
-            anime.banner = animeDto.banner
-            addBanner(anime.uuid!!, anime.banner!!, true)
         }
 
         updateAnimeSimulcast(animeDto, anime)

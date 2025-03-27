@@ -4,10 +4,7 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeMappingService
-import fr.shikkanime.services.ImageService
-import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -24,10 +21,13 @@ fun main(args: Array<String>) {
     logger.info("Pre-indexing anime data...")
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val memberService = Constant.injector.getInstance(MemberService::class.java)
+    val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
     animeService.preIndex()
 
-    logger.info("Loading images cache...")
-    ImageService.addAll()
+    logger.info("Converting files to attachments...")
+    ImageService.convertFilesToAttachment()
+    logger.info("Loading attachments cache...")
+    attachmentService.encodeAllActiveWithUrlAndWithoutFile()
 
     logger.info("Updating and deleting data...")
     updateAndDeleteData()
@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
         // Every 20 seconds
         JobManager.scheduleJob("*/20 * * * * ?", FetchEpisodesJob::class.java, SendMailJob::class.java)
         // Every 10 minutes
-        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java, UpdateImageJob::class.java)
+        JobManager.scheduleJob("0 */10 * * * ?", UpdateEpisodeMappingJob::class.java, UpdateAttachmentJob::class.java)
         // Every hour
         JobManager.scheduleJob("0 0 * * * ?", UpdateAnimeJob::class.java)
         // Every day at midnight

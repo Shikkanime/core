@@ -60,6 +60,27 @@
             return range;
         }
     }" x-init="init">
+        <div class="modal fade" id="updateAllModal" tabindex="-1" aria-labelledby="updateAllModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="updateAllModalLabel">Update confirmation</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to force update all animes? This operation may take some time.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                        <a class="btn btn-success" href="/admin/api/animes/force-update-all">
+                            Confirm
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="row g-3 align-items-center mb-3">
             <div class="col-auto">
                 <label class="form-label" for="nameInput">Name</label>
@@ -67,10 +88,10 @@
                        x-model="search" @input="applyFilters">
             </div>
             <div class="col-auto ms-auto">
-                <a class="btn btn-primary" href="/admin/api/animes/force-update-all">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateAllModal">
                     <i class="bi bi-check-all me-2"></i>
                     Force update all
-                </a>
+                </button>
             </div>
         </div>
 

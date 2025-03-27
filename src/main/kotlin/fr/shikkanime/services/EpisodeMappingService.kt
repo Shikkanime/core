@@ -6,10 +6,12 @@ import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
-import fr.shikkanime.utils.Constant
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -43,8 +45,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         limit: Int,
     ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit)
 
-    fun findAllAnimeUuidImageBannerAndUuidImage() = episodeMappingRepository.findAllAnimeUuidImageBannerAndUuidImage()
-
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
 
     fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
@@ -72,14 +72,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
-    fun addImage(uuid: UUID, image: String, bypass: Boolean = false) {
-        ImageService.add(uuid, ImageType.BANNER, image, null, bypass)
-    }
-
     override fun save(entity: EpisodeMapping): EpisodeMapping {
         val save = super.save(entity)
-        if (!Constant.isTest) addImage(save.uuid!!, save.image!!)
-        traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
+        traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
         return save
     }
 
@@ -219,11 +214,6 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
         if (entity.description?.isNotBlank() == true && entity.description != episode.description) {
             episode.description = entity.description
-        }
-
-        if (entity.image.isNotBlank() && entity.image != episode.image) {
-            episode.image = entity.image
-            addImage(episode.uuid!!, episode.image!!, true)
         }
 
         if (entity.duration != episode.duration) {
