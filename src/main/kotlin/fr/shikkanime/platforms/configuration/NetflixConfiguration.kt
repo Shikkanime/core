@@ -9,7 +9,7 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
         var season: Int = 1,
         var episodeType: EpisodeType = EpisodeType.EPISODE,
         var audioLocales: MutableSet<String> = mutableSetOf("ja-JP"),
-        var audioLocaleDelays: MutableMap<String, Int> = mutableMapOf(),
+        var audioLocaleDelays: MutableMap<String, Long> = mutableMapOf(),
     ) : ReleaseDayPlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
@@ -22,7 +22,7 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
                 it.split(",").forEach { delay ->
                     val parts = delay.split(":")
                     if (parts.size == 2) {
-                        audioLocaleDelays[parts[0]] = parts[1].toIntOrNull() ?: 0
+                        audioLocaleDelays[parts[0]] = parts[1].toLongOrNull() ?: 0
                     }
                 }
             }

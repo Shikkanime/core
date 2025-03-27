@@ -18,7 +18,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val animeImage: String,
         val animeBanner: String,
         val animeDescription: String?,
-        val releaseDateTime: ZonedDateTime,
+        var releaseDateTime: ZonedDateTime,
         val episodeType: EpisodeType,
         val seasonId: String,
         var season: Int,
