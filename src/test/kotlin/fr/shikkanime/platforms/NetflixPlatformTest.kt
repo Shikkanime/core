@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 
 class NetflixPlatformTest : AbstractTest() {
     @Inject
@@ -94,5 +95,32 @@ class NetflixPlatformTest : AbstractTest() {
         }
 
         assertTrue(episodes.size >= 4)
+    }
+
+    @Test
+    fun `fetchApiContent for My Happy Mariage`() {
+        val countryCode = CountryCode.FR
+        val zonedDateTime = ZonedDateTime.parse("2025-03-24T14:00:00Z")
+        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay("14:00:00").apply {
+            name = "81564905"
+            releaseDay = 1
+            image = "https://cdn.myanimelist.net/images/anime/1147/122444l.jpg"
+            audioLocales = mutableSetOf("ja-JP", "fr-FR")
+            audioLocaleDelays = mutableMapOf("fr-FR" to 1)
+        })
+        val episodes = runCatching { runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) } }.getOrNull() ?: emptyList()
+        assertNotNull(episodes)
+        assumeTrue(episodes.isNotEmpty())
+
+        episodes.forEach {
+            println(it)
+        }
+
+        val firstEpisode = episodes.filter { it.id == "891517da" }
+        assertEquals(2, firstEpisode.size)
+        assertEquals("FR-NETF-891517da-JA-JP", firstEpisode.first().getIdentifier())
+        assertEquals("FR-NETF-891517da-FR-FR", firstEpisode.last().getIdentifier())
+        // Check the delay for the French audio locale
+        assertEquals(1, ChronoUnit.WEEKS.between(firstEpisode.first().releaseDateTime, firstEpisode.last().releaseDateTime))
     }
 }

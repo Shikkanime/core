@@ -1,17 +1,20 @@
 package fr.shikkanime.platforms
 
+import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
 import java.time.ZonedDateTime
 
-class NetflixPlatform :
-    AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>?>() {
+class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>?>() {
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     override fun getPlatform(): Platform = Platform.NETF
 
@@ -26,23 +29,35 @@ class NetflixPlatform :
             key.netflixSimulcast.seasonName, key.netflixSimulcast.season
         ) ?: return null
 
-        return videos.flatMapIndexed { i, _ ->
-            key.netflixSimulcast.audioLocales.mapNotNull { audioLocale ->
-                val weekDelayed = key.netflixSimulcast.audioLocaleDelays[audioLocale] ?: 0
-                val delayedEpisode = videos.getOrNull(i - weekDelayed)
+        // Cache for original release dates per video ID
+        val originalReleaseDateCache = mutableMapOf<String, ZonedDateTime>()
 
-                delayedEpisode?.let {
-                    convertEpisode(
-                        key.countryCode,
-                        key.netflixSimulcast.image,
-                        it,
-                        zonedDateTime,
-                        key.netflixSimulcast.episodeType,
-                        audioLocale
-                    )
+        return videos.flatMap { video ->
+            key.netflixSimulcast.audioLocales.map { audioLocale ->
+                val episode = convertEpisode(
+                    key.countryCode,
+                    key.netflixSimulcast.image,
+                    video,
+                    zonedDateTime,
+                    key.netflixSimulcast.episodeType,
+                    audioLocale
+                )
+
+                // Fetch and cache the original release date only once per video ID
+                // Uses the identifier from the generated episode for the cache lookup.
+                val originalReleaseDateTime = originalReleaseDateCache.getOrPut(video.id) {
+                    episodeVariantCacheService.findReleaseDateTimeByIdentifier(episode.getIdentifier()) ?: zonedDateTime
                 }
+
+                // Apply delay if delay is defined for this locale
+                key.netflixSimulcast.audioLocaleDelays[audioLocale]?.let { delayInWeeks ->
+                    episode.releaseDateTime = originalReleaseDateTime.plusWeeks(delayInWeeks)
+                }
+                // If no delay is applicable, the releaseDateTime set by convertEpisode is used.
+
+                episode
             }
-        }.distinctBy { it.id }
+        }
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {

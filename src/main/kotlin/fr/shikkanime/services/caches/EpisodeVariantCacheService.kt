@@ -82,4 +82,10 @@ class EpisodeVariantCacheService : AbstractCacheService {
         classes = listOf(EpisodeVariant::class.java),
         key = uuid,
     ) { episodeVariantService.find(it)?.let { episodeVariantFactory.toDto(it) } }
+
+    fun findReleaseDateTimeByIdentifier(identifier: String) = MapCache.getOrComputeNullable(
+        "EpisodeVariantCacheService.findReleaseDateTimeByIdentifier",
+        classes = listOf(EpisodeVariant::class.java),
+        key = identifier,
+    ) { episodeVariantService.findReleaseDateTimeByIdentifier(it) }
 }
