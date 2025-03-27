@@ -60,6 +60,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
     @Inject
     private lateinit var mailService: MailService
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
@@ -121,7 +124,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.first()
             val hasChanged = AtomicBoolean(false)
 
-            updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+            updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier)
             updateEpisodeMappingTitle(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
             updateEpisodeMappingDescription(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
             updateEpisodeMappingDuration(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
@@ -257,16 +260,13 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private fun updateEpisodeMappingImage(
         originalEpisode: Episode,
         mapping: EpisodeMapping,
-        mappingIdentifier: String,
-        hasChanged: AtomicBoolean,
-        needRefreshCache: AtomicBoolean
+        mappingIdentifier: String
     ) {
-        if (originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW && mapping.image != originalEpisode.image) {
-            mapping.image = originalEpisode.image
-            episodeMappingService.addImage(mapping.uuid!!, originalEpisode.image, true)
+        val url = originalEpisode.image
+
+        if (attachmentService.findByEntityUuidTypeAndActive(mapping.uuid!!, ImageType.BANNER)?.url != url && url.isNotBlank() && originalEpisode.image != Constant.DEFAULT_IMAGE_PREVIEW) {
+            attachmentService.createAttachmentOrMarkAsActive(mapping.uuid, ImageType.BANNER, url = url)
             logger.info("Image updated for $mappingIdentifier to ${originalEpisode.image}")
-            hasChanged.set(true)
-            needRefreshCache.set(true)
         }
     }
 
@@ -342,8 +342,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
-        val isImageUpdate = episodeMapping.image == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime.isAfterOrEqual(lastDateTime)
-        val animeImage = episodeMapping.anime!!.image!!
+        val isImageUpdate = attachmentService.findByEntityUuidTypeAndActive(episodeMapping.uuid!!, ImageType.BANNER)?.url == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime.isAfterOrEqual(lastDateTime)
         val episodeType = episodeMapping.episodeType!!
         val audioLocale = episodeVariant.audioLocale!!
         val releaseDateTime = episodeVariant.releaseDateTime
@@ -421,7 +420,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     .map { episode ->
                         netflixPlatform.convertEpisode(
                             countryCode,
-                            animeImage,
+                            "",
                             episode,
                             releaseDateTime,
                             episodeType,
@@ -440,7 +439,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     .map { episode ->
                         primeVideoPlatform.convertEpisode(
                             countryCode,
-                            animeImage,
+                            "",
                             episode,
                             releaseDateTime,
                             episodeType,

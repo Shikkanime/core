@@ -36,6 +36,9 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     @Inject
     private lateinit var memberFactory: MemberFactory
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     override fun getRepository() = memberRepository
 
     private fun findAllByRoles(roles: List<Role>) = memberRepository.findAllByRoles(roles)
@@ -125,12 +128,10 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         val authorizedFormats = setOf("png", "jpeg", "jpg", "jpe")
         require(imageReader.formatName.lowercase() in authorizedFormats) { "Invalid file format, only png and jpeg are allowed. Received ${imageReader.formatName}" }
 
-        ImageService.add(
-            uuid = member.uuid!!,
-            type = ImageType.MEMBER_PROFILE,
-            url = null,
+        attachmentService.createAttachmentOrMarkAsActive(
+            member.uuid!!,
+            ImageType.MEMBER_PROFILE,
             bytes = bytes,
-            bypass = true,
             async = false
         )
 

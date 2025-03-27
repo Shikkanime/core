@@ -52,8 +52,6 @@ class EpisodeMapping(
     var title: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(1000)")
     var description: String? = null,
-    @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
-    var image: String? = null,
     // -----------------------------------------------------------------
     @OneToMany(mappedBy = "mapping", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)

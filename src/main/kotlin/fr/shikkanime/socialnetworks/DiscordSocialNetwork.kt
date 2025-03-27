@@ -95,7 +95,6 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
 
         val embedMessage = EmbedBuilder()
         embedMessage.setTitle(shortName, getInternalUrl(variants))
-        embedMessage.setThumbnail(anime.image)
         embedMessage.setImage("attachment://media-image.jpg")
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
         embedMessage.setTimestamp(variants.minOf { it.releaseDateTime }.toInstant())

@@ -19,7 +19,6 @@ data class EpisodeMappingDto(
     val duration: Long,
     val title: String?,
     val description: String?,
-    val image: String,
     val variants: Set<EpisodeVariantDto>? = null,
     val platforms: Set<PlatformDto>? = null,
     val langTypes: Set<LangType>? = null,

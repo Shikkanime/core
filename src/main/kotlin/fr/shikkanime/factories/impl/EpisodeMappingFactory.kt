@@ -39,7 +39,6 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
             duration = entity.duration,
             title = entity.title,
             description = entity.description,
-            image = entity.image!!,
             variants = variants.map { episodeVariantFactory.toDto(it, false) }.toSet(),
             platforms = variants.asSequence()
                 .mapNotNull { it.platform }

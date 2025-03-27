@@ -34,10 +34,6 @@ class Anime(
     var lastReleaseDateTime: ZonedDateTime = releaseDateTime,
     @Column(nullable = true, name = "last_update_date_time")
     var lastUpdateDateTime: ZonedDateTime? = releaseDateTime,
-    @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
-    var image: String? = null,
-    @Column(nullable = false, columnDefinition = "VARCHAR(1000)")
-    var banner: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(2000)")
     var description: String? = null,
     @Column(nullable = false)

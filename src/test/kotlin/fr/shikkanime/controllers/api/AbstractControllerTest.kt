@@ -2,7 +2,9 @@ package fr.shikkanime.controllers.api
 
 import fr.shikkanime.AbstractTest
 import fr.shikkanime.dtos.member.MemberDto
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
@@ -58,8 +60,6 @@ abstract class AbstractControllerTest : AbstractTest() {
                 name = "One Piece",
                 slug = "one-piece",
                 releaseDateTime = firstReleaseDateTime,
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/f154230aab3191aba977f337d392f812.jpe",
-                banner = "https://image.animationdigitalnetwork.fr/license/onepiece/tv15/web/license_640x360.jpg",
                 description = "Luffy et son équipage naviguent sur les mers à la recherche du légendaire trésor appelé « One Piece » et doivent faire face à de nombreuses aventures. Celui qui s’en emparera deviendra le roi des pirates, rêve ultime de Luffy.",
             )
         )
@@ -79,7 +79,6 @@ abstract class AbstractControllerTest : AbstractTest() {
                     duration = 1440,
                     title = "Episode $episodeNumber",
                     description = "Description $episodeNumber",
-                    image = "https://image.animationdigitalnetwork.fr/license/onepiece/tv/web/eps${episodeNumber}_640x360.jpg",
                 )
             )
 
@@ -127,8 +126,6 @@ abstract class AbstractControllerTest : AbstractTest() {
                 name = "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!",
                 slug = "7th-time-loop",
                 releaseDateTime = firstReleaseDateTime,
-                image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/480x720/catalog/crunchyroll/9217662a508e16c1987377d026272ec3.jpe",
-                banner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/2d2a9e005516e7d17b98513944d6e1aa.jpe",
                 description = "Rishe, la fille du duc, n'est pas étrangère à la réincarnation - c'est sa septième vie, après tout. Chaque vie recommence à ses fiançailles rompues. Après avoir été marchande, servante et chevalier, elle aspire maintenant aux loisirs. Mais son monde change lorsqu'un prince, qui l'a tuée dans une vie antérieure, la demande en mariage ! Pour éviter la guerre et vivre jusqu'à un âge avancé, elle commence sa septième vie en tant qu'épouse du prince d'une nation ennemie.",
             )
         )
@@ -148,7 +145,6 @@ abstract class AbstractControllerTest : AbstractTest() {
                     duration = 1430,
                     title = "Episode $episodeNumber",
                     description = "Description $episodeNumber",
-                    image = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/6d19c123aebb9b596b193f64554f37b4.jpg",
                 )
             )
 

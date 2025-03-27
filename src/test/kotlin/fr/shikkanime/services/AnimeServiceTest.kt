@@ -29,8 +29,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "DRAGON QUEST The Adventure of Dai",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "dragon-quest-the-adventure-of-dai"
             )
         )
@@ -39,8 +37,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "Dragon Quest",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "dragon-quest"
             )
         )
@@ -62,8 +58,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "DRAGON QUEST The Adventure of Dai",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "dragon-quest-the-adventure-of-dai"
             )
         )
@@ -74,7 +68,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -92,8 +85,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "Dragon Quest",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "dragon-quest"
             )
         )
@@ -104,7 +95,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -149,8 +139,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "DRAGON QUEST The Adventure of Dai",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "dragon-quest-the-adventure-of-dai"
             )
         )
@@ -163,7 +151,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -183,8 +170,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "Dragon Quest",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "dragon-quest"
             )
         )
@@ -197,7 +182,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
             )
         )
 
@@ -229,7 +213,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 2,
-                image = "test.jpg",
             )
         )
 
@@ -267,8 +250,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "A",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "a"
             )
         )
@@ -279,7 +260,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
                 releaseDateTime = previousWeek
             )
         )
@@ -312,7 +292,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 2,
-                image = "test.jpg",
                 releaseDateTime = now
             )
         )
@@ -365,8 +344,6 @@ class AnimeServiceTest : AbstractTest() {
             Anime(
                 countryCode = CountryCode.FR,
                 name = "A",
-                image = "test.jpg",
-                banner = "test.jpg",
                 slug = "a"
             )
         )
@@ -377,7 +354,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 2,
-                image = "test.jpg",
                 releaseDateTime = previousWeek
             )
         )
@@ -399,7 +375,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 1,
-                image = "test.jpg",
                 releaseDateTime = previousWeek.plusHours(6)
             )
         )
@@ -428,7 +403,6 @@ class AnimeServiceTest : AbstractTest() {
                 episodeType = EpisodeType.EPISODE,
                 season = 1,
                 number = 3,
-                image = "test.jpg",
                 releaseDateTime = now
             )
         )
