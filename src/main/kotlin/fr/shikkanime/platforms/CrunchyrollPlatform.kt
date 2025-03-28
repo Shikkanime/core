@@ -185,7 +185,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase()))
             throw AnimeException("\"$animeName\" is blacklisted")
 
-        val isTeaser = browseObject.slugTitle?.contains("teaser", true) == true &&
+        val isTeaser = browseObject.slugTitle?.contains("(teaser|pv)(?:-\\d)?".toRegex()) == true &&
                 browseObject.episodeMetadata.premiumAvailableDate.withUTCString() == "1970-01-01T00:00:00Z"
 
         if (isTeaser)
