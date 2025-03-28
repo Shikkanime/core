@@ -17,7 +17,7 @@ val firebaseVersion = "9.4.3"
 val simpleJavaMailVersion = "8.12.5"
 val jacksonVersion = "2.18.3"
 
-val jdaVersion = "5.3.0"
+val jdaVersion = "5.3.1"
 val twitter4jVersion = "4.0.7"
 val twitter4jV2Version = "1.4.4"
 
