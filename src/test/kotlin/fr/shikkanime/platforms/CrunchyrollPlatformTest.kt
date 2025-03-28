@@ -418,4 +418,22 @@ class CrunchyrollPlatformTest : AbstractTest() {
         assertEquals("Gridman Universe", episodes[0].anime)
         assertEquals(EpisodeType.FILM, episodes[0].episodeType)
     }
+
+    @Test
+    fun `fetchEpisodes for 2025-03-28`() {
+        val s = "2025-03-28T06:30:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-${s.replace(':', '-')}.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertTrue(episodes.none { it.anime == "Teogonia" })
+        assertTrue(episodes.none { it.anime == "Can a Boy-Girl Friendship Survive?" })
+        assertTrue(episodes.none { it.anime == "The Brilliant Healer's New Life in the Shadows" })
+    }
 }
