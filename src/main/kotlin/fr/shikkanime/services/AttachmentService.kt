@@ -33,6 +33,15 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     @Inject
     private lateinit var traceActionService: TraceActionService
 
+    @Inject
+    private lateinit var animeService: AnimeService
+
+    @Inject
+    private lateinit var episodeMappingService: EpisodeMappingService
+
+    @Inject
+    private lateinit var memberService: MemberService
+
     override fun getRepository() = attachmentRepository
 
     fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType) = attachmentRepository.findAllByEntityUuidAndType(entityUuid, type)
@@ -162,7 +171,16 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     }
 
     fun cleanUnusedAttachments() {
-        val attachments = findAll().associateBy { it.uuid }
+        val uuids = animeService.findAllUuids() + episodeMappingService.findAllUuids() + memberService.findAllUuids()
+        val attachments = findAll().associateBy { it.uuid }.toMutableMap()
+
+        attachments.values.forEach {
+            if (it.entityUuid !in uuids) {
+                // Remove the attachment if it is not used anymore
+                delete(it)
+                attachments.remove(it.uuid)
+            }
+        }
 
         Constant.imagesFolder.listFiles()?.asSequence()
             ?.filter { attachments[UUID.fromString(it.nameWithoutExtension)]?.active != true }

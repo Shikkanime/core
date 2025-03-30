@@ -4,7 +4,10 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.AttachmentService
+import fr.shikkanime.services.EpisodeMappingService
+import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -24,8 +27,6 @@ fun main(args: Array<String>) {
     val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
     animeService.preIndex()
 
-    logger.info("Converting files to attachments...")
-    ImageService.convertFilesToAttachment()
     logger.info("Loading attachments cache...")
     attachmentService.encodeAllActiveWithUrlAndWithoutFile()
 

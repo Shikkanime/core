@@ -17,16 +17,6 @@ import java.util.*
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
 
-    fun findAllUuids(): List<UUID> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
-            query.select(root[EpisodeMapping_.uuid])
-            createReadOnlyQuery(it, query).resultList
-        }
-    }
-
     fun findAllBy(
         countryCode: CountryCode?,
         anime: Anime?,
