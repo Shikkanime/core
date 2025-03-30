@@ -6,6 +6,7 @@ import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.*
 import com.google.inject.Inject
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -61,7 +62,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
             .sortedWith(compareBy({ it.releaseDateTime}, { it.season }, { it.episodeType }, { it.number }))
             .first()
 
-        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping.uuid}&type=image"
+        val image = "${Constant.apiUrl}/v1/attachments?uuid=${mapping.uuid}&type=${ImageType.BANNER.name}"
 
         val notification = Notification.builder()
             .setTitle(StringUtils.getShortName(anime.name!!))
