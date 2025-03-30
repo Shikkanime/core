@@ -174,17 +174,14 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         val uuids = animeService.findAllUuids() + episodeMappingService.findAllUuids() + memberService.findAllUuids()
         val attachments = findAll().associateBy { it.uuid }.toMutableMap()
 
-        attachments.values.forEach {
-            if (it.entityUuid !in uuids) {
-                // Remove the attachment if it is not used anymore
-                delete(it)
-                attachments.remove(it.uuid)
-            }
+        attachments.values.filter { it.entityUuid !in uuids }.forEach {
+            delete(it)
+            attachments.remove(it.uuid)
         }
 
-        Constant.imagesFolder.listFiles()?.asSequence()
-            ?.filter { attachments[UUID.fromString(it.nameWithoutExtension)]?.active != true }
-            ?.forEach { it.delete() }
+        Constant.imagesFolder.listFiles()?.filter {
+            attachments[UUID.fromString(it.nameWithoutExtension)]?.active != true
+        }?.forEach { it.delete() }
     }
 
     fun clearPool() {
