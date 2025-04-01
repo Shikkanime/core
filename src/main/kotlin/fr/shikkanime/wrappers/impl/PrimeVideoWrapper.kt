@@ -11,7 +11,29 @@ import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 
-object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
+object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
+    override suspend fun getShowById(locale: String, id: String): Show {
+        // Make API request
+        val globalJson = fetchPrimeVideoData("$baseUrl/detail/$id/ref=atv_sr_fle_c_Tn74RA_1_1_1", locale)
+        return buildShow(globalJson, id)
+    }
+
+    private fun buildShow(globalJson: JsonObject, id: String): Show {
+        // Extract show data
+        val atfState = globalJson.getAsJsonObject("atf").getAsJsonObject("state")
+        val pageTitleId = atfState.getAsString("pageTitleId")
+        val showJson = atfState.getAsJsonObject("detail").getAsJsonObject("headerDetail").getAsJsonObject(pageTitleId)
+            ?: throw Exception("Failed to get show")
+
+        // Create show object
+        return Show(
+            id,
+            showJson.getAsString("parentTitle")!!,
+            showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
+            showJson.getAsString("synopsis")
+        )
+    }
+
     override suspend fun getEpisodesByShowId(
         locale: String,
         id: String
@@ -22,16 +44,9 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         // Extract show data
         val atfState = globalJson.getAsJsonObject("atf").getAsJsonObject("state")
         val pageTitleId = atfState.getAsString("pageTitleId")
-        val showJson = atfState.getAsJsonObject("detail").getAsJsonObject("headerDetail").getAsJsonObject(pageTitleId)
-            ?: throw Exception("Failed to get show")
 
         // Create show object
-        val show = Show(
-            id,
-            showJson.getAsString("parentTitle")!!,
-            showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
-            showJson.getAsString("synopsis")
-        )
+        val show = buildShow(globalJson, id)
 
         // Extract season data
         val seasons = atfState.getAsJsonObject("seasons").getAsJsonArray(pageTitleId).map {

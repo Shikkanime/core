@@ -183,5 +183,8 @@ abstract class AbstractCrunchyrollWrapper {
 
     companion object {
         const val CRUNCHYROLL_CHUNK = 100
+
+        fun getCrunchyrollId(identifier: String) =
+            "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
     }
 }

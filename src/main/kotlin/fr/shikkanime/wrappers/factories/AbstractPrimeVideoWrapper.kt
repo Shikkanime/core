@@ -35,5 +35,6 @@ abstract class AbstractPrimeVideoWrapper {
     protected val baseUrl = "https://www.primevideo.com"
     protected val httpRequest = HttpRequest()
 
+    abstract suspend fun getShowById(locale: String, id: String): Show
     abstract suspend fun getEpisodesByShowId(locale: String, id: String): List<Episode>
 }

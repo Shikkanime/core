@@ -81,6 +81,7 @@ object StringUtils {
     fun toSeasonString(countryCode: CountryCode, season: String): String {
         return when(countryCode) {
             CountryCode.FR -> "Saison $season"
+            else -> "Season $season"
         }
     }
 
@@ -95,6 +96,15 @@ object StringUtils {
                     EpisodeType.SPIN_OFF -> "Spin-off"
                 }
             }
+            else -> {
+                when (episodeType) {
+                    EpisodeType.EPISODE -> "Episode"
+                    EpisodeType.SPECIAL -> "Special"
+                    EpisodeType.FILM -> "Film"
+                    EpisodeType.SUMMARY -> "Summary"
+                    EpisodeType.SPIN_OFF -> "Spin-off"
+                }
+            }
         }
     }
 
@@ -106,6 +116,12 @@ object StringUtils {
                 when(langType) {
                     LangType.SUBTITLES -> "VOSTFR"
                     LangType.VOICE -> "VF"
+                }
+            }
+            else -> {
+                when(langType) {
+                    LangType.SUBTITLES -> "Sub"
+                    LangType.VOICE -> "Dub"
                 }
             }
         }

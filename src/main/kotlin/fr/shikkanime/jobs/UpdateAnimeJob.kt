@@ -5,6 +5,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.CrunchyrollPlatform
@@ -21,6 +22,8 @@ import java.time.ZonedDateTime
 class UpdateAnimeJob : AbstractJob {
     data class UpdatableAnime(
         val platform: Platform,
+        val name: String,
+        val englishName: String? = null,
         val lastReleaseDateTime: ZonedDateTime,
         val attachments: Map<ImageType, String>,
         val description: String?,
@@ -109,9 +112,25 @@ class UpdateAnimeJob : AbstractJob {
             }
 
             logger.info("Anime $shortName updated")
+            updateExternalPlatformIds(updatedAnimes, shortName)
         }
 
         MapCache.invalidate(Anime::class.java)
+    }
+
+    private fun updateExternalPlatformIds(updatedAnimes: List<UpdatableAnime>, shortName: String) {
+        val names = updatedAnimes.map { it.englishName ?: it.name }.distinctBy { it.lowercase().filter { it.isLetterOrDigit() } }
+        logger.info("Search for anime $shortName on AniList...")
+        val media = names.asSequence()
+            .flatMap { runBlocking { AniListCachedWrapper.search(it).toList() } }
+            .firstOrNull()
+
+        if (media == null) {
+            logger.warning("No anime found on AniList for $shortName")
+            return
+        }
+
+        logger.info("Anime found on AniList: $media")
     }
 
     private suspend fun fetchAnime(anime: Anime, zonedDateTime: ZonedDateTime): List<UpdatableAnime> {
@@ -154,6 +173,7 @@ class UpdateAnimeJob : AbstractJob {
 
         return UpdatableAnime(
             platform = Platform.ANIM,
+            name = (show.originalTitle?.takeIf { !it.contains("??") && "[ぁ-んァ-ン-ー]".toRegex().containsMatchIn(it) } ?: show.title).replace("(VOSTFR)", "").trim(),
             lastReleaseDateTime = showVideos.maxOf { it.releaseDate!! },
             attachments = mapOf(
                 ImageType.THUMBNAIL to show.fullHDImage,
@@ -187,6 +207,8 @@ class UpdateAnimeJob : AbstractJob {
 
         return UpdatableAnime(
             platform = Platform.CRUN,
+            name = series.title,
+            englishName = CrunchyrollCachedWrapper.getSeries(CountryCode.US.locale, animePlatform.platformId!!).title,
             lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
             attachments = buildMap {
                 put(ImageType.THUMBNAIL, series.fullHDImage!!)
@@ -207,6 +229,7 @@ class UpdateAnimeJob : AbstractJob {
 
         return UpdatableAnime(
             platform = Platform.DISN,
+            name = show.name,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
             attachments = buildMap {
                 put(ImageType.THUMBNAIL, show.image)
@@ -232,6 +255,8 @@ class UpdateAnimeJob : AbstractJob {
 
         return UpdatableAnime(
             platform = Platform.NETF,
+            name = show.name,
+            englishName = NetflixCachedWrapper.getShow(CountryCode.US.locale, animePlatform.platformId!!.toInt()).name,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
             attachments = buildMap { put(ImageType.BANNER, show.banner) },
             description = show.description,
@@ -254,6 +279,8 @@ class UpdateAnimeJob : AbstractJob {
 
         return UpdatableAnime(
             platform = Platform.PRIM,
+            name = show.name,
+            englishName = PrimeVideoCachedWrapper.getShowById(CountryCode.US.locale, animePlatform.platformId!!).name,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
             attachments = buildMap { put(ImageType.BANNER, show.banner) },
             description = show.description,

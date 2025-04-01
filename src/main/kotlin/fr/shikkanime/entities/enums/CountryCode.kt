@@ -7,6 +7,7 @@ enum class CountryCode(
     val longitude: Double
 ) {
     FR("fr-FR", "Europe/Paris", 48.866667, 2.333333),
+    US("en-US", "America/New_York", 38.0, -97.0),
     ;
 
     companion object {
