@@ -74,9 +74,6 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         return list
     }
 
-    fun getShowId(url: String) =
-        "https://www\\.netflix\\.com/[a-z]{2}/title/([0-9]{8})".toRegex().find(url)?.groupValues?.get(1)
-
     fun convertEpisode(
         countryCode: CountryCode,
         showImage: String,

@@ -7,6 +7,9 @@ import java.time.ZonedDateTime
 abstract class AbstractAnimationDigitalNetworkWrapper {
     companion object {
         private val sizeRegex = "\\d+x\\d+".toRegex()
+
+        fun getAnimationDigitalNetworkId(identifier: String) =
+            "[A-Z]{2}-ANIM-([0-9]{1,5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex().find(identifier)?.groupValues?.get(1)
     }
 
     data class Microdata(
@@ -15,8 +18,9 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
 
     data class Show(
         val id: Int,
-        val shortTitle: String?,
         val title: String,
+        val originalTitle: String?,
+        val shortTitle: String?,
         val image2x: String,
         val imageHorizontal2x: String,
         val summary: String?,

@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
+import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -54,6 +55,25 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val root = query.from(getEntityClass())
 
             query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.uuid], mappingUUID))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
+    fun findAllByAnimeUUID(animeUUID: UUID, ignoreAudioLocales: Set<String> = emptySet<String>()): List<EpisodeVariant> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            val predicates = mutableListOf<Predicate>(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid], animeUUID))
+
+            if (ignoreAudioLocales.isNotEmpty()) {
+                predicates.add(cb.not(root[EpisodeVariant_.audioLocale].`in`(ignoreAudioLocales)))
+            }
+
+            query.where(*predicates.toTypedArray())
 
             createReadOnlyQuery(it, query)
                 .resultList

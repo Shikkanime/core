@@ -54,9 +54,6 @@ class PrimeVideoPlatform :
         return list
     }
 
-    fun getShowId(url: String) =
-        "https://www\\.primevideo\\.com/-/[a-z]{2}/detail/([A-Z0-9]{26})".toRegex().find(url)?.groupValues?.get(1)
-
     fun convertEpisode(
         countryCode: CountryCode,
         showImage: String,

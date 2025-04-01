@@ -33,5 +33,8 @@ abstract class AbstractPrimeVideoWrapper {
 
     companion object {
         const val BASE_URL = "https://www.primevideo.com"
+
+        fun getShowId(url: String) =
+            "https://www\\.primevideo\\.com/-/[a-z]{2}/detail/([A-Z0-9]{26})".toRegex().find(url)?.groupValues?.get(1)
     }
 }

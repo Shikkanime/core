@@ -92,4 +92,9 @@ abstract class AbstractDisneyPlusWrapper {
     abstract suspend fun getAudioLocales(resourceId: String): Set<String>
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
+
+    companion object {
+        fun getDisneyPlusId(identifier: String) =
+            "[A-Z]{2}-DISN-(.*)-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
+    }
 }

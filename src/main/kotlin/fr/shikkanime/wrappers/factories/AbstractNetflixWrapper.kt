@@ -54,5 +54,8 @@ abstract class AbstractNetflixWrapper {
         const val BASE_URL = "https://www.netflix.com/"
         // Only for testing
         var checkLanguage = true
+
+        fun getShowId(url: String) =
+            "https://www\\.netflix\\.com/[a-z]{2}/title/([0-9]{8})".toRegex().find(url)?.groupValues?.get(1)
     }
 }

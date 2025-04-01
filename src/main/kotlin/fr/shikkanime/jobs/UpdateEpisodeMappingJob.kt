@@ -9,7 +9,7 @@ import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
-import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
+import fr.shikkanime.wrappers.factories.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.*
@@ -52,9 +52,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private lateinit var traceActionService: TraceActionService
 
     @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @Inject
     private lateinit var configCacheService: ConfigCacheService
 
     @Inject
@@ -94,13 +91,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
                 .sortedBy { it.platform.sortIndex }
 
-            if (tmpIdentifiers != identifiers) {
-                needRefreshCache.set(true)
-            }
-
-            allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
-            saveAnimePlatformIfNotExists(episodes, mapping)
-
             if (episodes.isEmpty()) {
                 logger.warning("No episode found for $mappingIdentifier")
                 mapping.lastUpdateDateTime = zonedDateTime
@@ -108,6 +98,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 logger.info("Episode $mappingIdentifier updated")
                 return@forEach
             }
+
+            if (tmpIdentifiers != identifiers) {
+                needRefreshCache.set(true)
+            }
+
+            allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
 
             episodes.distinctBy { it.getIdentifier() }
                 .filter { it.getIdentifier() !in identifiers }
@@ -223,8 +219,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         variants.forEach { variant ->
             val identifier = when (variant.platform) {
-                Platform.ANIM -> animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(variant.identifier!!)!!
-                Platform.CRUN -> crunchyrollPlatform.getCrunchyrollId(variant.identifier!!)!!
+                Platform.ANIM -> AbstractAnimationDigitalNetworkWrapper.getAnimationDigitalNetworkId(variant.identifier!!)!!
+                Platform.CRUN -> AbstractCrunchyrollWrapper.getCrunchyrollId(variant.identifier!!)!!
                 else -> return@forEach
             }
 
@@ -317,23 +313,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
     }
 
-    private fun saveAnimePlatformIfNotExists(
-        episodes: List<Episode>,
-        mapping: EpisodeMapping
-    ) {
-        episodes.forEach {
-            if (animePlatformService.findByAnimePlatformAndId(mapping.anime!!, it.platform, it.animeId) == null) {
-                animePlatformService.save(
-                    AnimePlatform(
-                        anime = mapping.anime,
-                        platform = it.platform,
-                        platformId = it.animeId
-                    )
-                )
-            }
-        }
-    }
-
     private suspend fun retrievePlatformEpisode(
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant,
@@ -350,7 +329,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         when (episodeVariant.platform) {
             Platform.ANIM -> runCatching {
-                val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(identifier)!!.toInt()
+                val videoId = AbstractAnimationDigitalNetworkWrapper.getAnimationDigitalNetworkId(identifier)!!.toInt()
                 val video = AnimationDigitalNetworkCachedWrapper.getVideo(videoId)
                 episodes.addAll(
                     animationDigitalNetworkPlatform.convertEpisode(
@@ -361,12 +340,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
             }
 
             Platform.CRUN -> runCatching {
-                val crunchyrollId = crunchyrollPlatform.getCrunchyrollId(identifier)!!
+                val crunchyrollId = AbstractCrunchyrollWrapper.getCrunchyrollId(identifier)!!
                 episodes.addAll(getCrunchyrollEpisodeAndVariants(countryCode, crunchyrollId, isImageUpdate))
             }
 
             Platform.DISN -> runCatching {
-                val disneyPlusId = disneyPlusPlatform.getDisneyPlusId(identifier)!!
+                val disneyPlusId = AbstractDisneyPlusWrapper.getDisneyPlusId(identifier)!!
                 val playerVideo = DisneyPlusCachedWrapper.getShowIdByEpisodeId(disneyPlusId)
 
                 if (playerVideo.id != disneyPlusId) {
@@ -413,7 +392,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             }
 
             Platform.NETF -> runCatching {
-                val showId = netflixPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
+                val showId = AbstractNetflixWrapper.getShowId(episodeVariant.url!!) ?: return emptyList()
                 val netflixEpisodes = NetflixCachedWrapper.getShowVideos(countryCode, showId)
 
                 netflixEpisodes
@@ -432,7 +411,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             }
 
             Platform.PRIM -> runCatching {
-                val showId = primeVideoPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
+                val showId = AbstractPrimeVideoWrapper.getShowId(episodeVariant.url!!) ?: return emptyList()
                 val primeVideoEpisodes = PrimeVideoCachedWrapper.getShowVideos(countryCode, showId)
 
                 primeVideoEpisodes

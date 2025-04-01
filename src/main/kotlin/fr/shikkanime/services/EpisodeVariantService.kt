@@ -54,6 +54,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
+    fun findAllByAnimeUUID(animeUUID: UUID, ignoreAudioLocales: Set<String> = emptySet<String>()) =
+        episodeVariantRepository.findAllByAnimeUUID(animeUUID, ignoreAudioLocales)
+
     fun findAllVariantReleases(countryCode: CountryCode, member: Member?, startZonedDateTime: ZonedDateTime, endZonedDateTime: ZonedDateTime) =
         episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime)
 

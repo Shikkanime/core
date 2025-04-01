@@ -16,4 +16,6 @@ class AnimePlatformService : AbstractService<AnimePlatform, AnimePlatformReposit
 
     fun findByAnimePlatformAndId(anime: Anime, platform: Platform, platformId: String) =
         animePlatformRepository.findByAnimePlatformAndId(anime, platform, platformId)
+
+    fun deleteByAnime(anime: Anime) = animePlatformRepository.deleteAllByAnime(anime)
 }

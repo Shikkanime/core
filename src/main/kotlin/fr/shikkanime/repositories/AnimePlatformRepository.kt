@@ -40,4 +40,16 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
                 .firstOrNull()
         }
     }
+
+    fun deleteAllByAnime(anime: Anime) {
+        inTransaction {
+            val cb = it.criteriaBuilder
+            val query = cb.createCriteriaDelete(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[AnimePlatform_.anime], anime))
+
+            it.createQuery(query).executeUpdate()
+        }
+    }
 }
