@@ -79,7 +79,8 @@ class EpisodeMappingController : HasPageableRoute() {
     ): Response {
         if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
 
-        val uuids = EncryptionManager.fromGzip(uuidsGzip).split(",").mapNotNull { UUID.fromString(it) }.distinct()
+        val fromGzip = runCatching { EncryptionManager.fromGzip(uuidsGzip) }.getOrNull() ?: return Response.badRequest()
+        val uuids = fromGzip.split(",").mapNotNull { UUID.fromString(it) }.distinct()
         val variants = uuids.mapNotNull { episodeVariantService.find(it) }
         if (variants.isEmpty()) return Response.notFound()
 

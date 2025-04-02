@@ -63,28 +63,28 @@ object ThreadsWrapper {
         altText: String? = null,
         replyToId: Long? = null
     ): Long {
-        val parameters = mapOf(
-            "access_token" to accessToken,
-            "media_type" to postType.name,
-            "text" to URLEncoder.encode(text, StandardCharsets.UTF_8),
-            "image_url" to imageUrl,
-            "alt_text" to altText,
-            "reply_to_id" to replyToId,
-        ).filterValues { it != null }.map { (key, value) -> "$key=$value" }.joinToString("&")
+        val parameters = buildMap<String, Any> {
+            put("access_token", accessToken)
+            put("media_type", postType.name)
+            put("text", URLEncoder.encode(text, StandardCharsets.UTF_8))
+
+            imageUrl?.let { put("image_url", URLEncoder.encode(it, StandardCharsets.UTF_8)) }
+            altText?.let { put("alt_text", URLEncoder.encode(it, StandardCharsets.UTF_8)) }
+            replyToId?.let { put("reply_to_id", it) }
+        }.map { (key, value) -> "$key=$value" }
+            .joinToString("&")
 
         val createResponse = httpRequest.post(
             "$API_URL/me/threads?$parameters",
-            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
+            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
 
         require(createResponse.status == HttpStatusCode.OK) { "Failed to post (${createResponse.status.value} - ${createResponse.bodyAsText()})" }
         val creationId = ObjectParser.fromJson(createResponse.bodyAsText())["id"].asString
 
         val publishResponse = httpRequest.post(
-            "$API_URL/me/threads_publish?" +
-                    "access_token=$accessToken&" +
-                    "creation_id=$creationId",
-            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
+            "$API_URL/me/threads_publish?access_token=$accessToken&creation_id=$creationId",
+            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
 
         require(publishResponse.status == HttpStatusCode.OK) { "Failed to publish (${publishResponse.status.value} - ${publishResponse.bodyAsText()})" }
