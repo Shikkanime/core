@@ -6,7 +6,6 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.caches.AttachmentCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LRUCache
 import fr.shikkanime.utils.routes.Cached
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -23,9 +22,6 @@ class AttachmentController {
 
     @Inject
     private lateinit var attachmentCacheService: AttachmentCacheService
-    
-    // LRU Cache for image byte data with a maximum size of 100 images
-    private val imageCache = LRUCache<UUID, ByteArray>(100)
 
     @Path
     @Get
@@ -61,7 +57,7 @@ class AttachmentController {
         )
 
         // Check if image is in the memory cache
-        val imageBytes = imageCache[attachment.uuid!!] ?: run {
+        val imageBytes = attachmentService.getContentFromCache(attachment) ?: run {
             val file = attachmentService.getFile(attachment)
 
             if (!file.exists() || file.length() <= 0) {
@@ -75,7 +71,7 @@ class AttachmentController {
 
             // Read the file and store it in the cache
             val bytes = file.readBytes()
-            imageCache[attachment.uuid] = bytes
+            attachmentService.setContentInCache(attachment, bytes)
             bytes
         }
 

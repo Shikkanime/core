@@ -26,6 +26,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private val nThreads = Runtime.getRuntime().availableProcessors()
     private var threadPool = Executors.newFixedThreadPool(nThreads)
     private val httpRequest = HttpRequest()
+    private val imageCache = LRUCache<UUID, ByteArray>(100)
 
     @Inject
     private lateinit var attachmentRepository: AttachmentRepository
@@ -56,8 +57,16 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         val attachments = findAllByEntityUuidAndType(entityUuid, type)
         val existingAttachment = attachments.find { it.url == url }
 
-        if (existingAttachment?.active == true)
+        if (existingAttachment?.active == true) {
+            if (bytes?.isNotEmpty() == true) {
+                encodeAttachment(existingAttachment, url, bytes, async)
+                existingAttachment.lastUpdateDateTime = ZonedDateTime.now()
+                update(existingAttachment)
+                MapCache.invalidate(Attachment::class.java)
+            }
+
             return existingAttachment
+        }
 
         attachments.forEach { it.active = it == existingAttachment }
         updateAll(attachments)
@@ -110,6 +119,14 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun getFile(attachment: Attachment) = File(Constant.imagesFolder, "${attachment.uuid}.webp")
 
+    fun getContentFromCache(attachment: Attachment): ByteArray? {
+        return imageCache[attachment.uuid!!]
+    }
+
+    fun setContentInCache(attachment: Attachment, bytes: ByteArray) {
+        imageCache[attachment.uuid!!] = bytes
+    }
+
     private fun removeFile(attachment: Attachment) {
         if (!getFile(attachment).delete())
             logger.warning("Failed to delete file ${getFile(attachment)}")
@@ -155,6 +172,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                 }
 
                 getFile(attachment).writeBytes(webp)
+                if (imageCache.containsKey(attachment.uuid!!)) imageCache.remove(attachment.uuid)
             } catch (e: Exception) {
                 when (e) {
                     is InterruptedException, is RuntimeException -> {
@@ -172,7 +190,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun cleanUnusedAttachments() {
         val uuids = animeService.findAllUuids() + episodeMappingService.findAllUuids() + memberService.findAllUuids()
-        val attachments = findAll().associateBy { it.uuid }.toMutableMap()
+        val attachments = findAll().associateBy { it.uuid!! }.toMutableMap()
 
         attachments.values.filter { it.entityUuid !in uuids }.forEach {
             delete(it)

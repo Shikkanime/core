@@ -16,6 +16,10 @@ class LRUCache<K, V>(private val maxSize: Int) {
         }
     }
 
+    fun containsKey(key: K): Boolean {
+        return cache.containsKey(key)
+    }
+
     /**
      * Puts a value into the cache with the specified key.
      * If the cache is full, the least recently used item will be removed.
@@ -37,6 +41,10 @@ class LRUCache<K, V>(private val maxSize: Int) {
      */
     operator fun get(key: K): V? {
         return cache[key]
+    }
+
+    fun remove(key: K): V? {
+        return cache.remove(key)
     }
 
     /**
