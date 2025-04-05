@@ -12,6 +12,7 @@ import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -65,6 +66,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     @Inject
     private lateinit var episodeMappingFactory: EpisodeMappingFactory
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = animeRepository
 
@@ -414,6 +418,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
             anime.description = animeDto.description
+        }
+
+        if (animeDto.thumbnail.isNullOrBlank().not()) {
+            attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.THUMBNAIL, url = animeDto.thumbnail!!)
+        }
+
+        if (animeDto.banner.isNullOrBlank().not()) {
+            attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.BANNER, url = animeDto.banner!!)
         }
 
         updateAnimeSimulcast(animeDto, anime)

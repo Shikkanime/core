@@ -22,4 +22,6 @@ data class AnimeDto(
     var langTypes: Set<LangType>? = null,
     var seasons: Set<SeasonDto>? = null,
     var platformIds: Set<AnimePlatformDto>? = null,
+    var thumbnail: String? = null,
+    var banner: String? = null,
 )

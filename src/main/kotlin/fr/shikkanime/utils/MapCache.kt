@@ -1,5 +1,6 @@
 package fr.shikkanime.utils
 
+import io.ktor.util.collections.*
 import java.time.Duration
 
 class MapCache<K : Any, V>(
@@ -47,7 +48,7 @@ class MapCache<K : Any, V>(
     }
 
     companion object {
-        private val globalCaches: MutableMap<String, MapCache<*, *>> = mutableMapOf()
+        private val globalCaches: ConcurrentMap<String, MapCache<*, *>> = ConcurrentMap()
 
         fun invalidate(vararg classes: Class<*>) {
             globalCaches.filter { (_, cache) -> cache.classes.any { clazz -> classes.contains(clazz) } }
@@ -71,9 +72,7 @@ class MapCache<K : Any, V>(
             return globalCaches[name]?.let {
                 @Suppress("UNCHECKED_CAST")
                 (it as MapCache<K, V>)[key]
-            } ?: synchronized(MapCache) {
-                MapCache(name, duration, classes, block)
-            }[key]
+            } ?: MapCache(name, duration, classes, block)[key]
         }
 
         fun <K : Any, V> getOrCompute(

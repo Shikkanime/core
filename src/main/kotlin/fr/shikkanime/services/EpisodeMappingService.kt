@@ -6,10 +6,7 @@ import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import java.time.LocalDate
@@ -31,6 +28,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     @Inject
     private lateinit var traceActionService: TraceActionService
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = episodeMappingRepository
 
@@ -186,41 +186,45 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         }
     }
 
-    fun update(uuid: UUID, entity: EpisodeMappingDto): EpisodeMapping? {
+    fun update(uuid: UUID, dto: EpisodeMappingDto): EpisodeMapping? {
         val episode = find(uuid) ?: return null
 
-        updateEpisodeMappingAnime(entity, episode)
-        updateEpisodeMappingDateTime(entity, episode)
+        updateEpisodeMappingAnime(dto, episode)
+        updateEpisodeMappingDateTime(dto, episode)
 
-        if (!(entity.episodeType == episode.episodeType && entity.season == episode.season && entity.number == episode.number)) {
+        if (!(dto.episodeType == episode.episodeType && dto.season == episode.season && dto.number == episode.number)) {
             // Find if the episode already exists
             val existing =
-                findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, entity.season, entity.episodeType, entity.number)
+                findByAnimeSeasonEpisodeTypeNumber(episode.anime!!.uuid!!, dto.season, dto.episodeType, dto.number)
 
             if (existing != null) {
                 return mergeEpisodeMapping(episode, existing)
             } else {
-                episode.episodeType = entity.episodeType
-                episode.season = entity.season
-                episode.number = entity.number
+                episode.episodeType = dto.episodeType
+                episode.season = dto.season
+                episode.number = dto.number
             }
         }
 
-        if (entity.title?.isNotBlank() == true && entity.title != episode.title) {
-            episode.title = entity.title
+        if (dto.title?.isNotBlank() == true && dto.title != episode.title) {
+            episode.title = dto.title
         }
 
-        if (entity.description?.isNotBlank() == true && entity.description != episode.description) {
-            episode.description = entity.description
+        if (dto.description?.isNotBlank() == true && dto.description != episode.description) {
+            episode.description = dto.description
         }
 
-        if (entity.duration != episode.duration) {
-            episode.duration = entity.duration
+        if (dto.duration != episode.duration) {
+            episode.duration = dto.duration
+        }
+
+        if (dto.image.isNullOrBlank().not()) {
+            attachmentService.createAttachmentOrMarkAsActive(episode.uuid!!, ImageType.BANNER, url = dto.image!!)
         }
 
         episode.lastUpdateDateTime = ZonedDateTime.now()
         val update = super.update(episode)
-        updateEpisodeMappingVariants(entity, episode, update)
+        updateEpisodeMappingVariants(dto, episode, update)
         traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         return update
     }

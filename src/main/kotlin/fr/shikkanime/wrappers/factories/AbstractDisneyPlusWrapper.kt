@@ -48,7 +48,6 @@ abstract class AbstractDisneyPlusWrapper {
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
     protected val httpRequest = HttpRequest()
 
-    @Synchronized
     private fun getAccessToken() = MapCache.getOrCompute(
         "AbstractDisneyPlusWrapper.getAccessToken",
         duration = Duration.ofHours(3).plusMinutes(30),

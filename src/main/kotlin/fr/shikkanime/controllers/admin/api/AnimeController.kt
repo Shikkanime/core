@@ -7,9 +7,11 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -28,6 +30,9 @@ class AnimeController : HasPageableRoute() {
     @Inject
     private lateinit var animeFactory: AnimeFactory
 
+    @Inject
+    private lateinit var attachmentService: AttachmentService
+
     @Path("/force-update-all")
     @Get
     @AdminSessionAuthenticated
@@ -45,7 +50,10 @@ class AnimeController : HasPageableRoute() {
     private fun animeDetails(
         @PathParam("uuid") uuid: UUID,
     ): Response {
-        return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()))
+        return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()).apply {
+            thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
+            banner = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
+        })
     }
 
     @Path("/{uuid}")

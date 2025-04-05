@@ -22,4 +22,5 @@ data class EpisodeMappingDto(
     val variants: Set<EpisodeVariantDto>? = null,
     val platforms: Set<PlatformDto>? = null,
     val langTypes: Set<LangType>? = null,
+    var image: String? = null,
 )

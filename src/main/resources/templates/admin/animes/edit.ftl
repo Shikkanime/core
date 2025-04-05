@@ -188,11 +188,11 @@
                         <div :class="'col-md-' + (12 - titleSize)">
                             <div class="input-group mb-2">
                                 <input type="text" class="form-control" id="image" name="image"
-                                       x-model="anime.image" aria-label="Image"
+                                       x-model="anime.thumbnail" aria-label="Image"
                                        aria-describedby="basic-addon">
 
                                 <a class="input-group-text" id="basic-addon"
-                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.image">
+                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.thumbnail">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>

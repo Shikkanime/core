@@ -58,7 +58,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         val existingAttachment = attachments.find { it.url == url }
 
         if (existingAttachment?.active == true) {
-            if (bytes?.isNotEmpty() == true) {
+            if (bytes?.isNotEmpty() == true || !getFile(existingAttachment).exists()) {
                 encodeAttachment(existingAttachment, url, bytes, async)
                 existingAttachment.lastUpdateDateTime = ZonedDateTime.now()
                 update(existingAttachment)
@@ -174,13 +174,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                 getFile(attachment).writeBytes(webp)
                 if (imageCache.containsKey(attachment.uuid!!)) imageCache.remove(attachment.uuid)
             } catch (e: Exception) {
-                when (e) {
-                    is InterruptedException, is RuntimeException -> {
-                        // Ignore
-                    }
-                    else -> logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
-                }
-
+                logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
                 removeFile(attachment)
             }
         }

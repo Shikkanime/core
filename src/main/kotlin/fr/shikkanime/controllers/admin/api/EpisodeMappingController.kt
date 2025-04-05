@@ -8,7 +8,9 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -29,6 +31,9 @@ class EpisodeMappingController {
 
     @Inject
     private lateinit var episodeMappingFactory: EpisodeMappingFactory
+
+    @Inject
+    private lateinit var attachmentService: AttachmentService
 
     @Path("/update-all")
     @Put
@@ -60,7 +65,9 @@ class EpisodeMappingController {
     @AdminSessionAuthenticated
     private fun read(@PathParam("uuid") uuid: UUID): Response {
         val find = episodeMappingService.find(uuid) ?: return Response.notFound()
-        return Response.ok(episodeMappingFactory.toDto(find))
+        return Response.ok(episodeMappingFactory.toDto(find).apply {
+            image = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
+        })
     }
 
     @Path("/{uuid}")

@@ -144,7 +144,6 @@ abstract class AbstractCrunchyrollWrapper {
     protected val baseUrl = "https://www.crunchyroll.com/"
     protected val httpRequest = HttpRequest()
 
-    @Synchronized
     private fun getAnonymousAccessToken() = MapCache.getOrCompute(
         "AbstractCrunchyrollWrapper.getAnonymousAccessToken",
         duration = Duration.ofMinutes(30),
