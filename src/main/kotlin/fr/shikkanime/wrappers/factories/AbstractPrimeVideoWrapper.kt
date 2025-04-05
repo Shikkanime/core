@@ -27,7 +27,7 @@ abstract class AbstractPrimeVideoWrapper {
     internal fun loadContent(countryCode: CountryCode, showId: String) = HttpRequest(
         countryCode,
         "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
-    ).use { it.getBrowser("$BASE_URL/-/${countryCode.name.lowercase()}/detail/$showId?language=${countryCode.locale}") }
+    ).use { it.getWithBrowser("$BASE_URL/-/${countryCode.name.lowercase()}/detail/$showId?language=${countryCode.locale}") }
 
     abstract fun getShowVideos(countryCode: CountryCode, showId: String): List<Episode>?
 

@@ -7,29 +7,14 @@ import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
 class UpdateAnimeJobTest : AbstractTest() {
     @Inject
     private lateinit var updateAnimeJob: UpdateAnimeJob
-
-    @BeforeEach
-    override fun setUp() {
-        super.setUp()
-        AbstractNetflixWrapper.checkLanguage = false
-    }
-
-    @AfterEach
-    override fun tearDown() {
-        super.tearDown()
-        AbstractNetflixWrapper.checkLanguage = true
-    }
 
     @Test
     fun `update Crunchyroll anime Date A Live`() {

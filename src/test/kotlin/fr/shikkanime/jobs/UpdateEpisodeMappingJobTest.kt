@@ -9,8 +9,6 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.isAfterOrEqual
-import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.BeforeEach
@@ -33,13 +31,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         )
 
         MapCache.invalidate(Config::class.java)
-        AbstractNetflixWrapper.checkLanguage = false
-    }
-
-    @AfterEach
-    override fun tearDown() {
-        super.tearDown()
-        AbstractNetflixWrapper.checkLanguage = true
     }
 
     @Test
