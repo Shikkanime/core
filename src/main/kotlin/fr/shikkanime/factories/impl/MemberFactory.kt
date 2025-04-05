@@ -23,19 +23,21 @@ class MemberFactory : IGenericFactory<Member, MemberDto> {
 
     override fun toDto(entity: Member): MemberDto {
         val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(entity)
+        val attachment = attachmentService.findByEntityUuidTypeAndActive(entity.uuid!!, ImageType.MEMBER_PROFILE)
 
         return MemberDto(
-            uuid = entity.uuid!!,
+            uuid = entity.uuid,
             token = TokenDto.build(entity).token!!,
             creationDateTime = entity.creationDateTime.withUTCString(),
             lastUpdateDateTime = entity.lastUpdateDateTime.withUTCString(),
             isPrivate = entity.isPrivate,
             email = entity.email,
-            followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(entity).toSet(),
-            followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(entity).toSet(),
+            followedAnimes = memberFollowAnimeService.findAllFollowedAnimesUUID(entity.uuid).toSet(),
+            followedEpisodes = memberFollowEpisodeService.findAllFollowedEpisodesUUID(entity.uuid).toSet(),
             totalDuration = seenAndUnseenDuration.first,
             totalUnseenDuration = seenAndUnseenDuration.second,
-            hasProfilePicture = attachmentService.findByEntityUuidTypeAndActive(entity.uuid, ImageType.MEMBER_PROFILE) != null
+            hasProfilePicture = attachment != null,
+            attachmentLastUpdateDateTime = attachment?.lastUpdateDateTime?.withUTCString()
         )
     }
 }

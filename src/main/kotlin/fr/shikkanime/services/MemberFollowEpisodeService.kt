@@ -35,7 +35,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     fun findAllFollowedEpisodes(member: Member, page: Int, limit: Int) = memberFollowEpisodeRepository.findAllFollowedEpisodes(member, page, limit)
 
-    fun findAllFollowedEpisodesUUID(member: Member) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(member)
+    fun findAllFollowedEpisodesUUID(memberUuid: UUID) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(memberUuid)
 
     fun findAllByEpisode(episodeMapping: EpisodeMapping) =
         memberFollowEpisodeRepository.findAllByEpisode(episodeMapping)

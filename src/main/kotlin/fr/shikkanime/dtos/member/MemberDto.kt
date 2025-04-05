@@ -14,4 +14,5 @@ data class MemberDto(
     val totalDuration: Long,
     val totalUnseenDuration: Long,
     val hasProfilePicture: Boolean = false,
+    val attachmentLastUpdateDateTime: String? = null,
 )

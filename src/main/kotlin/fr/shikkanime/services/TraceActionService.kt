@@ -16,12 +16,13 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
 
     fun getLoginCountsAfter(date: ZonedDateTime) = traceActionRepository.getLoginCountsAfter(date)
 
-    fun createTraceAction(shikkEntity: ShikkEntity, action: TraceAction.Action) = save(
+    fun createTraceAction(shikkEntity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
         TraceAction(
             actionDateTime = ZonedDateTime.now(),
             entityType = shikkEntity::class.java.simpleName,
             entityUuid = shikkEntity.uuid,
-            action = action
+            action = action,
+            additionalData = additionalData
         )
     )
 }

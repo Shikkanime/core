@@ -87,11 +87,15 @@ class MemberController : HasPageableRoute() {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
         val actions = memberService.findMemberFollowAnimeActivities(memberUuid, after)
+        val total = memberFollowAnimeController.findAllFollowedAnimesUUID(memberUuid)
 
         return Response.ok(
-            after.datesUntil(now.plusDays(1))
-                .toList()
-                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+            mapOf(
+                "total" to total.size,
+                "activities" to after.datesUntil(now.plusDays(1))
+                    .toList()
+                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+            )
         )
     }
 
@@ -105,11 +109,15 @@ class MemberController : HasPageableRoute() {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
         val actions = memberService.findMemberFollowEpisodeActivities(memberUuid, after)
+        val total = memberFollowEpisodeService.findAllFollowedEpisodesUUID(memberUuid)
 
         return Response.ok(
-            after.datesUntil(now.plusDays(1))
-                .toList()
-                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+            mapOf(
+                "total" to total.size,
+                "activities" to after.datesUntil(now.plusDays(1))
+                    .toList()
+                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+            )
         )
     }
 

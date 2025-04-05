@@ -1,11 +1,13 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.member.AdditionalDataDto
 import fr.shikkanime.dtos.member.DetailedMemberDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.withUTCString
 import jakarta.persistence.metamodel.SingularAttribute
 import org.hibernate.Hibernate
@@ -145,6 +147,16 @@ class MemberRepository : AbstractRepository<Member>() {
                     )
             }
 
+            val additionalDataSubquery = query.subquery(String::class.java).apply {
+                val traceActionRoot = from(TraceAction::class.java)
+                select(traceActionRoot[TraceAction_.additionalData])
+                    .where(
+                        cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
+                        cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
+                        cb.equal(traceActionRoot[TraceAction_.actionDateTime], maxActionDateTimeSubquery)
+                    )
+            }
+
             val followedAnimesSubquery = query.subquery(Long::class.java).apply {
                 val followedAnimesRoot = from(MemberFollowAnime::class.java)
                 select(cb.count(followedAnimesRoot[MemberFollowAnime_.anime]))
@@ -175,7 +187,8 @@ class MemberRepository : AbstractRepository<Member>() {
                 maxActionDateTimeSubquery,
                 followedAnimesSubquery,
                 followedEpisodesSubquery,
-                hasMemberImageSubquery
+                hasMemberImageSubquery,
+                additionalDataSubquery,
             ).where(cb.equal(root[Member_.uuid], uuid))
 
             val tuple = createReadOnlyQuery(it, query).resultList.firstOrNull() ?: return null
@@ -188,7 +201,8 @@ class MemberRepository : AbstractRepository<Member>() {
                 tuple[4, ZonedDateTime::class.java]?.withUTCString(),
                 tuple[5, Long::class.java],
                 tuple[6, Long::class.java],
-                runCatching { tuple[7, Boolean::class.java] }.getOrDefault(false) ?: false
+                runCatching { tuple[7, Boolean::class.java] }.getOrDefault(false) ?: false,
+                additionalData = tuple[8, String::class.java]?.let { ObjectParser.fromJson(it, AdditionalDataDto::class.java) }
             ).apply {
                 isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
             }

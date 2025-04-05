@@ -11,6 +11,7 @@ import fr.shikkanime.factories.impl.MemberFactory
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.RandomManager
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
@@ -91,9 +92,19 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         return saved
     }
 
-    fun login(identifier: String): MemberDto? {
+    fun login(identifier: String, appVersion: String? = null, device: String? = null, locale: String? = null): MemberDto? {
         val member = findByIdentifier(identifier) ?: return null
-        traceActionService.createTraceAction(member, TraceAction.Action.LOGIN)
+
+        val traceData = if (appVersion != null && device != null && locale != null) {
+            ObjectParser.toJson(mapOf(
+                "appVersion" to appVersion,
+                "device" to device,
+                "locale" to locale
+            ))
+        } else null
+
+        traceActionService.createTraceAction(member, TraceAction.Action.LOGIN, traceData)
+
         return memberFactory.toDto(member)
     }
 

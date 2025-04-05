@@ -27,7 +27,9 @@ class TraceAction(
     var entityUuid: UUID? = null,
     @Column(name = "action", nullable = false)
     @Enumerated(EnumType.STRING)
-    var action: Action? = null
+    var action: Action? = null,
+    @Column(name = "additional_data", nullable = true, length = 1000)
+    var additionalData: String? = null
 ) : ShikkEntity(uuid) {
     enum class Action {
         CREATE,
