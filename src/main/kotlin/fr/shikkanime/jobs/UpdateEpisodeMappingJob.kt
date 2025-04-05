@@ -334,6 +334,37 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
     }
 
+    private fun updateIdentifier(
+        episodeVariant: EpisodeVariant,
+        oldId: String,
+        newId: String,
+        identifiers: MutableSet<String>
+    ) {
+        if (oldId == newId) {
+            return
+        }
+
+        val oldIdentifier = episodeVariant.identifier
+        logger.warning("Updating ${episodeVariant.platform!!.name} episode $oldId to $newId")
+        episodeVariant.identifier = oldIdentifier!!.replace(oldId, newId)
+        episodeVariantService.update(episodeVariant)
+        identifiers.remove(oldIdentifier)
+        identifiers.add(episodeVariant.identifier!!)
+    }
+
+    private fun updateUrl(
+        episodeVariant: EpisodeVariant,
+        url: String,
+    ) {
+        if (episodeVariant.url == url) {
+            return
+        }
+
+        logger.warning("Updating ${episodeVariant.platform!!.name} episode ${episodeVariant.identifier} URL to $url")
+        episodeVariant.url = url
+        episodeVariantService.update(episodeVariant)
+    }
+
     private suspend fun retrievePlatformEpisode(
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant,
@@ -368,67 +399,53 @@ class UpdateEpisodeMappingJob : AbstractJob {
             Platform.DISN -> runCatching {
                 val disneyPlusId = disneyPlusPlatform.getDisneyPlusId(identifier)!!
                 val playerVideo = DisneyPlusCachedWrapper.getShowIdByEpisodeId(disneyPlusId)
+                val videos = DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, playerVideo.showId, configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES))
+                val video = videos.find { it.id == playerVideo.id || it.oldId == playerVideo.id } ?: return emptyList()
 
-                if (playerVideo.id != disneyPlusId) {
-                    val oldIdentifier = identifier
-                    logger.warning("Updating Disney+ episode $disneyPlusId to ${playerVideo.id}")
-                    episodeVariant.identifier = oldIdentifier.replace(disneyPlusId, playerVideo.id)
-                    episodeVariantService.update(episodeVariant)
-                    identifiers.remove(oldIdentifier)
-                    identifiers.add(episodeVariant.identifier!!)
-                }
+                updateIdentifier(episodeVariant, playerVideo.id, disneyPlusId, identifiers)
+                updateUrl(episodeVariant, video.url)
 
-                val disneyPlusEpisodes = DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, playerVideo.showId, configCacheService.getValueAsBoolean(
-                    ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES))
-                disneyPlusEpisodes.forEach { episode ->
-                    val convertedEpisode = disneyPlusPlatform.convertEpisode(
+                episodes.add(
+                    disneyPlusPlatform.convertEpisode(
                         countryCode,
-                        episode,
+                        video,
                         releaseDateTime
                     )
+                )
 
-                    if (convertedEpisode.getIdentifier() == episodeVariant.identifier) {
-                        episodes.add(convertedEpisode)
-
-                        if (convertedEpisode.url != episodeVariant.url) {
-                            episodeVariant.url = convertedEpisode.url
-                            episodeVariantService.update(episodeVariant)
-                        }
-
-                        DisneyPlusCachedWrapper.getAudioLocales(playerVideo.resourceId)
-                            .filter { LangType.fromAudioLocale(countryCode, it) == LangType.VOICE }
-                            .forEach { locale ->
-                                episodes.add(
-                                    disneyPlusPlatform.convertEpisode(
-                                        countryCode,
-                                        episode,
-                                        releaseDateTime,
-                                        audioLocale = locale,
-                                        original = false
-                                    )
-                                )
-                            }
+                DisneyPlusCachedWrapper.getAudioLocales(playerVideo.resourceId)
+                    .filter { LangType.fromAudioLocale(countryCode, it) == LangType.VOICE }
+                    .forEach { locale ->
+                        episodes.add(
+                            disneyPlusPlatform.convertEpisode(
+                                countryCode,
+                                video,
+                                releaseDateTime,
+                                audioLocale = locale,
+                                original = false
+                            )
+                        )
                     }
-                }
             }
 
             Platform.NETF -> runCatching {
-                val showId = netflixPlatform.getShowId(episodeVariant.url!!) ?: return emptyList()
-                val netflixEpisodes = NetflixCachedWrapper.getShowVideos(countryCode, showId)
+                val id = netflixPlatform.getVideoOldIdOrOd(episodeVariant.identifier!!) ?: return emptyList()
+                val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
+                val videos = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, it.toInt()) }
+                val video = videos.find { it.id.toString() == id || it.oldId == id } ?: return emptyList()
 
-                netflixEpisodes
-                    .map { episode ->
-                        netflixPlatform.convertEpisode(
-                            countryCode,
-                            "",
-                            episode,
-                            releaseDateTime,
-                            episodeType,
-                            audioLocale
-                        )
-                    }
-                    .find { it.getIdentifier() == episodeVariant.identifier }
-                    ?.also { episodes.add(it) }
+                updateIdentifier(episodeVariant, id, video.id.toString(), identifiers)
+                updateUrl(episodeVariant, video.url)
+
+                episodes.add(
+                    netflixPlatform.convertEpisode(
+                        countryCode,
+                        "",
+                        video,
+                        episodeType,
+                        audioLocale
+                    )
+                )
             }
 
             Platform.PRIM -> runCatching {

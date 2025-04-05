@@ -1,6 +1,7 @@
 package fr.shikkanime.utils
 
 import com.microsoft.playwright.*
+import com.microsoft.playwright.options.Cookie
 import fr.shikkanime.entities.enums.CountryCode
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -95,7 +96,7 @@ class HttpRequest(
         isBrowserInitialized = true
     }
 
-    fun getBrowser(url: String, selector: String? = null, `try`: Int = 1): Document {
+    fun getWithBrowser(url: String, selector: String? = null, `try`: Int = 1): Document {
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 
@@ -111,7 +112,7 @@ class HttpRequest(
             } catch (e: Exception) {
                 if (`try` < 3) {
                     logger.info("Retrying...")
-                    return getBrowser(url, selector, `try` + 1)
+                    return getWithBrowser(url, selector, `try` + 1)
                 }
 
                 throw e
@@ -121,6 +122,20 @@ class HttpRequest(
         val content = page?.content()
         logger.info("Request to $url done in ${takeMs}ms (BROWSER)")
         return Jsoup.parse(content ?: throw Exception("Content is null"))
+    }
+
+    fun getCookiesWithBrowser(url: String): List<Cookie> {
+        initBrowser()
+        logger.info("Making request to $url... (BROWSER)")
+
+        val takeMs = measureTimeMillis {
+            page?.navigate(url)
+            page?.waitForLoadState()
+        }
+
+        val cookies = context?.cookies(url) ?: emptyList()
+        logger.info("Request to $url done in ${takeMs}ms (BROWSER)")
+        return cookies
     }
 
     override fun close() {

@@ -1,20 +1,31 @@
 package fr.shikkanime.wrappers.factories
 
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
-import org.jsoup.nodes.Document
+import fr.shikkanime.utils.MapCache
+import io.ktor.client.statement.*
+import java.time.Duration
+import java.time.ZonedDateTime
 
 abstract class AbstractNetflixWrapper {
     data class Show(
-        val id: String,
+        val id: Int,
         val name: String,
         val banner: String,
         val description: String?,
+        val seasonCount: Int?,
+    )
+
+    data class Season(
+        val id: Int,
+        val name: String,
+        val episodeCount: Int,
     )
 
     data class Episode(
         val show: Show,
-        val id: String,
+        val oldId: String,
+        val id: Int,
+        val releaseDateTime: ZonedDateTime,
         val season: Int,
         val number: Int,
         val title: String?,
@@ -24,35 +35,33 @@ abstract class AbstractNetflixWrapper {
         val duration: Long,
     )
 
-    private val maxRetry = 3
+    private val baseUrl = "https://www.netflix.com"
+    private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
+    protected val httpRequest = HttpRequest()
 
-    internal fun loadContent(countryCode: CountryCode, showId: String, i: Int = 1): Document? {
-        if (i >= maxRetry) {
-            return null
-        }
-
-        val document = HttpRequest(
-            countryCode,
-            "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" // Force Googlebot user-agent to bypass A-B testing
-        ).use { it.getBrowser("$BASE_URL${countryCode.name.lowercase()}/title/$showId") }
-
-        if (checkLanguage && document.getElementsByTag("html").attr("lang") != countryCode.name.lowercase()) {
-            return loadContent(countryCode, showId, i + 1)
-        }
-
-        // Is new design?
-        if (document.selectXpath("//*[@id=\"appMountPoint\"]/div/div[2]/div/header").isNotEmpty()) {
-            return loadContent(countryCode, showId, i + 1)
-        }
-
-        return document
+    private fun getIdAndSecureId() = MapCache.getOrCompute(
+        "AbstractNetflixWrapper.getIdAndSecureId",
+        duration = Duration.ofDays(1),
+        key = ""
+    ) {
+        val cookies = httpRequest.getCookiesWithBrowser(baseUrl).associateBy { it.name!! }
+        return@getOrCompute cookies["NetflixId"]?.value to cookies["SecureNetflixId"]?.value
     }
 
-    abstract fun getShowVideos(countryCode: CountryCode, showId: String, seasonName: String = "", season: Int = 1): List<Episode>?
+    protected suspend fun HttpRequest.postGraphQL(locale: String, body: String): HttpResponse {
+        val (id, secureId) = getIdAndSecureId()
 
-    companion object {
-        const val BASE_URL = "https://www.netflix.com/"
-        // Only for testing
-        var checkLanguage = true
+        return post(
+            apiUrl,
+            headers = mapOf(
+                "Content-Type" to "application/json",
+                "Cookie" to "NetflixId=$id; SecureNetflixId=$secureId",
+                "x-netflix.context.locales" to locale,
+            ),
+            body = body
+        )
     }
+
+    abstract suspend fun getShow(locale: String, id: Int): Show
+    abstract suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode>
 }
