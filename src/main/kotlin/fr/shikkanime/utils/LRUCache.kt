@@ -1,5 +1,7 @@
 package fr.shikkanime.utils
 
+import java.util.*
+
 /**
  * A simple LRU (Least Recently Used) cache implementation using LinkedHashMap.
  * This cache has a maximum size and will remove the least recently accessed items
@@ -10,11 +12,11 @@ package fr.shikkanime.utils
  * @param maxSize the maximum number of entries the cache can hold
  */
 class LRUCache<K, V>(private val maxSize: Int) {
-    private val cache = object : LinkedHashMap<K, V>(maxSize, 0.75f, true) {
+    private val cache = Collections.synchronizedMap(object : LinkedHashMap<K, V>(maxSize, 0.75f, true) {
         override fun removeEldestEntry(eldest: Map.Entry<K, V>): Boolean {
             return size > maxSize
         }
-    }
+    })
 
     fun containsKey(key: K): Boolean {
         return cache.containsKey(key)
