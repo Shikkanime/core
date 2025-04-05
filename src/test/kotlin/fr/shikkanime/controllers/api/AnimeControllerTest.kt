@@ -1,7 +1,8 @@
 package fr.shikkanime.controllers.api
 
 import com.google.gson.reflect.TypeToken
-import fr.shikkanime.dtos.*
+import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
@@ -37,7 +38,7 @@ class AnimeControllerTest : AbstractControllerTest() {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findByIdentifier(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!.uuid!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
                 assertEquals(anime.uuid, followedAnimesUUID.first())
@@ -87,7 +88,7 @@ class AnimeControllerTest : AbstractControllerTest() {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findByIdentifier(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!.uuid!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
                 assertEquals(anime.uuid, followedAnimesUUID.first())
@@ -100,7 +101,7 @@ class AnimeControllerTest : AbstractControllerTest() {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findByIdentifier(identifier)
-                val followedEpisodesUUID = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!)
+                val followedEpisodesUUID = memberFollowEpisodeService.findAllFollowedEpisodesUUID(findPrivateMember!!.uuid!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedEpisodesUUID.size)
                 assertEquals(episodes.first().uuid, followedEpisodesUUID.first())
@@ -200,7 +201,7 @@ class AnimeControllerTest : AbstractControllerTest() {
             }.apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val findPrivateMember = memberService.findByIdentifier(identifier)
-                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!)
+                val followedAnimesUUID = memberFollowAnimeService.findAllFollowedAnimesUUID(findPrivateMember!!.uuid!!)
                 assertNotNull(findPrivateMember)
                 assertEquals(1, followedAnimesUUID.size)
                 assertEquals(anime.uuid, followedAnimesUUID.first())

@@ -27,7 +27,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         }
     }
 
-    fun findAllFollowedAnimesUUID(member: Member): List<UUID> {
+    fun findAllFollowedAnimesUUID(memberUuid: UUID): List<UUID> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
@@ -35,7 +35,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             query.select(root[MemberFollowAnime_.anime][Anime_.uuid])
 
             query.where(
-                cb.equal(root[MemberFollowAnime_.member], member)
+                cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid)
             )
 
             createReadOnlyQuery(it, query)
