@@ -142,19 +142,20 @@ class UpdateAnimeJob : AbstractJob {
     }
 
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        val show = AnimationDigitalNetworkCachedWrapper.getShow(animePlatform.platformId!!.toInt())
-        val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(animePlatform.platformId!!.toInt())
+        val platformId = animePlatform.platformId!!.toInt()
+        val show = AnimationDigitalNetworkCachedWrapper.getShow(platformId)
+        val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(platformId)
+            .filter { it.releaseDate != null }
 
-        if (showVideos.isEmpty())
-            throw Exception("No episode found for ADN anime ${show.title}")
+        require(showVideos.isNotEmpty()) { "No episode found for ADN anime ${show.title}" }
 
         return UpdatableAnime(
             platform = Platform.ANIM,
-            lastReleaseDateTime = showVideos.maxOf { it.releaseDate },
-            attachments = buildMap {
-                put(ImageType.THUMBNAIL, show.fullHDImage)
-                put(ImageType.BANNER, show.fullHDBanner)
-            },
+            lastReleaseDateTime = showVideos.maxOf { it.releaseDate!! },
+            attachments = mapOf(
+                ImageType.THUMBNAIL to show.fullHDImage,
+                ImageType.BANNER to show.fullHDBanner
+            ),
             description = show.summary,
             episodeSize = showVideos.size
         )
