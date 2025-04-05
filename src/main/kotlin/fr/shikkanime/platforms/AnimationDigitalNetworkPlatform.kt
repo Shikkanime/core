@@ -103,7 +103,7 @@ class AnimationDigitalNetworkPlatform :
                 animeImage = video.show.fullHDImage,
                 animeBanner = video.show.fullHDBanner,
                 animeDescription = video.show.summary.normalize(),
-                releaseDateTime = video.releaseDate,
+                releaseDateTime = requireNotNull(video.releaseDate) { "Release date is null" },
                 episodeType = episodeType,
                 seasonId = video.season ?: "1",
                 season = season,
