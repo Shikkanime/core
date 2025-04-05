@@ -15,7 +15,7 @@ import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class EpisodeMappingCacheService : AbstractCacheService {
+class EpisodeMappingCacheService : ICacheService {
     companion object {
         private const val DEFAULT_ALL_KEY = "all"
     }

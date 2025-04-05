@@ -1,3 +1,3 @@
 package fr.shikkanime.services.caches
 
-interface AbstractCacheService
+interface ICacheService

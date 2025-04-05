@@ -10,13 +10,14 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
+import fr.shikkanime.services.admin.EpisodeMappingAdminService
 import fr.shikkanime.utils.ObjectParser
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class EpisodeMappingServiceTest : AbstractTest() {
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
 
     @Test
     fun update() {
@@ -39,7 +40,7 @@ class EpisodeMappingServiceTest : AbstractTest() {
         val dto = episodeMappingFactory.toDto(episodeMapping)
         dto.episodeType = EpisodeType.FILM
 
-        val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)
+        val updated = episodeMappingAdminService.update(episodeMapping.uuid!!, dto)
         assertEquals(EpisodeType.FILM, updated!!.episodeType)
     }
 
@@ -73,7 +74,7 @@ class EpisodeMappingServiceTest : AbstractTest() {
         val dto = episodeMappingFactory.toDto(episodeMapping)
         dto.episodeType = EpisodeType.FILM
 
-        val updated = episodeMappingService.update(episodeMapping.uuid!!, dto)
+        val updated = episodeMappingAdminService.update(episodeMapping.uuid!!, dto)
         assertNotEquals(updated!!.uuid, episodeMapping.uuid)
         assertEquals(EpisodeType.FILM, updated.episodeType)
         assertNull(episodeMappingService.find(episodeMapping.uuid))
@@ -117,6 +118,6 @@ class EpisodeMappingServiceTest : AbstractTest() {
             EpisodeMappingDto::class.java
         )
         println(dto)
-        episodeMappingService.update(episodeMapping.uuid!!, dto)
+        episodeMappingAdminService.update(episodeMapping.uuid!!, dto)
     }
 }

@@ -155,19 +155,4 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .map { it[0] as String to it[1] as ZonedDateTime }
         }
     }
-
-    fun findReleaseDateTimeByIdentifier(identifier: String): ZonedDateTime? {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(ZonedDateTime::class.java)
-            val root = query.from(getEntityClass())
-
-            query.select(root[EpisodeVariant_.releaseDateTime])
-                .where(cb.equal(root[EpisodeVariant_.identifier], identifier))
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
-        }
-    }
 }

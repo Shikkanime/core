@@ -19,7 +19,7 @@ import fr.shikkanime.utils.MapCache
 import java.time.LocalDate
 import java.util.*
 
-class AnimeCacheService : AbstractCacheService {
+class AnimeCacheService : ICacheService {
     companion object {
         private const val DEFAULT_ALL_KEY = "all"
     }

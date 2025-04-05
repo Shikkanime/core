@@ -10,7 +10,7 @@ import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class SimulcastCacheService : AbstractCacheService {
+class SimulcastCacheService : ICacheService {
     @Inject
     private lateinit var simulcastService: SimulcastService
 

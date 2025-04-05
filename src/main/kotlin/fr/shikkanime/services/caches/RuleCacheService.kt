@@ -6,7 +6,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.RuleService
 import fr.shikkanime.utils.MapCache
 
-class RuleCacheService : AbstractCacheService {
+class RuleCacheService : ICacheService {
     @Inject
     private lateinit var ruleService: RuleService
 

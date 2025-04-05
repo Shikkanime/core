@@ -5,7 +5,8 @@ import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
-import fr.shikkanime.services.caches.AbstractCacheService
+import fr.shikkanime.services.admin.IAdminService
+import fr.shikkanime.services.caches.ICacheService
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
@@ -23,7 +24,8 @@ class DefaultModule : AbstractModule() {
             Constant.reflections.getSubTypesOf(AbstractJob::class.java),
             Constant.reflections.getTypesAnnotatedWith(Controller::class.java),
             Constant.reflections.getSubTypesOf(AbstractSocialNetwork::class.java),
-            Constant.reflections.getSubTypesOf(AbstractCacheService::class.java),
+            Constant.reflections.getSubTypesOf(ICacheService::class.java),
+            Constant.reflections.getSubTypesOf(IAdminService::class.java),
         ).flatten().forEach {
             bind(it).asEagerSingleton()
         }

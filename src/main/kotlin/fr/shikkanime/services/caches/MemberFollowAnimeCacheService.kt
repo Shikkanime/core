@@ -13,7 +13,7 @@ import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class MemberFollowAnimeCacheService : AbstractCacheService {
+class MemberFollowAnimeCacheService : ICacheService {
     @Inject
     private lateinit var memberCacheService: MemberCacheService
 

@@ -14,7 +14,7 @@ import java.net.InetAddress
 import java.time.Duration
 import kotlin.experimental.and
 
-class BotDetectorCache : AbstractCacheService {
+class BotDetectorCache : ICacheService {
     companion object {
         private const val DEFAULT_ALL_KEY = "all"
     }

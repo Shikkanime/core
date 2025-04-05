@@ -5,7 +5,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.services.AnimePlatformService
 import fr.shikkanime.utils.MapCache
 
-class AnimePlatformCacheService : AbstractCacheService {
+class AnimePlatformCacheService : ICacheService {
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
 

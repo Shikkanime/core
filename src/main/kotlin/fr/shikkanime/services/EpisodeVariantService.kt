@@ -71,8 +71,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         endZonedDateTime
     )
 
-    fun findReleaseDateTimeByIdentifier(identifier: String) = episodeVariantRepository.findReleaseDateTimeByIdentifier(identifier)
-
     fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true): Simulcast {
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
         val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }

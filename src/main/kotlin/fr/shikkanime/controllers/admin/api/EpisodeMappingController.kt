@@ -12,6 +12,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.EpisodeMappingService
+import fr.shikkanime.services.admin.EpisodeMappingAdminService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
@@ -26,14 +27,10 @@ import java.util.*
 
 @Controller("$ADMIN/api/episode-mappings")
 class EpisodeMappingController {
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var attachmentService: AttachmentService
 
     @Path("/update-all")
     @Put
@@ -55,7 +52,7 @@ class EpisodeMappingController {
             return Response.badRequest("At least one field must be set")
         }
 
-        episodeMappingService.updateAll(updateAllEpisodeMappingDto)
+        episodeMappingAdminService.updateAll(updateAllEpisodeMappingDto)
         MapCache.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         return Response.ok()
     }
@@ -77,9 +74,9 @@ class EpisodeMappingController {
         @PathParam("uuid") uuid: UUID,
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
-        val updated = episodeMappingService.update(uuid, episodeMappingDto) ?: return Response.notFound()
+        val updated = episodeMappingAdminService.update(uuid, episodeMappingDto)
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
-        return Response.ok(episodeMappingFactory.toDto(updated))
+        return Response.ok(episodeMappingFactory.toDto(updated ?: return Response.noContent()))
     }
 
     @Path("/{uuid}")

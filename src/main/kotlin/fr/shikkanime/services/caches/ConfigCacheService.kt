@@ -6,7 +6,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.MapCache
 
-class ConfigCacheService : AbstractCacheService {
+class ConfigCacheService : ICacheService {
     @Inject
     private lateinit var configService: ConfigService
 

@@ -7,7 +7,7 @@ import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.utils.MapCache
 import java.util.*
 
-class AttachmentCacheService : AbstractCacheService {
+class AttachmentCacheService : ICacheService {
     @Inject
     private lateinit var attachmentService: AttachmentService
 
