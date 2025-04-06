@@ -97,7 +97,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             ?: chosenSimulcast
     }
 
-    fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null): EpisodeVariant {
+    fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null, async: Boolean = true): EpisodeVariant {
         val now = ZonedDateTime.now()
         val rules = ruleCacheService.findAllByPlatformSeriesIdAndSeasonId(episode.platform, episode.animeId, episode.seasonId)
 
@@ -131,8 +131,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 )
             ).apply {
                 if (!Constant.isTest) {
-                    attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.THUMBNAIL, url = episode.animeImage)
-                    attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = episode.animeBanner)
+                    attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.THUMBNAIL, url = episode.animeImage, async = async)
+                    attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = episode.animeBanner, async = async)
                 }
             }
 
@@ -146,7 +146,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
         }
 
-        val mapping = episodeMapping ?: getEpisodeMapping(anime, episode)
+        val mapping = episodeMapping ?: getEpisodeMapping(anime, episode, async)
 
         if (updateMappingDateTime && episode.releaseDateTime > mapping.lastReleaseDateTime) {
             mapping.lastReleaseDateTime = episode.releaseDateTime
@@ -189,7 +189,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     private fun getEpisodeMapping(
         anime: Anime,
-        episode: AbstractPlatform.Episode
+        episode: AbstractPlatform.Episode,
+        async: Boolean = true
     ): EpisodeMapping {
         var mapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             anime.uuid!!,
@@ -211,7 +212,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
         ).apply {
             if (!Constant.isTest)
-                attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.BANNER, url = episode.image)
+                attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.BANNER, url = episode.image, async = async)
         }
 
         episode.number.takeIf { it == -1 }?.let {

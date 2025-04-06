@@ -50,4 +50,5 @@ enum class ConfigPropertyKey(val key: String) {
     UPDATE_ATTACHMENT_DELAY("update_image_delay"),
     UPDATE_ATTACHMENT_SIZE("update_image_size"),
     CHECK_DISNEY_PLUS_AUDIO_LOCALES("check_disney_plus_audio_locales"),
+    ASYNC_FETCH_EPISODE_IMAGES("async_fetch_episode_images"),
 }

@@ -67,15 +67,16 @@ class FetchEpisodesJob : AbstractJob {
         val zonedDateTime = ZonedDateTime.now().withNano(0).withUTC()
         val episodes = mutableListOf<AbstractPlatform.Episode>()
 
-        Constant.abstractPlatforms.forEach { abstractPlatform ->
-            logger.info("Fetching episodes for ${abstractPlatform.getPlatform().name}...")
+        Constant.abstractPlatforms.sortedBy { it.getPlatform().sortIndex }
+            .forEach { abstractPlatform ->
+                logger.info("Fetching episodes for ${abstractPlatform.getPlatform().name}...")
 
-            try {
-                episodes.addAll(abstractPlatform.fetchEpisodes(zonedDateTime))
-            } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Error while fetching episodes for ${abstractPlatform.getPlatform().name}", e)
+                try {
+                    episodes.addAll(abstractPlatform.fetchEpisodes(zonedDateTime))
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while fetching episodes for ${abstractPlatform.getPlatform().name}", e)
+                }
             }
-        }
 
         if (episodes.isEmpty()) {
             isRunning = false
@@ -92,12 +93,17 @@ class FetchEpisodesJob : AbstractJob {
                     { it.season },
                     { it.episodeType },
                     { it.number },
-                    { LangType.fromAudioLocale(it.countryCode, it.audioLocale) })
+                    { LangType.fromAudioLocale(it.countryCode, it.audioLocale) },
+                    { it.platform.sortIndex }
+                )
             )
             .filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) && !identifiers.contains(it.getIdentifier()) }
             .mapNotNull {
                 try {
-                    val savedEpisode = episodeVariantService.save(it)
+                    val savedEpisode = episodeVariantService.save(
+                        it,
+                        async = configCacheService.getValueAsBoolean(ConfigPropertyKey.ASYNC_FETCH_EPISODE_IMAGES, true)
+                    )
                     Constant.abstractPlatforms.forEach { abstractPlatform -> abstractPlatform.updateAnimeSimulcastConfiguration(it.animeId) }
                     savedEpisode
                 } catch (e: Exception) {
