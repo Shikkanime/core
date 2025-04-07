@@ -172,7 +172,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                 }
 
                 getFile(attachment).writeBytes(webp)
-                if (imageCache.containsKey(attachment.uuid!!)) imageCache.remove(attachment.uuid)
+                setContentInCache(attachment, webp)
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
                 removeFile(attachment)
