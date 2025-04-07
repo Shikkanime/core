@@ -423,7 +423,7 @@ class AnimeServiceTest : AbstractTest() {
         weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         releases = weeklyReleases.flatMap { it.releases }
         releases.forEach { println(it) }
-        assertEquals(2, releases.size)
+        assertEquals(1, releases.size)
         assertTrue(releases.all { it.langTypes.size == 1 })
     }
 }

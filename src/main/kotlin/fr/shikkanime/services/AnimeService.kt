@@ -27,7 +27,6 @@ import fr.shikkanime.utils.atEndOfWeek
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.utils.withUTCString
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -224,9 +223,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         weekRange: ClosedRange<LocalDate>
     ): Boolean {
         val withZoneSameInstant = ZonedDateTime.parse(weeklyAnimeDto.first.releaseDateTime).withUTC()
-        val minusHour = withZoneSameInstant.minusHours(1).toLocalTime()
-        val plusHour = if (withZoneSameInstant.plusHours(1).toLocalTime() == LocalTime.MIDNIGHT) LocalTime.MAX else withZoneSameInstant.plusHours(1).toLocalTime()
-        val closedRange = minusHour..plusHour
 
         if (withZoneSameInstant.toLocalDate() in weekRange) {
             return false
@@ -237,14 +233,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }
 
         return releases.associateWith { ZonedDateTime.parse(it.first.releaseDateTime).withUTC() }
-            .filter { (it, releaseDateTime) ->
+            .any { (it, releaseDateTime) ->
                 it != weeklyAnimeDto &&
                         releaseDateTime.toLocalDate() in weekRange &&
                         releaseDateTime.dayOfWeek == withZoneSameInstant.dayOfWeek &&
                         it.first.anime.uuid == weeklyAnimeDto.first.anime.uuid &&
                         it.first.langTypes == weeklyAnimeDto.first.langTypes
             }
-            .any { it.value.toLocalTime() in closedRange }
     }
 
     private fun groupAndSortReleases(
