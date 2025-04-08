@@ -24,7 +24,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
             releaseDay = 1
             image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
         })
-        val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } } .getOrNull() ?: emptyList()
+        val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } ?: emptyList()
 
         assertNotNull(episodes)
         assumeTrue(episodes.isNotEmpty())
@@ -48,7 +48,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
             releaseDay = 1
             image = "https://cdn.myanimelist.net/images/anime/1850/144045l.jpg"
         })
-        val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } } .getOrNull() ?: emptyList()
+        val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } ?: emptyList()
 
         assertNotNull(episodes)
         assumeTrue(episodes.isNotEmpty())
@@ -71,13 +71,36 @@ class PrimeVideoPlatformTest : AbstractTest() {
             releaseDay = 1
             image = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
         })
-        val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } } .getOrNull() ?: emptyList()
+        val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } ?: emptyList()
 
         assertNotNull(episodes)
         assumeTrue(episodes.isNotEmpty())
 
         episodes.forEach {
             assertEquals("Magilumière Co. Ltd.", it.anime)
+            assertTrue(it.animeDescription?.isNotBlank() == true)
+            assertTrue(it.image.startsWith("https://m.media-amazon.com"))
+            assertTrue(it.url.isNotBlank())
+            assertFalse(it.getIdentifier().contains("https://"))
+        }
+    }
+
+    @Test
+    fun `fetchApiContent #4`() {
+        val countryCode = CountryCode.FR
+        val zonedDateTime = ZonedDateTime.parse("2025-04-08T16:01:00Z")
+        val key = CountryCodePrimeVideoSimulcastKeyCache(countryCode, PrimeVideoConfiguration.PrimeVideoSimulcast().apply {
+            name = "0KFD79CBVX90IWRIG5NLAGJ7R1"
+            releaseDay = 2
+            image = "https://cdn.myanimelist.net/images/anime/1803/146807l.jpg"
+        })
+        val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } ?: emptyList()
+
+        assertNotNull(episodes)
+        assumeTrue(episodes.isNotEmpty())
+
+        episodes.forEach {
+            assertEquals("Mobile Suit Gundam GQuuuuuuX", it.anime)
             assertTrue(it.animeDescription?.isNotBlank() == true)
             assertTrue(it.image.startsWith("https://m.media-amazon.com"))
             assertTrue(it.url.isNotBlank())
