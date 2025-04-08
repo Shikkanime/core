@@ -8,6 +8,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
@@ -40,16 +41,18 @@ class EpisodeVariantCacheService : ICacheService {
         member: Member?,
         startOfWeekDay: LocalDate,
         zoneId: ZoneId,
+        searchTypes: Array<LangType>? = null,
     ) = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllVariantReleases",
         classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java),
-        key = CountryCodeMemberUUIDWeekKeyCache(countryCode, member?.uuid, startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId), startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId)),
+        key = CountryCodeMemberUUIDWeekKeyCache(countryCode, member?.uuid, startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId), startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId), searchTypes),
     ) {
         episodeVariantService.findAllVariantReleases(
             it.countryCode,
             it.member?.let { uuid -> memberCacheService.find(uuid) },
             it.startZonedDateTime,
-            it.endZonedDateTime
+            it.endZonedDateTime,
+            it.searchTypes
         )
     }
 
