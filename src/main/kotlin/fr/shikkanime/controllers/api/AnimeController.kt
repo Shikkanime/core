@@ -95,12 +95,10 @@ class AnimeController : HasPageableRoute() {
     @Get
     @JWTAuthenticated(optional = true)
     fun getWeekly(
-        @JWTUser
-        memberUuid: UUID?,
-        @QueryParam("country")
-        countryParam: CountryCode?,
-        @QueryParam("date")
-        dateParam: String?,
+        @JWTUser memberUuid: UUID?,
+        @QueryParam("country") countryParam: CountryCode?,
+        @QueryParam("date") dateParam: String?,
+        @QueryParam("searchTypes") searchTypes: Array<LangType>?,
     ): Response {
         val startOfWeekDay = try {
             dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
@@ -113,6 +111,7 @@ class AnimeController : HasPageableRoute() {
                 countryParam ?: CountryCode.FR,
                 memberUuid,
                 startOfWeekDay,
+                searchTypes
             )
         )
     }

@@ -110,7 +110,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun getWeeklyAnimes(
         countryCode: CountryCode,
         member: Member?,
-        startOfWeekDay: LocalDate
+        startOfWeekDay: LocalDate,
+        searchTypes: Array<LangType>? = null,
     ): List<WeeklyAnimesDto> {
         val zoneId = ZoneId.of(countryCode.timezone)
         val dayCountryPattern = DateTimeFormatter.ofPattern("EEEE", Locale.forLanguageTag(countryCode.locale))
@@ -121,7 +122,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             countryCode,
             member,
             startOfWeekDay,
-            zoneId
+            zoneId,
+            searchTypes
         )
 
         val releases = processReleases(variantReleaseDtos, zoneId, weekRange).let { releases ->
