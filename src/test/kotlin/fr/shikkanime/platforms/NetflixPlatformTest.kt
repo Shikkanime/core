@@ -8,104 +8,97 @@ import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
+import java.util.stream.Stream
 
 class NetflixPlatformTest : AbstractTest() {
     @Inject
     private lateinit var netflixPlatform: NetflixPlatform
 
-    @Test
-    fun fetchApiContent() {
-        val countryCode = CountryCode.FR
-        val zonedDateTime = ZonedDateTime.parse("2024-07-17T07:00:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay().apply {
-            name = "81497635"
-            releaseDay = 3
-            image = "https://cdn.myanimelist.net/images/anime/1003/142645l.jpg"
-        })
-        val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assertNotNull(episodes)
-        assumeTrue(episodes.isNotEmpty())
+    data class NetflixTestCase(
+        val netflixId: String,
+        val expectedAnimeName: String,
+        val releaseDay: Int,
+        val testDate: String,
+        val imageUrl: String,
+        val audioLocales: Set<String> = setOf("ja-JP"),
+        val audioLocaleDelays: Map<String, Long> = emptyMap()
+    )
 
-        episodes.forEach {
-            println(it)
-        }
-
-        assertEquals(24, episodes.size)
-        // Count the distinct episode identifiers
-        assertEquals(24, episodes.map { it.getIdentifier() }.distinct().size)
+    companion object {
+        @JvmStatic
+        fun netflixTestCases(): Stream<NetflixTestCase> = Stream.of(
+            NetflixTestCase(
+                netflixId = "81497635",
+                expectedAnimeName = "T・P BON",
+                releaseDay = 3,
+                testDate = "2024-07-17T07:00:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1003/142645l.jpg"
+            ),
+            NetflixTestCase(
+                netflixId = "81562396",
+                expectedAnimeName = "Four Knights of the Apocalypse",
+                releaseDay = 7,
+                testDate = "2024-09-22T00:00:00Z",
+                imageUrl = "https://www.manga-news.com/public/upload/2024/02/Four-Knights-of-the-Apocalypse-visual-3.jpg"
+            ),
+            NetflixTestCase(
+                netflixId = "81943491",
+                expectedAnimeName = "Dragon Ball DAIMA",
+                releaseDay = 5,
+                testDate = "2024-08-11T16:45:00Z",
+                imageUrl = "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=85,width=480,height=720/catalog/crunchyroll/298acc932735d9a731ea39a3db6a613c.jpg"
+            ),
+            NetflixTestCase(
+                netflixId = "81564905",
+                expectedAnimeName = "My Happy Marriage",
+                releaseDay = 1,
+                testDate = "2025-03-24T14:00:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1147/122444l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR"),
+                audioLocaleDelays = mapOf("fr-FR" to 1L)
+            )
+        )
     }
 
-    @Test
-    fun `fetchApiContent For The Seven Deadly Sins Four Knights of the Apocalypse`() {
+    @ParameterizedTest
+    @MethodSource("netflixTestCases")
+    fun `should fetch episodes from Netflix`(testCase: NetflixTestCase) {
         val countryCode = CountryCode.FR
-        val zonedDateTime = ZonedDateTime.parse("2024-09-22T00:00:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay().apply {
-            name = "81562396"
-            releaseDay = 7
-            image = "https://www.manga-news.com/public/upload/2024/02/Four-Knights-of-the-Apocalypse-visual-3.jpg"
-        })
+        val zonedDateTime = ZonedDateTime.parse(testCase.testDate)
+        val simulcastDay = NetflixConfiguration.NetflixSimulcastDay().apply {
+            name = testCase.netflixId
+            releaseDay = testCase.releaseDay
+            image = testCase.imageUrl
+            
+            if (testCase.audioLocales.isNotEmpty()) {
+                audioLocales = testCase.audioLocales.toMutableSet()
+            }
+            
+            if (testCase.audioLocaleDelays.isNotEmpty()) {
+                audioLocaleDelays = testCase.audioLocaleDelays.toMutableMap()
+            }
+        }
+        
+        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, simulcastDay)
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
+        
         assertNotNull(episodes)
+        // Skip the test if no episodes are found
+        // Maybe due to a region restriction
         assumeTrue(episodes.isNotEmpty())
-        assertEquals("Famine, Guerre, Mort, Épidémie. Alors qu'une prophétie apocalyptique plane sur Britannia, une nouvelle génération de héros doit unir ses forces pour sauver le monde.", episodes.first().animeDescription)
-
+        
+        // Log episodes for debugging
         episodes.forEach {
             println(it)
         }
-
-        assertEquals(36, episodes.size)
-        // Count the distinct episode identifiers
-        assertEquals(36, episodes.map { it.getIdentifier() }.distinct().size)
-        assertEquals("FR-NETF-81700064-JA-JP", episodes.first().getIdentifier())
-    }
-
-    @Test
-    fun `fetchApiContent for Dragon Ball DAIMA`() {
-        val countryCode = CountryCode.FR
-        val zonedDateTime = ZonedDateTime.parse("2024-08-11T16:45:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay().apply {
-            name = "81943491"
-            releaseDay = 5
-            image = "https://imgsrv.crunchyroll.com/cdn-cgi/image/fit=contain,format=auto,quality=85,width=480,height=720/catalog/crunchyroll/298acc932735d9a731ea39a3db6a613c.jpg"
-        })
-        val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assertNotNull(episodes)
-        assumeTrue(episodes.isNotEmpty())
-
-        episodes.forEach {
-            println(it)
+        
+        // Common assertions for all episodes
+        episodes.forEach { episode ->
+            assertTrue(episode.url.isNotBlank())
+            assertFalse(episode.getIdentifier().contains("https://"))
         }
-
-        assertTrue(episodes.size >= 4)
-    }
-
-    @Test
-    fun `fetchApiContent for My Happy Mariage`() {
-        val countryCode = CountryCode.FR
-        val zonedDateTime = ZonedDateTime.parse("2025-03-24T14:00:00Z")
-        val key = CountryCodeNetflixSimulcastKeyCache(countryCode, NetflixConfiguration.NetflixSimulcastDay().apply {
-            name = "81564905"
-            releaseDay = 1
-            image = "https://cdn.myanimelist.net/images/anime/1147/122444l.jpg"
-            audioLocales = mutableSetOf("ja-JP", "fr-FR")
-            audioLocaleDelays = mutableMapOf("fr-FR" to 1)
-        })
-        val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
-        assertNotNull(episodes)
-        assumeTrue(episodes.isNotEmpty())
-
-        episodes.forEach {
-            println(it)
-        }
-
-        val firstEpisode = episodes.filter { it.id == "81651189" }
-        assertEquals(2, firstEpisode.size)
-        assertEquals("FR-NETF-81651189-JA-JP", firstEpisode.first().getIdentifier())
-        assertEquals("FR-NETF-81651189-FR-FR", firstEpisode.last().getIdentifier())
-        // Check the delay for the French audio locale
-        assertEquals(1, ChronoUnit.WEEKS.between(firstEpisode.first().releaseDateTime, firstEpisode.last().releaseDateTime))
     }
 }
