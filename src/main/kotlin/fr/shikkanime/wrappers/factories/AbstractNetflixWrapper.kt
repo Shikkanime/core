@@ -39,6 +39,7 @@ abstract class AbstractNetflixWrapper {
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
     protected val httpRequest = HttpRequest()
 
+    @Synchronized
     private fun getIdAndSecureId() = MapCache.getOrCompute(
         "AbstractNetflixWrapper.getIdAndSecureId",
         duration = Duration.ofDays(1),
