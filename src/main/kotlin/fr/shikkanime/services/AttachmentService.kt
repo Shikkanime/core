@@ -27,6 +27,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private var threadPool = Executors.newFixedThreadPool(nThreads)
     private val httpRequest = HttpRequest()
     private val imageCache = LRUCache<UUID, ByteArray>(100)
+    private val inProgressAttachments = Collections.synchronizedSet(HashSet<UUID>())
 
     @Inject
     private lateinit var attachmentRepository: AttachmentRepository
@@ -110,11 +111,41 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         MapCache.invalidate(Attachment::class.java)
     }
 
+    /**
+     * Encodes an attachment by either downloading its content from a URL or using provided byte data.
+     * The encoding process can be executed asynchronously or synchronously.
+     *
+     * @param attachment The `Attachment` object to be encoded.
+     * @param url The URL to fetch the attachment content from, if `bytes` is not provided. Can be null.
+     * @param bytes The byte array representing the attachment content. Can be null if `url` is provided.
+     * @param async A boolean flag indicating whether the encoding should be performed asynchronously.
+     *              Defaults to `true`.
+     *
+     * @throws IllegalArgumentException If both `url` and `bytes` are null.
+     */
     fun encodeAttachment(attachment: Attachment, url: String?, bytes: ByteArray?, async: Boolean = true) {
-        if (async)
-            threadPool.submit { taskEncode(attachment, url, bytes) }
-        else
-            taskEncode(attachment, url, bytes)
+        // Ensure that at least one of `url` or `bytes` is provided
+        require(url != null || bytes != null) { "Either url or bytes must be provided" }
+
+        // Retrieve the UUID of the attachment; return if it is null
+        val uuid = attachment.uuid ?: return
+
+        // Add the UUID to the set of in-progress attachments
+        inProgressAttachments.add(uuid)
+
+        // Define the encoding task
+        val task = {
+            try {
+                // Perform the encoding process
+                taskEncode(attachment, url, bytes)
+            } finally {
+                // Remove the UUID from the in-progress set after the task is completed
+                inProgressAttachments.remove(uuid)
+            }
+        }
+
+        // Execute the task asynchronously or synchronously based on the `async` flag
+        if (async) threadPool.submit(task) else task()
     }
 
     fun getFile(attachment: Attachment) = File(Constant.imagesFolder, "${attachment.uuid}.webp")
@@ -182,18 +213,41 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         logger.info("Encoded image to WebP in ${take}ms")
     }
 
+    /**
+     * Cleans up unused attachments and files from the system.
+     *
+     * This function performs the following tasks:
+     * 1. Identifies valid UUIDs from anime, episode mappings, and members.
+     * 2. Removes attachments that are no longer associated with valid UUIDs.
+     * 3. Deletes files in the images folder that are not linked to active attachments or are in progress.
+     */
     fun cleanUnusedAttachments() {
-        val uuids = animeService.findAllUuids() + episodeMappingService.findAllUuids() + memberService.findAllUuids()
+        // Retrieve all valid UUIDs from anime, episode mappings, and members
+        val validUuids = animeService.findAllUuids() + episodeMappingService.findAllUuids() + memberService.findAllUuids()
+
+        // Map all attachments by their UUIDs for quick lookup
         val attachments = findAll().associateBy { it.uuid!! }.toMutableMap()
 
-        attachments.values.filter { it.entityUuid !in uuids }.forEach {
-            delete(it)
-            attachments.remove(it.uuid)
+        // List all files in the images folder
+        val files = Constant.imagesFolder.listFiles()
+
+        // Remove attachments that are not associated with valid UUIDs
+        attachments.values.filter { it.entityUuid !in validUuids }.forEach {
+            delete(it) // Delete the attachment from the database
+            traceActionService.createTraceAction(it, TraceAction.Action.DELETE) // Log the deletion action
+            attachments.remove(it.uuid) // Remove the attachment from the map
+            imageCache.remove(it.uuid!!) // Remove the attachment from the cache
         }
 
-        Constant.imagesFolder.listFiles()?.filter {
-            attachments[UUID.fromString(it.nameWithoutExtension)]?.active != true
-        }?.forEach { it.delete() }
+        // Delete files that are not linked to active attachments or are in progress
+        files?.forEach { file ->
+            // Attempt to parse the file name as a UUID
+            val uuid = runCatching { UUID.fromString(file.nameWithoutExtension) }.getOrNull()
+
+            // Delete the file if it is not in progress, not active, and deletion fails
+            if (uuid != null && uuid !in inProgressAttachments && attachments[uuid]?.active != true && !file.delete())
+                logger.warning("Failed to delete file $file") // Log a warning if the file deletion fails
+        }
     }
 
     fun clearPool() {
