@@ -16,35 +16,16 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
-    @Inject
-    private lateinit var episodeVariantRepository: EpisodeVariantRepository
-
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @Inject
-    private lateinit var ruleCacheService: RuleCacheService
-
-    @Inject
-    private lateinit var ruleService: RuleService
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var episodeVariantRepository: EpisodeVariantRepository
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var animePlatformService: AnimePlatformService
+    @Inject private lateinit var ruleCacheService: RuleCacheService
+    @Inject private lateinit var ruleService: RuleService
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = episodeVariantRepository
 
@@ -97,27 +78,53 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             ?: chosenSimulcast
     }
 
-    fun save(episode: AbstractPlatform.Episode, updateMappingDateTime: Boolean = true, episodeMapping: EpisodeMapping? = null, async: Boolean = true): EpisodeVariant {
+    /**
+     * Saves an `EpisodeVariant` entity based on the provided episode data.
+     *
+     * @param episode The episode data from the platform to be saved.
+     * @param updateMappingDateTime Whether to update the mapping's last release date-time if the episode's release date-time is newer. Default is `true`.
+     * @param episodeMapping An optional existing `EpisodeMapping` to associate with the episode. If not provided, a new mapping will be created.
+     * @param async Whether to perform certain operations asynchronously. Default is `true`.
+     *
+     * @return The saved `EpisodeVariant` entity.
+     */
+    fun save(
+        episode: AbstractPlatform.Episode,
+        updateMappingDateTime: Boolean = true,
+        episodeMapping: EpisodeMapping? = null,
+        async: Boolean = true
+    ): EpisodeVariant {
+        // Get the current date-time
         val now = ZonedDateTime.now()
+
+        // Retrieve all rules associated with the platform, series, and season
         val rules = ruleCacheService.findAllByPlatformSeriesIdAndSeasonId(episode.platform, episode.animeId, episode.seasonId)
 
+        // Apply each rule to modify the episode's properties
         rules.forEach { rule ->
             when (rule.action!!) {
                 Rule.Action.REPLACE_ANIME_NAME -> episode.anime = rule.actionValue!!
                 Rule.Action.REPLACE_SEASON_NUMBER -> episode.season = rule.actionValue!!.toInt()
+                Rule.Action.ADD_TO_NUMBER -> if (episode.number != -1 || episode.episodeType == EpisodeType.EPISODE) {
+                    episode.number += rule.actionValue!!.toInt()
+                }
             }
 
+            // Update the last usage date-time of the rule
             rule.lastUsageDateTime = now
             ruleService.update(rule)
         }
 
+        // Generate a slug for the anime based on its name
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
+        // Create a mapping of anime hash codes to their UUIDs
         val animeHashCodes = animeService.findAllUuidAndSlug().associate { tuple ->
             StringUtils.computeAnimeHashcode(tuple[1] as String) to (tuple[0] as UUID)
         }
 
+        // Find or create the anime entity
         val anime = animeService.findBySlug(episode.countryCode, slug)
             ?: animeService.find(animeHashCodes[StringUtils.computeAnimeHashcode(slug)])
             ?: animeService.save(
@@ -130,12 +137,14 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     slug = slug
                 )
             ).apply {
+                // Create attachments for the anime if not in test mode
                 if (!Constant.isTest) {
                     attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.THUMBNAIL, url = episode.animeImage, async = async)
                     attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = episode.animeBanner, async = async)
                 }
             }
 
+        // Save the anime-platform association if it doesn't already exist
         if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null && (rules.isEmpty() || rules.any { rule -> rule.action != Rule.Action.REPLACE_ANIME_NAME })) {
             animePlatformService.save(
                 AnimePlatform(
@@ -146,15 +155,19 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
         }
 
+        // Retrieve or create the episode mapping
         val mapping = episodeMapping ?: getEpisodeMapping(anime, episode, async)
 
+        // Update the mapping's last release date-time if necessary
         if (updateMappingDateTime && episode.releaseDateTime > mapping.lastReleaseDateTime) {
             mapping.lastReleaseDateTime = episode.releaseDateTime
             episodeMappingService.update(mapping)
         }
 
+        // Update the anime entity with the episode's data
         updateAnime(anime, episode, mapping)
 
+        // Save the `EpisodeVariant` entity
         val savedEntity = super.save(
             EpisodeVariant(
                 mapping = mapping,
@@ -169,11 +182,14 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     episode.uncensored
                 ),
                 url = episode.url,
-                uncensored = episode.uncensored,
+                uncensored = episode.uncensored
             )
         )
 
+        // Log the creation of the `EpisodeVariant`
         traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
+
+        // Return the saved entity
         return savedEntity
     }
 

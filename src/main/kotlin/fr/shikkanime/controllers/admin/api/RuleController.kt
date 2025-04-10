@@ -20,11 +20,8 @@ import java.util.*
 
 @Controller("$ADMIN/api/rules")
 class RuleController {
-    @Inject
-    private lateinit var ruleService: RuleService
-
-    @Inject
-    private lateinit var ruleFactory: RuleFactory
+    @Inject private lateinit var ruleService: RuleService
+    @Inject private lateinit var ruleFactory: RuleFactory
 
     @Path
     @Get

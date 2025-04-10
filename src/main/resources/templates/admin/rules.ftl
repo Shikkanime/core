@@ -50,6 +50,7 @@
                                 <select class="form-select" id="action" name="action" x-model="selected.action">
                                     <option value="REPLACE_ANIME_NAME">Replace anime name</option>
                                     <option value="REPLACE_SEASON_NUMBER">Replace season number</option>
+                                    <option value="ADD_TO_NUMBER">Add to number</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

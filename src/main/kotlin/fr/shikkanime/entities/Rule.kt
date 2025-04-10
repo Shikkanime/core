@@ -33,5 +33,6 @@ class Rule(
     enum class Action {
         REPLACE_ANIME_NAME,
         REPLACE_SEASON_NUMBER,
+        ADD_TO_NUMBER
     }
 }
