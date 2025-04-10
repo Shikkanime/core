@@ -349,4 +349,42 @@ class EpisodeVariantServiceTest : AbstractTest() {
         assertEquals(23, mappings.first().number)
         assertEquals("tonbo", mappings.first().anime?.slug)
     }
+
+    @Test
+    fun `save platform episode with rule #4`() {
+        ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GYQ43P3E6", seasonId = "G65VCD1KE", action = Rule.Action.ADD_TO_NUMBER, actionValue = "11"))
+        MapCache.invalidate(Rule::class.java)
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "GYQ43P3E6",
+                "Black Butler",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2ea138d06fb4b5dac870eb8379345f7c.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/ff99c48c9aa901f08d3571a2276618a2.jpg",
+                "Au sein de l'élite britannique, le collège Weston défie le gouvernement. Aussi, lorsque des étudiants disparaissent, dont le fils du cousin de la reine Victoria, Sa Majesté envoie le jeune comte Ciel Phantomhive pour enquêter. Accompagné de son fidèle majordome, Sebastian, Ciel doit naviguer dans les méandres de l'école et infiltrer les élites irréprochables de Weston, les P4, s'il veut élucider les mystères qui entourent cette institution.",
+                ZonedDateTime.parse("2025-04-05T16:00:00Z"),
+                EpisodeType.EPISODE,
+                "G65VCD1KE",
+                4,
+                1,
+                1419,
+                "Le majordome enquête",
+                "La reine Victoria envoie Ciel en Allemagne pour enquêter sur des morts étranges, par peur d’une épidémie.",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/3b941b231422355a359ddb1fb7e25cf1.jpg",
+                Platform.CRUN,
+                "ja-JP",
+                "GQJUG5Z0Z",
+                "https://www.crunchyroll.com/fr/watch/GQJUG5Z0Z/his-butler-doing-fieldwork",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertEquals(EpisodeType.EPISODE, mappings.first().episodeType)
+        assertEquals(4, mappings.first().season)
+        assertEquals(12, mappings.first().number)
+    }
 }
