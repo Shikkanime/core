@@ -118,6 +118,9 @@ class EpisodeVariantServiceTest : AbstractTest() {
 
     @Test
     fun `save dan da dan multiple platform`() {
+        ruleService.save(Rule(platform = Platform.NETF, seriesId = "81736884", seasonId = "1", action = Rule.Action.REPLACE_ANIME_NAME, actionValue = "DAN DA DAN"))
+        MapCache.invalidate(Rule::class.java)
+
         episodeVariantService.save(
             AbstractPlatform.Episode(
                 CountryCode.FR,

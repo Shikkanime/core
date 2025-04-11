@@ -52,28 +52,61 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         endZonedDateTime
     )
 
+    /**
+     * Determines the appropriate simulcast for a given anime and episode mapping.
+     *
+     * @param anime The `Anime` entity for which the simulcast is being determined.
+     * @param entity The `EpisodeMapping` entity containing episode details.
+     * @param previousReleaseDateTime An optional `ZonedDateTime` representing the previous release date-time of the episode. Default is `null`.
+     * @param sqlCheck A boolean indicating whether to perform SQL checks for the previous release date-time. Default is `true`.
+     *
+     * @return The determined `Simulcast` entity.
+     */
     fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true): Simulcast {
+        // Retrieve the simulcast range configuration value
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
+
+        // Generate a list of adjusted dates based on the simulcast range
         val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
+
+        // Map the adjusted dates to their corresponding simulcast seasons and years
         val simulcasts = adjustedDates.map { Simulcast(season = Season.entries[(it.monthValue - 1) / 3], year = it.year) }
+
+        // Extract the previous, current, and next simulcasts
         val (previousSimulcast, currentSimulcast, nextSimulcast) = simulcasts
+
+        // Check if the anime's release date-time is before the earliest adjusted date
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime < adjustedDates.first()
 
+        // Calculate the difference in months between the previous release date-time and the current release date-time
         val diff = (previousReleaseDateTime ?: if (sqlCheck) {
             episodeMappingService.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, entity)
         } else null)?.until(entity.releaseDateTime, ChronoUnit.MONTHS) ?: -1
 
+        // Determine the appropriate simulcast based on various conditions
         val chosenSimulcast = when {
+            // If the next simulcast already exists for the anime, choose it
             anime.simulcasts.any { it.year == nextSimulcast.year && it.season == nextSimulcast.season } -> nextSimulcast
+
+            // If the episode number is 1 and the current simulcast is not the next simulcast, choose the next simulcast
             entity.number!! <= 1 && currentSimulcast != nextSimulcast -> nextSimulcast
+
+            // If the episode number is greater than 1 and the anime's release date-time is before the earliest adjusted date,
+            // and the difference in months is either -1 or greater than or equal to the configured delay, choose the next simulcast
             entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && (diff == -1L || diff >= configCacheService.getValueAsInt(
                 ConfigPropertyKey.SIMULCAST_RANGE_DELAY,
                 3
             )) -> nextSimulcast
+
+            // If the episode number is greater than 1 and the anime's release date-time is before the earliest adjusted date,
+            // and the current simulcast is not the previous simulcast, choose the previous simulcast
             entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && currentSimulcast != previousSimulcast -> previousSimulcast
+
+            // Otherwise, choose the current simulcast
             else -> currentSimulcast
         }
 
+        // Retrieve the simulcast from the cache or return the chosen simulcast
         return simulcastCacheService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
             ?: chosenSimulcast
     }
@@ -119,14 +152,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val animeName = StringUtils.removeAnimeNamePart(episode.anime)
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
-        // Create a mapping of anime hash codes to their UUIDs
-        val animeHashCodes = animeService.findAllUuidAndSlug().associate { tuple ->
-            StringUtils.computeAnimeHashcode(tuple[1] as String) to (tuple[0] as UUID)
-        }
-
         // Find or create the anime entity
         val anime = animeService.findBySlug(episode.countryCode, slug)
-            ?: animeService.find(animeHashCodes[StringUtils.computeAnimeHashcode(slug)])
             ?: animeService.save(
                 Anime(
                     countryCode = episode.countryCode,
@@ -145,7 +172,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             }
 
         // Save the anime-platform association if it doesn't already exist
-        if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null && (rules.isEmpty() || rules.any { rule -> rule.action != Rule.Action.REPLACE_ANIME_NAME })) {
+        if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null) {
             animePlatformService.save(
                 AnimePlatform(
                     anime = anime,
@@ -174,13 +201,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 releaseDateTime = episode.releaseDateTime,
                 platform = episode.platform,
                 audioLocale = episode.audioLocale,
-                identifier = StringUtils.getIdentifier(
-                    episode.countryCode,
-                    episode.platform,
-                    episode.id,
-                    episode.audioLocale,
-                    episode.uncensored
-                ),
+                identifier = episode.getIdentifier(),
                 url = episode.url,
                 uncensored = episode.uncensored
             )
@@ -203,11 +224,21 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
+    /**
+     * Retrieves or creates an `EpisodeMapping` for the given anime and episode.
+     *
+     * @param anime The `Anime` entity associated with the episode.
+     * @param episode The `Episode` data from the platform containing details to map.
+     * @param async A boolean indicating whether to perform certain operations asynchronously. Default is `true`.
+     *
+     * @return The `EpisodeMapping` entity corresponding to the given anime and episode.
+     */
     private fun getEpisodeMapping(
         anime: Anime,
         episode: AbstractPlatform.Episode,
         async: Boolean = true
     ): EpisodeMapping {
+        // Try to find an existing mapping or create a new one
         var mapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             anime.uuid!!,
             episode.season,
@@ -224,15 +255,19 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 number = episode.number,
                 duration = episode.duration,
                 title = episode.title,
-                description = episode.description?.take(Constant.MAX_DESCRIPTION_LENGTH),
+                description = episode.description?.take(Constant.MAX_DESCRIPTION_LENGTH)
             )
         ).apply {
-            if (!Constant.isTest)
+            // Create or activate a banner attachment for the episode if not in test mode
+            if (!Constant.isTest) {
                 attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.BANNER, url = episode.image, async = async)
+            }
         }
 
-        episode.number.takeIf { it == -1 }?.let {
-            val number = episodeMappingService.findLastNumber(
+        // Handle cases where the episode number is -1
+        if (episode.number == -1) {
+            // Determine the next available episode number
+            val newNumber = episodeMappingService.findLastNumber(
                 anime,
                 episode.episodeType,
                 episode.season,
@@ -240,30 +275,41 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 episode.audioLocale
             ) + 1
 
-            val newCheck = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+            // Check if a mapping with the new number already exists
+            val existingMapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
                 anime.uuid,
                 episode.season,
                 episode.episodeType,
-                number
+                newNumber
             )
 
-            if (newCheck != null) {
+            if (existingMapping != null) {
+                // If the current mapping is unused, delete it
                 if (findAllByMapping(mapping).isEmpty()) {
                     episodeMappingService.delete(mapping)
                 }
-
-                mapping = newCheck
+                // Use the existing mapping
+                mapping = existingMapping
             } else {
-                mapping.number = number
+                // Update the current mapping with the new number
+                mapping.number = newNumber
                 episodeMappingService.update(mapping)
             }
 
+            // Update the episode's number to match the mapping
             episode.number = mapping.number!!
         }
 
         return mapping
     }
 
+    /**
+     * Updates the `Anime` entity based on the provided episode and mapping data.
+     *
+     * @param anime The `Anime` entity to be updated.
+     * @param episode The `Episode` data from the platform containing updated information.
+     * @param mapping The `EpisodeMapping` associated with the episode.
+     */
     private fun updateAnime(
         anime: Anime,
         episode: AbstractPlatform.Episode,
@@ -271,17 +317,22 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     ) {
         var needAnimeUpdate = false
 
+        // Update the anime's last release date-time if the episode's release date-time is newer
         if (episode.releaseDateTime > anime.lastReleaseDateTime) {
             anime.lastReleaseDateTime = episode.releaseDateTime
             needAnimeUpdate = true
         }
 
-        if (episode.audioLocale != episode.countryCode.locale && episode.episodeType != EpisodeType.FILM) {
+        // Check if the episode's audio locale differs from the country's locale
+        if (episode.audioLocale != episode.countryCode.locale) {
+            // Determine the appropriate simulcast for the anime and mapping
             val simulcast = getSimulcast(anime, mapping)
+            // Add the simulcast to the anime and check if it was successfully added
             val added = animeService.addSimulcastToAnime(anime, simulcast)
             needAnimeUpdate = needAnimeUpdate || added
         }
 
+        // Update the anime entity in the database if any changes were made
         if (needAnimeUpdate) {
             animeService.update(anime)
         }
