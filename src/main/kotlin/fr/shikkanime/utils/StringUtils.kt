@@ -152,8 +152,6 @@ object StringUtils {
         return slug.lowercase()
     }
 
-    fun computeAnimeHashcode(slug: String) = EncryptionManager.toSHA512(slug.replace(DASH_STRING, EMPTY_STRING))
-
     private fun normalized(input: String) = input.replace("œ", "oe").replace("@", "a")
 
     fun getIdentifier(
