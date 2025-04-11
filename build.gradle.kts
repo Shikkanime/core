@@ -19,7 +19,6 @@ val jacksonVersion = "2.18.3"
 
 val jdaVersion = "5.3.2"
 val twitter4jVersion = "4.0.7"
-val twitter4jV2Version = "1.4.4"
 
 val junitVersion = "5.12.1"
 val h2Version = "2.3.232"
@@ -96,7 +95,11 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
-    implementation("io.github.takke:jp.takke.twitter4j-v2:$twitter4jV2Version")
+    implementation("twitter4j-v2:twitter4j-v2-support") {
+        version {
+            branch = "master"
+        }
+    }
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 

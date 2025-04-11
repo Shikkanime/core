@@ -69,7 +69,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
             configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: ""
         )
         val firstTweet = twitter!!.v2.createTweet(mediaIds = mediaImage?.let {
-            arrayOf(twitter!!.tweets().uploadMedia(UUID.randomUUID().toString(), ByteArrayInputStream(it)).mediaId)
+            arrayOf(twitter!!.v2.uploadMedia("image/jpg", UUID.randomUUID().toString(), ByteArrayInputStream(it)).mediaId)
         }, text = firstMessage)
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)
 
