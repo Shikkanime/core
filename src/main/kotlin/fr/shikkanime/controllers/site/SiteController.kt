@@ -2,10 +2,7 @@ package fr.shikkanime.controllers.site
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Link
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -210,21 +207,28 @@ class SiteController {
 
     @Path("calendar")
     @Get
-    private fun calendar(@QueryParam("date") date: String?): Response {
+    private fun calendar(
+        @QueryParam("date") date: String?,
+        @QueryParam("searchTypes") searchTypes: Array<LangType>?,
+    ): Response {
         val startOfWeekDay = try {
             date?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
         } catch (_: Exception) {
             LocalDate.now()
         }.atStartOfWeek()
 
-        if (startOfWeekDay < episodeMappingCacheService.findMinimalReleaseDateTime().toLocalDate().atStartOfWeek())
+        val minimalReleaseDate = episodeMappingCacheService.findMinimalReleaseDateTime().toLocalDate().atStartOfWeek()
+
+        if (startOfWeekDay < minimalReleaseDate)
             return Response.notFound()
 
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay),
-                "previousWeek" to startOfWeekDay.minusDays(7),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay, searchTypes),
+                "previousWeek" to startOfWeekDay.minusDays(7).takeIf { it >= minimalReleaseDate },
+                "searchTypes" to searchTypes.orEmpty().joinToString(","),
+                "currentWeek" to startOfWeekDay,
                 "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )
         )

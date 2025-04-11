@@ -3,9 +3,11 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
+import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -64,7 +66,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         countryCode: CountryCode,
         member: Member?,
         startZonedDateTime: ZonedDateTime,
-        endZonedDateTime: ZonedDateTime
+        endZonedDateTime: ZonedDateTime,
+        searchTypes: Array<LangType>? = null,
     ): List<VariantReleaseDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
@@ -84,7 +87,10 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 )
             )
 
-            val predicate = mutableListOf(cb.equal(root[Anime_.countryCode], countryCode), cb.between(variantsJoin[EpisodeVariant_.releaseDateTime], startZonedDateTime, endZonedDateTime))
+            val predicate = mutableListOf(
+                cb.equal(root[Anime_.countryCode], countryCode),
+                cb.between(variantsJoin[EpisodeVariant_.releaseDateTime], startZonedDateTime, endZonedDateTime)
+            )
 
             member?.let {
                 val followedJoin = root.join(Anime_.followings)
@@ -92,7 +98,21 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 predicate.add(cb.equal(members, it))
             }
 
-            query.where(*predicate.toTypedArray())
+            val orPredicate = mutableListOf<Predicate>()
+
+            searchTypes?.let { st ->
+                st.forEach { langType ->
+                    when (langType) {
+                        LangType.SUBTITLES -> orPredicate.add(cb.notEqual(variantsJoin[EpisodeVariant_.audioLocale], countryCode.locale))
+                        LangType.VOICE -> orPredicate.add(cb.equal(variantsJoin[EpisodeVariant_.audioLocale], countryCode.locale))
+                    }
+                }
+            }
+
+            query.where(
+                *predicate.toTypedArray(),
+                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
+            )
 
             query.orderBy(
                 cb.asc(variantsJoin[EpisodeVariant_.releaseDateTime]),
