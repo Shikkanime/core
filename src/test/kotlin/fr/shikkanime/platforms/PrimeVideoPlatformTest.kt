@@ -23,7 +23,8 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val expectedAnimeName: String,
         val releaseDay: Int,
         val testDate: String,
-        val imageUrl: String
+        val imageUrl: String,
+        val audioLocales: Set<String> = setOf<String>("ja-JP"),
     )
 
     companion object {
@@ -51,18 +52,36 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
             ),
             SimulcastTestCase(
+                simulcastName = "0TKRFV2FB8U18G5WS16GFOXNG2",
+                expectedAnimeName = "The Dinner Table Detective",
+                releaseDay = 6,
+                testDate = "2025-04-05T03:01:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1496/146890l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR")
+            ),
+            SimulcastTestCase(
+                simulcastName = "0GMSR5WMNJ6EMYQRQ6Y2587WAF",
+                expectedAnimeName = "From Old Country Bumpkin to Master Swordsman",
+                releaseDay = 6,
+                testDate = "2025-04-05T15:01:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1069/148148l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR")
+            ),
+            SimulcastTestCase(
                 simulcastName = "0KFD79CBVX90IWRIG5NLAGJ7R1",
                 expectedAnimeName = "Mobile Suit Gundam GQuuuuuuX",
                 releaseDay = 2,
                 testDate = "2025-04-08T16:01:00Z",
-                imageUrl = "https://cdn.myanimelist.net/images/anime/1803/146807l.jpg"
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1803/146807l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
                 simulcastName = "0NV4FUWKV9BQN8VDIIH1DWEEHH",
                 expectedAnimeName = "Lazarus",
-                releaseDay = 7,
-                testDate = "2025-04-05T09:01:00Z",
-                imageUrl = "https://cdn.myanimelist.net/images/anime/1015/148185l.jpg"
+                releaseDay = 6,
+                testDate = "2025-04-05T00:01:00Z",
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx167336-KpGIIBie71OX.png",
+                audioLocales = setOf("ja-JP", "fr-FR")
             )
         )
     }
@@ -78,6 +97,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 name = testCase.simulcastName
                 releaseDay = testCase.releaseDay
                 image = testCase.imageUrl
+                audioLocales = testCase.audioLocales.toMutableSet()
             }
         )
 
@@ -94,6 +114,13 @@ class PrimeVideoPlatformTest : AbstractTest() {
         episodes.forEach {
             println(it)
         }
+
+        // Find if duplicate episodes exist
+        val duplicates = episodes.groupBy { it.getIdentifier() }
+            .filter { it.value.size > 1 }
+            .map { it.key }
+            .toList()
+        assertTrue(duplicates.isEmpty(), "Duplicate episodes found: $duplicates")
 
         // Common assertions for all episodes
         episodes.forEach {

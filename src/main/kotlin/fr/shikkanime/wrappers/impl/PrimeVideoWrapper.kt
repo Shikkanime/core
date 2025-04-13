@@ -51,6 +51,6 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                 episodeImageUrl,
                 episodeDuration
             )
-        }
+        }.distinctBy { it.id }
     }
 }
