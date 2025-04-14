@@ -20,7 +20,7 @@ val jacksonVersion = "2.18.3"
 val jdaVersion = "5.3.2"
 val twitter4jVersion = "4.0.7"
 
-val junitVersion = "5.12.1"
+val junitVersion = "5.12.2"
 val h2Version = "2.3.232"
 val mockkVersion = "1.14.0"
 
