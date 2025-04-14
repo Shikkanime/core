@@ -8,7 +8,7 @@
     <property global="false" name="id" value="1710284914290"/>
     <property global="false" name="author" value="Ziedelth"/>
 
-    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-1" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <columnExists columnName="property_value" tableName="config"/>
         </preConditions>
@@ -18,7 +18,7 @@
                         tableName="config"/>
     </changeSet>
 
-    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-2" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -32,7 +32,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-3" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -46,7 +46,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-4" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config

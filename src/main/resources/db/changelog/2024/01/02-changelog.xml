@@ -50,7 +50,7 @@
         <addUniqueConstraint columnNames="property_key" constraintName="uc_config_property_key" tableName="config"/>
     </changeSet>
 
-    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-4" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config

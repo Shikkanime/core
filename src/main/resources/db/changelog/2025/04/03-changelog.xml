@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1744652327852"/>
+    <property global="false" name="author" value="Ziedelth"/>
+    
+    <changeSet id="${id}-1" author="${author}" dbms="!h2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <viewExists viewName="grouped_episode_view"/>
+            </not>
+        </preConditions>
+
+        <sql>
+            CREATE MATERIALIZED VIEW grouped_episode_view AS
+            SELECT a.uuid AS uuid,
+                   MIN(ev.release_date_time) AS min_release_date_time,
+                   MAX(em.last_update_date_time) AS max_last_update_date_time,
+                   MIN(em.season) AS min_season,
+                   MAX(em.season) AS max_season,
+                   em.episode_type AS episode_type,
+                   MIN(em.number) AS min_number,
+                   MAX(em.number) AS max_number,
+                   ARRAY_AGG(DISTINCT ev.platform ORDER BY ev.platform) AS platforms,
+                   ARRAY_AGG(DISTINCT ev.audio_locale ORDER BY ev.audio_locale) AS audio_locales,
+                   ARRAY_AGG(DISTINCT ev.url ORDER BY ev.url) AS urls,
+                   ARRAY_AGG(em.uuid ORDER BY em.season,em.episode_type,em.number) AS episode_mapping_uuids,
+                   CASE WHEN COUNT(DISTINCT em.uuid)=1 THEN MIN(em.title) ELSE NULL END AS title,
+                   CASE WHEN COUNT(DISTINCT em.uuid)=1 THEN MIN(em.description) ELSE NULL END AS description,
+                   CASE WHEN COUNT(DISTINCT em.uuid)=1 THEN MIN(em.duration) ELSE NULL END AS duration
+            FROM anime a
+                     JOIN episode_mapping em ON a.uuid=em.anime_uuid
+                     JOIN episode_variant ev ON em.uuid=ev.mapping_uuid
+            GROUP BY a.uuid,
+                     em.episode_type,
+                     DATE_TRUNC('hour',ev.release_date_time)
+        </sql>
+    </changeSet>
+
+    <changeSet id="${id}-1-h2" author="${author}" dbms="h2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <viewExists viewName="grouped_episode_view"/>
+            </not>
+        </preConditions>
+
+        <sql>
+            CREATE VIEW grouped_episode_view AS
+            SELECT a.uuid AS uuid,
+                   MIN(ev.release_date_time) AS min_release_date_time,
+                   MAX(em.last_update_date_time) AS max_last_update_date_time,
+                   MIN(em.season) AS min_season,
+                   MAX(em.season) AS max_season,
+                   em.episode_type AS episode_type,
+                   MIN(em.number) AS min_number,
+                   MAX(em.number) AS max_number,
+                   ARRAY_AGG(DISTINCT ev.platform ORDER BY ev.platform) AS platforms,
+                   ARRAY_AGG(DISTINCT ev.audio_locale ORDER BY ev.audio_locale) AS audio_locales,
+                   ARRAY_AGG(DISTINCT ev.url ORDER BY ev.url) AS urls,
+                   ARRAY_AGG(em.uuid ORDER BY em.season,em.episode_type,em.number) AS episode_mapping_uuids,
+                   CASE WHEN COUNT(DISTINCT em.uuid)=1 THEN MIN(em.title) ELSE NULL END AS title,
+                   CASE WHEN COUNT(DISTINCT em.uuid)=1 THEN MIN(em.description) ELSE NULL END AS description,
+                   CASE WHEN COUNT(DISTINCT em.uuid)=1 THEN MIN(em.duration) ELSE NULL END AS duration
+            FROM anime a
+                     JOIN episode_mapping em ON a.uuid=em.anime_uuid
+                     JOIN episode_variant ev ON em.uuid=ev.mapping_uuid
+            GROUP BY a.uuid,
+                     em.episode_type,
+                     DATE_TRUNC('hour',ev.release_date_time)
+        </sql>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="!h2">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <viewExists viewName="grouped_episode_view"/>
+                <columnExists tableName="grouped_episode_view" columnName="uuid"/>
+
+                <not>
+                    <indexExists indexName="idx_grouped_episode_view_release_date_time"/>
+                </not>
+            </and>
+        </preConditions>
+
+        <createIndex indexName="idx_grouped_episode_view_anime_uuid" tableName="grouped_episode_view">
+            <column name="uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="!h2">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <viewExists viewName="grouped_episode_view"/>
+                <columnExists tableName="grouped_episode_view" columnName="min_release_date_time"/>
+                <columnExists tableName="grouped_episode_view" columnName="min_season"/>
+                <columnExists tableName="grouped_episode_view" columnName="episode_type"/>
+                <columnExists tableName="grouped_episode_view" columnName="min_number"/>
+
+                <not>
+                    <indexExists indexName="idx_grouped_episode_view_order"/>
+                </not>
+            </and>
+        </preConditions>
+
+        <createIndex indexName="idx_grouped_episode_view_order" tableName="grouped_episode_view">
+            <column name="min_release_date_time" descending="true"/>
+            <column name="min_season" descending="true"/>
+            <column name="episode_type" descending="true"/>
+            <column name="min_number" descending="true"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

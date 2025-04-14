@@ -30,4 +30,8 @@ data class CountryCodeLocalDateKeyCache(
         result = 31 * result + (searchTypes?.contentHashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String {
+        return "CountryCodeLocalDateKeyCache(countryCode=$countryCode, member=$member, localDate=$localDate, searchTypes=${searchTypes.contentToString()})"
+    }
 }

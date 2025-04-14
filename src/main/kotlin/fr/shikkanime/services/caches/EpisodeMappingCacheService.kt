@@ -1,7 +1,6 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.entities.EpisodeMapping
@@ -10,7 +9,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
-import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import java.util.*
@@ -20,17 +18,9 @@ class EpisodeMappingCacheService : ICacheService {
         private const val DEFAULT_ALL_KEY = "all"
     }
 
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
-
-    @Inject
-    private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -54,25 +44,6 @@ class EpisodeMappingCacheService : ICacheService {
                 it.limit,
             ),
             episodeMappingFactory
-        )
-    }
-
-    fun findAllGroupedBy(
-        countryCode: CountryCode,
-        page: Int,
-        limit: Int,
-    ) = MapCache.getOrCompute(
-        "EpisodeMappingCacheService.findAllGroupedBy",
-        classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = CountryCodePaginationKeyCache(countryCode, page, limit),
-    ) {
-        PageableDto.fromPageable(
-            episodeMappingService.findAllGrouped(
-                it.countryCode!!,
-                it.page,
-                it.limit,
-            ),
-            groupedEpisodeFactory
         )
     }
 

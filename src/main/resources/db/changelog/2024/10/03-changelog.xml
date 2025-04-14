@@ -6,7 +6,7 @@
     <property global="false" name="id" value="1729177249821"/>
     <property global="false" name="author" value="Ziedelth"/>
 
-    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-1" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -20,7 +20,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-2" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -34,7 +34,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-3" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -48,7 +48,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-4" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -62,7 +62,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-5" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-5" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="1">SELECT COUNT(*)
                                          FROM config
@@ -75,7 +75,7 @@
         </update>
     </changeSet>
 
-    <changeSet id="${id}-6" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-6" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -89,7 +89,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-7" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-7" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="1">SELECT COUNT(*)
                                          FROM config
@@ -102,7 +102,7 @@
         </update>
     </changeSet>
 
-    <changeSet id="${id}-8" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-8" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
