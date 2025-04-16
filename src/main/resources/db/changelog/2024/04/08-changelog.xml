@@ -37,7 +37,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="${id}-config-last-fetch" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-config-last-fetch" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -51,7 +51,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-config-range" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-config-range" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config

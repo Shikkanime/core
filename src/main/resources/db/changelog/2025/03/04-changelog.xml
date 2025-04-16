@@ -62,7 +62,7 @@
         </createIndex>
     </changeSet>
 
-    <changeSet id="${author}-4" author="${author}" dbms="postgresql">
+    <changeSet id="${author}-4" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
                 SELECT COUNT(uuid)

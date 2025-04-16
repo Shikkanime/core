@@ -19,7 +19,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-2" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config
@@ -33,7 +33,7 @@
         </insert>
     </changeSet>
 
-    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+    <changeSet id="${id}-3" author="${author}" dbms="!h2">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">SELECT COUNT(*)
                                          FROM config

@@ -13,6 +13,12 @@ class Database {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val sessionFactory: SessionFactory
 
+    constructor() : this(
+        File(
+            ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
+        )
+    )
+
     constructor(file: File) {
         if (!file.exists()) {
             throw Exception("File ${file.absolutePath} does not exist")
@@ -76,12 +82,6 @@ class Database {
             exitProcess(1)
         }
     }
-
-    constructor() : this(
-        File(
-            ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
-        )
-    )
 
     val entityManager: EntityManager
         get() = sessionFactory.createEntityManager()

@@ -4,10 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
-import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeMappingCacheService
-import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.services.caches.*
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.Controller
@@ -22,17 +19,11 @@ import java.time.format.DateTimeFormatter
 
 @Controller("/")
 class SiteController {
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
-
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var groupedEpisodeCacheService: GroupedEpisodeCacheService
 
     private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
         val animeSimulcastLimit = 6
@@ -69,7 +60,7 @@ class SiteController {
             Link.HOME,
             mutableMapOf(
                 "animes" to getFullAnimesSimulcast(),
-                "groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
+                "groupedEpisodes" to groupedEpisodeCacheService.findAllBy(
                     CountryCode.FR,
                     1,
                     8

@@ -33,4 +33,8 @@ data class CountryCodeMemberUUIDWeekKeyCache(
         result = 31 * result + (searchTypes?.contentHashCode() ?: 0)
         return result
     }
+
+    override fun toString(): String {
+        return "CountryCodeMemberUUIDWeekKeyCache(countryCode=$countryCode, member=$member, startZonedDateTime=$startZonedDateTime, endZonedDateTime=$endZonedDateTime, searchTypes=${searchTypes.contentToString()})"
+    }
 }
