@@ -390,4 +390,43 @@ class EpisodeVariantServiceTest : AbstractTest() {
         assertEquals(4, mappings.first().season)
         assertEquals(12, mappings.first().number)
     }
+
+    @Test
+    fun `save platform episode with rule #5`() {
+        ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G1XHJV2X9", seasonId = "GRGGCVZV0", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "1"))
+        ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G1XHJV2X9", seasonId = "GRGGCVZV0", action = Rule.Action.REPLACE_EPISODE_TYPE, actionValue = "SPECIAL"))
+        MapCache.invalidate(Rule::class.java)
+
+        episodeVariantService.save(
+            AbstractPlatform.Episode(
+                CountryCode.FR,
+                "G1XHJV2X9",
+                "Lycoris Recoil",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/b407952122968b243e5c1e2b71d630d9.jpg",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/0b6e8bd4de40b260b3ccf0c700ce6710.jpg",
+                "Si vous souhaitez avoir l’esprit tranquille, faites appel à Lycoris, une organisation secrète luttant contre le crime composée d'agents féminins. Avec son air insouciant, Chisato est énergique et la plus douée. Takina quant à elle semble plus mystérieuse et réservée, mais elle garde toujours la tête froide. Lorsqu’elles ne sont pas en mission, elles s’occupent d’un café qui propose des douceurs, s’adonnent au shopping et font même de la garde d’enfants ! Suivez le quotidien de ce drôle de duo.",
+                ZonedDateTime.parse("2025-04-16T12:00:00Z"),
+                EpisodeType.EPISODE,
+                "GRGGCVZV0",
+                11,
+                1,
+                135,
+                "Relax",
+                "Au LycoReco, tout le monde s’affaire pour fêter la floraison des cerisiers !",
+                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b9f3e08145a45aaa7ebe3f303a7413ee.jpg",
+                Platform.CRUN,
+                "ja-JP",
+                "G2XUN17ZJ",
+                "https://www.crunchyroll.com/fr/watch/G2XUN17ZJ/take-it-easy",
+                uncensored = false,
+                original = true,
+            )
+        )
+
+        val mappings = episodeMappingService.findAll()
+        assertEquals(1, mappings.size)
+        assertEquals(EpisodeType.SPECIAL, mappings.first().episodeType)
+        assertEquals(1, mappings.first().season)
+        assertEquals(1, mappings.first().number)
+    }
 }
