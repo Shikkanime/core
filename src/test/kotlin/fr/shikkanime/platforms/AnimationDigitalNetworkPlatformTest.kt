@@ -6,7 +6,7 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.platforms.configuration.PlatformSimulcast
+import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration.AnimationDigitalNetworkSimulcast
 import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.ZonedDateTime
-import java.util.*
 
 class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     @Inject
@@ -26,13 +25,13 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
 
         platform.loadConfiguration()
         platform.configuration!!.availableCountries = mutableSetOf(CountryCode.FR)
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Pon no Michi"))
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "One Piece"))
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Urusei Yatsura"))
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Dragon Quest - The Adventures of Dai"))
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Kingdom"))
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Demon Slave"))
-        platform.configuration!!.simulcasts.add(PlatformSimulcast(UUID.randomUUID(), "Overlord"))
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Pon no Michi" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "One Piece" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Urusei Yatsura" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Dragon Quest - The Adventures of Dai" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Kingdom" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Demon Slave" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Overlord" })
     }
 
     @AfterEach
