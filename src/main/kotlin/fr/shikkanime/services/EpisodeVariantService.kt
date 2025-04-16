@@ -132,12 +132,14 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         // Retrieve all rules associated with the platform, series, and season
         val rules = ruleCacheService.findAllByPlatformSeriesIdAndSeasonId(episode.platform, episode.animeId, episode.seasonId)
+            .sortedBy { it.action?.ordinal ?: 0 }
 
         // Apply each rule to modify the episode's properties
         rules.forEach { rule ->
             when (rule.action!!) {
                 Rule.Action.REPLACE_ANIME_NAME -> episode.anime = rule.actionValue!!
                 Rule.Action.REPLACE_SEASON_NUMBER -> episode.season = rule.actionValue!!.toInt()
+                Rule.Action.REPLACE_EPISODE_TYPE -> episode.episodeType = EpisodeType.valueOf(rule.actionValue!!)
                 Rule.Action.ADD_TO_NUMBER -> if (episode.number != -1 || episode.episodeType == EpisodeType.EPISODE) {
                     episode.number += rule.actionValue!!.toInt()
                 }
