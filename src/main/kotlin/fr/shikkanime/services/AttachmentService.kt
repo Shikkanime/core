@@ -12,6 +12,8 @@ import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.Executors
@@ -27,7 +29,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private var threadPool = Executors.newFixedThreadPool(nThreads)
     private val httpRequest = HttpRequest()
     private val imageCache = LRUCache<UUID, ByteArray>(100)
-    private val inProgressAttachments = Collections.synchronizedSet(HashSet<UUID>())
+    val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet<UUID>())
 
     @Inject
     private lateinit var attachmentRepository: AttachmentRepository
@@ -222,6 +224,8 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
      * 3. Deletes files in the images folder that are not linked to active attachments or are in progress.
      */
     fun cleanUnusedAttachments() {
+        val now = System.currentTimeMillis()
+
         // Retrieve all valid UUIDs from anime, episode mappings, and members
         val validUuids = animeService.findAllUuids() + episodeMappingService.findAllUuids() + memberService.findAllUuids()
 
@@ -232,7 +236,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         val files = Constant.imagesFolder.listFiles()
 
         // Remove attachments that are not associated with valid UUIDs
-        attachments.values.filter { it.entityUuid !in validUuids }.forEach {
+        attachments.values.filter { it.entityUuid !in validUuids && it.uuid !in inProgressAttachments }.forEach {
             delete(it) // Delete the attachment from the database
             traceActionService.createTraceAction(it, TraceAction.Action.DELETE) // Log the deletion action
             attachments.remove(it.uuid) // Remove the attachment from the map
@@ -243,9 +247,10 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         files?.forEach { file ->
             // Attempt to parse the file name as a UUID
             val uuid = runCatching { UUID.fromString(file.nameWithoutExtension) }.getOrNull()
+            val creationDateTime = runCatching { Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).creationTime().toMillis() }.getOrNull()
 
-            // Delete the file if it is not in progress, not active, and deletion fails
-            if (uuid != null && uuid !in inProgressAttachments && attachments[uuid]?.active != true && !file.delete())
+            // Delete the file if it is not in progress, not active, creation date time is not hourly old, and deletion fails
+            if (uuid != null && uuid !in inProgressAttachments && attachments[uuid]?.active != true && creationDateTime != null && creationDateTime < now - 3600000 && !file.delete())
                 logger.warning("Failed to delete file $file") // Log a warning if the file deletion fails
         }
     }

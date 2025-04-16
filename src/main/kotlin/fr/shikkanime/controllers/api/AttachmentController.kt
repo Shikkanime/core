@@ -60,7 +60,7 @@ class AttachmentController {
         val imageBytes = attachmentService.getContentFromCache(attachment) ?: run {
             val file = attachmentService.getFile(attachment)
 
-            if (!file.exists() || file.length() <= 0) {
+            if (!file.exists() || file.length() <= 0 || attachment.uuid in attachmentService.inProgressAttachments) {
                 return Response.notFound(
                     MessageDto(
                         MessageDto.Type.ERROR,
