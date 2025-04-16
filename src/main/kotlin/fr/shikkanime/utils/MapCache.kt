@@ -47,12 +47,21 @@ class MapCache<K : Any, V>(
         cache.clear()
     }
 
+    fun removeInvalidated() {
+        if (duration == null) return
+        val now = System.currentTimeMillis()
+        cache.entries.removeIf { (_, value) -> now - value.first > duration!!.toMillis() }
+    }
+
     companion object {
         private val globalCaches: ConcurrentMap<String, MapCache<*, *>> = ConcurrentMap()
 
         fun invalidate(vararg classes: Class<*>) {
-            globalCaches.filter { (_, cache) -> cache.classes.any { clazz -> classes.contains(clazz) } }
-                .forEach { (_, cache) -> cache.invalidate() }
+            globalCaches.forEach { (_, cache) ->
+                if (cache.classes.any { clazz -> classes.contains(clazz) })
+                    cache.invalidate()
+                cache.removeInvalidated()
+            }
         }
 
         // For test only
