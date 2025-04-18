@@ -158,11 +158,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllGrouped(
-        countryCode: CountryCode,
-        page: Int,
-        limit: Int,
-    ): Pageable<GroupedEpisode> {
+    fun findAllGrouped(countryCode: CountryCode): List<GroupedEpisode> {
         return database.entityManager.use {
             val query = it.createQuery("""
             WITH grouped_data AS (
@@ -216,7 +212,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.setParameter("countryCode", countryCode)
 
-            buildPageableQuery(createReadOnlyQuery(query), page, limit)
+            createReadOnlyQuery(query)
+                .resultList
         }
     }
 

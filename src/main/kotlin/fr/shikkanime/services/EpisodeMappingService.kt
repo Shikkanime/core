@@ -48,7 +48,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String) =
         episodeMappingRepository.findAllSimulcasted(ignoreEpisodeTypes, ignoreAudioLocale)
 
-    fun findAllGrouped(countryCode: CountryCode, page: Int, limit: Int) = episodeMappingRepository.findAllGrouped(countryCode, page, limit)
+    fun findAllGrouped(countryCode: CountryCode) = episodeMappingRepository.findAllGrouped(countryCode)
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
