@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
@@ -57,22 +58,39 @@ class EpisodeMappingCacheService : ICacheService {
         )
     }
 
+    private fun findAllGrouped(countryCode: CountryCode) = MapCache.getOrCompute(
+        "EpisodeMappingCacheService.findAllGrouped",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        key = countryCode,
+    ) { episodeMappingService.findAllGrouped(it) }
+
     fun findAllGroupedBy(
         countryCode: CountryCode,
         page: Int,
         limit: Int,
     ) = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllGroupedBy",
-        classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
     ) {
-        PageableDto.fromPageable(
-            episodeMappingService.findAllGrouped(
-                it.countryCode!!,
-                it.page,
-                it.limit,
-            ),
-            groupedEpisodeFactory
+        val groupedEpisodes = findAllGrouped(it.countryCode!!)
+        val totalCount = groupedEpisodes.size
+        val startIndex = maxOf((it.page - 1) * it.limit, 0)
+        val endIndex = minOf(it.page * it.limit, totalCount)
+
+        val pagedItems = if (startIndex < totalCount) {
+            groupedEpisodes.subList(startIndex, endIndex)
+                .map { groupedEpisodeFactory.toDto(it) }
+                .toSet()
+        } else {
+            emptySet()
+        }
+
+        PageableDto(
+            pagedItems,
+            it.page,
+            it.limit,
+            totalCount.toLong()
         )
     }
 

@@ -26,6 +26,8 @@ class MapCache<K : Any, V>(
         return false
     }
 
+    fun lastInvalidation(key: K) = cache[key]?.first
+
     operator fun get(key: K): V? {
         val cachedValue = cache[key]
 
@@ -82,5 +84,7 @@ class MapCache<K : Any, V>(
             key: K,
             block: (K) -> V
         ) = getOrComputeNullable(name, duration, classes, key, block)!!
+
+        fun getCacheByName(name: String) = globalCaches[name]
     }
 }
