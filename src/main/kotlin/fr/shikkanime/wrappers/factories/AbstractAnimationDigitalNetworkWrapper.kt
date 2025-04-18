@@ -35,7 +35,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val id: Int,
         val title: String,
         val season: String?,
-        val releaseDate: ZonedDateTime?,
+        var releaseDate: ZonedDateTime?,
         val shortNumber: String?,
         val type: String,
         val name: String?,

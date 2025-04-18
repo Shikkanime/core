@@ -28,8 +28,35 @@ class AnimationDigitalNetworkPlatform :
 
     override fun getConfigurationClass() = AnimationDigitalNetworkConfiguration::class.java
 
+    private fun cleanAnimeName(title: String, season: String?): String {
+        val seasonPattern = season?.toIntOrNull() ?: 1
+        // Regex to remove season/part indicators and roman numerals from the end
+        val regex = "(?: -)? Saison \\d+|Part.*|$seasonPattern$| [${StringUtils.ROMAN_NUMBERS_CHECK}]+$".toRegex()
+        return title.replace(regex, "").trim()
+    }
+
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Video> {
-        return AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate())
+        val latestVideos = AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate()).toMutableList()
+
+        latestVideos.forEach { video ->
+            val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, video.season?.toIntOrNull()?.toString() ?: "1").lowercase()
+
+            configuration?.simulcasts
+                ?.find { it.name.equals(animeName, ignoreCase = true) && it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
+                ?.audioLocaleDelay
+                ?.let {
+                    latestVideos.addAll(
+                        AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate().minusWeeks(it))
+                            .filter { it.show.id == video.show.id }
+                            // Apply the current date to the video
+                            .onEach { delayedVideo ->
+                                delayedVideo.releaseDate = zonedDateTime.toLocalDate().atTime(video.releaseDate?.toLocalTime()).atZone(zonedDateTime.zone)
+                            }
+                    )
+                }
+        }
+
+        return latestVideos.toTypedArray()
     }
 
     override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
@@ -69,10 +96,7 @@ class AnimationDigitalNetworkPlatform :
         checkAnimation: Boolean = true
     ): List<Episode> {
         val season = video.season?.toIntOrNull() ?: 1
-
-        val animeName = (video.show.shortTitle ?: video.show.title)
-            .replace("(?: -)? Saison \\d|Part.*|$season$| [${StringUtils.ROMAN_NUMBERS_CHECK}]+$".toRegex(), "")
-            .trim()
+        val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, season.toString())
 
         if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
