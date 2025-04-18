@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
@@ -63,18 +64,9 @@ class EpisodeMappingCacheService : ICacheService {
         limit: Int,
     ) = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllGroupedBy",
-        classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
-    ) {
-        PageableDto.fromPageable(
-            episodeMappingService.findAllGrouped(
-                it.countryCode!!,
-                it.page,
-                it.limit,
-            ),
-            groupedEpisodeFactory
-        )
-    }
+    ) { PageableDto.fromPageable(episodeMappingService.findAllGrouped(it.countryCode!!, it.page, it.limit), groupedEpisodeFactory) }
 
     fun findAllSeo() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllSeo",

@@ -462,6 +462,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             if (findByAnimeSeasonEpisodeTypeNumber != null) {
                 episodeVariantService.findAllByMapping(episodeMapping).forEach { episodeVariant ->
                     episodeVariant.mapping = findByAnimeSeasonEpisodeTypeNumber
+                    episodeVariant.groupHash = EpisodeVariant.getGroupHash(episodeVariant)
                     episodeVariantService.update(episodeVariant)
                 }
 

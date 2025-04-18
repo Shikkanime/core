@@ -365,6 +365,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         if (existing != null) {
             episodeVariant.mapping = existing
+            episodeVariant.groupHash = EpisodeVariant.getGroupHash(episodeVariant)
             update(episodeVariant)
             return
         } else {
@@ -372,6 +373,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             val saved = episodeMappingService.save(entity)
             attachmentService.createAttachmentOrMarkAsActive(saved.uuid!!, ImageType.BANNER, url = image?.url)
             episodeVariant.mapping = saved
+            episodeVariant.groupHash = EpisodeVariant.getGroupHash(episodeVariant)
             update(episodeVariant)
         }
     }

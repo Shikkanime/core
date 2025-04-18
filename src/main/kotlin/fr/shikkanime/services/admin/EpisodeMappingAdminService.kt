@@ -46,6 +46,7 @@ class EpisodeMappingAdminService {
             if (!similarVariantExists) {
                 // Transférer ce variant
                 sourceVariant.mapping = targetEpisode
+                sourceVariant.groupHash = EpisodeVariant.getGroupHash(sourceVariant)
                 episodeVariantService.update(sourceVariant)
             }
         }
@@ -119,7 +120,11 @@ class EpisodeMappingAdminService {
         if (startDate == null && bindVoiceVariants) {
             val variants = episodeVariantService.findAllByMapping(episode)
             variants.minOfOrNull { it.releaseDateTime }?.let { minDate ->
-                variants.forEach { it.releaseDateTime = minDate }
+                variants.forEach {
+                    it.releaseDateTime = minDate
+                    it.groupHash = EpisodeVariant.getGroupHash(it)
+                }
+
                 episodeVariantService.updateAll(variants)
             }
             return null
@@ -155,6 +160,7 @@ class EpisodeMappingAdminService {
             // When not binding voice variants, update only the earliest variant
             variantsToUpdate.minByOrNull { it.releaseDateTime }?.let { variant ->
                 variant.releaseDateTime = variant.releaseDateTime.with(currentDate)
+                variant.groupHash = EpisodeVariant.getGroupHash(variant)
                 episodeVariantService.update(variant)
                 true
             } == true
@@ -162,6 +168,7 @@ class EpisodeMappingAdminService {
             // When binding voice variants, update all variants
             variantsToUpdate.forEach { variant ->
                 variant.releaseDateTime = variant.releaseDateTime.with(currentDate)
+                variant.groupHash = EpisodeVariant.getGroupHash(variant)
                 episodeVariantService.update(variant)
             }
             true
@@ -280,6 +287,7 @@ class EpisodeMappingAdminService {
                 variant.uncensored = variantDto.uncensored
             }
 
+            variant.groupHash = EpisodeVariant.getGroupHash(variant)
             variantsToModify.add(variant)
         }
         
@@ -350,6 +358,7 @@ class EpisodeMappingAdminService {
                 if (!similarVariantExists) {
                     // Transférer ce variant
                     sourceVariant.mapping = existingEpisode
+                    sourceVariant.groupHash = EpisodeVariant.getGroupHash(sourceVariant)
                     episodeVariantService.update(sourceVariant)
                     transferredVariants.add(sourceVariant)
                 }

@@ -1,6 +1,8 @@
 package fr.shikkanime.entities
 
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.EncryptionManager
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -18,6 +20,10 @@ import java.util.*
         Index(
             name = "idx_episode_variant_release_date_mapping_uuid",
             columnList = "release_date_time, mapping_uuid"
+        ),
+        Index(
+            name = "idx_episode_variant_group_hash",
+            columnList = "group_hash"
         ),
     ]
 )
@@ -41,4 +47,14 @@ class EpisodeVariant(
     var url: String? = null,
     @Column(nullable = false)
     var uncensored: Boolean = false,
-) : ShikkEntity(uuid)
+    @Column(name = "group_hash")
+    var groupHash: ByteArray? = getGroupHash(mapping?.anime?.uuid!!, mapping.episodeType!!, releaseDateTime),
+) : ShikkEntity(uuid) {
+    companion object {
+        fun getGroupHash(animeUuid: UUID, episodeType: EpisodeType, releaseDateTime: ZonedDateTime) =
+            EncryptionManager.toSHA512ByteArray("${animeUuid}${episodeType}${releaseDateTime.withMinute(0).withSecond(0).withNano(0)}")
+
+        fun getGroupHash(episodeVariant: EpisodeVariant) =
+            getGroupHash(episodeVariant.mapping?.anime?.uuid!!, episodeVariant.mapping?.episodeType!!, episodeVariant.releaseDateTime)
+    }
+}

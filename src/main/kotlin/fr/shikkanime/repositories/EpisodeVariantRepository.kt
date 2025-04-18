@@ -175,4 +175,16 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .map { it[0] as String to it[1] as ZonedDateTime }
         }
     }
+
+    fun updateAllGroupHash() {
+        inTransaction {
+            it.createNativeQuery("""
+                UPDATE episode_variant ev
+                SET group_hash = SHA512(CONCAT(a.uuid, em.episode_type, DATE_TRUNC('hour', ev.release_date_time))::bytea)
+                FROM episode_mapping em
+                  JOIN anime a on em.anime_uuid = a.uuid
+                WHERE ev.mapping_uuid = em.uuid;
+            """.trimIndent()).executeUpdate()
+        }
+    }
 }

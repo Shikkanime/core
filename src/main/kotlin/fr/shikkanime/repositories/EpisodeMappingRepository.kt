@@ -158,65 +158,54 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllGrouped(
-        countryCode: CountryCode,
-        page: Int,
-        limit: Int,
-    ): Pageable<GroupedEpisode> {
+    fun findAllGrouped(countryCode: CountryCode, page: Int, limit: Int): Pageable<GroupedEpisode> {
         return database.entityManager.use {
-            val query = it.createQuery("""
-            WITH grouped_data AS (
-                SELECT a AS anime,
-                     MIN(ev.releaseDateTime) AS minReleaseDateTime,
-                     MAX(em.lastUpdateDateTime) AS lastUpdateDateTime,
-                     MIN(em.season) AS minSeason,
-                     MAX(em.season) AS maxSeason,
-                     em.episodeType AS episodeType,
-                     MIN(em.number) AS minNumber,
-                     MAX(em.number) AS maxNumber,
-                     ARRAY_AGG(DISTINCT ev.platform) WITHIN GROUP (ORDER BY ev.platform) AS platforms,
-                     ARRAY_AGG(DISTINCT ev.audioLocale) WITHIN GROUP (ORDER BY ev.audioLocale) AS audioLocales,
-                     ARRAY_AGG(DISTINCT ev.url) WITHIN GROUP (ORDER BY ev.url) AS urls,
-                     ARRAY_AGG(em.uuid) WITHIN GROUP (ORDER BY em.season, em.episodeType, em.number) AS mappings,
-                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.title) ELSE NULL END AS title,
-                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.description) ELSE NULL END AS description,
-                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.duration) ELSE NULL END AS duration
-                FROM EpisodeVariant ev
-                    JOIN ev.mapping em
-                    JOIN em.anime a
-                WHERE a.countryCode = :countryCode
-                GROUP BY a,
-                        em.episodeType,
-                        DATE_TRUNC('hour', ev.releaseDateTime)
-            )
-            SELECT NEW fr.shikkanime.entities.miscellaneous.GroupedEpisode(
-                gd.anime,
-                gd.minReleaseDateTime,
-                gd.lastUpdateDateTime,
-                gd.minSeason,
-                gd.maxSeason,
-                gd.episodeType,
-                gd.minNumber,
-                gd.maxNumber,
-                gd.platforms,
-                gd.audioLocales,
-                gd.urls,
-                gd.mappings,
-                gd.title,
-                gd.description,
-                gd.duration
-            )
-            FROM grouped_data gd
-            ORDER BY gd.minReleaseDateTime DESC,
-                gd.anime.name DESC,
-                gd.minSeason DESC,
-                gd.episodeType DESC,
-                gd.minNumber DESC
-        """.trimIndent(), GroupedEpisode::class.java)
+            val cb = it.criteriaBuilder
+            val recentHashes = cb.createQuery(ByteArray::class.java)
+            val recentHashesRoot = recentHashes.from(EpisodeVariant::class.java)
 
-            query.setParameter("countryCode", countryCode)
+            recentHashes.select(recentHashesRoot[EpisodeVariant_.groupHash])
+                .where(cb.equal(recentHashesRoot[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode))
+                .orderBy(cb.desc(recentHashesRoot[EpisodeVariant_.releaseDateTime]))
+                .distinct(true)
 
-            buildPageableQuery(createReadOnlyQuery(query), page, limit)
+            val pageHash = buildPageableQuery(createReadOnlyQuery(it, recentHashes), page, limit)
+
+            val variantQuery = cb.createQuery(EpisodeVariant::class.java)
+            val variantRoot = variantQuery.from(EpisodeVariant::class.java)
+
+            variantQuery.where(
+                    cb.and(
+                        cb.equal(variantRoot[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode], countryCode),
+                        variantRoot[EpisodeVariant_.groupHash].`in`(pageHash.data)
+                    )
+                )
+                .orderBy(cb.desc(variantRoot[EpisodeVariant_.releaseDateTime]))
+
+            Pageable(
+                createReadOnlyQuery(it, variantQuery)
+                    .resultList
+                    .groupBy { "${it.mapping!!.anime!!.uuid}${it.mapping!!.episodeType}${it.mapping!!.releaseDateTime.withMinute(0).withSecond(0).withNano(0)}" }
+                    .map { (_, variants) ->
+                        GroupedEpisode(
+                            anime = variants.first().mapping!!.anime!!,
+                            releaseDateTime = variants.minOf { it.releaseDateTime },
+                            lastUpdateDateTime = variants.maxOf { it.mapping!!.lastUpdateDateTime },
+                            minSeason = variants.minOf { it.mapping!!.season!! },
+                            maxSeason = variants.maxOf { it.mapping!!.season!! },
+                            episodeType = variants.first().mapping!!.episodeType!!,
+                            minNumber = variants.minOf { it.mapping!!.number!! },
+                            maxNumber = variants.maxOf { it.mapping!!.number!! },
+                            platforms = variants.map { it.platform!! }.toSet(),
+                            audioLocales = variants.map { it.audioLocale!! }.toSet(),
+                            urls = variants.map { it.url!! }.toSet(),
+                            mappings = variants.map { it.mapping!!.uuid!! }.toSet(),
+                        )
+                    }.toSet(),
+                pageHash.page,
+                pageHash.limit,
+                pageHash.total
+            )
         }
     }
 
