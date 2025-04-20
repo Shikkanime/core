@@ -249,4 +249,18 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         assertTrue(episodes.isNotEmpty())
         assertTrue(episodes.any { it.anime == "Overlord" })
     }
+
+    @Test
+    fun `fetchEpisodes for 2025-04-20`() {
+        val s = "2025-04-20T07:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast(2L).apply { name = "Witch Watch" })
+        val episodes = platform.fetchEpisodes(zonedDateTime)
+
+        println(episodes)
+
+        assertTrue(episodes.isNotEmpty())
+        assertTrue(episodes.any { it.anime == "WITCH WATCH" })
+    }
 }

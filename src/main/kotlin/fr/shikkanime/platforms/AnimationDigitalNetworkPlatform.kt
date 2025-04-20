@@ -38,23 +38,23 @@ class AnimationDigitalNetworkPlatform :
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Video> {
         val latestVideos = AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate()).toMutableList()
 
-        latestVideos.forEach { video ->
-            val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, video.season?.toIntOrNull()?.toString() ?: "1").lowercase()
+        latestVideos.addAll(
+            latestVideos.flatMap { video ->
+                val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, video.season?.toIntOrNull()?.toString() ?: "1").lowercase()
 
-            configuration?.simulcasts
-                ?.find { it.name.equals(animeName, ignoreCase = true) && it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
-                ?.audioLocaleDelay
-                ?.let {
-                    latestVideos.addAll(
+                configuration?.simulcasts
+                    ?.find { it.name.equals(animeName, ignoreCase = true) && it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
+                    ?.audioLocaleDelay
+                    ?.let {
                         AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate().minusWeeks(it))
                             .filter { it.show.id == video.show.id }
                             // Apply the current date to the video
                             .onEach { delayedVideo ->
                                 delayedVideo.releaseDate = zonedDateTime.toLocalDate().atTime(video.releaseDate?.toLocalTime()).atZone(zonedDateTime.zone)
                             }
-                    )
-                }
-        }
+                    } ?: emptyList()
+            }
+        )
 
         return latestVideos.toTypedArray()
     }
