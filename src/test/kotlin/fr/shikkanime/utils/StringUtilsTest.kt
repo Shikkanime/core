@@ -71,6 +71,7 @@ class StringUtilsTest {
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "I'm a Noble on the Brink of Ruin",
             "Anyway, I'm Falling in Love with You." to "Anyway, I'm Falling in Love with You.",
             "Sonic X" to "Sonic X",
+            "SHIROHIYO - Reincarnated as a Neglected Noble: Raising My Baby Brother With Memories From My Past Life" to "SHIROHIYO",
         )
 
         list.forEach { (input, expected) ->

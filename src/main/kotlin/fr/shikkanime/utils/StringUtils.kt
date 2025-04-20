@@ -32,7 +32,7 @@ object StringUtils {
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>) = parts.map { it.trim().split(wordSeparatorRegex).size }.distinct().size == 1
 
     fun getShortName(fullName: String): String {
-        val normalizedName = when {
+        var normalizedName = when {
             fullName.contains(encasedRegex) -> fullName.replace("<", EMPTY_STRING).replace(">", ": ").trim()
             fullName.contains(ANIME_STRING) -> removeAnimeNamePart(fullName)
             else -> regex.replace(fullName, SPACE_STRING).trim()
@@ -53,7 +53,7 @@ object StringUtils {
             if (lastPart.count { it == ' ' } >= 2 &&
                 firstPart.length > (if (separator == ",") 6 else 5) &&
                 (separator == ":" || !isAllPartsHaveSameAmountOfWords(split))) {
-                return firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
+                normalizedName = firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
             }
         }
 
