@@ -9,6 +9,7 @@ import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.NETF
@@ -22,14 +23,19 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val episodes = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
 
         return episodes.flatMap { video ->
-            key.netflixSimulcast.audioLocales.map { audioLocale ->
-                val episode = convertEpisode(
-                    key.countryCode,
-                    key.netflixSimulcast.image,
-                    video,
-                    key.netflixSimulcast.episodeType,
-                    audioLocale
-                )
+            key.netflixSimulcast.audioLocales.mapNotNull { audioLocale ->
+                val episode = try {
+                    convertEpisode(
+                        key.countryCode,
+                        key.netflixSimulcast.image,
+                        video,
+                        key.netflixSimulcast.episodeType,
+                        audioLocale
+                    )
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error on converting episode", e)
+                    null
+                } ?: return@mapNotNull null
 
                 // Apply delay if delay is defined for this locale
                 key.netflixSimulcast.audioLocaleDelays[audioLocale]?.let { delayInWeeks ->
@@ -72,7 +78,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         animeImage = showImage,
         animeBanner = episode.show.banner,
         animeDescription = episode.show.description,
-        releaseDateTime = episode.releaseDateTime,
+        releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
         episodeType = episodeType,
         seasonId = episode.season.toString(),
         season = episode.season,

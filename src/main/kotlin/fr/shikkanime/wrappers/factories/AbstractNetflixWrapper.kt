@@ -25,7 +25,7 @@ abstract class AbstractNetflixWrapper {
         val show: Show,
         val oldId: String,
         val id: Int,
-        val releaseDateTime: ZonedDateTime,
+        val releaseDateTime: ZonedDateTime?,
         val season: Int,
         val number: Int,
         val title: String?,
