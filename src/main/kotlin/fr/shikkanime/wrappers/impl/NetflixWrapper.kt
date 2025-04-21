@@ -110,7 +110,7 @@ object NetflixWrapper : AbstractNetflixWrapper(){
                     show,
                     EncryptionManager.toSHA512("$id-${index + 1}-${episode.getAsInt("number")!!}").substring(0..<8),
                     episode.getAsInt("videoId")!!,
-                    ZonedDateTime.parse(episode.getAsString("availabilityStartTime")!!),
+                    episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
                     index + 1,
                     episode.getAsInt("number")!!,
                     episode.getAsString("title")?.normalize(),

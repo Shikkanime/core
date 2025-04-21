@@ -9,7 +9,7 @@ import java.util.*
 
 data class EpisodeMappingDto(
     val uuid: UUID?,
-    val anime: AnimeDto?,
+    var anime: AnimeDto?,
     val releaseDateTime: String,
     val lastReleaseDateTime: String,
     val lastUpdateDateTime: String,

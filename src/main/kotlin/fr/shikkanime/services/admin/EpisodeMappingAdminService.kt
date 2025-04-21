@@ -35,16 +35,16 @@ class EpisodeMappingAdminService {
         sourceEpisode: EpisodeMapping,
         targetEpisode: EpisodeMapping
     ): EpisodeMapping? {
-        // Récupérer tous les variants de l'épisode cible
+        // Get all variants of the target episode
         val targetVariants = episodeVariantService.findAllByMapping(targetEpisode)
         
-        // Transférer les variants de l'épisode source vers l'épisode cible, sans duplication
+        // Transfer variants from source episode to target episode, without duplication
         episodeVariantService.findAllByMapping(sourceEpisode).forEach { sourceVariant ->
-            // Vérifier si un variant similaire existe déjà (même URL)
+            // Check if a similar variant already exists (same URL)
             val similarVariantExists = targetVariants.any { it.url == sourceVariant.url }
             
             if (!similarVariantExists) {
-                // Transférer ce variant
+                // Transfer this variant
                 sourceVariant.mapping = targetEpisode
                 episodeVariantService.update(sourceVariant)
             }
@@ -258,7 +258,7 @@ class EpisodeMappingAdminService {
         val variants = dto.variants ?: return
         if (variants.isEmpty()) return
 
-        // Récupérer uniquement les variants mentionnés dans le DTO
+        // Get only the variants mentioned in the DTO
         val variantsToModify = mutableListOf<EpisodeVariant>()
         
         variants.forEach { variantDto ->
@@ -283,7 +283,7 @@ class EpisodeMappingAdminService {
             variantsToModify.add(variant)
         }
         
-        // Mettre à jour uniquement les variants spécifiés dans le DTO
+        // Update only the variants specified in the DTO
         if (variantsToModify.isNotEmpty()) {
             variantsToModify.forEach { episodeVariantService.update(it) }
         }
@@ -322,45 +322,45 @@ class EpisodeMappingAdminService {
      * Returns true if the method handled the complete update process.
      */
     private fun handleAnimeChange(episode: EpisodeMapping, oldAnime: Anime, dto: EpisodeMappingDto): Boolean {
-        if (dto.anime?.name.isNullOrBlank() || dto.anime.name == oldAnime.name) {
+        if (dto.anime?.name.isNullOrBlank() || dto.anime!!.name == oldAnime.name) {
             return false
         }
         
         // Change anime
-        val newAnime = animeService.findByName(oldAnime.countryCode!!, dto.anime.name)
-            ?: throw IllegalArgumentException("Anime with name ${dto.anime.name} not found")
+        val newAnime = animeService.findByName(oldAnime.countryCode!!, dto.anime!!.name)
+            ?: throw IllegalArgumentException("Anime with name ${dto.anime!!.name} not found")
         
-        // Vérifier si un épisode similaire existe déjà dans le nouvel anime
+        // Check if a similar episode already exists in the new anime
         val existingEpisode = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             newAnime.uuid!!, dto.season, dto.episodeType, dto.number
         )?.takeIf { it.uuid != episode.uuid }
         
         if (existingEpisode != null) {
-            // Conserver les variants de l'épisode cible
+            // Keep the variants of the target episode
             val existingVariants = episodeVariantService.findAllByMapping(existingEpisode)
             
-            // Transférer les variants de l'épisode source vers l'épisode cible
+            // Transfer variants from source episode to target episode
             val sourceVariants = episodeVariantService.findAllByMapping(episode)
             val transferredVariants = mutableListOf<EpisodeVariant>()
             
             sourceVariants.forEach { sourceVariant ->
-                // Vérifier si un variant similaire existe déjà (même URL)
+                // Check if a similar variant already exists (same URL)
                 val similarVariantExists = existingVariants.any { it.url == sourceVariant.url }
                 
                 if (!similarVariantExists) {
-                    // Transférer ce variant
+                    // Transfer this variant
                     sourceVariant.mapping = existingEpisode
                     episodeVariantService.update(sourceVariant)
                     transferredVariants.add(sourceVariant)
                 }
             }
             
-            // Supprimer les références à l'épisode source
+            // Remove references to the source episode
             memberFollowEpisodeService.findAllByEpisode(episode).forEach { 
                 memberFollowEpisodeService.delete(it) 
             }
             
-            // Mettre à jour les dates si nécessaire
+            // Update dates if necessary
             if (existingEpisode.lastReleaseDateTime < episode.lastReleaseDateTime) {
                 existingEpisode.lastReleaseDateTime = episode.lastReleaseDateTime
             }
@@ -368,13 +368,13 @@ class EpisodeMappingAdminService {
             existingEpisode.lastUpdateDateTime = ZonedDateTime.now()
             val updatedEpisode = episodeMappingService.update(existingEpisode)
 
-            // Supprimer l'épisode source
+            // Delete the source episode
             episodeMappingService.delete(episode)
             
-            // Créer l'action de trace pour l'épisode cible
+            // Create trace action for the target episode
             traceActionService.createTraceAction(existingEpisode, TraceAction.Action.UPDATE)
             
-            // Mettre à jour les variants spécifiés dans le DTO
+            // Update variants specified in the DTO
             updateEpisodeMappingVariants(dto, updatedEpisode)
 
             // Clean up old anime if needed
@@ -382,8 +382,9 @@ class EpisodeMappingAdminService {
             return true
         }
         
-        // Si pas de fusion, simplement changer l'anime
+        // If no merge, simply change the anime
         episode.anime = newAnime
+        episodeMappingService.update(episode)
         
         // Clean up old anime if necessary
         cleanupAnimeIfEmpty(oldAnime, episode.uuid)
