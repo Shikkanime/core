@@ -1,56 +1,116 @@
 package fr.shikkanime.wrappers.impl
 
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.normalize
+import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.ObjectParser.getAsInt
+import fr.shikkanime.utils.ObjectParser.getAsLong
+import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
+import io.ktor.client.statement.*
+import io.ktor.http.*
 
 object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
-    override fun getShowVideos(countryCode: CountryCode, showId: String): List<Episode>? {
-        val document = loadContent(countryCode, showId)
+    override suspend fun getEpisodesByShowId(
+        locale: String,
+        id: String
+    ): List<Episode> {
+        // Make API request
+        val globalJson = fetchPrimeVideoData("$baseUrl/detail/$id/ref=atv_sr_fle_c_Tn74RA_1_1_1", locale)
+        
+        // Extract show data
+        val atfState = globalJson.getAsJsonObject("atf").getAsJsonObject("state")
+        val pageTitleId = atfState.getAsString("pageTitleId")
+        val showJson = atfState.getAsJsonObject("detail").getAsJsonObject("headerDetail").getAsJsonObject(pageTitleId)
+            ?: throw Exception("Failed to get show")
 
-        val showName = document.selectFirst("h1[data-automation-id=\"title\"]")?.text()
-            ?: document.selectFirst("h1[data-testid=\"title-art\"] img")?.attr("alt")
-            ?: return null
+        // Create show object
+        val show = Show(
+            id,
+            showJson.getAsString("parentTitle")!!,
+            showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
+            showJson.getAsString("synopsis")
+        )
 
-        val showBanner = document.selectFirst("div[data-automation-id=\"hero-background\"] source[type=\"image/jpeg\"]")
-            ?.attr("srcset")?.split(", ")?.maxByOrNull { it.split(" ").last().replace("w", "").toInt() }
-            ?.substringBefore(" ") ?: return null
-
-        val showDescription = document.selectFirst(".dv-dp-node-synopsis")?.text()?.normalize()
-
-        return document.select("li[data-testid=\"episode-list-item\"]").map { episode ->
-            val episodeSeasonAndNumber = episode.select("span.izvPPq > span").text()
-            val season = episodeSeasonAndNumber.substringAfter("S. ").substringBefore(" ").trim().toIntOrNull() ?: 1
-            val episodeNumber = episodeSeasonAndNumber.substringAfter("ÉP. ").substringBefore(" ").trim().toIntOrNull() ?: -1
-            val episodeTitle = episode.selectFirst("span.P1uAb6")!!.text().normalize()
-            val episodeSynopsis = episode.selectFirst("div[dir=\"auto\"]")!!.text().normalize()
-
-            val episodeImage = episode.select("div[data-testid=\"episode-image\"] source")
-                .firstOrNull { it.attr("type") == "image/jpeg" || it.attr("type") == "image/png" }
-
-            val episodeImageUrl = episodeImage!!.attr("srcset").split(", ")
-                .maxByOrNull { it.split(" ").last().replace("w", "").toInt() }!!.substringBefore(" ")
-
-            val episodeDuration = episode.selectFirst("div[data-testid=\"episode-runtime\"]")!!.text()
-                .substringBefore("min").trim().toLongOrNull()?.times(60) ?: -1
-
-            Episode(
-                Show(
-                    showId,
-                    showName,
-                    showBanner,
-                    showDescription
-                ),
-                EncryptionManager.toSHA512("$showId-$season-$episodeNumber").substring(0..<8),
-                season,
-                episodeNumber,
-                episodeTitle,
-                episodeSynopsis,
-                "$BASE_URL/-/${countryCode.name.lowercase()}/detail/$showId",
-                episodeImageUrl,
-                episodeDuration
+        // Extract season data
+        val seasons = atfState.getAsJsonObject("seasons").getAsJsonArray(pageTitleId).map {
+            Season(
+                it.asJsonObject.getAsString("seasonId")!!,
+                it.asJsonObject.getAsString("displayName")!!,
+                it.asJsonObject.getAsInt("sequenceNumber")!!,
+                it.asJsonObject.getAsString("seasonLink")!!
             )
-        }.distinctBy { it.id }
+        }
+
+        // Process all seasons and extract episodes
+        return seasons.flatMap { season ->
+            // Use existing JSON for main page or fetch season-specific data
+            val json = if (season.id != pageTitleId) {
+                fetchPrimeVideoData("$baseUrl${season.link}", locale)
+            } else {
+                globalJson
+            }
+
+            // Extract episodes data
+            val btfState = json.getAsJsonObject("btf").getAsJsonObject("state")
+            val episodesJson = btfState.getAsJsonObject("detail").getAsJsonObject("detail")
+                ?: throw Exception("Failed to get episodes")
+
+            // Map JSON to Episode objects
+            episodesJson.entrySet().asSequence()
+                .filter { (_, element) -> element.asJsonObject.getAsString("titleType") == "episode" }
+                .map { (key, element) -> 
+                    createEpisode(key, element.asJsonObject, season, show, btfState)
+                }
+        }
+    }
+    
+    private fun createEpisode(
+        key: String, 
+        episodeJson: com.google.gson.JsonObject, 
+        season: Season, 
+        show: Show, 
+        btfState: com.google.gson.JsonObject
+    ): Episode {
+        val episodeId = btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("compactGTI")!!
+        val episodeNumber = episodeJson.getAsInt("episodeNumber")!!
+        val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toSet() ?: emptySet()
+
+        return Episode(
+            show,
+            EncryptionManager.toSHA512("${show.id}-${season.number}-$episodeNumber").substring(0..<8),
+            episodeId,
+            season.number,
+            episodeNumber,
+            episodeJson.getAsString("title")!!,
+            episodeJson.getAsString("synopsis")!!,
+            "$baseUrl${btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")}",
+            episodeJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
+            episodeJson.getAsLong("duration", -1),
+            buildSet {
+                if (audioTracks.contains("日本語")) add("ja-JP")
+                if (!audioTracks.contains("日本語") && audioTracks.contains("English")) add("en-US")
+                if (audioTracks.contains("Français")) add("fr-FR")
+            }
+        )
+    }
+    
+    private suspend fun fetchPrimeVideoData(url: String, locale: String): com.google.gson.JsonObject {
+        val response = httpRequest.get(
+            "$url?dvWebSPAClientVersion=1.0.105438.0",
+            headers = mapOf(
+                "Accept" to "application/json",
+                "Cookie" to "lc-main-av=${locale.replace("-", "_")}",
+                "x-requested-with" to "WebSPA"
+            )
+        )
+        
+        require(response.status == HttpStatusCode.OK) { 
+            "Failed to fetch data (${response.status.value} - ${response.bodyAsText()})" 
+        }
+        
+        return ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonArray("page")[0].asJsonObject
+            .getAsJsonObject("assembly").getAsJsonArray("body")[0].asJsonObject
+            .getAsJsonObject("props") ?: throw Exception("Failed to parse response")
     }
 }

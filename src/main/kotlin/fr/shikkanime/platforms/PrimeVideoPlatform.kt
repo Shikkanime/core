@@ -12,7 +12,7 @@ import java.time.LocalTime
 import java.time.ZonedDateTime
 
 class PrimeVideoPlatform :
-    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>?>() {
+    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.PRIM
 
     override fun getConfigurationClass() = PrimeVideoConfiguration::class.java
@@ -20,20 +20,17 @@ class PrimeVideoPlatform :
     override suspend fun fetchApiContent(
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ): List<Episode>? {
-        val episodes = PrimeVideoWrapper.getShowVideos(key.countryCode, key.primeVideoSimulcast.name) ?: return null
+    ): List<Episode> {
+        val episodes = PrimeVideoWrapper.getEpisodesByShowId(key.countryCode.locale, key.primeVideoSimulcast.name)
 
-        return key.primeVideoSimulcast.audioLocales.flatMap { audioLocale ->
-            episodes.map {
-                convertEpisode(
-                    key.countryCode,
-                    key.primeVideoSimulcast.image,
-                    it,
-                    zonedDateTime.minusMinutes(1),
-                    key.primeVideoSimulcast.episodeType,
-                    audioLocale,
-                )
-            }
+        return episodes.flatMap {
+            convertEpisode(
+                key.countryCode,
+                key.primeVideoSimulcast.image,
+                it,
+                zonedDateTime.minusMinutes(1),
+                key.primeVideoSimulcast.episodeType
+            )
         }
     }
 
@@ -46,16 +43,15 @@ class PrimeVideoPlatform :
                         (it.releaseTime.isBlank() || zonedDateTime.toLocalTime() >= LocalTime.parse(it.releaseTime))
             }
                 .forEach { simulcast ->
-                    getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
-                        ?.let { list.addAll(it) }
+                    list.addAll(getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime))
                 }
         }
 
         return list
     }
 
-    fun getShowId(url: String) =
-        "https://www\\.primevideo\\.com/-/[a-z]{2}/detail/([A-Z0-9]{26})".toRegex().find(url)?.groupValues?.get(1)
+    fun getVideoOldIdOrId(identifier: String) =
+        "[A-Z]{2}-PRIM-(.+)-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
 
     fun convertEpisode(
         countryCode: CountryCode,
@@ -63,28 +59,29 @@ class PrimeVideoPlatform :
         episode: AbstractPrimeVideoWrapper.Episode,
         zonedDateTime: ZonedDateTime,
         episodeType: EpisodeType,
-        audioLocale: String,
-    ) = Episode(
-        countryCode = countryCode,
-        animeId = episode.show.id,
-        anime = episode.show.name,
-        animeImage = showImage,
-        animeBanner = episode.show.banner,
-        animeDescription = episode.show.description,
-        releaseDateTime = zonedDateTime,
-        episodeType = episodeType,
-        seasonId = episode.season.toString(),
-        season = episode.season,
-        number = episode.number,
-        duration = episode.duration,
-        title = episode.title,
-        description = episode.description,
-        image = episode.image,
-        platform = getPlatform(),
-        audioLocale = audioLocale,
-        id = episode.id,
-        url = episode.url,
-        uncensored = false,
-        original = true,
-    )
+    ) = episode.audioLocales.map {
+        Episode(
+            countryCode = countryCode,
+            animeId = episode.show.id,
+            anime = episode.show.name,
+            animeImage = showImage,
+            animeBanner = episode.show.banner,
+            animeDescription = episode.show.description,
+            releaseDateTime = zonedDateTime,
+            episodeType = episodeType,
+            seasonId = episode.season.toString(),
+            season = episode.season,
+            number = episode.number,
+            duration = episode.duration,
+            title = episode.title,
+            description = episode.description,
+            image = episode.image,
+            platform = getPlatform(),
+            audioLocale = it,
+            id = episode.id,
+            url = episode.url,
+            uncensored = false,
+            original = true,
+        )
+    }
 }
