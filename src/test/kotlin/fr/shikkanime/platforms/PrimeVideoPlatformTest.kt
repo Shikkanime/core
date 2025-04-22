@@ -24,7 +24,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
         val releaseDay: Int,
         val testDate: String,
         val imageUrl: String,
-        val audioLocales: Set<String> = setOf<String>("ja-JP"),
+        val expectedAudioLocales: Set<String>
     )
 
     companion object {
@@ -35,21 +35,24 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 expectedAnimeName = "Ninja Kamui",
                 releaseDay = 1,
                 testDate = "2024-04-22T18:15:00Z",
-                imageUrl = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
+                expectedAudioLocales = setOf("ja-JP")
             ),
             SimulcastTestCase(
                 simulcastName = "0TRGLGKLJS99OYM9647IM6Y1N0",
                 expectedAnimeName = "Übel Blatt",
                 releaseDay = 1,
                 testDate = "2025-01-10T16:31:00Z",
-                imageUrl = "https://cdn.myanimelist.net/images/anime/1850/144045l.jpg"
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1850/144045l.jpg",
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
                 simulcastName = "0QA3P8T387P0WAV0KXUYBWDDYR",
                 expectedAnimeName = "Magilumière Co. Ltd.",
                 releaseDay = 1,
                 testDate = "2024-04-22T18:15:00Z",
-                imageUrl = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg"
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
                 simulcastName = "0TKRFV2FB8U18G5WS16GFOXNG2",
@@ -57,7 +60,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 releaseDay = 6,
                 testDate = "2025-04-05T03:01:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1496/146890l.jpg",
-                audioLocales = setOf("ja-JP", "fr-FR")
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
                 simulcastName = "0GMSR5WMNJ6EMYQRQ6Y2587WAF",
@@ -65,7 +68,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 releaseDay = 6,
                 testDate = "2025-04-05T15:01:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1069/148148l.jpg",
-                audioLocales = setOf("ja-JP", "fr-FR")
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
                 simulcastName = "0KFD79CBVX90IWRIG5NLAGJ7R1",
@@ -73,7 +76,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 releaseDay = 2,
                 testDate = "2025-04-08T16:01:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1803/146807l.jpg",
-                audioLocales = setOf("ja-JP", "fr-FR")
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
                 simulcastName = "0NV4FUWKV9BQN8VDIIH1DWEEHH",
@@ -81,7 +84,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 releaseDay = 6,
                 testDate = "2025-04-05T00:01:00Z",
                 imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx167336-KpGIIBie71OX.png",
-                audioLocales = setOf("ja-JP", "fr-FR")
+                expectedAudioLocales = setOf("en-US", "fr-FR")
             )
         )
     }
@@ -97,13 +100,10 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 name = testCase.simulcastName
                 releaseDay = testCase.releaseDay
                 image = testCase.imageUrl
-                audioLocales = testCase.audioLocales.toMutableSet()
             }
         )
 
-        val episodes = runBlocking {
-            primeVideoPlatform.fetchApiContent(key, zonedDateTime)
-        } ?: emptyList()
+        val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }
 
         assertNotNull(episodes)
         // Skip the test if no episodes are found
@@ -130,6 +130,10 @@ class PrimeVideoPlatformTest : AbstractTest() {
             assertTrue(it.url.isNotBlank())
             assertFalse(it.getIdentifier().contains("https://"))
         }
+
+        // Check if the audio locales match the expected values
+        val audioLocales = episodes.map { it.audioLocale }.toSet()
+        assertTrue(audioLocales.containsAll(testCase.expectedAudioLocales), "Audio locales do not match")
     }
 
     @Test

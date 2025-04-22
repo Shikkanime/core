@@ -1,7 +1,6 @@
 package fr.shikkanime.services.caches
 
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeIdKeyCache
 import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
@@ -100,9 +99,9 @@ class AnimeCacheService : ICacheService {
     fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrComputeNullable(
         "AnimeCacheService.findBySlug",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = CountryCodeIdKeyCache(countryCode, slug),
+        key = countryCode to slug,
     ) {
-        animeService.findBySlug(it.countryCode, it.id)?.let { anime -> animeFactory.toDto(anime) }
+        animeService.findBySlug(it.first, it.second)?.let { anime -> animeFactory.toDto(anime) }
     }
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate, searchTypes: Array<LangType>? = null) =

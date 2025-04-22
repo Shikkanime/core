@@ -7,13 +7,11 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
     data class PrimeVideoSimulcast(
         var releaseTime: String = "",
         var episodeType: EpisodeType = EpisodeType.EPISODE,
-        var audioLocales: MutableSet<String> = mutableSetOf("ja-JP"),
     ) : ReleaseDayPlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["releaseTime"]?.let { releaseTime = it }
             parameters["episodeType"]?.let { episodeType = EpisodeType.valueOf(it) }
-            parameters["audioLocales"]?.let { audioLocales = it.split(",").toMutableSet() }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
@@ -34,14 +32,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
                     value = episodeType.name,
                 )
             )
-            add(
-                ConfigurationField(
-                    label = "Audio Locales",
-                    name = "audioLocales",
-                    type = "text",
-                    value = audioLocales.joinToString(","),
-                )
-            )
         }
 
         override fun equals(other: Any?): Boolean {
@@ -51,7 +41,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
 
             if (releaseTime != other.releaseTime) return false
             if (episodeType != other.episodeType) return false
-            if (audioLocales != other.audioLocales) return false
 
             return true
         }
@@ -60,7 +49,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
             var result = super.hashCode()
             result = 31 * result + releaseTime.hashCode()
             result = 31 * result + episodeType.hashCode()
-            result = 31 * result + audioLocales.hashCode()
             return result
         }
     }

@@ -236,10 +236,10 @@ class UpdateAnimeJob : AbstractJob {
         )
     }
 
-    private fun fetchPrimeVideoAnime(animePlatform: AnimePlatform): UpdatableAnime {
+    private suspend fun fetchPrimeVideoAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val episodes = runCatching {
-            PrimeVideoCachedWrapper.getShowVideos(
-                animePlatform.anime!!.countryCode!!,
+            PrimeVideoCachedWrapper.getEpisodesByShowId(
+                animePlatform.anime!!.countryCode!!.locale,
                 animePlatform.platformId!!
             )
         }.getOrNull()

@@ -8,12 +8,12 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.isAfterOrEqual
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.ZonedDateTime
+import java.util.stream.Stream
 
 class UpdateEpisodeMappingJobTest : AbstractTest() {
     @Inject
@@ -33,754 +33,340 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         MapCache.invalidate(Config::class.java)
     }
 
-    @Test
-    fun `run old Crunchyroll episodes`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Rent-a-Girlfriend",
+    data class TestCase(
+        val animeName: String,
+        val slug: String,
+        val episodeNumber: Int,
+        val season: Int = 1,
+        val platforms: List<PlatformData>,
+        val episodeTitle: String? = null,
+        val episodeDescription: String? = null,
+        val expectedMappingsCount: Int,
+        val expectedVariantsCount: Int,
+        val expectedBannerUrl: String? = null,
+        val expectedUpdatedTitle: String? = null,
+        val checkPreviousEpisode: Boolean = false
+    )
+
+    data class PlatformData(
+        val platform: Platform,
+        val audioLocale: String,
+        val identifier: String,
+        val url: String
+    )
+
+    companion object {
+        @JvmStatic
+        fun testCases(): Stream<TestCase> = Stream.of(
+            TestCase(
+                animeName = "Rent-a-Girlfriend",
                 slug = "rent-a-girlfriend",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 1,
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "fr-FR",
-                identifier = "FR-CRUN-GZ7UV8KWZ-FR-FR",
-                url = "https://www.crunchyroll.com/fr/watch/GZ7UV8KWZ/rent-a-girlfriend"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(2, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(3, variants.size)
-
-        assertEquals(
-            "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/97ab10f90157c828a591cd4ec66e851c.jpg",
-            attachmentService.findByEntityUuidTypeAndActive(mappings.first().uuid!!, ImageType.BANNER)?.url
-        )
-        assertEquals("Petite amie à louer", mappings.first().title)
-        assertEquals(
-            "Kazuya Kinoshita est un jeune étudiant qui vient de se faire plaquer par sa copine. Alors qu'il déprime complètement, il décide de télécharger une application permettant de louer une petite amie pour une journée.",
-            mappings.first().description
-        )
-    }
-
-    @Test
-    fun `run old ADN episodes`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "The Eminence in Shadow",
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-CRUN-GZ7UV8KWZ-FR-FR",
+                        url = "https://www.crunchyroll.com/fr/watch/GZ7UV8KWZ/rent-a-girlfriend"
+                    )
+                ),
+                expectedMappingsCount = 2,
+                expectedVariantsCount = 3,
+                expectedBannerUrl = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/97ab10f90157c828a591cd4ec66e851c.jpg",
+                expectedUpdatedTitle = "Petite amie à louer"
+            ),
+            TestCase(
+                animeName = "The Eminence in Shadow",
                 slug = "the-eminence-in-shadow",
-            )
-        )
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 1,
-            )
-        )
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "ja-JP",
-                identifier = "FR-ANIM-20568-JA-JP",
-                url = "https://animationdigitalnetwork.fr/video/the-eminence-in-shadow/20568-episode-1-un-camarade-detestable"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(2, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(4, variants.size)
-    }
-
-    @Test
-    fun `run old ADN episodes Pon No Michi`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Pon no Michi",
-                slug = "pon-no-michi"
-            )
-        )
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 5,
-                title = "Une arrivée inattendue",
-                description = "Nashiko et ses amies reçoivent la visite de la personne contre qui elles jouaient en ligne : Haneru Emi. Cette dernière est déterminée à jouer à nouveau contre Riche pour la battre, mais avant ça, elle fait la connaissance des quatre filles. Et quoi de mieux pour cela qu’un barbecue sous le ciel bleu ?"
-            )
-        )
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "ja-JP",
-                identifier = "FR-ANIM-24026-JA-JP",
-                url = "https://animationdigitalnetwork.fr/video/pon-no-michi/24026-episode-5-une-arrivee-inattendue"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(3, mappings.size)
-        assertTrue(mappings.first().lastUpdateDateTime.isAfterOrEqual(zonedDateTime))
-        val variants = episodeVariantService.findAll()
-        assertEquals(3, variants.size)
-    }
-
-    @Test
-    fun `run old Berserk Crunchyroll`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Berserk : L'Âge d'or - Memorial Edition",
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-ANIM-20568-JA-JP",
+                        url = "https://animationdigitalnetwork.fr/video/the-eminence-in-shadow/20568-episode-1-un-camarade-detestable"
+                    )
+                ),
+                expectedMappingsCount = 2,
+                expectedVariantsCount = 4
+            ),
+            TestCase(
+                animeName = "Pon no Michi",
+                slug = "pon-no-michi",
+                episodeNumber = 5,
+                episodeTitle = "Une arrivée inattendue",
+                episodeDescription = "Nashiko et ses amies reçoivent la visite de la personne contre qui elles jouaient en ligne : Haneru Emi. Cette dernière est déterminée à jouer à nouveau contre Riche pour la battre, mais avant ça, elle fait la connaissance des quatre filles. Et quoi de mieux pour cela qu'un barbecue sous le ciel bleu ?",
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-ANIM-24026-JA-JP",
+                        url = "https://animationdigitalnetwork.fr/video/pon-no-michi/24026-episode-5-une-arrivee-inattendue"
+                    )
+                ),
+                expectedMappingsCount = 3,
+                expectedVariantsCount = 3
+            ),
+            TestCase(
+                animeName = "Berserk : L'Âge d'or - Memorial Edition",
                 slug = "berserk",
-            )
-        )
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 4,
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "ja-JP",
-                identifier = "FR-CRUN-GJWU23V97-JA-JP",
-                url = "https://www.crunchyroll.com/fr/watch/GJWU23V97/prepared-for-death"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "fr-FR",
-                identifier = "FR-CRUN-G50UZQEW0-FR-FR",
-                url = "https://www.crunchyroll.com/fr/watch/G50UZQEW0/prepared-for-death"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(3, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(8, variants.size)
-    }
-
-    @Test
-    fun `run old Berserk Crunchyroll with no updated platform variant`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Berserk : L'Âge d'or - Memorial Edition",
-                slug = "berserk",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 4,
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "ja-JP",
-                identifier = "FR-CRUN-GJWU23V97-JA-JP",
-                url = "https://www.crunchyroll.com/fr/watch/GJWU23V97/prepared-for-death"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "fr-FR",
-                identifier = "FR-CRUN-G50UZQEW0-FR-FR",
-                url = "https://www.crunchyroll.com/fr/watch/G50UZQEW0/prepared-for-death"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(3, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(8, variants.size)
-    }
-
-    @Test
-    fun `run old ADN episodes Isekai Cheat Magician`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Isekai Cheat Magician",
+                episodeNumber = 4,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-GJWU23V97-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/GJWU23V97/prepared-for-death"
+                    ),
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-CRUN-G50UZQEW0-FR-FR",
+                        url = "https://www.crunchyroll.com/fr/watch/G50UZQEW0/prepared-for-death"
+                    )
+                ),
+                expectedMappingsCount = 3,
+                expectedVariantsCount = 8
+            ),
+            TestCase(
+                animeName = "Isekai Cheat Magician",
                 slug = "isekai-cheat-magician",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 13,
-                title = "La Nuit aux étoiles",
-                description = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts."
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "ja-JP",
-                identifier = "FR-ANIM-10114-JA-JP",
-                url = "https://animationdigitalnetwork.fr/video/isekai-cheat-magician/10114-episode-13-la-nuit-aux-etoiles"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(2, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(2, variants.size)
-    }
-
-    @Test
-    fun `run old CRUN episodes Let's Make a Mug Too`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Let's Make a Mug Too",
+                episodeNumber = 13,
+                episodeTitle = "La Nuit aux étoiles",
+                episodeDescription = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts.",
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-ANIM-10114-JA-JP",
+                        url = "https://animationdigitalnetwork.fr/video/isekai-cheat-magician/10114-episode-13-la-nuit-aux-etoiles"
+                    )
+                ),
+                expectedMappingsCount = 2,
+                expectedVariantsCount = 2
+            ),
+            TestCase(
+                animeName = "Let's Make a Mug Too",
                 slug = "lets-make-a-mug-too",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 9,
-                title = "Écraser, étirer, reculer, compléter",
-                description = "Himeno n'a toujours pas trouvé l'idée ultime pour le concours. Elle essaie donc plusieurs formes pour créer le coussin qu'elle désire."
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "ja-JP",
-                identifier = "FR-CRUN-GK9U383WX-JA-JP",
-                url = "https://www.crunchyroll.com/fr/watch/GK9U383WX/pound-stretch-subtract-and-add"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(1, variants.size)
-    }
-
-    @Test
-    fun `run old ADN episodes One Piece`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "One Piece",
+                episodeNumber = 9,
+                episodeTitle = "Écraser, étirer, reculer, compléter",
+                episodeDescription = "Himeno n'a toujours pas trouvé l'idée ultime pour le concours. Elle essaie donc plusieurs formes pour créer le coussin qu'elle désire.",
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-GK9U383WX-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/GK9U383WX/pound-stretch-subtract-and-add"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 1
+            ),
+            TestCase(
+                animeName = "One Piece",
                 slug = "one-piece",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 816,
-                title = "La Nuit aux étoiles",
-                description = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts."
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "ja-JP",
-                identifier = "FR-ANIM-16948-JA-JP",
-                url = "https://animationdigitalnetwork.fr/video/isekai-cheat-magician/10114-episode-13-la-nuit-aux-etoiles"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(3, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(6, variants.size)
-    }
-
-    @Test
-    fun `run old ADN episodes One Piece only french dub`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "One Piece",
+                episodeNumber = 816,
+                episodeTitle = "La Nuit aux étoiles",
+                episodeDescription = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts.",
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-ANIM-16948-JA-JP",
+                        url = "https://animationdigitalnetwork.fr/video/isekai-cheat-magician/10114-episode-13-la-nuit-aux-etoiles"
+                    )
+                ),
+                expectedMappingsCount = 3,
+                expectedVariantsCount = 6
+            ),
+            TestCase(
+                animeName = "One Piece",
                 slug = "one-piece",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 566,
-                title = "Conclusion. L'affrontement final contre Hody !",
-                description = null
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "fr-FR",
-                identifier = "FR-ANIM-13530-FR-FR",
-                url = "https://animationdigitalnetwork.fr/video/one-piece-saga-8-ile-des-hommes-poissons/13530-episode-566-conclusion-l-affrontement-final-contre-hody"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(3, mappings.size)
-
-        episodeVariantService.findAllByMapping(episodeMapping).let { variants ->
-            assertTrue(variants.map { it.audioLocale }.contains("ja-JP"))
-            assertEquals(2, variants.size)
-        }
-
-        val findPreviousEpisode = episodeMappingService.findAllByAnime(anime).find { it.number == 565 }
-        assertNotNull(findPreviousEpisode)
-
-        episodeVariantService.findAllByMapping(findPreviousEpisode!!).let { variants ->
-            assertTrue(variants.map { it.audioLocale }.contains("fr-FR"))
-            assertEquals(2, variants.size)
-        }
-
-        updateEpisodeMappingJob.run()
-
-        episodeVariantService.findAllByMapping(episodeMapping).let { variants ->
-            assertTrue(variants.map { it.audioLocale }.contains("ja-JP"))
-            assertEquals(2, variants.size)
-        }
-
-        episodeVariantService.findAllByMapping(findPreviousEpisode).let { variants ->
-            assertTrue(variants.map { it.audioLocale }.contains("fr-FR"))
-            assertEquals(2, variants.size)
-        }
-    }
-
-    @Test
-    fun `run update with multiples differents platforms`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "DAN DA DAN",
+                episodeNumber = 566,
+                episodeTitle = "Conclusion. L'affrontement final contre Hody !",
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-ANIM-13530-FR-FR",
+                        url = "https://animationdigitalnetwork.fr/video/one-piece-saga-8-ile-des-hommes-poissons/13530-episode-566-conclusion-l-affrontement-final-contre-hody"
+                    )
+                ),
+                expectedMappingsCount = 3,
+                expectedVariantsCount = 6,
+                checkPreviousEpisode = true,
+            ),
+            TestCase(
+                animeName = "DAN DA DAN",
                 slug = "dan-da-dan",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 1,
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.NETF,
-                audioLocale = "ja-JP",
-                identifier = "FR-NETF-a7b9feca-JA-JP",
-                url = "https://www.netflix.com/fr/title/81736884"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "fr-FR",
-                identifier = "FR-ANIM-26662-FR-FR",
-                url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.ANIM,
-                audioLocale = "ja-JP",
-                identifier = "FR-ANIM-26662-JA-JP",
-                url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "ja-JP",
-                identifier = "FR-CRUN-GN7UNXWMJ-JA-JP",
-                url = "https://www.crunchyroll.com/fr/watch/GN7UNXWMJ/thats-how-love-starts-ya-know"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.NETF,
-                audioLocale = "fr-FR",
-                identifier = "FR-NETF-a7b9feca-FR-FR",
-                url = "https://www.netflix.com/fr/title/81736884"
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.CRUN,
-                audioLocale = "fr-FR",
-                identifier = "FR-CRUN-GG1UXWE24-FR-FR",
-                url = "https://www.crunchyroll.com/fr/watch/GG1UXWE24/"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(2, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(10, variants.size)
-    }
-
-    @Test
-    fun `run update with bad netflix url`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Garôden : La voie du loup solitaire",
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.NETF,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-NETF-a7b9feca-JA-JP",
+                        url = "https://www.netflix.com/fr/title/81736884"
+                    ),
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-ANIM-26662-FR-FR",
+                        url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
+                    ),
+                    PlatformData(
+                        platform = Platform.ANIM,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-ANIM-26662-JA-JP",
+                        url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
+                    ),
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-GN7UNXWMJ-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/GN7UNXWMJ/thats-how-love-starts-ya-know"
+                    ),
+                    PlatformData(
+                        platform = Platform.NETF,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-NETF-a7b9feca-FR-FR",
+                        url = "https://www.netflix.com/fr/title/81736884"
+                    ),
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-CRUN-GG1UXWE24-FR-FR",
+                        url = "https://www.crunchyroll.com/fr/watch/GG1UXWE24/"
+                    )
+                ),
+                expectedMappingsCount = 2,
+                expectedVariantsCount = 10
+            ),
+            TestCase(
+                animeName = "Garôden : La voie du loup solitaire",
                 slug = "garoden",
-            )
-        )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 7,
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.NETF,
-                audioLocale = "ja-JP",
-                identifier = "FR-NETF-6c247a4d-JA-JP",
-                url = "https://www.netflix.com/fr/title/6c247a4d"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
-        val variants = episodeVariantService.findAll()
-        assertEquals(1, variants.size)
-    }
-
-    @Test
-    fun `run update with netflix platform`() {
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
-        val anime = animeService.save(
-            Anime(
-                countryCode = CountryCode.FR,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                name = "Du mouvement de la Terre",
+                episodeNumber = 7,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.NETF,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-NETF-6c247a4d-JA-JP",
+                        url = "https://www.netflix.com/fr/title/6c247a4d"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 1
+            ),
+            TestCase(
+                animeName = "Du mouvement de la Terre",
                 slug = "du-mouvement-de-la-terre",
+                episodeNumber = 9,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.NETF,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-NETF-6936fd55-JA-JP",
+                        url = "https://www.netflix.com/fr/title/81765022"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 1
+            ),
+            TestCase(
+                animeName = "Ninja Kamui",
+                slug = "ninja-kamui",
+                episodeNumber = 10,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.PRIM,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-PRIM-0bdc4c77-JA-JP",
+                        url = "https://www.primevideo.com/-/fr/detail/0QN9ZXJ935YBTNK8U9FV5OAX5B"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 1
             )
         )
-
-        val episodeMapping = episodeMappingService.save(
-            EpisodeMapping(
-                anime = anime,
-                releaseDateTime = zonedDateTime,
-                lastReleaseDateTime = zonedDateTime,
-                lastUpdateDateTime = zonedDateTime,
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                number = 9,
-            )
-        )
-
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.NETF,
-                audioLocale = "ja-JP",
-                identifier = "FR-NETF-6936fd55-JA-JP",
-                url = "https://www.netflix.com/fr/title/81765022"
-            )
-        )
-
-        MapCache.invalidateAll()
-
-        updateEpisodeMappingJob.run()
-
-        val animes = animeService.findAll()
-        assertEquals(1, animes.size)
-        val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
-        assumeFalse("https://occ-0-56-55.1.nflxso.net/dnm/api/v6/9pS1daC2n6UGc3dUogvWIPMR_OU/AAAABT_ClBwV1ItifEAGonpxHrB_b1fSWtllElp6Sl3awusb-bRXPFrTzSZaunQ4O6ku1o8CVQjKu9bEnlOYYwPGBFQZFJUg3Y8eiVroGRTd9HAOJ_S-42Yut-g-.jpg" == attachmentService.findByEntityUuidTypeAndActive(mappings.first().uuid!!, ImageType.BANNER)?.url)
-        val variants = episodeVariantService.findAll()
-        assertEquals(1, variants.size)
     }
 
-    @Test
-    fun `run update with prime video platform`() {
+    @ParameterizedTest(name = "Testing {0}")
+    @MethodSource("testCases")
+    fun `should update episode mappings`(testCase: TestCase) {
         val zonedDateTime = ZonedDateTime.now().minusMonths(2)
-
+        
+        // Create anime
         val anime = animeService.save(
             Anime(
                 countryCode = CountryCode.FR,
                 releaseDateTime = zonedDateTime,
                 lastReleaseDateTime = zonedDateTime,
-                name = "Ninja Kamui",
-                slug = "ninja-kamui",
+                name = testCase.animeName,
+                slug = testCase.slug,
             )
         )
 
+        // Create episode mapping
         val episodeMapping = episodeMappingService.save(
             EpisodeMapping(
                 anime = anime,
                 releaseDateTime = zonedDateTime,
                 lastReleaseDateTime = zonedDateTime,
                 lastUpdateDateTime = zonedDateTime,
-                season = 1,
+                season = testCase.season,
                 episodeType = EpisodeType.EPISODE,
-                number = 10,
+                number = testCase.episodeNumber,
+                title = testCase.episodeTitle,
+                description = testCase.episodeDescription
             )
         )
 
-        episodeVariantService.save(
-            EpisodeVariant(
-                mapping = episodeMapping,
-                releaseDateTime = zonedDateTime,
-                platform = Platform.PRIM,
-                audioLocale = "ja-JP",
-                identifier = "FR-PRIM-0bdc4c77-JA-JP",
-                url = "https://www.primevideo.com/-/fr/detail/0QN9ZXJ935YBTNK8U9FV5OAX5B"
+        // Create episode variants
+        testCase.platforms.forEach { platformData ->
+            episodeVariantService.save(
+                EpisodeVariant(
+                    mapping = episodeMapping,
+                    releaseDateTime = zonedDateTime,
+                    platform = platformData.platform,
+                    audioLocale = platformData.audioLocale,
+                    identifier = platformData.identifier,
+                    url = platformData.url
+                )
             )
-        )
+        }
 
         MapCache.invalidateAll()
 
+        // Run the job
         updateEpisodeMappingJob.run()
 
+        // Verify results
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
+        
         val mappings = episodeMappingService.findAll()
-        assertEquals(1, mappings.size)
+        assertEquals(testCase.expectedMappingsCount, mappings.size)
+        
         val variants = episodeVariantService.findAll()
-        assertEquals(1, variants.size)
+        assertEquals(testCase.expectedVariantsCount, variants.size)
+        
+        // Verify updated metadata if expected
+        if (testCase.expectedBannerUrl != null) {
+            val banner = attachmentService.findByEntityUuidTypeAndActive(mappings.first().uuid!!, ImageType.BANNER)
+            assertEquals(testCase.expectedBannerUrl, banner?.url)
+        }
+        
+        if (testCase.expectedUpdatedTitle != null) {
+            assertEquals(testCase.expectedUpdatedTitle, mappings.first().title)
+        }
+        
+        // Check previous episode if needed
+        if (testCase.checkPreviousEpisode) {
+            val previousEpisode = episodeMappingService.findAllByAnime(anime)
+                .find { it.number == testCase.episodeNumber - 1 }
+            assertNotNull(previousEpisode)
+            
+            val previousEpisodeVariants = episodeVariantService.findAllByMapping(previousEpisode!!)
+            assertTrue(previousEpisodeVariants.isNotEmpty())
+        }
     }
 }
