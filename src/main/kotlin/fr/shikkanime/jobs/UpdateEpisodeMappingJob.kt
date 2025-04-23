@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.DISN, Platform.NETF, Platform.PRIM)
+    private val oldLastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
 
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
@@ -58,86 +59,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
-            val variants = episodeVariantService.findAllByMapping(mapping)
-            val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(mapping)}"
-            logger.info("Updating episode $mappingIdentifier...")
-
-            val tmpIdentifiers = identifiers.toMutableSet()
-
-            val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
-                .sortedBy { it.platform.sortIndex }
-
-            if (tmpIdentifiers != identifiers) {
-                needRefreshCache.set(true)
-            }
-
-            allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
-            saveAnimePlatformIfNotExists(episodes, mapping)
-
-            if (episodes.isEmpty()) {
-                logger.warning("No episode found for $mappingIdentifier")
-                mapping.lastUpdateDateTime = zonedDateTime
-                episodeMappingService.update(mapping)
-                logger.info("Episode $mappingIdentifier updated")
-                return@forEach
-            }
-
-            episodes.distinctBy { it.getIdentifier() }
-                .filter { it.getIdentifier() !in identifiers }
-                .takeIf { it.isNotEmpty() }
-                ?.also { logger.info("Found ${it.size} new episodes for $mappingIdentifier") }
-                ?.map { episode -> episodeVariantService.save(episode, false, mapping) }
-                ?.also { episodeVariants ->
-                    identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
-                    logger.info("Added ${episodeVariants.size} episodes for $mappingIdentifier")
-                    needRecalculate.set(true)
-                    needRefreshCache.set(true)
-                }
-
-            val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.first()
-            val hasChanged = AtomicBoolean(false)
-
-            updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier)
-            updateEpisodeMappingTitle(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
-            updateEpisodeMappingDescription(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
-            updateEpisodeMappingDuration(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
-
-            mapping.lastUpdateDateTime = zonedDateTime
-            episodeMappingService.update(mapping)
-
-            if (hasChanged.get()) {
-                traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
-            }
-
-            logger.info("Episode $mappingIdentifier updated")
+            updateEpisodeMapping(mapping, identifiers, allPreviousAndNext, lastDateTime, zonedDateTime, needRecalculate, needRefreshCache)
         }
 
-        val allNewEpisodes = mutableSetOf<EpisodeVariant>()
-
-        if (allPreviousAndNext.isNotEmpty()) {
-            val mappingUuids = episodeMappingService.findAllUuids()
-
-            allPreviousAndNext.distinctBy { it.getIdentifier() }
-                .filter { it.getIdentifier() !in identifiers }
-                .takeIf { it.isNotEmpty() }
-                ?.also { logger.info("Found ${it.size} new previous and next episodes") }
-                ?.map { episode -> episodeVariantService.save(episode, false) }
-                ?.toMutableList()
-                ?.also { episodeVariants ->
-                    episodeVariants.removeIf { it.mapping!!.uuid in mappingUuids }
-
-                    identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
-                    allNewEpisodes.addAll(episodeVariants)
-                    logger.info("Added ${episodeVariants.size} previous and next episodes")
-                    needRecalculate.set(true)
-                    needRefreshCache.set(true)
-
-                    episodeVariants.forEach {
-                        it.mapping!!.lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
-                        episodeMappingService.update(it.mapping!!)
-                    }
-                }
-        }
+        processNewEpisodes(allPreviousAndNext, identifiers, needRecalculate, needRefreshCache)
 
         if (needRecalculate.get()) {
             logger.info("Recalculating simulcasts...")
@@ -154,30 +79,145 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 Simulcast::class.java
             )
         }
+    }
 
-        if (allNewEpisodes.isNotEmpty()) {
-            val newMappings = allNewEpisodes.mapNotNull { it.mapping }.distinctBy { it.uuid }
+    private fun updateEpisodeMapping(
+        mapping: EpisodeMapping,
+        identifiers: MutableSet<String>,
+        allPreviousAndNext: MutableList<Episode>,
+        lastDateTime: ZonedDateTime,
+        zonedDateTime: ZonedDateTime,
+        needRecalculate: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        val variants = episodeVariantService.findAllByMapping(mapping)
+        val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(mapping)}"
+        logger.info("Updating episode $mappingIdentifier...")
 
-            logger.info("New episodes:")
-            val lines = mutableSetOf<String>()
+        val tmpIdentifiers = LinkedHashSet(identifiers)
 
-            newMappings.forEach {
-                val line = "- ${StringUtils.getShortName(it.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(it)}"
-                lines.add(line)
-                logger.info(line)
-            }
+        val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
+            .sortedBy { it.platform.sortIndex }
 
-            try {
-                mailService.save(
-                    Mail(
-                        recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                        title = "UpdateEpisodeMappingJob - ${newMappings.size} new episodes",
-                        body = lines.joinToString("<br>")
-                    )
+        if (tmpIdentifiers != identifiers) {
+            needRefreshCache.set(true)
+        }
+
+        allPreviousAndNext.addAll(checkPreviousAndNextEpisodes(mapping.anime!!, variants))
+        saveAnimePlatformIfNotExists(episodes, mapping)
+
+        if (episodes.isEmpty()) {
+            logger.warning("No episode found for $mappingIdentifier")
+            mapping.lastUpdateDateTime = zonedDateTime
+            episodeMappingService.update(mapping)
+            logger.info("Episode $mappingIdentifier updated")
+            return
+        }
+
+        var forceUpdate = false
+
+        val newEpisodes = episodes.distinctBy { it.getIdentifier() }
+            .filter { it.getIdentifier() !in identifiers }
+        
+        if (newEpisodes.isNotEmpty()) {
+            logger.info("Found ${newEpisodes.size} new episodes for $mappingIdentifier")
+            val episodeVariants = newEpisodes.map { episode -> episodeVariantService.save(episode, false, mapping) }
+            identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
+            logger.info("Added ${episodeVariants.size} episodes for $mappingIdentifier")
+            needRecalculate.set(true)
+            needRefreshCache.set(true)
+            forceUpdate = true
+        }
+
+        val originalEpisode = episodes.firstOrNull { it.original } ?: episodes.first()
+        val hasChanged = AtomicBoolean(false)
+
+        updateEpisodeDetails(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+
+        mapping.lastUpdateDateTime = if (forceUpdate) {
+            oldLastUpdateDateTime
+        } else {
+            zonedDateTime
+        }
+
+        episodeMappingService.update(mapping)
+
+        if (hasChanged.get()) {
+            traceActionService.createTraceAction(mapping, TraceAction.Action.UPDATE)
+        }
+
+        logger.info("Episode $mappingIdentifier updated")
+    }
+
+    private fun updateEpisodeDetails(
+        originalEpisode: Episode,
+        mapping: EpisodeMapping,
+        mappingIdentifier: String,
+        hasChanged: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        updateEpisodeMappingImage(originalEpisode, mapping, mappingIdentifier)
+        updateEpisodeMappingTitle(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+        updateEpisodeMappingDescription(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+        updateEpisodeMappingDuration(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
+    }
+
+    private fun processNewEpisodes(
+        allPreviousAndNext: List<Episode>,
+        identifiers: MutableSet<String>,
+        needRecalculate: AtomicBoolean,
+        needRefreshCache: AtomicBoolean
+    ) {
+        if (allPreviousAndNext.isEmpty()) return
+
+        val mappingUuids = episodeMappingService.findAllUuids()
+        val newPreviousNextEpisodes = allPreviousAndNext.distinctBy { it.getIdentifier() }
+            .filter { it.getIdentifier() !in identifiers }
+        
+        if (newPreviousNextEpisodes.isEmpty()) return
+        
+        logger.info("Found ${newPreviousNextEpisodes.size} new previous and next episodes")
+        val episodeVariants = newPreviousNextEpisodes.map { episode -> episodeVariantService.save(episode, false) }
+            .filter { it.mapping!!.uuid !in mappingUuids }
+            .toList()
+        
+        if (episodeVariants.isEmpty()) return
+        
+        identifiers.addAll(episodeVariants.mapNotNull { it.identifier })
+        logger.info("Added ${episodeVariants.size} previous and next episodes")
+        needRecalculate.set(true)
+        needRefreshCache.set(true)
+
+        episodeVariants.forEach {
+            it.mapping!!.lastUpdateDateTime = oldLastUpdateDateTime
+            episodeMappingService.update(it.mapping!!)
+        }
+
+        notifyAdminAboutNewEpisodes(episodeVariants)
+    }
+
+    private fun notifyAdminAboutNewEpisodes(episodeVariants: List<EpisodeVariant>) {
+        if (episodeVariants.isEmpty()) return
+
+        val newMappings = episodeVariants.mapNotNull { it.mapping }.distinctBy { it.uuid }
+        logger.info("New episodes:")
+        
+        val lines = newMappings.map { mapping ->
+            "- ${StringUtils.getShortName(mapping.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(mapping)}"
+        }.toSet()
+        
+        lines.forEach { logger.info(it) }
+
+        try {
+            mailService.save(
+                Mail(
+                    recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                    title = "UpdateEpisodeMappingJob - ${newMappings.size} new episodes",
+                    body = lines.joinToString("<br>")
                 )
-            } catch (e: Exception) {
-                logger.warning("Error while sending mail for UpdateEpisodeMappingJob: ${e.message}")
-            }
+            )
+        } catch (e: Exception) {
+            logger.warning("Error while sending mail for UpdateEpisodeMappingJob: ${e.message}")
         }
     }
 
@@ -193,18 +233,14 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val countryCode = anime.countryCode!!
         val platformIds = mutableMapOf<String, Platform>()
+        val depth = configCacheService.getValueAsInt(ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH, 1)
 
         variants.forEach { variant ->
-            val identifier = when (variant.platform) {
-                Platform.ANIM -> animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(variant.identifier!!)!!
-                Platform.CRUN -> crunchyrollPlatform.getCrunchyrollId(variant.identifier!!)!!
-                else -> return@forEach
-            }
-
+            val identifier = StringUtils.getVideoOldIdOrId(variant.identifier!!)
             var previousId: String? = identifier
             var nextId: String? = identifier
 
-            repeat(configCacheService.getValueAsInt(ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH, 1)) {
+            repeat(depth) {
                 runBlocking {
                     previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
                     nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
@@ -353,84 +389,132 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val identifier = episodeVariant.identifier!!
 
         when (episodeVariant.platform) {
-            Platform.ANIM -> runCatching {
-                val videoId = animationDigitalNetworkPlatform.getAnimationDigitalNetworkId(identifier)!!.toInt()
-                val video = AnimationDigitalNetworkCachedWrapper.getVideo(videoId)
-                episodes.addAll(
-                    animationDigitalNetworkPlatform.convertEpisode(
-                        countryCode, video, ZonedDateTime.now(),
-                        needSimulcast = false, checkAnimation = false
-                    )
-                )
-            }
-
-            Platform.CRUN -> runCatching {
-                val crunchyrollId = crunchyrollPlatform.getCrunchyrollId(identifier)!!
-                episodes.addAll(getCrunchyrollEpisodeAndVariants(countryCode, crunchyrollId, isImageUpdate))
-            }
-
-            Platform.DISN -> runCatching {
-                val id = disneyPlusPlatform.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return emptyList()
-                val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
-                val platformEpisodes = ids.flatMap { DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, id, configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)) }
-                val episode = platformEpisodes.find { it.id == id || it.oldId == id } ?: return emptyList()
-
-                updateIdentifier(episodeVariant, id, episode.id, identifiers)
-                updateUrl(episodeVariant, episode.url)
-
-                episodes.addAll(
-                    disneyPlusPlatform.convertEpisode(
-                        countryCode,
-                        episode,
-                        releaseDateTime
-                    )
-                )
-            }
-
-            Platform.NETF -> runCatching {
-                val id = netflixPlatform.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return emptyList()
-                val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
-                val platformEpisodes = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, it.toInt()) }
-                val episode = platformEpisodes.find { it.id.toString() == id || it.oldId == id } ?: return emptyList()
-
-                updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
-                updateUrl(episodeVariant, episode.url)
-
-                episodes.add(
-                    netflixPlatform.convertEpisode(
-                        countryCode,
-                        "",
-                        episode,
-                        episodeType,
-                        audioLocale
-                    )
-                )
-            }
-
-            Platform.PRIM -> runCatching {
-                val id = primeVideoPlatform.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return emptyList()
-                val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
-                val platformEpisodes = ids.flatMap { PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, it) }
-                val episode = platformEpisodes.find { it.id == id || it.oldId == id } ?: return emptyList()
-
-                updateIdentifier(episodeVariant, id, episode.id, identifiers)
-                updateUrl(episodeVariant, episode.url)
-
-                episodes.addAll(
-                    primeVideoPlatform.convertEpisode(
-                        countryCode,
-                        "",
-                        episode,
-                        releaseDateTime,
-                        episodeType
-                    )
-                )
-            }
-
+            Platform.ANIM -> retrieveAnimEpisode(countryCode, identifier, episodes)
+            Platform.CRUN -> retrieveCrunchyrollEpisode(countryCode, identifier, isImageUpdate, episodes)
+            Platform.DISN -> retrieveDisneyEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime)
+            Platform.NETF -> retrieveNetflixEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, episodeType, audioLocale)
+            Platform.PRIM -> retrievePrimeEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime, episodeType)
             else -> logger.warning("Error while getting episode $identifier : Invalid platform")
         }
 
         return episodes
+    }
+
+    private suspend fun retrieveAnimEpisode(
+        countryCode: CountryCode,
+        identifier: String,
+        episodes: MutableList<Episode>
+    ) {
+        runCatching {
+            val videoId = StringUtils.getVideoOldIdOrId(identifier)!!.toInt()
+            val video = AnimationDigitalNetworkCachedWrapper.getVideo(videoId)
+            episodes.addAll(
+                animationDigitalNetworkPlatform.convertEpisode(
+                    countryCode, video, ZonedDateTime.now(),
+                    needSimulcast = false, checkAnimation = false
+                )
+            )
+        }
+    }
+
+    private suspend fun retrieveCrunchyrollEpisode(
+        countryCode: CountryCode,
+        identifier: String,
+        isImageUpdate: Boolean,
+        episodes: MutableList<Episode>
+    ) {
+        runCatching {
+            val crunchyrollId = StringUtils.getVideoOldIdOrId(identifier)!!
+            episodes.addAll(getCrunchyrollEpisodeAndVariants(countryCode, crunchyrollId, isImageUpdate))
+        }
+    }
+
+    private suspend fun retrieveDisneyEpisode(
+        countryCode: CountryCode,
+        episodeVariant: EpisodeVariant,
+        episodeMapping: EpisodeMapping,
+        identifiers: MutableSet<String>,
+        episodes: MutableList<Episode>,
+        releaseDateTime: ZonedDateTime
+    ) {
+        runCatching {
+            val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
+            val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
+            val checkAudioLocales = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
+            val platformEpisodes = ids.flatMap { DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, id, checkAudioLocales) }
+            val episode = platformEpisodes.find { it.id == id || it.oldId == id } ?: return
+
+            updateIdentifier(episodeVariant, id, episode.id, identifiers)
+            updateUrl(episodeVariant, episode.url)
+
+            episodes.addAll(
+                disneyPlusPlatform.convertEpisode(
+                    countryCode,
+                    episode,
+                    releaseDateTime
+                )
+            )
+        }
+    }
+
+    private suspend fun retrieveNetflixEpisode(
+        countryCode: CountryCode,
+        episodeVariant: EpisodeVariant,
+        episodeMapping: EpisodeMapping,
+        identifiers: MutableSet<String>,
+        episodes: MutableList<Episode>,
+        episodeType: EpisodeType,
+        audioLocale: String
+    ) {
+        runCatching {
+            val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
+            val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
+            val platformEpisodes = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, it.toInt()) }
+            val episode = platformEpisodes.find { it.id.toString() == id || it.oldId == id } ?: return
+
+            updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
+            updateUrl(episodeVariant, episode.url)
+
+            episodes.add(
+                netflixPlatform.convertEpisode(
+                    countryCode,
+                    "",
+                    episode,
+                    episodeType,
+                    audioLocale
+                )
+            )
+        }
+    }
+
+    private suspend fun retrievePrimeEpisode(
+        countryCode: CountryCode,
+        episodeVariant: EpisodeVariant,
+        episodeMapping: EpisodeMapping,
+        identifiers: MutableSet<String>,
+        episodes: MutableList<Episode>,
+        releaseDateTime: ZonedDateTime,
+        episodeType: EpisodeType
+    ) {
+        runCatching {
+            val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
+            val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
+            val platformEpisodes = ids.flatMap { PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, it) }
+            val episode = platformEpisodes.find { it.id == id || it.oldId == id } ?: return
+
+            updateIdentifier(episodeVariant, id, episode.id, identifiers)
+            updateUrl(episodeVariant, episode.url)
+
+            episodes.addAll(
+                primeVideoPlatform.convertEpisode(
+                    countryCode,
+                    "",
+                    episode,
+                    releaseDateTime,
+                    episodeType
+                )
+            )
+        }
     }
 
     private suspend fun getCrunchyrollEpisodeAndVariants(
@@ -440,30 +524,21 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ): List<Episode> {
         val browseObjects = mutableListOf<BrowseObject>()
 
-        val variantObjects = (
-                if (isImageUpdate)
-                    CrunchyrollWrapper.getEpisode(
-                        countryCode.locale,
-                        crunchyrollId
-                    )
-                else
-                    CrunchyrollCachedWrapper.getEpisode(
-                        countryCode.locale,
-                        crunchyrollId
-                    )
-                ).also { browseObjects.add(it.convertToBrowseObject()) }
-            .getVariants()
-            .subtract(browseObjects.map { it.id }.toSet())
-            .chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
+        val episodeSource = if (isImageUpdate) {
+            CrunchyrollWrapper.getEpisode(countryCode.locale, crunchyrollId)
+        } else {
+            CrunchyrollCachedWrapper.getEpisode(countryCode.locale, crunchyrollId)
+        }
+        
+        val mainObject = episodeSource.also { browseObjects.add(it.convertToBrowseObject()) }
+        
+        val variantIds = mainObject.getVariants().subtract(browseObjects.map { it.id }.toSet())
+        val variantObjects = variantIds.chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
             .flatMap { chunk ->
                 HttpRequest.retry(3) {
-                    CrunchyrollCachedWrapper.getObjects(
-                        countryCode.locale,
-                        *chunk.toTypedArray()
-                    )
+                    CrunchyrollCachedWrapper.getObjects(countryCode.locale, *chunk.toTypedArray())
                 }
             }
-
 
         return (browseObjects + variantObjects).mapNotNull { browseObject ->
             try {
@@ -474,7 +549,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 )
             } catch (e: Exception) {
                 logger.warning("Error while getting Crunchyroll episode ${browseObject.id} : ${e.message}")
-                return@mapNotNull null
+                null
             }
         }
     }

@@ -106,7 +106,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             previousWeekLocalDate.atEndOfTheDay(Constant.utcZoneId)
         ).filter { (_, releaseDateTime) -> previousWeek.isAfterOrEqual(releaseDateTime) }
             .forEach { (identifier, _) ->
-                val crunchyrollId = getCrunchyrollId(identifier) ?: run {
+                val crunchyrollId = StringUtils.getVideoOldIdOrId(identifier) ?: run {
                     logger.warning("Crunchyroll ID not found in $identifier")
                     return@forEach
                 }
@@ -164,9 +164,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             }.getOrNull()?.firstOrNull()
         }
     }
-
-    fun getCrunchyrollId(identifier: String) =
-        "[A-Z]{2}-CRUN-([A-Z0-9]{9})-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
 
     fun convertEpisode(
         countryCode: CountryCode,

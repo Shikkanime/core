@@ -162,6 +162,8 @@ object StringUtils {
         uncensored: Boolean = false
     ) = "${countryCode}-${platform}-$id-${audioLocale.uppercase()}${if (uncensored) "-UNC" else EMPTY_STRING}"
 
+    fun getVideoOldIdOrId(identifier: String) = "^[A-Z]{2}-[A-Z]{4}-(.+)-[A-Z]{2}-[A-Z]{2}(?:-UNC)?$".toRegex().find(identifier)?.groupValues?.get(1)
+
     fun generateRandomString(length: Int): String {
         val source = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
         return (1..length)

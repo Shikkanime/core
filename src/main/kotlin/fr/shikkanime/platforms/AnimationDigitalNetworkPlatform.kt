@@ -180,7 +180,4 @@ class AnimationDigitalNetworkPlatform :
             else -> throw Exception("Language is null")
         }
     }
-
-    fun getAnimationDigitalNetworkId(identifier: String) =
-        "[A-Z]{2}-ANIM-([0-9]{1,5})-[A-Z]{2}-[A-Z]{2}(?:-UNC)?".toRegex().find(identifier)?.groupValues?.get(1)
 }
