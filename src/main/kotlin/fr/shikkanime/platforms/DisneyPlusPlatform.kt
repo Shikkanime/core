@@ -59,9 +59,6 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         return list
     }
 
-    fun getVideoOldIdOrId(identifier: String) =
-        "[A-Z]{2}-DISN-(.*)-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
-
     fun convertEpisode(
         countryCode: CountryCode,
         episode: AbstractDisneyPlusWrapper.Episode,

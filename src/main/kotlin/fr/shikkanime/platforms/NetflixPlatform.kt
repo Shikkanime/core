@@ -61,10 +61,6 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         return list
     }
 
-    fun getVideoOldIdOrId(identifier: String) =
-        "[A-Z]{2}-NETF-(.+)-[A-Z]{2}-[A-Z]{2}".toRegex().find(identifier)?.groupValues?.get(1)
-
-
     fun convertEpisode(
         countryCode: CountryCode,
         showImage: String,
