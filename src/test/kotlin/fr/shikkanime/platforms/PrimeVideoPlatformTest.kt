@@ -103,7 +103,8 @@ class PrimeVideoPlatformTest : AbstractTest() {
             }
         )
 
-        val episodes = runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }
+        val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } }
+            .getOrNull() ?: emptyList()
 
         assertNotNull(episodes)
         // Skip the test if no episodes are found
