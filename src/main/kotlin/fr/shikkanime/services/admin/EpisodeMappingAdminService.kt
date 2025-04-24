@@ -11,6 +11,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.*
+import fr.shikkanime.utils.Constant
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -92,7 +93,7 @@ class EpisodeMappingAdminService {
                 ?.let { existingEpisode ->
                     mergeEpisodeMapping(episode, existingEpisode)?.apply {
                         lastUpdateDateTime = if (forcedUpdate) {
-                            ZonedDateTime.parse("2000-01-01T00:00:00Z")
+                            Constant.oldLastUpdateDateTime
                         } else {
                             ZonedDateTime.now()
                         }
@@ -215,7 +216,7 @@ class EpisodeMappingAdminService {
 
             // Update the episode
             episode.lastUpdateDateTime = if (forcedUpdate) {
-                ZonedDateTime.parse("2000-01-01T00:00:00Z") 
+                Constant.oldLastUpdateDateTime
             } else {
                 ZonedDateTime.now()
             }

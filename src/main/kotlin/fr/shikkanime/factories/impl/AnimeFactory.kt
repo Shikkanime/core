@@ -39,7 +39,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             slug = entity.slug!!,
             releaseDateTime = entity.releaseDateTime.withUTCString(),
             lastReleaseDateTime = entity.lastReleaseDateTime.withUTCString(),
-            lastUpdateDateTime = entity.lastUpdateDateTime?.withUTCString(),
+            lastUpdateDateTime = entity.lastUpdateDateTime.withUTCString(),
             description = entity.description,
             simulcasts = if (Hibernate.isInitialized(entity.simulcasts)) entity.simulcasts.sortBySeasonAndYear().map { simulcastFactory.toDto(it) }.toSet() else null,
             audioLocales = audioLocales.takeIf { it.isNotEmpty() },

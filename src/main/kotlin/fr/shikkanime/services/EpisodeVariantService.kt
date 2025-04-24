@@ -347,7 +347,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val entity = EpisodeMapping(
             anime = mapping.anime,
             releaseDateTime = mapping.releaseDateTime,
-            lastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z"),
+            lastUpdateDateTime = Constant.oldLastUpdateDateTime,
             episodeType = dto.episodeType,
             season = dto.season,
             number = dto.number,
