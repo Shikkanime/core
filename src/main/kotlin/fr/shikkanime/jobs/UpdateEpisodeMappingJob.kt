@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.DISN, Platform.NETF, Platform.PRIM)
-    private val oldLastUpdateDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
 
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
@@ -135,7 +134,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         updateEpisodeDetails(originalEpisode, mapping, mappingIdentifier, hasChanged, needRefreshCache)
 
         mapping.lastUpdateDateTime = if (forceUpdate) {
-            oldLastUpdateDateTime
+            Constant.oldLastUpdateDateTime
         } else {
             zonedDateTime
         }
@@ -189,7 +188,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         needRefreshCache.set(true)
 
         episodeVariants.forEach {
-            it.mapping!!.lastUpdateDateTime = oldLastUpdateDateTime
+            it.mapping!!.lastUpdateDateTime = Constant.oldLastUpdateDateTime
             episodeMappingService.update(it.mapping!!)
         }
 

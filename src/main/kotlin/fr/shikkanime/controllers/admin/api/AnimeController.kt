@@ -12,6 +12,7 @@ import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.AttachmentService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -38,7 +39,7 @@ class AnimeController : HasPageableRoute() {
     @AdminSessionAuthenticated
     private fun forceUpdateAllAnimes(): Response {
         val animes = animeService.findAll()
-        animes.forEach { it.lastUpdateDateTime = null }
+        animes.forEach { it.lastUpdateDateTime = Constant.oldLastUpdateDateTime }
         animeService.updateAll(animes)
 
         return Response.redirect(Link.ANIMES.href)
