@@ -11,9 +11,6 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
-import freemarker.cache.ClassTemplateLoader
-import freemarker.template.Configuration
-import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
@@ -27,17 +24,10 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var memberActionRepository: MemberActionRepository
-
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var mailService: MailService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var memberActionRepository: MemberActionRepository
+    @Inject private lateinit var memberService: MemberService
+    @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberActionRepository
 
@@ -80,24 +70,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         return savedAction.uuid!!
     }
 
-    private fun getFreemarkerContent(template: String, code: String? = null, model: Map<String, String>? = null): StringWriter {
-        val stringWriter = StringWriter()
-        val configuration = Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS)
-        configuration.templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
-        configuration.defaultEncoding = "UTF-8"
-
-        configuration.getTemplate(template).process(
-            mutableMapOf(
-                "baseUrl" to Constant.baseUrl,
-                "code" to code,
-            ).apply {
-                model?.let(this::putAll)
-            }, stringWriter
-        )
-
-        return stringWriter
-    }
-
     private fun doAction(memberAction: MemberAction, code: String, email: String) {
         when (memberAction.action) {
             Action.VALIDATE_EMAIL -> {
@@ -105,7 +77,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     Mail(
                         recipient = email,
                         title = "${Constant.NAME} - Vérification d'adresse email",
-                        body = getFreemarkerContent("/mail/associate-email.ftl", code, model = mapOf("webToken" to toWebToken(memberAction))).toString()
+                        body = mailService.getFreemarkerContent("/mail/associate-email.ftl", code, model = mapOf("webToken" to toWebToken(memberAction))).toString()
                     )
                 )
             }
@@ -115,7 +87,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     Mail(
                         recipient = email,
                         title = "${Constant.NAME} - Récupération d'identifiant",
-                        body = getFreemarkerContent("/mail/forgot-identifier.ftl", code).toString()
+                        body = mailService.getFreemarkerContent("/mail/forgot-identifier.ftl", code).toString()
                     )
                 )
             }
@@ -135,7 +107,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     Mail(
                         recipient = memberAction.email!!,
                         title = "${Constant.NAME} - Adresse email validée",
-                        body = getFreemarkerContent("/mail/email-associated.ftl").toString()
+                        body = mailService.getFreemarkerContent("/mail/email-associated.ftl").toString()
                     )
                 )
             }
@@ -155,7 +127,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     Mail(
                         recipient = memberAction.email!!,
                         title = "${Constant.NAME} - Votre nouvel identifiant",
-                        body = getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
+                        body = mailService.getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
                     )
                 )
             }

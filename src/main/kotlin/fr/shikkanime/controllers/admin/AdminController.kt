@@ -2,15 +2,13 @@ package fr.shikkanime.controllers.admin
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.member.TokenDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.AttachmentService
+import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
@@ -33,20 +31,12 @@ const val ADMIN = "/admin"
 
 @Controller(ADMIN)
 class AdminController {
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var memberService: MemberService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var mailService: MailService
 
     @Path
     @Get
@@ -200,23 +190,6 @@ class AdminController {
         )
     }
 
-    @Path("/threads")
-    @Get
-    @AdminSessionAuthenticated
-    private fun getThreads(
-        @QueryParam("success") success: Int?
-    ): Response {
-        return Response.template(
-            Link.THREADS,
-            mapOf(
-                "askCodeUrl" to ThreadsWrapper.getCode(
-                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
-                ),
-                "success" to success
-            )
-        )
-    }
-
     @Path("/jobs")
     @Post
     @AdminSessionAuthenticated
@@ -232,6 +205,66 @@ class AdminController {
         }.start()
 
         return Response.redirect(Link.JOBS.href)
+    }
+
+    @Path("/emails")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getEmails(): Response {
+        return Response.template(Link.EMAILS)
+    }
+
+    @Path("/emails")
+    @Post
+    @AdminSessionAuthenticated
+    private fun sendEmails(@BodyParam parameters: Parameters): Response {
+        val subject = parameters["subject"] ?: return Response.redirect(Link.EMAILS.href)
+        val body = parameters["body"] ?: return Response.redirect(Link.EMAILS.href)
+
+        // Send the email to all members
+        val members = memberService.findAll().filterNot { it.email.isNullOrBlank() }
+
+        val bodyEmail = mailService.getFreemarkerContent("/mail/custom-message.ftl", model = mapOf(
+            "description" to body,
+        )).toString()
+
+        members.forEach { member ->
+            mailService.save(
+                Mail(
+                    recipient = member.email,
+                    title = "${Constant.NAME} - $subject",
+                    body = bodyEmail
+                )
+            )
+        }
+
+        mailService.save(
+            Mail(
+                recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                title = "${Constant.NAME} - $subject",
+                body = bodyEmail
+            )
+        )
+
+        return Response.redirect(Link.EMAILS.href)
+    }
+
+
+    @Path("/threads")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getThreads(
+        @QueryParam("success") success: Int?
+    ): Response {
+        return Response.template(
+            Link.THREADS,
+            mapOf(
+                "askCodeUrl" to ThreadsWrapper.getCode(
+                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
+                ),
+                "success" to success
+            )
+        )
     }
 
     @Path("/threads-publish")

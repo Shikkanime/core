@@ -1,4 +1,4 @@
-<#macro main title="" description="" showCode=true>
+<#macro main title="" description="" showCode=true showThanks=true>
     <div style="font-family: Arial, sans-serif; margin: 0; padding: 0; box-sizing: border-box; width: 100%; background-color: #f5f5f5;">
         <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f5f5f5; margin: 0 auto;">
             <tr>
@@ -34,17 +34,19 @@
                         </#if>
 
                         <#if description?? && description?length != 0>
-                            <div style="font-size: 14px; color: #666666; margin-bottom: 25px; line-height: 1.5;">
+                            <div style="font-size: 14px; <#if title?? && title?length != 0 && showCode && code?? && code?length != 0>color: #666666;</#if> margin-bottom: 25px; line-height: 1.5;">
                                 ${description}
                             </div>
                         </#if>
 
                         <#nested />
 
-                        <p style="font-size: 16px; margin-bottom: 20px; line-height: 1.5;">
-                            Merci d'utiliser notre application ! Nous apprécions votre confiance et espérons que notre
-                            service répondra à vos attentes.
-                        </p>
+                        <#if showThanks>
+                            <p style="font-size: 16px; margin-bottom: 20px; line-height: 1.5;">
+                                Merci d'utiliser notre application ! Nous apprécions votre confiance et espérons que notre
+                                service répondra à vos attentes.
+                            </p>
+                        </#if>
 
                         <p style="font-size: 12px; color: #999999; margin: 0; border-top: 1px solid #eeeeee; padding-top: 15px;">
                             Ceci est un email automatique, merci de ne pas répondre.
