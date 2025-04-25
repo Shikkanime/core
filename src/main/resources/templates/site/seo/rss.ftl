@@ -9,7 +9,7 @@
         <link>${baseUrl}</link>
         <#list groupedEpisodes as groupedEpisode>
         <item>
-            <title>${groupedEpisode.anime.name?html} - ${su.toEpisodeGroupedString(groupedEpisode, true, false)}<#if groupedEpisode.title??> - ${groupedEpisode.title?html}</#if></title>
+            <title>${groupedEpisode.anime.shortName?html} - ${su.toEpisodeGroupedString(groupedEpisode, true, false)}<#if groupedEpisode.title??> - ${groupedEpisode.title?html}</#if></title>
             <description>${(groupedEpisode.description!"")?html}</description>
             <pubDate>${groupedEpisode.releaseDateTime?replace("Z", "+0000")}</pubDate>
             <lastBuildDate>${groupedEpisode.releaseDateTime?replace("Z", "+0000")}</lastBuildDate>
