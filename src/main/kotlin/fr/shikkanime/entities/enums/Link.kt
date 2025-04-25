@@ -21,6 +21,7 @@ enum class Link(
     MEMBERS("$ADMIN/members", "/admin/members/list.ftl", "bi bi-people", "Members"),
     RULES("$ADMIN/rules", "/admin/rules.ftl", "bi bi-rulers", "Rules"),
     JOBS("$ADMIN/jobs", "/admin/jobs.ftl", "bi bi-gear-wide-connected", "Jobs"),
+    EMAILS("$ADMIN/emails", "/admin/emails.ftl", "bi bi-envelope", "Emails"),
     THREADS("$ADMIN/threads", "/admin/threads.ftl", "bi bi-threads", "Threads"),
     CONFIG("$ADMIN/config", "/admin/configs.ftl", "bi bi-gear", "Configurations"),
 
