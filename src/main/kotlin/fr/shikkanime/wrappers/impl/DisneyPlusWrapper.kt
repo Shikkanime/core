@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.impl
 
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -168,6 +169,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
         val rawVideoData = httpRequest.get(videoUrl)
         require(rawVideoData.status == HttpStatusCode.OK) { "Failed to fetch raw video data (${rawVideoData.status.value})" }
+        val supportedLanguages = CountryCode.entries.map { it.locale }
 
         return "#EXT-X-MEDIA:TYPE=AUDIO,.*,LANGUAGE=\"([a-zA-Z0-9\\-]*)\".*".toRegex()
             .findAll(rawVideoData.bodyAsText())
@@ -181,6 +183,8 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                     locale
                 }
             }
+            // Keep ja-JP and fr-FR
+            .filter { it == "ja-JP" || it in supportedLanguages }
             .toSet()
     }
 }
