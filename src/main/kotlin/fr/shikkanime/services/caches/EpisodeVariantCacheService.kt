@@ -21,14 +21,9 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantCacheService : ICacheService {
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var episodeVariantFactory: EpisodeVariantFactory
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var episodeVariantFactory: EpisodeVariantFactory
 
     fun findAllByMapping(episodeMapping: EpisodeMapping) = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllByMapping",
@@ -85,4 +80,10 @@ class EpisodeVariantCacheService : ICacheService {
         classes = listOf(EpisodeVariant::class.java),
         key = uuid,
     ) { episodeVariantService.find(it)?.let { episodeVariantFactory.toDto(it) } }
+
+    fun findByIdentifier(identifier: String) = MapCache.getOrComputeNullable(
+        "EpisodeVariantCacheService.findByIdentifier",
+        classes = listOf(EpisodeVariant::class.java),
+        key = identifier,
+    ) { episodeVariantService.findByIdentifier(it) }
 }

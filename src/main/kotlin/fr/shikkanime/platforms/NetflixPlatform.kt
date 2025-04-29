@@ -1,10 +1,12 @@
 package fr.shikkanime.platforms
 
+import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
@@ -12,6 +14,8 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
@@ -39,7 +43,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
 
                 // Apply delay if delay is defined for this locale
                 key.netflixSimulcast.audioLocaleDelays[audioLocale]?.let { delayInWeeks ->
-                    episode.releaseDateTime = episode.releaseDateTime.plusWeeks(delayInWeeks)
+                    episode.releaseDateTime = (episodeVariantCacheService.findByIdentifier(episode.getIdentifier())?.releaseDateTime ?: episode.releaseDateTime).plusWeeks(delayInWeeks)
                 }
                 // If no delay is applicable, the releaseDateTime set by convertEpisode is used.
 
