@@ -13,6 +13,8 @@ abstract class AbstractNetflixWrapper {
         val banner: String,
         val description: String?,
         val seasonCount: Int?,
+        val availabilityStartTime: ZonedDateTime?,
+        val runtimeSec: Long? = null,
     )
 
     data class Season(
