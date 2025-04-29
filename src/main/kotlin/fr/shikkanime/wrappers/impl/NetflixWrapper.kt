@@ -42,7 +42,9 @@ object NetflixWrapper : AbstractNetflixWrapper(){
             showJson.getAsString("title")!!,
             showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
-            showJson.getAsJsonObject("seasons")?.getAsInt("totalCount")
+            showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
+            showJson.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
+            showJson.getAsInt("runtimeSec")?.toLong()
         )
     }
 
@@ -53,7 +55,7 @@ object NetflixWrapper : AbstractNetflixWrapper(){
             "operationName" to "PreviewModalEpisodeSelector",
             "variables" to mapOf(
                 "showId" to id,
-                "seasonCount" to show.seasonCount,
+                "seasonCount" to (show.seasonCount ?: 1),
             ),
             "extensions" to mapOf(
                 "persistedQuery" to mapOf(
@@ -64,10 +66,30 @@ object NetflixWrapper : AbstractNetflixWrapper(){
         )))
         require(seasonsResponse.status == HttpStatusCode.OK) { "Failed to get seasons (${seasonsResponse.status.value} - ${seasonsResponse.bodyAsText()})" }
 
-        val seasonsJson = ObjectParser.fromJson(seasonsResponse.bodyAsText()).getAsJsonObject("data")
+        val firstVideoObject = ObjectParser.fromJson(seasonsResponse.bodyAsText()).getAsJsonObject("data")
             ?.getAsJsonArray("videos")
             ?.get(0)?.asJsonObject
-            ?.getAsJsonObject("seasons")
+
+        // If first video type is movie, return directly
+        if (firstVideoObject?.getAsString("__typename") == "Movie") {
+            return listOf(
+                Episode(
+                    show,
+                    EncryptionManager.toSHA512("$id-1-1").substring(0..<8),
+                    show.id,
+                    show.availabilityStartTime,
+                    1,
+                    1,
+                    show.name.normalize(),
+                    show.description?.normalize(),
+                    "https://www.netflix.com/watch/${show.id}",
+                    show.banner.substringBefore("?"),
+                    show.runtimeSec!!
+                )
+            )
+        }
+
+        val seasonsJson = firstVideoObject?.getAsJsonObject("seasons")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get seasons")
 
         val seasons = seasonsJson.map { seasonJson ->

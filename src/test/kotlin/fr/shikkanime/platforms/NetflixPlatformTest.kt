@@ -59,6 +59,22 @@ class NetflixPlatformTest : AbstractTest() {
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1147/122444l.jpg",
                 audioLocales = setOf("ja-JP", "fr-FR"),
                 audioLocaleDelays = mapOf("fr-FR" to 1L)
+            ),
+            NetflixTestCase(
+                netflixId = "81208936",
+                expectedAnimeName = "Violet Evergarden : Éternité et la poupée de souvenirs automatiques",
+                releaseDay = 2,
+                testDate = "2025-04-29T21:30:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1425/102304l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR")
+            ),
+            NetflixTestCase(
+                netflixId = "81193214",
+                expectedAnimeName = "Violet Evergarden : Le film",
+                releaseDay = 2,
+                testDate = "2025-04-29T21:30:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1825/110716l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR")
             )
         )
     }
