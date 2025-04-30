@@ -72,7 +72,7 @@
                 <tr>
                     <td>
                         <template x-if="member.hasProfilePicture">
-                            <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=MEMBER_PROFILE&v=' + new Date(member.lastUpdateDateTime).getTime()" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
+                            <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=MEMBER_PROFILE&v=' + new Date(member.attachmentLastUpdateDateTime).getTime()" class="rounded-circle me-1" width="32" height="32" alt="Profile picture">
                         </template>
 
                         <span class="me-1 badge" :class="member.isActive ? 'bg-success' : 'bg-danger'" x-text="member.isActive ? 'Active' : 'Inactive'"></span>

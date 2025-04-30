@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.withUTCString
+import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.metamodel.SingularAttribute
 import org.hibernate.Hibernate
 import java.time.LocalDate
@@ -75,30 +76,29 @@ class MemberRepository : AbstractRepository<Member>() {
             followedEpisodesSubquery.select(cb.count(followedEpisodesRoot[MemberFollowEpisode_.episode]))
                 .where(cb.equal(followedEpisodesRoot[MemberFollowEpisode_.member], root))
 
-            val hasMemberImageSubquery = query.subquery(Boolean::class.java)
-            val attachmentRoot = hasMemberImageSubquery.from(Attachment::class.java)
+            val attachmentJoin = root.join(Member_.attachments, JoinType.LEFT)
 
-            hasMemberImageSubquery.select(cb.literal(true))
-                .where(
-                    cb.equal(attachmentRoot[Attachment_.entityUuid], root[Member_.uuid]),
-                    cb.equal(attachmentRoot[Attachment_.type], ImageType.MEMBER_PROFILE),
-                    cb.isTrue(attachmentRoot[Attachment_.active])
-                )
+            attachmentJoin.on(
+                cb.equal(attachmentJoin[Attachment_.type], ImageType.MEMBER_PROFILE),
+                cb.isTrue(attachmentJoin[Attachment_.active])
+            )
 
             query.multiselect(
                 root[Member_.uuid],
                 root[Member_.email],
                 root[Member_.creationDateTime],
                 root[Member_.lastUpdateDateTime],
+                attachmentJoin[Attachment_.lastUpdateDateTime],
                 maxActionDateTimeSubquery,
                 followedAnimesSubquery,
                 followedEpisodesSubquery,
-                hasMemberImageSubquery
+                cb.count(attachmentJoin[Attachment_.uuid]),
             ).groupBy(
                 root[Member_.uuid],
                 root[Member_.email],
                 root[Member_.creationDateTime],
                 root[Member_.lastUpdateDateTime],
+                attachmentJoin[Attachment_.lastUpdateDateTime],
             ).orderBy(
                 cb.asc(cb.isNull(maxActionDateTimeSubquery)),
                 cb.desc(maxActionDateTimeSubquery),
@@ -112,9 +112,10 @@ class MemberRepository : AbstractRepository<Member>() {
                     tuple[2, ZonedDateTime::class.java].withUTCString(),
                     tuple[3, ZonedDateTime::class.java]?.withUTCString(),
                     tuple[4, ZonedDateTime::class.java]?.withUTCString(),
-                    tuple[5, Long::class.java],
+                    tuple[5, ZonedDateTime::class.java]?.withUTCString(),
                     tuple[6, Long::class.java],
-                    runCatching { tuple[7, Boolean::class.java] }.getOrDefault(false) ?: false
+                    tuple[7, Long::class.java],
+                    (runCatching { tuple[8, Long::class.java] }.getOrDefault(0L) ?: 0L) > 0L,
                 ).apply {
                     isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
                 }
@@ -169,27 +170,29 @@ class MemberRepository : AbstractRepository<Member>() {
                     .where(cb.equal(followedEpisodesRoot[MemberFollowEpisode_.member], root))
             }
 
-            val hasMemberImageSubquery = query.subquery(Boolean::class.java)
-            val attachmentRoot = hasMemberImageSubquery.from(Attachment::class.java)
+            val attachmentJoin = root.join(Member_.attachments, JoinType.LEFT)
 
-            hasMemberImageSubquery.select(cb.literal(true))
-                .where(
-                    cb.equal(attachmentRoot[Attachment_.entityUuid], root[Member_.uuid]),
-                    cb.equal(attachmentRoot[Attachment_.type], ImageType.MEMBER_PROFILE),
-                    cb.isTrue(attachmentRoot[Attachment_.active])
-                )
+            attachmentJoin.on(
+                cb.equal(attachmentJoin[Attachment_.type], ImageType.MEMBER_PROFILE),
+                cb.isTrue(attachmentJoin[Attachment_.active])
+            )
 
             query.multiselect(
                 root[Member_.uuid],
                 root[Member_.email],
                 root[Member_.creationDateTime],
                 root[Member_.lastUpdateDateTime],
+                attachmentJoin[Attachment_.lastUpdateDateTime],
                 maxActionDateTimeSubquery,
                 followedAnimesSubquery,
                 followedEpisodesSubquery,
-                hasMemberImageSubquery,
+                cb.count(attachmentJoin[Attachment_.uuid]),
                 additionalDataSubquery,
             ).where(cb.equal(root[Member_.uuid], uuid))
+                .groupBy(
+                    root[Member_.uuid],
+                    attachmentJoin[Attachment_.lastUpdateDateTime],
+                )
 
             val tuple = createReadOnlyQuery(it, query).resultList.firstOrNull() ?: return null
 
@@ -199,10 +202,11 @@ class MemberRepository : AbstractRepository<Member>() {
                 tuple[2, ZonedDateTime::class.java].withUTCString(),
                 tuple[3, ZonedDateTime::class.java]?.withUTCString(),
                 tuple[4, ZonedDateTime::class.java]?.withUTCString(),
-                tuple[5, Long::class.java],
+                tuple[5, ZonedDateTime::class.java]?.withUTCString(),
                 tuple[6, Long::class.java],
-                runCatching { tuple[7, Boolean::class.java] }.getOrDefault(false) ?: false,
-                additionalData = tuple[8, String::class.java]?.let { ObjectParser.fromJson(it, AdditionalDataDto::class.java) }
+                tuple[7, Long::class.java],
+                (runCatching { tuple[8, Long::class.java] }.getOrDefault(0L) ?: 0L) > 0L,
+                additionalData = tuple[9, String::class.java]?.let { ObjectParser.fromJson(it, AdditionalDataDto::class.java) }
             ).apply {
                 isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
             }

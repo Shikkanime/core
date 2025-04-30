@@ -15,7 +15,7 @@
             <div class="card-body">
                 <div class="d-flex mb-3">
                     <template x-if="member.hasProfilePicture">
-                        <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=MEMBER_PROFILE&v=' + new Date(member.lastUpdateDateTime).getTime()" class="rounded me-2" width="64" height="64" alt="Profile picture">
+                        <img x-bind:src="'/api/v1/attachments?uuid=' + member.uuid + '&type=MEMBER_PROFILE&v=' + new Date(member.attachmentLastUpdateDateTime).getTime()" class="rounded me-2" width="64" height="64" alt="Profile picture">
                     </template>
                     <div class="row row-cols-2">
                         <div class="col-auto">
