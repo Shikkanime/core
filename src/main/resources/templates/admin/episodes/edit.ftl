@@ -194,7 +194,7 @@
                         <div class="col-md-6">
                             <label for="image" class="form-label">Image</label>
 
-                            <div class="input-group">
+                            <div class="input-group mb-2">
                                 <input type="text" class="form-control" id="image" name="image"
                                        x-model="episode.image" aria-label="Image"
                                        aria-describedby="basic-addon">
@@ -204,6 +204,8 @@
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>
+
+                            <img :src="'${apiUrl}/v1/attachments?uuid=' + episode.uuid + '&type=BANNER'" class="w-50" alt="Episode preview">
                         </div>
                         <div class="col-md-6">
                             <label for="duration" class="form-label">Duration</label>
