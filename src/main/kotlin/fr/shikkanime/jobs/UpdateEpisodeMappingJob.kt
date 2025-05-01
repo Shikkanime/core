@@ -440,7 +440,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
             val checkAudioLocales = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
-            val platformEpisodes = ids.flatMap { DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, id, checkAudioLocales) }
+            val platformEpisodes = ids.flatMap { DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, it, checkAudioLocales) }
             val episode = platformEpisodes.find { it.id == id || it.oldId == id } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id, identifiers)

@@ -100,33 +100,6 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         return episodes
     }
 
-    override suspend fun getShowIdByEpisodeId(episodeId: String): PlayerVideo {
-        val types = listOf("deeplinkId", "dmcContentId")
-
-        val response = types.firstNotNullOfOrNull { type ->
-            val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.7/deeplink?action=playback&refId=$episodeId&refIdType=$type")
-
-            if (response.status == HttpStatusCode.OK) {
-                response
-            } else {
-                null
-            }
-        }
-
-        requireNotNull(response) { "Failed to fetch show id (${response?.status?.value})" }
-
-        val jsonObject = ObjectParser.fromJson(response.bodyAsText())
-            .getAsJsonObject("data")
-            .getAsJsonObject("deeplink")
-            .getAsJsonArray("actions")[0].asJsonObject
-
-        return PlayerVideo(
-            jsonObject.getAsString("deeplinkId")!!,
-            jsonObject.getAsJsonObject("partnerFeed").getAsString("evaSeriesEntityId")!!,
-            jsonObject.getAsString("resourceId")!!
-        )
-    }
-
     override suspend fun getAudioLocales(resourceId: String): Set<String> {
         val headers = mapOf(
             "x-application-version" to "1.1.2",
