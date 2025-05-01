@@ -25,12 +25,6 @@ object DisneyPlusCachedWrapper : AbstractDisneyPlusWrapper() {
         key = Triple(locale, showId, checkAudioLocales)
     ) { runBlocking { DisneyPlusWrapper.getEpisodesByShowId(it.first, it.second, it.third) } }
 
-    override suspend fun getShowIdByEpisodeId(episodeId: String) = MapCache.getOrCompute(
-        "DisneyPlusCachedWrapper.getShowIdByEpisodeId",
-        duration = defaultCacheDuration,
-        key = episodeId
-    ) { runBlocking { DisneyPlusWrapper.getShowIdByEpisodeId(it) } }
-
     override suspend fun getAudioLocales(resourceId: String) = MapCache.getOrCompute(
         "DisneyPlusCachedWrapper.getAudioLocales",
         duration = defaultCacheDuration,

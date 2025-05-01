@@ -39,12 +39,6 @@ abstract class AbstractDisneyPlusWrapper {
         val audioLocales: Set<String>
     )
 
-    data class PlayerVideo(
-        val id: String,
-        val showId: String,
-        val resourceId: String
-    )
-
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
     protected val httpRequest = HttpRequest()
 
@@ -88,7 +82,6 @@ abstract class AbstractDisneyPlusWrapper {
 
     abstract suspend fun getShow(id: String): Show
     abstract suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): List<Episode>
-    abstract suspend fun getShowIdByEpisodeId(episodeId: String): PlayerVideo
     abstract suspend fun getAudioLocales(resourceId: String): Set<String>
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
