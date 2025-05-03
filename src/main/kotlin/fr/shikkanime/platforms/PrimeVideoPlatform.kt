@@ -4,12 +4,14 @@ import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import java.io.File
 import java.time.LocalTime
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 class PrimeVideoPlatform :
     AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
@@ -24,13 +26,21 @@ class PrimeVideoPlatform :
         val episodes = PrimeVideoWrapper.getEpisodesByShowId(key.countryCode.locale, key.primeVideoSimulcast.name)
 
         return episodes.flatMap {
-            convertEpisode(
-                key.countryCode,
-                key.primeVideoSimulcast.image,
-                it,
-                zonedDateTime.minusMinutes(1),
-                key.primeVideoSimulcast.episodeType
-            )
+            try {
+                convertEpisode(
+                    key.countryCode,
+                    key.primeVideoSimulcast.image,
+                    it,
+                    zonedDateTime.minusMinutes(1),
+                    key.primeVideoSimulcast.episodeType
+                )
+            } catch (_: EpisodeNoSubtitlesOrVoiceException) {
+                // Ignore
+                emptyList()
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Error on converting episode", e)
+                emptyList()
+            }
         }
     }
 
@@ -56,29 +66,37 @@ class PrimeVideoPlatform :
         episode: AbstractPrimeVideoWrapper.Episode,
         zonedDateTime: ZonedDateTime,
         episodeType: EpisodeType,
-    ) = episode.audioLocales.map {
-        Episode(
-            countryCode = countryCode,
-            animeId = episode.show.id,
-            anime = episode.show.name,
-            animeImage = showImage,
-            animeBanner = episode.show.banner,
-            animeDescription = episode.show.description,
-            releaseDateTime = zonedDateTime,
-            episodeType = episodeType,
-            seasonId = episode.season.toString(),
-            season = episode.season,
-            number = episode.number,
-            duration = episode.duration,
-            title = episode.title,
-            description = episode.description,
-            image = episode.image,
-            platform = getPlatform(),
-            audioLocale = it,
-            id = episode.id,
-            url = episode.url,
-            uncensored = false,
-            original = true,
-        )
+    ): List<Episode> {
+        require(episode.audioLocales.isNotEmpty()) { "Audio locales are empty" }
+        require(episode.subtitleLocales.isNotEmpty()) { "Subtitle locales are empty" }
+
+        if (!episode.subtitleLocales.contains(countryCode.locale))
+            throw EpisodeNoSubtitlesOrVoiceException("Episode ${episode.show.name} (${episode.season}x${episode.number}) does not have subtitles for $countryCode")
+
+        return episode.audioLocales.map {
+            Episode(
+                countryCode = countryCode,
+                animeId = episode.show.id,
+                anime = episode.show.name,
+                animeImage = showImage,
+                animeBanner = episode.show.banner,
+                animeDescription = episode.show.description,
+                releaseDateTime = zonedDateTime,
+                episodeType = episodeType,
+                seasonId = episode.season.toString(),
+                season = episode.season,
+                number = episode.number,
+                duration = episode.duration,
+                title = episode.title,
+                description = episode.description,
+                image = episode.image,
+                platform = getPlatform(),
+                audioLocale = it,
+                id = episode.id,
+                url = episode.url,
+                uncensored = false,
+                original = true,
+            )
+        }
     }
 }

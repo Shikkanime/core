@@ -9,7 +9,7 @@ class MapCache<K : Any, V>(
     private val classes: List<Class<*>> = emptyList(),
     private val block: (K) -> V,
 ) {
-    private val cache: MutableMap<K, Pair<Long, V>> = mutableMapOf()
+    private val cache: ConcurrentMap<K, Pair<Long, V>> = ConcurrentMap()
 
     init {
         globalCaches[name] = this
@@ -52,7 +52,10 @@ class MapCache<K : Any, V>(
     fun removeInvalidated() {
         if (duration == null) return
         val now = System.currentTimeMillis()
-        cache.entries.removeIf { (_, value) -> now - value.first > duration!!.toMillis() }
+
+        cache.filter { (_, value) -> now - value.first > duration!!.toMillis() }
+            .toMap()
+            .forEach { (key, _) -> cache.remove(key) }
     }
 
     companion object {
