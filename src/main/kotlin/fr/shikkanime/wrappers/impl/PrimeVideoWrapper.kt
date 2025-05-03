@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.impl
 
+import com.google.gson.JsonObject
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -65,15 +66,16 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     }
     
     private fun createEpisode(
-        key: String, 
-        episodeJson: com.google.gson.JsonObject, 
-        season: Season, 
-        show: Show, 
-        btfState: com.google.gson.JsonObject
+        key: String,
+        episodeJson: JsonObject,
+        season: Season,
+        show: Show,
+        btfState: JsonObject
     ): Episode {
         val episodeId = btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("compactGTI")!!
         val episodeNumber = episodeJson.getAsInt("episodeNumber")!!
         val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toSet() ?: emptySet()
+        val subtitles = episodeJson.getAsJsonArray("subtitles")?.map { it.asString }?.toSet() ?: emptySet()
 
         return Episode(
             show,
@@ -90,11 +92,14 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                 if (audioTracks.contains("日本語")) add("ja-JP")
                 if (!audioTracks.contains("日本語") && audioTracks.contains("English")) add("en-US")
                 if (audioTracks.contains("Français")) add("fr-FR")
-            }
+            },
+            buildSet {
+                if (subtitles.contains("Français (France)")) add("fr-FR")
+            },
         )
     }
     
-    private suspend fun fetchPrimeVideoData(url: String, locale: String): com.google.gson.JsonObject {
+    private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = httpRequest.get(
             "$url?dvWebSPAClientVersion=1.0.105438.0",
             headers = mapOf(

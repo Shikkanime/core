@@ -28,7 +28,8 @@ abstract class AbstractPrimeVideoWrapper {
         val url: String,
         val image: String,
         val duration: Long,
-        val audioLocales: Set<String>
+        val audioLocales: Set<String>,
+        val subtitleLocales: Set<String>,
     )
 
     protected val baseUrl = "https://www.primevideo.com"
