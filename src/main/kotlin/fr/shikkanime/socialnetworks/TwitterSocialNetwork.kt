@@ -28,9 +28,10 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
                 requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN))
             val accessTokenSecret =
                 requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_ACCESS_TOKEN_SECRET))
-            if (consumerKey.isBlank() || consumerSecret.isBlank() || accessToken.isBlank() || accessTokenSecret.isBlank()) throw Exception(
-                "Twitter credentials are empty"
-            )
+            require(consumerKey.isNotBlank()) { "Twitter consumer key is empty" }
+            require(consumerSecret.isNotBlank()) { "Twitter consumer secret is empty" }
+            require(accessToken.isNotBlank()) { "Twitter access token is empty" }
+            require(accessTokenSecret.isNotBlank()) { "Twitter access token secret is empty" }
 
             twitter = TwitterFactory(
                 ConfigurationBuilder()

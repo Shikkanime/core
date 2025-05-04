@@ -36,7 +36,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
 
         try {
             val token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.DISCORD_TOKEN))
-            if (token.isBlank()) throw Exception("Token is empty")
+            require(token.isNotBlank()) { "Discord token is empty" }
             val builder = JDABuilder.createDefault(token)
             builder.setActivity(Activity.playing(Constant.baseUrl))
             this.jda = builder.build().awaitReady()
