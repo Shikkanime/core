@@ -10,6 +10,7 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
+import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
@@ -158,62 +159,116 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllGrouped(countryCode: CountryCode): List<GroupedEpisode> {
-        return database.entityManager.use {
-            val query = it.createQuery("""
-            WITH grouped_data AS (
-                SELECT a AS anime,
-                     MIN(ev.releaseDateTime) AS minReleaseDateTime,
-                     MAX(em.lastUpdateDateTime) AS lastUpdateDateTime,
-                     MIN(em.season) AS minSeason,
-                     MAX(em.season) AS maxSeason,
-                     em.episodeType AS episodeType,
-                     MIN(em.number) AS minNumber,
-                     MAX(em.number) AS maxNumber,
-                     ARRAY_AGG(DISTINCT ev.platform) WITHIN GROUP (ORDER BY ev.platform) AS platforms,
-                     ARRAY_AGG(DISTINCT ev.audioLocale) WITHIN GROUP (ORDER BY ev.audioLocale) AS audioLocales,
-                     ARRAY_AGG(DISTINCT ev.url) WITHIN GROUP (ORDER BY ev.url) AS urls,
-                     ARRAY_AGG(em.uuid) WITHIN GROUP (ORDER BY em.season, em.episodeType, em.number) AS mappings,
-                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.title) ELSE NULL END AS title,
-                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.description) ELSE NULL END AS description,
-                     CASE WHEN COUNT(DISTINCT em.uuid) = 1 THEN MIN(em.duration) ELSE NULL END AS duration
-                FROM EpisodeVariant ev
-                    JOIN ev.mapping em
-                    JOIN em.anime a
-                WHERE a.countryCode = :countryCode
-                GROUP BY a,
-                        em.episodeType,
-                        DATE_TRUNC('hour', ev.releaseDateTime)
-            )
-            SELECT NEW fr.shikkanime.entities.miscellaneous.GroupedEpisode(
-                gd.anime,
-                gd.minReleaseDateTime,
-                gd.lastUpdateDateTime,
-                gd.minSeason,
-                gd.maxSeason,
-                gd.episodeType,
-                gd.minNumber,
-                gd.maxNumber,
-                gd.platforms,
-                gd.audioLocales,
-                gd.urls,
-                gd.mappings,
-                gd.title,
-                gd.description,
-                gd.duration
-            )
-            FROM grouped_data gd
-            ORDER BY gd.minReleaseDateTime DESC,
-                gd.anime.name DESC,
-                gd.minSeason DESC,
-                gd.episodeType DESC,
-                gd.minNumber DESC
-        """.trimIndent(), GroupedEpisode::class.java)
+    private fun ZonedDateTime.truncateToHour(): ZonedDateTime {
+        return withMinute(0).withSecond(0).withNano(0)
+    }
 
-            query.setParameter("countryCode", countryCode)
+    fun findAllGroupedBy(countryCode: CountryCode, page: Int, limit: Int): Pageable<GroupedEpisode> {
+        return database.entityManager.use { entityManager ->
+            val cb = entityManager.criteriaBuilder
 
-            createReadOnlyQuery(query)
-                .resultList
+            val subQuery = cb.createQuery(Array::class.java)
+            val subRoot = subQuery.from(EpisodeVariant::class.java)
+            val subMapping = subRoot.join(EpisodeVariant_.mapping)
+            val subAnime = subMapping.join(EpisodeMapping_.anime)
+
+            val truncatedReleaseDateTime = cb.function(
+                "date_trunc",
+                ZonedDateTime::class.java,
+                cb.literal("hour"),
+                subRoot[EpisodeVariant_.releaseDateTime]
+            )
+
+            subQuery.multiselect(
+                subAnime[Anime_.uuid],
+                subMapping[EpisodeMapping_.episodeType],
+                truncatedReleaseDateTime
+            )
+
+            subQuery.where(cb.equal(subAnime[Anime_.countryCode], countryCode))
+
+            subQuery.groupBy(
+                subAnime[Anime_.uuid],
+                subMapping[EpisodeMapping_.episodeType],
+                truncatedReleaseDateTime
+            )
+
+            subQuery.orderBy(
+                cb.desc(
+                    truncatedReleaseDateTime
+                )
+            )
+
+            val pageableSubquery = buildPageableQuery(createReadOnlyQuery(entityManager, subQuery), page, limit)
+
+            val query = cb.createQuery(EpisodeVariant::class.java)
+            val root = query.from(EpisodeVariant::class.java)
+
+            // Fetch mapping and anime eagerly
+            root.fetch(EpisodeVariant_.mapping, JoinType.INNER)
+                .fetch(EpisodeMapping_.anime, JoinType.INNER)
+
+            val inPredicate = cb.or(
+                *pageableSubquery.data.map { result ->
+                    cb.and(
+                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid], result[0]),
+                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], result[1]),
+                        cb.equal(cb.function("date_trunc", ZonedDateTime::class.java, cb.literal("hour"), root[EpisodeVariant_.releaseDateTime]), result[2])
+                    )
+                }.toTypedArray()
+            )
+
+            query.where(inPredicate)
+
+            query.orderBy(
+                cb.desc(root[EpisodeVariant_.releaseDateTime]),
+                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.name]),
+                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
+                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
+                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.number])
+            )
+
+            val groups = createReadOnlyQuery(entityManager, query).resultList
+                .groupBy { episodeVariant -> "${episodeVariant.mapping!!.anime!!.uuid}-${episodeVariant.mapping!!.episodeType}-${episodeVariant.releaseDateTime.truncateToHour()}" }
+                .map { (_, variants) ->
+                    val firstVariant = variants.first()
+                    val firstMapping = firstVariant.mapping!!
+                    val anime = firstMapping.anime!!
+                    val episodeType = firstMapping.episodeType!!
+                    val releaseDateTime = firstVariant.releaseDateTime.truncateToHour()
+
+                    val mappingUuids = variants.asSequence()
+                        .map { it.mapping!! }
+                        .sortedWith(compareBy({it.season}, {it.episodeType!!}, {it.number}))
+                        .map { it.uuid!! }
+                        .toSet()
+                    val isSingleMapping = mappingUuids.size == 1
+
+                    GroupedEpisode(
+                        anime = anime,
+                        releaseDateTime = releaseDateTime,
+                        lastUpdateDateTime = variants.maxOf { it.mapping!!.lastUpdateDateTime },
+                        minSeason = variants.minOf { it.mapping!!.season!! },
+                        maxSeason = variants.maxOf { it.mapping!!.season!! },
+                        episodeType = episodeType,
+                        minNumber = variants.minOf { it.mapping!!.number!! },
+                        maxNumber = variants.maxOf { it.mapping!!.number!! },
+                        platforms = variants.map { it.platform!! }.toSet(),
+                        audioLocales = variants.map { it.audioLocale!! }.toSet(),
+                        urls = variants.map { it.url!! }.toSet(),
+                        mappings = mappingUuids,
+                        title = if (isSingleMapping) firstMapping.title else null,
+                        description = if (isSingleMapping) firstMapping.description else null,
+                        duration = if (isSingleMapping) firstMapping.duration else null
+                    )
+                }.toSet()
+
+            Pageable(
+                data = groups,
+                page = pageableSubquery.page,
+                limit = pageableSubquery.limit,
+                total = pageableSubquery.total
+            )
         }
     }
 

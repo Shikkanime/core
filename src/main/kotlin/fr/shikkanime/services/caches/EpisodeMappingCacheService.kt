@@ -21,17 +21,10 @@ class EpisodeMappingCacheService : ICacheService {
         private const val DEFAULT_ALL_KEY = "all"
     }
 
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
-
-    @Inject
-    private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -58,12 +51,6 @@ class EpisodeMappingCacheService : ICacheService {
         )
     }
 
-    private fun findAllGrouped(countryCode: CountryCode) = MapCache.getOrCompute(
-        "EpisodeMappingCacheService.findAllGrouped",
-        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = countryCode,
-    ) { episodeMappingService.findAllGrouped(it) }
-
     fun findAllGroupedBy(
         countryCode: CountryCode,
         page: Int,
@@ -73,24 +60,9 @@ class EpisodeMappingCacheService : ICacheService {
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
     ) {
-        val groupedEpisodes = findAllGrouped(it.countryCode!!)
-        val totalCount = groupedEpisodes.size
-        val startIndex = maxOf((it.page - 1) * it.limit, 0)
-        val endIndex = minOf(it.page * it.limit, totalCount)
-
-        val pagedItems = if (startIndex < totalCount) {
-            groupedEpisodes.subList(startIndex, endIndex)
-                .map { groupedEpisodeFactory.toDto(it) }
-                .toSet()
-        } else {
-            emptySet()
-        }
-
-        PageableDto(
-            pagedItems,
-            it.page,
-            it.limit,
-            totalCount.toLong()
+        PageableDto.fromPageable(
+            episodeMappingService.findAllGroupedBy(it.countryCode!!, it.page, it.limit),
+            groupedEpisodeFactory
         )
     }
 
