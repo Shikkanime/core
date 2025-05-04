@@ -22,6 +22,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
 
         try {
             this.token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_ACCESS_TOKEN))
+            require(token!!.isNotBlank()) { "Threads access token is empty" }
             isInitialized = true
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error while initializing ThreadsSocialNetwork", e)

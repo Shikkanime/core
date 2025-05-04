@@ -25,10 +25,11 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
         val episodes = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
+        val identifiers = mutableMapOf<Int, ZonedDateTime>()
 
         return episodes.flatMap { video ->
             key.netflixSimulcast.audioLocales.mapNotNull { audioLocale ->
-                val episode = try {
+                val episode = runCatching {
                     convertEpisode(
                         key.countryCode,
                         key.netflixSimulcast.image,
@@ -36,16 +37,21 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                         key.netflixSimulcast.episodeType,
                         audioLocale
                     )
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error on converting episode", e)
+                }.getOrElse {
+                    logger.log(Level.SEVERE, "Error on converting episode", it)
                     null
                 } ?: return@mapNotNull null
 
-                // Apply delay if delay is defined for this locale
-                key.netflixSimulcast.audioLocaleDelays[audioLocale]?.let { delayInWeeks ->
-                    episode.releaseDateTime = (episodeVariantCacheService.findByIdentifier(episode.getIdentifier())?.releaseDateTime ?: episode.releaseDateTime).plusWeeks(delayInWeeks)
+                identifiers.computeIfAbsent(video.id) {
+                    episodeVariantCacheService.findByIdentifier(episode.getIdentifier())
+                        ?.releaseDateTime ?: episode.releaseDateTime
                 }
-                // If no delay is applicable, the releaseDateTime set by convertEpisode is used.
+
+                key.netflixSimulcast.audioLocaleDelays[audioLocale]?.let { delay ->
+                    identifiers[video.id]?.plusWeeks(delay)?.let { releaseDateTime ->
+                        episode.releaseDateTime = releaseDateTime
+                    }
+                }
 
                 episode
             }

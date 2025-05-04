@@ -28,7 +28,8 @@ class BskySocialNetwork : AbstractSocialNetwork() {
             val session = runBlocking { BskyWrapper.createSession(identifier, password) }
             accessJwt = requireNotNull(session.getAsString("accessJwt"))
             did = requireNotNull(session.getAsString("did"))
-
+            require(accessJwt!!.isNotBlank()) { "Access JWT is empty" }
+            require(did!!.isNotBlank()) { "DID is empty" }
             isInitialized = true
             initializedAt = ZonedDateTime.now()
         } catch (e: Exception) {
