@@ -13,17 +13,10 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepository>() {
-    @Inject
-    private lateinit var episodeMappingRepository: EpisodeMappingRepository
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var episodeMappingRepository: EpisodeMappingRepository
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = episodeMappingRepository
 
@@ -48,7 +41,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String) =
         episodeMappingRepository.findAllSimulcasted(ignoreEpisodeTypes, ignoreAudioLocale)
 
-    fun findAllGrouped(countryCode: CountryCode) = episodeMappingRepository.findAllGrouped(countryCode)
+    fun findAllGroupedBy(countryCode: CountryCode, page: Int, limit: Int) = episodeMappingRepository.findAllGroupedBy(countryCode, page, limit)
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
