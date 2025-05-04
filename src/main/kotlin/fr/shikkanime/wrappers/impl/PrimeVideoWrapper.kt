@@ -94,7 +94,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                 if (audioTracks.contains("Français")) add("fr-FR")
             },
             buildSet {
-                if (subtitles.contains("Français (France)")) add("fr-FR")
+                if (subtitles.contains("Français (France)") || subtitles.contains("Français")) add("fr-FR")
             },
         )
     }
