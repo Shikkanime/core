@@ -95,7 +95,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     fun login(identifier: String, appVersion: String? = null, device: String? = null, locale: String? = null): MemberDto? {
         val member = findByIdentifier(identifier) ?: return null
 
-        val traceData = if (appVersion != null && device != null && locale != null) {
+        val traceData = if (!appVersion.isNullOrBlank() && !device.isNullOrBlank() && !locale.isNullOrBlank()) {
             ObjectParser.toJson(mapOf(
                 "appVersion" to appVersion,
                 "device" to device,

@@ -42,6 +42,12 @@ abstract class AbstractControllerTest : AbstractTest() {
         }
 
         client.post("/api/v1/members/login") {
+            headers {
+                append(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                append("X-App-Version", "1.0.0+1")
+                append("X-Device", "android")
+                append("X-Locale", "fr_FR")
+            }
             setBody(identifier!!)
         }.apply {
             assertEquals(HttpStatusCode.OK, status)
