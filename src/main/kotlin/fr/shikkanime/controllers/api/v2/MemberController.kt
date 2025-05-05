@@ -12,16 +12,15 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
+@Deprecated("Use /api/v1/members instead with headers")
 @Controller("/api/v2/members")
 class MemberController : HasPageableRoute() {
-    @Inject
-    private lateinit var memberService: MemberService
+    @Inject private lateinit var memberService: MemberService
 
     @Path("/login")
     @Post
     private fun loginMember(
-        @BodyParam
-        loginDto: LoginDto
+        @BodyParam loginDto: LoginDto
     ): Response {
         return Response.ok(memberService.login(loginDto.identifier, loginDto.appVersion, loginDto.device, loginDto.locale) ?: return runBlocking {
             delay(1000)

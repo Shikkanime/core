@@ -15,6 +15,7 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.HttpHeader
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
 import kotlinx.coroutines.delay
@@ -23,17 +24,10 @@ import java.util.*
 
 @Controller("/api/v1/members")
 class MemberController : HasPageableRoute() {
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var memberService: MemberService
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
     @Path("/register")
     @Post
@@ -52,10 +46,12 @@ class MemberController : HasPageableRoute() {
     @Path("/login")
     @Post
     private fun loginMember(
-        @BodyParam
-        identifier: String
+        @HttpHeader("X-App-Version") appVersion: String?,
+        @HttpHeader("X-Device") device: String?,
+        @HttpHeader("X-Locale") locale: String?,
+        @BodyParam identifier: String
     ): Response {
-        return Response.ok(memberService.login(identifier) ?: return runBlocking {
+        return Response.ok(memberService.login(identifier, appVersion, device, locale) ?: return runBlocking {
             delay(1000)
             Response.notFound()
         })
@@ -65,8 +61,7 @@ class MemberController : HasPageableRoute() {
     @Post
     @JWTAuthenticated
     private fun associateEmail(
-        @JWTUser
-        memberUuid: UUID,
+        @JWTUser memberUuid: UUID,
         @BodyParam email: String
     ): Response {
         // Verify email
@@ -85,10 +80,8 @@ class MemberController : HasPageableRoute() {
     @Post
     @JWTAuthenticated
     private fun forgotIdentifier(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        email: String
+        @JWTUser memberUuid: UUID,
+        @BodyParam email: String
     ): Response {
         // Verify email
         if (!StringUtils.isValidEmail(email)) {
@@ -114,10 +107,8 @@ class MemberController : HasPageableRoute() {
     @Put
     @JWTAuthenticated
     private fun followAnime(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        anime: GenericDto
+        @JWTUser memberUuid: UUID,
+        @BodyParam anime: GenericDto
     ): Response {
         return memberFollowAnimeService.follow(memberUuid, anime)
     }
@@ -126,10 +117,8 @@ class MemberController : HasPageableRoute() {
     @Delete
     @JWTAuthenticated
     private fun unfollowAnime(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        anime: GenericDto
+        @JWTUser memberUuid: UUID,
+        @BodyParam anime: GenericDto
     ): Response {
         return memberFollowAnimeService.unfollow(memberUuid, anime)
     }
@@ -138,10 +127,8 @@ class MemberController : HasPageableRoute() {
     @Put
     @JWTAuthenticated
     private fun followAllEpisodes(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        anime: GenericDto
+        @JWTUser memberUuid: UUID,
+        @BodyParam anime: GenericDto
     ): Response {
         return memberFollowEpisodeService.followAll(memberUuid, anime)
     }
@@ -150,10 +137,8 @@ class MemberController : HasPageableRoute() {
     @Put
     @JWTAuthenticated
     private fun followEpisode(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        episode: GenericDto
+        @JWTUser memberUuid: UUID,
+        @BodyParam episode: GenericDto
     ): Response {
         return memberFollowEpisodeService.follow(memberUuid, episode)
     }
@@ -162,10 +147,8 @@ class MemberController : HasPageableRoute() {
     @Delete
     @JWTAuthenticated
     private fun unfollowEpisode(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        episode: GenericDto
+        @JWTUser memberUuid: UUID,
+        @BodyParam episode: GenericDto
     ): Response {
         return memberFollowEpisodeService.unfollow(memberUuid, episode)
     }
@@ -174,10 +157,8 @@ class MemberController : HasPageableRoute() {
     @Post
     @JWTAuthenticated
     private fun uploadProfileImage(
-        @JWTUser
-        memberUuid: UUID,
-        @BodyParam
-        multiPartData: MultiPartData
+        @JWTUser memberUuid: UUID,
+        @BodyParam multiPartData: MultiPartData
     ): Response {
         try {
             runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
@@ -193,10 +174,8 @@ class MemberController : HasPageableRoute() {
     @Get
     @JWTAuthenticated
     private fun getRefreshMember(
-        @JWTUser
-        memberUuid: UUID,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @JWTUser memberUuid: UUID,
+        @QueryParam("limit") limitParam: Int?,
     ): Response {
         val (_, limit, _) = pageableRoute(null, limitParam, null, null, defaultLimit = 9)
         return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return Response.notFound())

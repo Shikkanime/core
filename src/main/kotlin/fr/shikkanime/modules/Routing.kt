@@ -16,6 +16,7 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.HttpHeader
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
@@ -239,6 +240,7 @@ private suspend fun callMethodWithParameters(method: KFunction<*>, controller: A
             kParameter.name.isNullOrBlank() -> controller
             kParameter.hasAnnotation<JWTUser>() -> call.principal<JWTPrincipal>()?.payload?.getClaim("uuid")?.asString()?.let { UUID.fromString(it) }
             kParameter.hasAnnotation<AdminSessionUser>() -> call.principal<TokenDto>()
+            kParameter.hasAnnotation<HttpHeader>() -> handleHttpHeader(kParameter, call)
             kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, call)
             kParameter.hasAnnotation<QueryParam>() -> handleQueryParam(kParameter, call)
             kParameter.hasAnnotation<BodyParam>() -> handleBodyParam(kParameter, call)
@@ -275,6 +277,12 @@ private fun fromString(value: String?, type: KType): Any? {
     return converters.entries.firstOrNull { (kClass, _) ->
         kClass.starProjectedType.withNullability(true) == type || kClass.starProjectedType == type
     }?.value?.invoke(value)
+}
+
+private fun handleHttpHeader(kParameter: KParameter, call: ApplicationCall): Any? {
+    val name = kParameter.findAnnotation<HttpHeader>()!!.name
+    val value = call.request.headers[name]
+    return fromString(value, kParameter.type)
 }
 
 private fun handlePathParam(kParameter: KParameter, call: ApplicationCall): Any? {
