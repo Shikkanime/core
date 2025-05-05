@@ -19,11 +19,7 @@ enum class Platform(
         }
 
         fun fromNullable(string: String?): Platform? {
-            return if (string == null) null else try {
-                Platform.valueOf(string.uppercase())
-            } catch (_: IllegalArgumentException) {
-                null
-            }
+            return string?.let { runCatching { Platform.valueOf(string.uppercase()) }.getOrNull() }
         }
     }
 }

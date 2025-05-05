@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1746467738722"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member_notification_settings"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="member_notification_settings">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_member_notification_settings"/>
+            </column>
+            <column name="creation_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_update_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="member_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="member_notification_settings_platforms"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="member_notification_settings_platforms">
+            <column name="member_notification_settings_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="platforms" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="FK_MEMBER_NOTIFICATION_SETTINGS_ON_MEMBER_UUID"
+                                            foreignKeyTableName="member_notification_settings"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="member_uuid" baseTableName="member_notification_settings"
+                                 constraintName="FK_MEMBER_NOTIFICATION_SETTINGS_ON_MEMBER_UUID"
+                                 referencedColumnNames="uuid" referencedTableName="member"/>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_membernotificationsettingsplat_on_membernotificationsettings"
+                                            foreignKeyTableName="member_notification_settings_platforms"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="member_notification_settings_uuid"
+                                 baseTableName="member_notification_settings_platforms"
+                                 constraintName="fk_membernotificationsettingsplat_on_membernotificationsettings"
+                                 referencedColumnNames="uuid" referencedTableName="member_notification_settings"/>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_notification_settings_member_index"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_notification_settings_member_index" tableName="member_notification_settings">
+            <column name="member_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_notification_settings_notification_type_index"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_notification_settings_notification_type_index"
+                     tableName="member_notification_settings">
+            <column name="notification_type"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

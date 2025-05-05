@@ -2,9 +2,11 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.dtos.MemberNotificationSettingsDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
+import fr.shikkanime.services.MemberNotificationSettingsService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
@@ -28,6 +30,7 @@ class MemberController : HasPageableRoute() {
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var memberNotificationSettingsService: MemberNotificationSettingsService
 
     @Path("/register")
     @Post
@@ -179,5 +182,15 @@ class MemberController : HasPageableRoute() {
     ): Response {
         val (_, limit, _) = pageableRoute(null, limitParam, null, null, defaultLimit = 9)
         return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return Response.notFound())
+    }
+
+    @Path("/notification-settings")
+    @Post
+    @JWTAuthenticated
+    private fun updateNotificationSettings(
+        @JWTUser memberUuid: UUID,
+        @BodyParam settings: MemberNotificationSettingsDto
+    ): Response {
+        return memberNotificationSettingsService.update(memberUuid, settings)
     }
 }

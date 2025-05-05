@@ -226,7 +226,10 @@ class MemberRepository : AbstractRepository<Member>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
-                .apply { Hibernate.initialize(this?.roles) }
+                .apply {
+                    Hibernate.initialize(this?.roles)
+                    Hibernate.initialize(this?.notificationSettings?.platforms)
+                }
         }
     }
 

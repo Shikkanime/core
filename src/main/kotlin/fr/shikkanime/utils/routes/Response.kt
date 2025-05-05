@@ -73,6 +73,9 @@ open class Response(
         fun redirect(path: String, session: TokenDto? = null): Response =
             Response(HttpStatusCode.Found, type = ResponseType.REDIRECT, data = path, session = session)
 
+        fun notModified(data: Any? = null, session: TokenDto? = null): Response =
+            Response(HttpStatusCode.NotModified, data = data, session = session)
+
         fun badRequest(data: Any? = null, session: TokenDto? = null): Response =
             Response(HttpStatusCode.BadRequest, data = data, session = session)
 

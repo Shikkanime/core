@@ -17,7 +17,7 @@ class MemberCacheService : ICacheService {
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "MemberCacheService.find",
-        classes = listOf(Member::class.java),
+        classes = listOf(Member::class.java, MemberNotificationSettings::class.java),
         key = uuid
     ) { memberService.find(it) }
 

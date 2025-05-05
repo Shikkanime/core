@@ -40,4 +40,7 @@ class Member(
     @JoinColumn(name = "entity_uuid")
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var attachments: MutableSet<Attachment> = mutableSetOf(),
+    @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var notificationSettings: MemberNotificationSettings? = null,
 ) : ShikkEntity(uuid)

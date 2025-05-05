@@ -1,5 +1,6 @@
 package fr.shikkanime.dtos.member
 
+import fr.shikkanime.dtos.MemberNotificationSettingsDto
 import java.util.*
 
 data class MemberDto(
@@ -15,4 +16,5 @@ data class MemberDto(
     val totalUnseenDuration: Long,
     val hasProfilePicture: Boolean = false,
     val attachmentLastUpdateDateTime: String? = null,
+    val notificationSettings: MemberNotificationSettingsDto? = null,
 )
