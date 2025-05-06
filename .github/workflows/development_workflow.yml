@@ -21,6 +21,8 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
           cache: gradle
+      - name: Install Webp
+        run: sudo apt install -y webp
       - name: Analyze push
         if: github.event_name == 'push'
         env:

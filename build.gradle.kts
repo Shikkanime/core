@@ -10,7 +10,6 @@ val quartzVersion = "2.5.0"
 val playwrightVersion = "1.51.0"
 val jsoupVersion = "1.20.1"
 val gsonVersion = "2.13.1"
-val openCvVersion = "4.9.0-0"
 val bcprovVersion = "1.80"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.4.3"
@@ -87,7 +86,6 @@ dependencies {
     implementation("com.microsoft.playwright:playwright:$playwrightVersion")
     implementation("org.jsoup:jsoup:$jsoupVersion")
     implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("org.openpnp:opencv:$openCvVersion")
     implementation("org.bouncycastle:bcprov-jdk18on:$bcprovVersion")
     implementation("com.mortennobel:java-image-scaling:$javaImageScalingVersion")
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")

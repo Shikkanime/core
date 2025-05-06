@@ -196,7 +196,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                 }
 
                 val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(attachment.type!!.width, attachment.type!!.height)
-                val webp = FileManager.encodeToWebP(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
+                val webp = FileManager.convertToWebP(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
 
                 if (webp.isEmpty()) {
                     logger.warning(FAILED_TO_ENCODE_MESSAGE)
