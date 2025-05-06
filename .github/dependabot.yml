@@ -9,8 +9,6 @@ updates:
       timezone: "Europe/Paris"
     assignees:
       - "Ziedelth"
-    reviewers:
-      - "Ziedelth"
     groups:
       ktor:
         patterns:
@@ -24,8 +22,6 @@ updates:
       timezone: "Europe/Paris"
     assignees:
       - "Ziedelth"
-    reviewers:
-      - "Ziedelth"
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -34,6 +30,4 @@ updates:
       time: "10:00"
       timezone: "Europe/Paris"
     assignees:
-      - "Ziedelth"
-    reviewers:
       - "Ziedelth"
