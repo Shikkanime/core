@@ -499,7 +499,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
             val platformEpisodes = ids.flatMap { PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, it) }
-            val episode = platformEpisodes.find { it.id == id || it.oldIds.contains(id) } ?: return
+            val episode = platformEpisodes.find { it.id == id || it.oldIds.contains(id) || (it.season == episodeMapping.season && it.number == episodeMapping.number) } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id, identifiers)
             updateUrl(episodeVariant, episode.url)
