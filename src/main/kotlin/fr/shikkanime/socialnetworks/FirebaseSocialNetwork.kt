@@ -75,7 +75,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
             .build()
 
         val apnsConfig = ApnsConfig.builder()
-            .setAps(Aps.builder().setContentAvailable(false).build())
+            .setAps(Aps.builder().setContentAvailable(true).build())
             .setFcmOptions(ApnsFcmOptions.builder().setImage(image).build())
             .putAllHeaders(mapOf("apns-priority" to "10"))
             .build()
