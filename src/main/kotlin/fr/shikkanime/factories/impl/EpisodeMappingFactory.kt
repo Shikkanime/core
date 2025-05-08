@@ -9,17 +9,10 @@ import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.withUTCString
 
 class EpisodeMappingFactory : IEpisodeMappingFactory {
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
-    @Inject
-    private lateinit var episodeVariantFactory: EpisodeVariantFactory
-
-    @Inject
-    private lateinit var platformFactory: PlatformFactory
-
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var episodeVariantFactory: EpisodeVariantFactory
+    @Inject private lateinit var platformFactory: PlatformFactory
+    @Inject private lateinit var animeFactory: AnimeFactory
 
     override fun toDto(
         entity: EpisodeMapping,

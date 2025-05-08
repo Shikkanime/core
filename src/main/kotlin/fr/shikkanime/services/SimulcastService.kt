@@ -11,14 +11,9 @@ import fr.shikkanime.utils.withUTCString
 import java.time.ZonedDateTime
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
-    @Inject
-    private lateinit var simulcastRepository: SimulcastRepository
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var simulcastFactory: SimulcastFactory
+    @Inject private lateinit var simulcastRepository: SimulcastRepository
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var simulcastFactory: SimulcastFactory
 
     override fun getRepository() = simulcastRepository
 

@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class BotDetectorCacheTest : AbstractTest() {
-    @Inject
-    private lateinit var botDetectorCache: BotDetectorCache
+    @Inject private lateinit var botDetectorCache: BotDetectorCache
 
     @Test
     fun testBotDetectorCache() {

@@ -13,17 +13,10 @@ import fr.shikkanime.utils.routes.Response
 import java.util.*
 
 class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollowAnimeRepository>() {
-    @Inject
-    private lateinit var memberFollowAnimeRepository: MemberFollowAnimeRepository
-
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var memberFollowAnimeRepository: MemberFollowAnimeRepository
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberFollowAnimeRepository
 

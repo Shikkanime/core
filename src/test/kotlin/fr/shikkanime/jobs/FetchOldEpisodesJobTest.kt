@@ -12,11 +12,8 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 
 class FetchOldEpisodesJobTest : AbstractTest() {
-    @Inject
-    private lateinit var fetchOldEpisodesJob: FetchOldEpisodesJob
-
-    @Inject
-    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+    @Inject private lateinit var fetchOldEpisodesJob: FetchOldEpisodesJob
+    @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
 
     @Test
     fun `fix issue #503`() {

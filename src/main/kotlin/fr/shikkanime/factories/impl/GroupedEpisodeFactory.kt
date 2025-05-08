@@ -9,11 +9,8 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.withUTCString
 
 class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto> {
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
-
-    @Inject
-    private lateinit var platformFactory: PlatformFactory
+    @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var platformFactory: PlatformFactory
 
     override fun toDto(entity: GroupedEpisode): GroupedEpisodeDto {
         val season = if (entity.minSeason == entity.maxSeason) entity.minSeason.toString() else "${entity.minSeason} - ${entity.maxSeason}"

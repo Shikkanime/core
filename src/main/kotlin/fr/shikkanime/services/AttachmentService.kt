@@ -31,20 +31,11 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private val imageCache = LRUCache<UUID, ByteArray>(100)
     val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet<UUID>())
 
-    @Inject
-    private lateinit var attachmentRepository: AttachmentRepository
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var memberService: MemberService
+    @Inject private lateinit var attachmentRepository: AttachmentRepository
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var memberService: MemberService
 
     override fun getRepository() = attachmentRepository
 

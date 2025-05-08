@@ -25,8 +25,7 @@ import java.time.ZonedDateTime
 import java.util.stream.Stream
 
 class CrunchyrollPlatformTest : AbstractTest() {
-    @Inject
-    lateinit var platform: CrunchyrollPlatform
+    @Inject lateinit var platform: CrunchyrollPlatform
 
     @BeforeEach
     override fun setUp() {

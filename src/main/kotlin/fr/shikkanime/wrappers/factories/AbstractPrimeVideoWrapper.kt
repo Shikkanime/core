@@ -19,7 +19,7 @@ abstract class AbstractPrimeVideoWrapper {
 
     data class Episode(
         val show: Show,
-        val oldId: String,
+        val oldIds: Set<String>,
         val id: String,
         val season: Int,
         val number: Int,

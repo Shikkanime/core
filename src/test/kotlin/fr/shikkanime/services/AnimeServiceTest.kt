@@ -20,8 +20,7 @@ import java.time.ZonedDateTime
 import kotlin.test.assertTrue
 
 class AnimeServiceTest : AbstractTest() {
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var animeFactory: AnimeFactory
 
     @Test
     fun `update with no episodes`() {

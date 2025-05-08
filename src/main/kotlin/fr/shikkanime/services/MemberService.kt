@@ -25,20 +25,11 @@ import javax.imageio.ImageIO
 class MemberService : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var memberRepository: MemberRepository
-
-    @Inject
-    private lateinit var memberActionService: MemberActionService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var memberFactory: MemberFactory
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var memberRepository: MemberRepository
+    @Inject private lateinit var memberActionService: MemberActionService
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var memberFactory: MemberFactory
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = memberRepository
 

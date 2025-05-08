@@ -15,8 +15,7 @@ import java.time.ZonedDateTime
 import java.util.stream.Stream
 
 class PrimeVideoPlatformTest : AbstractTest() {
-    @Inject
-    private lateinit var primeVideoPlatform: PrimeVideoPlatform
+    @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
     data class SimulcastTestCase(
         val simulcastName: String,

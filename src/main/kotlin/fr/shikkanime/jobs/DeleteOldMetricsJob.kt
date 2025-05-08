@@ -5,8 +5,7 @@ import fr.shikkanime.services.MetricService
 import java.time.ZonedDateTime
 
 class DeleteOldMetricsJob : AbstractJob {
-    @Inject
-    private lateinit var metricService: MetricService
+    @Inject private lateinit var metricService: MetricService
 
     override fun run() {
         val date = ZonedDateTime.now().minusWeeks(1)

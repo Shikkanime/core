@@ -29,23 +29,12 @@ class UpdateAnimeJob : AbstractJob {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @Inject
-    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var animePlatformService: AnimePlatformService
+    @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()

@@ -33,41 +33,18 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
-    @Inject
-    private lateinit var animeRepository: AnimeRepository
-
-    @Inject
-    private lateinit var simulcastService: SimulcastService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
-
-    @Inject
-    private lateinit var platformFactory: PlatformFactory
-
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var animeRepository: AnimeRepository
+    @Inject private lateinit var simulcastService: SimulcastService
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var animePlatformService: AnimePlatformService
+    @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var platformFactory: PlatformFactory
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = animeRepository
 
