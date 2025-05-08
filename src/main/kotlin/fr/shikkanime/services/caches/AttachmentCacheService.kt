@@ -8,8 +8,7 @@ import fr.shikkanime.utils.MapCache
 import java.util.*
 
 class AttachmentCacheService : ICacheService {
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var attachmentService: AttachmentService
 
     fun findByEntityUuidTypeAndActive(uuid: UUID, type: ImageType) = MapCache.getOrComputeNullable(
         "AttachmentCacheService.findByEntityUuidTypeAndActive",

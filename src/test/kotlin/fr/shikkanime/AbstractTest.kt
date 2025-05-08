@@ -12,44 +12,19 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 
 abstract class AbstractTest {
-    @Inject
-    protected lateinit var animeService: AnimeService
-
-    @Inject
-    protected lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    protected lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    protected lateinit var memberService: MemberService
-
-    @Inject
-    protected lateinit var memberActionService: MemberActionService
-
-    @Inject
-    protected lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    protected lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    protected lateinit var animePlatformService: AnimePlatformService
-
-    @Inject
-    protected lateinit var configService: ConfigService
-
-    @Inject
-    protected lateinit var traceActionService: TraceActionService
-
-    @Inject
-    protected lateinit var ruleService: RuleService
-
-    @Inject
-    protected lateinit var attachmentService: AttachmentService
-
-    @Inject
-    private lateinit var database: Database
+    @Inject protected lateinit var animeService: AnimeService
+    @Inject protected lateinit var episodeMappingService: EpisodeMappingService
+    @Inject protected lateinit var episodeVariantService: EpisodeVariantService
+    @Inject protected lateinit var memberService: MemberService
+    @Inject protected lateinit var memberActionService: MemberActionService
+    @Inject protected lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject protected lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject protected lateinit var animePlatformService: AnimePlatformService
+    @Inject protected lateinit var configService: ConfigService
+    @Inject protected lateinit var traceActionService: TraceActionService
+    @Inject protected lateinit var ruleService: RuleService
+    @Inject protected lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var database: Database
 
     @BeforeEach
     open fun setUp() {

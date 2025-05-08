@@ -13,11 +13,8 @@ import java.time.ZonedDateTime
 class UpdateAttachmentJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()

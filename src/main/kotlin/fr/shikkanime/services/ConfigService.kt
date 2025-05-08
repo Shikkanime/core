@@ -8,11 +8,8 @@ import fr.shikkanime.repositories.ConfigRepository
 import java.util.*
 
 class ConfigService : AbstractService<Config, ConfigRepository>() {
-    @Inject
-    private lateinit var configRepository: ConfigRepository
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var configRepository: ConfigRepository
+    @Inject private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = configRepository
 

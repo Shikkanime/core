@@ -16,11 +16,8 @@ import java.util.*
 
 @Controller("/api/v1/animes")
 class AnimeController : HasPageableRoute() {
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var memberFollowAnimeCacheService: MemberFollowAnimeCacheService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var memberFollowAnimeCacheService: MemberFollowAnimeCacheService
 
     @Path
     @Get

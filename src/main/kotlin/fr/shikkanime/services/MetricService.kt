@@ -6,8 +6,7 @@ import fr.shikkanime.repositories.MetricRepository
 import java.time.ZonedDateTime
 
 class MetricService : AbstractService<Metric, MetricRepository>() {
-    @Inject
-    private lateinit var metricRepository: MetricRepository
+    @Inject private lateinit var metricRepository: MetricRepository
 
     override fun getRepository() = metricRepository
 

@@ -14,8 +14,7 @@ import java.time.ZonedDateTime
 import java.util.stream.Stream
 
 class NetflixPlatformTest : AbstractTest() {
-    @Inject
-    private lateinit var netflixPlatform: NetflixPlatform
+    @Inject private lateinit var netflixPlatform: NetflixPlatform
 
     data class NetflixTestCase(
         val netflixId: String,

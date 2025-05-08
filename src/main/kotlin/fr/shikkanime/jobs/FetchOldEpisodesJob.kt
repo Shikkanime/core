@@ -25,32 +25,15 @@ import kotlin.streams.asSequence
 class FetchOldEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
-
-    @Inject
-    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
-    @Inject
-    private lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var mailService: MailService
+    @Inject private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
+    @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var configService: ConfigService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var mailService: MailService
 
     private fun log(stringBuilder: StringBuilder, level: Level, message: String) {
         logger.log(level, message)

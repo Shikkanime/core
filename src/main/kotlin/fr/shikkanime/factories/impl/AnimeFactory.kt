@@ -14,17 +14,10 @@ import fr.shikkanime.utils.withUTCString
 import org.hibernate.Hibernate
 
 class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var animePlatformCacheService: AnimePlatformCacheService
-
-    @Inject
-    private lateinit var simulcastFactory: SimulcastFactory
-
-    @Inject
-    private lateinit var animePlatformFactory: AnimePlatformFactory
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
+    @Inject private lateinit var simulcastFactory: SimulcastFactory
+    @Inject private lateinit var animePlatformFactory: AnimePlatformFactory
 
     override fun toDto(entity: Anime): AnimeDto {
         val audioLocales = animeCacheService.getAudioLocales(entity) ?: emptySet()

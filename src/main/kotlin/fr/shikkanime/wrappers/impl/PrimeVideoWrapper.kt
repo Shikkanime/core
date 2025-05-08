@@ -72,15 +72,17 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         show: Show,
         btfState: JsonObject
     ): Episode {
-        val episodeId = btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("compactGTI")!!
         val episodeNumber = episodeJson.getAsInt("episodeNumber")!!
         val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toSet() ?: emptySet()
         val subtitles = episodeJson.getAsJsonArray("subtitles")?.map { it.asString }?.toSet() ?: emptySet()
 
         return Episode(
             show,
-            EncryptionManager.toSHA512("${show.id}-${season.number}-$episodeNumber").substring(0..<8),
-            episodeId,
+            setOf(
+                EncryptionManager.toSHA512("${show.id}-${season.number}-$episodeNumber").substring(0..<8),
+                btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("compactGTI")!!
+            ),
+            key.substringAfterLast("."),
             season.number,
             episodeNumber,
             episodeJson.getAsString("title")!!,

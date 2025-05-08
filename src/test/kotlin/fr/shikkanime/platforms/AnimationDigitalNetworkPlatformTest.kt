@@ -16,8 +16,7 @@ import java.io.File
 import java.time.ZonedDateTime
 
 class AnimationDigitalNetworkPlatformTest : AbstractTest() {
-    @Inject
-    lateinit var platform: AnimationDigitalNetworkPlatform
+    @Inject lateinit var platform: AnimationDigitalNetworkPlatform
 
     @BeforeEach
     override fun setUp() {

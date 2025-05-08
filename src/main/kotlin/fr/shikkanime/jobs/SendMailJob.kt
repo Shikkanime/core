@@ -14,11 +14,8 @@ import java.time.ZonedDateTime
 class SendMailJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var mailService: MailService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var configCacheService: ConfigCacheService
 
     override fun run() {
         val mails = mailService.findAllNotSent()

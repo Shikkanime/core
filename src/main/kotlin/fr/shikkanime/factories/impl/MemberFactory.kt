@@ -12,14 +12,9 @@ import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.utils.withUTCString
 
 class MemberFactory : IGenericFactory<Member, MemberDto> {
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun toDto(entity: Member): MemberDto {
         val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(entity)
