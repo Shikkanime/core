@@ -262,4 +262,19 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         assertTrue(episodes.isNotEmpty())
         assertTrue(episodes.any { it.anime == "WITCH WATCH" })
     }
+
+    @Test
+    fun `fetchEpisodes for 2025-05-09`() {
+        val s = "2025-05-09T07:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(s)
+        val episodes = platform.fetchEpisodes(zonedDateTime)
+
+        println(episodes)
+
+        assertTrue(episodes.isNotEmpty())
+        assertTrue(episodes.any { it.anime == "OVERLORD: The Sacred Kingdom" })
+        val animeEpisodes = episodes.filter { it.anime == "OVERLORD: The Sacred Kingdom" }
+        assertEquals(2, animeEpisodes.size)
+        assertEquals(EpisodeType.FILM, animeEpisodes.first().episodeType)
+    }
 }
