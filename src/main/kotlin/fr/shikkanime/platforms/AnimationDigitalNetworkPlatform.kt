@@ -19,6 +19,13 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
+private val MOVIE_REGEX = "Film(?: (\\d*))?".toRegex()
+private val SPECIAL_EPISODE_REGEX = "(?:Épisode spécial|OAV)(?: (\\d*))?".toRegex()
+private val NUMBER_CLEANUP_REGEX = "\\(.*\\)".toRegex()
+
+private const val SHOW_TYPE_MOVIE = "MOV"
+private const val SHOW_TYPE_OAV = "OAV"
+
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
     @Inject
@@ -47,7 +54,7 @@ class AnimationDigitalNetworkPlatform :
                     ?.audioLocaleDelay
                     ?.let {
                         AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate().minusWeeks(it))
-                            .filter { it.show.id == video.show.id }
+                            .filter { latestVideo -> latestVideo.show.id == video.show.id }
                             // Apply the current date to the video
                             .onEach { delayedVideo ->
                                 delayedVideo.releaseDate = zonedDateTime.toLocalDate().atTime(video.releaseDate?.toLocalTime()).atZone(zonedDateTime.zone)
@@ -146,31 +153,33 @@ class AnimationDigitalNetworkPlatform :
         }
     }
 
-    private fun getNumberAndEpisodeType(numberAsString: String?, showType: String?): Pair<Int, EpisodeType> {
-        val number = numberAsString?.replace("\\(.*\\)".toRegex(), "")?.trim()?.toIntOrNull() ?: -1
+    private fun parseInitialNumber(rawString: String?): Int {
+        return rawString?.replace(NUMBER_CLEANUP_REGEX, "")?.trim()?.toIntOrNull() ?: -1
+    }
 
-        val episodeType = when {
-            numberAsString == "Film" -> EpisodeType.FILM
-            numberAsString == "OAV" || numberAsString == "Épisode spécial" ||
-                    showType == "OAV" || numberAsString?.contains(".") == true -> EpisodeType.SPECIAL
-            else -> EpisodeType.EPISODE
+    /**
+     * Determines the episode number and its corresponding type based on the raw episode string and show type.
+     *
+     * @param rawEpisodeString the raw string representing the episode, which may contain details like episode number or type
+     * @param showType the type of the show, which can indicate if the content is a movie, special, or regular episode
+     * @return a pair containing the episode number as an integer and the corresponding episode type as an [EpisodeType] enum value
+     */
+    private fun getNumberAndEpisodeType(rawEpisodeString: String?, showType: String?): Pair<Int, EpisodeType> {
+        val initialNumber = parseInitialNumber(rawEpisodeString)
+
+        val movieMatch = rawEpisodeString?.let { MOVIE_REGEX.find(it) }
+        if (movieMatch != null || showType == SHOW_TYPE_MOVIE) {
+            val filmNumber = movieMatch?.groupValues?.getOrNull(1)?.toIntOrNull()
+            return (filmNumber ?: initialNumber) to EpisodeType.FILM
         }
 
-        val movieMatch = "Film (\\d*)".toRegex().find(numberAsString ?: "")
-
-        if (movieMatch != null) {
-            val movieNumber = movieMatch.groupValues[1].toIntOrNull()
-            return (movieNumber ?: number) to EpisodeType.FILM
+        val specialEpisodeMatch = rawEpisodeString?.let { SPECIAL_EPISODE_REGEX.find(it) }
+        if (specialEpisodeMatch != null || showType == SHOW_TYPE_OAV || rawEpisodeString?.contains(".") == true) {
+            val specialNumber = specialEpisodeMatch?.groupValues?.getOrNull(1)?.toIntOrNull()
+            return (specialNumber ?: initialNumber) to EpisodeType.SPECIAL
         }
 
-        val specialMatch = "Épisode spécial (\\d*)".toRegex().find(numberAsString ?: "")
-
-        if (specialMatch != null) {
-            val specialNumber = specialMatch.groupValues[1].toIntOrNull()
-            return (specialNumber ?: number) to EpisodeType.SPECIAL
-        }
-
-        return number to episodeType
+        return initialNumber to EpisodeType.EPISODE
     }
 
     private fun getAudioLocale(string: String): String {
