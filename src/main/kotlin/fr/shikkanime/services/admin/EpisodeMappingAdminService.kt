@@ -38,12 +38,12 @@ class EpisodeMappingAdminService {
     ): EpisodeMapping? {
         // Get all variants of the target episode
         val targetVariants = episodeVariantService.findAllByMapping(targetEpisode)
-        
+
         // Transfer variants from source episode to target episode, without duplication
         episodeVariantService.findAllByMapping(sourceEpisode).forEach { sourceVariant ->
             // Check if a similar variant already exists (same URL)
             val similarVariantExists = targetVariants.any { it.url == sourceVariant.url }
-            
+
             if (!similarVariantExists) {
                 // Transfer this variant
                 sourceVariant.mapping = targetEpisode
@@ -55,7 +55,7 @@ class EpisodeMappingAdminService {
         memberFollowEpisodeService.findAllByEpisode(sourceEpisode).forEach { 
             memberFollowEpisodeService.delete(it) 
         }
-        
+
         // Delete the source episode
         episodeMappingService.delete(sourceEpisode)
 
@@ -66,7 +66,7 @@ class EpisodeMappingAdminService {
             }
             lastUpdateDateTime = ZonedDateTime.now()
         }
-        
+
         episodeMappingService.update(targetEpisode)
         traceActionService.createTraceAction(targetEpisode, TraceAction.Action.UPDATE)
 
@@ -87,7 +87,7 @@ class EpisodeMappingAdminService {
             val season = episode.season ?: return false
             val episodeType = episode.episodeType ?: return false
             val number = episode.number ?: return false
-            
+
             episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(animeUuid, season, episodeType, number)
                 ?.takeIf { it.uuid != episode.uuid }
                 ?.let { existingEpisode ->
@@ -115,7 +115,7 @@ class EpisodeMappingAdminService {
         updateDto: UpdateAllEpisodeMappingDto
     ): LocalDate? {
         val bindVoiceVariants = updateDto.bindVoiceVariants == true
-        
+
         // If no start date but binding voice variants is enabled, synchronize variants
         if (startDate == null && bindVoiceVariants) {
             val variants = episodeVariantService.findAllByMapping(episode)
@@ -135,9 +135,9 @@ class EpisodeMappingAdminService {
 
         // Process variants based on configuration
         val getLangType = { audioLocale: String -> LangType.fromAudioLocale(episode.anime!!.countryCode!!, audioLocale) }
-        
+
         val langTypes = variants.mapTo(HashSet()) { getLangType(it.audioLocale ?: "") }
-        
+
         val variantsToUpdate = if (langTypes.size > 1 && !bindVoiceVariants) {
             // If multiple language types and not binding, only update subtitles
             variants.filter { variant -> 
@@ -208,7 +208,7 @@ class EpisodeMappingAdminService {
 
             // Process release dates
             currentDate = processReleaseDates(currentDate, episode, updateDto)
-            
+
             // Skip if episode was merged
             if (hasBeenMerged(updateDto, episode, forcedUpdate)) {
                 return@forEach
@@ -220,7 +220,7 @@ class EpisodeMappingAdminService {
             } else {
                 ZonedDateTime.now()
             }
-            
+
             episodeMappingService.update(episode)
             traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         }
@@ -250,22 +250,35 @@ class EpisodeMappingAdminService {
 
     /**
      * Updates episode variants from the provided DTO.
-     * Only updates variants that are explicitly mentioned in the DTO, without removing others.
+     * Updates variants that are explicitly mentioned in the DTO and removes variants that are not included.
      */
     private fun updateEpisodeMappingVariants(
         dto: EpisodeMappingDto,
         targetEpisode: EpisodeMapping,
     ) {
         val variants = dto.variants ?: return
-        if (variants.isEmpty()) return
+
+        // Get all existing variants for this episode mapping
+        val existingVariants = episodeVariantService.findAllByMapping(targetEpisode)
+
+        // If the DTO variants list is empty, delete all existing variants
+        if (variants.isEmpty()) {
+            existingVariants.forEach { episodeVariantService.delete(it) }
+            return
+        }
 
         // Get only the variants mentioned in the DTO
         val variantsToModify = mutableListOf<EpisodeVariant>()
-        
+        val dtoVariantUuids = variants.map { it.uuid }.toSet()
+
+        // Find variants to delete (existing variants not in the DTO)
+        val variantsToDelete = existingVariants.filter { it.uuid !in dtoVariantUuids }
+
+        // Process variants in the DTO
         variants.forEach { variantDto ->
             val variantUuid = variantDto.uuid
             val variant = episodeVariantService.find(variantUuid) ?: return@forEach
-            
+
             variant.mapping = targetEpisode
 
             // Update variant fields if changed
@@ -283,10 +296,15 @@ class EpisodeMappingAdminService {
 
             variantsToModify.add(variant)
         }
-        
-        // Update only the variants specified in the DTO
+
+        // Update the variants specified in the DTO
         if (variantsToModify.isNotEmpty()) {
             variantsToModify.forEach { episodeVariantService.update(it) }
+        }
+
+        // Delete variants not included in the DTO
+        if (variantsToDelete.isNotEmpty()) {
+            variantsToDelete.forEach { episodeVariantService.delete(it) }
         }
     }
 
@@ -309,15 +327,15 @@ class EpisodeMappingAdminService {
         if (episodeMapping != null) {
             return episodeMapping
         }
-        
+
         // Handle episode variants
         val updatedEpisode = episodeMappingService.update(episode)
         updateEpisodeMappingVariants(dto, updatedEpisode)
         traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
-        
+
         return updatedEpisode
     }
-    
+
     /**
      * Handles changes to the anime a mapping belongs to.
      * Returns true if the method handled the complete update process.
@@ -326,28 +344,28 @@ class EpisodeMappingAdminService {
         if (dto.anime?.name.isNullOrBlank() || dto.anime!!.name == oldAnime.name) {
             return false
         }
-        
+
         // Change anime
         val newAnime = animeService.findByName(oldAnime.countryCode!!, dto.anime!!.name)
             ?: throw IllegalArgumentException("Anime with name ${dto.anime!!.name} not found")
-        
+
         // Check if a similar episode already exists in the new anime
         val existingEpisode = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             newAnime.uuid!!, dto.season, dto.episodeType, dto.number
         )?.takeIf { it.uuid != episode.uuid }
-        
+
         if (existingEpisode != null) {
             // Keep the variants of the target episode
             val existingVariants = episodeVariantService.findAllByMapping(existingEpisode)
-            
+
             // Transfer variants from source episode to target episode
             val sourceVariants = episodeVariantService.findAllByMapping(episode)
             val transferredVariants = mutableListOf<EpisodeVariant>()
-            
+
             sourceVariants.forEach { sourceVariant ->
                 // Check if a similar variant already exists (same URL)
                 val similarVariantExists = existingVariants.any { it.url == sourceVariant.url }
-                
+
                 if (!similarVariantExists) {
                     // Transfer this variant
                     sourceVariant.mapping = existingEpisode
@@ -355,26 +373,26 @@ class EpisodeMappingAdminService {
                     transferredVariants.add(sourceVariant)
                 }
             }
-            
+
             // Remove references to the source episode
             memberFollowEpisodeService.findAllByEpisode(episode).forEach { 
                 memberFollowEpisodeService.delete(it) 
             }
-            
+
             // Update dates if necessary
             if (existingEpisode.lastReleaseDateTime < episode.lastReleaseDateTime) {
                 existingEpisode.lastReleaseDateTime = episode.lastReleaseDateTime
             }
-            
+
             existingEpisode.lastUpdateDateTime = ZonedDateTime.now()
             val updatedEpisode = episodeMappingService.update(existingEpisode)
 
             // Delete the source episode
             episodeMappingService.delete(episode)
-            
+
             // Create trace action for the target episode
             traceActionService.createTraceAction(existingEpisode, TraceAction.Action.UPDATE)
-            
+
             // Update variants specified in the DTO
             updateEpisodeMappingVariants(dto, updatedEpisode)
 
@@ -382,48 +400,48 @@ class EpisodeMappingAdminService {
             cleanupAnimeIfEmpty(oldAnime, updatedEpisode.uuid)
             return true
         }
-        
+
         // If no merge, simply change the anime
         episode.anime = newAnime
         episodeMappingService.update(episode)
-        
+
         // Clean up old anime if necessary
         cleanupAnimeIfEmpty(oldAnime, episode.uuid)
         return false
     }
-    
+
     /**
      * Updates the episode properties from the DTO.
      */
     private fun handleUpdateEpisodeProperties(episode: EpisodeMapping, dto: EpisodeMappingDto): EpisodeMapping? {
         // Update date/time fields
         updateEpisodeMappingDateTime(dto, episode)
-        
+
         // Handle episode type/season/number changes
         if (dto.episodeType != episode.episodeType || dto.season != episode.season || dto.number != episode.number) {
             // Check for existing episode with the new properties
             val existingEpisode = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
                 episode.anime!!.uuid!!, dto.season, dto.episodeType, dto.number
             )
-            
+
             if (existingEpisode != null) {
                 return mergeEpisodeMapping(episode, existingEpisode)
             }
-            
+
             // Update episode properties
             episode.episodeType = dto.episodeType
             episode.season = dto.season
             episode.number = dto.number
         }
-        
+
         // Update other metadata
         updateEpisodeMetadata(episode, dto)
-        
+
         // Update timestamps
         episode.lastUpdateDateTime = ZonedDateTime.now()
         return null
     }
-    
+
     /**
      * Updates metadata fields like title, description, duration, and image.
      */
@@ -432,17 +450,17 @@ class EpisodeMappingAdminService {
         if (!dto.title.isNullOrBlank() && dto.title != episode.title) {
             episode.title = dto.title
         }
-        
+
         // Update description if changed
         if (!dto.description.isNullOrBlank() && dto.description != episode.description) {
             episode.description = dto.description
         }
-        
+
         // Update duration if changed
         if (dto.duration != episode.duration) {
             episode.duration = dto.duration
         }
-        
+
         // Update image if provided
         if (!dto.image.isNullOrBlank()) {
             attachmentService.createAttachmentOrMarkAsActive(
@@ -457,7 +475,7 @@ class EpisodeMappingAdminService {
     private fun cleanupAnimeIfEmpty(anime: Anime, excludeEpisodeUuid: UUID?) {
         val remainingEpisodes = episodeMappingService.findAllByAnime(anime).toMutableList()
         excludeEpisodeUuid?.let { uuid -> remainingEpisodes.removeIf { it.uuid == uuid } }
-        
+
         if (remainingEpisodes.isEmpty()) {
             animeService.delete(anime)
         }

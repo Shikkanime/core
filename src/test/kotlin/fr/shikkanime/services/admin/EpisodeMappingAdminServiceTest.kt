@@ -21,6 +21,88 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
 
     @Test
+    fun `should delete variants not included in DTO`() {
+        // Arrange
+        val anime = createTestAnime()
+        val episodeMapping = createEpisodeMapping(
+            anime = anime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+
+        // Create three variants
+        val variant1 = episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                platform = Platform.ANIM,
+                audioLocale = "ja-JP",
+                identifier = "FR-ANIM-1-JA-JP",
+                url = "https://example.com/variant1",
+            )
+        )
+
+        val variant2 = episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                platform = Platform.CRUN,
+                audioLocale = "en-US",
+                identifier = "FR-CRUN-2-EN-US",
+                url = "https://example.com/variant2",
+            )
+        )
+
+        val variant3 = episodeVariantService.save(
+            EpisodeVariant(
+                mapping = episodeMapping,
+                platform = Platform.NETF,
+                audioLocale = "fr-FR",
+                identifier = "FR-NETF-3-FR-FR",
+                url = "https://example.com/variant3",
+            )
+        )
+
+        // Create DTO with only the first and third variants
+        val originalDto = episodeMappingFactory.toDto(episodeMapping)
+
+        // Create a new DTO with filtered variants
+        val dto = EpisodeMappingDto(
+            uuid = originalDto.uuid,
+            anime = originalDto.anime,
+            releaseDateTime = originalDto.releaseDateTime,
+            lastReleaseDateTime = originalDto.lastReleaseDateTime,
+            lastUpdateDateTime = originalDto.lastUpdateDateTime,
+            episodeType = originalDto.episodeType,
+            season = originalDto.season,
+            number = originalDto.number,
+            duration = originalDto.duration,
+            title = originalDto.title,
+            description = originalDto.description,
+            variants = originalDto.variants?.filter { it.uuid != variant2.uuid }?.toSet(),
+            platforms = originalDto.platforms,
+            langTypes = originalDto.langTypes,
+            image = originalDto.image
+        )
+
+        // Act
+        val updatedMapping = episodeMappingAdminService.update(episodeMapping.uuid!!, dto)
+
+        // Assert
+        assertNotNull(updatedMapping)
+
+        // Get all variants for the updated mapping
+        val remainingVariants = episodeVariantService.findAllByMapping(updatedMapping!!)
+
+        // Should have only 2 variants
+        assertEquals(2, remainingVariants.size)
+
+        // Should contain variant1 and variant3, but not variant2
+        assertTrue(remainingVariants.any { it.uuid == variant1.uuid })
+        assertFalse(remainingVariants.any { it.uuid == variant2.uuid })
+        assertTrue(remainingVariants.any { it.uuid == variant3.uuid })
+    }
+
+    @Test
     fun `should update episode mapping type`() {
         // Arrange
         val anime = createTestAnime()
@@ -46,7 +128,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     fun `should create new mapping when updating with conflicting identifier`() {
         // Arrange
         val anime = createTestAnime()
-        
+
         // Create first mapping with FILM type
         episodeMappingService.save(
             EpisodeMapping(
