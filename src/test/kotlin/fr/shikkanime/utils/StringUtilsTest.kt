@@ -72,6 +72,8 @@ class StringUtilsTest {
             "Anyway, I'm Falling in Love with You." to "Anyway, I'm Falling in Love with You.",
             "Sonic X" to "Sonic X",
             "SHIROHIYO - Reincarnated as a Neglected Noble: Raising My Baby Brother With Memories From My Past Life" to "SHIROHIYO",
+            "Jojo’s Bizarre Adventure" to "Jojo’s Bizarre Adventure",
+            "Fate/Zero" to "Fate/Zero",
         )
 
         list.forEach { (input, expected) ->
@@ -109,6 +111,8 @@ class StringUtilsTest {
             "<DOGEZA>I Tried Asking While Kowtowing." to "dogeza",
             "Demon Slayer: Kimetsu no Yaiba - L’entraînement des piliers" to "demon-slayer",
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "im-a-noble-on-the-brink-of-ruin",
+            "Jojo’s Bizarre Adventure" to "jojos-bizarre-adventure",
+            "Fate/Zero" to "fate-zero",
         )
 
         list.forEach { (input, expected) ->
@@ -148,6 +152,8 @@ class StringUtilsTest {
             "Ranma1/2" to "Ranma",
             "Bogus Skill <<Fruitmaster>> ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~" to "BogusSkillFruitmaster",
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "ImANobleOnTheBrinkOfRuin",
+            "Jojo’s Bizarre Adventure" to "JojosBizarreAdventure",
+            "Fate/Zero" to "FateZero"
         )
 
         list.forEach { (input, expected) ->
