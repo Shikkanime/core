@@ -55,6 +55,14 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
                 .addOption(OptionType.CHANNEL, "channel", "The channel to receive notifications", true)
                 .addOption(OptionType.STRING, "anime", "The anime to receive notifications for, by default: all", false)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .setContexts(InteractionContextType.GUILD),
+            Commands.slash("remove-release-channel", "Remove a channel from release notifications")
+                .addOption(OptionType.CHANNEL, "channel", "The channel to remove from notifications", true)
+                .addOption(OptionType.STRING, "anime", "The anime to remove from notifications, by default: all", false)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+                .setContexts(InteractionContextType.GUILD),
+            Commands.slash("view-release-channel", "View the notification type of a channel and its anime list")
+                .addOption(OptionType.CHANNEL, "channel", "The channel to view notifications for", true)
                 .setContexts(InteractionContextType.GUILD)
         )
 

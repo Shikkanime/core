@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import java.io.File
 
+private const val CHANNEL_IS_REQUIRED = "Channel is required"
+
 class SlashCommandInteractionListener : ListenerAdapter() {
     private fun getFile() = File(Constant.configFolder, "discord_channels.json")
 
@@ -18,11 +20,23 @@ class SlashCommandInteractionListener : ListenerAdapter() {
         }).toMutableList()
     }
 
-    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
-        if (!event.name.equals("add-release-channel", true)) return
+    private fun getFileAndChannels(): Pair<File, MutableList<Channel>> {
+        val file = getFile()
+        val channels = getChannels(file)
+        return Pair(file, channels)
+    }
 
+    override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
+        when (event.name.lowercase()) {
+            "add-release-channel" -> handleAddReleaseChannel(event)
+            "remove-release-channel" -> handleRemoveReleaseChannel(event)
+            "view-release-channel" -> handleViewReleaseChannel(event)
+        }
+    }
+
+    private fun handleAddReleaseChannel(event: SlashCommandInteractionEvent) {
         val channel = event.getOption("channel")?.asChannel ?: run {
-            event.reply("Channel is required").setEphemeral(true).queue()
+            event.reply(CHANNEL_IS_REQUIRED).setEphemeral(true).queue()
             return
         }
 
@@ -38,8 +52,7 @@ class SlashCommandInteractionListener : ListenerAdapter() {
         // Save the channel to the database
         event.reply("Channel added to receive release notifications").queue()
 
-        val file = getFile()
-        val channels = getChannels(file)
+        val (file, channels) = getFileAndChannels()
 
         // If channel id already exists, update the release type and animes
         val existingChannel = channels.firstOrNull { it.id == channel.idLong }
@@ -67,5 +80,82 @@ class SlashCommandInteractionListener : ListenerAdapter() {
         }
 
         file.writeText(ObjectParser.toJson(channels))
+    }
+
+    private fun handleRemoveReleaseChannel(event: SlashCommandInteractionEvent) {
+        val channel = event.getOption("channel")?.asChannel ?: run {
+            event.reply(CHANNEL_IS_REQUIRED).setEphemeral(true).queue()
+            return
+        }
+
+        val animeName = event.getOption("anime")?.asString
+        val (file, channels) = getFileAndChannels()
+
+        // Find the channel in the list
+        val existingChannel = channels.firstOrNull { it.id == channel.idLong }
+
+        if (existingChannel == null) {
+            event.reply("This channel is not registered for notifications").setEphemeral(true).queue()
+            return
+        }
+
+        if (animeName.isNullOrBlank() || existingChannel.releaseType == "ALL") {
+            // Remove the entire channel if no anime specified or if the channel is set to ALL
+            channels.removeIf { it.id == channel.idLong }
+
+            val message = if (animeName.isNullOrBlank()) {
+                "Channel removed from all release notifications"
+            } else {
+                "Channel removed from all release notifications (was set to receive ALL)"
+            }
+
+            event.reply(message).queue()
+        } else {
+            // Remove only the specified anime
+            existingChannel.animes.remove(animeName)
+
+            // If no animes left, remove the channel entirely
+            if (existingChannel.animes.isEmpty()) {
+                channels.removeIf { it.id == channel.idLong }
+            }
+
+            event.reply("Anime '$animeName' removed from channel notifications").queue()
+        }
+
+        file.writeText(ObjectParser.toJson(channels))
+    }
+
+    private fun handleViewReleaseChannel(event: SlashCommandInteractionEvent) {
+        val channel = event.getOption("channel")?.asChannel ?: run {
+            event.reply(CHANNEL_IS_REQUIRED).setEphemeral(true).queue()
+            return
+        }
+
+        val (_, channels) = getFileAndChannels()
+
+        // Find the channel in the list
+        val existingChannel = channels.firstOrNull { it.id == channel.idLong }
+
+        if (existingChannel == null) {
+            event.reply("This channel is not registered for notifications").setEphemeral(true).queue()
+            return
+        }
+
+        val message = StringBuilder()
+        message.append("Channel: <#${channel.id}>\n")
+        message.append("Notification type: ${existingChannel.releaseType}\n")
+
+        if (existingChannel.releaseType == "CUSTOM" && existingChannel.animes.isNotEmpty()) {
+            message.append("Anime list:\n")
+            existingChannel.animes.sorted().forEach { anime ->
+                message.append("- $anime\n")
+            }
+        } else if (existingChannel.releaseType == "ALL") {
+            message.append("This channel receives notifications for all animes")
+        } else {
+            message.append("No animes in the list")
+        }
+
+        event.reply(message.toString()).queue()
     }
 }
