@@ -31,7 +31,7 @@ plugins {
     kotlin("kapt") version kotlinVersion
 
     id("io.ktor.plugin") version "3.1.3"
-    id("org.sonarqube") version "6.1.0.5360"
+    id("org.sonarqube") version "6.2.0.5505"
 
     jacoco
 }
