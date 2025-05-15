@@ -3,11 +3,11 @@
     <br>
     <br>
     <a href="https://www.shikkanime.fr">Website</a> •
-    <a href="#getting-started">Getting Started</a> •
-    <a href="#features">Features</a>
+    <a href="#-features">Features</a> •
+    <a href="#-getting-started">Getting Started</a>
     <br>
     <img src="https://img.shields.io/github/v/tag/Shikkanime/core" alt="Version">
-    <img src="https://sonarqube.shikkanime.fr/api/project_badges/measure?project=core&metric=coverage&token=sqb_3e76e261e8152958c5d1c7136644d7292d49b237" alt="Code Coverage">
+    <img src="https://sonarqube.shikkanime.fr/api/project_badges/measure?project=shikkanime-core&metric=coverage&token=sqb_fee5e6f98fab5ec08bec7eb2d6dcb463ee266877" alt="Code Coverage">
     <img src="https://img.shields.io/github/license/Shikkanime/core" alt="License">
 </p>
 

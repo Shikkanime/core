@@ -116,8 +116,8 @@ kotlin {
 
 sonar {
     properties {
-        property("sonar.projectKey", "core")
-        property("sonar.projectName", "core")
+        property("sonar.projectKey", "shikkanime-core")
+        property("sonar.projectName", "shikkanime-core")
     }
 }
 
