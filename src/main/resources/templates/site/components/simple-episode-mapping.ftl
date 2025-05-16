@@ -4,7 +4,7 @@
 <#macro display episodeMapping label>
     <#assign animeSanitized = episodeMapping.anime.shortName?html />
 
-    <article class="shikk-element">
+    <article class="shikk-element background-dominant-color">
         <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}/${episodeMapping.episodeType.slug}-${episodeMapping.number?c}">
             <div class="shikk-element-content">
                 <p class="mb-1 text-uppercase fw-bold">${label}</p>

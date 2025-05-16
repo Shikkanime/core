@@ -82,7 +82,7 @@
                                 <#assign imageUrl = "${apiUrl}/v1/attachments?uuid=${release.mappings?first.uuid}&type=BANNER">
                             </#if>
 
-                            <article x-data="{ hover: false }" class="shikk-element mb-3">
+                            <article x-data="{ hover: false }" class="shikk-element background-dominant-color mb-3">
                                 <a href="${release.slug}" @mouseenter="hover = true" @mouseleave="hover = false">
                                     <div class="shikk-element-content">
                                         <div class="position-relative">

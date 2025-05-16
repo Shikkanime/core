@@ -143,5 +143,6 @@
         </footer>
 
         <script src="/assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="/assets/js/dominant_colors.js" crossorigin="anonymous"></script>
     </@layout.main>
 </#macro>

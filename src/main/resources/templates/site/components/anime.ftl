@@ -4,7 +4,7 @@
     <#assign animeSanitized = anime.shortName?html />
 
     <div class="col-md-2 col-6 mt-0 mb-4">
-        <article x-data="{ hover: false }" class="shikk-element">
+        <article x-data="{ hover: false }" class="shikk-element background-dominant-color">
             <a href="/animes/${anime.slug}" @mouseenter="hover = true" @mouseleave="hover = false">
                 <div class="shikk-element-content">
                     <div class="position-relative">

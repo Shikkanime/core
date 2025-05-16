@@ -6,7 +6,7 @@
 
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
          @mouseleave="hover = false">
-        <article class="shikk-element">
+        <article class="shikk-element background-dominant-color">
             <a href="${groupedEpisode.internalUrl}">
                 <div class="shikk-element-content">
                     <div class="position-relative">
