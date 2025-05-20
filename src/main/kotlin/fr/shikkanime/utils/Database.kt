@@ -86,5 +86,9 @@ class Database {
     val entityManager: EntityManager
         get() = sessionFactory.createEntityManager()
 
+    fun <T> inTransaction(block: (EntityManager) -> T): T = sessionFactory.callInTransaction(block)
+
+    fun truncate() = sessionFactory.schemaManager.truncate()
+
     fun clearCache() = sessionFactory.cache.evictAllRegions()
 }
