@@ -56,7 +56,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                     else -> null
                 }
 
-                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
+                field?.let { if (sortParameter.order == SortParameter.Order.ASC) cb.asc(it) else cb.desc(it) }
             }
 
             query.orderBy(orders)
