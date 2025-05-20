@@ -1,8 +1,6 @@
 package fr.shikkanime
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.ShikkEntity
-import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
@@ -32,35 +30,10 @@ abstract class AbstractTest {
         MapCache.invalidateAll()
     }
 
-    private fun deleteAll() {
-        database.entityManager.use { entityManager ->
-            val transaction = entityManager.transaction
-            transaction.begin()
-
-            val services = Constant.reflections.getSubTypesOf(AbstractService::class.java)
-                .map { klass -> Constant.injector.getInstance(klass) }
-
-            val serviceEntityCounts = services.associateWith { service ->
-                val repository = service.javaClass.getDeclaredMethod("getRepository").apply { isAccessible = true }.invoke(service) as AbstractRepository<*>
-                val entityClass = repository.javaClass.getDeclaredMethod("getEntityClass").apply { isAccessible = true }.invoke(repository) as Class<*>
-                entityClass.declaredFields.count { field ->
-                    field.isAccessible = true
-                    field.type.superclass != null && ShikkEntity::class.java.isAssignableFrom(field.type.superclass)
-                }.toLong()
-            }
-
-            serviceEntityCounts.toList()
-                .sortedByDescending { it.second }
-                .forEach { (service, _) -> service.deleteAll(entityManager) }
-
-            transaction.commit()
-        }
-    }
-
     @AfterEach
     open fun tearDown() {
-        deleteAll()
         attachmentService.clearPool()
+        database.truncate()
         database.clearCache()
     }
 

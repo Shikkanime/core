@@ -17,10 +17,12 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
             val root = query.from(getEntityClass())
             val animeJoin = root.join(Simulcast_.animes)
 
-            query.multiselect(
-                root,
-                cb.greatest(animeJoin[Anime_.releaseDateTime]),
-                cb.count(animeJoin)
+            query.select(
+                cb.tuple(
+                    root,
+                    cb.greatest(animeJoin[Anime_.releaseDateTime]),
+                    cb.count(animeJoin)
+                )
             )
 
             query.groupBy(root)

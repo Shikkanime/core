@@ -78,7 +78,7 @@ class FetchOldEpisodesJob : AbstractJob {
                     fetchCrunchyroll(it, dates)
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
-                    return@flatMap emptyList<Episode>()
+                    return@flatMap emptyList()
                 }
             } ?: emptyList()
         )

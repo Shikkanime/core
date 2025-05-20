@@ -14,28 +14,9 @@ import org.hibernate.query.Query
 import java.util.*
 
 abstract class AbstractRepository<E : ShikkEntity> {
-    @Inject
-    protected lateinit var database: Database
+    @Inject protected lateinit var database: Database
 
     protected abstract fun getEntityClass(): Class<E>
-
-    protected inline fun <T> inTransaction(block: (EntityManager) -> T): T {
-        return database.entityManager.use {
-            val transaction = it.transaction
-            transaction.begin()
-            val result: T
-
-            try {
-                result = block(it)
-                transaction.commit()
-            } catch (e: Exception) {
-                transaction.rollback()
-                throw e
-            }
-
-            result
-        }
-    }
 
     fun <T> createReadOnlyQuery(entityManager: EntityManager, query: CriteriaQuery<T>) = createReadOnlyQuery(entityManager.createQuery(query))
 
@@ -60,7 +41,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
                 if (!scrollableResults.next()) return@forEach
             }
 
-            total = if (scrollableResults.last()) scrollableResults.rowNumber + 1L else 0
+            total = if (scrollableResults.last()) scrollableResults.position.toLong() else 0L
         }
 
         return Pageable(list, page, limit, total)
@@ -92,33 +73,33 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     fun save(entity: E): E {
-        return inTransaction {
+        return database.inTransaction {
             it.persist(entity)
             entity
         }
     }
 
     fun saveAll(entities: List<E>) {
-        return inTransaction { entityManager ->
+        return database.inTransaction { entityManager ->
             entities.forEach { entityManager.persist(it) }
         }
     }
 
     fun update(entity: E): E {
-        return inTransaction {
+        return database.inTransaction {
             it.merge(entity)
             entity
         }
     }
 
     fun updateAll(entities: List<E>) {
-        return inTransaction { entityManager ->
+        return database.inTransaction { entityManager ->
             entities.forEach { entityManager.merge(it) }
         }
     }
 
     fun delete(entity: E) {
-        inTransaction {
+        database.inTransaction {
             it.remove(entity)
         }
     }

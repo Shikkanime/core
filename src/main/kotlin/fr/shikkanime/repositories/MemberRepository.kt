@@ -212,7 +212,7 @@ class MemberRepository : AbstractRepository<Member>() {
             selections.add(additionalDataSubquery)
         }
         
-        query.multiselect(selections)
+        query.select(cb.tuple(selections))
             .groupBy(
                 root[Member_.uuid],
                 root[Member_.email],

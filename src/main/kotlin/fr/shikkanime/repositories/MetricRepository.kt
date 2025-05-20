@@ -21,7 +21,7 @@ class MetricRepository : AbstractRepository<Metric>() {
     }
 
     fun deleteAllBefore(date: ZonedDateTime) {
-        inTransaction {
+        database.inTransaction {
             val cb = it.criteriaBuilder
             val query = cb.createCriteriaDelete(getEntityClass())
             val root = query.from(getEntityClass())
