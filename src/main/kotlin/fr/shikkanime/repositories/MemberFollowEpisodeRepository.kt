@@ -143,9 +143,11 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
                     .otherwise(0)
             )
 
-            query.multiselect(
-                cb.coalesce(seenDuration, 0L),
-                cb.coalesce(unseenDuration, 0L)
+            query.select(
+                cb.tuple(
+                    cb.coalesce(seenDuration, 0L),
+                    cb.coalesce(unseenDuration, 0L)
+                )
             )
 
             query.where(cb.equal(root[MemberFollowAnime_.member], member))

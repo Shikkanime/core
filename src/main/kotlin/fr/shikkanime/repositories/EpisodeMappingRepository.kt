@@ -49,7 +49,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                     else -> null
                 }
 
-                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
+                field?.let { if (sortParameter.order == SortParameter.Order.ASC) cb.asc(it) else cb.desc(it) }
             }
 
             query.orderBy(orders)
@@ -165,7 +165,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
 
-            val subQuery = cb.createQuery(Array::class.java)
+            val subQuery = cb.createTupleQuery()
             val subRoot = subQuery.from(EpisodeVariant::class.java)
             val subMapping = subRoot.join(EpisodeVariant_.mapping)
             val subAnime = subMapping.join(EpisodeMapping_.anime)
@@ -177,10 +177,12 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 subRoot[EpisodeVariant_.releaseDateTime]
             )
 
-            subQuery.multiselect(
-                subAnime[Anime_.uuid],
-                subMapping[EpisodeMapping_.episodeType],
-                truncatedReleaseDateTime
+            subQuery.select(
+                cb.tuple(
+                    subAnime[Anime_.uuid],
+                    subMapping[EpisodeMapping_.episodeType],
+                    truncatedReleaseDateTime
+                )
             )
 
             countryCode?.let { subQuery.where(cb.equal(subAnime[Anime_.countryCode], it)) }
@@ -375,7 +377,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     }
 
     fun updateAllReleaseDate() {
-        inTransaction {
+        database.inTransaction {
             val cb = it.criteriaBuilder
             val update = cb.createCriteriaUpdate(getEntityClass())
             val root = update.from(getEntityClass())

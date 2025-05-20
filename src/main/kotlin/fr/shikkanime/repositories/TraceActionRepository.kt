@@ -34,10 +34,12 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
             val root = query.from(getEntityClass())
             val function = cb.function("DATE", LocalDate::class.java, root[TraceAction_.actionDateTime])
 
-            query.multiselect(
-                function,
-                cb.countDistinct(root[TraceAction_.entityUuid]),
-                cb.count(root[TraceAction_.entityUuid]),
+            query.select(
+                cb.tuple(
+                    function,
+                    cb.countDistinct(root[TraceAction_.entityUuid]),
+                    cb.count(root[TraceAction_.entityUuid])
+                )
             ).where(
                 cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], date),
                 cb.equal(root[TraceAction_.entityType], "Member"),

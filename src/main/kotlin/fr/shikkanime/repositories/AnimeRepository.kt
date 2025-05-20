@@ -56,7 +56,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
                     else -> null
                 }
 
-                field?.let { (if (sortParameter.order == SortParameter.Order.ASC) cb::asc else cb::desc).invoke(it) }
+                field?.let { if (sortParameter.order == SortParameter.Order.ASC) cb.asc(it) else cb.desc(it) }
             }
 
             query.orderBy(orders)
@@ -201,9 +201,11 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val root = query.from(getEntityClass())
 
             query.distinct(true)
-                .multiselect(
-                    root[Anime_.uuid],
-                    root.join(Anime_.mappings).join(EpisodeMapping_.variants)[EpisodeVariant_.audioLocale]
+                .select(
+                    cb.tuple(
+                        root[Anime_.uuid],
+                        root.join(Anime_.mappings).join(EpisodeMapping_.variants)[EpisodeVariant_.audioLocale]
+                    )
                 )
 
             createReadOnlyQuery(it, query)
@@ -221,10 +223,12 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val root = query.from(getEntityClass())
             val mappingJoin = root.join(Anime_.mappings)
 
-            query.multiselect(
-                root[Anime_.uuid],
-                mappingJoin[EpisodeMapping_.season],
-                cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
+            query.select(
+                cb.tuple(
+                    root[Anime_.uuid],
+                    mappingJoin[EpisodeMapping_.season],
+                    cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
+                )
             ).groupBy(root[Anime_.uuid], mappingJoin[EpisodeMapping_.season])
                 .orderBy(cb.asc(mappingJoin[EpisodeMapping_.season]))
 
@@ -291,7 +295,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     }
 
     fun updateAllReleaseDate() {
-        inTransaction {
+        database.inTransaction {
             val cb = it.criteriaBuilder
             val update = cb.createCriteriaUpdate(getEntityClass())
             val root = update.from(getEntityClass())
