@@ -18,32 +18,19 @@ import java.util.*
 
 @Controller("$ADMIN/api/members")
 class MemberController : HasPageableRoute() {
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var memberFollowAnimeController: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
-
-    @Inject
-    private lateinit var traceActionFactory: TraceActionFactory
-
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var memberService: MemberService
+    @Inject private lateinit var memberFollowAnimeController: MemberFollowAnimeService
+    @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var traceActionFactory: TraceActionFactory
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     @Path
     @Get
     @AdminSessionAuthenticated
     private fun getMembers(
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
         return Response.ok(memberService.findAllWithLastLogin(page, limit))
@@ -52,20 +39,13 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun getMember(
-        @PathParam("memberUuid")
-        memberUuid: UUID
-    ): Response {
-        return Response.ok(memberService.findDetailedMember(memberUuid) ?: return Response.notFound())
-    }
+    private fun getMember(@PathParam memberUuid: UUID) =
+        memberService.findDetailedMember(memberUuid)?.let { Response.ok(it) } ?: Response.notFound()
 
     @Path("/{memberUuid}/login-activities")
     @Get
     @AdminSessionAuthenticated
-    private fun getMemberLoginActivities(
-        @PathParam("memberUuid")
-        memberUuid: UUID
-    ): Response {
+    private fun getMemberLoginActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
         val actions = memberService.findMemberLoginActivities(memberUuid, after)
@@ -80,10 +60,7 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/follow-anime-activities")
     @Get
     @AdminSessionAuthenticated
-    private fun getMemberFollowAnimeActivities(
-        @PathParam("memberUuid")
-        memberUuid: UUID
-    ): Response {
+    private fun getMemberFollowAnimeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
         val actions = memberService.findMemberFollowAnimeActivities(memberUuid, after)
@@ -102,10 +79,7 @@ class MemberController : HasPageableRoute() {
     @Path("/{memberUuid}/follow-episode-activities")
     @Get
     @AdminSessionAuthenticated
-    private fun getMemberFollowEpisodeActivities(
-        @PathParam("memberUuid")
-        memberUuid: UUID
-    ): Response {
+    private fun getMemberFollowEpisodeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
         val actions = memberService.findMemberFollowEpisodeActivities(memberUuid, after)
@@ -125,12 +99,9 @@ class MemberController : HasPageableRoute() {
     @Get
     @AdminSessionAuthenticated
     private fun getMemberAnimes(
-        @PathParam("memberUuid")
-        memberUuid: UUID,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @PathParam memberUuid: UUID,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
 
@@ -150,12 +121,9 @@ class MemberController : HasPageableRoute() {
     @Get
     @AdminSessionAuthenticated
     private fun getMemberEpisodeMappings(
-        @PathParam("memberUuid")
-        memberUuid: UUID,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @PathParam memberUuid: UUID,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
 

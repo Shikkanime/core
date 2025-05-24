@@ -14,17 +14,10 @@ import fr.shikkanime.utils.MapCache
 import java.util.*
 
 class MemberFollowAnimeCacheService : ICacheService {
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
-
-    @Inject
-    private lateinit var missedAnimeFactory: MissedAnimeFactory
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var missedAnimeFactory: MissedAnimeFactory
 
     fun getMissedAnimes(member: UUID, page: Int, limit: Int) = MapCache.getOrCompute(
         "MemberFollowAnimeCacheService.getMissedAnimes",

@@ -23,67 +23,37 @@ class AnimeController : HasPageableRoute() {
     @Get
     @JWTAuthenticated(optional = true)
     private fun getAll(
-        @JWTUser
-        memberUuid: UUID?,
-        @QueryParam("name")
-        name: String?,
-        @QueryParam("country")
-        countryParam: CountryCode?,
-        @QueryParam("simulcast")
-        simulcastParam: UUID?,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
-        @QueryParam("sort")
-        sortParam: String?,
-        @QueryParam("desc")
-        descParam: String?,
-        @QueryParam("searchTypes")
-        searchTypes: Array<LangType>?,
+        @JWTUser memberUuid: UUID?,
+        @QueryParam parameters: Map<String, String>
     ): Response {
-        if (simulcastParam != null && name != null) {
-            return Response.conflict(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "You can't use simulcast and name at the same time",
-                )
-            )
-        }
+        val countryCode = CountryCode.fromNullable(parameters["country"])
+        val simulcastUuid = parameters["simulcast"]?.let(UUID::fromString)
+        val name = parameters["name"]
+        val sort = parameters["sort"]
+        val desc = parameters["desc"]
+        val searchTypes = parameters["searchTypes"]?.split(",")?.map(LangType::valueOf)?.toTypedArray()
 
-        if (name != null && (sortParam != null || descParam != null)) {
-            return Response.conflict(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "You can't use sort and desc with name",
-                )
-            )
-        }
+        if (simulcastUuid != null && name != null)
+            return Response.conflict(MessageDto.error("You can't use simulcast and name at the same time"))
+        if (name != null && (sort != null || desc != null))
+            return Response.conflict(MessageDto.error("You can't use sort and desc with name"))
 
-        val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
-
-        if (memberUuid != null) {
-            return Response.ok(
-                memberFollowAnimeCacheService.findAllBy(
-                    memberUuid,
-                    page,
-                    limit
-                )
-            )
-        }
+        val (page, limit, sortParams) = pageableRoute(
+            parameters["page"]?.toIntOrNull(),
+            parameters["limit"]?.toIntOrNull() ?: 9,
+            sort,
+            desc
+        )
 
         return Response.ok(
-            if (!name.isNullOrBlank()) {
-                animeCacheService.findAllByName(countryParam, name, page, limit, searchTypes)
+            if (memberUuid != null) {
+                memberFollowAnimeCacheService.findAllBy(memberUuid, page, limit)
             } else {
-                animeCacheService.findAllBy(
-                    countryParam,
-                    simulcastParam,
-                    sortParameters,
-                    page,
-                    limit,
-                    searchTypes
-                )
+                if (!name.isNullOrBlank()) {
+                    animeCacheService.findAllByName(countryCode, name, page, limit, searchTypes)
+                } else {
+                    animeCacheService.findAllBy(countryCode, simulcastUuid, sortParams, page, limit, searchTypes)
+                }
             }
         )
     }
@@ -93,24 +63,17 @@ class AnimeController : HasPageableRoute() {
     @JWTAuthenticated(optional = true)
     fun getWeekly(
         @JWTUser memberUuid: UUID?,
-        @QueryParam("country") countryParam: CountryCode?,
-        @QueryParam("date") dateParam: String?,
-        @QueryParam("searchTypes") searchTypes: Array<LangType>?,
+        @QueryParam(defaultValue = "FR") country: CountryCode,
+        @QueryParam date: String?,
+        @QueryParam searchTypes: Array<LangType>?
     ): Response {
         val startOfWeekDay = try {
-            dateParam?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
+            date?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
         } catch (_: Exception) {
-            return Response.badRequest(MessageDto(MessageDto.Type.ERROR, "Invalid week format"))
+            return Response.badRequest(MessageDto.error("Invalid week format"))
         }.atStartOfWeek()
 
-        return Response.ok(
-            animeCacheService.getWeeklyAnimes(
-                countryParam ?: CountryCode.FR,
-                memberUuid,
-                startOfWeekDay,
-                searchTypes
-            )
-        )
+        return Response.ok(animeCacheService.getWeeklyAnimes(country, memberUuid, startOfWeekDay, searchTypes))
     }
 
     @Path("/missed")
@@ -118,10 +81,8 @@ class AnimeController : HasPageableRoute() {
     @JWTAuthenticated
     private fun getMissedAnimes(
         @JWTUser uuid: UUID,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
         return Response.ok(memberFollowAnimeCacheService.getMissedAnimes(uuid, page, limit))

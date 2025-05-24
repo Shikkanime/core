@@ -16,24 +16,20 @@ import java.util.*
 
 @Controller("/")
 class ShortLinkController {
-    @Inject
-    private lateinit var memberActionService: MemberActionService
-
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var memberActionService: MemberActionService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     private fun getUrl(episodeDto: EpisodeVariantDto) =
         "${Constant.baseUrl}/animes/${episodeDto.mapping!!.anime!!.slug}/season-${episodeDto.mapping.season}/${episodeDto.mapping.episodeType.slug}-${episodeDto.mapping.number}"
 
     @Path("r/{episodeVariantUuid}")
     @Get
-    private fun redirectToRealLink(@PathParam("episodeVariantUuid") episodeVariantUuid: UUID): Response {
-        return Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let { getUrl(it) } ?: "/404")
-    }
+    private fun redirectToRealLink(@PathParam episodeVariantUuid: UUID) =
+        Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let { getUrl(it) } ?: "/404")
 
-    @Path("v/{webTokenAction}")
+    @Path("v/{webToken}")
     @Get
-    private fun validateWebToken(@PathParam("webTokenAction") webToken: String): Response {
+    private fun validateWebToken(@PathParam webToken: String): Response {
         try {
             memberActionService.validateWebAction(webToken)
             MapCache.invalidate(Member::class.java)

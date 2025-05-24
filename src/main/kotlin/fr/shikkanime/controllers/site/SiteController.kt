@@ -22,17 +22,10 @@ import java.time.format.DateTimeFormatter
 
 @Controller("/")
 class SiteController {
-    @Inject
-    private lateinit var animeCacheService: AnimeCacheService
-
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
-
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
-
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
 
     private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
         val animeSimulcastLimit = 6
@@ -64,23 +57,21 @@ class SiteController {
 
     @Path
     @Get
-    private fun home(): Response {
-        return Response.template(
-            Link.HOME,
-            mutableMapOf(
-                "animes" to getFullAnimesSimulcast(),
-                "groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
-                    CountryCode.FR,
-                    1,
-                    8
-                ).data,
-            )
+    private fun home() = Response.template(
+        Link.HOME,
+        mutableMapOf(
+            "animes" to getFullAnimesSimulcast(),
+            "groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
+                CountryCode.FR,
+                1,
+                8
+            ).data,
         )
-    }
+    )
 
     @Path("catalog/{slug}")
     @Get
-    private fun catalogSimulcast(@PathParam("slug") slug: String): Response {
+    private fun catalogSimulcast(@PathParam slug: String): Response {
         val findAll = simulcastCacheService.findAll()
         val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
 
@@ -103,7 +94,7 @@ class SiteController {
 
     private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null): Response {
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
-        val seasonDto = dto.seasons?.firstOrNull { it.number == (season ?: it.number) } ?: return Response.notFound()
+        val seasonDto = dto.seasons?.firstOrNull { it.number == (season ?: it.number) } ?: return Response.redirect("/animes/$slug")
         val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
         val findAllBy = episodeMappingCacheService.findAllBy(
             CountryCode.FR,
@@ -139,28 +130,25 @@ class SiteController {
 
     @Path("animes/{slug}")
     @Get
-    private fun animeDetail(
-        @PathParam("slug") slug: String
-    ) = getAnimeDetail(slug)
+    private fun animeDetail(@PathParam slug: String) = getAnimeDetail(slug)
 
     @Path("animes/{slug}/season-{season}")
     @Get
     private fun animeDetailBySeason(
-        @PathParam("slug") slug: String,
-        @PathParam("season") season: Int,
-        @QueryParam("page") page: Int?
+        @PathParam slug: String,
+        @PathParam season: Int,
+        @QueryParam page: Int?
     ) = getAnimeDetail(slug, season, page)
 
     @Path("animes/{slug}/season-{season}/{episodeSlug}")
     @Get
     private fun episodeDetails(
-        @PathParam("slug") slug: String,
-        @PathParam("season") season: Int,
-        @PathParam("episodeSlug") episodeSlug: String
+        @PathParam slug: String,
+        @PathParam season: Int,
+        @PathParam episodeSlug: String
     ): Response {
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
-        if (dto.seasons.isNullOrEmpty()) return Response.notFound()
-        if (dto.seasons!!.none { it.number == season }) return Response.redirect("/animes/$slug/season-${dto.seasons!!.last().number}/$episodeSlug")
+        if (dto.seasons.isNullOrEmpty() || dto.seasons!!.none { it.number == season }) return Response.redirect("/animes/$slug")
 
         val match = "(${EpisodeType.entries.joinToString("|") { it.slug }})-(-?\\d+)".toRegex().find(episodeSlug) ?: return Response.notFound()
         val episodeType = EpisodeType.fromSlug(match.groupValues[1])
@@ -171,7 +159,7 @@ class SiteController {
             season,
             episodeType,
             episodeNumber
-        ) ?: return Response.notFound()
+        ) ?: return Response.redirect("/animes/$slug/season-$season")
 
         val title =
             currentDto.anime!!.shortName + " - ${StringUtils.toEpisodeMappingString(currentDto, separator = false)}"
@@ -192,24 +180,22 @@ class SiteController {
     @Get
     private fun search(
         @QueryParam("q") query: String?,
-        @QueryParam("searchTypes") searchTypes: String?,
-        @QueryParam("page") pageParam: Int?,
-    ): Response {
-        return Response.template(
-            Link.SEARCH,
-            mutableMapOf(
-                "query" to query,
-                "searchTypes" to searchTypes,
-                "page" to pageParam,
-            )
+        @QueryParam searchTypes: String?,
+        @QueryParam page: Int?,
+    ) = Response.template(
+        Link.SEARCH,
+        mutableMapOf(
+            "query" to query,
+            "searchTypes" to searchTypes,
+            "page" to page,
         )
-    }
+    )
 
     @Path("calendar")
     @Get
     private fun calendar(
-        @QueryParam("date") date: String?,
-        @QueryParam("searchTypes") searchTypes: Array<LangType>?,
+        @QueryParam date: String?,
+        @QueryParam searchTypes: Array<LangType>?,
     ): Response {
         val startOfWeekDay = try {
             date?.let { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) } ?: LocalDate.now()
@@ -236,13 +222,9 @@ class SiteController {
 
     @Path("presentation")
     @Get
-    private fun presentation(): Response {
-        return Response.template(Link.PRESENTATION)
-    }
+    private fun presentation() = Response.template(Link.PRESENTATION)
 
     @Path("privacy")
     @Get
-    private fun privacy(): Response {
-        return Response.template(Link.PRIVACY)
-    }
+    private fun privacy() = Response.template(Link.PRIVACY)
 }

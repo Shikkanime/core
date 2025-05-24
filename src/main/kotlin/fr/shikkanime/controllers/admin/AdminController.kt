@@ -40,29 +40,28 @@ class AdminController {
 
     @Path
     @Get
-    private fun home(@QueryParam("error") error: String?): Response {
-        return Response.template(
-            "admin/login.ftl",
-            "Login",
-            if (!error.isNullOrBlank())
-                mutableMapOf(
-                    "error" to
-                            when (error) {
-                                "1" -> "Invalid credentials"
-                                "2" -> "Token expired"
-                                else -> "Unknown error"
-                            }
-                )
-            else
-                mutableMapOf()
-        )
-    }
+    private fun home(@QueryParam error: String?) = Response.template(
+        "admin/login.ftl",
+        "Login",
+        if (!error.isNullOrBlank())
+            mutableMapOf(
+                "error" to
+                        when (error) {
+                            "1" -> "Invalid credentials"
+                            "2" -> "Token expired"
+                            else -> "Unknown error"
+                        }
+            )
+        else
+            mutableMapOf()
+    )
 
     @Path("/login")
     @Post
     private fun login(@BodyParam parameters: Parameters): Response {
         val username = parameters["username"] ?: return Response.redirect(ADMIN)
         val password = parameters["password"] ?: return Response.redirect(ADMIN)
+
         val user = memberService.findByUsernameAndPassword(username, password) ?: return runBlocking {
             delay(1000)
             Response.redirect("$ADMIN?error=1")
@@ -74,23 +73,18 @@ class AdminController {
     @Path("/logout")
     @Get
     @AdminSessionAuthenticated
-    private fun logout(): Response {
-        return Response.redirect(ADMIN, TokenDto.empty)
-    }
+    private fun logout() = Response.redirect(ADMIN, TokenDto.empty)
 
     @Path("/dashboard")
     @Get
     @AdminSessionAuthenticated
-    private fun getDashboard(): Response {
-
-        return Response.template(
-            Link.DASHBOARD,
-            mapOf(
-                "simulcasts" to simulcastCacheService.findAll(),
-                "size" to Constant.imagesFolder.listFiles().size
-            )
+    private fun getDashboard() = Response.template(
+        Link.DASHBOARD,
+        mapOf(
+            "simulcasts" to simulcastCacheService.findAll(),
+            "size" to Constant.imagesFolder.listFiles().size
         )
-    }
+    )
 
     @Path("/images-invalidate")
     @Get
@@ -117,44 +111,32 @@ class AdminController {
     @Path("/animes")
     @Get
     @AdminSessionAuthenticated
-    private fun getAnimes(): Response {
-        return Response.template(Link.ANIMES)
-    }
+    private fun getAnimes() = Response.template(Link.ANIMES)
 
     @Path("/animes/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun getAnimeView(): Response {
-        return Response.template("admin/animes/edit.ftl", "Edit anime")
-    }
+    private fun getAnimeView() = Response.template("admin/animes/edit.ftl", "Edit anime")
 
     @Path("/episodes")
     @Get
     @AdminSessionAuthenticated
-    private fun getEpisodes(): Response {
-        return Response.template(Link.EPISODES)
-    }
+    private fun getEpisodes() = Response.template(Link.EPISODES)
 
     @Path("/episodes/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun getEpisodeView(): Response {
-        return Response.template("admin/episodes/edit.ftl", "Edit episode")
-    }
+    private fun getEpisodeView() = Response.template("admin/episodes/edit.ftl", "Edit episode")
 
     @Path("/trace-actions")
     @Get
     @AdminSessionAuthenticated
-    private fun getTraceActions(): Response {
-        return Response.template(Link.TRACE_ACTIONS)
-    }
+    private fun getTraceActions() = Response.template(Link.TRACE_ACTIONS)
 
     @Path("/anime-alerts")
     @Get
     @AdminSessionAuthenticated
-    private fun getAnimeAlerts(): Response {
-        return Response.template(Link.ANIME_ALERTS)
-    }
+    private fun getAnimeAlerts() = Response.template(Link.ANIME_ALERTS)
 
     @Path("/members")
     @Get
@@ -166,29 +148,23 @@ class AdminController {
     @Path("/members/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun getMemberView(): Response {
-        return Response.template("admin/members/edit.ftl", "Edit member")
-    }
+    private fun getMemberView() = Response.template("admin/members/edit.ftl", "Edit member")
 
     @Path("/rules")
     @Get
     @AdminSessionAuthenticated
-    private fun getRules(): Response {
-        return Response.template(Link.RULES)
-    }
+    private fun getRules() = Response.template(Link.RULES)
 
     @Path("/jobs")
     @Get
     @AdminSessionAuthenticated
-    private fun getJobs(): Response {
-        return Response.template(
-            Link.JOBS,
-            mapOf(
-                "jobs" to Constant.reflections.getSubTypesOf(AbstractJob::class.java)
-                    .map { it.simpleName.removeSuffix("Job") }
-            ),
-        )
-    }
+    private fun getJobs() = Response.template(
+        Link.JOBS,
+        mapOf(
+            "jobs" to Constant.reflections.getSubTypesOf(AbstractJob::class.java)
+                .map { it.simpleName.removeSuffix("Job") }
+        ),
+    )
 
     @Path("/jobs")
     @Post
@@ -210,9 +186,7 @@ class AdminController {
     @Path("/emails")
     @Get
     @AdminSessionAuthenticated
-    private fun getEmails(): Response {
-        return Response.template(Link.EMAILS)
-    }
+    private fun getEmails() = Response.template(Link.EMAILS)
 
     @Path("/emails")
     @Post
@@ -253,26 +227,20 @@ class AdminController {
     @Path("/threads")
     @Get
     @AdminSessionAuthenticated
-    private fun getThreads(
-        @QueryParam("success") success: Int?
-    ): Response {
-        return Response.template(
-            Link.THREADS,
-            mapOf(
-                "askCodeUrl" to ThreadsWrapper.getCode(
-                    requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
-                ),
-                "success" to success
-            )
+    private fun getThreads(@QueryParam success: Int?) = Response.template(
+        Link.THREADS,
+        mapOf(
+            "askCodeUrl" to ThreadsWrapper.getCode(requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))),
+            "success" to success
         )
-    }
+    )
 
     @Path("/threads-publish")
     @Get
     @AdminSessionAuthenticated
     private fun threadsPublish(
-        @QueryParam("message") message: String,
-        @QueryParam("image_url") imageUrl: String?,
+        @QueryParam message: String,
+        @QueryParam("image_url") imageUrl: String?
     ): Response {
         val hasImage = !imageUrl.isNullOrBlank()
 
@@ -292,7 +260,5 @@ class AdminController {
     @Path("/config")
     @Get
     @AdminSessionAuthenticated
-    private fun getConfigs(): Response {
-        return Response.template(Link.CONFIG)
-    }
+    private fun getConfigs() = Response.template(Link.CONFIG)
 }

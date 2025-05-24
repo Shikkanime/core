@@ -12,24 +12,17 @@ import java.time.ZonedDateTime
 
 @Controller("$ADMIN/api/trace-actions")
 class TraceActionController : HasPageableRoute() {
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-
-    @Inject
-    private lateinit var traceActionFactory: TraceActionFactory
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var traceActionFactory: TraceActionFactory
 
     @Path
     @Get
     @AdminSessionAuthenticated
     private fun getTraceAction(
-        @QueryParam("entityType",)
-        entityTypeParam: String?,
-        @QueryParam("action")
-        actionParam: String?,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @QueryParam("entityType") entityTypeParam: String?,
+        @QueryParam("action") actionParam: String?,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
         return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), traceActionFactory))
@@ -38,10 +31,6 @@ class TraceActionController : HasPageableRoute() {
     @Path("/login-counts")
     @Get
     @AdminSessionAuthenticated
-    private fun getLoginCounts(
-        @QueryParam("days") days: Int?,
-    ): Response {
-        val xDayAgo = ZonedDateTime.now().minusDays(days?.toLong() ?: 30)
-        return Response.ok(traceActionService.getLoginCountsAfter(xDayAgo))
-    }
+    private fun getLoginCounts(@QueryParam(defaultValue = "30") days: Long) =
+        Response.ok(traceActionService.getLoginCountsAfter(ZonedDateTime.now().minusDays(days)))
 }

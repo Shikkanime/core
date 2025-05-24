@@ -12,27 +12,16 @@ import fr.shikkanime.utils.routes.param.QueryParam
 
 @Controller("/api/v2/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     @Path
     @Get
     private fun getAll(
-        @QueryParam("country")
-        countryParam: CountryCode?,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @QueryParam country: CountryCode?,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-
-        return Response.ok(
-            episodeMappingCacheService.findAllGroupedBy(
-                countryParam ?: CountryCode.FR,
-                page,
-                limit,
-            )
-        )
+        return Response.ok(episodeMappingCacheService.findAllGroupedBy(country, page, limit))
     }
 }

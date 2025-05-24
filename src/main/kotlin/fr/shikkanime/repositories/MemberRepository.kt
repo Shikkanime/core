@@ -9,7 +9,8 @@ import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.withUTCString
-import jakarta.persistence.criteria.JoinType
+import jakarta.persistence.Tuple
+import jakarta.persistence.criteria.*
 import jakarta.persistence.metamodel.SingularAttribute
 import org.hibernate.Hibernate
 import java.time.LocalDate
@@ -52,81 +53,17 @@ class MemberRepository : AbstractRepository<Member>() {
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
 
-            val maxActionDateTimeSubquery = query.subquery(ZonedDateTime::class.java)
-            val traceActionRoot = maxActionDateTimeSubquery.from(TraceAction::class.java)
+            val maxActionDateTimeSubquery = buildMemberQuery(cb, query, root)
 
-            maxActionDateTimeSubquery.select(cb.greatest(traceActionRoot[TraceAction_.actionDateTime]))
-                .where(
-                    cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
-                    cb.or(
-                        cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
-                        cb.isNull(traceActionRoot[TraceAction_.action])
-                    )
-                )
-
-            val followedAnimesSubquery = query.subquery(Long::class.java)
-            val followedAnimesRoot = followedAnimesSubquery.from(MemberFollowAnime::class.java)
-
-            followedAnimesSubquery.select(cb.count(followedAnimesRoot[MemberFollowAnime_.anime]))
-                .where(cb.equal(followedAnimesRoot[MemberFollowAnime_.member], root))
-
-            val followedEpisodesSubquery = query.subquery(Long::class.java)
-            val followedEpisodesRoot = followedEpisodesSubquery.from(MemberFollowEpisode::class.java)
-
-            followedEpisodesSubquery.select(cb.count(followedEpisodesRoot[MemberFollowEpisode_.episode]))
-                .where(cb.equal(followedEpisodesRoot[MemberFollowEpisode_.member], root))
-
-            val attachmentJoin = root.join(Member_.attachments, JoinType.LEFT)
-
-            attachmentJoin.on(
-                cb.equal(attachmentJoin[Attachment_.type], ImageType.MEMBER_PROFILE),
-                cb.isTrue(attachmentJoin[Attachment_.active])
-            )
-
-            query.multiselect(
-                root[Member_.uuid],
-                root[Member_.email],
-                root[Member_.creationDateTime],
-                root[Member_.lastUpdateDateTime],
-                attachmentJoin[Attachment_.lastUpdateDateTime],
-                maxActionDateTimeSubquery,
-                followedAnimesSubquery,
-                followedEpisodesSubquery,
-                cb.count(attachmentJoin[Attachment_.uuid]),
-            ).groupBy(
-                root[Member_.uuid],
-                root[Member_.email],
-                root[Member_.creationDateTime],
-                root[Member_.lastUpdateDateTime],
-                attachmentJoin[Attachment_.lastUpdateDateTime],
-            ).orderBy(
+            query.orderBy(
                 cb.asc(cb.isNull(maxActionDateTimeSubquery)),
                 cb.desc(maxActionDateTimeSubquery),
                 cb.desc(root[Member_.creationDateTime])
             )
 
             PageableDto.fromPageable(buildPageableQuery(createReadOnlyQuery(it, query), page, limit)) { tuple ->
-                DetailedMemberDto(
-                    tuple[0, UUID::class.java],
-                    tuple[1, String::class.java],
-                    tuple[2, ZonedDateTime::class.java].withUTCString(),
-                    tuple[3, ZonedDateTime::class.java]?.withUTCString(),
-                    tuple[4, ZonedDateTime::class.java]?.withUTCString(),
-                    tuple[5, ZonedDateTime::class.java]?.withUTCString(),
-                    tuple[6, Long::class.java],
-                    tuple[7, Long::class.java],
-                    (runCatching { tuple[8, Long::class.java] }.getOrDefault(0L) ?: 0L) > 0L,
-                ).apply {
-                    isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
-                }
+                createDetailedMemberDto(tuple)
             }
-        }
-    }
-
-    override fun find(uuid: UUID): Member? {
-        return database.entityManager.use {
-            it.find(getEntityClass(), uuid)
-                ?.apply { Hibernate.initialize(roles) }
         }
     }
 
@@ -136,80 +73,20 @@ class MemberRepository : AbstractRepository<Member>() {
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
 
-            val maxActionDateTimeSubquery = query.subquery(ZonedDateTime::class.java).apply {
-                val traceActionRoot = from(TraceAction::class.java)
-                select(cb.greatest(traceActionRoot[TraceAction_.actionDateTime]))
-                    .where(
-                        cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
-                        cb.or(
-                            cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
-                            cb.isNull(traceActionRoot[TraceAction_.action])
-                        )
-                    )
-            }
+            val additionalDataSubquery = buildAdditionalDataSubquery(cb, query, root)
+            buildMemberQuery(cb, query, root, additionalDataSubquery)
 
-            val additionalDataSubquery = query.subquery(String::class.java).apply {
-                val traceActionRoot = from(TraceAction::class.java)
-                select(traceActionRoot[TraceAction_.additionalData])
-                    .where(
-                        cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
-                        cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
-                        cb.equal(traceActionRoot[TraceAction_.actionDateTime], maxActionDateTimeSubquery)
-                    )
-            }
-
-            val followedAnimesSubquery = query.subquery(Long::class.java).apply {
-                val followedAnimesRoot = from(MemberFollowAnime::class.java)
-                select(cb.count(followedAnimesRoot[MemberFollowAnime_.anime]))
-                    .where(cb.equal(followedAnimesRoot[MemberFollowAnime_.member], root))
-            }
-
-            val followedEpisodesSubquery = query.subquery(Long::class.java).apply {
-                val followedEpisodesRoot = from(MemberFollowEpisode::class.java)
-                select(cb.count(followedEpisodesRoot[MemberFollowEpisode_.episode]))
-                    .where(cb.equal(followedEpisodesRoot[MemberFollowEpisode_.member], root))
-            }
-
-            val attachmentJoin = root.join(Member_.attachments, JoinType.LEFT)
-
-            attachmentJoin.on(
-                cb.equal(attachmentJoin[Attachment_.type], ImageType.MEMBER_PROFILE),
-                cb.isTrue(attachmentJoin[Attachment_.active])
-            )
-
-            query.multiselect(
-                root[Member_.uuid],
-                root[Member_.email],
-                root[Member_.creationDateTime],
-                root[Member_.lastUpdateDateTime],
-                attachmentJoin[Attachment_.lastUpdateDateTime],
-                maxActionDateTimeSubquery,
-                followedAnimesSubquery,
-                followedEpisodesSubquery,
-                cb.count(attachmentJoin[Attachment_.uuid]),
-                additionalDataSubquery,
-            ).where(cb.equal(root[Member_.uuid], uuid))
-                .groupBy(
-                    root[Member_.uuid],
-                    attachmentJoin[Attachment_.lastUpdateDateTime],
-                )
+            query.where(cb.equal(root[Member_.uuid], uuid))
 
             val tuple = createReadOnlyQuery(it, query).resultList.firstOrNull() ?: return null
+            createDetailedMemberDto(tuple, includeAdditionalData = true)
+        }
+    }
 
-            return DetailedMemberDto(
-                tuple[0, UUID::class.java],
-                tuple[1, String::class.java],
-                tuple[2, ZonedDateTime::class.java].withUTCString(),
-                tuple[3, ZonedDateTime::class.java]?.withUTCString(),
-                tuple[4, ZonedDateTime::class.java]?.withUTCString(),
-                tuple[5, ZonedDateTime::class.java]?.withUTCString(),
-                tuple[6, Long::class.java],
-                tuple[7, Long::class.java],
-                (runCatching { tuple[8, Long::class.java] }.getOrDefault(0L) ?: 0L) > 0L,
-                additionalData = tuple[9, String::class.java]?.let { ObjectParser.fromJson(it, AdditionalDataDto::class.java) }
-            ).apply {
-                isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
-            }
+    override fun find(uuid: UUID): Member? {
+        return database.entityManager.use {
+            it.find(getEntityClass(), uuid)
+                ?.apply { Hibernate.initialize(roles) }
         }
     }
 
@@ -305,6 +182,136 @@ class MemberRepository : AbstractRepository<Member>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
+        }
+    }
+
+    private fun buildMemberQuery(
+        cb: CriteriaBuilder,
+        query: CriteriaQuery<Tuple>,
+        root: Root<Member>,
+        additionalDataSubquery: Subquery<String>? = null
+    ): Subquery<ZonedDateTime> {
+        val maxActionDateTimeSubquery = buildLastLoginSubquery(cb, query, root)
+        val followedAnimesSubquery = buildFollowedAnimesSubquery(cb, query, root)
+        val followedEpisodesSubquery = buildFollowedEpisodesSubquery(cb, query, root)
+        val attachmentJoin = buildAttachmentJoin(cb, root)
+        
+        val selections: MutableList<Selection<*>> = mutableListOf(
+            root[Member_.uuid],
+            root[Member_.email],
+            root[Member_.creationDateTime],
+            root[Member_.lastUpdateDateTime],
+            attachmentJoin[Attachment_.lastUpdateDateTime],
+            maxActionDateTimeSubquery,
+            followedAnimesSubquery,
+            followedEpisodesSubquery,
+            cb.count(attachmentJoin[Attachment_.uuid])
+        )
+        
+        if (additionalDataSubquery != null) {
+            selections.add(additionalDataSubquery)
+        }
+        
+        query.multiselect(selections)
+            .groupBy(
+                root[Member_.uuid],
+                root[Member_.email],
+                root[Member_.creationDateTime],
+                root[Member_.lastUpdateDateTime],
+                attachmentJoin[Attachment_.lastUpdateDateTime]
+            )
+            
+        return maxActionDateTimeSubquery
+    }
+    
+    private fun buildLastLoginSubquery(
+        cb: CriteriaBuilder,
+        query: CriteriaQuery<Tuple>,
+        root: Root<Member>
+    ): Subquery<ZonedDateTime> {
+        val subquery = query.subquery(ZonedDateTime::class.java)
+        val traceActionRoot = subquery.from(TraceAction::class.java)
+        
+        return subquery.select(cb.greatest(traceActionRoot[TraceAction_.actionDateTime]))
+            .where(
+                cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
+                cb.or(
+                    cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
+                    cb.isNull(traceActionRoot[TraceAction_.action])
+                )
+            )
+    }
+    
+    private fun buildAdditionalDataSubquery(
+        cb: CriteriaBuilder,
+        query: CriteriaQuery<Tuple>,
+        root: Root<Member>
+    ): Subquery<String> {
+        val subquery = query.subquery(String::class.java)
+        val traceActionRoot = subquery.from(TraceAction::class.java)
+        val maxActionDateTimeSubquery = buildLastLoginSubquery(cb, query, root)
+        
+        return subquery.select(traceActionRoot[TraceAction_.additionalData])
+            .where(
+                cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
+                cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
+                cb.equal(traceActionRoot[TraceAction_.actionDateTime], maxActionDateTimeSubquery)
+            )
+    }
+    
+    private fun buildFollowedAnimesSubquery(
+        cb: CriteriaBuilder,
+        query: CriteriaQuery<Tuple>,
+        root: Root<Member>
+    ): Subquery<Long> {
+        val subquery = query.subquery(Long::class.java)
+        val followedAnimesRoot = subquery.from(MemberFollowAnime::class.java)
+        
+        return subquery.select(cb.count(followedAnimesRoot[MemberFollowAnime_.anime]))
+            .where(cb.equal(followedAnimesRoot[MemberFollowAnime_.member], root))
+    }
+    
+    private fun buildFollowedEpisodesSubquery(
+        cb: CriteriaBuilder,
+        query: CriteriaQuery<Tuple>,
+        root: Root<Member>
+    ): Subquery<Long> {
+        val subquery = query.subquery(Long::class.java)
+        val followedEpisodesRoot = subquery.from(MemberFollowEpisode::class.java)
+        
+        return subquery.select(cb.count(followedEpisodesRoot[MemberFollowEpisode_.episode]))
+            .where(cb.equal(followedEpisodesRoot[MemberFollowEpisode_.member], root))
+    }
+    
+    private fun buildAttachmentJoin(
+        cb: CriteriaBuilder,
+        root: Root<Member>
+    ): Join<Member, Attachment> {
+        val attachmentJoin = root.join(Member_.attachments, JoinType.LEFT)
+        
+        return attachmentJoin.on(
+            cb.equal(attachmentJoin[Attachment_.type], ImageType.MEMBER_PROFILE),
+            cb.isTrue(attachmentJoin[Attachment_.active])
+        )
+    }
+    
+    private fun createDetailedMemberDto(
+        tuple: Tuple,
+        includeAdditionalData: Boolean = false
+    ): DetailedMemberDto {
+        return DetailedMemberDto(
+            tuple[0, UUID::class.java],
+            tuple[1, String::class.java],
+            tuple[2, ZonedDateTime::class.java].withUTCString(),
+            tuple[3, ZonedDateTime::class.java]?.withUTCString(),
+            tuple[4, ZonedDateTime::class.java]?.withUTCString(),
+            tuple[5, ZonedDateTime::class.java]?.withUTCString(),
+            tuple[6, Long::class.java],
+            tuple[7, Long::class.java],
+            (runCatching { tuple[8, Long::class.java] }.getOrDefault(0L) ?: 0L) > 0L,
+            additionalData = if (includeAdditionalData) tuple[9, String::class.java]?.let { ObjectParser.fromJson(it, AdditionalDataDto::class.java) } else null
+        ).apply {
+            isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
         }
     }
 }

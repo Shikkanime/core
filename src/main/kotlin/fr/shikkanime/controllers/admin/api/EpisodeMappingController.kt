@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
+import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
@@ -35,12 +36,9 @@ class EpisodeMappingController {
     @Path("/update-all")
     @Put
     @AdminSessionAuthenticated
-    private fun updateAllEpisode(
-        @BodyParam updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto
-    ): Response {
-        if (updateAllEpisodeMappingDto.uuids.isEmpty()) {
-            return Response.badRequest("uuids must not be empty")
-        }
+    private fun updateAllEpisode(@BodyParam updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto): Response {
+        if (updateAllEpisodeMappingDto.uuids.isEmpty())
+            return Response.badRequest(MessageDto.error("uuids must not be empty"))
 
         if (updateAllEpisodeMappingDto.episodeType == null &&
             updateAllEpisodeMappingDto.season == null &&
@@ -48,9 +46,8 @@ class EpisodeMappingController {
             updateAllEpisodeMappingDto.incrementDate == null &&
             updateAllEpisodeMappingDto.forceUpdate == null &&
             updateAllEpisodeMappingDto.bindVoiceVariants == null &&
-            updateAllEpisodeMappingDto.bindNumber == null) {
-            return Response.badRequest("At least one field must be set")
-        }
+            updateAllEpisodeMappingDto.bindNumber == null)
+            return Response.badRequest(MessageDto.error("At least one field must be set"))
 
         episodeMappingAdminService.updateAll(updateAllEpisodeMappingDto)
         MapCache.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
@@ -60,18 +57,16 @@ class EpisodeMappingController {
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun read(@PathParam("uuid") uuid: UUID): Response {
-        val find = episodeMappingService.find(uuid) ?: return Response.notFound()
-        return Response.ok(episodeMappingFactory.toDto(find).apply {
-            image = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
-        })
+    private fun read(@PathParam uuid: UUID): Response {
+        val episodeMapping = episodeMappingService.find(uuid) ?: return Response.notFound()
+        return Response.ok(episodeMappingFactory.toDto(episodeMapping).apply { image = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url })
     }
 
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
     private fun updateEpisode(
-        @PathParam("uuid") uuid: UUID,
+        @PathParam uuid: UUID,
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
         val updated = episodeMappingAdminService.update(uuid, episodeMappingDto)
@@ -82,7 +77,7 @@ class EpisodeMappingController {
     @Path("/{uuid}")
     @Delete
     @AdminSessionAuthenticated
-    private fun deleteEpisode(@PathParam("uuid") uuid: UUID): Response {
+    private fun deleteEpisode(@PathParam uuid: UUID): Response {
         episodeMappingService.delete(episodeMappingService.find(uuid) ?: return Response.notFound())
         MapCache.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
         return Response.noContent()

@@ -11,4 +11,8 @@ data class MessageDto(
         WARNING,
         ERROR
     }
+
+    companion object {
+        fun error(message: String, data: Any? = null) = MessageDto(Type.ERROR, message, data)
+    }
 }

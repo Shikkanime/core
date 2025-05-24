@@ -21,31 +21,27 @@ import java.util.*
 
 @Controller("$ADMIN/api/configs")
 class ConfigController {
-    @Inject
-    private lateinit var configService: ConfigService
-
-    @Inject
-    private lateinit var configFactory: ConfigFactory
+    @Inject private lateinit var configService: ConfigService
+    @Inject private lateinit var configFactory: ConfigFactory
 
     @Path
     @Get
     @AdminSessionAuthenticated
-    private fun getConfigs(
-        @QueryParam("name") nameParam: String?,
-    ): Response {
-        val configs = if (nameParam != null) {
-            configService.findAllByName(nameParam)
+    private fun getConfigs(@QueryParam name: String?) = Response.ok(
+        if (name != null) {
+            configService.findAllByName(name)
         } else {
             configService.findAll()
-        }
-
-        return Response.ok(configs.map { configFactory.toDto(it) })
-    }
+        }.map { configFactory.toDto(it) }
+    )
 
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
-    private fun updateConfig(@PathParam("uuid") uuid: UUID, @BodyParam configDto: ConfigDto): Response {
+    private fun updateConfig(
+        @PathParam uuid: UUID,
+        @BodyParam configDto: ConfigDto
+    ): Response {
         val config = configService.update(uuid, configDto) ?: return Response.notFound()
         MapCache.invalidate(Config::class.java)
         Constant.abstractSocialNetworks.forEach { it.logout() }

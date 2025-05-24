@@ -11,14 +11,9 @@ import fr.shikkanime.utils.MapCache
 import java.util.*
 
 class MemberFollowEpisodeCacheService : ICacheService {
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     fun findAllBy(member: UUID, page: Int, limit: Int) = MapCache.getOrCompute(
         "MemberFollowEpisodeCacheService.findAllBy",

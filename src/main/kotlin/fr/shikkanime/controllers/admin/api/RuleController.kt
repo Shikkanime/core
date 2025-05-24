@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
+import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.RuleDto
 import fr.shikkanime.entities.Rule
 import fr.shikkanime.factories.impl.RuleFactory
@@ -26,17 +27,14 @@ class RuleController {
     @Path
     @Get
     @AdminSessionAuthenticated
-    private fun getRules(): Response {
-        return Response.ok(ruleService.findAll().map { ruleFactory.toDto(it) })
-    }
+    private fun getRules() = Response.ok(ruleService.findAll().map { ruleFactory.toDto(it) })
 
     @Path
     @Post
     @AdminSessionAuthenticated
     private fun createRule(@BodyParam ruleDto: RuleDto): Response {
-        if (ruleDto.uuid != null) {
-            return Response.badRequest("UUID must be null")
-        }
+        if (ruleDto.uuid != null)
+            Response.badRequest(MessageDto.error("UUID must be null"))
 
         val rule = ruleService.save(ruleFactory.toEntity(ruleDto))
         MapCache.invalidate(Rule::class.java)
@@ -46,7 +44,7 @@ class RuleController {
     @Path("/{uuid}")
     @Delete
     @AdminSessionAuthenticated
-    private fun deleteRule(@PathParam("uuid") uuid: UUID): Response {
+    private fun deleteRule(@PathParam uuid: UUID): Response {
         val rule = ruleService.find(uuid) ?: return Response.notFound()
         ruleService.delete(rule)
         MapCache.invalidate(Rule::class.java)

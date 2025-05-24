@@ -5,13 +5,12 @@ import fr.shikkanime.entities.miscellaneous.SortParameter
 open class HasPageableRoute {
     protected fun pageableRoute(
         pageParam: Int?,
-        limitParam: Int?,
+        limitParam: Int,
         sortParam: String?,
-        descParam: String?,
-        defaultLimit: Int = 15
+        descParam: String?
     ): Triple<Int, Int, List<SortParameter>> {
         val page = pageParam ?: 1
-        val limit = limitParam?.coerceIn(1, 30) ?: defaultLimit
+        val limit = limitParam.coerceIn(1, 30)
 
         val sortParameters = sortParam?.split(",")?.map { sort ->
             val desc = descParam?.split(",")?.contains(sort) == true
