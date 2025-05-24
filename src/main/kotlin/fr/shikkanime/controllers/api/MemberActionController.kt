@@ -16,47 +16,26 @@ import java.util.*
 
 @Controller("/api/v1/member-actions")
 class MemberActionController {
-    @Inject
-    private lateinit var memberActionService: MemberActionService
+    @Inject private lateinit var memberActionService: MemberActionService
 
     @Path("/validate")
     @Post
     @JWTAuthenticated
     fun validateAction(
-        @QueryParam("uuid")
-        uuid: UUID?,
-        @BodyParam
-        action: String?
+        @QueryParam uuid: UUID?,
+        @BodyParam action: String?
     ): Response {
-        if (uuid == null) {
-            return Response.badRequest(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "UUID is required"
-                )
-            )
-        }
-
-        if (action.isNullOrEmpty()) {
-            return Response.badRequest(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "Action is required"
-                )
-            )
-        }
+        if (uuid == null)
+            Response.badRequest(MessageDto.error("UUID is required"))
+        if (action.isNullOrEmpty())
+            return Response.badRequest(MessageDto.error("Action is required"))
 
         try {
-            memberActionService.validateAction(uuid, action)
+            memberActionService.validateAction(uuid!!, action)
             MapCache.invalidate(Member::class.java)
             return Response.ok()
         } catch (e: Exception) {
-            return Response.badRequest(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    e.message ?: "An error occurred"
-                )
-            )
+            return Response.badRequest(MessageDto.error(e.message ?: "An error occurred"))
         }
     }
 }

@@ -16,20 +16,11 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFollowEpisodeRepository>() {
-    @Inject
-    private lateinit var memberFollowEpisodeRepository: MemberFollowEpisodeRepository
-
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var memberFollowEpisodeRepository: MemberFollowEpisodeRepository
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberFollowEpisodeRepository
 

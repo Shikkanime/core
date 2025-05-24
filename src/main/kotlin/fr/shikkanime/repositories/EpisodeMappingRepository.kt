@@ -163,7 +163,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return withMinute(0).withSecond(0).withNano(0)
     }
 
-    fun findAllGroupedBy(countryCode: CountryCode, page: Int, limit: Int): Pageable<GroupedEpisode> {
+    fun findAllGroupedBy(countryCode: CountryCode?, page: Int, limit: Int): Pageable<GroupedEpisode> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
 
@@ -185,7 +185,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 truncatedReleaseDateTime
             )
 
-            subQuery.where(cb.equal(subAnime[Anime_.countryCode], countryCode))
+            countryCode?.let { subQuery.where(cb.equal(subAnime[Anime_.countryCode], it)) }
 
             subQuery.groupBy(
                 subAnime[Anime_.uuid],

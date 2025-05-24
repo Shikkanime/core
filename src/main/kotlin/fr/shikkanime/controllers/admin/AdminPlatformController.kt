@@ -23,13 +23,11 @@ class AdminPlatformController {
     @Path
     @Get
     @AdminSessionAuthenticated
-    private fun getPlatforms(): Response {
-        return Response.template(
-            Link.PLATFORMS,
-            mutableMapOf(
-                "platforms" to Constant.abstractPlatforms.sortedBy { it.getPlatform().name.lowercase() })
-        )
-    }
+    private fun getPlatforms() = Response.template(
+        Link.PLATFORMS,
+        mutableMapOf(
+            "platforms" to Constant.abstractPlatforms.sortedBy { it.getPlatform().name.lowercase() })
+    )
 
     @Path
     @Post
@@ -50,7 +48,7 @@ class AdminPlatformController {
     @Path("/{platform}/simulcasts")
     @Get
     @AdminSessionAuthenticated
-    private fun getPlatformSimulcast(@PathParam("platform") platform: Platform): Response {
+    private fun getPlatformSimulcast(@PathParam platform: Platform): Response {
         val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
             ?: return Response.redirect(Link.PLATFORMS.href)
 
@@ -68,8 +66,8 @@ class AdminPlatformController {
     @Get
     @AdminSessionAuthenticated
     private fun getPlatformSimulcasts(
-        @PathParam("platform") platform: Platform,
-        @PathParam("uuid") uuid: UUID
+        @PathParam platform: Platform,
+        @PathParam uuid: UUID
     ): Response {
         val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
             ?: return Response.redirect(Link.PLATFORMS.href)
@@ -88,7 +86,7 @@ class AdminPlatformController {
     @Post
     @AdminSessionAuthenticated
     private fun addPlatformSimulcast(
-        @PathParam("platform") platform: Platform,
+        @PathParam platform: Platform,
         @BodyParam parameters: Parameters
     ): Response {
         val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
@@ -118,8 +116,8 @@ class AdminPlatformController {
     @Get
     @AdminSessionAuthenticated
     private fun deletePlatformSimulcast(
-        @PathParam("platform") platform: Platform,
-        @PathParam("uuid") uuid: UUID
+        @PathParam platform: Platform,
+        @PathParam uuid: UUID
     ): Response {
         val abstractPlatform = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
             ?: return Response.redirect(Link.PLATFORMS.href)

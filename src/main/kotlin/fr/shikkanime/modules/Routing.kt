@@ -272,6 +272,7 @@ private fun fromString(value: String?, type: KType): Any? {
         Platform::class to { Platform.fromNullable(it) },
         String::class to { it },
         Int::class to { it?.toIntOrNull() },
+        Long::class to { it?.toLongOrNull() },
     )
 
     return converters.entries.firstOrNull { (kClass, _) ->
@@ -286,14 +287,20 @@ private fun handleHttpHeader(kParameter: KParameter, call: ApplicationCall): Any
 }
 
 private fun handlePathParam(kParameter: KParameter, call: ApplicationCall): Any? {
-    val name = kParameter.findAnnotation<PathParam>()?.name ?: kParameter.name
+    val name = kParameter.findAnnotation<PathParam>()?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
     val value = name?.let { call.parameters[name] }
     return fromString(value, kParameter.type)
 }
 
 private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any? {
-    val name = kParameter.findAnnotation<QueryParam>()?.name ?: kParameter.name
-    val value = name?.let { call.request.queryParameters[it] }
+    val annotation = kParameter.findAnnotation<QueryParam>()
+
+    if (annotation?.name.isNullOrBlank() && kParameter.type.jvmErasure == Map::class) {
+        return call.request.queryParameters.toMap().mapValues { (_, values) -> values.first() }
+    }
+
+    val name = annotation?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
+    val value = name?.let { call.request.queryParameters[it] } ?: annotation?.defaultValue?.takeIf { it.isNotBlank() }
     return fromString(value, kParameter.type)
 }
 

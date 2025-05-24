@@ -9,12 +9,9 @@ import fr.shikkanime.utils.routes.method.Get
 
 @Controller("/api/v1/simulcasts")
 class SimulcastController {
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Path
     @Get
-    private fun getAll(): Response {
-        return Response.ok(simulcastCacheService.findAll())
-    }
+    private fun getAll() = Response.ok(simulcastCacheService.findAll())
 }

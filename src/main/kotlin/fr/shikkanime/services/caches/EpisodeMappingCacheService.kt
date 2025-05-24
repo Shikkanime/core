@@ -52,7 +52,7 @@ class EpisodeMappingCacheService : ICacheService {
     }
 
     fun findAllGroupedBy(
-        countryCode: CountryCode,
+        countryCode: CountryCode?,
         page: Int,
         limit: Int,
     ) = MapCache.getOrCompute(
@@ -61,7 +61,7 @@ class EpisodeMappingCacheService : ICacheService {
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
     ) {
         PageableDto.fromPageable(
-            episodeMappingService.findAllGroupedBy(it.countryCode!!, it.page, it.limit),
+            episodeMappingService.findAllGroupedBy(it.countryCode, it.page, it.limit),
             groupedEpisodeFactory
         )
     }

@@ -19,12 +19,9 @@ class MemberController : HasPageableRoute() {
 
     @Path("/login")
     @Post
-    private fun loginMember(
-        @BodyParam loginDto: LoginDto
-    ): Response {
-        return Response.ok(memberService.login(loginDto.identifier, loginDto.appVersion, loginDto.device, loginDto.locale) ?: return runBlocking {
+    private fun loginMember(@BodyParam loginDto: LoginDto) =
+        memberService.login(loginDto.identifier, loginDto.appVersion, loginDto.device, loginDto.locale)?.let { Response.ok(it) } ?: runBlocking {
             delay(1000)
             Response.notFound()
-        })
-    }
+        }
 }

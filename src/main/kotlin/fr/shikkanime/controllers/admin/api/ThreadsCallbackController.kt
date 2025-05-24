@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.admin.api
 
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
+import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
@@ -21,18 +22,13 @@ import kotlinx.coroutines.runBlocking
 
 @Controller("$ADMIN/api/threads")
 class ThreadsCallbackController {
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var configService: ConfigService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var configService: ConfigService
 
     @Path
     @Get
     @AdminSessionAuthenticated
-    private fun callback(
-        @QueryParam("code") code: String,
-    ): Response {
+    private fun callback(@QueryParam code: String): Response {
         val appId = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
         val appSecret = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_SECRET))
 
@@ -59,7 +55,7 @@ class ThreadsCallbackController {
                 Response.redirect("${Link.THREADS.href}?success=1")
             } catch (e: Exception) {
                 e.printStackTrace()
-                Response.badRequest("Impossible to get token with code $code")
+                Response.badRequest(MessageDto.error("Impossible to get token with code $code"))
             }
         }
     }

@@ -14,19 +14,12 @@ import java.time.ZonedDateTime
 
 @Controller("$ADMIN/api/metrics")
 class MetricController {
-    @Inject
-    private lateinit var metricService: MetricService
-
-    @Inject
-    private lateinit var metricFactory: MetricFactory
+    @Inject private lateinit var metricService: MetricService
+    @Inject private lateinit var metricFactory: MetricFactory
 
     @Path
     @Get
     @AdminSessionAuthenticated
-    private fun getMetrics(
-        @QueryParam("hours") hours: Int?,
-    ): Response {
-        val xHourAgo = ZonedDateTime.now().minusHours(hours?.toLong() ?: 1)
-        return Response.ok(metricService.findAllAfter(xHourAgo).map { metricFactory.toDto(it) })
-    }
+    private fun getMetrics(@QueryParam(defaultValue = "1") hours: Long) =
+        Response.ok(metricService.findAllAfter(ZonedDateTime.now().minusHours(hours)).map { metricFactory.toDto(it) })
 }

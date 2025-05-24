@@ -22,7 +22,7 @@ class EpisodeVariantController : HasPageableRoute() {
     @Post
     @AdminSessionAuthenticated
     private fun separateVariant(
-        @PathParam("uuid") uuid: UUID,
+        @PathParam uuid: UUID,
         @BodyParam separateVariantDto: SeparateVariantDto
     ): Response {
         episodeVariantService.separate(uuid, separateVariantDto)

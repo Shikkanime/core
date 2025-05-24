@@ -17,57 +17,32 @@ import java.util.*
 
 @Controller("/api/v1/attachments")
 class AttachmentController {
-    @Inject
-    private lateinit var attachmentService: AttachmentService
-
-    @Inject
-    private lateinit var attachmentCacheService: AttachmentCacheService
+    @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var attachmentCacheService: AttachmentCacheService
 
     @Path
     @Get
     @Cached(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION)
     private fun getAttachment(
-        @QueryParam("uuid")
-        uuid: UUID?,
-        @QueryParam("type")
-        typeString: String?
+        @QueryParam uuid: UUID?,
+        @QueryParam("type") typeString: String?
     ): Response {
-        if (uuid == null || runCatching { UUID.fromString(uuid.toString()) }.isFailure) {
-            return Response.badRequest(
-                MessageDto(
-                    MessageDto.Type.ERROR,
-                    "UUID is required"
-                )
-            )
-        }
+        if (uuid == null || runCatching { UUID.fromString(uuid.toString()) }.isFailure)
+            Response.badRequest(MessageDto.error("UUID is required"))
 
-        val type = ImageType.entries.find { it.name.equals(typeString, true) } ?: return Response.badRequest(
-            MessageDto(
-                MessageDto.Type.ERROR,
-                "Invalid type"
-            )
-        )
+        val type = ImageType.entries.find { it.name.equals(typeString, true) }
+            ?: return Response.badRequest(MessageDto.error("Invalid type"))
 
         // Get attachment from cache or database
-        val attachment = attachmentCacheService.findByEntityUuidTypeAndActive(uuid, type) ?: return Response.notFound(
-            MessageDto(
-                MessageDto.Type.ERROR,
-                "Attachment not found"
-            )
-        )
+        val attachment = attachmentCacheService.findByEntityUuidTypeAndActive(uuid!!, type)
+            ?: return Response.notFound(MessageDto.error("Attachment not found"))
 
         // Check if image is in the memory cache
         val imageBytes = attachmentService.getContentFromCache(attachment) ?: run {
             val file = attachmentService.getFile(attachment)
 
-            if (!file.exists() || file.length() <= 0 || attachment.uuid in attachmentService.inProgressAttachments) {
-                return Response.notFound(
-                    MessageDto(
-                        MessageDto.Type.ERROR,
-                        "Attachment not found"
-                    )
-                )
-            }
+            if (!file.exists() || file.length() <= 0 || attachment.uuid in attachmentService.inProgressAttachments)
+                return Response.notFound(MessageDto.error("Attachment not found"))
 
             // Read the file and store it in the cache
             val bytes = file.readBytes()

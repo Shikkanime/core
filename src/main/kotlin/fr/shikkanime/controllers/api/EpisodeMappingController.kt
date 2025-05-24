@@ -17,66 +17,42 @@ import javax.imageio.ImageIO
 
 @Controller("/api/v1/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
-
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-
-    @Inject
-    private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
+    @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
 
     @Path
     @Get
     @JWTAuthenticated(optional = true)
     private fun getAll(
-        @JWTUser
-        memberUuid: UUID?,
-        @QueryParam("country")
-        countryParam: CountryCode?,
-        @QueryParam("anime")
-        animeParam: UUID?,
-        @QueryParam("season")
-        seasonParam: Int?,
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
-        @QueryParam("sort")
-        sortParam: String?,
-        @QueryParam("desc")
-        descParam: String?,
+        @JWTUser memberUuid: UUID?,
+        @QueryParam parameters: Map<String, String>
     ): Response {
-        val (page, limit, sortParameters) = pageableRoute(pageParam, limitParam, sortParam, descParam)
+        val countryCode = CountryCode.fromNullable(parameters["country"])
+        val animeUuid = parameters["anime"]?.let(UUID::fromString)
+        val season = parameters["name"]?.toIntOrNull()
+        val sort = parameters["sort"]
+        val desc = parameters["desc"]
 
-        if (memberUuid != null) {
-            return Response.ok(
-                memberFollowEpisodeCacheService.findAllBy(
-                    memberUuid,
-                    page,
-                    limit
-                )
-            )
-        }
+        val (page, limit, sortParameters) = pageableRoute(
+            parameters["page"]?.toIntOrNull(),
+            parameters["limit"]?.toIntOrNull() ?: 9,
+            sort,
+            desc
+        )
 
         return Response.ok(
-            episodeMappingCacheService.findAllBy(
-                countryParam ?: CountryCode.FR,
-                animeParam,
-                seasonParam,
-                sortParameters,
-                page,
-                limit
-            )
+            if (memberUuid != null) {
+                memberFollowEpisodeCacheService.findAllBy(memberUuid, page, limit)
+            } else {
+                episodeMappingCacheService.findAllBy(countryCode, animeUuid, season, sortParameters, page, limit)
+            }
         )
     }
 
     @Path("/media-image")
     @Get
-    private fun getMediaImage(
-        @QueryParam("uuids")
-        uuidsGzip: String?
-    ): Response {
+    private fun getMediaImage(@QueryParam("uuids") uuidsGzip: String?): Response {
         if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
 
         val fromGzip = runCatching { EncryptionManager.fromGzip(uuidsGzip) }.getOrNull() ?: return Response.badRequest()

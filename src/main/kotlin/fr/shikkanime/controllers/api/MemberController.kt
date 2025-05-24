@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.GenericDto
+import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
@@ -50,11 +51,9 @@ class MemberController : HasPageableRoute() {
         @HttpHeader("X-Device") device: String?,
         @HttpHeader("X-Locale") locale: String?,
         @BodyParam identifier: String
-    ): Response {
-        return Response.ok(memberService.login(identifier, appVersion, device, locale) ?: return runBlocking {
-            delay(1000)
-            Response.notFound()
-        })
+    ) = memberService.login(identifier, appVersion, device, locale)?.let { Response.ok(it) } ?: runBlocking {
+        delay(1000)
+        Response.notFound(MessageDto.error("Member not found"))
     }
 
     @Path("/associate-email")
@@ -64,14 +63,10 @@ class MemberController : HasPageableRoute() {
         @JWTUser memberUuid: UUID,
         @BodyParam email: String
     ): Response {
-        // Verify email
-        if (!StringUtils.isValidEmail(email)) {
-            return Response.badRequest("Invalid email")
-        }
-
-        if (memberService.findByEmail(email) != null) {
-            return Response.conflict("Email already associated to an account")
-        }
+        if (!StringUtils.isValidEmail(email))
+            return Response.badRequest(MessageDto.error("Invalid email"))
+        if (memberService.findByEmail(email) != null)
+            return Response.conflict(MessageDto.error("Email already associated to an account"))
 
         return Response.created(GenericDto(memberService.associateEmail(memberUuid, email)))
     }
@@ -83,25 +78,20 @@ class MemberController : HasPageableRoute() {
         @JWTUser memberUuid: UUID,
         @BodyParam email: String
     ): Response {
-        // Verify email
-        if (!StringUtils.isValidEmail(email)) {
-            return Response.badRequest("Invalid email")
-        }
-
-        if (memberCacheService.find(memberUuid)!!.email == email) {
-            return Response.badRequest("Email already associated to your account")
-        }
+        if (!StringUtils.isValidEmail(email))
+            return Response.badRequest(MessageDto.error("Invalid email"))
+        if (memberCacheService.find(memberUuid)!!.email == email)
+            Response.badRequest(MessageDto.error("Email already associated to your account"))
 
         val findByEmail = memberService.findByEmail(email)
 
         if (findByEmail == null) {
             runBlocking { delay(1000) }
-            return Response.badRequest("Email not associated to any account")
+            return Response.badRequest(MessageDto.error("Email not associated to any account"))
         }
 
         return Response.created(GenericDto(memberService.forgotIdentifier(findByEmail)))
     }
-
 
     @Path("/animes")
     @Put
@@ -109,9 +99,7 @@ class MemberController : HasPageableRoute() {
     private fun followAnime(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
-    ): Response {
-        return memberFollowAnimeService.follow(memberUuid, anime)
-    }
+    ) = memberFollowAnimeService.follow(memberUuid, anime)
 
     @Path("/animes")
     @Delete
@@ -119,9 +107,7 @@ class MemberController : HasPageableRoute() {
     private fun unfollowAnime(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
-    ): Response {
-        return memberFollowAnimeService.unfollow(memberUuid, anime)
-    }
+    ) = memberFollowAnimeService.unfollow(memberUuid, anime)
 
     @Path("/follow-all-episodes")
     @Put
@@ -129,9 +115,7 @@ class MemberController : HasPageableRoute() {
     private fun followAllEpisodes(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
-    ): Response {
-        return memberFollowEpisodeService.followAll(memberUuid, anime)
-    }
+    ) = memberFollowEpisodeService.followAll(memberUuid, anime)
 
     @Path("/episodes")
     @Put
@@ -139,9 +123,7 @@ class MemberController : HasPageableRoute() {
     private fun followEpisode(
         @JWTUser memberUuid: UUID,
         @BodyParam episode: GenericDto
-    ): Response {
-        return memberFollowEpisodeService.follow(memberUuid, episode)
-    }
+    ) = memberFollowEpisodeService.follow(memberUuid, episode)
 
     @Path("/episodes")
     @Delete
@@ -149,9 +131,7 @@ class MemberController : HasPageableRoute() {
     private fun unfollowEpisode(
         @JWTUser memberUuid: UUID,
         @BodyParam episode: GenericDto
-    ): Response {
-        return memberFollowEpisodeService.unfollow(memberUuid, episode)
-    }
+    ) = memberFollowEpisodeService.unfollow(memberUuid, episode)
 
     @Path("/image")
     @Post
@@ -163,7 +143,7 @@ class MemberController : HasPageableRoute() {
         try {
             runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
         } catch (e: Exception) {
-            return Response.badRequest(e.message ?: "Invalid file format")
+            return Response.badRequest(MessageDto.error(e.message ?: "Invalid file format"))
         }
 
         MapCache.invalidate(Member::class.java)
@@ -175,9 +155,9 @@ class MemberController : HasPageableRoute() {
     @JWTAuthenticated
     private fun getRefreshMember(
         @JWTUser memberUuid: UUID,
-        @QueryParam("limit") limitParam: Int?,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
-        val (_, limit, _) = pageableRoute(null, limitParam, null, null, defaultLimit = 9)
+        val (_, limit, _) = pageableRoute(null, limitParam, null, null)
         return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return Response.notFound())
     }
 }

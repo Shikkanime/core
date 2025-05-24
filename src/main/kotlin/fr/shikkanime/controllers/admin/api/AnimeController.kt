@@ -25,14 +25,9 @@ import java.util.*
 
 @Controller("$ADMIN/api/animes")
 class AnimeController : HasPageableRoute() {
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
-
-    @Inject
-    private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var attachmentService: AttachmentService
 
     @Path("/force-update-all")
     @Get
@@ -48,9 +43,7 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated
-    private fun animeDetails(
-        @PathParam("uuid") uuid: UUID,
-    ): Response {
+    private fun animeDetails(@PathParam uuid: UUID): Response {
         return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()).apply {
             thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
             banner = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
@@ -60,7 +53,10 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Put
     @AdminSessionAuthenticated
-    private fun updateAnime(@PathParam("uuid") uuid: UUID, @BodyParam animeDto: AnimeDto): Response {
+    private fun updateAnime(
+        @PathParam uuid: UUID,
+        @BodyParam animeDto: AnimeDto
+    ): Response {
         val updated = animeService.update(uuid, animeDto) ?: return Response.notFound()
         MapCache.invalidate(Anime::class.java)
         return Response.ok(animeFactory.toDto(updated))
@@ -69,7 +65,7 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Delete
     @AdminSessionAuthenticated
-    private fun deleteAnime(@PathParam("uuid") uuid: UUID): Response {
+    private fun deleteAnime(@PathParam uuid: UUID): Response {
         animeService.delete(animeService.find(uuid) ?: return Response.notFound())
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.noContent()
@@ -79,10 +75,8 @@ class AnimeController : HasPageableRoute() {
     @Get
     @AdminSessionAuthenticated
     private fun getAlerts(
-        @QueryParam("page")
-        pageParam: Int?,
-        @QueryParam("limit")
-        limitParam: Int?,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
         return Response.ok(animeService.getAlerts(page, limit))

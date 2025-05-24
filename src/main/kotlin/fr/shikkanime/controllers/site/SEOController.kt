@@ -21,21 +21,16 @@ import java.time.ZonedDateTime
 class SEOController {
     private fun ZonedDateTime.formatDateTime() = this.withUTCString().replace("Z", "+00:00")
 
-    @Inject
-    private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
-
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Path("robots.txt")
     @Get
-    private fun robots(): Response {
-        return Response.template(
-            "/site/seo/robots.ftl",
-            null,
-            contentType = ContentType.Text.Plain
-        )
-    }
+    private fun robots() = Response.template(
+        "/site/seo/robots.ftl",
+        null,
+        contentType = ContentType.Text.Plain
+    )
 
     @Path("sitemap.xml")
     @Get
@@ -92,24 +87,18 @@ class SEOController {
 
     @Path("c97385827d194199b3a0509ec9221517.txt")
     @Get
-    private fun indexNow(): Response {
-        return Response.ok("c97385827d194199b3a0509ec9221517", contentType = ContentType.Text.Plain)
-    }
+    private fun indexNow() = Response.ok("c97385827d194199b3a0509ec9221517", contentType = ContentType.Text.Plain)
 
     @Path("/feed/episodes")
     @Get
-    private fun feedRss(): Response {
-        val data = episodeMappingCacheService.findAllGroupedBy(
+    private fun feedRss() = Response.template(
+        "/site/seo/rss.ftl",
+        null,
+        mutableMapOf("groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
             CountryCode.FR,
             1,
             50
-        ).data
-
-        return Response.template(
-            "/site/seo/rss.ftl",
-            null,
-            mutableMapOf("groupedEpisodes" to data),
-            contentType = ContentType.Text.Xml
-        )
-    }
+        ).data),
+        contentType = ContentType.Text.Xml
+    )
 }
