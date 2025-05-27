@@ -14,13 +14,10 @@ import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import java.util.*
 
 class EpisodeMappingCacheService : ICacheService {
-    companion object {
-        private const val DEFAULT_ALL_KEY = "all"
-    }
-
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
@@ -69,7 +66,7 @@ class EpisodeMappingCacheService : ICacheService {
     fun findAllSeo() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllSeo",
         classes = listOf(EpisodeMapping::class.java),
-        key = DEFAULT_ALL_KEY,
+        key = StringUtils.EMPTY_STRING,
     ) { episodeMappingService.findAllSeo() }
 
     fun findPreviousAndNextBy(
@@ -96,6 +93,6 @@ class EpisodeMappingCacheService : ICacheService {
     fun findMinimalReleaseDateTime() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findMinimalReleaseDateTime",
         classes = listOf(EpisodeMapping::class.java),
-        key = DEFAULT_ALL_KEY,
+        key = StringUtils.EMPTY_STRING,
     ) { episodeMappingService.findMinimalReleaseDateTime() }
 }

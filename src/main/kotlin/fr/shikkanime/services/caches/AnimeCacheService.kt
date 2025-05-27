@@ -15,30 +15,20 @@ import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
 import java.util.*
 
 class AnimeCacheService : ICacheService {
-    companion object {
-        private const val DEFAULT_ALL_KEY = "all"
-    }
-
-    @Inject
-    private lateinit var animeService: AnimeService
-
-    @Inject
-    private lateinit var simulcastCacheService: SimulcastCacheService
-
-    @Inject
-    private lateinit var memberCacheService: MemberCacheService
-
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var memberCacheService: MemberCacheService
+    @Inject private lateinit var animeFactory: AnimeFactory
 
     fun findAll() = MapCache.getOrCompute(
         "AnimeCacheService.findAll",
         classes = listOf(Anime::class.java),
-        key = DEFAULT_ALL_KEY,
+        key = StringUtils.EMPTY_STRING,
     ) { animeService.findAll() }
 
     fun findAllBy(
@@ -81,13 +71,13 @@ class AnimeCacheService : ICacheService {
     fun getAudioLocales(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getAudioLocales",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = DEFAULT_ALL_KEY,
+        key = StringUtils.EMPTY_STRING,
     ) { animeService.findAllAudioLocales() }[anime.uuid!!]
 
     fun getSeasons(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getSeasons",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = DEFAULT_ALL_KEY,
+        key = StringUtils.EMPTY_STRING,
     ) { animeService.findAllSeasons() }[anime.uuid!!]
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(

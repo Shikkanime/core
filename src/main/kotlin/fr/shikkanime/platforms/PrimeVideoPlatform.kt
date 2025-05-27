@@ -70,7 +70,7 @@ class PrimeVideoPlatform :
         require(episode.audioLocales.isNotEmpty()) { "Audio locales are empty" }
         require(episode.subtitleLocales.isNotEmpty()) { "Subtitle locales are empty" }
 
-        if (!episode.subtitleLocales.contains(countryCode.locale))
+        if (countryCode.locale !in episode.subtitleLocales)
             throw EpisodeNoSubtitlesOrVoiceException("Episode ${episode.show.name} (${episode.season}x${episode.number}) does not have subtitles for $countryCode")
 
         return episode.audioLocales.map {

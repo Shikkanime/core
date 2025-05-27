@@ -39,7 +39,7 @@ class AnimationDigitalNetworkPlatform :
         val seasonPattern = season?.toIntOrNull() ?: 1
         // Regex to remove season/part indicators and roman numerals from the end
         val regex = "(?: -)? Saison \\d+|Part.*|$seasonPattern$| [${StringUtils.ROMAN_NUMBERS_CHECK}]+$".toRegex()
-        return title.replace(regex, "").trim()
+        return title.replace(regex, StringUtils.EMPTY_STRING).trim()
     }
 
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Video> {
@@ -105,7 +105,7 @@ class AnimationDigitalNetworkPlatform :
         val season = video.season?.toIntOrNull() ?: 1
         val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, season.toString())
 
-        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
+        if (isBlacklisted(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
         val genres = video.show.genres
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
@@ -113,7 +113,7 @@ class AnimationDigitalNetworkPlatform :
         if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !isConfigurationSimulcasted && checkAnimation)
             throw Exception("Anime is not an animation")
 
-        val isSimulcasted = video.show.simulcast || video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: "").lowercase()) } == true
+        val isSimulcasted = video.show.simulcast || video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: StringUtils.EMPTY_STRING).lowercase()) } == true
 
         if (needSimulcast && !(isConfigurationSimulcasted || isSimulcasted))
             throw AnimeNotSimulcastedException("Anime is not simulcasted")
@@ -121,7 +121,7 @@ class AnimationDigitalNetworkPlatform :
         val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
         val specialShowTypes = listOf("PV", "BONUS")
 
-        if (trailerIndicators.any { video.shortNumber?.startsWith(it) == true } || specialShowTypes.contains(video.type))
+        if (trailerIndicators.any { video.shortNumber?.startsWith(it) == true } || video.type in specialShowTypes)
             throw NotSimulcastedMediaException("Trailer or special show type")
 
         val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
@@ -154,7 +154,7 @@ class AnimationDigitalNetworkPlatform :
     }
 
     private fun parseInitialNumber(rawString: String?): Int {
-        return rawString?.replace(NUMBER_CLEANUP_REGEX, "")?.trim()?.toIntOrNull() ?: -1
+        return rawString?.replace(NUMBER_CLEANUP_REGEX, StringUtils.EMPTY_STRING)?.trim()?.toIntOrNull() ?: -1
     }
 
     /**

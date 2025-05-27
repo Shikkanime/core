@@ -65,10 +65,7 @@ class SlashCommandInteractionListener : ListenerAdapter() {
                 existingChannel.animes.clear()
             }
 
-            if (releaseType == "CUSTOM" && !animeName.isNullOrBlank() && !existingChannel.animes.contains(
-                    animeName
-                )
-            ) {
+            if (releaseType == "CUSTOM" && !animeName.isNullOrBlank() && animeName !in existingChannel.animes) {
                 existingChannel.animes.add(animeName)
             }
         } else {

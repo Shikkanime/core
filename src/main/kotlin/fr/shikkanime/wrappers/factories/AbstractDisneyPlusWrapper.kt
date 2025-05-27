@@ -3,10 +3,7 @@ package fr.shikkanime.wrappers.factories
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -47,14 +44,14 @@ abstract class AbstractDisneyPlusWrapper {
         "AbstractDisneyPlusWrapper.getAccessToken",
         duration = Duration.ofHours(3).plusMinutes(30),
         classes = listOf(Config::class.java),
-        key = ""
+        key = StringUtils.EMPTY_STRING
     ) {
         val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 
         runBlocking {
             val response = httpRequest.post(
                 "${baseUrl}graph/v1/device/graphql",
-                headers = mapOf(HttpHeaders.Authorization to (configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION) ?: "")),
+                headers = mapOf(HttpHeaders.Authorization to (configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION) ?: StringUtils.EMPTY_STRING)),
                 body = ObjectParser.toJson(
                     mapOf(
                         "operationName" to "refreshToken",

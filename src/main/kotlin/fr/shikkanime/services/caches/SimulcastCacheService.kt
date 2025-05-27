@@ -7,16 +7,16 @@ import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import java.util.*
 
 class SimulcastCacheService : ICacheService {
-    @Inject
-    private lateinit var simulcastService: SimulcastService
+    @Inject private lateinit var simulcastService: SimulcastService
 
     fun findAll() = MapCache.getOrCompute(
         "SimulcastCacheService.findAll",
         classes = listOf(Simulcast::class.java, Anime::class.java),
-        key = "all"
+        key = StringUtils.EMPTY_STRING
     ) { simulcastService.findAllModified() }
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(

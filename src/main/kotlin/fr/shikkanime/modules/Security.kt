@@ -52,7 +52,7 @@ private fun AuthenticationConfig.setupJWTAuthentication(jwtVerifier: JWTVerifier
         realm = Constant.jwtRealm
         verifier(jwtVerifier)
         validate { credential ->
-            if (credential.payload.audience.contains(Constant.jwtAudience) &&
+            if (Constant.jwtAudience in credential.payload.audience &&
                 credential.payload.getClaim("uuid") != null
             ) JWTPrincipal(credential.payload) else null
         }

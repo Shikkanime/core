@@ -111,7 +111,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         val fileUpload = FileUpload.fromData(mediaImage ?: byteArrayOf(), "media-image.jpg")
 
         channels.forEach { channel ->
-            if (channel.releaseType == "ALL" || channel.animes.contains(shortName)) {
+            if (channel.releaseType == "ALL" || shortName in channel.animes) {
                 jda?.getTextChannelById(channel.id)
                     ?.sendFiles(fileUpload)
                     ?.setEmbeds(embed)

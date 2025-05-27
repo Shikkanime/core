@@ -9,11 +9,8 @@ import fr.shikkanime.utils.MapCache
 import java.util.*
 
 class MemberCacheService : ICacheService {
-    @Inject
-    private lateinit var memberService: MemberService
-
-    @Inject
-    private lateinit var refreshMemberFactory: RefreshMemberFactory
+    @Inject private lateinit var memberService: MemberService
+    @Inject private lateinit var refreshMemberFactory: RefreshMemberFactory
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "MemberCacheService.find",

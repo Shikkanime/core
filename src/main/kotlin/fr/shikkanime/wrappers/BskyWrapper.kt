@@ -3,6 +3,7 @@ package fr.shikkanime.wrappers
 import com.google.gson.JsonObject
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
@@ -17,7 +18,7 @@ private const val TYPE = "\$type"
 object BskyWrapper {
     data class Image(
         val image: JsonObject,
-        val alt: String = "",
+        val alt: String = StringUtils.EMPTY_STRING,
     )
 
     enum class FacetType(val typeKey: String, val jsonKey: String) {
@@ -186,12 +187,12 @@ object BskyWrapper {
     private fun getFacets(text: String): Pair<String, List<Facet>> {
         var tmpText = text
 
-        val facets = text.split(" ", "\n")
+        val facets = text.split(StringUtils.SPACE_STRING, "\n")
             .mapNotNull { word ->
                 val link = word.trim()
                 when {
                     link.startsWith("http") -> {
-                        val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), "").trim()
+                        val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), StringUtils.EMPTY_STRING).trim()
                         tmpText = tmpText.replace(link, beautifulLink)
                         val substringEmojiCount = countEmoji(tmpText.substringBeforeLast(link)).sumOf { it.group().length }
                         val substringAccentCount = countAccent(tmpText.substringBefore(link)).sumOf { it.group().length }

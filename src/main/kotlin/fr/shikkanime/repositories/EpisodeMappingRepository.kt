@@ -76,12 +76,11 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllNeedUpdateByPlatforms(platforms: List<Platform>, lastDateTime: ZonedDateTime): List<EpisodeMapping> {
+    fun findAllNeedUpdate(lastDateTime: ZonedDateTime): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
-            val variantJoin = root.join(EpisodeMapping_.variants)
 
             val attachmentSubquery = query.subquery(Long::class.java)
             val attachmentRoot = attachmentSubquery.from(Attachment::class.java)
@@ -96,7 +95,6 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             query.distinct(true)
                 .where(
-                    variantJoin[EpisodeVariant_.platform].`in`(platforms),
                     cb.or(
                         cb.lessThanOrEqualTo(
                             root[EpisodeMapping_.lastUpdateDateTime],

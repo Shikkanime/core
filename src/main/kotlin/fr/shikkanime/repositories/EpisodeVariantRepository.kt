@@ -126,7 +126,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllIdentifiers(): Set<String> {
+    fun findAllIdentifiers(): HashSet<String> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
@@ -136,7 +136,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
-                .toSet()
+                .toHashSet()
         }
     }
 

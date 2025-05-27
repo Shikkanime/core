@@ -28,7 +28,7 @@ data class PageableDto<T>(
             )
         }
 
-        fun <T : Any, R> fromPageable(pageable: Pageable<T>, fn: (T) -> R): PageableDto<R> {
+        inline fun <T : Any, reified R> fromPageable(pageable: Pageable<T>, fn: (T) -> R): PageableDto<R> {
             return PageableDto(
                 data = pageable.data.map(fn).toSet(),
                 page = pageable.page,

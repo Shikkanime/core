@@ -103,7 +103,7 @@ class FetchOldEpisodesJob : AbstractJob {
         val identifiers = episodeVariantCacheService.findAllIdentifiers()
 
         episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
-            if (identifiers.none { it == episode.getIdentifier() }) {
+            if (episode.getIdentifier() !in identifiers) {
                 realSavedAnimes.add(StringUtils.getShortName(episode.anime))
                 realSaved++
                 episodeVariantService.save(episode, false)

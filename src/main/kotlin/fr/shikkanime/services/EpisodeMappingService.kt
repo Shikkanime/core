@@ -33,8 +33,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
 
-    fun findAllNeedUpdateByPlatforms(platforms: List<Platform>, lastDateTime: ZonedDateTime) =
-        episodeMappingRepository.findAllNeedUpdateByPlatforms(platforms, lastDateTime)
+    fun findAllNeedUpdate(lastDateTime: ZonedDateTime) =
+        episodeMappingRepository.findAllNeedUpdate(lastDateTime)
 
     fun findAllSeo() = episodeMappingRepository.findAllSeo()
 

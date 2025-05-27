@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import io.mockk.every
@@ -237,15 +238,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
     fun getNextEpisodeFallbackToEpisode() = runBlocking {
         val episode = AbstractCrunchyrollWrapper.Episode(
             null,
-            "",
-            "",
-            "",
+            StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
             emptyList(),
             ZonedDateTime.now(),
-            "",
+            StringUtils.EMPTY_STRING,
             null,
             null,
-            "",
+            StringUtils.EMPTY_STRING,
             null,
             null,
             null,
@@ -294,15 +295,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
             null,
-            "",
-            "",
-            "",
+            StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
             emptyList(),
             ZonedDateTime.now().minusDays(1),
             "seasonId",
             null,
             null,
-            "",
+            StringUtils.EMPTY_STRING,
             null,
             null,
             null,
@@ -363,15 +364,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
             null,
-            "",
-            "",
-            "",
+            StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
             emptyList(),
             ZonedDateTime.now().minusDays(1),
             "seasonId",
             null,
             null,
-            "",
+            StringUtils.EMPTY_STRING,
             null,
             null,
             null,

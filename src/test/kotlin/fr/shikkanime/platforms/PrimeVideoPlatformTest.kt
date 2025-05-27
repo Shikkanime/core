@@ -128,7 +128,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
             assertTrue(it.animeDescription?.isNotBlank() == true)
             assertTrue(it.image.startsWith("https://m.media-amazon.com"))
             assertTrue(it.url.isNotBlank())
-            assertFalse(it.getIdentifier().contains("https://"))
+            assertTrue("https://" !in it.getIdentifier())
         }
 
         // Check if the audio locales match the expected values

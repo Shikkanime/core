@@ -29,7 +29,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private var threadPool = Executors.newFixedThreadPool(nThreads)
     private val httpRequest = HttpRequest()
     private val imageCache = LRUCache<UUID, ByteArray>(100)
-    val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet<UUID>())
+    val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet())
 
     @Inject private lateinit var attachmentRepository: AttachmentRepository
     @Inject private lateinit var traceActionService: TraceActionService
@@ -45,7 +45,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) = attachmentRepository.findByEntityUuidTypeAndActive(entityUuid, type)
 
-    fun findAllActive() = attachmentRepository.findAllActive()
+    fun findAllActiveWithUrl() = attachmentRepository.findAllActiveWithUrl()
 
     fun createAttachmentOrMarkAsActive(entityUuid: UUID, type: ImageType, url: String? = null, bytes: ByteArray? = null, async: Boolean = true): Attachment {
         val attachments = findAllByEntityUuidAndType(entityUuid, type)
@@ -78,29 +78,20 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         return attachment
     }
 
-    fun encodeAllActive() {
-        val now = ZonedDateTime.now()
-        val attachments = findAllActive()
-
-        attachments.forEach {
-            it.lastUpdateDateTime = now
-            encodeAttachment(it, it.url, null)
-        }
-
-        updateAll(attachments)
-        MapCache.invalidate(Attachment::class.java)
-    }
-
     fun encodeAllActiveWithUrlAndWithoutFile() {
         val now = ZonedDateTime.now()
-        val attachments = findAllActive().filter { !getFile(it).exists() && !it.url.isNullOrBlank() }
+        val files = Constant.imagesFolder.list().toHashSet()
 
-        attachments.forEach {
-            it.lastUpdateDateTime = now
-            encodeAttachment(it, it.url, null)
-        }
+        updateAll(
+            findAllActiveWithUrl().onEach {
+                if (getFileName(it) in files)
+                    return@onEach
 
-        updateAll(attachments)
+                it.lastUpdateDateTime = now
+                encodeAttachment(it, it.url, null)
+            }
+        )
+
         MapCache.invalidate(Attachment::class.java)
     }
 
@@ -141,7 +132,9 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         if (async) threadPool.submit(task) else task()
     }
 
-    fun getFile(attachment: Attachment) = File(Constant.imagesFolder, "${attachment.uuid}.webp")
+    private fun getFileName(attachment: Attachment) = "${attachment.uuid}.webp"
+
+    fun getFile(attachment: Attachment) = File(Constant.imagesFolder, getFileName(attachment))
 
     fun getContentFromCache(attachment: Attachment): ByteArray? {
         return imageCache[attachment.uuid!!]

@@ -6,6 +6,7 @@ import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -73,8 +74,8 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         btfState: JsonObject
     ): Episode {
         val episodeNumber = episodeJson.getAsInt("episodeNumber")!!
-        val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toSet() ?: emptySet()
-        val subtitles = episodeJson.getAsJsonArray("subtitles")?.map { it.asString }?.toSet() ?: emptySet()
+        val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toHashSet() ?: HashSet()
+        val subtitles = episodeJson.getAsJsonArray("subtitles")?.map { it.asString }?.toHashSet() ?: HashSet()
 
         return Episode(
             show,
@@ -91,12 +92,12 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             episodeJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             episodeJson.getAsLong("duration", -1),
             buildSet {
-                if (audioTracks.contains("日本語")) add("ja-JP")
-                if (!audioTracks.contains("日本語") && audioTracks.contains("English")) add("en-US")
-                if (audioTracks.contains("Français")) add("fr-FR")
+                if ("日本語" in audioTracks) add("ja-JP")
+                if ("日本語" !in audioTracks && "English" in audioTracks) add("en-US")
+                if ("Français" in audioTracks) add("fr-FR")
             },
             buildSet {
-                if (subtitles.contains("Français (France)") || subtitles.contains("Français")) add("fr-FR")
+                if ("Français (France)" in subtitles || "Français" in subtitles) add("fr-FR")
             },
         )
     }
@@ -106,7 +107,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             "$url?dvWebSPAClientVersion=1.0.105438.0",
             headers = mapOf(
                 "Accept" to "application/json",
-                "Cookie" to "lc-main-av=${locale.replace("-", "_")}",
+                "Cookie" to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
                 "x-requested-with" to "WebSPA"
             )
         )

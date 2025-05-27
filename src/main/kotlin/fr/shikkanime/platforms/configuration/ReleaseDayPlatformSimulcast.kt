@@ -1,10 +1,11 @@
 package fr.shikkanime.platforms.configuration
 
+import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 
 open class ReleaseDayPlatformSimulcast(
     var releaseDay: Int = 0,
-    var image: String = ""
+    var image: String = StringUtils.EMPTY_STRING
 ) : PlatformSimulcast() {
     override fun of(parameters: Parameters) {
         super.of(parameters)

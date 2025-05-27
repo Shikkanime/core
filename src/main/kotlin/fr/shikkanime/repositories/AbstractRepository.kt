@@ -19,7 +19,7 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     protected abstract fun getEntityClass(): Class<E>
 
-    protected fun <T> inTransaction(block: (EntityManager) -> T): T {
+    protected inline fun <T> inTransaction(block: (EntityManager) -> T): T {
         return database.entityManager.use {
             val transaction = it.transaction
             transaction.begin()

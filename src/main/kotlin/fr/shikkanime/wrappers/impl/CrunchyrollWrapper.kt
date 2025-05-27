@@ -2,9 +2,10 @@ package fr.shikkanime.wrappers.impl
 
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.*
+import io.ktor.http.*
 
 object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getBrowse(
@@ -15,7 +16,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         start: Int,
         simulcast: String?
     ): List<BrowseObject> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else ""}")
+        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else StringUtils.EMPTY_STRING}")
         require(response.status == HttpStatusCode.OK) { "Failed to get media list (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get media list")
         return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java).toList()

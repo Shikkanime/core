@@ -3,6 +3,7 @@ package fr.shikkanime.socialnetworks
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import twitter4j.Twitter
 import twitter4j.TwitterFactory
 import twitter4j.conf.ConfigurationBuilder
@@ -67,7 +68,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
 
         val firstMessage = getEpisodeMessage(
             variants,
-            configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: ""
+            configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
         )
         val firstTweet = twitter!!.v2.createTweet(mediaIds = mediaImage?.let {
             arrayOf(twitter!!.v2.uploadMedia("image/jpg", UUID.randomUUID().toString(), ByteArrayInputStream(it)).mediaId)

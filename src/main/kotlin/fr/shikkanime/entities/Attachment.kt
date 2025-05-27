@@ -13,6 +13,7 @@ import java.util.*
     indexes = [
         Index(name = "attachment_entity_uuid_index", columnList = "entity_uuid"),
         Index(name = "attachment_type_index", columnList = "type"),
+        Index(name = "attachment_entity_uuid_type_active_index", columnList = "entity_uuid, type, active"),
     ]
 )
 @Cacheable

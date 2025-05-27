@@ -6,6 +6,7 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -148,7 +149,7 @@ abstract class AbstractCrunchyrollWrapper {
     private fun getAnonymousAccessToken() = MapCache.getOrCompute(
         "AbstractCrunchyrollWrapper.getAnonymousAccessToken",
         duration = Duration.ofMinutes(30),
-        key = ""
+        key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
             val response = httpRequest.post(
@@ -178,7 +179,7 @@ abstract class AbstractCrunchyrollWrapper {
     abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): List<BrowseObject>
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =
-        "${baseUrl}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: ""}"
+        "${baseUrl}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: StringUtils.EMPTY_STRING}"
 
     companion object {
         const val CRUNCHYROLL_CHUNK = 100

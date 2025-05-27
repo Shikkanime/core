@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class UpdateEpisodeMappingJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val availableUpdatePlatforms = listOf(Platform.ANIM, Platform.CRUN, Platform.DISN, Platform.NETF, Platform.PRIM)
 
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
@@ -40,7 +39,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
 
-        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdateByPlatforms(availableUpdatePlatforms, lastDateTime)
+        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdate(lastDateTime)
         logger.info("Found ${allPlatformEpisodes.size} episodes to update")
 
         val needUpdateEpisodes = allPlatformEpisodes
@@ -54,7 +53,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
-        val identifiers = episodeVariantCacheService.findAllIdentifiers().toMutableSet()
+        val identifiers = episodeVariantCacheService.findAllIdentifiers()
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
@@ -82,7 +81,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     private fun updateEpisodeMapping(
         mapping: EpisodeMapping,
-        identifiers: MutableSet<String>,
+        identifiers: HashSet<String>,
         allPreviousAndNext: MutableList<Episode>,
         lastDateTime: ZonedDateTime,
         zonedDateTime: ZonedDateTime,
@@ -93,7 +92,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val mappingIdentifier = "${StringUtils.getShortName(mapping.anime!!.name!!)} ${StringUtils.toEpisodeMappingString(mapping)}"
         logger.info("Updating episode $mappingIdentifier...")
 
-        val tmpIdentifiers = LinkedHashSet(identifiers)
+        val tmpIdentifiers = identifiers.toHashSet()
 
         val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
             .sortedBy { it.platform.sortIndex }
@@ -163,7 +162,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     private fun processNewEpisodes(
         allPreviousAndNext: List<Episode>,
-        identifiers: MutableSet<String>,
+        identifiers: HashSet<String>,
         needRecalculate: AtomicBoolean,
         needRefreshCache: AtomicBoolean
     ) {
@@ -346,7 +345,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         episodeVariant: EpisodeVariant,
         oldId: String,
         newId: String,
-        identifiers: MutableSet<String>
+        identifiers: HashSet<String>
     ) {
         if (oldId == newId) {
             return
@@ -377,7 +376,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant,
         lastDateTime: ZonedDateTime,
-        identifiers: MutableSet<String>
+        identifiers: HashSet<String>
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
@@ -432,7 +431,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         countryCode: CountryCode,
         episodeVariant: EpisodeVariant,
         episodeMapping: EpisodeMapping,
-        identifiers: MutableSet<String>,
+        identifiers: HashSet<String>,
         episodes: MutableList<Episode>,
         releaseDateTime: ZonedDateTime
     ) {
@@ -460,7 +459,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         countryCode: CountryCode,
         episodeVariant: EpisodeVariant,
         episodeMapping: EpisodeMapping,
-        identifiers: MutableSet<String>,
+        identifiers: HashSet<String>,
         episodes: MutableList<Episode>,
         episodeType: EpisodeType,
         audioLocale: String
@@ -477,7 +476,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             episodes.add(
                 netflixPlatform.convertEpisode(
                     countryCode,
-                    "",
+                    StringUtils.EMPTY_STRING,
                     episode,
                     episodeType,
                     audioLocale
@@ -490,7 +489,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         countryCode: CountryCode,
         episodeVariant: EpisodeVariant,
         episodeMapping: EpisodeMapping,
-        identifiers: MutableSet<String>,
+        identifiers: HashSet<String>,
         episodes: MutableList<Episode>,
         releaseDateTime: ZonedDateTime,
         episodeType: EpisodeType
@@ -499,7 +498,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
             val platformEpisodes = ids.flatMap { PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, it) }
-            val episode = platformEpisodes.find { it.id == id || it.oldIds.contains(id) || (it.season == episodeMapping.season && it.number == episodeMapping.number) } ?: return
+            val episode = platformEpisodes.find { it.id == id || id in it.oldIds || (it.season == episodeMapping.season && it.number == episodeMapping.number) } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id, identifiers)
             updateUrl(episodeVariant, episode.url)
@@ -507,7 +506,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             episodes.addAll(
                 primeVideoPlatform.convertEpisode(
                     countryCode,
-                    "",
+                    StringUtils.EMPTY_STRING,
                     episode,
                     releaseDateTime,
                     episodeType

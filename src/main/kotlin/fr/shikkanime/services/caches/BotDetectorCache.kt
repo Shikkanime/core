@@ -6,6 +6,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -15,16 +16,11 @@ import java.time.Duration
 import kotlin.experimental.and
 
 class BotDetectorCache : ICacheService {
-    companion object {
-        private const val DEFAULT_ALL_KEY = "all"
-    }
-
     private val httpRequest = HttpRequest()
     private val ipv4Regex = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?:/[0-9]+)*")
     private val duration = Duration.ofDays(1)
 
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
 
     private fun createMask(cidr: Int): ByteArray {
         val mask = ByteArray(4)
@@ -48,7 +44,7 @@ class BotDetectorCache : ICacheService {
     private fun getGoodBotsIPs() = MapCache.getOrCompute(
         "BotDetectorCache.getGoodBotsIPs",
         duration = duration,
-        key = DEFAULT_ALL_KEY
+        key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
             val response =
@@ -65,27 +61,27 @@ class BotDetectorCache : ICacheService {
     private fun getGoodBotsRegex() = MapCache.getOrCompute(
         "BotDetectorCache.getGoodBotsRegex",
         duration = duration,
-        key = DEFAULT_ALL_KEY
+        key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
             val response = httpRequest.get("https://raw.githubusercontent.com/matomo-org/device-detector/refs/heads/master/regexes/bots.yml")
 
             if (response.status != HttpStatusCode.OK) {
-                return@runBlocking emptyList()
+                return@runBlocking mutableSetOf()
             }
 
             val bodyAsText = response.bodyAsText()
             val mapper = ObjectMapper(YAMLFactory())
             val yaml = mapper.readTree(StringReader(bodyAsText))
 
-            yaml.map { it["regex"].asText() }.map { it.toRegex() }
+            yaml.map { it["regex"].asText().toRegex() }.toMutableSet()
         }
     }
 
     private fun getAbuseIPs() = MapCache.getOrCompute(
         "BotDetectorCache.getAbuseIPs",
         duration = duration,
-        key = DEFAULT_ALL_KEY
+        key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
             val response =
@@ -95,12 +91,12 @@ class BotDetectorCache : ICacheService {
                 return@runBlocking emptyList()
             }
 
-            response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) }
+            response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) }.toHashSet()
         }
     }
 
     private fun isIpInRange(clientIp: String, botIp: String): Boolean {
-        return if (botIp.contains("/")) {
+        return if ("/" in botIp) {
             val (ip, cidr) = botIp.split("/")
             val mask = createMask(cidr.toInt())
             isInRange(InetAddress.getByName(clientIp).address, InetAddress.getByName(ip).address, mask)
@@ -108,16 +104,18 @@ class BotDetectorCache : ICacheService {
     }
 
     fun isBot(clientIp: String? = null, userAgent: String? = null): Boolean {
-        clientIp?.let {
-            if (getGoodBotsIPs().any { botIp -> isIpInRange(it, botIp) }) return true
-            if (getAbuseIPs().contains(it)) return true
+        clientIp?.let { ip ->
+            if (ip in getAbuseIPs() || getGoodBotsIPs().any { isIpInRange(ip, it) }) return true
         }
 
-        userAgent?.let {
-            val regexes = getGoodBotsRegex().toMutableSet()
-            configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.toRegex()?.let { regexes.add(it) }
+        userAgent?.let { agent ->
+            val regexes = getGoodBotsRegex()
 
-            if (regexes.any { regex -> it.contains(regex) }) return true
+            configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)
+                ?.toRegex()
+                ?.let { regexes.add(it) }
+
+            if (regexes.any { it in agent }) return true
         }
 
         return false

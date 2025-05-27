@@ -72,13 +72,7 @@
 
             <div class="col-md-6">
                 <div class="card p-3">
-                    <div class="d-flex flex-column flex-md-row mb-3 mb-md-4 justify-content-center">
-                        <h4 class="card-title">Images</h4>
-
-                        <div class="ms-md-auto me-md-0">
-                            <a id="images-invalidate" href="/admin/images-invalidate" class="btn btn-danger">Invalidate</a>
-                        </div>
-                    </div>
+                    <h4 class="card-title mb-3 mb-md-4">Images</h4>
 
                     <div class="row g-3">
                         <div class="col-md-4">
