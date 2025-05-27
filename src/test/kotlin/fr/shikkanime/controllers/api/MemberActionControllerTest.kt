@@ -41,7 +41,7 @@ class MemberActionControllerTest : AbstractControllerTest() {
             client.post("/api/v1/member-actions/validate?uuid=${UUID.randomUUID()}") {
                 header(HttpHeaders.Authorization, "Bearer $token")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody("")
+                setBody(StringUtils.EMPTY_STRING)
             }.apply {
                 assertEquals(HttpStatusCode.BadRequest, status)
             }

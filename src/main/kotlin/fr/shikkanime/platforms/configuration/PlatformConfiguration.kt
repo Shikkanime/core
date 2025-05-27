@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms.configuration
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 import java.util.*
 
@@ -14,7 +15,7 @@ data class ConfigurationField(
 
 open class PlatformSimulcast(
     var uuid: UUID? = null,
-    var name: String = "",
+    var name: String = StringUtils.EMPTY_STRING,
     var lastUsageDateTime: String? = null,
 ) {
     open fun of(parameters: Parameters) {

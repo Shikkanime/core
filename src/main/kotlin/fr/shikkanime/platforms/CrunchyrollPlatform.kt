@@ -174,12 +174,12 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var animeName = browseObject.episodeMetadata!!.seriesTitle
         var forcedSeason: Int? = null
 
-        if (animeName.contains(seasonRegex)) {
+        if (seasonRegex in animeName) {
             forcedSeason = seasonRegex.find(animeName)!!.groupValues[1].toIntOrNull()
-            animeName = animeName.replace(seasonRegex, "")
+            animeName = animeName.replace(seasonRegex, StringUtils.EMPTY_STRING)
         }
 
-        if (configuration!!.blacklistedSimulcasts.contains(animeName.lowercase()))
+        if (isBlacklisted(animeName))
             throw AnimeException("\"$animeName\" is blacklisted")
 
         val isTeaser = browseObject.slugTitle?.contains("(teaser|pv)(?:-\\d)?".toRegex()) == true &&
@@ -191,7 +191,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val isDubbed = browseObject.episodeMetadata.audioLocale == countryCode.locale
         val subtitles = browseObject.episodeMetadata.subtitleLocales
 
-        if (!isDubbed && (subtitles.isEmpty() || !subtitles.contains(countryCode.locale)))
+        if (!isDubbed && (subtitles.isEmpty() || countryCode.locale !in subtitles))
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
         val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getSeries(countryCode.locale, browseObject.episodeMetadata.seriesId) }

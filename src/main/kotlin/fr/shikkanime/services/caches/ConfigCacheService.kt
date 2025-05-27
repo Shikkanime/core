@@ -5,15 +5,15 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 
 class ConfigCacheService : ICacheService {
-    @Inject
-    private lateinit var configService: ConfigService
+    @Inject private lateinit var configService: ConfigService
 
     fun findByName(name: String) = MapCache.getOrCompute(
         "ConfigCacheService.findAll",
         classes = listOf(Config::class.java),
-        key = "all",
+        key = StringUtils.EMPTY_STRING,
     ) { configService.findAll() }
         .find { it.propertyKey == name }
 

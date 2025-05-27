@@ -1,10 +1,7 @@
 package fr.shikkanime.wrappers.impl.caches
 
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.atStartOfWeek
-import fr.shikkanime.utils.withUTC
+import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import io.ktor.client.statement.*
@@ -171,7 +168,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
                 val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
                 releaseDateTimes.add(releaseDateTime)
 
-                if (element.attr("data-episode-num").contains("-")) {
+                if (StringUtils.DASH_STRING in element.attr("data-episode-num")) {
                     seriesIds.add(seriesRegex.find(element.select("a[href~=${seriesRegex.pattern}]").attr("href"))!!.groupValues[1])
                 } else {
                     episodeIds.add(episodeRegex.find(element.select("a[href~=${episodeRegex.pattern}]").attr("href"))!!.groupValues[1])

@@ -20,7 +20,7 @@ class LoggerFactory {
             val throwable: String = sw.toString()
             // %d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
             // Use this format for logback
-            return "${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName} ${record?.loggerName} - ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else ""}"
+            return "${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName} ${record?.loggerName} - ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else StringUtils.EMPTY_STRING}"
         }
     }
 

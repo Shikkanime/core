@@ -4,6 +4,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.BskyWrapper
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -66,7 +67,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         val firstMessage =
             getEpisodeMessage(
                 variants,
-                configCacheService.getValueAsString(ConfigPropertyKey.BSKY_FIRST_MESSAGE) ?: ""
+                configCacheService.getValueAsString(ConfigPropertyKey.BSKY_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
             )
 
         val firstRecord = runBlocking {
@@ -95,9 +96,9 @@ class BskySocialNetwork : AbstractSocialNetwork() {
                 BskyWrapper.createRecord(
                     accessJwt!!,
                     did!!,
-                    getEpisodeMessage(variants, secondMessage.replace("{EMBED}", "")).trim(),
+                    getEpisodeMessage(variants, secondMessage.replace("{EMBED}", StringUtils.EMPTY_STRING)).trim(),
                     replyTo = firstRecord,
-                    embed = getInternalUrl(variants).takeIf { secondMessage.contains("{EMBED}") }
+                    embed = getInternalUrl(variants).takeIf { "{EMBED}" in secondMessage }
                 )
             }
         }

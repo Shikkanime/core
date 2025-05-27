@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1748330617342"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="attachment" indexName="attachment_entity_uuid_type_active_index"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="attachment" indexName="attachment_entity_uuid_type_active_index">
+            <column name="entity_uuid"/>
+            <column name="type"/>
+            <column name="active"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

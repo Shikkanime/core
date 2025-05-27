@@ -12,6 +12,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -136,12 +137,12 @@ class EpisodeMappingAdminService {
         // Process variants based on configuration
         val getLangType = { audioLocale: String -> LangType.fromAudioLocale(episode.anime!!.countryCode!!, audioLocale) }
 
-        val langTypes = variants.mapTo(HashSet()) { getLangType(it.audioLocale ?: "") }
+        val langTypes = variants.mapTo(HashSet()) { getLangType(it.audioLocale ?: StringUtils.EMPTY_STRING) }
 
         val variantsToUpdate = if (langTypes.size > 1 && !bindVoiceVariants) {
             // If multiple language types and not binding, only update subtitles
             variants.filter { variant -> 
-                getLangType(variant.audioLocale ?: "") == LangType.SUBTITLES 
+                getLangType(variant.audioLocale ?: StringUtils.EMPTY_STRING) == LangType.SUBTITLES
             }
         } else {
             variants

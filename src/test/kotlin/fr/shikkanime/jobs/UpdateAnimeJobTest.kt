@@ -7,6 +7,7 @@ import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.StringUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
@@ -116,8 +117,8 @@ class UpdateAnimeJobTest : AbstractTest() {
         val name: String,
         val slug: String,
         val releaseDateTime: String,
-        val lastReleaseDateTime: String = "",
-        val lastUpdateDateTime: String = "",
+        val lastReleaseDateTime: String = StringUtils.EMPTY_STRING,
+        val lastUpdateDateTime: String = StringUtils.EMPTY_STRING,
         val platforms: List<PlatformData>,
         val expectedThumbnail: String? = null,
         val expectedBanner: String? = null,

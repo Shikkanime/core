@@ -51,7 +51,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         val message =
             getEpisodeMessage(
                 variants,
-                configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: ""
+                configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
             )
 
         runBlocking {

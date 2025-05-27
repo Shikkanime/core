@@ -86,14 +86,6 @@ class AdminController {
         )
     )
 
-    @Path("/images-invalidate")
-    @Get
-    @AdminSessionAuthenticated
-    private fun invalidateImages(): Response {
-        attachmentService.encodeAllActive()
-        return Response.redirect(Link.DASHBOARD.href)
-    }
-
     @Path("/simulcasts-invalidate")
     @Get
     @AdminSessionAuthenticated

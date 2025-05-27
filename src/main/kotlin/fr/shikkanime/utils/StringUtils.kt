@@ -14,9 +14,9 @@ import java.util.regex.Pattern
 
 object StringUtils {
     private const val ANIME_STRING = "Anime "
-    private const val EMPTY_STRING = ""
-    private const val SPACE_STRING = " "
-    private const val DASH_STRING = "-"
+    const val EMPTY_STRING = ""
+    const val SPACE_STRING = " "
+    const val DASH_STRING = "-"
     const val ROMAN_NUMBERS_CHECK = "VI"
 
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
@@ -33,13 +33,13 @@ object StringUtils {
 
     fun getShortName(fullName: String): String {
         var normalizedName = when {
-            fullName.contains(encasedRegex) -> fullName.replace("<", EMPTY_STRING).replace(">", ": ").trim()
-            fullName.contains(ANIME_STRING) -> removeAnimeNamePart(fullName)
+            encasedRegex in fullName -> fullName.replace("<", EMPTY_STRING).replace(">", ": ").trim()
+            ANIME_STRING in fullName -> removeAnimeNamePart(fullName)
             else -> regex.replace(fullName, SPACE_STRING).trim()
         }
 
         for (separator in separators) {
-            if (!normalizedName.contains(separator)) {
+            if (separator !in normalizedName) {
                 continue
             }
 
@@ -122,7 +122,7 @@ object StringUtils {
 
     fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime!!.countryCode, episode.season.toString(), showSeason, separator, episode.episodeType, episode.number.toString())
     fun toEpisodeGroupedString(episode: GroupedEpisodeDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
-    fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), true, true, episode.episodeType!!, episode.number!!.toString())
+    fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), showSeason = true, showSeparator = true, episode.episodeType!!, episode.number!!.toString())
 
     fun toVariantsString(vararg variant: EpisodeVariant): String {
         require(variant.map { it.mapping!!.anime!! }.distinctBy { it.uuid }.size == 1) { "The variants list must be from the same anime" }

@@ -10,6 +10,7 @@ import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -74,7 +75,7 @@ fun Application.configureRouting() {
 
 private fun setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
     val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS)
-    val authorizedDomainsString = authorizedDomains.joinToString(" ").trim()
+    val authorizedDomainsString = authorizedDomains.joinToString(StringUtils.SPACE_STRING).trim()
 
     call.response.header(
         HttpHeaders.StrictTransportSecurity,
@@ -100,15 +101,15 @@ private fun setSecurityHeaders(call: ApplicationCall, configCacheService: Config
 
 fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
     val startTime = call.attributes.getOrNull(callStartTime)
-    val httpMethod = call.request.httpMethod.value
-    val status = statusCode?.value ?: call.response.status()?.value ?: 0
     val duration = startTime?.let { ZonedDateTime.now().toInstant().toEpochMilli() - it.toInstant().toEpochMilli() } ?: -1
-    val path = call.request.path()
     val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
     val userAgent = call.request.userAgent() ?: "Unknown"
     val isBot = call.attributes.getOrNull(attributeKey) == true
+    val status = statusCode?.value ?: call.response.status()?.value ?: 0
+    val httpMethod = call.request.httpMethod.value
+    val uri = call.request.uri
 
-    logger.info("[$ipAddress - $userAgent${if (isBot) " (BOT)" else ""}] ($status - $duration ms) $httpMethod ${call.request.origin.uri} -> $path")
+    logger.info("[$ipAddress - $userAgent${if (isBot) " (BOT)" else StringUtils.EMPTY_STRING}] ($status - $duration ms) $httpMethod $uri")
 }
 
 private fun Routing.createRoutes() {
@@ -119,7 +120,7 @@ private fun Routing.createRoutes() {
 }
 
 fun Routing.createControllerRoutes(controller: Any) {
-    val prefix = controller::class.findAnnotation<Controller>()?.value ?: ""
+    val prefix = controller::class.findAnnotation<Controller>()?.value ?: StringUtils.EMPTY_STRING
     val kMethods = controller::class.declaredFunctions.filter { it.hasAnnotation<Path>() }
 
     route(prefix) {
@@ -189,7 +190,7 @@ private suspend fun handleRequest(
             ResponseType.MULTIPART -> handleMultipartResponse(call, response)
             ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
             ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
-            else -> call.respond(response.status, response.data ?: "")
+            else -> call.respond(response.status, response.data ?: StringUtils.EMPTY_STRING)
         }
     } catch (e: Exception) {
         logger.log(Level.SEVERE, "Error while calling method $method", e)
@@ -226,7 +227,7 @@ suspend fun handleTemplateResponse(
     }
 
     setGlobalAttributes(isBot, mutableMap, controller, replacedPath, response.data["title"] as String?)
-    call.respond(response.status, FreeMarkerContent(response.data["template"] as String, mutableMap, "", response.contentType))
+    call.respond(response.status, FreeMarkerContent(response.data["template"] as String, mutableMap, StringUtils.EMPTY_STRING, response.contentType))
 }
 
 fun replacePathWithParameters(path: String, parameters: Map<String, List<String>>) =
@@ -266,18 +267,16 @@ private fun fromString(value: String?, type: KType): Any? {
             ?.toTypedArray()
     }
 
-    val converters: Map<KClass<*>, (String?) -> Any?> = mapOf(
+    val converters = mapOf<KClass<*>, (String?) -> Any?>(
         UUID::class to { it?.let(UUID::fromString) },
         CountryCode::class to { CountryCode.fromNullable(it) },
         Platform::class to { Platform.fromNullable(it) },
         String::class to { it },
         Int::class to { it?.toIntOrNull() },
-        Long::class to { it?.toLongOrNull() },
+        Long::class to { it?.toLongOrNull() }
     )
 
-    return converters.entries.firstOrNull { (kClass, _) ->
-        kClass.starProjectedType.withNullability(true) == type || kClass.starProjectedType == type
-    }?.value?.invoke(value)
+    return converters[type.jvmErasure]?.invoke(value)
 }
 
 private fun handleHttpHeader(kParameter: KParameter, call: ApplicationCall): Any? {
@@ -294,14 +293,17 @@ private fun handlePathParam(kParameter: KParameter, call: ApplicationCall): Any?
 
 private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any? {
     val annotation = kParameter.findAnnotation<QueryParam>()
+    val isMapType = kParameter.type.jvmErasure == Map::class
 
-    if (annotation?.name.isNullOrBlank() && kParameter.type.jvmErasure == Map::class) {
-        return call.request.queryParameters.toMap().mapValues { (_, values) -> values.first() }
+    if (annotation?.name.isNullOrBlank() && isMapType) {
+        return call.request.queryParameters.toMap().mapValues { it.value.first() }
     }
 
-    val name = annotation?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
-    val value = name?.let { call.request.queryParameters[it] } ?: annotation?.defaultValue?.takeIf { it.isNotBlank() }
-    return fromString(value, kParameter.type)
+    val paramName = annotation?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
+    val paramValue = paramName?.let { call.request.queryParameters[it] }
+        ?: annotation?.defaultValue?.takeIf { it.isNotBlank() }
+
+    return fromString(paramValue, kParameter.type)
 }
 
 private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCall): Any {

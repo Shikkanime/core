@@ -37,7 +37,7 @@ object EncryptionManager {
     fun toSHA512(source: String): String {
         val digest = MessageDigest.getInstance("SHA-512")
         val hash = digest.digest(source.toByteArray(StandardCharsets.UTF_8))
-        return hash.fold("") { str, it -> str + "%02x".format(it) }
+        return hash.fold(StringUtils.EMPTY_STRING) { str, it -> str + "%02x".format(it) }
     }
 
     fun toGzip(source: String): String {

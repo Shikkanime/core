@@ -61,7 +61,7 @@ class MapCache<K : Any, V>(
 
         fun invalidate(vararg classes: Class<*>) {
             globalCaches.forEach { (_, cache) ->
-                if (cache.classes.any { clazz -> classes.contains(clazz) })
+                if (cache.classes.any { clazz -> clazz in classes })
                     cache.invalidate()
                 cache.removeInvalidated()
             }

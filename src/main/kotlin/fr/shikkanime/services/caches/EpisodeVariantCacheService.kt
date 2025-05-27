@@ -13,6 +13,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atEndOfTheDay
 import fr.shikkanime.utils.atEndOfWeek
 import java.time.LocalDate
@@ -72,7 +73,7 @@ class EpisodeVariantCacheService : ICacheService {
     fun findAllIdentifiers() = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllIdentifiers",
         classes = listOf(EpisodeVariant::class.java),
-        key = "",
+        key = StringUtils.EMPTY_STRING,
     ) { episodeVariantService.findAllIdentifiers() }
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(

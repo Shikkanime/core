@@ -23,7 +23,7 @@ fun BufferedImage.resize(width: Int, height: Int): BufferedImage {
 }
 
 fun String?.normalize(): String? {
-    return this?.replace("(?U)\\s+".toRegex(), " ")
+    return this?.replace("(?U)\\s+".toRegex(), StringUtils.SPACE_STRING)
         ?.trim()
         ?.ifBlank { null }
 }

@@ -41,6 +41,12 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     var configuration: C? = null
     val apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
 
+    protected fun isBlacklisted(name: String): Boolean {
+        val shortName = StringUtils.getShortName(name)
+        val blacklist = configuration!!.blacklistedSimulcasts.toSet()
+        return name in blacklist || name.lowercase() in blacklist || shortName in blacklist || shortName.lowercase() in blacklist
+    }
+
     abstract fun getPlatform(): Platform
     abstract fun getConfigurationClass(): Class<C>
     abstract suspend fun fetchApiContent(key: K, zonedDateTime: ZonedDateTime): V
@@ -95,7 +101,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     }
 
     private fun getConfigurationFile() =
-        File(Constant.configFolder, "${getPlatform().platformName.lowercase().replace(" ", "-")}.json")
+        File(Constant.configFolder, "${getPlatform().platformName.lowercase().replace(StringUtils.SPACE_STRING, StringUtils.DASH_STRING)}.json")
 
     fun containsAnimeSimulcastConfiguration(name: String) = configuration!!.simulcasts.any { it.name.lowercase() == name.lowercase() }
 

@@ -1,11 +1,12 @@
 package fr.shikkanime.platforms.configuration
 
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 
 class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.PrimeVideoSimulcast>() {
     data class PrimeVideoSimulcast(
-        var releaseTime: String = "",
+        var releaseTime: String = StringUtils.EMPTY_STRING,
         var episodeType: EpisodeType = EpisodeType.EPISODE,
     ) : ReleaseDayPlatformSimulcast() {
         override fun of(parameters: Parameters) {

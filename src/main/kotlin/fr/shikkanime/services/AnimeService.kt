@@ -365,7 +365,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             simulcastService.findBySeasonAndYear(simulcast.season!!, simulcast.year!!) ?: simulcastService.save(simulcast)
         }.toMutableSet()
 
-        entity.description = entity.description?.replace("\n", "")?.replace("\r", "")
+        entity.description = entity.description?.replace("\n", StringUtils.EMPTY_STRING)?.replace("\r", "")
         val savedEntity = super.save(entity)
         traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
         return savedEntity

@@ -78,7 +78,7 @@ class FetchEpisodesJob : AbstractJob {
 
         val identifiers = episodeVariantCacheService.findAllIdentifiers()
 
-        val savedEpisodes = episodes
+        val savedEpisodes = episodes.asSequence()
             .sortedWith(
                 compareBy(
                     { it.releaseDateTime },
@@ -90,7 +90,7 @@ class FetchEpisodesJob : AbstractJob {
                     { it.platform.sortIndex }
                 )
             )
-            .filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) && !identifiers.contains(it.getIdentifier()) }
+            .filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) && it.getIdentifier() !in identifiers }
             .mapNotNull {
                 try {
                     val savedEpisode = episodeVariantService.save(
@@ -104,6 +104,7 @@ class FetchEpisodesJob : AbstractJob {
                     null
                 }
             }
+            .toList()
 
         isRunning = false
 
@@ -158,7 +159,8 @@ class FetchEpisodesJob : AbstractJob {
             try {
                 socialNetwork.sendEpisodeRelease(episodes, mediaImage)
             } catch (e: Exception) {
-                val title = "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork", "")}"
+                val title = "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork",
+                    StringUtils.EMPTY_STRING)}"
                 logger.log(Level.SEVERE, title, e)
                 val stringWriter = StringWriter()
                 e.printStackTrace(PrintWriter(stringWriter))

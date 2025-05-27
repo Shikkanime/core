@@ -7,6 +7,6 @@ object RandomManager {
 
         return (1..length)
             .map { allowedChars.random() }
-            .joinToString("")
+            .joinToString(StringUtils.EMPTY_STRING)
     }
 }

@@ -6,7 +6,8 @@ import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -113,7 +114,7 @@ class NetflixPlatformTest : AbstractTest() {
         // Common assertions for all episodes
         episodes.forEach { episode ->
             assertTrue(episode.url.isNotBlank())
-            assertFalse(episode.getIdentifier().contains("https://"))
+            assertTrue("https://" !in episode.getIdentifier())
         }
     }
 }

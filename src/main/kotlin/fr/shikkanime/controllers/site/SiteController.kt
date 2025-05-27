@@ -110,7 +110,7 @@ class SiteController {
             limit
         )
 
-        val title = dto.shortName + (season?.let { " - ${StringUtils.toSeasonString(dto.countryCode, it.toString())}" } ?: "")
+        val title = dto.shortName + (season?.let { " - ${StringUtils.toSeasonString(dto.countryCode, it.toString())}" } ?: StringUtils.EMPTY_STRING)
         val showMore = ((((page ?: 1) - 1) * limit) + findAllBy.data.size < findAllBy.total.toInt())
 
         return Response.template(

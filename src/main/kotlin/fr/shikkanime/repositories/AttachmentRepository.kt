@@ -42,13 +42,16 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun findAllActive(): List<Attachment> {
+    fun findAllActiveWithUrl(): List<Attachment> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
-            query.where(cb.isTrue(root[Attachment_.active]))
+            query.where(
+                cb.isTrue(root[Attachment_.active]),
+                cb.isNotNull(root[Attachment_.url])
+            )
 
             createReadOnlyQuery(it, query)
                 .resultList

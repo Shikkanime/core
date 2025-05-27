@@ -2,6 +2,7 @@ package fr.shikkanime.wrappers.factories
 
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -45,7 +46,7 @@ abstract class AbstractNetflixWrapper {
     private fun getIdAndSecureId() = MapCache.getOrCompute(
         "AbstractNetflixWrapper.getIdAndSecureId",
         duration = Duration.ofDays(1),
-        key = ""
+        key = StringUtils.EMPTY_STRING
     ) {
         val cookies = httpRequest.getCookiesWithBrowser(baseUrl).associateBy { it.name!! }
         return@getOrCompute cookies["NetflixId"]?.value to cookies["SecureNetflixId"]?.value

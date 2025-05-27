@@ -66,7 +66,7 @@ private fun getLinks(controller: Any, replacedPath: String, simulcastCacheServic
     LinkObject.list()
         .filter { it.href.startsWith(ADMIN) == controller.javaClass.simpleName.startsWith("Admin") && !it.footer }
         .map { link ->
-            link.href = link.href.replace("{currentSimulcast}", simulcastCacheService.currentSimulcast?.slug ?: "")
+            link.href = link.href.replace("{currentSimulcast}", simulcastCacheService.currentSimulcast?.slug ?: StringUtils.EMPTY_STRING)
             link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
             link
         }
@@ -75,13 +75,9 @@ private fun getFooterLinks(controller: Any) = LinkObject.list()
     .filter { it.href.startsWith(ADMIN) == controller.javaClass.simpleName.startsWith("Admin") && it.footer }
 
 private fun getTitle(title: String?): String {
-    if (title.isNullOrBlank()) {
-        return Constant.NAME
+    return when {
+        title.isNullOrBlank() -> Constant.NAME
+        Constant.NAME in title -> title
+        else -> "$title - ${Constant.NAME}"
     }
-
-    if (title.contains(Constant.NAME)) {
-        return title
-    }
-
-    return "$title - ${Constant.NAME}"
 }

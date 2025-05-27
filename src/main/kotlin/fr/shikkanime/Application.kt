@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
         logger.info("Admin user already exists")
     }
 
-    if (args.contains("--enable-jobs")) {
+    if ("--enable-jobs" in args) {
         logger.info("Starting jobs...")
         // Every 10 seconds
         JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
@@ -79,10 +79,10 @@ private fun updateAndDeleteData() {
             logger.info("Updating name for anime $oldName to ${anime.name}")
         }
 
-        if (anime.name!!.contains(seasonRegex)) {
+        if (seasonRegex in anime.name!!) {
             val seasonString = seasonRegex.find(anime.name!!)!!.groupValues[0].trim()
             val season = seasonString.toIntOrNull() ?: StringUtils.romanToInt(seasonString)
-            anime.name = anime.name!!.replace(seasonRegex, "")
+            anime.name = anime.name!!.replace(seasonRegex, StringUtils.EMPTY_STRING)
             logger.info("Updating name for anime $oldName to ${anime.name}")
             logger.warning("Replacing all season episodes for anime ${anime.name} to season $season")
 
