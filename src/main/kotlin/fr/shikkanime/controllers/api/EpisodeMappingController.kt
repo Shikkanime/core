@@ -30,7 +30,7 @@ class EpisodeMappingController : HasPageableRoute() {
     ): Response {
         val countryCode = CountryCode.fromNullable(parameters["country"])
         val animeUuid = parameters["anime"]?.let(UUID::fromString)
-        val season = parameters["name"]?.toIntOrNull()
+        val season = parameters["season"]?.toIntOrNull()
         val sort = parameters["sort"]
         val desc = parameters["desc"]
 
