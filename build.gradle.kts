@@ -12,7 +12,7 @@ val jsoupVersion = "1.20.1"
 val gsonVersion = "2.13.1"
 val bcprovVersion = "1.80"
 val javaImageScalingVersion = "0.8.6"
-val firebaseVersion = "9.4.3"
+val firebaseVersion = "9.5.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.19.0"
 
