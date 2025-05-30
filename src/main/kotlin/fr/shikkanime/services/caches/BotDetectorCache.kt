@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.StringReader
 import java.net.InetAddress
 import java.time.Duration
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.experimental.and
 
 class BotDetectorCache : ICacheService {
@@ -51,10 +52,10 @@ class BotDetectorCache : ICacheService {
                 httpRequest.get("https://raw.githubusercontent.com/AnTheMaker/GoodBots/refs/heads/main/all.ips")
 
             if (response.status != HttpStatusCode.OK) {
-                return@runBlocking emptyList()
+                return@runBlocking CopyOnWriteArraySet()
             }
 
-            response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) }
+            CopyOnWriteArraySet(response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) })
         }
     }
 
@@ -67,14 +68,14 @@ class BotDetectorCache : ICacheService {
             val response = httpRequest.get("https://raw.githubusercontent.com/matomo-org/device-detector/refs/heads/master/regexes/bots.yml")
 
             if (response.status != HttpStatusCode.OK) {
-                return@runBlocking mutableSetOf()
+                return@runBlocking CopyOnWriteArraySet()
             }
 
             val bodyAsText = response.bodyAsText()
             val mapper = ObjectMapper(YAMLFactory())
             val yaml = mapper.readTree(StringReader(bodyAsText))
 
-            yaml.map { it["regex"].asText().toRegex() }.toMutableSet()
+            CopyOnWriteArraySet(yaml.map { it["regex"].asText().toRegex() })
         }
     }
 
@@ -88,10 +89,10 @@ class BotDetectorCache : ICacheService {
                 httpRequest.get("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4")
 
             if (response.status != HttpStatusCode.OK) {
-                return@runBlocking emptyList()
+                return@runBlocking CopyOnWriteArraySet()
             }
 
-            response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) }.toHashSet()
+            CopyOnWriteArraySet(response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) })
         }
     }
 
