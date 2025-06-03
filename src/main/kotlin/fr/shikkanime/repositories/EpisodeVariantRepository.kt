@@ -190,4 +190,19 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .firstOrNull()
         }
     }
+
+    fun findMinimalMappingDateTimeByIdentifiers(identifiers: Collection<String>): ZonedDateTime? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+
+            val query = cb.createQuery(ZonedDateTime::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(cb.least(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]))
+                .where(root[EpisodeVariant_.identifier].`in`(identifiers))
+
+            createReadOnlyQuery(it, query)
+                .singleResult
+        }
+    }
 }

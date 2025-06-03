@@ -328,17 +328,24 @@ class UpdateEpisodeMappingJob : AbstractJob {
         episodes: List<Episode>,
         mapping: EpisodeMapping
     ) {
-        episodes.forEach {
-            if (animePlatformService.findByAnimePlatformAndId(mapping.anime!!, it.platform, it.animeId) == null) {
-                animePlatformService.save(
-                    AnimePlatform(
-                        anime = mapping.anime,
-                        platform = it.platform,
-                        platformId = it.animeId
-                    )
-                )
-            }
-        }
+        val now = ZonedDateTime.now()
+
+        animePlatformService.updateAll(
+            episodes.map {
+                animePlatformService.findByAnimePlatformAndId(mapping.anime!!, it.platform, it.animeId)
+                    ?: animePlatformService.save(
+                        AnimePlatform(
+                            anime = mapping.anime,
+                            platform = it.platform,
+                            platformId = it.animeId
+                        )
+                    ).apply { traceActionService.createTraceAction(this, TraceAction.Action.CREATE) }
+            }.distinctBy { it.platform to it.platformId }
+                .onEach {
+                    it.lastValidateDateTime = now
+                    traceActionService.createTraceAction(it, TraceAction.Action.UPDATE)
+                }
+        )
     }
 
     private fun updateIdentifier(
@@ -387,7 +394,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val identifier = episodeVariant.identifier!!
 
         when (episodeVariant.platform) {
-            Platform.ANIM -> retrieveAnimEpisode(countryCode, identifier, episodes)
+            Platform.ANIM -> retrieveADNEpisode(countryCode, identifier, episodes)
             Platform.CRUN -> retrieveCrunchyrollEpisode(countryCode, identifier, isImageUpdate, episodes)
             Platform.DISN -> retrieveDisneyEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime)
             Platform.NETF -> retrieveNetflixEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, episodeType, audioLocale)
@@ -398,7 +405,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         return episodes
     }
 
-    private suspend fun retrieveAnimEpisode(
+    private suspend fun retrieveADNEpisode(
         countryCode: CountryCode,
         identifier: String,
         episodes: MutableList<Episode>

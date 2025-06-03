@@ -4,6 +4,7 @@ import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
+import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
@@ -28,4 +29,6 @@ class AnimePlatform(
     val platform: Platform? = null,
     @Column(nullable = false, name = "platform_id")
     var platformId: String? = null,
+    @Column(nullable = true, name = "last_validate_date_time")
+    var lastValidateDateTime: ZonedDateTime? = null,
 ) : ShikkEntity(uuid)

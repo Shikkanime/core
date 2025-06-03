@@ -4,12 +4,14 @@ import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
+import fr.shikkanime.entities.EpisodeMapping
+import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.StringUtils
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -64,8 +66,14 @@ class UpdateAnimeJobTest : AbstractTest() {
                 lastReleaseDateTime = "2024-06-19T15:00:00Z",
                 lastUpdateDateTime = "2000-01-01T00:00:00Z",
                 platforms = listOf(
+                    PlatformData(Platform.ANIM, "1120"),
+                    PlatformData(Platform.ANIM, "1124"),
                     PlatformData(Platform.CRUN, "GYE5K3GQR"),
-                    PlatformData(Platform.CRUN, "GJ0H7Q5V7")
+                    PlatformData(Platform.CRUN, "GJ0H7Q5V7"),
+                ),
+                episodes = listOf(
+                    EpisodeData(Platform.CRUN, "FR-CRUN-GJWU2V32J-JA-JP", "2016-01-14T19:30:00Z", 1, EpisodeType.EPISODE, 1),
+                    EpisodeData(Platform.ANIM, "FR-ANIM-24059-JA-JP", "2024-01-18T08:00:00Z", 1, EpisodeType.EPISODE, 1),
                 ),
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/041fa9860f09efb08b3c8a3af712b985.jpg",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/131f32cf27743b9c95b78b4b3fb1c6ee.jpg",
@@ -113,6 +121,15 @@ class UpdateAnimeJobTest : AbstractTest() {
 
     data class PlatformData(val platform: Platform, val platformId: String)
 
+    data class EpisodeData(
+        val platform: Platform,
+        val identifier: String,
+        val releaseDateTime: String,
+        val season: Int,
+        val episodeType: EpisodeType,
+        val number: Int
+    )
+
     data class TestCase(
         val name: String,
         val slug: String,
@@ -120,6 +137,7 @@ class UpdateAnimeJobTest : AbstractTest() {
         val lastReleaseDateTime: String = StringUtils.EMPTY_STRING,
         val lastUpdateDateTime: String = StringUtils.EMPTY_STRING,
         val platforms: List<PlatformData>,
+        val episodes: List<EpisodeData> = emptyList(),
         val expectedThumbnail: String? = null,
         val expectedBanner: String? = null,
         val expectedDescription: String? = null
@@ -158,6 +176,34 @@ class UpdateAnimeJobTest : AbstractTest() {
             )
         }
 
+        // Ajout des épisodes
+        testCase.episodes.forEach { episodeData ->
+            val mapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+                animeUuid = anime.uuid!!,
+                season = episodeData.season,
+                episodeType = episodeData.episodeType,
+                number = episodeData.number
+            ) ?: episodeMappingService.save(
+                EpisodeMapping(
+                    anime = anime,
+                    season = episodeData.season,
+                    episodeType = episodeData.episodeType,
+                    number = episodeData.number
+                )
+            )
+
+            episodeVariantService.save(
+                EpisodeVariant(
+                    mapping = mapping,
+                    platform = episodeData.platform,
+                    audioLocale = "JA-JP",
+                    releaseDateTime = ZonedDateTime.parse(episodeData.releaseDateTime),
+                    identifier = episodeData.identifier,
+                    url = ""
+                )
+            )
+        }
+
         // Exécution du job
         updateAnimeJob.run()
 
@@ -168,21 +214,15 @@ class UpdateAnimeJobTest : AbstractTest() {
 
         // Vérification des données mises à jour
         testCase.expectedThumbnail?.let {
-            assumeTrue(
-                it ==
-                        attachmentService.findByEntityUuidTypeAndActive(updatedAnime.uuid!!, ImageType.THUMBNAIL)?.url
-            )
+            assertEquals(it, attachmentService.findByEntityUuidTypeAndActive(updatedAnime.uuid!!, ImageType.THUMBNAIL)?.url)
         }
 
         testCase.expectedBanner?.let {
-            assumeTrue(
-                it ==
-                        attachmentService.findByEntityUuidTypeAndActive(updatedAnime.uuid!!, ImageType.BANNER)?.url
-            )
+            assertEquals(it, attachmentService.findByEntityUuidTypeAndActive(updatedAnime.uuid!!, ImageType.BANNER)?.url)
         }
 
         testCase.expectedDescription?.let {
-            assumeTrue(it == updatedAnime.description)
+            assertEquals(it, updatedAnime.description)
         }
     }
 

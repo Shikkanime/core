@@ -99,4 +99,6 @@
     <include file="/db/changelog/2025/04/03-changelog.xml"/>
     <!-- May 2025 -->
     <include file="/db/changelog/2025/05/01-changelog.xml"/>
+    <!-- June 2025 -->
+    <include file="/db/changelog/2025/06/01-changelog.xml"/>
 </databaseChangeLog>

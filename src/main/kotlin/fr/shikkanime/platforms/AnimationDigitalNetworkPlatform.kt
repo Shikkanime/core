@@ -182,7 +182,7 @@ class AnimationDigitalNetworkPlatform :
         return initialNumber to EpisodeType.EPISODE
     }
 
-    private fun getAudioLocale(string: String): String {
+    fun getAudioLocale(string: String): String {
         return when (string) {
             "vostf" -> "ja-JP"
             "vf" -> "fr-FR"

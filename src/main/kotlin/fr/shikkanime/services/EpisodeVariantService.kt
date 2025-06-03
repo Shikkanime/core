@@ -54,6 +54,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findByIdentifier(identifier: String) = episodeVariantRepository.findByIdentifier(identifier)
 
+    fun findMinimalMappingDateTimeByIdentifiers(identifiers: Collection<String>) = episodeVariantRepository.findMinimalMappingDateTimeByIdentifiers(identifiers)
+
     /**
      * Determines the appropriate simulcast for a given anime and episode mapping.
      *
@@ -183,7 +185,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     platform = episode.platform,
                     platformId = episode.animeId
                 )
-            )
+            ).apply { traceActionService.createTraceAction(this, TraceAction.Action.CREATE) }
         }
 
         // Retrieve or create the episode mapping

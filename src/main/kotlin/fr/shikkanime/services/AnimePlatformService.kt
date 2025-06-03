@@ -7,8 +7,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.repositories.AnimePlatformRepository
 
 class AnimePlatformService : AbstractService<AnimePlatform, AnimePlatformRepository>() {
-    @Inject
-    private lateinit var animePlatformRepository: AnimePlatformRepository
+    @Inject private lateinit var animePlatformRepository: AnimePlatformRepository
 
     override fun getRepository() = animePlatformRepository
 
