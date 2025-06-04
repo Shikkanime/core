@@ -40,8 +40,9 @@ class EpisodeMappingController {
         if (updateAllEpisodeMappingDto.uuids.isEmpty())
             return Response.badRequest(MessageDto.error("uuids must not be empty"))
 
-        if (updateAllEpisodeMappingDto.episodeType == null &&
+        if (updateAllEpisodeMappingDto.animeName == null &&
             updateAllEpisodeMappingDto.season == null &&
+            updateAllEpisodeMappingDto.episodeType == null &&
             updateAllEpisodeMappingDto.startDate == null &&
             updateAllEpisodeMappingDto.incrementDate == null &&
             updateAllEpisodeMappingDto.forceUpdate == null &&

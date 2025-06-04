@@ -231,6 +231,357 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
         assertEquals(EpisodeType.SPECIAL, updatedMapping.episodeType)
     }
 
+    @Test
+    fun `should create anime when migrating episode to non-existing anime`() {
+        // Arrange
+        val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
+        val episodeMapping = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+
+        val dto = episodeMappingFactory.toDto(episodeMapping)
+        dto.anime!!.name = "New Anime Name"
+
+        // Act
+        val updatedMapping = episodeMappingAdminService.update(episodeMapping.uuid!!, dto)
+
+        // Assert
+        assertNotNull(updatedMapping)
+        assertEquals("New Anime Name", updatedMapping!!.anime!!.name)
+        
+        // Check that the new anime was created by querying it separately
+        val newAnime = animeService.findByName(sourceAnime.countryCode!!, "New Anime Name")
+        assertNotNull(newAnime)
+        assertEquals("new-name", newAnime!!.slug)
+        assertEquals(sourceAnime.countryCode, newAnime.countryCode)
+        assertEquals(sourceAnime.description, newAnime.description)
+    }
+
+    @Test
+    fun `should migrate episodes in batch to existing anime`() {
+        // Arrange
+        val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
+        val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
+        
+        val episode1 = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+        
+        val episode2 = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 2
+        )
+
+        val updateDto = fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto(
+            uuids = setOf(episode1.uuid!!, episode2.uuid!!),
+            episodeType = null,
+            season = null,
+            animeName = targetAnime.name,
+            startDate = null,
+            incrementDate = null,
+            bindVoiceVariants = null,
+            forceUpdate = null,
+            bindNumber = null
+        )
+
+        // Act
+        episodeMappingAdminService.updateAll(updateDto)
+
+        // Assert
+        val updatedEpisode1 = episodeMappingService.find(episode1.uuid)
+        val updatedEpisode2 = episodeMappingService.find(episode2.uuid)
+        
+        assertNotNull(updatedEpisode1)
+        assertNotNull(updatedEpisode2)
+        assertEquals(targetAnime.uuid, updatedEpisode1!!.anime!!.uuid)
+        assertEquals(targetAnime.uuid, updatedEpisode2!!.anime!!.uuid)
+    }
+
+    @Test
+    fun `should migrate episodes in batch and create new anime if not exists`() {
+        // Arrange
+        val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
+        
+        val episode1 = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+        
+        val episode2 = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 2
+        )
+
+        val updateDto = fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto(
+            uuids = setOf(episode1.uuid!!, episode2.uuid!!),
+            episodeType = null,
+            season = null,
+            animeName = "Brand New Anime",
+            startDate = null,
+            incrementDate = null,
+            bindVoiceVariants = null,
+            forceUpdate = null,
+            bindNumber = null
+        )
+
+        // Act
+        episodeMappingAdminService.updateAll(updateDto)
+
+        // Assert
+        val updatedEpisode1 = episodeMappingService.find(episode1.uuid)
+        val updatedEpisode2 = episodeMappingService.find(episode2.uuid)
+        
+        assertNotNull(updatedEpisode1)
+        assertNotNull(updatedEpisode2)
+        
+        // Check that the new anime was created by querying it separately
+        val newAnime = animeService.findByName(sourceAnime.countryCode!!, "Brand New Anime")
+        assertNotNull(newAnime)
+        assertEquals("brand-new-anime", newAnime!!.slug)
+        assertEquals(sourceAnime.countryCode, newAnime.countryCode)
+        assertEquals(sourceAnime.description, newAnime.description)
+        assertEquals("Brand New Anime", newAnime.name)
+        
+        // Verify episodes are now associated with the new anime
+        assertEquals(newAnime.uuid, updatedEpisode1!!.anime!!.uuid)
+        assertEquals(newAnime.uuid, updatedEpisode2!!.anime!!.uuid)
+    }
+
+    @Test
+    fun `should merge episodes when migrating to anime with existing episode`() {
+        // Arrange
+        val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
+        val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
+        
+        // Create episode in source anime
+        val sourceEpisode = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+        
+        // Create episode with same season/type/number in target anime
+        val targetEpisode = createEpisodeMapping(
+            anime = targetAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+
+        // Add variants to both episodes
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = sourceEpisode,
+                platform = Platform.ANIM,
+                audioLocale = "ja-JP",
+                identifier = "SOURCE-VARIANT",
+                url = "https://example.com/source",
+            )
+        )
+
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = targetEpisode,
+                platform = Platform.CRUN,
+                audioLocale = "en-US",
+                identifier = "TARGET-VARIANT",
+                url = "https://example.com/target",
+            )
+        )
+
+        val updateDto = fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto(
+            uuids = setOf(sourceEpisode.uuid!!),
+            episodeType = null,
+            season = null,
+            animeName = targetAnime.name,
+            startDate = null,
+            incrementDate = null,
+            bindVoiceVariants = null,
+            forceUpdate = null,
+            bindNumber = null
+        )
+
+        // Act
+        episodeMappingAdminService.updateAll(updateDto)
+
+        // Assert
+        // Source episode should be deleted
+        assertNull(episodeMappingService.find(sourceEpisode.uuid))
+        
+        // Target episode should still exist and have both variants
+        val updatedTargetEpisode = episodeMappingService.find(targetEpisode.uuid!!)
+        assertNotNull(updatedTargetEpisode)
+        
+        val variants = episodeVariantService.findAllByMapping(updatedTargetEpisode!!)
+        assertEquals(2, variants.size)
+        assertTrue(variants.any { it.url == "https://example.com/source" })
+        assertTrue(variants.any { it.url == "https://example.com/target" })
+    }
+
+    @Test
+    fun `should cleanup empty source anime after migration`() {
+        // Arrange
+        val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
+        val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
+        
+        // Create only one episode in source anime
+        val episode = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+
+        val updateDto = fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto(
+            uuids = setOf(episode.uuid!!),
+            episodeType = null,
+            season = null,
+            animeName = targetAnime.name,
+            startDate = null,
+            incrementDate = null,
+            bindVoiceVariants = null,
+            forceUpdate = null,
+            bindNumber = null
+        )
+
+        // Act
+        episodeMappingAdminService.updateAll(updateDto)
+
+        // Assert
+        // Source anime should be deleted since it has no more episodes
+        assertNull(animeService.find(sourceAnime.uuid!!))
+        
+        // Target anime should still exist
+        assertNotNull(animeService.find(targetAnime.uuid!!))
+        
+        // Episode should be in target anime
+        val updatedEpisode = episodeMappingService.find(episode.uuid)
+        assertNotNull(updatedEpisode)
+        assertEquals(targetAnime.uuid, updatedEpisode!!.anime!!.uuid)
+    }
+
+    @Test
+    fun `should not cleanup source anime if it still has episodes after migration`() {
+        // Arrange
+        val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
+        val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
+        
+        // Create two episodes in source anime
+        val episode1 = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+        
+        val episode2 = createEpisodeMapping(
+            anime = sourceAnime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 2
+        )
+
+        // Only migrate one episode
+        val updateDto = fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto(
+            uuids = setOf(episode1.uuid!!),
+            episodeType = null,
+            season = null,
+            animeName = targetAnime.name,
+            startDate = null,
+            incrementDate = null,
+            bindVoiceVariants = null,
+            forceUpdate = null,
+            bindNumber = null
+        )
+
+        // Act
+        episodeMappingAdminService.updateAll(updateDto)
+
+        // Assert
+        // Source anime should still exist since it has one remaining episode
+        assertNotNull(animeService.find(sourceAnime.uuid!!))
+        
+        // Episode2 should still be in source anime
+        val remainingEpisode = episodeMappingService.find(episode2.uuid!!)
+        assertNotNull(remainingEpisode)
+        assertEquals(sourceAnime.uuid, remainingEpisode!!.anime!!.uuid)
+        
+        // Episode1 should be in target anime
+        val migratedEpisode = episodeMappingService.find(episode1.uuid)
+        assertNotNull(migratedEpisode)
+        assertEquals(targetAnime.uuid, migratedEpisode!!.anime!!.uuid)
+    }
+
+    @Test
+    fun `should handle batch migration with mixed scenarios`() {
+        // Arrange
+        val sourceAnime1 = createTestAnime(name = "Source Anime 1", slug = "source-anime-1")
+        val sourceAnime2 = createTestAnime(name = "Source Anime 2", slug = "source-anime-2")
+        
+        val episode1 = createEpisodeMapping(
+            anime = sourceAnime1,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+        
+        val episode2 = createEpisodeMapping(
+            anime = sourceAnime2,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 2
+        )
+
+        val updateDto = fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto(
+            uuids = setOf(episode1.uuid!!, episode2.uuid!!),
+            episodeType = null,
+            season = null,
+            animeName = "Unified Anime",
+            startDate = null,
+            incrementDate = null,
+            bindVoiceVariants = null,
+            forceUpdate = null,
+            bindNumber = null
+        )
+
+        // Act
+        episodeMappingAdminService.updateAll(updateDto)
+
+        // Assert
+        val updatedEpisode1 = episodeMappingService.find(episode1.uuid)
+        val updatedEpisode2 = episodeMappingService.find(episode2.uuid)
+        
+        assertNotNull(updatedEpisode1)
+        assertNotNull(updatedEpisode2)
+        
+        // Check that the unified anime was created
+        val unifiedAnime = animeService.findByName(sourceAnime1.countryCode!!, "Unified Anime")
+        assertNotNull(unifiedAnime)
+        assertEquals("unified-anime", unifiedAnime!!.slug)
+        assertEquals("Unified Anime", unifiedAnime.name)
+        
+        // Verify episodes are now associated with the unified anime
+        assertEquals(unifiedAnime.uuid, updatedEpisode1!!.anime!!.uuid)
+        assertEquals(unifiedAnime.uuid, updatedEpisode2!!.anime!!.uuid)
+        
+        // Both source animes should be deleted
+        assertNull(animeService.find(sourceAnime1.uuid!!))
+        assertNull(animeService.find(sourceAnime2.uuid!!))
+    }
+
     // Helper methods
     private fun createTestAnime(
         name: String = "Test Anime",
