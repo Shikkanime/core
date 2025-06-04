@@ -175,15 +175,22 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 }
             }
 
-        // Save the anime-platform association if it doesn't already exist
-        if (animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId) == null) {
+        val animePlatform = animePlatformService.findByAnimePlatformAndId(anime, episode.platform, episode.animeId)
+
+        if (animePlatform == null) {
+            // Save the anime-platform association if it doesn't already exist
             animePlatformService.save(
                 AnimePlatform(
                     anime = anime,
                     platform = episode.platform,
                     platformId = episode.animeId
                 )
-            )
+            ).apply { traceActionService.createTraceAction(this, TraceAction.Action.CREATE) }
+        } else {
+            // Update the anime platform's last update date-time
+            animePlatform.lastValidateDateTime = now
+            animePlatformService.update(animePlatform)
+            traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
         }
 
         // Retrieve or create the episode mapping

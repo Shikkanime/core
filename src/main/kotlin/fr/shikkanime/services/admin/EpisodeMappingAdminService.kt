@@ -181,7 +181,18 @@ class EpisodeMappingAdminService {
      * Updates multiple episodes based on the provided configuration.
      */
     fun updateAll(updateDto: UpdateAllEpisodeMappingDto) {
-        val episodes = updateDto.uuids
+        val episodesForMigration = updateDto.uuids
+            .mapNotNull { episodeMappingService.find(it) }
+            .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
+
+        if (!updateDto.animeName.isNullOrBlank() && episodesForMigration.isNotEmpty()) {
+            handleAnimeMigration(episodesForMigration, updateDto.animeName.trim())
+            // After this, episodes in episodesForMigration might be deleted from DB or their anime changed.
+        }
+
+        // Re-fetch episodes to ensure we are working with the current state for further processing.
+        // Episodes deleted during migration will not be found and thus excluded.
+        val episodesForProcessing = updateDto.uuids
             .mapNotNull { episodeMappingService.find(it) }
             .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
 
@@ -190,7 +201,7 @@ class EpisodeMappingAdminService {
         val forcedUpdate = updateDto.forceUpdate == true
         val bindNumbers = updateDto.bindNumber == true
 
-        episodes.forEach { episode ->
+        episodesForProcessing.forEach { episode ->
             // Handle episode numbering if binding is enabled
             if (bindNumbers) {
                 episode.season?.let { season ->
@@ -203,19 +214,20 @@ class EpisodeMappingAdminService {
                 }
             }
 
-            // Apply episode type and season updates
+            // Apply episode type and season updates from the DTO
             updateDto.episodeType?.let { episode.episodeType = it }
             updateDto.season?.let { episode.season = it }
 
             // Process release dates
             currentDate = processReleaseDates(currentDate, episode, updateDto)
 
-            // Skip if episode was merged
+            // This check is for merging if the episode's properties (season/type/number)
+            // now clash with another episode in its current anime due to the direct updates above.
             if (hasBeenMerged(updateDto, episode, forcedUpdate)) {
-                return@forEach
+                return@forEach // Episode was merged (and thus the original 'episode' reference is now stale for further direct use)
             }
 
-            // Update the episode
+            // Update the episode's lastUpdateDateTime
             episode.lastUpdateDateTime = if (forcedUpdate) {
                 Constant.oldLastUpdateDateTime
             } else {
@@ -227,8 +239,95 @@ class EpisodeMappingAdminService {
         }
 
         // Recalculate simulcasts if dates were updated
-        if (currentDate != null) {
+        if (currentDate != null) { // This condition implies dates were processed.
+            // We should recalculate for all animes involved, not just one.
+            // A broader recalculation or specific anime recalculation might be needed.
+            // For now, keeping existing logic.
             animeService.recalculateSimulcasts()
+        }
+    }
+
+    /**
+     * Handles migration of episodes to another anime.
+     * Creates the target anime if it doesn't exist, using info from the source anime.
+     */
+    private fun handleAnimeMigration(episodes: List<EpisodeMapping>, targetAnimeName: String) {
+        if (episodes.isEmpty()) return
+
+        // Group episodes by their current anime
+        val episodesByAnime = episodes.groupBy { it.anime!! }
+
+        episodesByAnime.forEach { (sourceAnime, episodeList) ->
+            // Find or create the target anime
+            val targetAnime = animeService.findByName(sourceAnime.countryCode!!, targetAnimeName)
+                ?: createAnimeFromSource(sourceAnime, targetAnimeName)
+
+            // Migrate each episode to the target anime
+            episodeList.forEach { episode ->
+                migrateEpisodeToAnime(episode, targetAnime)
+            }
+
+            // Cleanup source anime if it has no more episodes
+            cleanupAnimeIfEmpty(sourceAnime, null)
+        }
+    }
+
+    /**
+     * Creates a new anime based on the source anime with a different name.
+     */
+    private fun createAnimeFromSource(sourceAnime: Anime, newName: String): Anime {
+        val slug = StringUtils.toSlug(StringUtils.getShortName(newName))
+        
+        // Check if an anime with this slug already exists
+        animeService.findBySlug(sourceAnime.countryCode!!, slug)?.let { existingAnime ->
+            return existingAnime
+        }
+
+        val newAnime = Anime(
+            countryCode = sourceAnime.countryCode,
+            name = newName,
+            lastUpdateDateTime = Constant.oldLastUpdateDateTime,
+            description = sourceAnime.description,
+            slug = slug
+        )
+
+        val savedAnime = animeService.save(newAnime)
+        
+        // Copy attachments from source anime to new anime
+        ImageType.entries.forEach { imageType ->
+            val attachment = attachmentService.findByEntityUuidTypeAndActive(sourceAnime.uuid!!, imageType) ?: return@forEach
+
+            attachmentService.createAttachmentOrMarkAsActive(
+                savedAnime.uuid!!,
+                imageType,
+                url = attachment.url
+            )
+        }
+
+        return savedAnime
+    }
+
+    /**
+     * Migrates an episode from source anime to target anime.
+     * Handles merging if an episode with same season/type/number already exists.
+     */
+    private fun migrateEpisodeToAnime(episode: EpisodeMapping, targetAnime: Anime) {
+        // Check if an episode with the same season/type/number already exists in the target anime
+        val existingEpisode = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+            targetAnime.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!
+        )
+
+        if (existingEpisode != null && existingEpisode.uuid != episode.uuid) {
+            // Merge episodes: transfer variants from current episode to existing episode
+            mergeEpisodeMapping(episode, existingEpisode)?.let { mergedEpisode ->
+                mergedEpisode.lastUpdateDateTime = Constant.oldLastUpdateDateTime
+                episodeMappingService.update(mergedEpisode)
+            }
+        } else {
+            // Simply change the anime of the episode
+            episode.anime = targetAnime
+            episode.lastUpdateDateTime = Constant.oldLastUpdateDateTime
+            episodeMappingService.update(episode)
         }
     }
 
@@ -348,7 +447,7 @@ class EpisodeMappingAdminService {
 
         // Change anime
         val newAnime = animeService.findByName(oldAnime.countryCode!!, dto.anime!!.name)
-            ?: throw IllegalArgumentException("Anime with name ${dto.anime!!.name} not found")
+            ?: createAnimeFromSource(oldAnime, dto.anime!!.name)
 
         // Check if a similar episode already exists in the new anime
         val existingEpisode = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
@@ -385,7 +484,7 @@ class EpisodeMappingAdminService {
                 existingEpisode.lastReleaseDateTime = episode.lastReleaseDateTime
             }
 
-            existingEpisode.lastUpdateDateTime = ZonedDateTime.now()
+            existingEpisode.lastUpdateDateTime = Constant.oldLastUpdateDateTime
             val updatedEpisode = episodeMappingService.update(existingEpisode)
 
             // Delete the source episode
@@ -404,6 +503,7 @@ class EpisodeMappingAdminService {
 
         // If no merge, simply change the anime
         episode.anime = newAnime
+        episode.lastUpdateDateTime = Constant.oldLastUpdateDateTime
         episodeMappingService.update(episode)
 
         // Clean up old anime if necessary

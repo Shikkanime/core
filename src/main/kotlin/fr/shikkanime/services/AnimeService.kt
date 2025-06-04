@@ -465,11 +465,13 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
             if (findByAnimePlatformAndId != null) {
                 animePlatformService.delete(animePlatform)
+                traceActionService.createTraceAction(animePlatform, TraceAction.Action.DELETE)
                 return@forEach
             }
 
             animePlatform.anime = to
             animePlatformService.update(animePlatform)
+            traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
         }
 
         delete(from)

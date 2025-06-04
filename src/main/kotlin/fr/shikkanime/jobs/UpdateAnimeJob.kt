@@ -24,7 +24,8 @@ class UpdateAnimeJob : AbstractJob {
         val lastReleaseDateTime: ZonedDateTime,
         val attachments: Map<ImageType, String>,
         val description: String?,
-        val episodeSize: Int
+        val episodeSize: Int,
+        var isValidated: Boolean? = null
     )
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -50,11 +51,13 @@ class UpdateAnimeJob : AbstractJob {
             return
         }
 
+        val deprecatedAnimePlatformDateTime = zonedDateTime.minusMonths(configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION, 3).toLong())
+
         needUpdateAnimes.forEach { anime ->
             val shortName = StringUtils.getShortName(anime.name!!)
             logger.info("Updating anime $shortName...")
             // Compare platform sort index and anime release date descending
-            val updatedAnimes = runCatching { runBlocking { fetchAnime(anime) } }
+            val updatedAnimes = runCatching { runBlocking { fetchAnime(anime, deprecatedAnimePlatformDateTime) } }
                 .getOrNull()
                 ?.groupBy { it.platform }
                 ?.toList()
@@ -64,7 +67,8 @@ class UpdateAnimeJob : AbstractJob {
                 )
                 ?.flatMap { pair ->
                     pair.second.sortedWith(
-                        compareByDescending<UpdatableAnime> { it.lastReleaseDateTime }
+                        compareByDescending<UpdatableAnime> { it.isValidated }
+                            .thenByDescending { it.lastReleaseDateTime }
                             .thenBy { it.episodeSize }
                     )
                 } ?: emptyList()
@@ -110,18 +114,28 @@ class UpdateAnimeJob : AbstractJob {
         MapCache.invalidate(Anime::class.java)
     }
 
-    private suspend fun fetchAnime(anime: Anime): List<UpdatableAnime> {
+    private suspend fun fetchAnime(anime: Anime, zonedDateTime: ZonedDateTime): List<UpdatableAnime> {
         val list = mutableListOf<UpdatableAnime>()
 
         animePlatformService.findAllByAnime(anime).forEach {
+            if (it.lastValidateDateTime != null && it.lastValidateDateTime!!.isBeforeOrEqual(zonedDateTime)) {
+                logger.warning("Deleting old anime platform ${it.platform} for anime ${anime.name} with id ${it.platformId}")
+                animePlatformService.delete(it)
+                traceActionService.createTraceAction(it, TraceAction.Action.DELETE)
+                return@forEach
+            }
+
             runCatching {
-                when (it.platform!!) {
-                    Platform.ANIM -> list.add(fetchADNAnime(it))
-                    Platform.CRUN -> list.add(fetchCrunchyrollAnime(it))
-                    Platform.DISN -> list.add(fetchDisneyPlusAnime(it))
-                    Platform.NETF -> list.add(fetchNetflixAnime(it))
-                    Platform.PRIM -> list.add(fetchPrimeVideoAnime(it))
+                val updatableAnime = when (it.platform!!) {
+                    Platform.ANIM -> fetchADNAnime(it)
+                    Platform.CRUN -> fetchCrunchyrollAnime(it)
+                    Platform.DISN -> fetchDisneyPlusAnime(it)
+                    Platform.NETF -> fetchNetflixAnime(it)
+                    Platform.PRIM -> fetchPrimeVideoAnime(it)
                 }
+
+                updatableAnime.isValidated = it.lastValidateDateTime != null && it.lastValidateDateTime!!.isAfterOrEqual(zonedDateTime)
+                list.add(updatableAnime)
             }.onFailure { e ->
                 logger.warning("Error while fetching anime ${anime.name} on platform ${it.platform}: ${e.message}")
             }

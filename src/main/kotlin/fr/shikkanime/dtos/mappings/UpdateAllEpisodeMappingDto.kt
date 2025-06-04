@@ -5,8 +5,9 @@ import java.util.*
 
 data class UpdateAllEpisodeMappingDto(
     val uuids: Set<UUID>,
-    val episodeType: EpisodeType?,
+    val animeName: String?,
     val season: Int?,
+    val episodeType: EpisodeType?,
     val startDate: String?,
     val incrementDate: Boolean?,
     val bindVoiceVariants: Boolean?,
