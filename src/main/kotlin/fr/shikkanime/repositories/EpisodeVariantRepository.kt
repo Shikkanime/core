@@ -35,13 +35,15 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val root = query.from(getEntityClass())
 
             query.distinct(true)
-                .multiselect(
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode],
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.season],
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
-                    root[EpisodeVariant_.mapping][EpisodeMapping_.number],
-                    root[EpisodeVariant_.audioLocale],
+                .select(
+                    cb.tuple(
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode],
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.season],
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.number],
+                        root[EpisodeVariant_.audioLocale]
+                    )
                 )
 
             createReadOnlyQuery(it, query)
