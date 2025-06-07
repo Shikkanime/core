@@ -6,6 +6,11 @@ on:
       version:
         description: 'Version to release'
         required: true
+      bypass_tests:
+        description: 'Bypass tests failure. Default: false'
+        required: false
+        default: false
+        type: boolean
 
 env:
   JAVA_VERSION: 21
@@ -29,6 +34,7 @@ jobs:
         run: sudo apt install -y webp
       - name: Build and test
         run: ./gradlew clean test --info
+        continue-on-error: ${{ github.event.inputs.bypass_tests }}
 
   docker:
     name: Build and push Docker image
