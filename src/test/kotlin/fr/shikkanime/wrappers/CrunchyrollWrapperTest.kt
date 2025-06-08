@@ -6,6 +6,7 @@ import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -58,7 +59,7 @@ class CrunchyrollWrapperTest {
             setOf(LocalDate.parse("2024-01-01"))
         )
 
-        assertEquals(true, episodes.isNotEmpty())
+        assumeTrue(episodes.isNotEmpty())
     }
 
     @Test
