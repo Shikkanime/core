@@ -78,7 +78,7 @@
             </button>
         </div>
 
-        <ul class="nav nav-underline nav-fill mb-3">
+        <ul class="nav nav-underline nav-fill mt-3">
             <li class="nav-item">
                 <a class="nav-link" :class="tab === 0 ? 'active' : ''" @click="tab = 0">General</a>
             </li>
@@ -233,16 +233,24 @@
                         </div>
 
                         <div :class="'col-md-' + (12 - titleSize)">
-                            <ul class="list-group">
-                            <template x-for="animePlatform in anime.platformIds">
-                                <li class="list-group-item">
-                                    <div>
-                                        <span x-text="animePlatform.platform.name"></span>
-                                        <strong x-text="animePlatform.platformId"></strong>
-                                    </div>
-                                </li>
-                            </template>
-                            </ul>
+                            <table class="table table-striped table-bordered">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Platform</th>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Last validation</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <template x-for="animePlatform in anime.platformIds">
+                                    <tr>
+                                        <td x-text="animePlatform.platform.name"></td>
+                                        <td x-text="animePlatform.platformId"></td>
+                                        <td x-text="animePlatform.lastValidateDateTime ? new Date(animePlatform.lastValidateDateTime).toLocaleString() : 'N/A'"></td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     <div class="row">
