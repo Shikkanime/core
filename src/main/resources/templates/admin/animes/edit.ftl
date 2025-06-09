@@ -56,19 +56,24 @@
         </div>
 
         <div class="d-flex">
-            <a href="/admin/animes" class="btn btn-secondary ms-0">Back</a>
+            <a class="btn btn-secondary ms-0"  @click="window.history.back()">Back</a>
 
             <div class="spinner-border ms-2 me-auto" role="status" x-show="loading">
                 <span class="visually-hidden">Loading...</span>
             </div>
 
-            <button type="button" class="btn btn-danger ms-auto me-0" data-bs-toggle="modal"
+            <button type="button" class="btn btn-danger ms-auto" data-bs-toggle="modal"
                     data-bs-target="#deleteModal" :disabled="loading">
                 Delete
             </button>
 
+            <button type="button" class="btn btn-info ms-2" :disabled="loading"
+                    @click="loading = true; forceUpdateAnime().finally(() => loading = false)">
+                Force Update
+            </button>
+
             <button type="submit" class="btn btn-success ms-2 me-0" :disabled="loading"
-                    @click="loading = true; await updateAnime(anime); loading = false;">
+                    @click="loading = true; updateAnime(anime).finally(() => loading = false)">
                 Update
             </button>
         </div>
@@ -321,6 +326,26 @@
                 })
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
+                    toastBootstrap.show();
+                });
+        }
+
+        async function forceUpdateAnime() {
+            const uuid = getUuid();
+
+            await axios.get('/admin/api/animes/' + uuid + '/force-update')
+                .then(() => {
+                    const toastEl = document.getElementById('successToast');
+                    toastEl.querySelector('.toast-body').textContent = 'Force update requested successfully!';
+                    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
+                    toastBootstrap.show();
+                    // Reload page to see updated status
+                    setTimeout(() => window.location.reload(), 1000);
+                })
+                .catch(() => {
+                    const toastEl = document.getElementById('errorToast');
+                    toastEl.querySelector('.toast-body').textContent = 'Error during force update!';
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
                     toastBootstrap.show();
                 });
