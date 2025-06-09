@@ -40,6 +40,17 @@ class AnimeController : HasPageableRoute() {
         return Response.redirect(Link.ANIMES.href)
     }
 
+    @Path("/{uuid}/force-update")
+    @Get
+    @AdminSessionAuthenticated
+    private fun forceUpdateAnime(@PathParam uuid: UUID): Response {
+        val anime = animeService.find(uuid) ?: return Response.notFound()
+        anime.lastUpdateDateTime = Constant.oldLastUpdateDateTime
+        animeService.update(anime)
+        MapCache.invalidate(Anime::class.java)
+        return Response.ok()
+    }
+
     @Path("/{uuid}")
     @Get
     @AdminSessionAuthenticated
