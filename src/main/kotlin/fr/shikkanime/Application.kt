@@ -8,6 +8,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.admin.AnimeAdminService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.JobManager
 import fr.shikkanime.utils.LoggerFactory
@@ -67,6 +68,7 @@ fun main(args: Array<String>) {
 
 private fun updateAndDeleteData() {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
+    val animeAdminService = Constant.injector.getInstance(AnimeAdminService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)
     val seasonRegex = " Saison (\\d)| ([${StringUtils.ROMAN_NUMBERS_CHECK}]+$)".toRegex()
     val animes = animeService.findAll()
@@ -101,7 +103,7 @@ private fun updateAndDeleteData() {
 
             animeService.findBySlug(anime.countryCode!!, slug)?.let { existing ->
                 logger.warning("Slug $slug already exists, merging ${anime.name} with ${existing.name}")
-                animeService.merge(anime, existing)
+                animeAdminService.merge(anime, existing)
                 return@forEach
             }
         }

@@ -26,10 +26,8 @@
     </div>
 
     <div x-data="{
-    simulcasts: [],
     anime: {},
     loading: true,
-    selectedSimulcast: '',
     tab: 0,
     titleSize: 2
     }">
@@ -91,9 +89,8 @@
         </ul>
 
         <template x-init="loading = true;
-        simulcasts = await getSimulcasts();
         anime = await loadAnime();
-        loading = false;" x-if="anime.uuid && simulcasts.length > 0">
+        loading = false;" x-if="anime.uuid">
             <div class="card">
                 <div x-show="tab === 0" class="card-body">
                     <div class="row mb-2">
@@ -261,35 +258,9 @@
                         <div :class="'col-md-' + (12 - titleSize)">
                             <ul class="list-group">
                                 <template x-for="simulcast in anime.simulcasts">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span x-text="simulcast.season + ' ' + simulcast.year"></span>
-                                        <button type="button" class="btn btn-outline-danger" @click="anime.simulcasts.splice(anime.simulcasts.indexOf(simulcast), 1)">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center" x-text="simulcast.season + ' ' + simulcast.year"></li>
                                 </template>
                             </ul>
-
-                            <hr class="w-100">
-
-                            <div class="d-flex align-items-center my-1">
-                                <div class="ms-0 me-3 w-100">
-                                    <select class="form-select" x-model="selectedSimulcast">
-                                        <option value="" selected disabled>Select a simulcast</option>
-
-                                        <template
-                                                x-for="simulcast in simulcasts.filter(simulcast => !anime.simulcasts.find(animeSimulcast => animeSimulcast.uuid === simulcast.uuid))">
-                                            <option :value="simulcast.uuid"
-                                                    x-text="simulcast.season + ' ' + simulcast.year"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div class="ms-auto me-0">
-                                    <button type="button" class="btn btn-outline-success" @click="addSimulcast(simulcasts, anime, selectedSimulcast); selectedSimulcast = ''">
-                                        +
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -301,12 +272,6 @@
         function getUuid() {
             const url = new URL(window.location.href);
             return url.pathname.split('/').pop();
-        }
-
-        async function getSimulcasts() {
-            return await axios.get('/api/v1/simulcasts')
-                .then(response => response.data)
-                .catch(() => []);
         }
 
         async function loadAnime() {
@@ -368,16 +333,6 @@
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
                     toastBootstrap.show();
                 });
-        }
-
-        function addSimulcast(simulcasts, anime, uuid) {
-            const simulcast = simulcasts.find(simulcast => simulcast.uuid === uuid);
-
-            if (!simulcast) {
-                return;
-            }
-
-            anime.simulcasts.push(simulcast);
         }
     </script>
 </@navigation.display>
