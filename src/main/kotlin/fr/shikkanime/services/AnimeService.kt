@@ -1,18 +1,12 @@
 package fr.shikkanime.services
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.animes.AnimeAlertDto
-import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.animes.AnimeError
-import fr.shikkanime.dtos.animes.ErrorType
 import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -44,7 +38,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
-    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = animeRepository
 
@@ -243,81 +236,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }
     }
 
-    fun getAlerts(page: Int, limit: Int): PageableDto<AnimeAlertDto> {
-        val allSeasons = findAllSeasons()
-        val allAudioLocales = findAllAudioLocales()
-        val invalidAnimes = mutableMapOf<Anime, Pair<ZonedDateTime, MutableSet<AnimeError>>>()
-
-        findAll().forEach { anime ->
-            val animeSeasons = allSeasons[anime.uuid!!] ?: return@forEach
-
-            animeSeasons.map { it.key }.toSortedSet().zipWithNext().forEach { (current, next) ->
-                if (current + 1 != next) {
-                    invalidAnimes.getOrPut(anime) { (animeSeasons[current] ?: ZonedDateTime.now()) to mutableSetOf() }.second
-                        .add(AnimeError(ErrorType.INVALID_CHAIN_SEASON, "$current -> $next"))
-                }
-            }
-        }
-
-        episodeMappingService.findAll()
-            .asSequence()
-            .sortedWith(
-                compareBy(
-                    { it.releaseDateTime },
-                    { it.season },
-                    { it.episodeType },
-                    { it.number }
-                )
-            ).groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
-            .values.forEach { episodes ->
-                val anime = episodes.first().anime!!
-                val audioLocales = allAudioLocales[anime.uuid!!] ?: return@forEach
-
-                if (episodes.first().episodeType == EpisodeType.EPISODE) {
-                    episodes.groupBy { it.releaseDateTime.toLocalDate() }
-                        .values.forEach {
-                            if (it.size > 3 && !(audioLocales.size == 1 && LangType.fromAudioLocale(anime.countryCode!!, audioLocales.first()) == LangType.VOICE)) {
-                                it.forEach { episodeMapping ->
-                                    invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
-                                        .add(AnimeError(ErrorType.INVALID_RELEASE_DATE, "S${episodeMapping.season} ${episodeMapping.releaseDateTime.toLocalDate()}[${it.size}]"))
-                                    return@forEach
-                                }
-                            }
-                        }
-                }
-
-                episodes.filter { it.number!! < 0 }
-                    .forEach { episodeMapping ->
-                        invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_EPISODE_NUMBER, StringUtils.toEpisodeMappingString(episodeMapping)))
-                    }
-
-                episodes.zipWithNext().forEach { (current, next) ->
-                    if (current.number!! + 1 != next.number!!) {
-                        invalidAnimes.getOrPut(current.anime!!) { current.releaseDateTime to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_CHAIN_EPISODE_NUMBER, "${StringUtils.toEpisodeMappingString(current)} -> ${StringUtils.toEpisodeMappingString(next)}"))
-                    }
-                }
-            }
-
-        return PageableDto(
-            data = invalidAnimes.asSequence()
-                .map { (anime, pair) ->
-                    AnimeAlertDto(
-                        animeFactory.toDto(anime),
-                        pair.first.withUTCString(),
-                        pair.second
-                    )
-                }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }
-                .drop((page - 1) * limit)
-                .take(limit)
-                .toSet(),
-            page = page,
-            limit = limit,
-            total = invalidAnimes.size.toLong()
-        )
-    }
-
     fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
         if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
             simulcast.uuid ?: simulcastService.save(simulcast)
@@ -371,110 +289,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return savedEntity
     }
 
-    fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
-        val anime = find(uuid) ?: return null
-
-        if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
-            anime.name = animeDto.name
-        }
-
-        if (animeDto.slug.isNotBlank() && animeDto.slug != anime.slug) {
-            val findBySlug = findBySlug(anime.countryCode!!, animeDto.slug)
-
-            if (findBySlug != null && findBySlug.uuid != anime.uuid) {
-                return merge(anime, findBySlug)
-            }
-
-            anime.slug = animeDto.slug
-        }
-
-        if (!animeDto.description.isNullOrBlank() && animeDto.description != anime.description) {
-            anime.description = animeDto.description
-        }
-
-        if (animeDto.thumbnail.isNullOrBlank().not()) {
-            attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.THUMBNAIL, url = animeDto.thumbnail!!)
-        }
-
-        if (animeDto.banner.isNullOrBlank().not()) {
-            attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.BANNER, url = animeDto.banner!!)
-        }
-
-        updateAnimeSimulcast(animeDto, anime)
-
-        val update = super.update(anime)
-        traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
-        return update
-    }
-
-    private fun updateAnimeSimulcast(animeDto: AnimeDto, anime: Anime) {
-        anime.simulcasts.clear()
-
-        animeDto.simulcasts?.forEach { simulcastDto ->
-            val simulcast = simulcastService.find(simulcastDto.uuid!!) ?: return@forEach
-
-            if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
-                anime.simulcasts.add(simulcast)
-            }
-        }
-    }
-
     override fun delete(entity: Anime) {
         episodeMappingService.findAllByAnime(entity).forEach { episodeMappingService.delete(it) }
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         animePlatformService.findAllByAnime(entity).forEach { animePlatformService.delete(it) }
         super.delete(entity)
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
-    }
-
-    fun merge(from: Anime, to: Anime): Anime {
-        episodeMappingService.findAllByAnime(from).forEach { episodeMapping ->
-            val findByAnimeSeasonEpisodeTypeNumber = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
-                to.uuid!!,
-                episodeMapping.season!!,
-                episodeMapping.episodeType!!,
-                episodeMapping.number!!
-            )
-
-            if (findByAnimeSeasonEpisodeTypeNumber != null) {
-                episodeVariantService.findAllByMapping(episodeMapping).forEach { episodeVariant ->
-                    episodeVariant.mapping = findByAnimeSeasonEpisodeTypeNumber
-                    episodeVariantService.update(episodeVariant)
-                }
-
-                episodeMappingService.delete(episodeMapping)
-                return@forEach
-            }
-
-            episodeMapping.anime = to
-            episodeMappingService.update(episodeMapping)
-        }
-
-        memberFollowAnimeService.findAllByAnime(from).forEach { memberFollowAnime ->
-            if (memberFollowAnimeService.existsByMemberAndAnime(memberFollowAnime.member!!, to)) {
-                memberFollowAnimeService.delete(memberFollowAnime)
-            } else {
-                memberFollowAnime.anime = to
-                memberFollowAnimeService.update(memberFollowAnime)
-            }
-        }
-
-        animePlatformService.findAllByAnime(from).forEach { animePlatform ->
-            val findByAnimePlatformAndId =
-                animePlatformService.findByAnimePlatformAndId(to, animePlatform.platform!!, animePlatform.platformId!!)
-
-            if (findByAnimePlatformAndId != null) {
-                animePlatformService.delete(animePlatform)
-                traceActionService.createTraceAction(animePlatform, TraceAction.Action.DELETE)
-                return@forEach
-            }
-
-            animePlatform.anime = to
-            animePlatformService.update(animePlatform)
-            traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
-        }
-
-        delete(from)
-        return to
     }
 }

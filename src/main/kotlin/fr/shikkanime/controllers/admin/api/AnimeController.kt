@@ -12,7 +12,7 @@ import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.AttachmentService
-import fr.shikkanime.utils.Constant
+import fr.shikkanime.services.admin.AnimeAdminService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -26,6 +26,7 @@ import java.util.*
 @Controller("$ADMIN/api/animes")
 class AnimeController : HasPageableRoute() {
     @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var animeAdminService: AnimeAdminService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var attachmentService: AttachmentService
 
@@ -33,10 +34,8 @@ class AnimeController : HasPageableRoute() {
     @Get
     @AdminSessionAuthenticated
     private fun forceUpdateAllAnimes(): Response {
-        val animes = animeService.findAll()
-        animes.forEach { it.lastUpdateDateTime = Constant.oldLastUpdateDateTime }
-        animeService.updateAll(animes)
-
+        animeAdminService.forceUpdateAll()
+        MapCache.invalidate(Anime::class.java)
         return Response.redirect(Link.ANIMES.href)
     }
 
@@ -44,9 +43,7 @@ class AnimeController : HasPageableRoute() {
     @Get
     @AdminSessionAuthenticated
     private fun forceUpdateAnime(@PathParam uuid: UUID): Response {
-        val anime = animeService.find(uuid) ?: return Response.notFound()
-        anime.lastUpdateDateTime = Constant.oldLastUpdateDateTime
-        animeService.update(anime)
+        animeAdminService.forceUpdate(uuid) ?: return Response.notFound()
         MapCache.invalidate(Anime::class.java)
         return Response.ok()
     }
@@ -68,7 +65,7 @@ class AnimeController : HasPageableRoute() {
         @PathParam uuid: UUID,
         @BodyParam animeDto: AnimeDto
     ): Response {
-        val updated = animeService.update(uuid, animeDto) ?: return Response.notFound()
+        val updated = animeAdminService.update(uuid, animeDto) ?: return Response.notFound()
         MapCache.invalidate(Anime::class.java)
         return Response.ok(animeFactory.toDto(updated))
     }
@@ -77,7 +74,7 @@ class AnimeController : HasPageableRoute() {
     @Delete
     @AdminSessionAuthenticated
     private fun deleteAnime(@PathParam uuid: UUID): Response {
-        animeService.delete(animeService.find(uuid) ?: return Response.notFound())
+        animeAdminService.delete(animeService.find(uuid) ?: return Response.notFound())
         MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.noContent()
     }
@@ -90,6 +87,6 @@ class AnimeController : HasPageableRoute() {
         @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(animeService.getAlerts(page, limit))
+        return Response.ok(animeAdminService.getAlerts(page, limit))
     }
 }
