@@ -72,17 +72,20 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         println(episodes)
 
         assertEquals(true, episodes.isNotEmpty())
-        assertEquals(4, episodes.size)
+        assertEquals(5, episodes.size)
         assertEquals("One Piece", episodes[0].anime)
         assertNotNull(episodes[0].description)
-        assertEquals("Run For Money", episodes[1].anime)
-        assertNotNull(episodes[1].description)
+        assertEquals("ja-JP", episodes[0].audioLocale)
+        assertEquals("fr-FR", episodes[1].audioLocale)
 
-        assertEquals("MONSTERS", episodes[2].anime)
-        assertEquals("ja-JP", episodes[2].audioLocale)
+        assertEquals("Run For Money", episodes[2].anime)
         assertNotNull(episodes[2].description)
-        assertEquals("fr-FR", episodes[3].audioLocale)
+
+        assertEquals("MONSTERS", episodes[3].anime)
+        assertEquals("ja-JP", episodes[3].audioLocale)
         assertNotNull(episodes[3].description)
+        assertEquals("fr-FR", episodes[4].audioLocale)
+        assertNotNull(episodes[4].description)
     }
 
     @Test

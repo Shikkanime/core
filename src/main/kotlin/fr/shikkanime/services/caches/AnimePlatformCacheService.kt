@@ -13,6 +13,5 @@ class AnimePlatformCacheService : ICacheService {
         "AnimePlatformCacheService.getAll",
         classes = listOf(Anime::class.java),
         key = StringUtils.EMPTY_STRING,
-    ) { animePlatformService.findAll() }
-        .filter { it.anime!!.uuid == anime.uuid }
+    ) { animePlatformService.findAll().groupBy { it.anime!!.uuid } }[anime.uuid] ?: emptyList()
 }
