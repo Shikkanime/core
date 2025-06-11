@@ -36,11 +36,11 @@ import io.ktor.server.sessions.*
 import io.ktor.util.*
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
-import kotlin.reflect.KType
 import kotlin.reflect.full.*
 import kotlin.reflect.jvm.isAccessible
 import kotlin.reflect.jvm.jvmErasure
@@ -48,6 +48,17 @@ import kotlin.reflect.jvm.jvmErasure
 private val logger = LoggerFactory.getLogger("Routing")
 private val callStartTime = AttributeKey<ZonedDateTime>("CallStartTime")
 private val attributeKey = AttributeKey<Boolean>("isBot")
+private val fromStringConverters = mapOf<KClass<*>, (String?) -> Any?>(
+    UUID::class to { it?.let(UUID::fromString) },
+    CountryCode::class to { CountryCode.fromNullable(it) },
+    Platform::class to { Platform.fromNullable(it) },
+    String::class to { it },
+    Int::class to { it?.toIntOrNull() },
+    Long::class to { it?.toLongOrNull() }
+)
+private val jvmErasureCache = ConcurrentHashMap<KParameter, KClass<*>>()
+private val mapKClass = Map::class
+private val arrayLangTypeKClass = Array<LangType>::class
 
 fun Application.configureRouting() {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
@@ -74,40 +85,43 @@ fun Application.configureRouting() {
 }
 
 private fun setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
-    val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS)
-    val authorizedDomainsString = authorizedDomains.joinToString(StringUtils.SPACE_STRING).trim()
+    val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS).joinToString(StringUtils.SPACE_STRING).trim()
+    val response = call.response
 
-    call.response.header(
+    response.header(
         HttpHeaders.StrictTransportSecurity,
         "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
     )
 
-    call.response.header(
+    response.header(
         "Content-Security-Policy",
         "default-src 'self';" +
-                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomainsString;" +
-                "font-src 'self' https://cdn.jsdelivr.net $authorizedDomainsString; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomainsString;" +
-                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl} $authorizedDomainsString;" +
-                "connect-src 'self' ${Constant.apiUrl} $authorizedDomainsString;"
+                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomains;" +
+                "font-src 'self' https://cdn.jsdelivr.net $authorizedDomains; " +
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomains;" +
+                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl} $authorizedDomains;" +
+                "connect-src 'self' ${Constant.apiUrl} $authorizedDomains;"
     )
 
-    call.response.header("X-Frame-Options", "DENY")
-    call.response.header("X-Content-Type-Options", "nosniff")
-    call.response.header("Referrer-Policy", "no-referrer")
-    call.response.header("Permissions-Policy", "geolocation=(), microphone=()")
-    call.response.header("X-XSS-Protection", "1; mode=block")
+    response.header("X-Frame-Options", "DENY")
+    response.header("X-Content-Type-Options", "nosniff")
+    response.header("Referrer-Policy", "no-referrer")
+    response.header("Permissions-Policy", "geolocation=(), microphone=()")
+    response.header("X-XSS-Protection", "1; mode=block")
 }
 
 fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
-    val startTime = call.attributes.getOrNull(callStartTime)
+    val attributes = call.attributes
+    val request = call.request
+
+    val startTime = attributes.getOrNull(callStartTime)
     val duration = startTime?.let { ZonedDateTime.now().toInstant().toEpochMilli() - it.toInstant().toEpochMilli() } ?: -1
-    val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
-    val userAgent = call.request.userAgent() ?: "Unknown"
-    val isBot = call.attributes.getOrNull(attributeKey) == true
+    val ipAddress = request.header("X-Forwarded-For") ?: request.origin.remoteHost
+    val userAgent = request.userAgent() ?: "Unknown"
+    val isBot = attributes.getOrNull(attributeKey) == true
     val status = statusCode?.value ?: call.response.status()?.value ?: 0
-    val httpMethod = call.request.httpMethod.value
-    val uri = call.request.uri
+    val httpMethod = request.httpMethod.value
+    val uri = request.uri
 
     logger.info("[$ipAddress - $userAgent${if (isBot) " (BOT)" else StringUtils.EMPTY_STRING}] ($status - $duration ms) $httpMethod $uri")
 }
@@ -177,7 +191,7 @@ private suspend fun handleRequest(
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
     try {
-        val response = callMethodWithParameters(method, controller, call)
+        val response = callMethodWithParameters(method, controller, call, parameters)
 
         if (method.hasAnnotation<Cached>()) {
             val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
@@ -235,15 +249,15 @@ fun replacePathWithParameters(path: String, parameters: Map<String, List<String>
         acc.replace("{$param}", values.joinToString(", "))
     }
 
-private suspend fun callMethodWithParameters(method: KFunction<*>, controller: Any, call: ApplicationCall): Response {
+private suspend fun callMethodWithParameters(method: KFunction<*>, controller: Any, call: ApplicationCall, parameters: Map<String, List<String>>): Response {
     val methodParams = method.parameters.associateWith { kParameter ->
         when {
             kParameter.name.isNullOrBlank() -> controller
             kParameter.hasAnnotation<JWTUser>() -> call.principal<JWTPrincipal>()?.payload?.getClaim("uuid")?.asString()?.let { UUID.fromString(it) }
             kParameter.hasAnnotation<AdminSessionUser>() -> call.principal<TokenDto>()
             kParameter.hasAnnotation<HttpHeader>() -> handleHttpHeader(kParameter, call)
-            kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, call)
-            kParameter.hasAnnotation<QueryParam>() -> handleQueryParam(kParameter, call)
+            kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, parameters)
+            kParameter.hasAnnotation<QueryParam>() -> handleQueryParam(kParameter, parameters)
             kParameter.hasAnnotation<BodyParam>() -> handleBodyParam(kParameter, call)
             else -> throw Exception("Unknown parameter ${kParameter.name}")
         }
@@ -259,51 +273,42 @@ private suspend fun callMethodWithParameters(method: KFunction<*>, controller: A
     }
 }
 
-private fun fromString(value: String?, type: KType): Any? {
-    if (type.jvmErasure == Array<LangType>::class) {
+private fun fromString(value: String?, jvmErasure: KClass<*>): Any? {
+    if (jvmErasure == arrayLangTypeKClass) {
         return value?.takeIf { it.isNotBlank() }
             ?.split(",")
             ?.map(LangType::valueOf)
             ?.toTypedArray()
     }
 
-    val converters = mapOf<KClass<*>, (String?) -> Any?>(
-        UUID::class to { it?.let(UUID::fromString) },
-        CountryCode::class to { CountryCode.fromNullable(it) },
-        Platform::class to { Platform.fromNullable(it) },
-        String::class to { it },
-        Int::class to { it?.toIntOrNull() },
-        Long::class to { it?.toLongOrNull() }
-    )
-
-    return converters[type.jvmErasure]?.invoke(value)
+    return fromStringConverters[jvmErasure]?.invoke(value)
 }
 
 private fun handleHttpHeader(kParameter: KParameter, call: ApplicationCall): Any? {
     val name = kParameter.findAnnotation<HttpHeader>()!!.name
     val value = call.request.headers[name]
-    return fromString(value, kParameter.type)
+    return fromString(value, jvmErasureCache.getOrPut(kParameter) { kParameter.type.jvmErasure })
 }
 
-private fun handlePathParam(kParameter: KParameter, call: ApplicationCall): Any? {
+private fun handlePathParam(kParameter: KParameter, parameters: Map<String, List<String>>): Any? {
     val name = kParameter.findAnnotation<PathParam>()?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
-    val value = name?.let { call.parameters[name] }
-    return fromString(value, kParameter.type)
+    val value = name?.let { parameters[name]?.firstOrNull() }
+    return fromString(value, jvmErasureCache.getOrPut(kParameter) { kParameter.type.jvmErasure })
 }
 
-private fun handleQueryParam(kParameter: KParameter, call: ApplicationCall): Any? {
+private fun handleQueryParam(kParameter: KParameter, parameters: Map<String, List<String>>): Any? {
     val annotation = kParameter.findAnnotation<QueryParam>()
-    val isMapType = kParameter.type.jvmErasure == Map::class
+    val jvmErasure = jvmErasureCache.getOrPut(kParameter) { kParameter.type.jvmErasure }
+    val annotationName = annotation?.name
 
-    if (annotation?.name.isNullOrBlank() && isMapType) {
-        return call.request.queryParameters.toMap().mapValues { it.value.first() }
+    if (annotationName.isNullOrBlank() && jvmErasure == mapKClass) {
+        return parameters.mapValues { it.value.first() }
     }
 
-    val paramName = annotation?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
-    val paramValue = paramName?.let { call.request.queryParameters[it] }
-        ?: annotation?.defaultValue?.takeIf { it.isNotBlank() }
+    val paramName = annotationName?.takeIf { it.isNotBlank() } ?: kParameter.name
+    val paramValue = paramName?.let { parameters[it]?.firstOrNull() } ?: annotation?.defaultValue?.takeIf { it.isNotBlank() }
 
-    return fromString(paramValue, kParameter.type)
+    return fromString(paramValue, jvmErasure)
 }
 
 private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCall): Any {

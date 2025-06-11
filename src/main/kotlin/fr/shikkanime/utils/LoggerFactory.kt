@@ -2,25 +2,29 @@ package fr.shikkanime.utils
 
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.logging.*
-import java.util.logging.Formatter
 
 class LoggerFactory {
     class LogFormatter : Formatter() {
-        private val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+        private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+
         override fun format(record: LogRecord?): String {
             val message = formatMessage(record)
-            val sw = StringWriter()
-            val pw = PrintWriter(sw)
-            pw.println()
-            record?.thrown?.printStackTrace(pw)
-            pw.close()
-            val throwable: String = sw.toString()
+
+            val throwable = record?.thrown?.let {
+                val sw = StringWriter()
+                val pw = PrintWriter(sw)
+                pw.println()
+                it.printStackTrace(pw)
+                pw.close()
+                sw.toString()
+            } ?: System.lineSeparator()
+
             // %d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
             // Use this format for logback
-            return "${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName} ${record?.loggerName} - ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else StringUtils.EMPTY_STRING}"
+            return "${ZonedDateTime.now().format(dateTimeFormatter)} ${record?.level?.localizedName} ${record?.loggerName} - $message$throwable"
         }
     }
 
