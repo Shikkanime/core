@@ -60,6 +60,19 @@ private val jvmErasureCache = ConcurrentHashMap<KParameter, KClass<*>>()
 private val mapKClass = Map::class
 private val arrayLangTypeKClass = Array<LangType>::class
 
+private const val STRICT_TRANSPORT_SECURITY_VALUE = "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
+private const val CONTENT_SECURITY_POLICY_HEADER = "Content-Security-Policy"
+private const val X_FRAME_OPTIONS_HEADER = "X-Frame-Options"
+private const val X_FRAME_OPTIONS_VALUE = "DENY"
+private const val X_CONTENT_TYPE_OPTIONS_HEADER = "X-Content-Type-Options"
+private const val X_CONTENT_TYPE_OPTIONS_VALUE = "nosniff"
+private const val REFERRER_POLICY_HEADER = "Referrer-Policy"
+private const val REFERRER_POLICY_VALUE = "no-referrer"
+private const val PERMISSIONS_POLICY_HEADER = "Permissions-Policy"
+private const val PERMISSIONS_POLICY_VALUE = "geolocation=(), microphone=()"
+private const val X_XSS_PROTECTION_HEADER = "X-XSS-Protection"
+private const val X_XSS_PROTECTION_VALUE = "1; mode=block"
+
 fun Application.configureRouting() {
     val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 
@@ -86,28 +99,21 @@ fun Application.configureRouting() {
 
 private fun setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
     val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS).joinToString(StringUtils.SPACE_STRING).trim()
-    val response = call.response
 
-    response.header(
-        HttpHeaders.StrictTransportSecurity,
-        "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
-    )
-
-    response.header(
-        "Content-Security-Policy",
-        "default-src 'self';" +
-                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomains;" +
+    call.response.headers.apply {
+        append(HttpHeaders.StrictTransportSecurity, STRICT_TRANSPORT_SECURITY_VALUE)
+        append(CONTENT_SECURITY_POLICY_HEADER, "default-src 'self'; " +
+                "style-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomains; " +
                 "font-src 'self' https://cdn.jsdelivr.net $authorizedDomains; " +
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomains;" +
-                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl} $authorizedDomains;" +
-                "connect-src 'self' ${Constant.apiUrl} $authorizedDomains;"
-    )
-
-    response.header("X-Frame-Options", "DENY")
-    response.header("X-Content-Type-Options", "nosniff")
-    response.header("Referrer-Policy", "no-referrer")
-    response.header("Permissions-Policy", "geolocation=(), microphone=()")
-    response.header("X-XSS-Protection", "1; mode=block")
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net $authorizedDomains; " +
+                "img-src data: 'self' 'unsafe-inline' 'unsafe-eval' ${Constant.apiUrl} ${Constant.baseUrl} $authorizedDomains; " +
+                "connect-src 'self' ${Constant.apiUrl} $authorizedDomains;")
+        append(X_FRAME_OPTIONS_HEADER, X_FRAME_OPTIONS_VALUE)
+        append(X_CONTENT_TYPE_OPTIONS_HEADER, X_CONTENT_TYPE_OPTIONS_VALUE)
+        append(REFERRER_POLICY_HEADER, REFERRER_POLICY_VALUE)
+        append(PERMISSIONS_POLICY_HEADER, PERMISSIONS_POLICY_VALUE)
+        append(X_XSS_PROTECTION_HEADER, X_XSS_PROTECTION_VALUE)
+    }
 }
 
 fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
@@ -116,7 +122,7 @@ fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
 
     val startTime = attributes.getOrNull(callStartTime)
     val duration = startTime?.let { ZonedDateTime.now().toInstant().toEpochMilli() - it.toInstant().toEpochMilli() } ?: -1
-    val ipAddress = request.header("X-Forwarded-For") ?: request.origin.remoteHost
+    val ipAddress = request.header(HttpHeaders.XForwardedFor) ?: request.origin.remoteHost
     val userAgent = request.userAgent() ?: "Unknown"
     val isBot = attributes.getOrNull(attributeKey) == true
     val status = statusCode?.value ?: call.response.status()?.value ?: 0
@@ -224,7 +230,7 @@ suspend fun handleTemplateResponse(
     replacedPath: String,
     response: Response
 ) {
-    val ipAddress = call.request.header("X-Forwarded-For") ?: call.request.origin.remoteHost
+    val ipAddress = call.request.header(HttpHeaders.XForwardedFor) ?: call.request.origin.remoteHost
     val userAgent = call.request.userAgent() ?: "Unknown"
     require(response.data is Map<*, *>) { "Data must be a map" }
     val model = response.data["model"]
