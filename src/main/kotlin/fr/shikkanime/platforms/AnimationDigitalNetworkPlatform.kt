@@ -28,8 +28,7 @@ private const val SHOW_TYPE_OAV = "OAV"
 
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
 
     override fun getPlatform(): Platform = Platform.ANIM
 

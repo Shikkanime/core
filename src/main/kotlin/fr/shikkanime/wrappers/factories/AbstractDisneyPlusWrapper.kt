@@ -66,11 +66,11 @@ abstract class AbstractDisneyPlusWrapper {
             )
             require(response.status == HttpStatusCode.OK) { "Failed to get access token (${response.status.value})" }
 
-            ObjectParser.fromJson(response.bodyAsText())
+            requireNotNull(ObjectParser.fromJson(response.bodyAsText())
                 .getAsJsonObject("extensions")
                 .getAsJsonObject("sdk")
                 .getAsJsonObject("token")
-                .getAsString("accessToken")!!
+                .getAsString("accessToken")) { "Access token is null or empty"}
         }
     }
 

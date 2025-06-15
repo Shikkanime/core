@@ -67,11 +67,11 @@ class PrimeVideoPlatform :
         zonedDateTime: ZonedDateTime,
         episodeType: EpisodeType,
     ): List<Episode> {
-        require(episode.audioLocales.isNotEmpty()) { "Audio locales are empty" }
-        require(episode.subtitleLocales.isNotEmpty()) { "Subtitle locales are empty" }
+        val isDubbed = countryCode.locale in episode.audioLocales
+        val subtitles = episode.subtitleLocales
 
-        if (countryCode.locale !in episode.subtitleLocales)
-            throw EpisodeNoSubtitlesOrVoiceException("Episode ${episode.show.name} (${episode.season}x${episode.number}) does not have subtitles for $countryCode")
+        if (!isDubbed && (subtitles.isEmpty() || countryCode.locale !in subtitles))
+            throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
         return episode.audioLocales.map {
             Episode(

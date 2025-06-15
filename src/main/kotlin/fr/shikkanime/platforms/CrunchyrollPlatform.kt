@@ -19,11 +19,8 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<AbstractCrunchyrollWrapper.BrowseObject>>() {
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     override fun getPlatform(): Platform = Platform.CRUN
 
