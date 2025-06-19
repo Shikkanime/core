@@ -37,9 +37,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
+        val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
+        val lastImageUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2).toLong())
 
-        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdate(lastDateTime)
+        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdate(lastUpdateDateTime, lastImageUpdateDateTime)
         logger.info("Found ${allPlatformEpisodes.size} episodes to update")
 
         val needUpdateEpisodes = allPlatformEpisodes
@@ -57,7 +58,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
-            updateEpisodeMapping(mapping, identifiers, allPreviousAndNext, lastDateTime, zonedDateTime, needRecalculate, needRefreshCache)
+            updateEpisodeMapping(mapping, identifiers, allPreviousAndNext, lastImageUpdateDateTime, zonedDateTime, needRecalculate, needRefreshCache)
         }
 
         processNewEpisodes(allPreviousAndNext, identifiers, needRecalculate, needRefreshCache)
@@ -83,7 +84,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         mapping: EpisodeMapping,
         identifiers: HashSet<String>,
         allPreviousAndNext: MutableList<Episode>,
-        lastDateTime: ZonedDateTime,
+        lastImageUpdateDateTime: ZonedDateTime,
         zonedDateTime: ZonedDateTime,
         needRecalculate: AtomicBoolean,
         needRefreshCache: AtomicBoolean
@@ -94,7 +95,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val tmpIdentifiers = identifiers.toHashSet()
 
-        val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastDateTime, identifiers) } }
+        val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastImageUpdateDateTime, identifiers) } }
             .sortedBy { it.platform.sortIndex }
 
         if (tmpIdentifiers != identifiers) {
@@ -382,12 +383,12 @@ class UpdateEpisodeMappingJob : AbstractJob {
     private suspend fun retrievePlatformEpisode(
         episodeMapping: EpisodeMapping,
         episodeVariant: EpisodeVariant,
-        lastDateTime: ZonedDateTime,
+        lastImageUpdateDateTime: ZonedDateTime,
         identifiers: HashSet<String>
     ): List<Episode> {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
-        val isImageUpdate = attachmentService.findByEntityUuidTypeAndActive(episodeMapping.uuid!!, ImageType.BANNER)?.url == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime.isAfterOrEqual(lastDateTime)
+        val isImageUpdate = attachmentService.findByEntityUuidTypeAndActive(episodeMapping.uuid!!, ImageType.BANNER)?.url == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime.isAfterOrEqual(lastImageUpdateDateTime)
         val episodeType = episodeMapping.episodeType!!
         val audioLocale = episodeVariant.audioLocale!!
         val releaseDateTime = episodeVariant.releaseDateTime

@@ -76,7 +76,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllNeedUpdate(lastDateTime: ZonedDateTime): List<EpisodeMapping> {
+    fun findAllNeedUpdate(lastUpdateDateTime: ZonedDateTime, lastImageUpdateDateTime: ZonedDateTime): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
@@ -98,11 +98,11 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                     cb.or(
                         cb.lessThanOrEqualTo(
                             root[EpisodeMapping_.lastUpdateDateTime],
-                            lastDateTime
+                            lastUpdateDateTime
                         ),
                         cb.and(
                             cb.equal(attachmentSubquery, 1L),
-                            cb.greaterThanOrEqualTo(root[EpisodeMapping_.releaseDateTime], lastDateTime),
+                            cb.greaterThanOrEqualTo(root[EpisodeMapping_.releaseDateTime], lastImageUpdateDateTime),
                         ),
                     ),
                 )
