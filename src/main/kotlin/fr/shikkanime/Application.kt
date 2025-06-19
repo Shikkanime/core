@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
         // Every hour
         JobManager.scheduleJob("0 0 * * * ?", UpdateAnimeJob::class.java)
         // Every day at midnight
-        JobManager.scheduleJob("0 0 0 * * ?", DeleteOldMetricsJob::class.java)
+        JobManager.scheduleJob("0 0 0 * * ?", DailyJob::class.java)
         JobManager.start()
     } else {
         logger.warning("Jobs are disabled, use --enable-jobs to enable them")

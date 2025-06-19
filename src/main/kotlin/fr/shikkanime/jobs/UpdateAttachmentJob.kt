@@ -19,10 +19,7 @@ class UpdateAttachmentJob : AbstractJob {
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ATTACHMENT_DELAY, 30).toLong())
-        
-        attachmentService.cleanUnusedAttachments()
         val attachments = attachmentService.findAllNeededUpdate(lastUpdateDateTime).shuffled().toList()
-
         logger.info("Found ${attachments.size} attachments to update")
 
         if (attachments.isEmpty()) {
