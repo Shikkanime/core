@@ -20,6 +20,11 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     override fun login() {
         if (isInitialized) return
 
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.THREADS_ENABLED)) {
+            logger.info("Threads is disabled in configuration")
+            return
+        }
+
         try {
             this.token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_ACCESS_TOKEN))
             require(token!!.isNotBlank()) { "Threads access token is empty" }

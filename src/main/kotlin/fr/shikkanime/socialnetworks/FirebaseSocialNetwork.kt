@@ -6,6 +6,7 @@ import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.*
 import com.google.inject.Inject
 import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
@@ -25,6 +26,11 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
     override fun login() {
         if (isInitialized)
             return
+
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.FIREBASE_ENABLED)) {
+            logger.info("Firebase is disabled in configuration")
+            return
+        }
 
         try {
             val file = File(Constant.dataFolder, "firebase.json")

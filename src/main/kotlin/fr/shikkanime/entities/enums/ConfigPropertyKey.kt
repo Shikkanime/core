@@ -53,4 +53,9 @@ enum class ConfigPropertyKey(val key: String) {
     ASYNC_FETCH_EPISODE_IMAGES("async_fetch_episode_images"),
     ANIME_PLATFORM_DEPRECATED_DURATION("anime_platform_deprecated_duration"),
     UPDATE_IMAGE_EPISODE_DELAY("update_image_episode_delay"),
+    BSKY_ENABLED("bsky_enabled"),
+    DISCORD_ENABLED("discord_enabled"),
+    FIREBASE_ENABLED("firebase_enabled"),
+    THREADS_ENABLED("threads_enabled"),
+    TWITTER_ENABLED("twitter_enabled"),
 }

@@ -22,6 +22,11 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     override fun login() {
         if (isInitialized) return
 
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.BSKY_ENABLED)) {
+            logger.info("BlueSky is disabled in configuration")
+            return
+        }
+
         try {
             val identifier = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.BSKY_IDENTIFIER))
             val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.BSKY_PASSWORD))

@@ -18,6 +18,11 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
     override fun login() {
         if (isInitialized) return
 
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.TWITTER_ENABLED)) {
+            logger.info("Twitter is disabled in configuration")
+            return
+        }
+
         try {
             val consumerKey =
                 requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_CONSUMER_KEY))

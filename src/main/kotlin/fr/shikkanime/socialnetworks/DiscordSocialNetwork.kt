@@ -34,6 +34,11 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
     override fun login() {
         if (isInitialized) return
 
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.DISCORD_ENABLED)) {
+            logger.info("Discord is disabled in configuration")
+            return
+        }
+
         try {
             val token = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.DISCORD_TOKEN))
             require(token.isNotBlank()) { "Discord token is empty" }

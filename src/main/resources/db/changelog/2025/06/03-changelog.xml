@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1750883909203"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'bsky_enabled'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="bsky_enabled"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'discord_enabled'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="discord_enabled"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'firebase_enabled'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="firebase_enabled"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'threads_enabled'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="threads_enabled"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'twitter_enabled'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="twitter_enabled"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
