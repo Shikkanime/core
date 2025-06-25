@@ -11,12 +11,168 @@ import fr.shikkanime.utils.MapCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.time.ZonedDateTime
+import java.util.stream.Stream
 
 class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     @Inject lateinit var platform: AnimationDigitalNetworkPlatform
+
+    data class EpisodeTestCase(
+        val date: String,
+        val useApiFile: Boolean = true,
+        val simulcasts: List<String> = emptyList(),
+        val needsSimulcastDetectionRegexConfig: Boolean = false,
+        val assertions: (List<AbstractPlatform.Episode>) -> Unit
+    )
+
+    companion object {
+        @JvmStatic
+        private fun adnTestCases(): Stream<EpisodeTestCase> = Stream.of(
+            EpisodeTestCase(
+                date = "2023-12-05T21:59:59Z",
+                useApiFile = false,
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals(2, episodes.size)
+                    assertEquals("Paradox Live THE ANIMATION", episodes[0].anime)
+                    assertNotNull(episodes[0].description)
+                    assertEquals("Helck", episodes[1].anime)
+                    assertNotNull(episodes[1].description)
+                }
+            ),
+            EpisodeTestCase(
+                date = "2024-01-05T21:59:59Z",
+                useApiFile = false,
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals(1, episodes.size)
+                    assertEquals("Pon no Michi", episodes[0].anime)
+                    assertNotNull(episodes[0].description)
+                }
+            ),
+            EpisodeTestCase(
+                date = "2024-01-21T21:59:59Z",
+                useApiFile = false,
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals(5, episodes.size)
+                    val onePieceEpisodes = episodes.filter { it.anime == "One Piece" }
+                    assertEquals(2, onePieceEpisodes.size)
+                    assertTrue(onePieceEpisodes.any { it.audioLocale == "ja-JP" })
+                    assertTrue(onePieceEpisodes.any { it.audioLocale == "fr-FR" })
+                    assertTrue(episodes.any { it.anime == "Run For Money" })
+                    val monstersEpisodes = episodes.filter { it.anime == "MONSTERS" }
+                    assertEquals(2, monstersEpisodes.size)
+                    assertTrue(monstersEpisodes.any { it.audioLocale == "ja-JP" })
+                    assertTrue(monstersEpisodes.any { it.audioLocale == "fr-FR" })
+                }
+            ),
+            EpisodeTestCase(
+                date = "2022-12-09T23:59:59Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals(1, episodes.size)
+                    assertEquals("My Master Has No Tail", episodes[0].anime)
+                    assertNotNull(episodes[0].description)
+                }
+            ),
+            EpisodeTestCase(
+                date = "2022-03-18T23:59:59Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals(1, episodes.size)
+                    assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime)
+                    assertNotNull(episodes[0].description)
+                }
+            ),
+            EpisodeTestCase(
+                date = "2024-02-01T23:59:59Z",
+                useApiFile = false,
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals(4, episodes.size)
+                    assertTrue(episodes.any { it.anime == "Demon Slave" })
+                    assertTrue(episodes.any { it.anime == "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!" })
+                    assertTrue(episodes.any { it.anime == "Urusei Yatsura" })
+                }
+            ),
+            EpisodeTestCase(
+                date = "2024-04-10T08:00:00Z",
+                needsSimulcastDetectionRegexConfig = true,
+                assertions = { episodes ->
+                    assertTrue(episodes.isEmpty())
+                }
+            ),
+            EpisodeTestCase(
+                date = "2024-04-14T09:00:00Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertEquals("One Piece", episodes[0].anime)
+                    assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
+                    assertEquals(13, episodes[0].number)
+                }
+            ),
+            EpisodeTestCase(
+                date = "2023-07-11T23:59:59Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isEmpty())
+                }
+            ),
+            EpisodeTestCase(
+                date = "2022-08-06T23:59:59Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertTrue(episodes.any { it.anime == "Dragon Quest - The Adventures of Dai" })
+                    assertTrue(episodes.any { it.anime == "Kingdom" })
+                }
+            ),
+            EpisodeTestCase(
+                date = "2024-07-07T09:30:00Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertTrue(episodes.any { it.anime == "FAIRY TAIL 100 YEARS QUEST" })
+                }
+            ),
+            EpisodeTestCase(
+                date = "2022-09-27T23:59:59Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertTrue(episodes.any { it.anime == "Overlord" })
+                }
+            ),
+            EpisodeTestCase(
+                date = "2025-04-20T07:00:00Z",
+                useApiFile = false,
+                simulcasts = listOf("Witch Watch"),
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertTrue(episodes.any { it.anime == "WITCH WATCH" })
+                }
+            ),
+            EpisodeTestCase(
+                date = "2025-05-09T07:00:00Z",
+                useApiFile = false,
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    val animeEpisodes = episodes.filter { it.anime == "OVERLORD: The Sacred Kingdom" }
+                    assertEquals(2, animeEpisodes.size)
+                    assertEquals(EpisodeType.FILM, animeEpisodes.first().episodeType)
+                }
+            ),
+            EpisodeTestCase(
+                date = "2025-06-25T07:00:00Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertTrue(episodes.none { it.anime == "Eyeshield 2" })
+                    val animeEpisodes = episodes.filter { it.anime == "Eyeshield 21" }
+                    assertEquals(290, animeEpisodes.size)
+                }
+            )
+        )
+    }
 
     @BeforeEach
     override fun setUp() {
@@ -31,6 +187,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Kingdom" })
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Demon Slave" })
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Overlord" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Eyeshield 21" })
     }
 
     @AfterEach
@@ -41,96 +198,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         platform.reset()
     }
 
-    @Test
-    fun `fetchEpisodes for 2023-12-05`() {
-        val zonedDateTime = ZonedDateTime.parse("2023-12-05T21:59:59Z")
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals(2, episodes.size)
-        assertEquals("Paradox Live THE ANIMATION", episodes[0].anime)
-        assertNotNull(episodes[0].description)
-        assertEquals("Helck", episodes[1].anime)
-        assertNotNull(episodes[1].description)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2024-01-05`() {
-        val zonedDateTime = ZonedDateTime.parse("2024-01-05T21:59:59Z")
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals(1, episodes.size)
-        assertEquals("Pon no Michi", episodes[0].anime)
-        assertNotNull(episodes[0].description)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2024-01-21`() {
-        val zonedDateTime = ZonedDateTime.parse("2024-01-21T21:59:59Z")
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-        println(episodes)
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals(5, episodes.size)
-        assertEquals("One Piece", episodes[0].anime)
-        assertNotNull(episodes[0].description)
-        assertEquals("ja-JP", episodes[0].audioLocale)
-        assertEquals("fr-FR", episodes[1].audioLocale)
-
-        assertEquals("Run For Money", episodes[2].anime)
-        assertNotNull(episodes[2].description)
-
-        assertEquals("MONSTERS", episodes[3].anime)
-        assertEquals("ja-JP", episodes[3].audioLocale)
-        assertNotNull(episodes[3].description)
-        assertEquals("fr-FR", episodes[4].audioLocale)
-        assertNotNull(episodes[4].description)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2022-12-09`() {
-        val zonedDateTime = ZonedDateTime.parse("2022-12-09T23:59:59Z")
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals(1, episodes.size)
-        assertEquals("My Master Has No Tail", episodes[0].anime)
-        assertNotNull(episodes[0].description)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2022-03-18`() {
-        val zonedDateTime = ZonedDateTime.parse("2022-03-18T23:59:59Z")
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals(1, episodes.size)
-        assertEquals("Les Héros de la Galaxie : Die Neue These", episodes[0].anime)
-        assertNotNull(episodes[0].description)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2024-02-01`() {
-        val zonedDateTime = ZonedDateTime.parse("2024-02-01T23:59:59Z")
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-        println(episodes)
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals(4, episodes.size)
-        assertEquals("Demon Slave", episodes[0].anime)
-        assertNotNull(episodes[0].description)
-        assertEquals(
-            "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!",
-            episodes[1].anime
-        )
-        assertNotNull(episodes[1].description)
-        assertEquals("Urusei Yatsura", episodes[2].anime)
-        assertNotNull(episodes[2].description)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2024-04-10`() {
+    private fun setupSimulcastDetectionRegexConfig() {
         configService.save(
             Config(
                 propertyKey = ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX.key,
@@ -138,146 +206,33 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
             )
         )
         MapCache.invalidate(Config::class.java)
+    }
 
-        val s = "2024-04-10T08:00:00Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
+    @ParameterizedTest
+    @MethodSource("adnTestCases")
+    fun fetchEpisodes(testCase: EpisodeTestCase) {
+        if (testCase.needsSimulcastDetectionRegexConfig) {
+            setupSimulcastDetectionRegexConfig()
+        }
 
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
+        testCase.simulcasts.forEach {
+            platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = it })
+        }
+
+        val zonedDateTime = ZonedDateTime.parse(testCase.date)
+
+        val episodes = if (testCase.useApiFile) {
+            val s = testCase.date
+            platform.fetchEpisodes(
+                zonedDateTime,
                 ClassLoader.getSystemClassLoader()
                     .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?: throw Exception("File not found")
+                    ?.let { File(it) },
             )
-        )
+        } else {
+            platform.fetchEpisodes(zonedDateTime)
+        }
 
-        assertEquals(true, episodes.isEmpty())
-    }
-
-    @Test
-    fun `fetchEpisodes for 2024-04-14`() {
-        val s = "2024-04-14T09:00:00Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?: throw Exception("File not found")
-            )
-        )
-
-        assertEquals(true, episodes.isNotEmpty())
-        assertEquals("One Piece", episodes[0].anime)
-        assertEquals(EpisodeType.SPECIAL, episodes[0].episodeType)
-        assertEquals(13, episodes[0].number)
-    }
-
-    @Test
-    fun `fetchEpisodes for 2023-07-11`() {
-        val s = "2023-07-11T23:59:59Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?: throw Exception("File not found")
-            )
-        )
-
-        assertEquals(true, episodes.isEmpty())
-    }
-
-    @Test
-    fun `fetchEpisodes for 2022-08-06`() {
-        val s = "2022-08-06T23:59:59Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?: throw Exception("File not found")
-            )
-        )
-
-        episodes.forEach(::println)
-
-        assertTrue(episodes.isNotEmpty())
-        assertTrue(episodes.any { it.anime == "Dragon Quest - The Adventures of Dai" })
-        assertTrue(episodes.any { it.anime == "Kingdom" })
-    }
-
-    @Test
-    fun `fetchEpisodes for 2024-07-07`() {
-        val s = "2024-07-07T09:30:00Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?: throw Exception("File not found")
-            )
-        )
-
-        println(episodes)
-
-        assertTrue(episodes.isNotEmpty())
-        assertTrue(episodes.any { it.anime == "FAIRY TAIL 100 YEARS QUEST" })
-    }
-
-    @Test
-    fun `fetchEpisodes for 2022-09-27`() {
-        val s = "2022-09-27T23:59:59Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?: throw Exception("File not found")
-            )
-        )
-
-        println(episodes)
-
-        assertTrue(episodes.isNotEmpty())
-        assertTrue(episodes.any { it.anime == "Overlord" })
-    }
-
-    @Test
-    fun `fetchEpisodes for 2025-04-20`() {
-        val s = "2025-04-20T07:00:00Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-
-        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast(2L).apply { name = "Witch Watch" })
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-
-        println(episodes)
-
-        assertTrue(episodes.isNotEmpty())
-        assertTrue(episodes.any { it.anime == "WITCH WATCH" })
-    }
-
-    @Test
-    fun `fetchEpisodes for 2025-05-09`() {
-        val s = "2025-05-09T07:00:00Z"
-        val zonedDateTime = ZonedDateTime.parse(s)
-        val episodes = platform.fetchEpisodes(zonedDateTime)
-
-        println(episodes)
-
-        assertTrue(episodes.isNotEmpty())
-        assertTrue(episodes.any { it.anime == "OVERLORD: The Sacred Kingdom" })
-        val animeEpisodes = episodes.filter { it.anime == "OVERLORD: The Sacred Kingdom" }
-        assertEquals(2, animeEpisodes.size)
-        assertEquals(EpisodeType.FILM, animeEpisodes.first().episodeType)
+        testCase.assertions(episodes)
     }
 }
