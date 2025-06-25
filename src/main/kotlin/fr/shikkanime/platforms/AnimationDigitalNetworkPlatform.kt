@@ -37,7 +37,7 @@ class AnimationDigitalNetworkPlatform :
     private fun cleanAnimeName(title: String, season: String?): String {
         val seasonPattern = season?.toIntOrNull() ?: 1
         // Regex to remove season/part indicators and roman numerals from the end
-        val regex = "(?: -)? Saison \\d+|Part.*|$seasonPattern$| [${StringUtils.ROMAN_NUMBERS_CHECK}]+$".toRegex()
+        val regex = "(?: -)? Saison \\d+|Part .*| $seasonPattern$| [${StringUtils.ROMAN_NUMBERS_CHECK}]+$".toRegex()
         return title.replace(regex, StringUtils.EMPTY_STRING).trim()
     }
 

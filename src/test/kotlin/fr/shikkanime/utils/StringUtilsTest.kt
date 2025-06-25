@@ -74,6 +74,7 @@ class StringUtilsTest {
             "SHIROHIYO - Reincarnated as a Neglected Noble: Raising My Baby Brother With Memories From My Past Life" to "SHIROHIYO",
             "Jojo’s Bizarre Adventure" to "Jojo’s Bizarre Adventure",
             "Fate/Zero" to "Fate/Zero",
+            "Fate/stay night Unlimited Blade Works" to "Fate/stay night Unlimited Blade Works",
         )
 
         list.forEach { (input, expected) ->
@@ -113,6 +114,7 @@ class StringUtilsTest {
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "im-a-noble-on-the-brink-of-ruin",
             "Jojo’s Bizarre Adventure" to "jojos-bizarre-adventure",
             "Fate/Zero" to "fate-zero",
+            "Fate/stay night Unlimited Blade Works" to "fate-stay-night-unlimited-blade-works",
         )
 
         list.forEach { (input, expected) ->
@@ -153,7 +155,8 @@ class StringUtilsTest {
             "Bogus Skill <<Fruitmaster>> ~About that time I became able to eat unlimited numbers of Skill Fruits (that kill you)~" to "BogusSkillFruitmaster",
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "ImANobleOnTheBrinkOfRuin",
             "Jojo’s Bizarre Adventure" to "JojosBizarreAdventure",
-            "Fate/Zero" to "FateZero"
+            "Fate/Zero" to "FateZero",
+            "Fate/stay night Unlimited Blade Works" to "FateStayNightUnlimitedBladeWorks"
         )
 
         list.forEach { (input, expected) ->
