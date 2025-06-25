@@ -11,7 +11,6 @@ import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
 import java.time.ZonedDateTime
-import java.util.logging.Level
 
 class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
@@ -37,20 +36,15 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                         key.netflixSimulcast.episodeType,
                         audioLocale
                     )
-                }.getOrElse {
-                    logger.log(Level.SEVERE, "Error on converting episode", it)
-                    null
-                } ?: return@mapNotNull null
+                }.getOrNull() ?: return@mapNotNull null
 
-                identifiers.computeIfAbsent(video.id) {
+                val releaseDateTime = identifiers.computeIfAbsent(video.id) {
                     episodeVariantCacheService.findByIdentifier(episode.getIdentifier())
                         ?.releaseDateTime ?: episode.releaseDateTime
                 }
 
                 key.netflixSimulcast.audioLocaleDelays[audioLocale]?.let { delay ->
-                    identifiers[video.id]?.plusWeeks(delay)?.let { releaseDateTime ->
-                        episode.releaseDateTime = releaseDateTime
-                    }
+                    episode.releaseDateTime = releaseDateTime.plusWeeks(delay)
                 }
 
                 episode
