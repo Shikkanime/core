@@ -211,7 +211,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .asSequence()
-                .groupBy({ tuple -> tuple[0] as UUID }, { tuple -> tuple[1] as String })
+                .groupBy({ tuple -> tuple[0, UUID::class.java] }, { tuple -> tuple[1, String::class.java] })
                 .mapValues { (_, locales) -> locales.toSet() }
         }
     }
@@ -235,7 +235,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .asSequence()
-                .groupBy({ tuple -> tuple[0] as UUID }, { tuple -> tuple[1] as Int to tuple[2] as ZonedDateTime })
+                .groupBy({ tuple -> tuple[0, UUID::class.java] }, { tuple -> tuple[1, Int::class.java] to tuple[2, ZonedDateTime::class.java] })
                 .mapValues { (_, seasons) -> seasons.toMap() }
         }
     }

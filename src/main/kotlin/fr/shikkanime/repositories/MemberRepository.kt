@@ -95,6 +95,7 @@ class MemberRepository : AbstractRepository<Member>() {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
+            root.fetch(Member_.roles, JoinType.LEFT)
 
             query.where(*pairs.map { pair ->
                 cb.equal(root[pair.first], pair.second)
@@ -103,7 +104,6 @@ class MemberRepository : AbstractRepository<Member>() {
             createReadOnlyQuery(it, query)
                 .resultList
                 .firstOrNull()
-                .apply { Hibernate.initialize(this?.roles) }
         }
     }
 
@@ -294,7 +294,7 @@ class MemberRepository : AbstractRepository<Member>() {
             cb.isTrue(attachmentJoin[Attachment_.active])
         )
     }
-    
+
     private fun createDetailedMemberDto(
         tuple: Tuple,
         includeAdditionalData: Boolean = false
@@ -309,9 +309,20 @@ class MemberRepository : AbstractRepository<Member>() {
             tuple[6, Long::class.java],
             tuple[7, Long::class.java],
             (runCatching { tuple[8, Long::class.java] }.getOrDefault(0L) ?: 0L) > 0L,
-            additionalData = if (includeAdditionalData) tuple[9, String::class.java]?.let { ObjectParser.fromJson(it, AdditionalDataDto::class.java) } else null
+            additionalData = if (includeAdditionalData) tuple[9, String::class.java]?.let {
+                ObjectParser.fromJson(
+                    it,
+                    AdditionalDataDto::class.java
+                )
+            } else null
         ).apply {
-            isActive = email != null || hasProfilePicture || (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) || (lastUpdateDateTime != null && ZonedDateTime.parse(lastUpdateDateTime).toLocalDate() != ZonedDateTime.parse(creationDateTime).toLocalDate())
+            val creationDate = ZonedDateTime.parse(creationDateTime).toLocalDate()
+            val lastUpdateDate = lastUpdateDateTime?.let { ZonedDateTime.parse(it).toLocalDate() }
+
+            isActive = email != null ||
+                    hasProfilePicture ||
+                    (lastLoginDateTime != null && (followedAnimesCount > 0 || followedEpisodesCount > 0)) ||
+                    (lastUpdateDate != null && !lastUpdateDate.isEqual(creationDate))
         }
     }
 }
