@@ -5,9 +5,9 @@ import org.bouncycastle.crypto.params.Argon2Parameters
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.*
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
+import kotlin.io.encoding.Base64
 
 object EncryptionManager {
     private val salt = Constant.NAME.toByteArray(StandardCharsets.UTF_8)
@@ -40,15 +40,19 @@ object EncryptionManager {
         return hash.fold(StringUtils.EMPTY_STRING) { str, it -> str + "%02x".format(it) }
     }
 
+    fun toBase64(source: ByteArray) = Base64.encode(source)
+
+    fun fromBase64(source: String) = Base64.decode(source)
+
     fun toGzip(source: String): String {
         val bytes = source.toByteArray(StandardCharsets.UTF_8)
         val outputStream = ByteArrayOutputStream()
         GZIPOutputStream(outputStream).use { it.write(bytes) }
-        return Base64.getEncoder().encodeToString(outputStream.toByteArray())
+        return toBase64(outputStream.toByteArray())
     }
 
     fun fromGzip(source: String): String {
-        val bytes = Base64.getDecoder().decode(source)
+        val bytes = fromBase64(source)
         val outputStream = ByteArrayOutputStream()
         bytes.inputStream().use { GZIPInputStream(it).copyTo(outputStream) }
         return outputStream.toString(StandardCharsets.UTF_8)

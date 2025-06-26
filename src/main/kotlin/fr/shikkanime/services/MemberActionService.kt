@@ -14,7 +14,6 @@ import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 class MemberActionService : AbstractService<MemberAction, MemberActionRepository>() {
@@ -32,7 +31,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     override fun getRepository() = memberActionRepository
 
     @OptIn(ExperimentalEncodingApi::class)
-    private fun toWebToken(memberAction: MemberAction): String = Base64.encode(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
+    private fun toWebToken(memberAction: MemberAction): String = EncryptionManager.toBase64(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
 
     fun validateWebAction(webToken: String) {
         val actionTokens = memberActionRepository.findAllNotValidated().associateBy(this::toWebToken)

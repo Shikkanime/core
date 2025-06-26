@@ -17,7 +17,7 @@ data class CountryCodeLocalDateKeyCache(
 
         if (countryCode != other.countryCode) return false
         if (member != other.member) return false
-        if (localDate != other.localDate) return false
+        if (!localDate.isEqual(other.localDate)) return false
         if (!searchTypes.contentEquals(other.searchTypes)) return false
 
         return true

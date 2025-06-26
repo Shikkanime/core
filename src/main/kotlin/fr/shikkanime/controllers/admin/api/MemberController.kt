@@ -53,7 +53,7 @@ class MemberController : HasPageableRoute() {
         return Response.ok(
             after.datesUntil(now.plusDays(1))
                 .toList()
-                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate().isEqual(date) }.map { traceActionFactory.toDto(it) } }
         )
     }
 
@@ -71,7 +71,7 @@ class MemberController : HasPageableRoute() {
                 "total" to total.size,
                 "activities" to after.datesUntil(now.plusDays(1))
                     .toList()
-                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate().isEqual(date) }.map { traceActionFactory.toDto(it) } }
             )
         )
     }
@@ -90,7 +90,7 @@ class MemberController : HasPageableRoute() {
                 "total" to total.size,
                 "activities" to after.datesUntil(now.plusDays(1))
                     .toList()
-                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate() == date }.map { traceActionFactory.toDto(it) } }
+                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate().isEqual(date) }.map { traceActionFactory.toDto(it) } }
             )
         )
     }

@@ -18,8 +18,8 @@ data class CountryCodeMemberUUIDWeekKeyCache(
 
         if (countryCode != other.countryCode) return false
         if (member != other.member) return false
-        if (startZonedDateTime != other.startZonedDateTime) return false
-        if (endZonedDateTime != other.endZonedDateTime) return false
+        if (!startZonedDateTime.isEqual(other.startZonedDateTime)) return false
+        if (!endZonedDateTime.isEqual(other.endZonedDateTime)) return false
         if (!searchTypes.contentEquals(other.searchTypes)) return false
 
         return true
