@@ -40,25 +40,19 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            val api = if (bypassFileContent != null && bypassFileContent.exists()) {
+            val api = bypassFileContent?.takeIf { it.exists() }?.let {
                 ObjectParser.fromJson(
-                    ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("data"),
+                    ObjectParser.fromJson(it.readText()).getAsJsonArray("data"),
                     Array<AbstractCrunchyrollWrapper.BrowseObject>::class.java
                 ).toList()
-            } else {
-                getApiContent(countryCode, zonedDateTime)
-            }.toMutableList()
+            } ?: getApiContent(countryCode, zonedDateTime).toMutableList()
 
             api.map { it.episodeMetadata!!.seriesId }.distinct().parallelStream().forEach {
-                runCatching {
-                    HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeries(countryCode.locale, it) }
-                }
+                runCatching { HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeries(countryCode.locale, it) } }
             }
 
             api.map { it.episodeMetadata!!.seasonId }.distinct().parallelStream().forEach {
-                runCatching {
-                    HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeason(countryCode.locale, it) }
-                }
+                runCatching { HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeason(countryCode.locale, it) } }
             }
 
             api.forEach { addToList(list, countryCode, it) }
@@ -124,42 +118,32 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         return list
     }
 
-    suspend fun getNextEpisode(countryCode: CountryCode, crunchyrollId: String): AbstractCrunchyrollWrapper.BrowseObject? {
-        val locale = countryCode.locale
+    suspend fun getNextEpisode(countryCode: CountryCode, id: String): AbstractCrunchyrollWrapper.BrowseObject? {
+        // Attempt to fetch the next episode directly
+        runCatching { CrunchyrollWrapper.getUpNext(countryCode.locale, id) }.getOrNull()?.let { return it }
 
-        // Try getting next episode directly
-        try {
-            return CrunchyrollWrapper.getUpNext(locale, crunchyrollId)
-        } catch (_: Exception) {
-            logger.warning("Can not fetch up next episode for $crunchyrollId, trying to check with the episode...")
+        logger.warning("Cannot fetch next episode for $id, trying alternative methods...")
+
+        // Fetch the current episode and check for nextEpisodeId
+        val episode = runCatching { CrunchyrollWrapper.getJvmStaticEpisode(countryCode.locale, id) }.getOrNull() ?: return null
+
+        episode.nextEpisodeId?.let { nextEpisodeId ->
+            runCatching { CrunchyrollWrapper.getJvmStaticObjects(countryCode.locale, nextEpisodeId) }.getOrNull()?.firstOrNull()
+                ?.let { return it }
         }
 
-        // Try getting episode and check nextEpisodeId
-        val episode = runCatching {
-            CrunchyrollWrapper.getJvmStaticEpisode(locale, crunchyrollId)
-        }.getOrNull() ?: return null
+        // Fetch episodes by season and find the next episode
+        logger.warning("Next episode ID not found for $id, searching by season...")
+        runCatching { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(countryCode.locale, episode.seasonId) }.getOrNull()
+            ?.sortedBy { it.sequenceNumber }
+            ?.firstOrNull { it.sequenceNumber > episode.sequenceNumber }
+            ?.let { return it.convertToBrowseObject() }
 
-        // If nextEpisodeId exists, get that episode
-        if (!episode.nextEpisodeId.isNullOrEmpty()) {
-            return runCatching {
-                CrunchyrollWrapper.getJvmStaticObjects(locale, episode.nextEpisodeId)
-            }.getOrNull()?.firstOrNull()
-        }
-
-        // Try finding next episode by season
-        logger.warning("Next episode ID not found for $crunchyrollId, trying to find it by season...")
-        val episodes = runCatching {
-            CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(locale, episode.seasonId)
-        }.getOrNull()
-
-        // Find first episode with later premium date
-        return episodes?.firstOrNull {
-            it.premiumAvailableDate > episode.premiumAvailableDate
-        }?.let { nextEpisode ->
-            runCatching {
-                CrunchyrollWrapper.getJvmStaticObjects(locale, nextEpisode.id!!)
-            }.getOrNull()?.firstOrNull()
-        }
+        // Fetch episodes by series and find the next episode
+        logger.warning("Next episode not found in season, searching by series...")
+        return runCatching { CrunchyrollWrapper.getJvmStaticEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
+            ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
+            ?.firstOrNull { it.episodeMetadata!!.index() > episode.index() }
     }
 
     fun convertEpisode(
@@ -256,6 +240,16 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         specialEpisodeRegex.find(episode.numberString)?.let {
             episodeType = EpisodeType.SPECIAL
             number = it.groupValues[1].toIntOrNull() ?: -1
+        }
+
+        episode.identifier?.let { identifier ->
+            "(.+)\\|(.+)\\|(.+)".toRegex().find(identifier)?.let {
+                when (it.groupValues[2]) {
+                    "OAD" -> {
+                        episodeType = EpisodeType.SPECIAL
+                    }
+                }
+            }
         }
 
         return number to episodeType

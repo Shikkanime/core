@@ -35,8 +35,9 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
     data class TestCase(
         val animeName: String,
         val slug: String,
+        val season: Int,
+        val episodeType: EpisodeType,
         val episodeNumber: Int,
-        val season: Int = 1,
         val platforms: List<PlatformData>,
         val episodeTitle: String? = null,
         val episodeDescription: String? = null,
@@ -44,7 +45,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         val expectedVariantsCount: Int,
         val expectedBannerUrl: String? = null,
         val expectedUpdatedTitle: String? = null,
-        val checkPreviousEpisode: Boolean = false
+        val checkPreviousEpisode: Boolean = false,
+        val previousAndNextDepth: Int = 1
     )
 
     data class PlatformData(
@@ -60,6 +62,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Rent-a-Girlfriend",
                 slug = "rent-a-girlfriend",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 1,
                 platforms = listOf(
                     PlatformData(
@@ -77,6 +81,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "The Eminence in Shadow",
                 slug = "the-eminence-in-shadow",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 1,
                 platforms = listOf(
                     PlatformData(
@@ -92,6 +98,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Pon no Michi",
                 slug = "pon-no-michi",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 5,
                 episodeTitle = "Une arrivée inattendue",
                 episodeDescription = "Nashiko et ses amies reçoivent la visite de la personne contre qui elles jouaient en ligne : Haneru Emi. Cette dernière est déterminée à jouer à nouveau contre Riche pour la battre, mais avant ça, elle fait la connaissance des quatre filles. Et quoi de mieux pour cela qu'un barbecue sous le ciel bleu ?",
@@ -109,6 +117,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Berserk : L'Âge d'or - Memorial Edition",
                 slug = "berserk",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 4,
                 platforms = listOf(
                     PlatformData(
@@ -130,6 +140,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Isekai Cheat Magician",
                 slug = "isekai-cheat-magician",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 13,
                 episodeTitle = "La Nuit aux étoiles",
                 episodeDescription = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts.",
@@ -147,6 +159,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Let's Make a Mug Too",
                 slug = "lets-make-a-mug-too",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 9,
                 episodeTitle = "Écraser, étirer, reculer, compléter",
                 episodeDescription = "Himeno n'a toujours pas trouvé l'idée ultime pour le concours. Elle essaie donc plusieurs formes pour créer le coussin qu'elle désire.",
@@ -158,12 +172,14 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                         url = "https://www.crunchyroll.com/fr/watch/GK9U383WX/pound-stretch-subtract-and-add"
                     )
                 ),
-                expectedMappingsCount = 1,
-                expectedVariantsCount = 1
+                expectedMappingsCount = 3,
+                expectedVariantsCount = 3
             ),
             TestCase(
                 animeName = "One Piece",
                 slug = "one-piece",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 816,
                 episodeTitle = "La Nuit aux étoiles",
                 episodeDescription = "Taichi, Rin, Remia et Myûra sont de retour à Azpire pour participer à un festival en mémoire des morts.",
@@ -181,6 +197,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "One Piece",
                 slug = "one-piece",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 566,
                 episodeTitle = "Conclusion. L'affrontement final contre Hody !",
                 platforms = listOf(
@@ -198,6 +216,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "DAN DA DAN",
                 slug = "dan-da-dan",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 1,
                 platforms = listOf(
                     PlatformData(
@@ -243,6 +263,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Garôden : La voie du loup solitaire",
                 slug = "garoden",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 7,
                 platforms = listOf(
                     PlatformData(
@@ -258,6 +280,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Du mouvement de la Terre",
                 slug = "du-mouvement-de-la-terre",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 9,
                 platforms = listOf(
                     PlatformData(
@@ -273,6 +297,8 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             TestCase(
                 animeName = "Ninja Kamui",
                 slug = "ninja-kamui",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
                 episodeNumber = 10,
                 platforms = listOf(
                     PlatformData(
@@ -284,6 +310,24 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 ),
                 expectedMappingsCount = 1,
                 expectedVariantsCount = 1
+            ),
+            TestCase(
+                animeName = "given",
+                slug = "given",
+                season = 1,
+                episodeType = EpisodeType.FILM,
+                episodeNumber = 2,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-GMKUEMXMJ-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/GMKUEMXMJ/given-the-movie-hiiragi-mix"
+                    )
+                ),
+                expectedMappingsCount = 5,
+                expectedVariantsCount = 5,
+                previousAndNextDepth = 3
             )
         )
     }
@@ -291,6 +335,15 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
     @ParameterizedTest(name = "Testing {0}")
     @MethodSource("testCases")
     fun `should update episode mappings`(testCase: TestCase) {
+        configService.save(
+            Config(
+                propertyKey = ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH.key,
+                propertyValue = testCase.previousAndNextDepth.toString()
+            )
+        )
+
+        MapCache.invalidate(Config::class.java)
+
         val zonedDateTime = ZonedDateTime.now().minusMonths(2)
         
         // Create anime
@@ -312,7 +365,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 lastReleaseDateTime = zonedDateTime,
                 lastUpdateDateTime = zonedDateTime,
                 season = testCase.season,
-                episodeType = EpisodeType.EPISODE,
+                episodeType = testCase.episodeType,
                 number = testCase.episodeNumber,
                 title = testCase.episodeTitle,
                 description = testCase.episodeDescription

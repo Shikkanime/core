@@ -84,7 +84,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         id: String
     ) = episodeCache[locale to id] ?: throw Exception("Failed to get episode")
 
-    override suspend fun getEpisodeByType(
+    override suspend fun getEpisodeDiscoverByType(
         locale: String,
         type: String,
         id: String
@@ -93,15 +93,15 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         duration = defaultCacheDuration,
         key = Triple(locale, type, id)
     ) {
-        runBlocking { CrunchyrollWrapper.getEpisodeByType(it.first, it.second, it.third) }
+        runBlocking { CrunchyrollWrapper.getEpisodeDiscoverByType(it.first, it.second, it.third) }
             .also { episode -> objectCache.setIfNotExists(it.first to episode.id, episode) }
     }
 
     @JvmStatic
-    suspend fun getPreviousEpisode(locale: String, id: String) = getEpisodeByType(locale, "previous_episode", id)
+    suspend fun getPreviousEpisode(locale: String, id: String) = getEpisodeDiscoverByType(locale, "previous_episode", id)
 
     @JvmStatic
-    suspend fun getUpNext(locale: String, id: String) = getEpisodeByType(locale, "up_next", id)
+    suspend fun getUpNext(locale: String, id: String) = getEpisodeDiscoverByType(locale, "up_next", id)
 
     override suspend fun getObjects(
         locale: String,

@@ -244,6 +244,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
                     nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
 
+                    logger.info("Previous and next episodes for $identifier: previous: $previousId, next: $nextId")
+
                     previousId?.let { platformIds[it] = variant.platform!! }
                     nextId?.let { platformIds[it] = variant.platform!! }
                 }
@@ -259,10 +261,9 @@ class UpdateEpisodeMappingJob : AbstractJob {
                         else -> emptyList()
                     }
                 }
-            }.onFailure {
-                logger.warning("Error while getting previous and next episodes for $id: ${it.message}")
-            }.getOrDefault(emptyList())
-        }.distinctBy { it.getIdentifier() }.filter { it.episodeType == EpisodeType.EPISODE }
+            }.onFailure { logger.warning("Error while getting previous and next episodes for $id: ${it.message}") }
+                .getOrDefault(emptyList())
+        }.distinctBy { it.getIdentifier() }
     }
 
     private fun updateEpisodeMappingImage(
@@ -575,11 +576,27 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 logger.warning("Error while getting previous episode for $id: ${it.message}")
             }.getOrNull()
 
-            Platform.CRUN -> runCatching {
-                CrunchyrollCachedWrapper.getPreviousEpisode(countryCode.locale, id).id
-            }.onFailure {
-                logger.warning("Error while getting previous episode for $id: ${it.message}")
-            }.getOrNull()
+            Platform.CRUN -> {
+                // Attempt to fetch the previous episode directly
+                runCatching { CrunchyrollCachedWrapper.getPreviousEpisode(countryCode.locale, id) }.getOrNull()?.let { return it.id }
+
+                logger.warning("Cannot fetch previous episode for $id, trying alternative methods...")
+
+                val episode = runCatching { CrunchyrollCachedWrapper.getEpisode(countryCode.locale, id) }.getOrNull() ?: return null
+
+                // Fetch episodes by season and find the previous episode
+                runCatching { CrunchyrollCachedWrapper.getEpisodesBySeasonId(countryCode.locale, episode.seasonId) }.getOrNull()
+                    ?.sortedBy { it.sequenceNumber }
+                    ?.firstOrNull { it.sequenceNumber < episode.sequenceNumber }
+                    ?.let { return it.id }
+
+                // Fetch episodes by series and find the previous episode
+                logger.warning("Previous episode not found in season, searching by series...")
+                return runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
+                    ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
+                    ?.firstOrNull { it.episodeMetadata!!.index() < episode.index() }
+                    ?.id
+            }
 
             else -> {
                 logger.warning("Error while getting previous episode $id: Invalid platform")
@@ -603,11 +620,31 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 logger.warning("Error while getting next episode for $id: ${it.message}")
             }.getOrNull()
 
-            Platform.CRUN -> runCatching {
-                CrunchyrollCachedWrapper.getUpNext(countryCode.locale, id).id
-            }.onFailure {
-                logger.warning("Error while getting next episode for $id: ${it.message}")
-            }.getOrNull()
+            Platform.CRUN -> {
+                // Attempt to fetch the next episode directly
+                runCatching { CrunchyrollCachedWrapper.getUpNext(countryCode.locale, id) }.getOrNull()?.let { return it.id }
+
+                logger.warning("Cannot fetch next episode for $id, trying alternative methods...")
+
+                // Fetch the current episode and check for nextEpisodeId
+                val episode = runCatching { CrunchyrollCachedWrapper.getEpisode(countryCode.locale, id) }.getOrNull() ?: return null
+
+                episode.nextEpisodeId?.let { return it }
+
+                // Fetch episodes by season and find the next episode
+                logger.warning("Next episode ID not found for $id, searching by season...")
+                runCatching { CrunchyrollCachedWrapper.getEpisodesBySeasonId(countryCode.locale, episode.seasonId) }.getOrNull()
+                    ?.sortedBy { it.sequenceNumber }
+                    ?.firstOrNull { it.sequenceNumber > episode.sequenceNumber }
+                    ?.let { return it.id }
+
+                // Fetch episodes by series and find the next episode
+                logger.warning("Next episode not found in season, searching by series...")
+                return runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
+                    ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
+                    ?.firstOrNull { it.episodeMetadata!!.index() > episode.index() }
+                    ?.id
+            }
 
             else -> {
                 logger.warning("Error while getting next episode $id: Invalid platform")

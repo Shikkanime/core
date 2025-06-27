@@ -79,7 +79,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     @JvmStatic
     suspend fun getJvmStaticEpisode(locale: String, id: String) = getEpisode(locale, id)
 
-    override suspend fun getEpisodeByType(
+    override suspend fun getEpisodeDiscoverByType(
         locale: String,
         type: String,
         id: String
@@ -91,7 +91,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     }
 
     @JvmStatic
-    suspend fun getUpNext(locale: String, id: String) = getEpisodeByType(locale, "up_next", id)
+    suspend fun getUpNext(locale: String, id: String) = getEpisodeDiscoverByType(locale, "up_next", id)
 
     override suspend fun getObjects(
         locale: String,
@@ -125,4 +125,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
 
         return browseObjects + variantObjects
     }
+
+    @JvmStatic
+    suspend fun getJvmStaticEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null) = getEpisodesBySeriesId(locale, id, original)
 }
