@@ -134,16 +134,10 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         // Fetch episodes by season and find the next episode
         logger.warning("Next episode ID not found for $id, searching by season...")
-        runCatching { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(countryCode.locale, episode.seasonId) }.getOrNull()
-            ?.sortedBy { it.sequenceNumber }
-            ?.firstOrNull { it.sequenceNumber > episode.sequenceNumber }
-            ?.let { return it.convertToBrowseObject() }
-
-        // Fetch episodes by series and find the next episode
-        logger.warning("Next episode not found in season, searching by series...")
-        return runCatching { CrunchyrollWrapper.getJvmStaticEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
-            ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
-            ?.firstOrNull { it.episodeMetadata!!.index() > episode.index() }
+        return runCatching { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(countryCode.locale, episode.seasonId) }.getOrNull()
+                ?.sortedBy { it.sequenceNumber }
+                ?.firstOrNull { it.sequenceNumber > episode.sequenceNumber }
+                ?.convertToBrowseObject()
     }
 
     fun convertEpisode(

@@ -244,8 +244,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
                     nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
 
-                    logger.info("Previous and next episodes for $identifier: previous: $previousId, next: $nextId")
-
                     previousId?.let { platformIds[it] = variant.platform!! }
                     nextId?.let { platformIds[it] = variant.platform!! }
                 }

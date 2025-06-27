@@ -1,31 +1,14 @@
 package fr.shikkanime.socialnetworks.listeners
 
+import fr.shikkanime.socialnetworks.DiscordSocialNetwork
 import fr.shikkanime.socialnetworks.DiscordSocialNetwork.Channel
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import java.io.File
 
 private const val CHANNEL_IS_REQUIRED = "Channel is required"
 
-class SlashCommandInteractionListener : ListenerAdapter() {
-    private fun getFile() = File(Constant.configFolder, "discord_channels.json")
-
-    private fun getChannels(file: File): MutableList<Channel> {
-        return (if (file.exists()) {
-            ObjectParser.fromJson(file.readText(), Array<Channel>::class.java)
-        } else {
-            emptyArray()
-        }).toMutableList()
-    }
-
-    private fun getFileAndChannels(): Pair<File, MutableList<Channel>> {
-        val file = getFile()
-        val channels = getChannels(file)
-        return Pair(file, channels)
-    }
-
+class SlashCommandInteractionListener(val discordSocialNetwork: DiscordSocialNetwork) : ListenerAdapter() {
     override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
         when (event.name.lowercase()) {
             "add-release-channel" -> handleAddReleaseChannel(event)
@@ -52,7 +35,8 @@ class SlashCommandInteractionListener : ListenerAdapter() {
         // Save the channel to the database
         event.reply("Channel added to receive release notifications").queue()
 
-        val (file, channels) = getFileAndChannels()
+        val file = discordSocialNetwork.getFile()
+        val channels = discordSocialNetwork.getChannels(file).toMutableList()
 
         // If channel id already exists, update the release type and animes
         val existingChannel = channels.firstOrNull { it.id == channel.idLong }
@@ -86,7 +70,8 @@ class SlashCommandInteractionListener : ListenerAdapter() {
         }
 
         val animeName = event.getOption("anime")?.asString
-        val (file, channels) = getFileAndChannels()
+        val file = discordSocialNetwork.getFile()
+        val channels = discordSocialNetwork.getChannels(file).toMutableList()
 
         // Find the channel in the list
         val existingChannel = channels.firstOrNull { it.id == channel.idLong }
@@ -128,7 +113,8 @@ class SlashCommandInteractionListener : ListenerAdapter() {
             return
         }
 
-        val (_, channels) = getFileAndChannels()
+        val file = discordSocialNetwork.getFile()
+        val channels = discordSocialNetwork.getChannels(file)
 
         // Find the channel in the list
         val existingChannel = channels.firstOrNull { it.id == channel.idLong }

@@ -419,14 +419,6 @@ class CrunchyrollPlatformTest : AbstractTest() {
                     )
                 }
             } returns listOf()
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticEpisodesBySeriesId(
-                        any(String::class),
-                        any(String::class),
-                    )
-                }
-            } returns listOf()
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertNull(result)

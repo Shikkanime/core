@@ -125,7 +125,4 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
 
         return browseObjects + variantObjects
     }
-
-    @JvmStatic
-    suspend fun getJvmStaticEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null) = getEpisodesBySeriesId(locale, id, original)
 }

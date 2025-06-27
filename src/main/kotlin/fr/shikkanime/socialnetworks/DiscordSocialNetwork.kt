@@ -72,17 +72,15 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         )
 
         commands.submit()
-        this.jda!!.addEventListener(SlashCommandInteractionListener())
+        this.jda!!.addEventListener(SlashCommandInteractionListener(this))
     }
 
-    private fun getFile() = File(Constant.configFolder, "discord_channels.json")
+    fun getFile() = File(Constant.configFolder, "discord_channels.json")
 
-    private fun getChannels(file: File): MutableList<Channel> {
-        return (if (file.exists()) {
-            ObjectParser.fromJson(file.readText(), Array<Channel>::class.java)
-        } else {
-            arrayOf()
-        }).toMutableList()
+    fun getChannels(file: File) = if (file.exists()) {
+        ObjectParser.fromJson(file.readText(), Array<Channel>::class.java)
+    } else {
+        arrayOf()
     }
 
     override fun logout() {
