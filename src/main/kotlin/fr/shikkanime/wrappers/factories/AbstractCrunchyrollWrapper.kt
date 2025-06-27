@@ -63,7 +63,7 @@ abstract class AbstractCrunchyrollWrapper {
         val id: String,
         @SerializedName("subtitle_locales")
         val subtitleLocales: List<String>,
-        val keywords: List<String>,
+        val keywords: List<String>
     )
 
     data class Episode(
@@ -100,7 +100,15 @@ abstract class AbstractCrunchyrollWrapper {
         val versions: List<Version>?,
         @SerializedName("next_episode_id")
         val nextEpisodeId: String?,
+        @SerializedName("season_sequence_number")
+        val seasonSequenceNumber: Int,
+        @SerializedName("sequence_number")
+        val sequenceNumber: Double,
+        @SerializedName("identifier")
+        val identifier: String?,
     ) {
+        fun index() = ((seasonSequenceNumber - 1) * 100) + sequenceNumber
+
         fun convertToBrowseObject() = BrowseObject(
             id = id!!,
             images = images,
@@ -174,7 +182,7 @@ abstract class AbstractCrunchyrollWrapper {
     abstract suspend fun getSeason(locale: String, id: String): Season
     abstract suspend fun getEpisodesBySeasonId(locale: String, id: String): List<Episode>
     abstract suspend fun getEpisode(locale: String, id: String): Episode
-    abstract suspend fun getEpisodeByType(locale: String, type: String, id: String): BrowseObject
+    abstract suspend fun getEpisodeDiscoverByType(locale: String, type: String, id: String): BrowseObject
     abstract suspend fun getObjects(locale: String, vararg ids: String): List<BrowseObject>
     abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): List<BrowseObject>
 

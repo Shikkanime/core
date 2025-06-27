@@ -256,6 +256,9 @@ class CrunchyrollPlatformTest : AbstractTest() {
             false,
             null,
             "nextId",
+            1,
+            1.0,
+            null
         )
         val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
@@ -313,11 +316,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
             false,
             null,
             null,
+            1,
+            1.0,
+            null
         )
         val nextEpisode = mockkClass(AbstractCrunchyrollWrapper.Episode::class)
         every { nextEpisode.id } returns "nextId"
-        every { nextEpisode.premiumAvailableDate } returns ZonedDateTime.now()
+        every { nextEpisode.sequenceNumber } returns 2.0
         val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
+        every { nextEpisode.convertToBrowseObject() } returns expectedEpisode
 
         mockkStatic(CrunchyrollWrapper::class) {
             every {
@@ -382,6 +389,9 @@ class CrunchyrollPlatformTest : AbstractTest() {
             false,
             null,
             null,
+            1,
+            1.0,
+            null
         )
 
         mockkStatic(CrunchyrollWrapper::class) {
@@ -404,6 +414,14 @@ class CrunchyrollPlatformTest : AbstractTest() {
             every {
                 runBlocking {
                     CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(
+                        any(String::class),
+                        any(String::class),
+                    )
+                }
+            } returns listOf()
+            every {
+                runBlocking {
+                    CrunchyrollWrapper.getJvmStaticEpisodesBySeriesId(
                         any(String::class),
                         any(String::class),
                     )
