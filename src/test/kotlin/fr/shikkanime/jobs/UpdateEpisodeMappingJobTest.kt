@@ -328,6 +328,23 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 expectedMappingsCount = 5,
                 expectedVariantsCount = 5,
                 previousAndNextDepth = 3
+            ),
+            TestCase(
+                animeName = "ZENSHU",
+                slug = "zenshu",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-GZ7UD3DKN-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/GZ7UD3DKN/"
+                    )
+                ),
+                expectedMappingsCount = 2,
+                expectedVariantsCount = 4
             )
         )
     }
