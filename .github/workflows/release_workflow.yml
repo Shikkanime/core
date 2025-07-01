@@ -32,6 +32,8 @@ jobs:
           cache: gradle
       - name: Install Webp
         run: sudo apt install -y webp
+      - name: Install Playwright
+        run: npx -y playwright install --with-deps
       - name: Build and test
         run: ./gradlew clean test --info
         continue-on-error: ${{ github.event.inputs.bypass_tests }}

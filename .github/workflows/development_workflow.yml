@@ -29,6 +29,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: ./gradlew sonar --info
+      - name: Install Playwright
+        run: npx -y playwright install --with-deps
       - name: Analyse pull request
         if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         env:
