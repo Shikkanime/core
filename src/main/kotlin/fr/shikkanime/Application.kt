@@ -1,6 +1,5 @@
 package fr.shikkanime
 
-import com.microsoft.playwright.Playwright
 import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
@@ -10,10 +9,7 @@ import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.admin.AnimeAdminService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.JobManager
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -74,7 +70,8 @@ fun main(args: Array<String>) {
 
 private fun checkPlaywrightInstallation() {
     try {
-        Playwright.create().use {
+        HttpRequest().use {
+            it.getWithBrowser("https://playwright.dev")
             logger.info("Playwright is installed correctly.")
         }
     } catch (e: Exception) {
