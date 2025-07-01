@@ -4,6 +4,6 @@
   "description": "Dependencies for the Docker image of shikkanime-core",
   "private": true,
   "dependencies": {
-    "playwright": "1.53.1"
+    "playwright": "1.53.2"
   }
 } 
