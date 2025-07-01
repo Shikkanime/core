@@ -75,6 +75,7 @@ class StringUtilsTest {
             "Jojo’s Bizarre Adventure" to "Jojo’s Bizarre Adventure",
             "Fate/Zero" to "Fate/Zero",
             "Fate/stay night Unlimited Blade Works" to "Fate/stay night Unlimited Blade Works",
+            "Watari-kun's ****** Is about to Collapse" to "Watari-kun's ****** Is about to Collapse",
         )
 
         list.forEach { (input, expected) ->
@@ -115,6 +116,7 @@ class StringUtilsTest {
             "Jojo’s Bizarre Adventure" to "jojos-bizarre-adventure",
             "Fate/Zero" to "fate-zero",
             "Fate/stay night Unlimited Blade Works" to "fate-stay-night-unlimited-blade-works",
+            "Watari-kun's ****** Is about to Collapse" to "watari-kuns-is-about-to-collapse"
         )
 
         list.forEach { (input, expected) ->
@@ -156,7 +158,8 @@ class StringUtilsTest {
             "I'm a Noble on the Brink of Ruin, So I Might as Well Try Mastering Magic" to "ImANobleOnTheBrinkOfRuin",
             "Jojo’s Bizarre Adventure" to "JojosBizarreAdventure",
             "Fate/Zero" to "FateZero",
-            "Fate/stay night Unlimited Blade Works" to "FateStayNightUnlimitedBladeWorks"
+            "Fate/stay night Unlimited Blade Works" to "FateStayNightUnlimitedBladeWorks",
+            "Watari-kun's ****** Is about to Collapse" to "WatariKunsIsAboutToCollapse"
         )
 
         list.forEach { (input, expected) ->

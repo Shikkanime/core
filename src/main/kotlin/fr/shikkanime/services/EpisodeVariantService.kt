@@ -182,6 +182,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             animePlatformService.save(
                 AnimePlatform(
                     anime = anime,
+                    lastValidateDateTime = now,
                     platform = episode.platform,
                     platformId = episode.animeId
                 )
