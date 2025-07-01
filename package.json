@@ -1,9 +1,0 @@
-{
-  "name": "shikkanime-core-docker",
-  "version": "1.0.0",
-  "description": "Dependencies for the Docker image of shikkanime-core",
-  "private": true,
-  "dependencies": {
-    "playwright": "1.53.1"
-  }
-} 

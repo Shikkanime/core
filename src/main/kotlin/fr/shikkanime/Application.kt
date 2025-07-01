@@ -1,5 +1,6 @@
 package fr.shikkanime
 
+import com.microsoft.playwright.Playwright
 import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
@@ -16,11 +17,16 @@ import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import java.util.logging.Level
+import kotlin.system.exitProcess
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
 fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
+
+    logger.info("Testing Playwright installation...")
+    checkPlaywrightInstallation()
 
     logger.info("Pre-indexing anime data...")
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
@@ -64,6 +70,17 @@ fun main(args: Array<String>) {
         host = "0.0.0.0",
         module = Application::module
     ).start(wait = true)
+}
+
+private fun checkPlaywrightInstallation() {
+    try {
+        Playwright.create().use {
+            logger.info("Playwright is installed correctly.")
+        }
+    } catch (e: Exception) {
+        logger.log(Level.SEVERE, "Playwright installation failed", e)
+        exitProcess(1)
+    }
 }
 
 private fun updateAndDeleteData() {

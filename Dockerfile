@@ -1,11 +1,11 @@
 ARG JAVA_VERSION=21
+ARG PLAYWRIGHT_VERSION=1.53.0
 
 FROM amazoncorretto:${JAVA_VERSION} AS java
 
 FROM node:24-bookworm-slim
-COPY package.json package-lock.json* ./
-RUN npm ci && npx playwright install --with-deps firefox
-
+ARG PLAYWRIGHT_VERSION
+RUN npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps firefox
 ARG JAVA_VERSION
 COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 
