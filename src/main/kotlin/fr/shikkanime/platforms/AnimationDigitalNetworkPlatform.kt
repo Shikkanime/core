@@ -46,7 +46,7 @@ class AnimationDigitalNetworkPlatform :
 
         latestVideos.addAll(
             latestVideos.flatMap { video ->
-                val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, video.season?.toIntOrNull()?.toString() ?: "1").lowercase()
+                val animeName = cleanAnimeName(video.show.shortTitle?.takeIf { it.isNotBlank() } ?: video.show.title, video.season?.toIntOrNull()?.toString() ?: "1").lowercase()
 
                 configuration?.simulcasts
                     ?.find { it.name.equals(animeName, ignoreCase = true) && it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
@@ -102,7 +102,7 @@ class AnimationDigitalNetworkPlatform :
         checkAnimation: Boolean = true
     ): List<Episode> {
         val season = video.season?.toIntOrNull() ?: 1
-        val animeName = cleanAnimeName(video.show.shortTitle ?: video.show.title, season.toString())
+        val animeName = cleanAnimeName(video.show.shortTitle?.takeIf { it.isNotBlank() } ?: video.show.title, season.toString())
 
         if (isBlacklisted(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
 
