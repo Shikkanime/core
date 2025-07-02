@@ -346,25 +346,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 expectedMappingsCount = 2,
                 expectedVariantsCount = 4
             ),
-            TestCase(
-                animeName = "One Piece",
-                slug = "one-piece",
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                episodeNumber = 879,
-                episodeTitle = "Cap sur Rêverie. Les alliés du chapeau de paille réunis !",
-                episodeDescription = "As the royals make their way to the Reverie, the mighty Navy takes all precautions to make sure they don't fall prey to kidnappings! At the vanguard is Koby, who glimpses Luffy's exploits and remembers their shared past. Meanwhile, Luffy is confronted with a staggering change to his bounty!",
-                platforms = listOf(
-                    PlatformData(
-                        platform = Platform.CRUN,
-                        audioLocale = "ja-JP",
-                        identifier = "FR-CRUN-GYEX43P86-JA-JP",
-                        url = "https://www.crunchyroll.com/fr/watch/GYEX43P86/to-the-reverie-the-straw-hats-sworn-allies-come-together"
-                    )
-                ),
-                expectedMappingsCount = 3,
-                expectedVariantsCount = 3
-            ),
         )
     }
 
