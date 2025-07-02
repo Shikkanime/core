@@ -592,7 +592,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                 logger.warning("Previous episode not found in season, searching by series...")
                 return runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
                     ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
-                    ?.firstOrNull { it.episodeMetadata!!.index() < episode.index() }
+                    ?.lastOrNull { it.episodeMetadata!!.index() < episode.index() }
                     ?.id
             }
 
