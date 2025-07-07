@@ -257,7 +257,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                         url = "https://www.crunchyroll.com/fr/watch/GG1UXWE24/"
                     )
                 ),
-                expectedMappingsCount = 2,
+                expectedMappingsCount = 3,
                 expectedVariantsCount = 10
             ),
             TestCase(
