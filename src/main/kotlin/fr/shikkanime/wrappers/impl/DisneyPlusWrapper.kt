@@ -14,7 +14,7 @@ import java.util.*
 
 object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
     override suspend fun getShow(id: String): Show {
-        val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.4/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
+        val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.10/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
         require(response.status == HttpStatusCode.OK) { "Failed to fetch show (${response.status.value})" }
         val jsonObject = ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("data")
@@ -50,7 +50,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             var hasMore: Boolean
 
             do {
-                val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.4/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}")
+                val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.10/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}")
                 require(response.status == HttpStatusCode.OK) { "Failed to fetch episodes (${response.status.value})" }
 
                 val jsonObject = ObjectParser.fromJson(response.bodyAsText())
@@ -109,8 +109,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             "x-dss-edge-accept" to "vnd.dss.edge+json; version=2",
             "x-dss-feature-filtering" to "true"
         )
-        val body = """
-        {
+        val body = """{
             "playback": {
                 "attributes": {
                     "resolution": {"max": ["1280x720"]},
@@ -128,35 +127,35 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                 }
             },
             "playbackId": "$resourceId"
+        }""".trimIndent()
+
+        val response = httpRequest.postWithAccessToken(
+            "${baseUrl}v7/playback/ctr-regular",
+            headers,
+            body
+        )
+        require(response.status == HttpStatusCode.OK) {
+            "Failed to fetch video data (${response.status.value} - ${response.bodyAsText()})"
         }
-    """.trimIndent()
 
-        val response = httpRequest.postWithAccessToken("https://disney.playback.edge.bamgrid.com/v7/playback/ctr-regular", headers, body)
-        require(response.status == HttpStatusCode.OK) { "Failed to fetch video data (${response.status.value} - ${response.bodyAsText()})" }
-
-        val videoUrl = ObjectParser.fromJson(response.bodyAsText())
+        val jsonObject = ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("stream")
-            .getAsJsonArray("sources")[0].asJsonObject
-            .getAsJsonObject("complete")
-            .getAsString("url")!!
+            .getAsJsonObject("renditions")
 
-        val rawVideoData = httpRequest.get(videoUrl)
-        require(rawVideoData.status == HttpStatusCode.OK) { "Failed to fetch raw video data (${rawVideoData.status.value})" }
         val supportedLanguages = CountryCode.entries.map { it.locale }
 
-        return "#EXT-X-MEDIA:TYPE=AUDIO,.*,LANGUAGE=\"([a-zA-Z0-9\\-]*)\".*".toRegex()
-            .findAll(rawVideoData.bodyAsText())
-            // If audio locale is equals to "ja", replace it with "ja-JP"
-            .map {
-                val locale = it.groupValues[1]
+        val subtitleLocales = jsonObject.getAsJsonArray("subtitles")
+            .mapNotNull { it.asJsonObject.getAsString("language") }
+            .toSet()
 
-                if (locale == "ja") {
-                    "ja-JP"
-                } else {
-                    locale
-                }
-            }
-            // Keep ja-JP and fr-FR
+        val audioLocales = jsonObject.getAsJsonArray("audio")
+            .mapNotNull { it.asJsonObject.getAsString("language") }
+            .toSet()
+
+        if (subtitleLocales.none { it in supportedLanguages }) return emptySet()
+
+        return audioLocales
+            .map { if (it == "ja") "ja-JP" else it }
             .filter { it == "ja-JP" || it in supportedLanguages }
             .toSet()
     }
