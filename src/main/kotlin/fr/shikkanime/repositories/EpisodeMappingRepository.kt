@@ -10,6 +10,7 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
+import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
@@ -157,119 +158,192 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    private fun ZonedDateTime.truncateToHour(): ZonedDateTime {
-        return withMinute(0).withSecond(0).withNano(0)
-    }
+    private data class DailyMaxReleaseInfo(
+        val animeUuid: UUID,
+        val episodeType: EpisodeType,
+        val releaseDay: ZonedDateTime,
+        val maxReleaseTime: ZonedDateTime
+    )
 
+    /**
+     * Finds all grouped episodes by country code, page and limit.
+     *
+     * A grouped episode is a collection of episodes that are released at the same time (within a 2-hour window),
+     * of the same type (e.g., EPISODE, FILM), and for the same anime.
+     *
+     * This function is paginated and the total is the number of groups.
+     *
+     * @param countryCode The country code to filter by. If null, all countries are included.
+     * @param page The page to get.
+     * @param limit The number of items to get.
+     * @return A pageable of grouped episodes.
+     */
     fun findAllGroupedBy(countryCode: CountryCode?, page: Int, limit: Int): Pageable<GroupedEpisode> {
         return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
+            val dailyMaxReleases = findDailyMaxReleases(entityManager, countryCode, page, limit)
 
-            val subQuery = cb.createTupleQuery()
-            val subRoot = subQuery.from(EpisodeVariant::class.java)
-            val subMapping = subRoot.join(EpisodeVariant_.mapping)
-            val subAnime = subMapping.join(EpisodeMapping_.anime)
+            if (dailyMaxReleases.data.isEmpty()) {
+                return@use Pageable(emptySet(), page, limit, 0)
+            }
 
-            val truncatedReleaseDateTime = cb.function(
-                "date_trunc",
-                ZonedDateTime::class.java,
-                cb.literal("hour"),
-                subRoot[EpisodeVariant_.releaseDateTime]
-            )
-
-            subQuery.select(
-                cb.tuple(
-                    subAnime[Anime_.uuid],
-                    subMapping[EpisodeMapping_.episodeType],
-                    truncatedReleaseDateTime
-                )
-            )
-
-            countryCode?.let { subQuery.where(cb.equal(subAnime[Anime_.countryCode], it)) }
-
-            subQuery.groupBy(
-                subAnime[Anime_.uuid],
-                subMapping[EpisodeMapping_.episodeType],
-                truncatedReleaseDateTime
-            )
-
-            subQuery.orderBy(
-                cb.desc(
-                    truncatedReleaseDateTime
-                )
-            )
-
-            val pageableSubquery = buildPageableQuery(createReadOnlyQuery(entityManager, subQuery), page, limit)
-
-            val query = cb.createQuery(EpisodeVariant::class.java)
-            val root = query.from(EpisodeVariant::class.java)
-
-            // Fetch mapping and anime eagerly
-            root.fetch(EpisodeVariant_.mapping, JoinType.INNER)
-                .fetch(EpisodeMapping_.anime, JoinType.INNER)
-
-            val inPredicate = cb.or(
-                *pageableSubquery.data.map { result ->
-                    cb.and(
-                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid], result[0]),
-                        cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType], result[1]),
-                        cb.equal(cb.function("date_trunc", ZonedDateTime::class.java, cb.literal("hour"), root[EpisodeVariant_.releaseDateTime]), result[2])
-                    )
-                }.toTypedArray()
-            )
-
-            query.where(inPredicate)
-
-            query.orderBy(
-                cb.desc(root[EpisodeVariant_.releaseDateTime]),
-                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.name]),
-                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
-                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
-                cb.desc(root[EpisodeVariant_.mapping][EpisodeMapping_.number])
-            )
-
-            val groups = createReadOnlyQuery(entityManager, query).resultList
-                .groupBy { episodeVariant -> "${episodeVariant.mapping!!.anime!!.uuid}-${episodeVariant.mapping!!.episodeType}-${episodeVariant.releaseDateTime.truncateToHour()}" }
-                .map { (_, variants) ->
-                    val firstVariant = variants.first()
-                    val firstMapping = firstVariant.mapping!!
-                    val anime = firstMapping.anime!!
-                    val episodeType = firstMapping.episodeType!!
-                    val releaseDateTime = firstVariant.releaseDateTime.truncateToHour()
-
-                    val mappingUuids = variants.asSequence()
-                        .map { it.mapping!! }
-                        .sortedWith(compareBy({it.season}, {it.episodeType!!}, {it.number}))
-                        .map { it.uuid!! }
-                        .toSet()
-                    val isSingleMapping = mappingUuids.size == 1
-
-                    GroupedEpisode(
-                        anime = anime,
-                        releaseDateTime = releaseDateTime,
-                        lastUpdateDateTime = variants.maxOf { it.mapping!!.lastUpdateDateTime },
-                        minSeason = variants.minOf { it.mapping!!.season!! },
-                        maxSeason = variants.maxOf { it.mapping!!.season!! },
-                        episodeType = episodeType,
-                        minNumber = variants.minOf { it.mapping!!.number!! },
-                        maxNumber = variants.maxOf { it.mapping!!.number!! },
-                        platforms = variants.map { it.platform!! }.toSet(),
-                        audioLocales = variants.map { it.audioLocale!! }.toSet(),
-                        urls = variants.map { it.url!! }.toSet(),
-                        mappings = mappingUuids,
-                        title = if (isSingleMapping) firstMapping.title else null,
-                        description = if (isSingleMapping) firstMapping.description else null,
-                        duration = if (isSingleMapping) firstMapping.duration else null
-                    )
-                }.toSet()
+            val episodeVariants = findEpisodeVariants(entityManager, dailyMaxReleases.data)
+            val groupedEpisodes = groupEpisodeVariants(episodeVariants)
 
             Pageable(
-                data = groups,
-                page = pageableSubquery.page,
-                limit = pageableSubquery.limit,
-                total = pageableSubquery.total
+                data = groupedEpisodes,
+                page = dailyMaxReleases.page,
+                limit = dailyMaxReleases.limit,
+                total = dailyMaxReleases.total,
             )
         }
+    }
+
+    private fun findDailyMaxReleases(
+        entityManager: EntityManager,
+        countryCode: CountryCode?,
+        page: Int,
+        limit: Int
+    ): Pageable<DailyMaxReleaseInfo> {
+        val criteriaBuilder = entityManager.criteriaBuilder
+        val dailyMaxReleaseQuery = criteriaBuilder.createQuery(DailyMaxReleaseInfo::class.java)
+        val episodeVariantRoot = dailyMaxReleaseQuery.from(EpisodeVariant::class.java)
+
+        val releaseDayExpression = criteriaBuilder.function(
+            "date_trunc",
+            ZonedDateTime::class.java,
+            criteriaBuilder.literal("day"),
+            episodeVariantRoot[EpisodeVariant_.releaseDateTime]
+        ).`as`(ZonedDateTime::class.java)
+
+        dailyMaxReleaseQuery.select(
+            criteriaBuilder.construct(
+                DailyMaxReleaseInfo::class.java,
+                episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+                releaseDayExpression,
+                criteriaBuilder.greatest(episodeVariantRoot[EpisodeVariant_.releaseDateTime])
+            )
+        )
+
+        countryCode?.let {
+            dailyMaxReleaseQuery.where(
+                criteriaBuilder.equal(
+                    episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode],
+                    it
+                )
+            )
+        }
+
+        dailyMaxReleaseQuery.groupBy(
+            episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+            episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+            releaseDayExpression
+        )
+
+        dailyMaxReleaseQuery.orderBy(criteriaBuilder.desc(criteriaBuilder.greatest(episodeVariantRoot[EpisodeVariant_.releaseDateTime])))
+
+        return buildPageableQuery(createReadOnlyQuery(entityManager, dailyMaxReleaseQuery), page, limit)
+    }
+
+    private fun findEpisodeVariants(
+        entityManager: EntityManager,
+        dailyMaxReleases: Set<DailyMaxReleaseInfo>
+    ): List<EpisodeVariant> {
+        val criteriaBuilder = entityManager.criteriaBuilder
+        val mainQuery = criteriaBuilder.createQuery(EpisodeVariant::class.java)
+        val episodeVariantRoot = mainQuery.from(EpisodeVariant::class.java)
+
+        episodeVariantRoot.fetch(EpisodeVariant_.mapping, JoinType.INNER)
+            .fetch(EpisodeMapping_.anime, JoinType.INNER)
+
+        val predicates = dailyMaxReleases.map { dailyMaxRelease ->
+            val animePredicate = criteriaBuilder.equal(
+                episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid],
+                dailyMaxRelease.animeUuid
+            )
+
+            val typePredicate = criteriaBuilder.equal(
+                episodeVariantRoot[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+                dailyMaxRelease.episodeType
+            )
+
+            val releaseDayPredicate = criteriaBuilder.equal(
+                criteriaBuilder.function(
+                    "date_trunc",
+                    ZonedDateTime::class.java,
+                    criteriaBuilder.literal("day"),
+                    episodeVariantRoot[EpisodeVariant_.releaseDateTime]
+                ),
+                dailyMaxRelease.releaseDay
+            )
+
+            val timeWindowPredicate = criteriaBuilder.between(
+                episodeVariantRoot[EpisodeVariant_.releaseDateTime],
+                dailyMaxRelease.maxReleaseTime.minusHours(1),
+                dailyMaxRelease.maxReleaseTime.plusHours(1)
+            )
+
+            criteriaBuilder.and(animePredicate, typePredicate, releaseDayPredicate, timeWindowPredicate)
+        }
+
+        mainQuery.select(episodeVariantRoot)
+        mainQuery.where(criteriaBuilder.or(*predicates.toTypedArray()))
+        mainQuery.orderBy(criteriaBuilder.desc(episodeVariantRoot[EpisodeVariant_.releaseDateTime]))
+
+        return createReadOnlyQuery(entityManager, mainQuery).resultList
+    }
+
+    private fun groupEpisodeVariants(variants: List<EpisodeVariant>): Set<GroupedEpisode> {
+        val groups = mutableMapOf<Pair<String, ZonedDateTime>, UUID>()
+
+        val groupedByAnimeAndType = variants.groupBy {
+            val mapping = it.mapping
+            "${mapping?.anime?.uuid}-${mapping?.episodeType}"
+        }
+
+        return groupedByAnimeAndType.flatMap { (_, variantsForAnimeType) ->
+            variantsForAnimeType.groupBy { variant ->
+                val animeTypeKey = "${variant.mapping?.anime?.uuid}-${variant.mapping?.episodeType}"
+
+                val groupKey = groups.entries.find { (key, _) ->
+                    val (existingAnimeTypeKey, releaseDateTime) = key
+                    animeTypeKey == existingAnimeTypeKey && variant.releaseDateTime in releaseDateTime.minusHours(1)..releaseDateTime.plusHours(1)
+                }
+
+                groupKey?.value ?: UUID.randomUUID().also { groups[animeTypeKey to variant.releaseDateTime] = it }
+            }.values
+        }.map(::toGroupedEpisode).toSet()
+    }
+
+    private fun toGroupedEpisode(variants: List<EpisodeVariant>): GroupedEpisode {
+        val firstVariant = variants.first()
+        val firstMapping = firstVariant.mapping!!
+
+        val mappingUuids = variants.asSequence()
+            .map { it.mapping!! }
+            .sortedWith(compareBy({ it.season }, { it.episodeType!! }, { it.number }))
+            .map { it.uuid!! }
+            .toSet()
+
+        val isSingleMapping = mappingUuids.size == 1
+
+        return GroupedEpisode(
+            anime = firstMapping.anime!!,
+            releaseDateTime = variants.minOf { it.releaseDateTime },
+            lastUpdateDateTime = variants.maxOf { it.mapping!!.lastUpdateDateTime },
+            minSeason = variants.minOf { it.mapping!!.season!! },
+            maxSeason = variants.maxOf { it.mapping!!.season!! },
+            episodeType = firstMapping.episodeType!!,
+            minNumber = variants.minOf { it.mapping!!.number!! },
+            maxNumber = variants.maxOf { it.mapping!!.number!! },
+            platforms = variants.map { it.platform!! }.toSet(),
+            audioLocales = variants.map { it.audioLocale!! }.toSet(),
+            urls = variants.map { it.url!! }.toSet(),
+            mappings = mappingUuids,
+            title = if (isSingleMapping) firstMapping.title else null,
+            description = if (isSingleMapping) firstMapping.description else null,
+            duration = if (isSingleMapping) firstMapping.duration else null
+        )
     }
 
     fun findByAnimeSeasonEpisodeTypeNumber(

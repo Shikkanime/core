@@ -22,7 +22,7 @@ abstract class AbstractTest {
     @Inject protected lateinit var traceActionService: TraceActionService
     @Inject protected lateinit var ruleService: RuleService
     @Inject protected lateinit var attachmentService: AttachmentService
-    @Inject private lateinit var database: Database
+    @Inject protected lateinit var database: Database
 
     @BeforeEach
     open fun setUp() {

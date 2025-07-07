@@ -21,6 +21,7 @@ import fr.shikkanime.utils.atEndOfWeek
 import fr.shikkanime.utils.withUTC
 import fr.shikkanime.utils.withUTCString
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -103,20 +104,34 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return groupAndSortReleases(startOfWeekDay, releases.map { it.first }, zoneId, dayCountryPattern)
     }
 
+    private fun isTimeInRange(timeToCheck: LocalTime, referenceTime: LocalTime, toleranceHours: Long): Boolean {
+        val minTime = referenceTime.minusHours(toleranceHours)
+        val maxTime = referenceTime.plusHours(toleranceHours)
+
+        if (minTime <= maxTime) {
+            return timeToCheck >= minTime && timeToCheck <= maxTime
+        }
+
+        return timeToCheck >= minTime || timeToCheck <= maxTime
+    }
+
     private fun processReleases(
         variantReleaseDtos: List<VariantReleaseDto>,
         zoneId: ZoneId,
         weekRange: ClosedRange<LocalDate>
     ): List<Triple<WeeklyAnimeDto, Int, EpisodeType>> {
+        val groups = mutableMapOf<Pair<String, ZonedDateTime>, UUID>()
         val isCurrentWeek: (VariantReleaseDto) -> Boolean = { it.releaseDateTime.withZoneSameInstant(zoneId).toLocalDate() in weekRange }
         val dayPattern = DateTimeFormatter.ofPattern("EEEE")
-        val hourPattern = DateTimeFormatter.ofPattern("HH")
 
         return variantReleaseDtos.groupBy { variantReleaseDto ->
             variantReleaseDto.releaseDateTime.format(dayPattern) to variantReleaseDto.anime
         }.flatMap { (pair, values) ->
+            val key = "${pair.first}-${pair.second.uuid}"
+
             values.groupBy { variantReleaseDto ->
-                variantReleaseDto.releaseDateTime.format(hourPattern)
+                val groupKey = groups.entries.firstOrNull { it.key.first == key && isTimeInRange(variantReleaseDto.releaseDateTime.toLocalTime(), it.key.second.toLocalTime(), 1) }
+                groupKey?.value ?: UUID.randomUUID().also { groups[key to variantReleaseDto.releaseDateTime] = it }
             }.flatMap { (_, hourValues) ->
                 val filter = hourValues.filter(isCurrentWeek)
                 createWeeklyAnimeDtos(filter, hourValues, pair)
