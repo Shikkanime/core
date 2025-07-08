@@ -48,7 +48,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             } ?: getApiContent(countryCode, zonedDateTime).toMutableList()
 
             api.map { it.episodeMetadata!!.seriesId }.distinct().parallelStream().forEach {
-                runCatching { HttpRequest.retry(3) { CrunchyrollCachedWrapper.getSeries(countryCode.locale, it) } }
+                runCatching { HttpRequest.retry(3) { CrunchyrollCachedWrapper.getObjects(countryCode.locale, it) } }
             }
 
             api.map { it.episodeMetadata!!.seasonId }.distinct().parallelStream().forEach {
@@ -169,13 +169,13 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (!isDubbed && (subtitles.isEmpty() || countryCode.locale !in subtitles))
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
-        val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getSeries(countryCode.locale, browseObject.episodeMetadata.seriesId) }
+        val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getObjects(countryCode.locale, browseObject.episodeMetadata.seriesId).first() }
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
         val season = runBlocking { CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId) }
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
 
-        val isSimulcasted = crunchyrollAnimeContent.isSimulcast || isDubbed || episodeType == EpisodeType.FILM
+        val isSimulcasted = crunchyrollAnimeContent.seriesMetadata!!.isSimulcast || isDubbed || episodeType == EpisodeType.FILM
 
         if (needSimulcast && !(isConfigurationSimulcasted || isSimulcasted))
             throw AnimeNotSimulcastedException("\"$animeName\" is not simulcasted")
@@ -191,8 +191,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             countryCode = countryCode,
             animeId = browseObject.episodeMetadata.seriesId,
             anime = animeName,
-            animeImage = crunchyrollAnimeContent.fullHDImage!!,
-            animeBanner = crunchyrollAnimeContent.fullHDBanner!!,
+            animeImage = crunchyrollAnimeContent.images!!.fullHDImage!!,
+            animeBanner = crunchyrollAnimeContent.images.fullHDBanner!!,
             animeDescription = crunchyrollAnimeContent.description.normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
@@ -202,8 +202,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             duration = browseObject.episodeMetadata.durationMs / 1000,
             title = browseObject.title.normalize(),
             description = browseObject.description.normalize(),
-            image = browseObject.images?.thumbnail?.firstOrNull()
-                ?.maxByOrNull { it.width }?.source?.takeIf { it.isNotBlank() } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+            image = browseObject.images?.fullHDThumbnail ?: Constant.DEFAULT_IMAGE_PREVIEW,
             platform = getPlatform(),
             audioLocale = browseObject.episodeMetadata.audioLocale,
             id = browseObject.id,

@@ -107,6 +107,17 @@ class UpdateAnimeJobTest : AbstractTest() {
                 expectedThumbnail = "https://image.animationdigitalnetwork.com/license/onepiecefanletter/tv/web/affiche_1560x2340.jpg",
                 expectedBanner = "https://image.animationdigitalnetwork.com/license/onepiecefanletter/tv/web/license_1920x1080.jpg",
                 expectedDescription = "L’intrigue se déroule sur l’île de Sabaody, deux ans après la bataille de Marine Ford, où Luffy a tragiquement perdu son frère, Ace. Une jeune fille, fascinée par Nami, entreprend alors une aventure hors du commun."
+            ),
+            TestCase(
+                name = "The Too-Perfect Saint: Tossed Aside by My Fiancé and Sold to Another Kingdom",
+                slug = "the-too-perfect-saint-tossed-aside-by-my-fianc-and-sold-to-another-kingdom",
+                releaseDateTime = "2014-04-02T13:30:00Z",
+                platforms = listOf(
+                    PlatformData(Platform.CRUN, "GP5HJ8477")
+                ),
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2611cd3c30e3fdbb6e563dfdde4a7029.jpg",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/f1c802e3c46fa6bcb76e18cb0ed62637.jpg",
+                expectedDescription = "Née dans une famille où le rôle de \"Sainte\" est transmis de génération en génération, Philia est reconnue comme la plus grande de tous les temps grâce à une éducation très rigoureuse. Cependant, son fiancé, le prince Julius, rompt leurs fiançailles et voilà qu'elle est vendue à un royaume voisin. S'attendant au pire, Philia reçoit pourtant un accueil chaleureux et utilise ses talents de sainte pour protéger des monstres le pays qui l'a accueillie."
             )
         )
     }

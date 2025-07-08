@@ -38,7 +38,14 @@ abstract class AbstractCrunchyrollWrapper {
         val posterTall: List<List<MediaImage>> = emptyList(),
         @SerializedName("poster_wide")
         val posterWide: List<List<MediaImage>> = emptyList(),
-    )
+    ) {
+        val fullHDThumbnail: String?
+            get() = thumbnail.firstOrNull()?.maxByOrNull { it.width }?.source
+        val fullHDImage: String?
+            get() = posterTall.firstOrNull()?.maxByOrNull { it.width }?.source
+        val fullHDBanner: String?
+            get() = posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
+    }
 
     data class Version(
         val guid: String,
@@ -49,14 +56,21 @@ abstract class AbstractCrunchyrollWrapper {
         val id: String,
         val images: Image,
         val title: String,
+        @SerializedName("slug_title")
+        val slugTitle: String,
         val description: String?,
         @SerializedName("is_simulcast")
         val isSimulcast: Boolean,
     ) {
-        val fullHDImage: String?
-            get() = images.posterTall.firstOrNull()?.maxByOrNull { it.width }?.source
-        val fullHDBanner: String?
-            get() = images.posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
+        fun convertToBrowseObject() = BrowseObject(
+            id = id,
+            images = images,
+            description = description,
+            title = title,
+            seriesMetadata = this,
+            episodeMetadata = null,
+            slugTitle = slugTitle,
+        )
     }
 
     data class Season(
@@ -67,7 +81,7 @@ abstract class AbstractCrunchyrollWrapper {
     )
 
     data class Episode(
-        val id: String?,
+        val id: String,
         @SerializedName("series_id")
         val seriesId: String,
         @SerializedName("series_title")
@@ -110,17 +124,18 @@ abstract class AbstractCrunchyrollWrapper {
         fun index() = ((seasonSequenceNumber - 1) * 100) + sequenceNumber
 
         fun convertToBrowseObject() = BrowseObject(
-            id = id!!,
+            id = id,
             images = images,
             description = description,
             title = title,
+            seriesMetadata = null,
             episodeMetadata = this,
             slugTitle = slugTitle,
         )
 
         fun getVariants(original: Boolean? = null): List<String> {
             if (versions.isNullOrEmpty())
-                return listOf(id!!)
+                return listOf(id)
 
             if (original == null)
                 return versions.map { it.guid }
@@ -134,6 +149,8 @@ abstract class AbstractCrunchyrollWrapper {
         val images: Image?,
         val description: String?,
         val title: String?,
+        @SerializedName("series_metadata")
+        val seriesMetadata: Series?,
         @SerializedName("episode_metadata")
         val episodeMetadata: Episode?,
         @SerializedName("slug_title")

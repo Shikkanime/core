@@ -20,6 +20,14 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         duration = defaultCacheDuration
     ) { runBlocking { CrunchyrollWrapper.getObjects(it.first, it.second).first() } }
 
+    private val seriesCache = MapCache<Pair<String, String>, Series>(
+        "CrunchyrollCachedWrapper.seriesCache",
+        duration = defaultCacheDuration
+    ) {
+        runBlocking { CrunchyrollWrapper.getSeries(it.first, it.second) }
+            .also { series -> objectCache.setIfNotExists(it.first to it.second, series.convertToBrowseObject()) }
+    }
+
     private val episodeCache = MapCache<Pair<String, String>, Episode>(
         "CrunchyrollCachedWrapper.episodeCache",
         duration = defaultCacheDuration
@@ -40,11 +48,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getSeries(
         locale: String,
         id: String
-    ) = MapCache.getOrCompute(
-        "CrunchyrollCachedWrapper.getSeries",
-        duration = defaultCacheDuration,
-        key = locale to id
-    ) { runBlocking { CrunchyrollWrapper.getSeries(it.first, it.second) } }
+    ) = seriesCache[locale to id] ?: throw Exception("Failed to get series")
 
     override suspend fun getSeason(
         locale: String,
@@ -74,7 +78,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     ) {
         runBlocking { CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second) }
             .also { episodes -> episodes.forEach { episode ->
-                episodeCache.setIfNotExists(it.first to episode.id!!, episode)
+                episodeCache.setIfNotExists(it.first to episode.id, episode)
                 objectCache.setIfNotExists(it.first to episode.id, episode.convertToBrowseObject())
             } }
     }
@@ -180,7 +184,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
             seriesIds.asSequence()
                 .flatMap { seriesId -> HttpRequest.retry(3) { getSeasonsBySeriesId(countryCode.locale, seriesId) } }
                 .flatMap { season -> HttpRequest.retry(3) { getEpisodesBySeasonId(countryCode.locale, season.id) } }
-                .flatMap { episode -> (listOf(episode.id!!) + episode.getVariants(null)) }
+                .flatMap { episode -> (listOf(episode.id) + episode.getVariants(null)) }
                 .distinct()
         )
 
@@ -189,7 +193,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
             .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() in releaseDateTimes }
             .toList()
             .apply {
-                map { it.episodeMetadata!!.seriesId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { getSeries(countryCode.locale, it) } }
+                map { it.episodeMetadata!!.seriesId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { getObjects(countryCode.locale, it) } }
                 map { it.episodeMetadata!!.seasonId }.distinct().parallelStream().forEach { HttpRequest.retry(3) { getSeason(countryCode.locale, it) } }
             }
     }
