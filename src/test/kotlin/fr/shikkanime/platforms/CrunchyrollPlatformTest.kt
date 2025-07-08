@@ -237,7 +237,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     @Test
     fun getNextEpisodeFallbackToEpisode() = runBlocking {
         val episode = AbstractCrunchyrollWrapper.Episode(
-            null,
+            "",
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
@@ -297,7 +297,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val countryCode = CountryCode.FR
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
-            null,
+            "",
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
@@ -370,7 +370,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val countryCode = CountryCode.FR
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
-            null,
+            "",
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
