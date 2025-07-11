@@ -397,7 +397,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             Platform.ANIM -> retrieveADNEpisode(countryCode, identifier, episodes)
             Platform.CRUN -> retrieveCrunchyrollEpisode(countryCode, identifier, isImageUpdate, episodes)
             Platform.DISN -> retrieveDisneyEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime)
-            Platform.NETF -> retrieveNetflixEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, episodeType, audioLocale)
+            Platform.NETF -> retrieveNetflixEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, episodeType, setOf(audioLocale))
             Platform.PRIM -> retrievePrimeEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime, episodeType)
             else -> logger.warning("Error while getting episode $identifier : Invalid platform")
         }
@@ -469,7 +469,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         identifiers: HashSet<String>,
         episodes: MutableList<Episode>,
         episodeType: EpisodeType,
-        audioLocale: String
+        audioLocales: Set<String>
     ) {
         runCatching {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
@@ -480,13 +480,13 @@ class UpdateEpisodeMappingJob : AbstractJob {
             updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
             updateUrl(episodeVariant, episode.url)
 
-            episodes.add(
+            episodes.addAll(
                 netflixPlatform.convertEpisode(
                     countryCode,
                     StringUtils.EMPTY_STRING,
                     episode,
                     episodeType,
-                    audioLocale
+                    audioLocales
                 )
             )
         }

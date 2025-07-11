@@ -233,7 +233,10 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.NETF,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            attachments = buildMap { put(ImageType.BANNER, show.banner) },
+            attachments = buildMap {
+                show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
+                put(ImageType.BANNER, show.banner)
+            },
             description = show.description,
             episodeSize = episodes.size
         )

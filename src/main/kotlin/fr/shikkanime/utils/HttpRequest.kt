@@ -78,7 +78,10 @@ class HttpRequest(
         }
 
         playwright = Playwright.create()
-        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true))
+        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true).setFirefoxUserPrefs(mapOf(
+            "media.eme.enabled" to true,
+            "media.gmp-manager.updateEnabled" to true,
+        )))
 
         context = if (countryCode != null)
             browser?.newContext(
@@ -96,32 +99,55 @@ class HttpRequest(
         isBrowserInitialized = true
     }
 
-    fun getWithBrowser(url: String, selector: String? = null, `try`: Int = 1): Document {
+    fun getWithBrowser(url: String, selector: String? = null, retryCount: Int = 1): Document {
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 
-        val takeMs = measureTimeMillis {
+        val elapsedTime = measureTimeMillis {
             try {
                 page?.navigate(url)
-
-                if (selector != null) {
-                    page?.waitForSelector(selector)
-                } else {
-                    page?.waitForLoadState()
-                }
+                selector?.let { page?.waitForSelector(it) } ?: page?.waitForLoadState()
             } catch (e: Exception) {
-                if (`try` < 3) {
+                if (retryCount < 3) {
                     logger.info("Retrying...")
-                    return getWithBrowser(url, selector, `try` + 1)
+                    return getWithBrowser(url, selector, retryCount + 1)
                 }
-
                 throw e
             }
         }
 
-        val content = page?.content()
-        logger.info("Request to $url done in ${takeMs}ms (BROWSER)")
-        return Jsoup.parse(content ?: throw Exception("Content is null"))
+        val content = page?.content() ?: throw Exception("Content is null")
+        logger.info("Request to $url done in ${elapsedTime}ms (BROWSER)")
+        return Jsoup.parse(content)
+    }
+
+    fun getJSContent(url: String, cookies: Map<String, String>? = null, selector: String? = null): Any? {
+        var content: Any? = null
+        initBrowser()
+        logger.info("Making request to $url... (BROWSER)")
+
+        val elapsedTime = measureTimeMillis {
+            cookies?.takeIf { it.isNotEmpty() }?.let {
+                context?.addCookies(it.map { (key, value) -> Cookie(key, value).setUrl(url) })
+            }
+
+            page?.navigate(url)
+            selector?.let { page?.waitForSelector(it) } ?: page?.waitForLoadState()
+
+            // Execute JS and get the content
+            content = page?.evaluate("""
+                let videoPlayer = netflix.appContext.state.playerApp.getAPI().videoPlayer;
+                let sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+                let video = videoPlayer.getVideoPlayerBySessionId(sessionId);
+                JSON.stringify({
+                    audio_locales: video.getAudioTrackList().filter((e) => e.bcp47 && e.trackType === 'PRIMARY').map(e => e.bcp47),
+                    subtitles_locales: video.getTextTrackList().filter((e) => e.bcp47 && e.trackType === 'PRIMARY').map(e => e.bcp47)
+                });
+            """.trimIndent())
+        }
+
+        logger.info("Request to $url done in ${elapsedTime}ms (BROWSER)")
+        return content
     }
 
     fun getCookiesWithBrowser(url: String): List<Cookie> {
