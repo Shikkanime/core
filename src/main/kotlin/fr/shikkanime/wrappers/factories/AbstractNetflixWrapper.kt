@@ -8,14 +8,28 @@ import java.time.Duration
 import java.time.ZonedDateTime
 
 abstract class AbstractNetflixWrapper {
+    data class EpisodeMetadata(
+        val id: Int,
+        val image: String?
+    )
+
+    data class ShowMetadata(
+        val thumbnail: String?,
+        val banner: String?,
+        val cover: String?,
+        val episodes: List<EpisodeMetadata>,
+    )
+
     data class Show(
         val id: Int,
         val name: String,
+        val thumbnail: String?,
         val banner: String,
         val description: String?,
         val seasonCount: Int?,
         val availabilityStartTime: ZonedDateTime?,
         val runtimeSec: Long? = null,
+        val metadata: ShowMetadata? = null,
     )
 
     data class Season(
@@ -38,7 +52,7 @@ abstract class AbstractNetflixWrapper {
         val duration: Long,
     )
 
-    private val baseUrl = "https://www.netflix.com"
+    protected val baseUrl = "https://www.netflix.com"
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
     protected val httpRequest = HttpRequest()
 

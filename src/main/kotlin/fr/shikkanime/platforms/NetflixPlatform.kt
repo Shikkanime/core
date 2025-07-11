@@ -75,7 +75,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         countryCode = countryCode,
         animeId = episode.show.id.toString(),
         anime = episode.show.name,
-        animeImage = showImage,
+        animeImage = episode.show.thumbnail ?: showImage,
         animeBanner = episode.show.banner,
         animeDescription = episode.show.description,
         releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
