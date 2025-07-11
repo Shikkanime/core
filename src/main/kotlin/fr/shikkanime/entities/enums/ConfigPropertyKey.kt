@@ -58,4 +58,6 @@ enum class ConfigPropertyKey(val key: String) {
     FIREBASE_ENABLED("firebase_enabled"),
     THREADS_ENABLED("threads_enabled"),
     TWITTER_ENABLED("twitter_enabled"),
+    NETFLIX_ID("netflix_id"),
+    NETFLIX_SECURE_ID("netflix_secure_id"),
 }

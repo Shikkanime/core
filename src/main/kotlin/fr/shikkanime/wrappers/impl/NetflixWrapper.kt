@@ -1,5 +1,9 @@
 package fr.shikkanime.wrappers.impl
 
+import com.google.gson.JsonObject
+import com.google.inject.Inject
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -10,7 +14,51 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
-object NetflixWrapper : AbstractNetflixWrapper(){
+object NetflixWrapper : AbstractNetflixWrapper() {
+    @Inject private lateinit var configCacheService: ConfigCacheService
+
+    private fun extractMaxUrl(json: JsonObject, arrayName: String): String? {
+        return json.getAsJsonArray(arrayName)
+            .map { it.asJsonObject }
+            .maxByOrNull { it.getAsInt("w") ?: 0 }
+            ?.getAsString("url")
+            ?.substringBefore("?")
+    }
+
+    private suspend fun getMetadata(id: Int): ShowMetadata {
+        val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
+        val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
+        require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true) { "NetflixId and NetflixSecureId must be set in the configuration" }
+
+        val response = httpRequest.get(
+            "$baseUrl/nq/website/memberapi/release/metadata?movieid=$id&imageFormat=jpg",
+            mapOf(
+                "Content-Type" to "application/json",
+                "Cookie" to "NetflixId=$netflixId; SecureNetflixId=$netflixSecureId"
+            )
+        )
+        require(response.status == HttpStatusCode.OK) { "Failed to get metadata (${response.status.value} - ${response.bodyAsText()})" }
+        val metadataJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("video")
+            ?: throw Exception("Failed to get metadata")
+
+        val episodes = metadataJson.getAsJsonArray("seasons")?.flatMap { seasonJson ->
+            seasonJson.asJsonObject.getAsJsonArray("episodes").map { episodeJson ->
+                val episode = episodeJson.asJsonObject
+                EpisodeMetadata(
+                    episode.getAsInt("id") ?: 0,
+                    extractMaxUrl(episode, "stills")
+                )
+            }
+        }.orEmpty()
+
+        return ShowMetadata(
+            extractMaxUrl(metadataJson, "boxart"),
+            extractMaxUrl(metadataJson, "artwork"),
+            extractMaxUrl(metadataJson, "storyart"),
+            episodes
+        )
+    }
+
     override suspend fun getShow(locale: String, id: Int): Show {
         val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "DetailModal",
@@ -36,15 +84,18 @@ object NetflixWrapper : AbstractNetflixWrapper(){
         )))
         require(response.status == HttpStatusCode.OK) { "Failed to get show (${response.status.value} - ${response.bodyAsText()})" }
         val showJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("data")?.getAsJsonArray("unifiedEntities")?.get(0)?.asJsonObject ?: throw Exception("Failed to get show")
+        val metadata = runCatching { getMetadata(id) }.getOrNull()
 
         return Show(
             id,
             showJson.getAsString("title")!!,
-            showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
+            metadata?.thumbnail,
+            metadata?.banner ?: showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
             showJson.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
-            showJson.getAsInt("runtimeSec")?.toLong()
+            showJson.getAsInt("runtimeSec")?.toLong(),
+            metadata
         )
     }
 
@@ -83,7 +134,7 @@ object NetflixWrapper : AbstractNetflixWrapper(){
                     show.name.normalize(),
                     show.description?.normalize(),
                     "https://www.netflix.com/watch/${show.id}",
-                    show.banner.substringBefore("?"),
+                    show.metadata?.cover ?: show.banner.substringBefore("?"),
                     show.runtimeSec!!
                 )
             )
@@ -102,21 +153,25 @@ object NetflixWrapper : AbstractNetflixWrapper(){
         }
 
         return seasons.flatMapIndexed { index, season ->
-            val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
-                "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
-                "variables" to mapOf(
-                    "seasonId" to season.id,
-                    "count" to season.episodeCount,
-                    "opaqueImageFormat" to "PNG",
-                    "artworkContext" to emptyMap<String, String>(),
-                ),
-                "extensions" to mapOf(
-                    "persistedQuery" to mapOf(
-                        "version" to 102,
-                        "id" to "9492d2b1-888a-47e5-b02d-dbee58872f1e"
+            val response = httpRequest.postGraphQL(
+                locale, ObjectParser.toJson(
+                    mapOf(
+                        "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
+                        "variables" to mapOf(
+                            "seasonId" to season.id,
+                            "count" to season.episodeCount,
+                            "opaqueImageFormat" to "PNG",
+                            "artworkContext" to emptyMap<String, String>(),
+                        ),
+                        "extensions" to mapOf(
+                            "persistedQuery" to mapOf(
+                                "version" to 102,
+                                "id" to "9492d2b1-888a-47e5-b02d-dbee58872f1e"
+                            )
+                        )
                     )
                 )
-            )))
+            )
             require(response.status == HttpStatusCode.OK) { "Failed to get episodes (${response.status.value} - ${response.bodyAsText()})" }
 
             val episodesJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("data")
@@ -127,18 +182,19 @@ object NetflixWrapper : AbstractNetflixWrapper(){
 
             episodesJson.map { episodeJson ->
                 val episode = episodeJson.asJsonObject.getAsJsonObject("node")
+                val episodeId = episode.getAsInt("videoId")!!
 
                 Episode(
                     show,
-                    EncryptionManager.toSHA512("$id-${index + 1}-${episode.getAsInt("number")!!}").substring(0..<8),
-                    episode.getAsInt("videoId")!!,
+                    EncryptionManager.toSHA512("${show.id}-${index + 1}-${episode.getAsInt("number")!!}").substring(0..<8),
+                    episodeId,
                     episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
                     index + 1,
                     episode.getAsInt("number")!!,
                     episode.getAsString("title")?.normalize(),
                     episode.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
-                    "https://www.netflix.com/watch/${episode.getAsInt("videoId")!!}",
-                    episode.getAsJsonObject("artwork")!!.getAsString("url")!!.substringBefore("?"),
+                    "https://www.netflix.com/watch/$episodeId",
+                    show.metadata?.episodes?.find { it.id == episodeId }?.image ?: episode.getAsJsonObject("artwork")!!.getAsString("url")!!.substringBefore("?"),
                     episode.getAsInt("runtimeSec")!!.toLong()
                 )
             }
