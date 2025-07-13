@@ -26,8 +26,7 @@ class FetchEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isInitialized = false
     private var isRunning = false
-    private var lock = 0
-    private val maxLock = 5
+    private var lastFetch: ZonedDateTime? = null
 
     private val typeIdentifiers = mutableSetOf<String>()
 
@@ -38,18 +37,17 @@ class FetchEpisodesJob : AbstractJob {
 
     override fun run() {
         if (isRunning) {
-            if (++lock > maxLock) {
+            if (lastFetch != null && lastFetch!!.isAfter(ZonedDateTime.now().minusMinutes(5))) {
                 logger.warning("Job is locked, unlocking...")
                 isRunning = false
-                lock = 0
             } else {
-                logger.warning("Job is already running ($lock/$maxLock)")
+                logger.warning("Job is already running or was recently executed, skipping this run.")
                 return
             }
         }
 
         isRunning = true
-        lock = 0
+        lastFetch = ZonedDateTime.now()
 
         if (!isInitialized) {
             val variants = episodeVariantService.findAllTypeIdentifier()

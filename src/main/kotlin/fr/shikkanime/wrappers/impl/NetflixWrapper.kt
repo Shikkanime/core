@@ -1,22 +1,18 @@
 package fr.shikkanime.wrappers.impl
 
 import com.google.gson.JsonObject
-import com.google.inject.Inject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
+import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
 object NetflixWrapper : AbstractNetflixWrapper() {
-    @Inject private lateinit var configCacheService: ConfigCacheService
-
     private fun extractMaxUrl(json: JsonObject, arrayName: String): String? {
         return json.getAsJsonArray(arrayName)
             .map { it.asJsonObject }
@@ -25,10 +21,16 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.substringBefore("?")
     }
 
-    private suspend fun getMetadata(id: Int): ShowMetadata {
+    private fun getIdAndSecureIdFromConfig(): Pair<String?, String?> {
+        val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
         val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
         val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
         require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true) { "NetflixId and NetflixSecureId must be set in the configuration" }
+        return Pair(netflixId, netflixSecureId)
+    }
+
+    private suspend fun getMetadata(id: Int): ShowMetadata {
+        val (netflixId, netflixSecureId) = getIdAndSecureIdFromConfig()
 
         val response = httpRequest.get(
             "$baseUrl/nq/website/memberapi/release/metadata?movieid=$id&imageFormat=jpg",
@@ -99,14 +101,24 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode> {
+    override suspend fun getEpisodesByShowId(zonedDateTime: ZonedDateTime, locale: String, id: Int, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
         val show = getShow(locale, id)
+        val seasonsResponse = fetchSeasonsData(locale, id, show.seasonCount ?: 1)
+        val firstVideoObject = parseFirstVideoObject(seasonsResponse)
+        
+        return if (firstVideoObject?.getAsString("__typename") == "Movie") {
+            createMovieEpisode(zonedDateTime, show, id, fetchLocaleAfterReleaseDateTime)
+        } else {
+            createSeriesEpisodes(zonedDateTime, locale, show, firstVideoObject, fetchLocaleAfterReleaseDateTime)
+        }
+    }
 
+    private suspend fun fetchSeasonsData(locale: String, id: Int, seasonCount: Int): HttpResponse {
         val seasonsResponse = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelector",
             "variables" to mapOf(
                 "showId" to id,
-                "seasonCount" to (show.seasonCount ?: 1),
+                "seasonCount" to seasonCount
             ),
             "extensions" to mapOf(
                 "persistedQuery" to mapOf(
@@ -115,89 +127,173 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 )
             )
         )))
-        require(seasonsResponse.status == HttpStatusCode.OK) { "Failed to get seasons (${seasonsResponse.status.value} - ${seasonsResponse.bodyAsText()})" }
+        require(seasonsResponse.status == HttpStatusCode.OK) { 
+            "Failed to get seasons (${seasonsResponse.status.value} - ${seasonsResponse.bodyAsText()})" 
+        }
+        return seasonsResponse
+    }
 
-        val firstVideoObject = ObjectParser.fromJson(seasonsResponse.bodyAsText()).getAsJsonObject("data")
+    private suspend fun parseFirstVideoObject(seasonsResponse: HttpResponse): JsonObject? {
+        return ObjectParser.fromJson(seasonsResponse.bodyAsText())
+            .getAsJsonObject("data")
             ?.getAsJsonArray("videos")
-            ?.get(0)?.asJsonObject
+            ?.firstOrNull()?.asJsonObject
+    }
 
-        // If first video type is movie, return directly
-        if (firstVideoObject?.getAsString("__typename") == "Movie") {
-            return listOf(
-                Episode(
-                    show,
-                    EncryptionManager.toSHA512("$id-1-1").substring(0..<8),
-                    show.id,
-                    show.availabilityStartTime,
-                    1,
-                    1,
-                    show.name.normalize(),
-                    show.description?.normalize(),
-                    "https://www.netflix.com/watch/${show.id}",
-                    show.metadata?.cover ?: show.banner.substringBefore("?"),
-                    show.runtimeSec!!
-                )
-            )
+    private suspend fun createMovieEpisode(zonedDateTime: ZonedDateTime, show: Show, id: Int, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
+        val releaseDateTime = show.availabilityStartTime
+
+        val (audioLocales, subtitleLocales) = when {
+            fetchLocaleAfterReleaseDateTime && (releaseDateTime?.toLocalTime()?.withNano(0) ?: ZonedDateTime.now()
+                .toLocalTime().withNano(0)) >= zonedDateTime.toLocalTime().withNano(0) ->
+                getEpisodeLocales(show.id)
+            else ->
+                Pair(emptySet(), emptySet())
         }
 
+        return listOf(
+            Episode(
+                show,
+                EncryptionManager.toSHA512("$id-1-1").take(8),
+                show.id,
+                releaseDateTime,
+                1,
+                1,
+                show.name.normalize(),
+                show.description?.normalize(),
+                "$baseUrl/watch/${show.id}",
+                show.metadata?.cover ?: show.banner.substringBefore("?"),
+                show.runtimeSec!!,
+                mapAudioLocales(audioLocales),
+                mapSubtitleLocales(subtitleLocales)
+            )
+        )
+    }
+
+    private suspend fun createSeriesEpisodes(zonedDateTime: ZonedDateTime, locale: String, show: Show, firstVideoObject: JsonObject?, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
         val seasonsJson = firstVideoObject?.getAsJsonObject("seasons")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get seasons")
+        
+        val seasons = parseSeasons(seasonsJson)
+        
+        return seasons.flatMapIndexed { index, season ->
+            fetchAndCreateEpisodesForSeason(zonedDateTime, locale, show, season, index + 1, fetchLocaleAfterReleaseDateTime)
+        }
+    }
 
-        val seasons = seasonsJson.map { seasonJson ->
+    private fun parseSeasons(seasonsJson: com.google.gson.JsonArray): List<Season> {
+        return seasonsJson.map { seasonJson ->
             val season = seasonJson.asJsonObject.getAsJsonObject("node")
             Season(
                 season.getAsInt("videoId")!!,
                 season.getAsString("title")!!,
-                season.getAsJsonObject("episodes")!!.getAsInt("totalCount")!!,
+                season.getAsJsonObject("episodes").getAsInt("totalCount")!!
+            )
+        }
+    }
+
+    private suspend fun fetchAndCreateEpisodesForSeason(zonedDateTime: ZonedDateTime, locale: String, show: Show, season: Season, seasonNumber: Int, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
+        val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
+            "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
+            "variables" to mapOf(
+                "seasonId" to season.id,
+                "count" to season.episodeCount,
+                "opaqueImageFormat" to "PNG",
+                "artworkContext" to emptyMap<String, String>()
+            ),
+            "extensions" to mapOf(
+                "persistedQuery" to mapOf(
+                    "version" to 102,
+                    "id" to "9492d2b1-888a-47e5-b02d-dbee58872f1e"
+                )
+            )
+        )))
+        require(response.status == HttpStatusCode.OK) { 
+            "Failed to get episodes (${response.status.value} - ${response.bodyAsText()})" 
+        }
+
+        val episodesJson = ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonObject("data")
+            ?.getAsJsonArray("videos")
+            ?.firstOrNull()?.asJsonObject
+            ?.getAsJsonObject("episodes")
+            ?.getAsJsonArray("edges") ?: throw Exception("Failed to get episodes")
+
+        return episodesJson.map { episodeJson ->
+            createEpisodeFromJson(zonedDateTime, show, episodeJson.asJsonObject, seasonNumber, fetchLocaleAfterReleaseDateTime)
+        }
+    }
+
+    private suspend fun createEpisodeFromJson(zonedDateTime: ZonedDateTime, show: Show, episodeJson: JsonObject, seasonNumber: Int, fetchLocaleAfterReleaseDateTime: Boolean): Episode {
+        val episode = episodeJson.getAsJsonObject("node")
+        val episodeId = episode.getAsInt("videoId")!!
+        val episodeNumber = episode.getAsInt("number")!!
+        val releaseDateTime = episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) }
+
+        val (audioLocales, subtitleLocales) = when {
+            fetchLocaleAfterReleaseDateTime && (releaseDateTime?.toLocalTime()?.withNano(0) ?: ZonedDateTime.now()
+                .toLocalTime().withNano(0)) >= zonedDateTime.toLocalTime().withNano(0) ->
+                getEpisodeLocales(episodeId)
+            else ->
+                Pair(emptySet(), emptySet())
+        }
+
+        return Episode(
+            show,
+            EncryptionManager.toSHA512("${show.id}-$seasonNumber-$episodeNumber").take(8),
+            episodeId,
+            releaseDateTime,
+            seasonNumber,
+            episodeNumber,
+            episode.getAsString("title")?.normalize(),
+            episode.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
+            "$baseUrl/watch/$episodeId",
+            show.metadata?.episodes?.find { it.id == episodeId }?.image
+                ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
+            episode.getAsInt("runtimeSec")!!.toLong(),
+            mapAudioLocales(audioLocales),
+            mapSubtitleLocales(subtitleLocales)
+        )
+    }
+
+    private suspend fun getEpisodeLocales(episodeId: Int): Pair<Set<String>, Set<String>> {
+        return runCatching {
+            NetflixCachedWrapper.getEpisodeAudioLocalesAndSubtitles(episodeId)
+        }.getOrNull() ?: Pair(emptySet(), emptySet())
+    }
+
+    private fun mapAudioLocales(audioLocales: Set<String>): Set<String> {
+        return buildSet {
+            if ("ja" in audioLocales) add("ja-JP")
+            if ("ja" !in audioLocales && "en" in audioLocales) add("en-US")
+            if ("fr" in audioLocales) add("fr-FR")
+        }
+    }
+
+    private fun mapSubtitleLocales(subtitleLocales: Set<String>): Set<String> {
+        return subtitleLocales.mapTo(mutableSetOf()) {
+            if (it == "fr") "fr-FR" else null
+        }.filterNotNull().toSet()
+    }
+
+    override suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>>? {
+        val (netflixId, netflixSecureId) = getIdAndSecureIdFromConfig()
+
+        val response = HttpRequest().use {
+            it.getJSContent(
+                "$baseUrl/watch/$id",
+                mapOf(
+                    "NetflixId" to netflixId!!,
+                    "SecureNetflixId" to netflixSecureId!!
+                ),
+                "div.error-page--content"
             )
         }
 
-        return seasons.flatMapIndexed { index, season ->
-            val response = httpRequest.postGraphQL(
-                locale, ObjectParser.toJson(
-                    mapOf(
-                        "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
-                        "variables" to mapOf(
-                            "seasonId" to season.id,
-                            "count" to season.episodeCount,
-                            "opaqueImageFormat" to "PNG",
-                            "artworkContext" to emptyMap<String, String>(),
-                        ),
-                        "extensions" to mapOf(
-                            "persistedQuery" to mapOf(
-                                "version" to 102,
-                                "id" to "9492d2b1-888a-47e5-b02d-dbee58872f1e"
-                            )
-                        )
-                    )
-                )
-            )
-            require(response.status == HttpStatusCode.OK) { "Failed to get episodes (${response.status.value} - ${response.bodyAsText()})" }
-
-            val episodesJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("data")
-                ?.getAsJsonArray("videos")
-                ?.get(0)?.asJsonObject
-                ?.getAsJsonObject("episodes")
-                ?.getAsJsonArray("edges") ?: throw Exception("Failed to get episodes")
-
-            episodesJson.map { episodeJson ->
-                val episode = episodeJson.asJsonObject.getAsJsonObject("node")
-                val episodeId = episode.getAsInt("videoId")!!
-
-                Episode(
-                    show,
-                    EncryptionManager.toSHA512("${show.id}-${index + 1}-${episode.getAsInt("number")!!}").substring(0..<8),
-                    episodeId,
-                    episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
-                    index + 1,
-                    episode.getAsInt("number")!!,
-                    episode.getAsString("title")?.normalize(),
-                    episode.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
-                    "https://www.netflix.com/watch/$episodeId",
-                    show.metadata?.episodes?.find { it.id == episodeId }?.image ?: episode.getAsJsonObject("artwork")!!.getAsString("url")!!.substringBefore("?"),
-                    episode.getAsInt("runtimeSec")!!.toLong()
-                )
-            }
-        }
+        requireNotNull(response) { "Failed to get episode audio locales and subtitles" }
+        val json = ObjectParser.fromJson(response.toString()).asJsonObject
+        val audioLocales = json.getAsJsonArray("audio_locales").map { it.asString }.toSet()
+        val subtitleLocales = json.getAsJsonArray("subtitles_locales").map { it.asString }.toSet()
+        return audioLocales to subtitleLocales
     }
 }
