@@ -58,7 +58,7 @@
             <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/favicons/apple-touch-icon.png">
             <link rel="manifest" href="/assets/site.webmanifest">
 
-            <link rel="stylesheet" href="/assets/css/purged/bootstrap.min.css" crossorigin="anonymous">
+            <link rel="stylesheet" href="/assets/css/bootstrap.min.css" crossorigin="anonymous">
             <link rel="stylesheet" href="/assets/css/purged/main.min.css" crossorigin="anonymous">
             <script defer src="/assets/js/alpinejs.min.js" crossorigin="anonymous"></script>
 

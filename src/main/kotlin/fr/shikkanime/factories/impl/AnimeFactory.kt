@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
@@ -39,7 +38,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             audioLocales = audioLocales.takeIf { it.isNotEmpty() },
             langTypes = audioLocales.map { LangType.fromAudioLocale(entity.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),
-            platformIds = platforms.sortedWith(compareByDescending <AnimePlatform>{ it.lastValidateDateTime }.thenBy { it.platform?.name }).map { animePlatformFactory.toDto(it) }.toSet()
+            platformIds = platforms.sortedBy { it.platform?.name }.map { animePlatformFactory.toDto(it) }.toSet()
         )
     }
 }
