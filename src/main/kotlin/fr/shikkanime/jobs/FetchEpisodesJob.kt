@@ -37,7 +37,7 @@ class FetchEpisodesJob : AbstractJob {
 
     override fun run() {
         if (isRunning) {
-            if (lastFetch != null && lastFetch!!.isAfter(ZonedDateTime.now().minusMinutes(5))) {
+            if (lastFetch != null && lastFetch!!.plusMinutes(5).isAfterOrEqual(ZonedDateTime.now())) {
                 logger.warning("Job is locked, unlocking...")
                 isRunning = false
             } else {
