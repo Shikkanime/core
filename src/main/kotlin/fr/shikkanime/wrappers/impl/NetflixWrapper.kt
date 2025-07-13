@@ -101,15 +101,15 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(zonedDateTime: ZonedDateTime, locale: String, id: Int, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
+    override suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode> {
         val show = getShow(locale, id)
         val seasonsResponse = fetchSeasonsData(locale, id, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
         
         return if (firstVideoObject?.getAsString("__typename") == "Movie") {
-            createMovieEpisode(zonedDateTime, show, id, fetchLocaleAfterReleaseDateTime)
+            createMovieEpisode(show, id)
         } else {
-            createSeriesEpisodes(zonedDateTime, locale, show, firstVideoObject, fetchLocaleAfterReleaseDateTime)
+            createSeriesEpisodes(locale, show, firstVideoObject)
         }
     }
 
@@ -140,16 +140,9 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.firstOrNull()?.asJsonObject
     }
 
-    private suspend fun createMovieEpisode(zonedDateTime: ZonedDateTime, show: Show, id: Int, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
+    private suspend fun createMovieEpisode(show: Show, id: Int): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
-
-        val (audioLocales, subtitleLocales) = when {
-            fetchLocaleAfterReleaseDateTime && (releaseDateTime?.toLocalTime()?.withNano(0) ?: ZonedDateTime.now()
-                .toLocalTime().withNano(0)) >= zonedDateTime.toLocalTime().withNano(0) ->
-                getEpisodeLocales(show.id)
-            else ->
-                Pair(emptySet(), emptySet())
-        }
+        val (audioLocales, subtitleLocales) = getEpisodeLocales(show.id)
 
         return listOf(
             Episode(
@@ -170,14 +163,14 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    private suspend fun createSeriesEpisodes(zonedDateTime: ZonedDateTime, locale: String, show: Show, firstVideoObject: JsonObject?, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
+    private suspend fun createSeriesEpisodes(locale: String, show: Show, firstVideoObject: JsonObject?): List<Episode> {
         val seasonsJson = firstVideoObject?.getAsJsonObject("seasons")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get seasons")
         
         val seasons = parseSeasons(seasonsJson)
         
         return seasons.flatMapIndexed { index, season ->
-            fetchAndCreateEpisodesForSeason(zonedDateTime, locale, show, season, index + 1, fetchLocaleAfterReleaseDateTime)
+            fetchAndCreateEpisodesForSeason(locale, show, season, index + 1)
         }
     }
 
@@ -192,7 +185,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private suspend fun fetchAndCreateEpisodesForSeason(zonedDateTime: ZonedDateTime, locale: String, show: Show, season: Season, seasonNumber: Int, fetchLocaleAfterReleaseDateTime: Boolean): List<Episode> {
+    private suspend fun fetchAndCreateEpisodesForSeason(locale: String, show: Show, season: Season, seasonNumber: Int): List<Episode> {
         val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
             "variables" to mapOf(
@@ -220,23 +213,16 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get episodes")
 
         return episodesJson.map { episodeJson ->
-            createEpisodeFromJson(zonedDateTime, show, episodeJson.asJsonObject, seasonNumber, fetchLocaleAfterReleaseDateTime)
+            createEpisodeFromJson(show, episodeJson.asJsonObject, seasonNumber)
         }
     }
 
-    private suspend fun createEpisodeFromJson(zonedDateTime: ZonedDateTime, show: Show, episodeJson: JsonObject, seasonNumber: Int, fetchLocaleAfterReleaseDateTime: Boolean): Episode {
+    private suspend fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode {
         val episode = episodeJson.getAsJsonObject("node")
         val episodeId = episode.getAsInt("videoId")!!
         val episodeNumber = episode.getAsInt("number")!!
         val releaseDateTime = episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) }
-
-        val (audioLocales, subtitleLocales) = when {
-            fetchLocaleAfterReleaseDateTime && (releaseDateTime?.toLocalTime()?.withNano(0) ?: ZonedDateTime.now()
-                .toLocalTime().withNano(0)) >= zonedDateTime.toLocalTime().withNano(0) ->
-                getEpisodeLocales(episodeId)
-            else ->
-                Pair(emptySet(), emptySet())
-        }
+        val (audioLocales, subtitleLocales) = getEpisodeLocales(episodeId)
 
         return Episode(
             show,

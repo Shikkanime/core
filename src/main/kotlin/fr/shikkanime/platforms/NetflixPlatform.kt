@@ -24,7 +24,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
-        val episodes = NetflixWrapper.getEpisodesByShowId(zonedDateTime, key.countryCode.locale, key.netflixSimulcast.name.toInt(), true)
+        val episodes = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
         val identifiers = mutableMapOf<Int, ZonedDateTime>()
 
         return episodes.flatMap { video ->

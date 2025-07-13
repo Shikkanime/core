@@ -474,7 +474,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         runCatching {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
-            val platformEpisodes = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(ZonedDateTime.now(), countryCode.locale, it.toInt(), false) }
+            val platformEpisodes = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, it.toInt()) }
             val episode = platformEpisodes.find { it.id.toString() == id || it.oldId == id } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)

@@ -220,10 +220,8 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchNetflixAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val episodes = runCatching {
             NetflixCachedWrapper.getEpisodesByShowId(
-                ZonedDateTime.now(),
                 animePlatform.anime!!.countryCode!!.locale,
-                animePlatform.platformId!!.toInt(),
-                false
+                animePlatform.platformId!!.toInt()
             )
         }.getOrNull()
 
