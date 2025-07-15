@@ -30,7 +30,7 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     kotlin("kapt") version kotlinVersion
 
-    id("io.ktor.plugin") version "3.2.1"
+    id("io.ktor.plugin") version "3.2.2"
     id("org.sonarqube") version "6.2.0.5505"
 
     jacoco
