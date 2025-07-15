@@ -121,21 +121,21 @@ class HttpRequest(
         return Jsoup.parse(content)
     }
 
-    fun getJSContent(url: String, cookies: Map<String, String>? = null, selector: String? = null): Any? {
+    fun getJSContent(url: String, cookies: Map<String, String>? = null, selector: String? = null, retryCount: Int = 1): Any? {
         var content: Any? = null
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 
         val elapsedTime = measureTimeMillis {
-            cookies?.takeIf { it.isNotEmpty() }?.let {
-                context?.addCookies(it.map { (key, value) -> Cookie(key, value).setUrl(url) })
-            }
+            try {
+                cookies?.takeIf { it.isNotEmpty() }?.let {
+                    context?.addCookies(it.map { (key, value) -> Cookie(key, value).setUrl(url) })
+                }
 
-            page?.navigate(url)
-            selector?.let { page?.waitForSelector(it) } ?: page?.waitForLoadState()
+                page?.navigate(url)
+                selector?.let { page?.waitForSelector(it) } ?: page?.waitForLoadState()
 
-            // Execute JS and get the content
-            content = page?.evaluate("""
+                content = page?.evaluate("""
                 let videoPlayer = netflix.appContext.state.playerApp.getAPI().videoPlayer;
                 let sessionId = videoPlayer.getAllPlayerSessionIds()[0];
                 let video = videoPlayer.getVideoPlayerBySessionId(sessionId);
@@ -144,6 +144,13 @@ class HttpRequest(
                     subtitles_locales: video.getTextTrackList().filter((e) => e.bcp47 && e.trackType === 'PRIMARY').map(e => e.bcp47)
                 });
             """.trimIndent())
+            } catch (e: Exception) {
+                if (retryCount < 3) {
+                    logger.info("Retrying...")
+                    return getJSContent(url, cookies, selector, retryCount + 1)
+                }
+                throw e
+            }
         }
 
         logger.info("Request to $url done in ${elapsedTime}ms (BROWSER)")

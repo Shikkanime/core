@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
+import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
@@ -96,6 +97,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
             showJson.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
+            showJson.getAsBoolean("isAvailable") ?: false,
+            showJson.getAsBoolean("isPlayable") ?: false,
             showJson.getAsInt("runtimeSec")?.toLong(),
             metadata
         )
@@ -142,6 +145,13 @@ object NetflixWrapper : AbstractNetflixWrapper() {
 
     private suspend fun createMovieEpisode(show: Show, id: Int): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
+        val isAvailable = show.isAvailable
+        val isPlayable = show.isPlayable
+
+        if (!(isAvailable && isPlayable)) {
+            return emptyList()
+        }
+
         val (audioLocales, subtitleLocales) = getEpisodeLocales(show.id)
 
         return listOf(
@@ -212,16 +222,23 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.getAsJsonObject("episodes")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get episodes")
 
-        return episodesJson.map { episodeJson ->
+        return episodesJson.mapNotNull { episodeJson ->
             createEpisodeFromJson(show, episodeJson.asJsonObject, seasonNumber)
         }
     }
 
-    private suspend fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode {
+    private suspend fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode? {
         val episode = episodeJson.getAsJsonObject("node")
         val episodeId = episode.getAsInt("videoId")!!
         val episodeNumber = episode.getAsInt("number")!!
         val releaseDateTime = episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) }
+        val isAvailable = episode.getAsBoolean("isAvailable") ?: false
+        val isPlayable = episode.getAsBoolean("isPlayable") ?: false
+
+        if (!(isAvailable && isPlayable)) {
+            return null
+        }
+
         val (audioLocales, subtitleLocales) = getEpisodeLocales(episodeId)
 
         return Episode(
@@ -243,9 +260,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
     }
 
     private suspend fun getEpisodeLocales(episodeId: Int): Pair<Set<String>, Set<String>> {
-        return runCatching {
-            NetflixCachedWrapper.getEpisodeAudioLocalesAndSubtitles(episodeId)
-        }.getOrNull() ?: Pair(emptySet(), emptySet())
+        return runCatching { NetflixCachedWrapper.getEpisodeAudioLocalesAndSubtitles(episodeId) }
+            .getOrNull() ?: Pair(emptySet(), emptySet())
     }
 
     private fun mapAudioLocales(audioLocales: Set<String>): Set<String> {

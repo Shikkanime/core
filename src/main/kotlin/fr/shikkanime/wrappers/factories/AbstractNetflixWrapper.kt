@@ -28,6 +28,8 @@ abstract class AbstractNetflixWrapper {
         val description: String?,
         val seasonCount: Int?,
         val availabilityStartTime: ZonedDateTime?,
+        val isAvailable: Boolean,
+        val isPlayable: Boolean,
         val runtimeSec: Long? = null,
         val metadata: ShowMetadata? = null,
     )
@@ -64,7 +66,7 @@ abstract class AbstractNetflixWrapper {
         duration = Duration.ofDays(1),
         key = StringUtils.EMPTY_STRING
     ) {
-        val cookies = httpRequest.getCookiesWithBrowser(baseUrl).associateBy { it.name!! }
+        val cookies = HttpRequest().use { it.getCookiesWithBrowser(baseUrl).associateBy { cookie -> cookie.name!! } }
         return@getOrCompute cookies["NetflixId"]?.value to cookies["SecureNetflixId"]?.value
     }
 
