@@ -50,8 +50,8 @@ const setChartData = async () => {
         chart.update();
     };
 
-    updateChart(cpuChart, 'cpuLoad');
-    updateChart(memoryChart, 'memoryUsage');
+    updateChart(cpuChart, 'avgCpuLoad');
+    updateChart(memoryChart, 'avgMemoryUsage');
 
     const loginCounts = await getLoginCounts();
     loginCountChart.data.labels = loginCounts.map(loginCount => loginCount.date);
