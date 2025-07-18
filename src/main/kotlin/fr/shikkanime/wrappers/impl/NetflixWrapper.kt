@@ -25,7 +25,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.substringBefore("?")
     }
 
-    private fun getIdAndSecureIdFromConfig(): Pair<String?, String?> {
+    private fun getIdAndSecureIdFromConfig(): Pair<String, String> {
         val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
         val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
         val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
@@ -282,18 +282,46 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }.filterNotNull().toSet()
     }
 
-    override suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>>? {
+    override suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>> {
         val (netflixId, netflixSecureId) = getIdAndSecureIdFromConfig()
 
         val response = HttpRequest().use {
-            it.getJSContent(
-                "$baseUrl/watch/$id",
-                mapOf(
-                    "NetflixId" to netflixId!!,
-                    "SecureNetflixId" to netflixSecureId!!
-                ),
-                "div.error-page--content"
-            )
+            runCatching {
+                it.getJSContent(
+                    "$baseUrl/watch/$id",
+                    mapOf(
+                        "NetflixId" to netflixId,
+                        "SecureNetflixId" to netflixSecureId
+                    ),
+                    checkCondition = """
+                try {
+                    let videoPlayer = netflix?.appContext?.state?.playerApp?.getAPI()?.videoPlayer;
+                    let sessionId = videoPlayer?.getAllPlayerSessionIds()?.[0];
+                    let video = videoPlayer?.getVideoPlayerBySessionId(sessionId);
+                    sessionId && video?.getAudioTrackList()?.length > 0 && video?.getTextTrackList()?.length > 0;
+                } catch {
+                    false;
+                }
+                """.trimIndent(),
+                    evaluate = """
+                let videoPlayer = netflix.appContext.state.playerApp.getAPI().videoPlayer;
+                let sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+                const video = videoPlayer.getVideoPlayerBySessionId(sessionId);
+                
+                JSON.stringify({
+                    audio_locales: video.getAudioTrackList()
+                        .filter(e => e.bcp47 && e.trackType === 'PRIMARY')
+                        .map(e => e.bcp47),
+                    subtitles_locales: video.getTextTrackList()
+                        .filter(e => e.bcp47 && e.trackType === 'PRIMARY')
+                        .map(e => e.bcp47)
+                });
+                """.trimIndent(),
+                    maxAttempts = 6,
+                    delayMs = 2500
+                )
+            }.onFailure { exception -> logger.log(Level.WARNING, "Failed to get episode audio locales and subtitles for episode $id", exception) }
+                .getOrNull()
         }
 
         requireNotNull(response) { "Failed to get episode audio locales and subtitles" }
