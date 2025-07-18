@@ -86,5 +86,5 @@ abstract class AbstractNetflixWrapper {
 
     abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode>
-    abstract suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>>
+    abstract suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>>?
 }
