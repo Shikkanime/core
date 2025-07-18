@@ -69,13 +69,15 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         episodeType: EpisodeType,
         audioLocales: Set<String>,
     ): List<Episode> {
-        val isDubbed = countryCode.locale in episode.audioLocales
+        val episodeAudioLocales = episode.audioLocales.plus(audioLocales)
+
+        val isDubbed = countryCode.locale in episodeAudioLocales
         val subtitles = episode.subtitleLocales
 
         if (subtitles.isNotEmpty() && !isDubbed && countryCode.locale !in subtitles)
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
-        return episode.audioLocales.plus(audioLocales).map {
+        return episodeAudioLocales.map {
             Episode(
                 countryCode = countryCode,
                 animeId = episode.show.id.toString(),

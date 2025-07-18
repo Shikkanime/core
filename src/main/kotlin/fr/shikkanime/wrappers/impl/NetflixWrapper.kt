@@ -12,8 +12,11 @@ import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 object NetflixWrapper : AbstractNetflixWrapper() {
+    private val logger = LoggerFactory.getLogger(NetflixWrapper::class.java)
+
     private fun extractMaxUrl(json: JsonObject, arrayName: String): String? {
         return json.getAsJsonArray(arrayName)
             .map { it.asJsonObject }
@@ -261,6 +264,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
 
     private suspend fun getEpisodeLocales(episodeId: Int): Pair<Set<String>, Set<String>> {
         return runCatching { NetflixCachedWrapper.getEpisodeAudioLocalesAndSubtitles(episodeId) }
+            .onFailure { logger.log(Level.SEVERE, "Failed to get episode audio locales and subtitles for episode $episodeId", it) }
             .getOrNull() ?: Pair(emptySet(), emptySet())
     }
 
@@ -296,6 +300,10 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val json = ObjectParser.fromJson(response.toString()).asJsonObject
         val audioLocales = json.getAsJsonArray("audio_locales").map { it.asString }.toSet()
         val subtitleLocales = json.getAsJsonArray("subtitles_locales").map { it.asString }.toSet()
+
+        logger.info("Audio locales for episode $id: $audioLocales")
+        logger.info("Subtitle locales for episode $id: $subtitleLocales")
+
         return audioLocales to subtitleLocales
     }
 }
