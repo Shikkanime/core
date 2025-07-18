@@ -14,7 +14,7 @@ enum class Platform(
     ;
 
     companion object {
-        fun findByName(name: String): Platform? {
+        fun findByName(name: String?): Platform? {
             return entries.find { it.platformName == name }
         }
 

@@ -1,10 +1,10 @@
 package fr.shikkanime.utils
 
-import java.io.BufferedInputStream
-import java.io.File
+import java.io.*
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
+import java.util.zip.GZIPInputStream
 
 object FileManager {
     private const val WEBP_QUALITY = 75
@@ -65,8 +65,7 @@ object FileManager {
             }
             
             // Read the converted image
-            return tempOutputFile.readBytes()
-            
+            return readFileAsByteArray(tempOutputFile)
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Failed to convert image to WebP", e)
             throw e
@@ -87,6 +86,28 @@ object FileManager {
         } catch (e: Exception) {
             e.printStackTrace()
             throw Exception("Failed to get input stream from resource")
+        }
+    }
+
+    fun decompressGzip(bytes: ByteArray): ByteArray {
+        return try {
+            ByteArrayInputStream(bytes).use { bais ->
+                GZIPInputStream(bais).use { gis ->
+                    gis.readBytes()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Failed to decompress GZIP")
+        }
+    }
+
+    fun readFileAsByteArray(file: File) = file.inputStream().use { readInputStreamAsByteArray(it) }
+
+    fun readInputStreamAsByteArray(inputStream: InputStream): ByteArray {
+        return ByteArrayOutputStream().use { outputStream ->
+            inputStream.copyTo(outputStream)
+            outputStream.toByteArray()
         }
     }
 }

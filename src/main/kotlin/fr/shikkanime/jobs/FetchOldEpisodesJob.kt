@@ -1,24 +1,27 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Config
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
+import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
-import fr.shikkanime.platforms.AnimationDigitalNetworkPlatform
-import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.*
+import fr.shikkanime.services.ConfigService
+import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
+import fr.shikkanime.utils.*
+import fr.shikkanime.wrappers.impl.caches.*
 import kotlinx.coroutines.runBlocking
-import java.time.LocalDate
-import java.time.Period
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.File
+import java.io.FileOutputStream
+import java.time.*
+import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 import kotlin.streams.asSequence
 
@@ -27,18 +30,14 @@ class FetchOldEpisodesJob : AbstractJob {
 
     @Inject private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
     @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
-    @Inject private lateinit var animeService: AnimeService
-    @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-    @Inject private lateinit var configService: ConfigService
-    @Inject private lateinit var configCacheService: ConfigCacheService
-    @Inject private lateinit var traceActionService: TraceActionService
-    @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var disneyPlusPlatform: DisneyPlusPlatform
+    @Inject private lateinit var netflixPlatform: NetflixPlatform
+    @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
-    private fun log(stringBuilder: StringBuilder, level: Level, message: String) {
-        logger.log(level, message)
-        stringBuilder.append("[${level.localizedName}] $message<br/>")
-    }
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var configService: ConfigService
+    @Inject private lateinit var traceActionService: TraceActionService
 
     override fun run() {
         val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
@@ -62,9 +61,8 @@ class FetchOldEpisodesJob : AbstractJob {
 
         val episodes = mutableListOf<Episode>()
         val start = System.currentTimeMillis()
-        val emailLogs = StringBuilder()
 
-        log(emailLogs, Level.INFO, "Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
+        logger.info("Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
 
         episodes.addAll(
             animationDigitalNetworkPlatform.configuration?.availableCountries?.flatMap {
@@ -73,81 +71,106 @@ class FetchOldEpisodesJob : AbstractJob {
         )
 
         episodes.addAll(
-            crunchyrollPlatform.configuration?.availableCountries?.flatMap {
-                try {
-                    fetchCrunchyroll(it, dates)
-                } catch (e: Exception) {
-                    logger.log(Level.SEVERE, "Error while fetching Crunchyroll episodes", e)
-                    return@flatMap emptyList()
-                }
-            } ?: emptyList()
+            CountryCode.entries.flatMap {
+                runBlocking { fetchLiveChart(it, dates) }
+            }
         )
 
-        episodes.removeIf { it.releaseDateTime.toLocalDate() !in dates }
+        val identifiers = episodeVariantCacheService.findAllIdentifiers()
+        episodes.removeIf { it.releaseDateTime.toLocalDate() < dates.min() || it.getIdentifier() in identifiers }
 
-        val limit = configCacheService.getValueAsInt(ConfigPropertyKey.FETCH_OLD_EPISODES_LIMIT, 5)
+        if (episodes.isNotEmpty()) {
+            // Save into a Excel sheet
+            val workbook = XSSFWorkbook()
+            // Create a sheet per platform
+            episodes.groupBy { it.platform }.forEach { (platform, episodes) ->
+                val sheet = workbook.createSheet(platform.platformName)
+                val rows = mutableListOf<Array<Any>>()
 
-        if (limit != -1) {
-            episodes.groupBy { it.anime + it.releaseDateTime.toLocalDate().toString() }.forEach { (_, animeDayEpisodes) ->
-                if (animeDayEpisodes.size > limit) {
-                    log(emailLogs, Level.WARNING, "More than $limit episodes for ${animeDayEpisodes.first().anime} on ${animeDayEpisodes.first().releaseDateTime.toLocalDate()}, removing...")
-                    episodes.removeAll(animeDayEpisodes)
-                    return@forEach
+                rows.add(arrayOf(
+                    "Country",
+                    "Anime ID",
+                    "Anime",
+                    "Anime image",
+                    "Anime banner",
+                    "Anime description",
+                    "Release date time",
+                    "Episode type",
+                    "Season ID",
+                    "Season",
+                    "Number",
+                    "Duration",
+                    "Title",
+                    "Description",
+                    "Image",
+                    "Platform",
+                    "Audio locale",
+                    "ID",
+                    "URL",
+                    "Uncensored",
+                    "Original"
+                ))
+
+                episodes.forEach { episode ->
+                    rows.add(arrayOf(
+                        episode.countryCode,
+                        episode.animeId,
+                        episode.anime,
+                        episode.animeImage,
+                        episode.animeBanner,
+                        episode.animeDescription?.normalize() ?: StringUtils.EMPTY_STRING,
+                        episode.releaseDateTime,
+                        episode.episodeType,
+                        episode.seasonId,
+                        episode.season,
+                        episode.number,
+                        episode.duration,
+                        episode.title?.normalize() ?: StringUtils.EMPTY_STRING,
+                        episode.description?.normalize() ?: StringUtils.EMPTY_STRING,
+                        episode.image,
+                        episode.platform,
+                        episode.audioLocale,
+                        episode.id,
+                        episode.url,
+                        episode.uncensored,
+                        episode.original
+                    ))
+                }
+
+                for (i in rows.indices) {
+                    val row = sheet.createRow(i)
+                    val columns = rows[i]
+                    for (j in columns.indices) {
+                        val cell = row.createCell(j)
+                        val value = columns[j]
+
+                        when (value) {
+                            is ZonedDateTime -> {
+                                cell.setCellValue(value.withUTC().toLocalDateTime())
+                                val cellStyle = workbook.createCellStyle()
+                                cellStyle.dataFormat = workbook.createDataFormat().getFormat("yyyy-MM-dd HH:mm:ss")
+                                cell.cellStyle = cellStyle
+                            }
+                            is Number -> cell.setCellValue(value.toDouble())
+                            else -> cell.setCellValue(value.toString())
+                        }
+                    }
                 }
             }
+
+            val outputStream = FileOutputStream(File(Constant.exportsFolder, "old_episodes_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.xlsx"))
+            workbook.write(outputStream)
+            workbook.close()
         }
 
-        log(emailLogs, Level.INFO, "Found ${episodes.size} episodes, saving...")
-        var realSaved = 0
-        val realSavedAnimes = mutableSetOf<String>()
-        val identifiers = episodeVariantCacheService.findAllIdentifiers()
-
-        episodes.sortedBy { it.releaseDateTime }.forEach { episode ->
-            if (episode.getIdentifier() !in identifiers) {
-                realSavedAnimes.add(StringUtils.getShortName(episode.anime))
-                realSaved++
-                episodeVariantService.save(episode, false)
-            }
-        }
-
-        log(emailLogs, Level.INFO, "Saved $realSaved episodes")
-
-        realSavedAnimes.forEach {
-            log(emailLogs, Level.INFO, "Updating $it...")
-        }
-
-        if (realSaved > 0) {
-            log(emailLogs, Level.INFO, "Recalculating simulcasts...")
-            animeService.recalculateSimulcasts()
-
-            MapCache.invalidate(
-                Anime::class.java,
-                EpisodeMapping::class.java,
-                EpisodeVariant::class.java,
-                Simulcast::class.java
-            )
-        }
-
-        log(emailLogs, Level.INFO, "Updating config to the next fetch date...")
+        logger.info("Updating config to the next fetch date...")
 
         config.propertyValue = from.toString()
         configService.update(config)
         MapCache.invalidate(Config::class.java)
         traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
 
-        log(emailLogs, Level.INFO, "Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
-
-        try {
-            mailService.save(
-                Mail(
-                    recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                    title = "FetchOldEpisodesJob - ${dates.first()} to ${dates.last()}",
-                    body = emailLogs.toString(),
-                )
-            )
-        } catch (e: Exception) {
-            logger.warning("Error while sending mail for FetchOldEpisodesJob: ${e.message}")
-        }
+        logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
     }
 
     private fun fetchAnimationDigitalNetwork(
@@ -189,31 +212,104 @@ class FetchOldEpisodesJob : AbstractJob {
         return episodes
     }
 
-    private fun fetchCrunchyroll(
-        countryCode: CountryCode,
-        dates: Set<LocalDate>
-    ): List<Episode> {
-        return CrunchyrollCachedWrapper.getSimulcastCalendarWithDates(
-            countryCode,
-            dates
-        ).mapNotNull { browseObject ->
-            try {
-                crunchyrollPlatform.convertEpisode(
-                    countryCode,
-                    browseObject,
-                    false
-                )
-            } catch (e: EpisodeNoSubtitlesOrVoiceException) {
-                logger.warning("Error while fetching Crunchyroll episodes: ${e.message}")
-                null
-            } catch (e: Exception) {
-                logger.log(
-                    Level.SEVERE,
-                    "Error while converting episode (Episode ID: ${browseObject.id})",
-                    e
-                )
-                null
+    private suspend fun fetchLiveChart(countryCode: CountryCode, dates: Set<LocalDate>): List<Episode> {
+        val minimalDate = dates.min()
+        val startOfWeekDates = dates.map { it.atStartOfWeek() }.toSet()
+        val animeIds = startOfWeekDates.flatMap { LiveChartCachedWrapper.getAnimeIdsFromDate(it) }.toSet()
+        // Remove ids from ADN (ANIM)
+        val ids = animeIds.associateWith { LiveChartCachedWrapper.getStreamsForAnime(it).filterNot { entry -> entry.key == Platform.ANIM } }
+        val episodes = mutableListOf<Episode>()
+
+        ids.forEach { (_, platformIds) ->
+            platformIds.forEach { (platform, ids) ->
+                ids.forEach { id ->
+                    when (platform) {
+                        Platform.ANIM -> {
+                            AnimationDigitalNetworkCachedWrapper.getShowVideos(id.toInt()).forEach { video ->
+                                runCatching {
+                                    animationDigitalNetworkPlatform.convertEpisode(
+                                        countryCode,
+                                        video,
+                                        minimalDate.atStartOfDay(Constant.utcZoneId),
+                                        false
+                                    )
+                                }.onSuccess {
+                                    episodes.addAll(it)
+                                }
+                            }
+                        }
+                        Platform.CRUN -> {
+                            CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, id)
+                                .forEach { episode ->
+                                    runCatching {
+                                        crunchyrollPlatform.convertEpisode(
+                                            countryCode,
+                                            episode,
+                                            false
+                                        )
+                                    }.onSuccess {
+                                        episodes.add(it)
+                                    }
+                                }
+                        }
+                        Platform.DISN -> {
+                            DisneyPlusCachedWrapper.getEpisodesByShowId(
+                                countryCode.locale,
+                                id,
+                                configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
+                            ).forEach { episode ->
+                                runCatching {
+                                    disneyPlusPlatform.convertEpisode(
+                                        countryCode,
+                                        episode,
+                                        minimalDate.atStartOfDay(ZoneId.of(countryCode.timezone))
+                                    )
+                                }.onSuccess {
+                                    episodes.addAll(it)
+                                }
+                           }
+                        }
+                        Platform.NETF -> {
+                            NetflixCachedWrapper.getEpisodesByShowId(
+                                countryCode.locale,
+                                id.toInt()
+                            ).forEach { episode ->
+                                runCatching {
+                                    netflixPlatform.convertEpisode(
+                                        countryCode,
+                                        StringUtils.EMPTY_STRING,
+                                        episode,
+                                        EpisodeType.EPISODE,
+                                        "ja-JP"
+                                    )
+                                }.onSuccess {
+                                    episodes.add(it)
+                                }
+                            }
+                        }
+                        Platform.PRIM -> {
+                            PrimeVideoCachedWrapper.getEpisodesByShowId(
+                                countryCode.locale,
+                                id
+                            ).forEach { episode ->
+                                runCatching {
+                                    primeVideoPlatform.convertEpisode(
+                                        countryCode,
+                                        StringUtils.EMPTY_STRING,
+                                        episode,
+                                        minimalDate.atStartOfDay(ZoneId.of(countryCode.timezone)),
+                                        EpisodeType.EPISODE
+                                    )
+                                }.onSuccess {
+                                    episodes.addAll(it)
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        }.distinctBy { it.getIdentifier() }
+        }
+
+        return episodes
     }
 }

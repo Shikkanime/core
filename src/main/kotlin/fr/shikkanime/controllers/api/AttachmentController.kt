@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.caches.AttachmentCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.FileManager
 import fr.shikkanime.utils.routes.Cached
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -45,7 +46,7 @@ class AttachmentController {
                 return Response.notFound(MessageDto.error("Attachment not found"))
 
             // Read the file and store it in the cache
-            val bytes = file.readBytes()
+            val bytes = FileManager.readFileAsByteArray(file)
             attachmentService.setContentInCache(attachment, bytes)
             bytes
         }

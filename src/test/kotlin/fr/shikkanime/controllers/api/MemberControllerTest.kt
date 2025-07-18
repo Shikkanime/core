@@ -423,7 +423,7 @@ class MemberControllerTest : AbstractControllerTest() {
             client.submitFormWithBinaryData(
                 "/api/v1/members/image",
                 formData {
-                    append("file", fromResource.readBytes(), Headers.build {
+                    append("file", fromResource.use { FileManager.readInputStreamAsByteArray(it) }, Headers.build {
                         append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
                         append(HttpHeaders.ContentDisposition, "filename=avatar.jpg")
                     })
