@@ -1,10 +1,12 @@
 package fr.shikkanime.utils
 
 import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
+import java.util.zip.GZIPInputStream
 
 object FileManager {
     private const val WEBP_QUALITY = 75
@@ -87,6 +89,19 @@ object FileManager {
         } catch (e: Exception) {
             e.printStackTrace()
             throw Exception("Failed to get input stream from resource")
+        }
+    }
+
+    fun decompressGzip(bytes: ByteArray): ByteArray {
+        return try {
+            ByteArrayInputStream(bytes).use { bais ->
+                GZIPInputStream(bais).use { gis ->
+                    gis.readBytes()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Exception("Failed to decompress GZIP")
         }
     }
 }

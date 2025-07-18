@@ -32,11 +32,11 @@ open class Response(
         fun noContent(data: Any? = null, session: TokenDto? = null): Response =
             Response(HttpStatusCode.NoContent, data = data, session = session)
 
-        fun multipart(image: ByteArray, contentType: ContentType, session: TokenDto? = null): Response =
+        fun multipart(byteArray: ByteArray, contentType: ContentType, session: TokenDto? = null): Response =
             Response(
                 HttpStatusCode.OK,
                 type = ResponseType.MULTIPART,
-                data = mapOf("image" to image, "contentType" to contentType),
+                data = mapOf("byteArray" to byteArray, "contentType" to contentType),
                 session = session
             )
 

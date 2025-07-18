@@ -221,7 +221,7 @@ private suspend fun handleRequest(
 private suspend fun handleMultipartResponse(call: ApplicationCall, response: Response) {
     require(response.data is Map<*, *>) { "Data must be a map" }
     val map = response.data.toMap()
-    call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
+    call.respondBytes(map["byteArray"] as ByteArray, map["contentType"] as ContentType)
 }
 
 suspend fun handleTemplateResponse(
