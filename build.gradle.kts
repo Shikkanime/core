@@ -110,10 +110,6 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-kotlin {
-    jvmToolchain(21)
-}
-
 sonar {
     properties {
         property("sonar.projectKey", "shikkanime-core")

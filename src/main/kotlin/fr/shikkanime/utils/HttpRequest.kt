@@ -11,6 +11,8 @@ import io.ktor.client.statement.*
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.io.File
+import java.util.*
 import kotlin.system.measureTimeMillis
 
 private const val TIMEOUT = 60_000L
@@ -121,40 +123,58 @@ class HttpRequest(
         return Jsoup.parse(content)
     }
 
-    fun getJSContent(url: String, cookies: Map<String, String>? = null, selector: String? = null, retryCount: Int = 1): Any? {
-        var content: Any? = null
+    fun getJSContent(
+        url: String,
+        cookies: Map<String, String>? = null,
+        checkCondition: String,
+        evaluate: String,
+        delayMs: Long = 1000L,
+        maxAttempts: Int = 5
+    ): Any? {
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 
-        val elapsedTime = measureTimeMillis {
+        cookies?.takeIf { it.isNotEmpty() }?.let {
+            context?.addCookies(it.map { (key, value) -> Cookie(key, value).setUrl(url) })
+        }
+
+        val start = System.currentTimeMillis()
+
+        page?.navigate(url)
+        page?.waitForLoadState()
+
+        repeat(maxAttempts) { attempt ->
             try {
-                cookies?.takeIf { it.isNotEmpty() }?.let {
-                    context?.addCookies(it.map { (key, value) -> Cookie(key, value).setUrl(url) })
+                if (page?.evaluate(checkCondition) == true) {
+                    val content = page?.evaluate(evaluate)
+                    val elapsedTime = System.currentTimeMillis() - start
+                    logger.info("Request to $url done in ${elapsedTime}ms (BROWSER)")
+                    return content
                 }
 
-                page?.navigate(url)
-                selector?.let { page?.waitForSelector(it) } ?: page?.waitForLoadState()
-
-                content = page?.evaluate("""
-                let videoPlayer = netflix.appContext.state.playerApp.getAPI().videoPlayer;
-                let sessionId = videoPlayer.getAllPlayerSessionIds()[0];
-                let video = videoPlayer.getVideoPlayerBySessionId(sessionId);
-                JSON.stringify({
-                    audio_locales: video.getAudioTrackList().filter((e) => e.bcp47 && e.trackType === 'PRIMARY').map(e => e.bcp47),
-                    subtitles_locales: video.getTextTrackList().filter((e) => e.bcp47 && e.trackType === 'PRIMARY').map(e => e.bcp47)
-                });
-            """.trimIndent())
+                if (attempt < maxAttempts - 1) {
+                    logger.info("Condition not met (attempt ${attempt + 1}/$maxAttempts), waiting ${delayMs}ms...")
+                    Thread.sleep(delayMs)
+                }
             } catch (e: Exception) {
-                if (retryCount < 3) {
-                    logger.info("Retrying...")
-                    return getJSContent(url, cookies, selector, retryCount + 1)
+                if (attempt < maxAttempts - 1) {
+                    logger.info("Error checking condition (attempt ${attempt + 1}/$maxAttempts): ${e.message}, waiting ${delayMs}ms...")
+                    Thread.sleep(delayMs)
+                } else {
+                    throw e
                 }
-                throw e
             }
         }
 
-        logger.info("Request to $url done in ${elapsedTime}ms (BROWSER)")
-        return content
+        // Make a screenshot of the page for debugging
+        val uuidScreenshot = UUID.randomUUID().toString()
+
+        page?.screenshot(
+            Page.ScreenshotOptions().setFullPage(true)
+                .setPath(File(Constant.screenshotsFolder, "$uuidScreenshot.png").toPath())
+        )
+
+        throw Exception("Condition was not met after $maxAttempts attempts (Screenshot saved as $uuidScreenshot.png)")
     }
 
     fun getCookiesWithBrowser(url: String): List<Cookie> {

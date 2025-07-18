@@ -27,7 +27,7 @@ object NetflixCachedWrapper : AbstractNetflixWrapper() {
         key = locale to id
     ) { runBlocking { NetflixWrapper.getEpisodesByShowId(it.first, it.second) } }
 
-    override suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int) = MapCache.getOrComputeNullable(
+    override suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int) = MapCache.getOrCompute(
         "NetflixCachedWrapper.getEpisodeAudioLocalesAndSubtitles",
         duration = defaultCacheDuration,
         key = id
