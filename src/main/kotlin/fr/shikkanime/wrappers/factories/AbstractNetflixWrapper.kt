@@ -51,9 +51,7 @@ abstract class AbstractNetflixWrapper {
         val description: String?,
         val url: String,
         val image: String,
-        val duration: Long,
-        val audioLocales: Set<String>,
-        val subtitleLocales: Set<String>,
+        val duration: Long
     )
 
     protected val baseUrl = "https://www.netflix.com"
@@ -86,5 +84,4 @@ abstract class AbstractNetflixWrapper {
 
     abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode>
-    abstract suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>>?
 }

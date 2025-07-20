@@ -3,20 +3,19 @@ package fr.shikkanime.wrappers.impl
 import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
-import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.ZonedDateTime
-import java.util.logging.Level
 
 object NetflixWrapper : AbstractNetflixWrapper() {
-    private val logger = LoggerFactory.getLogger(NetflixWrapper::class.java)
-
     private fun extractMaxUrl(json: JsonObject, arrayName: String): String? {
         return json.getAsJsonArray(arrayName)
             .map { it.asJsonObject }
@@ -146,7 +145,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.firstOrNull()?.asJsonObject
     }
 
-    private suspend fun createMovieEpisode(show: Show, id: Int): List<Episode> {
+    private fun createMovieEpisode(show: Show, id: Int): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
         val isAvailable = show.isAvailable
         val isPlayable = show.isPlayable
@@ -154,8 +153,6 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         if (!(isAvailable && isPlayable)) {
             return emptyList()
         }
-
-        val (audioLocales, subtitleLocales) = getEpisodeLocales(show.id)
 
         return listOf(
             Episode(
@@ -169,9 +166,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.description?.normalize(),
                 "$baseUrl/watch/${show.id}",
                 show.metadata?.cover ?: show.banner.substringBefore("?"),
-                show.runtimeSec!!,
-                mapAudioLocales(audioLocales),
-                mapSubtitleLocales(subtitleLocales)
+                show.runtimeSec!!
             )
         )
     }
@@ -230,7 +225,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private suspend fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode? {
+    private fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode? {
         val episode = episodeJson.getAsJsonObject("node")
         val episodeId = episode.getAsInt("videoId")!!
         val episodeNumber = episode.getAsInt("number")!!
@@ -241,8 +236,6 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         if (!(isAvailable && isPlayable)) {
             return null
         }
-
-        val (audioLocales, subtitleLocales) = getEpisodeLocales(episodeId)
 
         return Episode(
             show,
@@ -256,54 +249,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             "$baseUrl/watch/$episodeId",
             show.metadata?.episodes?.find { it.id == episodeId }?.image
                 ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
-            episode.getAsInt("runtimeSec")!!.toLong(),
-            mapAudioLocales(audioLocales),
-            mapSubtitleLocales(subtitleLocales)
+            episode.getAsInt("runtimeSec")!!.toLong()
         )
-    }
-
-    private suspend fun getEpisodeLocales(episodeId: Int): Pair<Set<String>, Set<String>> {
-        return runCatching { NetflixCachedWrapper.getEpisodeAudioLocalesAndSubtitles(episodeId) }
-            .onFailure { logger.log(Level.SEVERE, "Failed to get episode audio locales and subtitles for episode $episodeId", it) }
-            .getOrNull() ?: Pair(emptySet(), emptySet())
-    }
-
-    private fun mapAudioLocales(audioLocales: Set<String>): Set<String> {
-        return buildSet {
-            if ("ja" in audioLocales) add("ja-JP")
-            if ("ja" !in audioLocales && "en" in audioLocales) add("en-US")
-            if ("fr" in audioLocales) add("fr-FR")
-        }
-    }
-
-    private fun mapSubtitleLocales(subtitleLocales: Set<String>): Set<String> {
-        return subtitleLocales.mapTo(mutableSetOf()) {
-            if (it == "fr") "fr-FR" else null
-        }.filterNotNull().toSet()
-    }
-
-    override suspend fun getEpisodeAudioLocalesAndSubtitles(id: Int): Pair<Set<String>, Set<String>>? {
-        val (netflixId, netflixSecureId) = getIdAndSecureIdFromConfig()
-
-        val response = HttpRequest().use {
-            it.getJSContent(
-                "$baseUrl/watch/$id",
-                mapOf(
-                    "NetflixId" to netflixId!!,
-                    "SecureNetflixId" to netflixSecureId!!
-                ),
-                "div.error-page--content"
-            )
-        }
-
-        requireNotNull(response) { "Failed to get episode audio locales and subtitles" }
-        val json = ObjectParser.fromJson(response.toString()).asJsonObject
-        val audioLocales = json.getAsJsonArray("audio_locales").map { it.asString }.toSet()
-        val subtitleLocales = json.getAsJsonArray("subtitles_locales").map { it.asString }.toSet()
-
-        logger.info("Audio locales for episode $id: $audioLocales")
-        logger.info("Subtitle locales for episode $id: $subtitleLocales")
-
-        return audioLocales to subtitleLocales
     }
 }

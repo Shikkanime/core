@@ -5,7 +5,6 @@ import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
@@ -28,15 +27,15 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val identifiers = mutableMapOf<Int, ZonedDateTime>()
 
         return episodes.flatMap { video ->
-            runCatching {
-                convertEpisode(
+            key.netflixSimulcast.audioLocales.map { audioLocale ->
+                val episode = convertEpisode(
                     key.countryCode,
                     key.netflixSimulcast.image,
                     video,
                     key.netflixSimulcast.episodeType,
-                    key.netflixSimulcast.audioLocales
+                    audioLocale
                 )
-            }.getOrElse { emptyList() }.onEach { episode ->
+
                 val releaseDateTime = identifiers.getOrPut(video.id) {
                     episodeVariantCacheService.findByIdentifier(episode.getIdentifier())
                         ?.releaseDateTime ?: episode.releaseDateTime
@@ -45,6 +44,8 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                 key.netflixSimulcast.audioLocaleDelays[episode.audioLocale]?.let { delay ->
                     episode.releaseDateTime = releaseDateTime.plusWeeks(delay)
                 }
+
+                episode
             }
         }
     }
@@ -67,40 +68,28 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         showImage: String,
         episode: AbstractNetflixWrapper.Episode,
         episodeType: EpisodeType,
-        audioLocales: Set<String>,
-    ): List<Episode> {
-        val episodeAudioLocales = episode.audioLocales.plus(audioLocales)
-
-        val isDubbed = countryCode.locale in episodeAudioLocales
-        val subtitles = episode.subtitleLocales
-
-        if (subtitles.isNotEmpty() && !isDubbed && countryCode.locale !in subtitles)
-            throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
-
-        return episodeAudioLocales.map {
-            Episode(
-                countryCode = countryCode,
-                animeId = episode.show.id.toString(),
-                anime = episode.show.name,
-                animeImage = episode.show.thumbnail ?: showImage,
-                animeBanner = episode.show.banner,
-                animeDescription = episode.show.description,
-                releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
-                episodeType = episodeType,
-                seasonId = episode.season.toString(),
-                season = episode.season,
-                number = episode.number,
-                duration = episode.duration,
-                title = episode.title,
-                description = episode.description,
-                image = episode.image,
-                platform = getPlatform(),
-                audioLocale = it,
-                id = episode.id.toString(),
-                url = episode.url,
-                uncensored = false,
-                original = true,
-            )
-        }
-    }
+        audioLocale: String,
+    ) = Episode(
+        countryCode = countryCode,
+        animeId = episode.show.id.toString(),
+        anime = episode.show.name,
+        animeImage = episode.show.thumbnail ?: showImage,
+        animeBanner = episode.show.banner,
+        animeDescription = episode.show.description,
+        releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
+        episodeType = episodeType,
+        seasonId = episode.season.toString(),
+        season = episode.season,
+        number = episode.number,
+        duration = episode.duration,
+        title = episode.title,
+        description = episode.description,
+        image = episode.image,
+        platform = getPlatform(),
+        audioLocale = audioLocale,
+        id = episode.id.toString(),
+        url = episode.url,
+        uncensored = false,
+        original = true,
+    )
 }

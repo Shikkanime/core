@@ -2,7 +2,10 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.*
-import fr.shikkanime.entities.enums.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.ImageType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.*
@@ -388,8 +391,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val countryCode = episodeMapping.anime!!.countryCode!!
         val episodes = mutableListOf<Episode>()
         val isImageUpdate = attachmentService.findByEntityUuidTypeAndActive(episodeMapping.uuid!!, ImageType.BANNER)?.url == Constant.DEFAULT_IMAGE_PREVIEW && episodeMapping.releaseDateTime.isAfterOrEqual(lastImageUpdateDateTime)
-        val episodeType = episodeMapping.episodeType!!
-        val audioLocale = episodeVariant.audioLocale!!
         val releaseDateTime = episodeVariant.releaseDateTime
         val identifier = episodeVariant.identifier!!
 
@@ -397,8 +398,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
             Platform.ANIM -> retrieveADNEpisode(countryCode, identifier, episodes)
             Platform.CRUN -> retrieveCrunchyrollEpisode(countryCode, identifier, isImageUpdate, episodes)
             Platform.DISN -> retrieveDisneyEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime)
-            Platform.NETF -> retrieveNetflixEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, episodeType, setOf(audioLocale))
-            Platform.PRIM -> retrievePrimeEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime, episodeType)
+            Platform.NETF -> retrieveNetflixEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes)
+            Platform.PRIM -> retrievePrimeEpisode(countryCode, episodeVariant, episodeMapping, identifiers, episodes, releaseDateTime)
             else -> logger.warning("Error while getting episode $identifier : Invalid platform")
         }
 
@@ -468,8 +469,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
         episodeMapping: EpisodeMapping,
         identifiers: HashSet<String>,
         episodes: MutableList<Episode>,
-        episodeType: EpisodeType,
-        audioLocales: Set<String>
     ) {
         runCatching {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
@@ -480,13 +479,13 @@ class UpdateEpisodeMappingJob : AbstractJob {
             updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
             updateUrl(episodeVariant, episode.url)
 
-            episodes.addAll(
+            episodes.add(
                 netflixPlatform.convertEpisode(
                     countryCode,
                     StringUtils.EMPTY_STRING,
                     episode,
-                    episodeType,
-                    audioLocales
+                    episodeMapping.episodeType!!,
+                    episodeVariant.audioLocale!!
                 )
             )
         }
@@ -499,7 +498,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
         identifiers: HashSet<String>,
         episodes: MutableList<Episode>,
         releaseDateTime: ZonedDateTime,
-        episodeType: EpisodeType
     ) {
         runCatching {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
@@ -516,7 +514,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     StringUtils.EMPTY_STRING,
                     episode,
                     releaseDateTime,
-                    episodeType
+                    episodeMapping.episodeType!!,
                 )
             )
         }
