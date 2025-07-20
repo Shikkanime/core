@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1743108286154"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${author}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="attachment"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="attachment">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_attachment"/>
+            </column>
+            <column name="creation_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_update_date_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url" type="VARCHAR(1000)"/>
+            <column name="active" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${author}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="attachment" indexName="attachment_entity_uuid_index"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="attachment_entity_uuid_index" tableName="attachment">
+            <column name="entity_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${author}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="attachment" indexName="attachment_type_index"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="attachment_type_index" tableName="attachment">
+            <column name="type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${author}-4" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(uuid)
+                FROM attachment;
+            </sqlCheck>
+        </preConditions>
+
+        <sql>
+            INSERT INTO attachment (uuid, creation_date_time, last_update_date_time, entity_uuid, type, url, active)
+            SELECT
+                gen_random_uuid(),
+                NOW(),
+                NOW(),
+                a.uuid,
+                'THUMBNAIL',
+                a.image,
+                true
+            FROM anime a;
+
+            INSERT INTO attachment (uuid, creation_date_time, last_update_date_time, entity_uuid, type, url, active)
+            SELECT
+                gen_random_uuid(),
+                NOW(),
+                NOW(),
+                a.uuid,
+                'BANNER',
+                a.banner,
+                true
+            FROM anime a;
+
+            INSERT INTO attachment (uuid, creation_date_time, last_update_date_time, entity_uuid, type, url, active)
+            SELECT
+                gen_random_uuid(),
+                NOW(),
+                NOW(),
+                em.uuid,
+                'BANNER',
+                em.image,
+                true
+            FROM episode_mapping em;
+        </sql>
+    </changeSet>
+
+    <changeSet id="${author}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="anime" columnName="image"/>
+        </preConditions>
+
+        <dropColumn columnName="image" tableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${author}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="anime" columnName="banner"/>
+        </preConditions>
+
+        <dropColumn columnName="banner" tableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${author}-7" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="episode_mapping" columnName="image"/>
+        </preConditions>
+
+        <dropColumn columnName="image" tableName="episode_mapping"/>
+    </changeSet>
+</databaseChangeLog>

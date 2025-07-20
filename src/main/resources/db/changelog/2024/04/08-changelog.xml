@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1713781629855"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <indexExists indexName="idx_anime_slug" tableName="anime"/>
+        </preConditions>
+
+        <dropIndex indexName="idx_anime_slug" tableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <uniqueConstraintExists tableName="anime" constraintName="uc_anime_slug"/>
+        </preConditions>
+
+        <dropUniqueConstraint constraintName="uc_anime_slug" tableName="anime"/>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_anime_country_code_slug" tableName="anime"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_anime_country_code_slug" tableName="anime" unique="true">
+            <column name="country_code"/>
+            <column name="slug"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-config-last-fetch" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'last_fetch_old_episodes'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="last_fetch_old_episodes"/>
+            <column name="property_value" value="2024-01-10"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-config-range" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'fetch_old_episodes_range'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="fetch_old_episodes_range"/>
+            <column name="property_value" value="14"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

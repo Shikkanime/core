@@ -1,0 +1,38 @@
+services:
+  shikkanime-db:
+    image: postgres:16-alpine
+    restart: always
+    container_name: shikkanime-db
+    environment:
+      POSTGRES_PASSWORD: "mysecretpassword"
+      POSTGRES_USER: postgres
+      POSTGRES_DB: shikkanime
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+  shikkanime-core:
+    build:
+        context: .
+    ports:
+      - "37100:37100"
+    restart: on-failure
+    container_name: shikkanime-core
+    depends_on:
+      shikkanime-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://shikkanime-db:5432/shikkanime
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: "mysecretpassword"
+      JWT_SECRET: "mysecretkey"
+      JWT_DOMAIN: "http://localhost:37100"
+      JWT_REALM: "Access to '/admin'"
+      JWT_AUDIENCE: "http://localhost:37100/admin"
+      BASE_URL: "http://localhost:37100"
+      API_URL: "http://localhost:37100/api"
+    volumes:
+      - ./data:/app/data/
+    healthcheck:
+      test: curl --fail http://localhost:37100/ || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5

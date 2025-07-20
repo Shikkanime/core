@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.30.xsd" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1733217051097"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <sql>
+            delete from member_follow_anime
+            where uuid in (
+                select uuid
+                from (
+                         select uuid,
+                                row_number() over (partition by member_uuid,anime_uuid order by follow_date_time desc) as rn
+                         from member_follow_anime
+                     ) t
+                where t.rn > 1
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <sql>
+            delete from member_follow_episode
+            where uuid in (
+                select uuid
+                from (
+                         select uuid,
+                                row_number() over (partition by member_uuid,episode_uuid order by follow_date_time desc) as rn
+                         from member_follow_episode
+                     ) t
+                where t.rn > 1
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="trace_action_entity_type_index" tableName="trace_action"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="trace_action_entity_type_index" tableName="trace_action">
+            <column name="entity_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="trace_action_entity_uuid_index" tableName="trace_action"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="trace_action_entity_uuid_index" tableName="trace_action">
+            <column name="entity_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="trace_action_action_index" tableName="trace_action"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="trace_action_action_index" tableName="trace_action">
+            <column name="action"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-6" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_follow_anime_member_index" tableName="member_follow_anime"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_follow_anime_member_index" tableName="member_follow_anime">
+            <column name="member_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-7" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_follow_anime_anime_index" tableName="member_follow_anime"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_follow_anime_anime_index" tableName="member_follow_anime">
+            <column name="anime_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-8" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_follow_anime_member_anime_index" tableName="member_follow_anime"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_follow_anime_member_anime_index" tableName="member_follow_anime" unique="true">
+            <column name="member_uuid"/>
+            <column name="anime_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-9" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_follow_episode_member_index" tableName="member_follow_episode"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_follow_episode_member_index" tableName="member_follow_episode">
+            <column name="member_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-10" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_follow_episode_episode_index" tableName="member_follow_episode"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_follow_episode_episode_index" tableName="member_follow_episode">
+            <column name="episode_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-11" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="member_follow_episode_member_episode_index" tableName="member_follow_episode"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="member_follow_episode_member_episode_index" tableName="member_follow_episode" unique="true">
+            <column name="member_uuid"/>
+            <column name="episode_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-12" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_episode_mapping_sort_order" tableName="episode_mapping"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_mapping_sort_order" tableName="episode_mapping">
+            <column name="last_release_date_time" descending="true"/>
+            <column name="season" descending="true"/>
+            <column name="episode_type" descending="true"/>
+            <column name="number" descending="true"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

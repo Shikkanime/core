@@ -1,0 +1,223 @@
+{
+  "videos": [
+    {
+      "id": 24687,
+      "title": "One Piece : Saga 15 - Egghead - Épisode spécial 13",
+      "name": "Le Log d'un lourd passé. Luffy et son équipage contre le Cipher Pol !",
+      "number": "Épisode spécial 13",
+      "shortNumber": "Épisode spécial 13",
+      "season": null,
+      "reference": "onepiece_tv_9987",
+      "type": "EPS",
+      "order": 14,
+      "image": "https://image.animationdigitalnetwork.fr/license/onepiece/tv/web/eps9987_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/onepiece/tv/web/eps9987_640x360.jpg",
+      "summary": "Robin et Franky reviennent sur l'histoire de Lucci, Kaku et les agents du Cipher Pol qui se sont introduits sur Egghead. Ils évoquent aussi l'antagonisme entre les Renseignements et l'équipage de Chapeau de paille, puis l'évolution des agents depuis leur rencontre à Water Seven.",
+      "releaseDate": "2024-04-14T07:00:00Z",
+      "duration": 1430,
+      "url": "https://animationdigitalnetwork.fr/video/one-piece-saga-15-egghead/24687-episode-special-13-le-log-d-un-lourd-passe-luffy-et-son-equipage-contre-le-cipher-pol",
+      "urlPath": "/video/one-piece-saga-15-egghead/24687-episode-special-13-le-log-d-un-lourd-passe-luffy-et-son-equipage-contre-le-cipher-pol",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/one-piece-saga-15-egghead/24687",
+      "languages": [
+        "vostf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 2.2,
+      "ratingsCount": 9,
+      "commentsCount": 5,
+      "available": true,
+      "download": false,
+      "free": false,
+      "freeWithAds": false,
+      "show": {
+        "id": 1116,
+        "title": "One Piece : Saga 15 - Egghead",
+        "type": "EPS",
+        "originalTitle": "ワンピース",
+        "shortTitle": "One Piece",
+        "reference": "onepiece_tv15",
+        "age": "10+",
+        "languages": [
+          "vostf"
+        ],
+        "summary": "Oyez ! Oyez ! Pirates de tous bords ! Gol D.Roger, le légendaire Roi des pirates, mort sur l’échafaud, a laissé derrière lui un trésor inestimable : le « One Piece ». Monkey D.Luffy, un garçon naïf et impulsif, rêve de mettre la main sur ce fameux butin et de devenir le nouveau Roi des Pirates. Parcourant les mers, il rassemble au fil de l’eau un équipage redoutable.\nAprès avoir quitté le pays de Wa, Luffy et son équipage accostent sur l’île de Egg Head où réside le talentueux et mystérieux Dr Vegapunk. Malheureusement pour eux, le Gouvernement Mondial envoie une équipe du CP0 dont la mission est d’assassiner le scientifique.",
+        "image": "https://image.animationdigitalnetwork.fr/license/onepiece/tv15/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/onepiece/tv15/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/onepiece/tv15/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/onepiece/tv15/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/one-piece-saga-15-egghead",
+        "urlPath": "/video/one-piece-saga-15-egghead",
+        "episodeCount": 14,
+        "genres": [
+          "Animation japonaise",
+          "Jeunesse",
+          "Action",
+          "Aventure",
+          "Comédie",
+          "Fantastique",
+          "Shônen"
+        ],
+        "copyright": "©Eiichiro Oda / Shueisha, Toei Animation",
+        "rating": 4.7,
+        "ratingsCount": 1019,
+        "commentsCount": 55,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "simulcast": true,
+        "free": false,
+        "available": true,
+        "download": false,
+        "basedOn": "Manga",
+        "tagline": "Une nouvelle aventure attend Luffy et son équipage ! Le début de la saga finale commence !",
+        "firstReleaseYear": "1999",
+        "productionStudio": "Toei Animation",
+        "countryOfOrigin": "Japon",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Fukasawa Toshinori"
+          },
+          {
+            "role": "Scénariste",
+            "name": "Shoji Yonemura"
+          },
+          {
+            "role": "Mangaka",
+            "name": "Eiichiro Oda"
+          },
+          {
+            "role": "Compositeur",
+            "name": "Kohei Tanaka, Shiro Hamaguchi"
+          },
+          {
+            "role": "Directeur de la photographie",
+            "name": "Hideki Chiba, Tomoya Hosaka"
+          },
+          {
+            "role": "Directeur de l'animation",
+            "name": "Kazuya Hisada, Keiichi Ichikawa"
+          }
+        ],
+        "nextVideoReleaseDate": "2024-04-21T07:00:00Z",
+        "indexable": true
+      },
+      "indexable": false
+    },
+    {
+      "id": 25481,
+      "title": "Run For Money : The Great Mission - Épisode 51",
+      "name": "Mission 51 : Lac aux eaux troubles ! L'homme masqué du camping !",
+      "number": "Épisode 51",
+      "shortNumber": "51",
+      "season": "1",
+      "reference": "runformoney_tv_0051",
+      "type": "EPS",
+      "order": 51,
+      "image": "https://image.animationdigitalnetwork.fr/license/runformoney/tv/web/eps51_320x180.jpg",
+      "image2x": "https://image.animationdigitalnetwork.fr/license/runformoney/tv/web/eps51_640x360.jpg",
+      "summary": null,
+      "releaseDate": "2024-04-14T07:00:00Z",
+      "duration": 1400,
+      "url": "https://animationdigitalnetwork.fr/video/run-for-money-the-great-mission/25481-episode-51-mission-51-lac-aux-eaux-troubles-l-homme-masque-du-camping",
+      "urlPath": "/video/run-for-money-the-great-mission/25481-episode-51-mission-51-lac-aux-eaux-troubles-l-homme-masque-du-camping",
+      "embeddedUrl": "https://animationdigitalnetwork.fr/embedded/run-for-money-the-great-mission/25481",
+      "languages": [
+        "vostf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 5,
+      "ratingsCount": 1,
+      "commentsCount": 0,
+      "available": true,
+      "download": false,
+      "free": false,
+      "freeWithAds": false,
+      "show": {
+        "id": 1038,
+        "title": "Run For Money : The Great Mission",
+        "type": "EPS",
+        "originalTitle": "Tousouchuu : Great Mission",
+        "shortTitle": "Run For Money",
+        "reference": "runformoney_tv",
+        "age": "10+",
+        "languages": [
+          "vostf"
+        ],
+        "summary": "Afin de préserver l’humanité de la menace grandissante du réchauffement climatique, la population terrienne s’est réfugiée sur la Lune. Un jeu de survie et de divertissement crée l’émulation au sein des colonies. Le principe est simple : enfermés dans une zone restreinte, les participants doivent échapper à tout prix à leurs assaillants robotiques. À la clé, une importante somme d’argent. Haru, un adolescent de 17 ans, s’est promis d’utiliser tous les subterfuges pour faire sienne la victoire.",
+        "image": "https://image.animationdigitalnetwork.fr/license/runformoney/tv/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.fr/license/runformoney/tv/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.fr/license/runformoney/tv/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.fr/license/runformoney/tv/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.fr/video/run-for-money-the-great-mission",
+        "urlPath": "/video/run-for-money-the-great-mission",
+        "episodeCount": 51,
+        "genres": [
+          "Animation japonaise",
+          "Action",
+          "Drame",
+          "Science-Fiction"
+        ],
+        "copyright": "@Fuji Television, Toei Animation",
+        "rating": 4.8,
+        "ratingsCount": 221,
+        "commentsCount": 3,
+        "qualities": [
+          "fhd",
+          "hd",
+          "sd"
+        ],
+        "simulcast": true,
+        "free": false,
+        "available": true,
+        "download": false,
+        "basedOn": "Oeuvre Originale",
+        "tagline": "L'adaptation du célèbre jeu télévisé nippon !",
+        "firstReleaseYear": "2023",
+        "productionStudio": "Toei Animation",
+        "countryOfOrigin": "Japon",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Yukio Kaizawa, Kureta Kohei"
+          },
+          {
+            "role": "Scénariste",
+            "name": "Tomohiro Nakayama"
+          },
+          {
+            "role": "Auteur",
+            "name": "Fuji Television"
+          },
+          {
+            "role": "Character designer original",
+            "name": "Takeshi Okano"
+          },
+          {
+            "role": "Character designer",
+            "name": "Ohnishi Yoichi"
+          },
+          {
+            "role": "Directeur artistique",
+            "name": "Akiyama Kentaro, Ayaka Kami"
+          }
+        ],
+        "nextVideoReleaseDate": "2024-04-21T06:00:00Z",
+        "indexable": true
+      },
+      "indexable": false
+    }
+  ]
+}

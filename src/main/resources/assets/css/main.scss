@@ -1,0 +1,138 @@
+:root {
+  --card-bg: #FFFFFF14;
+  --card-bg-hover: rgba(0, 0, 0, 0.75);
+  --card-border-radius: 1rem;
+  --card-img-padding: 0.5rem;
+  --card-content-padding: 0.5rem;
+}
+
+@font-face {
+  font-family: Satoshi;
+  src: url(/assets/fonts/Satoshi-Regular.woff2) format('woff2'),
+  url(/assets/fonts/Satoshi-Regular.woff) format('woff'),
+  url(/assets/fonts/Satoshi-Regular.ttf) format('truetype'),
+  url(/assets/fonts/Satoshi-Regular.eot) format('embedded-opentype');
+}
+
+body {
+  background-color: #000;
+  font-family: Satoshi, sans-serif;
+}
+
+@mixin text-truncate($lines) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-truncate-2 {
+  @include text-truncate(2);
+}
+
+.text-truncate-4 {
+  @include text-truncate(4);
+}
+
+.text-truncate-6 {
+  @include text-truncate(6);
+}
+
+.text-muted {
+  color: #b9b9b9 !important;
+}
+
+@mixin img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
+.shikk-element {
+  border-radius: var(--card-border-radius);
+  background-color: var(--card-bg);
+  overflow: hidden;
+
+  a {
+    text-decoration: none;
+    color: white;
+    position: relative;
+  }
+
+  .shikk-element-content {
+    padding: var(--card-content-padding);
+
+    .shikk-element-content-img {
+      border-radius: calc(var(--card-border-radius) - var(--card-content-padding));
+
+      &:not(.responsive) {
+        @include img-fluid;
+      }
+
+      &, .responsive {
+        @media (min-width: 576px) {
+          width: 100%;
+          object-fit: cover;
+        }
+
+        @media (max-width: 576px) {
+          @include img-fluid;
+        }
+      }
+    }
+
+    .platforms {
+      display: flex;
+      position: absolute;
+      top: var(--card-img-padding);
+      right: var(--card-img-padding);
+    }
+
+    .duration {
+      display: flex;
+      position: absolute;
+      bottom: var(--card-img-padding);
+      right: var(--card-img-padding);
+      background-color: var(--card-bg-hover);
+      padding: 0.25rem 0.5rem;
+      border-radius: calc(var(--card-border-radius) - var(--card-img-padding));
+      font-size: 0.75rem;
+    }
+  }
+
+  .overlay {
+    border: 1px solid var(--card-bg);
+    border-radius: var(--card-border-radius);
+
+    background-color: var(--card-bg-hover);
+    backdrop-filter: blur(0.25rem);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: calc(var(--card-content-padding) * 2);
+  }
+}
+
+.anime-infos {
+  @media (min-width: 576px) {
+    position: relative;
+    margin-top: -100px;
+  }
+
+  @media (max-width: 575px) {
+    position: relative;
+    margin-top: -22.5rem;
+  }
+}
+
+.callout {
+  padding: 1.25rem;
+  color: #fff;
+  background-color: #202020;
+  border-left: 0.25rem solid #5a5a5a;
+  display: flex;
+  align-items: center;
+}

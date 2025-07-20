@@ -1,0 +1,22 @@
+name: Update Gradle Wrapper
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Runs every Monday at 8:00 AM
+
+jobs:
+  update-gradle-wrapper:
+    name: Update Gradle Wrapper
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update Gradle Wrapper
+        uses: gradle-update/update-gradle-wrapper-action@v2.1.0
+        with:
+          reviewers: Ziedelth

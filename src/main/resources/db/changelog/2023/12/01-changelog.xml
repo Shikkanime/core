@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <property global="false" name="id" value="1701440511172"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="metric"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="metric">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_metric"/>
+            </column>
+
+            <column name="cpu_load"
+                    type="DOUBLE"/>
+            <column name="memory_usage"
+                    type="BIGINT"/>
+
+            <column name="date"
+                    type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="anime"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="anime">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_anime"/>
+            </column>
+            <column name="country_code"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="release_date_time"
+                    type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image"
+                    type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description"
+                    type="VARCHAR(2000)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="episode"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="episode">
+            <column name="uuid"
+                    type="UUID">
+                <constraints nullable="false"
+                             primaryKey="true"
+                             primaryKeyName="pk_episode"/>
+            </column>
+            <column name="platform"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="anime_uuid"
+                    type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="episode_type"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lang_type"
+                    type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hash"
+                    type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="release_date_time"
+                    type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="season"
+                    type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="number"
+                    type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title"
+                    type="VARCHAR(1000)"/>
+            <column name="url"
+                    type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image"
+                    type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration"
+                    type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_episode_on_anime_uuid" foreignKeyTableName="episode"/>
+            </not>
+        </preConditions>
+
+        <addForeignKeyConstraint baseColumnNames="anime_uuid"
+                                 baseTableName="episode"
+                                 constraintName="fk_episode_on_anime_uuid"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="anime"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.28.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1719316685053"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_episode_mapping_anime_uuid" tableName="episode_mapping"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_mapping_anime_uuid" tableName="episode_mapping">
+            <column name="anime_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_episode_variant_mapping_uuid" tableName="episode_variant"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_variant_mapping_uuid" tableName="episode_variant">
+            <column name="mapping_uuid"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_episode_variant_release_date_mapping_uuid" tableName="episode_variant"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_variant_release_date_mapping_uuid" tableName="episode_variant">
+            <column name="release_date_time"/>
+            <column name="mapping_uuid"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

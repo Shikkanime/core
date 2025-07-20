@@ -1,0 +1,4506 @@
+{
+  "total": 10000,
+  "data": [
+    {
+      "channel_id": "crunchyroll",
+      "promo_description": "",
+      "linked_resource_key": "cms:/episodes/G14U47N5N",
+      "type": "episode",
+      "title": "Witch: War Between the Sisters (AKA Alice Explodes)",
+      "id": "G14U47N5N",
+      "new": true,
+      "external_id": "EPI.934246",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/c59d8c87dcc0b8fbdbfe451aed267d82.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_title": "",
+      "slug_title": "witch-war-between-the-sisters-aka-alice-explodes",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 360016,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 720032,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1080048,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ja-JP",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Images à caractère sexuel",
+          "Violence"
+        ],
+        "duration_ms": 1440066,
+        "eligible_region": "FR",
+        "episode": "2",
+        "episode_air_date": "2024-07-17T22:30:00+09:00",
+        "episode_number": 2,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "14",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GVDHX8ZD0|S2|E2",
+        "is_clip": false,
+        "is_dubbed": false,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T14:30:00Z",
+        "premium_date": null,
+        "season_display_number": "2",
+        "season_id": "GY09CX759",
+        "season_number": 2,
+        "season_sequence_number": 2,
+        "season_slug_title": "our-last-crusade-or-the-rise-of-a-new-world-season-2",
+        "season_title": "Our Last Crusade or the Rise of a New World",
+        "sequence_number": 2,
+        "series_id": "GVDHX8ZD0",
+        "series_slug_title": "our-last-crusade-or-the-rise-of-a-new-world",
+        "series_title": "Our Last Crusade or the Rise of a New World",
+        "subtitle_locales": [
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "pt-BR",
+          "it-IT",
+          "de-DE",
+          "ru-RU"
+        ],
+        "upload_date": "2024-07-17T22:30:00+09:00",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "G14U47N5N",
+            "is_premium_only": true,
+            "media_guid": "GKKF3E1W1",
+            "original": true,
+            "season_guid": "GY09CX759",
+            "variant": ""
+          }
+        ]
+      },
+      "slug": "",
+      "description": "",
+      "last_public": "2024-07-17T14:30:06Z"
+    },
+    {
+      "channel_id": "crunchyroll",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/25e1c85db6f3d7fe842dc39454133184.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug": "",
+      "new": true,
+      "slug_title": "duel",
+      "type": "episode",
+      "description": "La tentative d'assassinat visant Ike venait bien de l'intérieur. Le traître, Jeyes, n'aura pas réussi à vaincre Ike, ce dernier étant aidé par Cefiro. Alors que Jeyes est sur le point d'avouer qui était réellement derrière ce complot, il trépasse sous les effets d'un puissant poison. Tout semble accuser l'un des autres commandants, Basteo...",
+      "linked_resource_key": "cms:/episodes/G7PU470QD",
+      "promo_title": "",
+      "id": "G7PU470QD",
+      "promo_description": "",
+      "title": "Duel",
+      "external_id": "EPI.932538",
+      "last_public": "2024-07-17T14:00:06Z",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 354990,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 709980,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1064970,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ja-JP",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Violence"
+        ],
+        "duration_ms": 1419962,
+        "eligible_region": "FR",
+        "episode": "4",
+        "episode_air_date": "2024-07-17T22:30:00+09:00",
+        "episode_number": 4,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "14",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "",
+        "is_clip": false,
+        "is_dubbed": false,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T14:00:00Z",
+        "premium_date": null,
+        "season_display_number": "",
+        "season_id": "GRMGC3K4N",
+        "season_number": 1,
+        "season_sequence_number": 0,
+        "season_slug_title": "the-strongest-magician-in-the-demon-lords-army-was-a-human",
+        "season_title": "The Strongest Magician in the Demon Lord's Army Was a Human",
+        "sequence_number": 4,
+        "series_id": "GG5H5XQDD",
+        "series_slug_title": "the-strongest-magician-in-the-demon-lords-army-was-a-human",
+        "series_title": "The Strongest Magician in the Demon Lord's Army Was a Human",
+        "subtitle_locales": [
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "pt-BR",
+          "ar-SA",
+          "it-IT",
+          "de-DE",
+          "ru-RU"
+        ],
+        "upload_date": "2024-07-17T22:30:00+09:00",
+        "versions": null
+      }
+    },
+    {
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_description": "",
+      "external_id": "EPI.934791",
+      "id": "GVWU0M9DZ",
+      "linked_resource_key": "cms:/episodes/GVWU0M9DZ",
+      "description": "Shinra et Arthur poursuivent leur étrange entraînement auprès du capitaine Shinmon afin d’accéder à un nouveau niveau dans la maîtrise de leur pouvoir. Mais à une échelle plus grande, la donne a changé et un combat plus important encore apparaît à l’horizon…",
+      "slug": "",
+      "channel_id": "crunchyroll",
+      "promo_title": "",
+      "last_public": "2024-07-17T06:57:18Z",
+      "new": true,
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 362992,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 725984,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1088976,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Images à caractère sexuel",
+          "Torture",
+          "Violence"
+        ],
+        "duration_ms": 1451969,
+        "eligible_region": "FR",
+        "episode": "24",
+        "episode_air_date": "2020-12-12T01:55:00+09:00",
+        "episode_number": 24,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "16",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GYQWNXPZY|S2|E24",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T05:30:00Z",
+        "premium_date": null,
+        "season_display_number": "2",
+        "season_id": "GR2PCVKGM",
+        "season_number": 2,
+        "season_sequence_number": 2,
+        "season_slug_title": "fire-force-season-2-telugu-dub",
+        "season_title": "Fire Force",
+        "sequence_number": 24,
+        "series_id": "GYQWNXPZY",
+        "series_slug_title": "fire-force",
+        "series_title": "Fire Force",
+        "subtitle_locales": [],
+        "upload_date": "2020-12-12T01:55:00+09:00",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "G6Z433K8R",
+            "is_premium_only": true,
+            "media_guid": "G4GFQPVG8",
+            "original": true,
+            "season_guid": "G6QWV8426",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G4VUQZGKV",
+            "is_premium_only": true,
+            "media_guid": "GNJFDG8X1",
+            "original": false,
+            "season_guid": "GR09CX3D4",
+            "variant": ""
+          },
+          {
+            "audio_locale": "es-419",
+            "guid": "GX9UQ9V1J",
+            "is_premium_only": true,
+            "media_guid": "GJKF28PN9",
+            "original": false,
+            "season_guid": "GYE5CQPX4",
+            "variant": ""
+          },
+          {
+            "audio_locale": "pt-BR",
+            "guid": "GPWUKE3KZ",
+            "is_premium_only": true,
+            "media_guid": "GZ4FVJWV2",
+            "original": false,
+            "season_guid": "GR75CD5MZ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "G8WUN8Z7V",
+            "is_premium_only": true,
+            "media_guid": "GQ9FG1KM0",
+            "original": false,
+            "season_guid": "GRDQCGWM7",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GPWUKZE95",
+            "is_premium_only": true,
+            "media_guid": "GZ4FV2JGX",
+            "original": false,
+            "season_guid": "G6Q4CZ1MM",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-IN",
+            "guid": "G2XU04J7J",
+            "is_premium_only": true,
+            "media_guid": "GDVFVQDMD",
+            "original": false,
+            "season_guid": "G65VCD9MG",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GVWU0M9DZ",
+            "is_premium_only": true,
+            "media_guid": "G25F07QZ3",
+            "original": false,
+            "season_guid": "GR2PCVKGM",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GMKUX1VJ5",
+            "is_premium_only": true,
+            "media_guid": "GPPFK9GW0",
+            "original": false,
+            "season_guid": "G6P8CX7V2",
+            "variant": ""
+          }
+        ]
+      },
+      "type": "episode",
+      "slug_title": "signs-of-upheaval",
+      "title": "Les Signes d'un grand changement"
+    },
+    {
+      "id": "GMKUX1VJ5",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/d23e991fa2536eb8a952dea71f851327.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_description": "",
+      "external_id": "EPI.934790",
+      "title": "Les Signes d'un grand changement",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 362992,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 725984,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1088976,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Images à caractère sexuel",
+          "Torture",
+          "Violence"
+        ],
+        "duration_ms": 1451969,
+        "eligible_region": "FR",
+        "episode": "24",
+        "episode_air_date": "2020-12-12T01:55:00+09:00",
+        "episode_number": 24,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "16",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GYQWNXPZY|S2|E24",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T05:25:00Z",
+        "premium_date": null,
+        "season_display_number": "2",
+        "season_id": "G6P8CX7V2",
+        "season_number": 2,
+        "season_sequence_number": 2,
+        "season_slug_title": "fire-force-season-2-tamil-dub",
+        "season_title": "Fire Force",
+        "sequence_number": 24,
+        "series_id": "GYQWNXPZY",
+        "series_slug_title": "fire-force",
+        "series_title": "Fire Force",
+        "subtitle_locales": [],
+        "upload_date": "2020-12-12T01:55:00+09:00",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "G6Z433K8R",
+            "is_premium_only": true,
+            "media_guid": "G4GFQPVG8",
+            "original": true,
+            "season_guid": "G6QWV8426",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G4VUQZGKV",
+            "is_premium_only": true,
+            "media_guid": "GNJFDG8X1",
+            "original": false,
+            "season_guid": "GR09CX3D4",
+            "variant": ""
+          },
+          {
+            "audio_locale": "es-419",
+            "guid": "GX9UQ9V1J",
+            "is_premium_only": true,
+            "media_guid": "GJKF28PN9",
+            "original": false,
+            "season_guid": "GYE5CQPX4",
+            "variant": ""
+          },
+          {
+            "audio_locale": "pt-BR",
+            "guid": "GPWUKE3KZ",
+            "is_premium_only": true,
+            "media_guid": "GZ4FVJWV2",
+            "original": false,
+            "season_guid": "GR75CD5MZ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "G8WUN8Z7V",
+            "is_premium_only": true,
+            "media_guid": "GQ9FG1KM0",
+            "original": false,
+            "season_guid": "GRDQCGWM7",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GPWUKZE95",
+            "is_premium_only": true,
+            "media_guid": "GZ4FV2JGX",
+            "original": false,
+            "season_guid": "G6Q4CZ1MM",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-IN",
+            "guid": "G2XU04J7J",
+            "is_premium_only": true,
+            "media_guid": "GDVFVQDMD",
+            "original": false,
+            "season_guid": "G65VCD9MG",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GVWU0M9DZ",
+            "is_premium_only": true,
+            "media_guid": "G25F07QZ3",
+            "original": false,
+            "season_guid": "GR2PCVKGM",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GMKUX1VJ5",
+            "is_premium_only": true,
+            "media_guid": "GPPFK9GW0",
+            "original": false,
+            "season_guid": "G6P8CX7V2",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_title": "",
+      "description": "Shinra et Arthur poursuivent leur étrange entraînement auprès du capitaine Shinmon afin d’accéder à un nouveau niveau dans la maîtrise de leur pouvoir. Mais à une échelle plus grande, la donne a changé et un combat plus important encore apparaît à l’horizon…",
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/GMKUX1VJ5",
+      "channel_id": "crunchyroll",
+      "last_public": "2024-07-17T06:57:07Z",
+      "new": true,
+      "slug_title": "signs-of-upheaval",
+      "slug": ""
+    },
+    {
+      "linked_resource_key": "cms:/episodes/GVWU0M93Z",
+      "slug_title": "18-tips-for-maintaining-a-spiritual-sword",
+      "type": "episode",
+      "last_public": "2024-07-17T02:26:16Z",
+      "description": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/ab031130263e67a21a41c896b6d7a607.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "id": "GVWU0M93Z",
+      "promo_description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 354475,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 708950,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1063425,
+        "eligible_region": "FR",
+        "episode": "7",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 7,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E7",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 7,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GMKUX7DJM",
+            "is_premium_only": false,
+            "media_guid": "GPPFK42WJ",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G50UZPK3J",
+            "is_premium_only": true,
+            "media_guid": "G07FNPGEQ",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GPWUKD5E3",
+            "is_premium_only": true,
+            "media_guid": "GZ4FV1XJW",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G31UXN98N",
+            "is_premium_only": true,
+            "media_guid": "G8MFNJM5J",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GVWU0M93Z",
+            "is_premium_only": true,
+            "media_guid": "G25F07QM3",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "new": true,
+      "title": "18 Tips For Maintaining A Spiritual Sword",
+      "promo_title": "",
+      "external_id": "EPI.934769",
+      "channel_id": "crunchyroll",
+      "slug": ""
+    },
+    {
+      "slug_title": "b-is-the-best-language-in-the-world",
+      "description": "",
+      "external_id": "EPI.934766",
+      "promo_title": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 368185,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 736370,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1104555,
+        "eligible_region": "FR",
+        "episode": "6",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 6,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E6",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 6,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GK9U30P7V",
+            "is_premium_only": false,
+            "media_guid": "G3WFXDJMK",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GVWU05W00",
+            "is_premium_only": true,
+            "media_guid": "G25F0W400",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G0DUNJ3P3",
+            "is_premium_only": true,
+            "media_guid": "G9XFEGXJX",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GN7UDM404",
+            "is_premium_only": true,
+            "media_guid": "GVMF0M919",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GN7UDM485",
+            "is_premium_only": true,
+            "media_guid": "GVMF0M93D",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "slug": "",
+      "type": "episode",
+      "id": "GN7UDM485",
+      "last_public": "2024-07-17T02:26:16Z",
+      "linked_resource_key": "cms:/episodes/GN7UDM485",
+      "promo_description": "",
+      "title": "B++ Is The Best Language In The World",
+      "channel_id": "crunchyroll",
+      "new": true
+    },
+    {
+      "promo_title": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/20007622087285ce0f6dc299e04212d2.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug": "",
+      "title": "Ocean Dance",
+      "promo_description": "",
+      "id": "GWDU82D4J",
+      "linked_resource_key": "cms:/episodes/GWDU82D4J",
+      "description": "",
+      "channel_id": "crunchyroll",
+      "type": "episode",
+      "slug_title": "ocean-dance",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 360626,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 721252,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1081878,
+        "eligible_region": "FR",
+        "episode": "11",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 11,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E11",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 11,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G2XU0WPZ9",
+            "is_premium_only": false,
+            "media_guid": "GDVFVJ047",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G50UZP5W2",
+            "is_premium_only": true,
+            "media_guid": "G07FNP843",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GD9UV8QEX",
+            "is_premium_only": true,
+            "media_guid": "GWMF8QE7D",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GWDU82DZ4",
+            "is_premium_only": true,
+            "media_guid": "GEMFZ7EV1",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GWDU82D4J",
+            "is_premium_only": true,
+            "media_guid": "GEMFZ7E1D",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "external_id": "EPI.934778",
+      "last_public": "2024-07-17T02:26:16Z",
+      "new": true
+    },
+    {
+      "linked_resource_key": "cms:/episodes/GX9UQE0V3",
+      "promo_title": "",
+      "description": "",
+      "type": "episode",
+      "new": true,
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fba54b3b28e99bbc4166eba16bcda7c8.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "title": "Steps to Make Vitality Pills",
+      "last_public": "2024-07-17T02:26:16Z",
+      "channel_id": "crunchyroll",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 383431,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 766862,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1150294,
+        "eligible_region": "FR",
+        "episode": "3",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 3,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E3",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 3,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G9DUEQVK8",
+            "is_premium_only": false,
+            "media_guid": "G1QF40ZKN",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G31UXD3KX",
+            "is_premium_only": false,
+            "media_guid": "G8MFN8W3N",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G9DUEG45K",
+            "is_premium_only": false,
+            "media_guid": "G1QF4G59K",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GX9UQE02P",
+            "is_premium_only": true,
+            "media_guid": "GJKF2WVK5",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GX9UQE0V3",
+            "is_premium_only": true,
+            "media_guid": "GJKF2WVPQ",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_description": "",
+      "slug_title": "steps-to-make-vitality-pills",
+      "slug": "",
+      "external_id": "EPI.934762",
+      "id": "GX9UQE0V3"
+    },
+    {
+      "last_public": "2024-07-17T02:26:16Z",
+      "new": true,
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/G4VUQ52GD",
+      "promo_title": "",
+      "slug_title": "the-girl-at-the-door-for-a-date",
+      "channel_id": "crunchyroll",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 397184,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 794368,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1191553,
+        "eligible_region": "FR",
+        "episode": "4",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 4,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E4",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 4,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G4VUQJ4G8",
+            "is_premium_only": false,
+            "media_guid": "GNJFD938V",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G4VUQJZJZ",
+            "is_premium_only": true,
+            "media_guid": "GNJFD9G9G",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GN7UDV8G2",
+            "is_premium_only": true,
+            "media_guid": "GVMF043JW",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G4VUQ52DJ",
+            "is_premium_only": true,
+            "media_guid": "GNJFDM409",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G4VUQ52GD",
+            "is_premium_only": true,
+            "media_guid": "GNJFDM480",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "title": "The Girl at the Door for a Date",
+      "description": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_description": "",
+      "slug": "",
+      "id": "G4VUQ52GD",
+      "external_id": "EPI.934763"
+    },
+    {
+      "channel_id": "crunchyroll",
+      "slug": "",
+      "slug_title": "three-brothers-from-the-shadow-faction",
+      "last_public": "2024-07-17T02:26:16Z",
+      "new": true,
+      "type": "episode",
+      "id": "GJWU2WVPP",
+      "promo_description": "",
+      "description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 310170,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 620340,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 930510,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1240683,
+        "eligible_region": "FR",
+        "episode": "5",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 5,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E5",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 5,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GJWU2GDP0",
+            "is_premium_only": false,
+            "media_guid": "GM8FX7DNP",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GMKUX7QX3",
+            "is_premium_only": true,
+            "media_guid": "GPPFK4ZKX",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G2XU0DZKV",
+            "is_premium_only": true,
+            "media_guid": "GDVFV84KG",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GJWU2WVKZ",
+            "is_premium_only": true,
+            "media_guid": "GM8FX1V0K",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GJWU2WVPP",
+            "is_premium_only": true,
+            "media_guid": "GM8FX1VNN",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "external_id": "EPI.934765",
+      "linked_resource_key": "cms:/episodes/GJWU2WVPP",
+      "title": "Three Brothers from the Shadow Faction",
+      "promo_title": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/ffcb6bb27d3b21f4ffcb981e97f81e58.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "description": "",
+      "slug_title": "dogs-are-the-best-friends-of-humans",
+      "type": "episode",
+      "channel_id": "crunchyroll",
+      "title": "Dogs Are The Best Friends of Humans",
+      "slug": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 366528,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 733056,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1099585,
+        "eligible_region": "FR",
+        "episode": "12",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 12,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E12",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 12,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G8WUN8Q9Q",
+            "is_premium_only": false,
+            "media_guid": "GQ9FG1848",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GG1U294DZ",
+            "is_premium_only": true,
+            "media_guid": "G71F4EMWJ",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G9DUEGMJ5",
+            "is_premium_only": true,
+            "media_guid": "G1QF4G1D9",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G7PU479NV",
+            "is_premium_only": true,
+            "media_guid": "G4GFQ524X",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G0DUN28QG",
+            "is_premium_only": true,
+            "media_guid": "G9XFE03WZ",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_title": "",
+      "new": true,
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/dbf0ce322482a211983dbeaaf4d93daa.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_description": "",
+      "external_id": "EPI.934780",
+      "last_public": "2024-07-17T02:26:16Z",
+      "id": "G0DUN28QG",
+      "linked_resource_key": "cms:/episodes/G0DUN28QG"
+    },
+    {
+      "description": "",
+      "channel_id": "crunchyroll",
+      "promo_description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 348167,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 696334,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1044502,
+        "eligible_region": "FR",
+        "episode": "8",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 8,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E8",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 8,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GVWU05GD2",
+            "is_premium_only": false,
+            "media_guid": "G25F0WPZV",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G7PU4E3QX",
+            "is_premium_only": true,
+            "media_guid": "G4GFQ9WNE",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GWDU8QGKV",
+            "is_premium_only": true,
+            "media_guid": "GEMFZNKGJ",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G2XU07QP1",
+            "is_premium_only": true,
+            "media_guid": "GDVFVMX0Z",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G31UXN95Q",
+            "is_premium_only": true,
+            "media_guid": "G8MFNJMKE",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "linked_resource_key": "cms:/episodes/G31UXN95Q",
+      "type": "episode",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9ac8df30e4ccf989f388ffb383f42161.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "new": true,
+      "external_id": "EPI.934770",
+      "title": "Perfect Match",
+      "promo_title": "",
+      "slug": "",
+      "last_public": "2024-07-17T02:26:16Z",
+      "slug_title": "perfect-match",
+      "id": "G31UXN95Q"
+    },
+    {
+      "type": "episode",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 329306,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 658612,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 987918,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1317227,
+        "eligible_region": "FR",
+        "episode": "15",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 15,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E15",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 15,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G50UZ93JE",
+            "is_premium_only": false,
+            "media_guid": "G07FN1EQ9",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GZ7UVZ5X0",
+            "is_premium_only": true,
+            "media_guid": "G5JFZQ347",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GPWUKZX8G",
+            "is_premium_only": true,
+            "media_guid": "GZ4FV2MD4",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GK9U3EXPD",
+            "is_premium_only": true,
+            "media_guid": "G3WFXN9JZ",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G14U47M8Z",
+            "is_premium_only": true,
+            "media_guid": "GKKF3EX7P",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/4e34ea16a07878f7cd4d6d30b2ce6936.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "new": true,
+      "channel_id": "crunchyroll",
+      "linked_resource_key": "cms:/episodes/G14U47M8Z",
+      "description": "",
+      "last_public": "2024-07-17T02:26:16Z",
+      "promo_title": "",
+      "id": "G14U47M8Z",
+      "slug": "",
+      "external_id": "EPI.934786",
+      "title": "The Immortal King At A Loss",
+      "slug_title": "the-immortal-king-at-a-loss",
+      "promo_description": ""
+    },
+    {
+      "promo_description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 299845,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 599690,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 899535,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1199382,
+        "eligible_region": "FR",
+        "episode": "13",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 13,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E13",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 13,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GZ7UV85NW",
+            "is_premium_only": false,
+            "media_guid": "G5JFZ93J8",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GPWUKPKDG",
+            "is_premium_only": true,
+            "media_guid": "GZ4FVZV14",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G31UXWKEZ",
+            "is_premium_only": true,
+            "media_guid": "G8MFNG3V0",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GX9UQE08P",
+            "is_premium_only": true,
+            "media_guid": "GJKF2WVD5",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G7PU479KD",
+            "is_premium_only": true,
+            "media_guid": "G4GFQ52P7",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "channel_id": "crunchyroll",
+      "title": "Let Us Burn!!",
+      "id": "G7PU479KD",
+      "slug": "",
+      "slug_title": "let-us-burn",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "last_public": "2024-07-17T02:26:16Z",
+      "new": true,
+      "linked_resource_key": "cms:/episodes/G7PU479KD",
+      "description": "",
+      "external_id": "EPI.934782",
+      "promo_title": "",
+      "type": "episode"
+    },
+    {
+      "description": "",
+      "linked_resource_key": "cms:/episodes/G7PU479GD",
+      "slug": "",
+      "title": "The Giant Frog: Triple Killed by Wang Ling",
+      "last_public": "2024-07-17T02:26:16Z",
+      "promo_description": "",
+      "slug_title": "the-giant-frog-triple-killed-by-wang-ling",
+      "type": "episode",
+      "external_id": "EPI.934760",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/2d39acbebbeefb03f2d12a92bd1d22fb.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_title": "",
+      "channel_id": "crunchyroll",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 377223,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 754446,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1131670,
+        "eligible_region": "FR",
+        "episode": "1",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 1,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E1",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 1,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G0DUN1EV5",
+            "is_premium_only": false,
+            "media_guid": "G9XFEQVK1",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G31UXDJPX",
+            "is_premium_only": false,
+            "media_guid": "G8MFN8QDN",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G9DUEGEK4",
+            "is_premium_only": false,
+            "media_guid": "G1QF4G4K5",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G7PU4798V",
+            "is_premium_only": true,
+            "media_guid": "G4GFQ52DX",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G7PU479GD",
+            "is_premium_only": true,
+            "media_guid": "G4GFQ52G7",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "id": "G7PU479GD",
+      "new": true
+    },
+    {
+      "slug_title": "dignified-run-for-chief-of-class",
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/G9DUE03KE",
+      "slug": "",
+      "new": true,
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_description": "",
+      "promo_title": "",
+      "last_public": "2024-07-17T02:26:16Z",
+      "channel_id": "crunchyroll",
+      "description": "",
+      "title": "Dignified Run for Chief of Class",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 398876,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 797752,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1196630,
+        "eligible_region": "FR",
+        "episode": "2",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 2,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E2",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 2,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GEVUZ2V12",
+            "is_premium_only": false,
+            "media_guid": "GXMFQG8VG",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GK9U3079K",
+            "is_premium_only": false,
+            "media_guid": "G3WFXDM54",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GMKUXGE43",
+            "is_premium_only": false,
+            "media_guid": "GPPFKD85X",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G9DUE0347",
+            "is_premium_only": true,
+            "media_guid": "G1QF47M52",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G9DUE03KE",
+            "is_premium_only": true,
+            "media_guid": "G1QF47MK4",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "external_id": "EPI.934761",
+      "id": "G9DUE03KE"
+    },
+    {
+      "linked_resource_key": "cms:/episodes/GQJUG52XQ",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 358869,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 717738,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1076607,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1435478,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 10,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GPWUK42W8",
+            "is_premium_only": false,
+            "media_guid": "GZ4FV85ND",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GQJUGJ274",
+            "is_premium_only": true,
+            "media_guid": "GGVF29G07",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GEVUZNEZZ",
+            "is_premium_only": true,
+            "media_guid": "GXMFQZ0QQ",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GQJUG528W",
+            "is_premium_only": true,
+            "media_guid": "GGVF2JGP1",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GQJUG52XQ",
+            "is_premium_only": true,
+            "media_guid": "GGVF2JGKZ",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "channel_id": "crunchyroll",
+      "new": true,
+      "slug_title": "set-off-old-driver",
+      "slug": "",
+      "promo_description": "",
+      "last_public": "2024-07-17T02:26:16Z",
+      "external_id": "EPI.934776",
+      "id": "GQJUG52XQ",
+      "type": "episode",
+      "promo_title": "",
+      "title": "Set Off, Old Driver!"
+    },
+    {
+      "external_id": "EPI.934784",
+      "channel_id": "crunchyroll",
+      "promo_description": "",
+      "new": true,
+      "type": "episode",
+      "title": "Almost Perfect",
+      "id": "GX9UQE0N3",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/423b175a46f36a202e2bd521ff520e28.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug_title": "almost-perfect",
+      "description": "",
+      "linked_resource_key": "cms:/episodes/GX9UQE0N3",
+      "promo_title": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 347534,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 695068,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1042603,
+        "eligible_region": "FR",
+        "episode": "14",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 14,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E14",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 14,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GQJUG184D",
+            "is_premium_only": false,
+            "media_guid": "GGVF2QP7M",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G2XU0E0DD",
+            "is_premium_only": true,
+            "media_guid": "GDVFV5V88",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GZ7UV238Z",
+            "is_premium_only": true,
+            "media_guid": "G5JFZXN9Q",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G4VUQ524J",
+            "is_premium_only": true,
+            "media_guid": "GNJFDM439",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GX9UQE0N3",
+            "is_premium_only": true,
+            "media_guid": "GJKF2WV4Q",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "slug": "",
+      "last_public": "2024-07-17T02:26:16Z"
+    },
+    {
+      "linked_resource_key": "cms:/episodes/G8WUNJMKX",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug_title": "boss-of-shadow-faction",
+      "description": "",
+      "external_id": "EPI.934773",
+      "last_public": "2024-07-17T02:26:16Z",
+      "channel_id": "crunchyroll",
+      "title": "Boss of Shadow Faction",
+      "type": "episode",
+      "new": true,
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 350571,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 701142,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "te-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1051713,
+        "eligible_region": "FR",
+        "episode": "9",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 9,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E9",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "G619CPNWN",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-telugu-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 9,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G31UXDJMX",
+            "is_premium_only": false,
+            "media_guid": "G8MFN8Q9N",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G8WUNX23J",
+            "is_premium_only": true,
+            "media_guid": "GQ9FGJEN5",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G2XU0DWQ9",
+            "is_premium_only": true,
+            "media_guid": "GDVFV8JX7",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GZ7UVG45V",
+            "is_premium_only": true,
+            "media_guid": "G5JFZ053Z",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G8WUNJMKX",
+            "is_premium_only": true,
+            "media_guid": "GQ9FG52XJ",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_title": "",
+      "id": "G8WUNJMKX",
+      "promo_description": "",
+      "slug": ""
+    },
+    {
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/503ee000abde08210332465224541dfc.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "last_public": "2024-07-17T02:25:23Z",
+      "new": true,
+      "external_id": "EPI.934726",
+      "promo_title": "",
+      "slug_title": "dignified-run-for-chief-of-class",
+      "title": "Dignified Run for Chief of Class",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 398876,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 797752,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1196630,
+        "eligible_region": "FR",
+        "episode": "2",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 2,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E2",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "GY49C7NE9",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-tamil-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 2,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GEVUZ2V12",
+            "is_premium_only": false,
+            "media_guid": "GXMFQG8VG",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GK9U3079K",
+            "is_premium_only": false,
+            "media_guid": "G3WFXDM54",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GMKUXGE43",
+            "is_premium_only": false,
+            "media_guid": "GPPFKD85X",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G9DUE0347",
+            "is_premium_only": true,
+            "media_guid": "G1QF47M52",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G9DUE03KE",
+            "is_premium_only": true,
+            "media_guid": "G1QF47MK4",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "description": "",
+      "type": "episode",
+      "slug": "",
+      "id": "G9DUE0347",
+      "linked_resource_key": "cms:/episodes/G9DUE0347",
+      "promo_description": "",
+      "channel_id": "crunchyroll"
+    },
+    {
+      "external_id": "EPI.934739",
+      "description": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/4e27e438fb7f77eafb13643ee52bc6bc.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "id": "GZ7UVG45V",
+      "last_public": "2024-07-17T02:25:23Z",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 350571,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 701142,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1051713,
+        "eligible_region": "FR",
+        "episode": "9",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 9,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E9",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "GY49C7NE9",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-tamil-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 9,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G31UXDJMX",
+            "is_premium_only": false,
+            "media_guid": "G8MFN8Q9N",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G8WUNX23J",
+            "is_premium_only": true,
+            "media_guid": "GQ9FGJEN5",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G2XU0DWQ9",
+            "is_premium_only": true,
+            "media_guid": "GDVFV8JX7",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GZ7UVG45V",
+            "is_premium_only": true,
+            "media_guid": "G5JFZ053Z",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G8WUNJMKX",
+            "is_premium_only": true,
+            "media_guid": "GQ9FG52XJ",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_title": "",
+      "channel_id": "crunchyroll",
+      "slug_title": "boss-of-shadow-faction",
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/GZ7UVG45V",
+      "promo_description": "",
+      "slug": "",
+      "title": "Boss of Shadow Faction",
+      "new": true
+    },
+    {
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/GQJUG528W",
+      "last_public": "2024-07-17T02:25:23Z",
+      "external_id": "EPI.934741",
+      "promo_title": "",
+      "id": "GQJUG528W",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/1eea9f78454784f036cfb644795b653c.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 358869,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 717738,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1076607,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1435478,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "GY49C7NE9",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-tamil-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 10,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GPWUK42W8",
+            "is_premium_only": false,
+            "media_guid": "GZ4FV85ND",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GQJUGJ274",
+            "is_premium_only": true,
+            "media_guid": "GGVF29G07",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GEVUZNEZZ",
+            "is_premium_only": true,
+            "media_guid": "GXMFQZ0QQ",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GQJUG528W",
+            "is_premium_only": true,
+            "media_guid": "GGVF2JGP1",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GQJUG52XQ",
+            "is_premium_only": true,
+            "media_guid": "GGVF2JGKZ",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "slug": "",
+      "promo_description": "",
+      "title": "Set Off, Old Driver!",
+      "channel_id": "crunchyroll",
+      "new": true,
+      "slug_title": "set-off-old-driver"
+    },
+    {
+      "external_id": "EPI.934728",
+      "title": "The Girl at the Door for a Date",
+      "new": true,
+      "last_public": "2024-07-17T02:25:23Z",
+      "channel_id": "crunchyroll",
+      "promo_title": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/cfc5e97dda89def8639462c49784a467.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_description": "",
+      "type": "episode",
+      "description": "",
+      "slug_title": "the-girl-at-the-door-for-a-date",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 397184,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 794368,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1191553,
+        "eligible_region": "FR",
+        "episode": "4",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 4,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E4",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "GY49C7NE9",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-tamil-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 4,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "G4VUQJ4G8",
+            "is_premium_only": false,
+            "media_guid": "GNJFD938V",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "G4VUQJZJZ",
+            "is_premium_only": true,
+            "media_guid": "GNJFD9G9G",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "GN7UDV8G2",
+            "is_premium_only": true,
+            "media_guid": "GVMF043JW",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "G4VUQ52DJ",
+            "is_premium_only": true,
+            "media_guid": "GNJFDM409",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G4VUQ52GD",
+            "is_premium_only": true,
+            "media_guid": "GNJFDM480",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "id": "G4VUQ52DJ",
+      "slug": "",
+      "linked_resource_key": "cms:/episodes/G4VUQ52DJ"
+    },
+    {
+      "id": "GN7UDM404",
+      "linked_resource_key": "cms:/episodes/GN7UDM404",
+      "title": "B++ Is The Best Language In The World",
+      "new": true,
+      "external_id": "EPI.934731",
+      "promo_description": "",
+      "slug_title": "b-is-the-best-language-in-the-world",
+      "description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 368185,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 736370,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1104555,
+        "eligible_region": "FR",
+        "episode": "6",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 6,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E6",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "GY49C7NE9",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-tamil-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 6,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GK9U30P7V",
+            "is_premium_only": false,
+            "media_guid": "G3WFXDJMK",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GVWU05W00",
+            "is_premium_only": true,
+            "media_guid": "G25F0W400",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G0DUNJ3P3",
+            "is_premium_only": true,
+            "media_guid": "G9XFEGXJX",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GN7UDM404",
+            "is_premium_only": true,
+            "media_guid": "GVMF0M919",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "GN7UDM485",
+            "is_premium_only": true,
+            "media_guid": "GVMF0M93D",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_title": "",
+      "slug": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/9eae37c6f66518811d022b53b95a3692.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "type": "episode",
+      "last_public": "2024-07-17T02:25:23Z",
+      "channel_id": "crunchyroll"
+    },
+    {
+      "description": "",
+      "id": "GX9UQE08P",
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/GX9UQE08P",
+      "title": "Let Us Burn!!",
+      "promo_title": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/de0556df6f7b2c33e71c641df40944fa.jpg",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "last_public": "2024-07-17T02:25:23Z",
+      "slug": "",
+      "channel_id": "crunchyroll",
+      "slug_title": "let-us-burn",
+      "new": true,
+      "promo_description": "",
+      "external_id": "EPI.934749",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 299845,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 599690,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 899535,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ta-IN",
+        "availability_ends": "9998-11-30T08:00:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T08:00:00Z",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1199382,
+        "eligible_region": "FR",
+        "episode": "13",
+        "episode_air_date": "2024-07-16T19:30:00Z",
+        "episode_number": 13,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T08:00:00Z",
+        "identifier": "GZJH3DJ8E|S1|E13",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2024-07-17T02:30:00Z",
+        "premium_date": null,
+        "season_display_number": "1",
+        "season_id": "GY49C7NE9",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "the-daily-life-of-the-immortal-king-tamil-dub",
+        "season_title": "The Daily Life of the Immortal King",
+        "sequence_number": 13,
+        "series_id": "GZJH3DJ8E",
+        "series_slug_title": "the-daily-life-of-the-immortal-king",
+        "series_title": "The Daily Life of the Immortal King",
+        "subtitle_locales": [],
+        "upload_date": "2024-07-16T19:30:00Z",
+        "versions": [
+          {
+            "audio_locale": "zh-CN",
+            "guid": "GZ7UV85NW",
+            "is_premium_only": false,
+            "media_guid": "G5JFZ93J8",
+            "original": true,
+            "season_guid": "G6E5CQG41",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GPWUKPKDG",
+            "is_premium_only": true,
+            "media_guid": "GZ4FVZV14",
+            "original": false,
+            "season_guid": "GY75CDVXK",
+            "variant": ""
+          },
+          {
+            "audio_locale": "hi-IN",
+            "guid": "G31UXWKEZ",
+            "is_premium_only": true,
+            "media_guid": "G8MFNG3V0",
+            "original": false,
+            "season_guid": "G609CX1GQ",
+            "variant": ""
+          },
+          {
+            "audio_locale": "ta-IN",
+            "guid": "GX9UQE08P",
+            "is_premium_only": true,
+            "media_guid": "GJKF2WVD5",
+            "original": false,
+            "season_guid": "GY49C7NE9",
+            "variant": ""
+          },
+          {
+            "audio_locale": "te-IN",
+            "guid": "G7PU479KD",
+            "is_premium_only": true,
+            "media_guid": "G4GFQ52P7",
+            "original": false,
+            "season_guid": "G619CPNWN",
+            "variant": ""
+          }
+        ]
+      }
+    }
+  ],
+  "meta": {}
+}

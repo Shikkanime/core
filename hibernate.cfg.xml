@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database connection settings -->
+        <property name="connection.url">jdbc:postgresql://localhost:5432/shikkanime</property>
+        <property name="connection.username">postgres</property>
+        <property name="connection.password">mysecretpassword</property>
+        <property name="show_sql">false</property>
+        <property name="hibernate.current_session_context_class">org.hibernate.context.internal.ThreadLocalSessionContext</property>
+        <property name="hibernate.search.backend.type">lucene</property>
+        <property name="hibernate.search.backend.directory.type">local-filesystem</property>
+        <property name="hibernate.search.backend.analysis.configurer">fr.shikkanime.modules.CustomLuceneAnalysisDefinitionProvider</property>
+        <property name="hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS">100</property>
+        <property name="hibernate.cache.use_second_level_cache">true</property>
+        <property name="hibernate.cache.region.factory_class">jcache</property>
+        <property name="hibernate.cache.use_query_cache">true</property>
+        <property name="hibernate.javax.cache.missing_cache_strategy">create</property>
+    </session-factory>
+</hibernate-configuration>

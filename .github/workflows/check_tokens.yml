@@ -1,0 +1,48 @@
+name: Check and update Crunchyroll token
+
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Runs every Monday at 8:00 AM
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  check-and-update:
+    name: Check and update Crunchyroll token
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tokens and update if necessary
+        run: |
+          #!/bin/bash
+          
+          CRUNCHYROLL_RS_TOKEN=$(curl 'https://raw.githubusercontent.com/crunchy-labs/crunchyroll-rs/master/src/crunchyroll.rs' | grep -oP 'Basic \K[^\\"]*' | head -n 1)
+          SHIKKANIME_TOKEN=$(cat 'src/main/kotlin/fr/shikkanime/wrappers/factories/AbstractCrunchyrollWrapper.kt' | grep -oP 'Basic \K[^\\"]*' | head -n 1)
+          
+          if [ "$CRUNCHYROLL_RS_TOKEN" != "$SHIKKANIME_TOKEN" ]; then
+            echo "Tokens are different. Updating Shikkanime token..."
+          
+            # Update the file
+            sed -i "s|$SHIKKANIME_TOKEN|$CRUNCHYROLL_RS_TOKEN|g" src/main/kotlin/fr/shikkanime/wrappers/factories/AbstractCrunchyrollWrapper.kt
+          
+            # Set up Git
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+          
+            # Create a new branch
+            git checkout -b update-crunchyroll-token
+          
+            # Commit the changes
+            git add src/main/kotlin/fr/shikkanime/wrappers/factories/AbstractCrunchyrollWrapper.kt
+            git commit -m "Update Crunchyroll token"
+          
+            # Push the changes
+            git push origin update-crunchyroll-token
+          
+            # Create a pull request
+            gh pr create --title "Update Crunchyroll token" --body "Automatically updated Crunchyroll token to match crunchyroll-rs" --base master --head update-crunchyroll-token
+          else
+            echo "Tokens are the same. No update needed."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
