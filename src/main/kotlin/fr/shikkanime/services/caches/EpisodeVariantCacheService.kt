@@ -12,25 +12,37 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.atEndOfTheDay
-import fr.shikkanime.utils.atEndOfWeek
+import fr.shikkanime.utils.*
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("EpisodeVariantCacheService")
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var episodeVariantFactory: EpisodeVariantFactory
-
-    fun findAllByMapping(episodeMapping: EpisodeMapping) = MapCache.getOrCompute(
+    
+    private val byMappingCache = MapCache<UUID, Set<EpisodeVariant>>(
         "EpisodeVariantCacheService.findAllByMapping",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
-        key = episodeMapping.uuid!!,
-    ) { episodeVariantService.findAllByMapping(it) }.toSet()
+    ) { tracer.trace { episodeVariantService.findAllByMapping(it).toSet() } }
+
+    fun findAllByMapping(episodeMapping: EpisodeMapping) = byMappingCache[episodeMapping.uuid!!] ?: emptySet()
+
+    fun findAllByMappings(vararg episodeMappings: EpisodeMapping) {
+        val notFetched = episodeMappings.filterNot { byMappingCache.containsKeyAndValid(it.uuid!!) }
+
+        if (notFetched.isNotEmpty()) {
+            episodeVariantService.findAllByMappings(*notFetched.mapNotNull { it.uuid }.toTypedArray())
+                .groupBy { it.mapping!!.uuid!! }
+                .forEach { byMappingCache.setIfNotExists(it.key, it.value.toSet()) }
+        }
+
+        episodeMappings.forEach { byMappingCache[it.uuid!!]!! }
+    }
 
     fun findAllVariantReleases(
         countryCode: CountryCode,
@@ -42,7 +54,7 @@ class EpisodeVariantCacheService : ICacheService {
         "EpisodeVariantCacheService.findAllVariantReleases",
         classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java),
         key = CountryCodeMemberUUIDWeekKeyCache(countryCode, member?.uuid, startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId), startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId), searchTypes),
-    ) {
+    ) { tracer.trace {
         episodeVariantService.findAllVariantReleases(
             it.countryCode,
             it.member?.let { uuid -> memberCacheService.find(uuid) },
@@ -50,7 +62,7 @@ class EpisodeVariantCacheService : ICacheService {
             it.endZonedDateTime,
             it.searchTypes
         )
-    }
+    } }
 
     fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
         countryCode: CountryCode,

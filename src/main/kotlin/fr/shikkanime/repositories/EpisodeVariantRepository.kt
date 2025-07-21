@@ -64,6 +64,19 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
+    fun findAllByMappings(vararg mappingUUIDs: UUID): List<EpisodeVariant> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(root[EpisodeVariant_.mapping][EpisodeMapping_.uuid].`in`(mappingUUIDs.toSet()))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllVariantReleases(
         countryCode: CountryCode,
         member: Member?,

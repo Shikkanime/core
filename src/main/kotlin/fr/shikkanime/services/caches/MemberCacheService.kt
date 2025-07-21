@@ -6,9 +6,12 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.factories.impl.RefreshMemberFactory
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.util.*
 
 class MemberCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("MemberCacheService")
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var refreshMemberFactory: RefreshMemberFactory
 
@@ -16,11 +19,11 @@ class MemberCacheService : ICacheService {
         "MemberCacheService.find",
         classes = listOf(Member::class.java),
         key = uuid
-    ) { memberService.find(it) }
+    ) { tracer.trace { memberService.find(it) } }
 
     fun getRefreshMember(uuid: UUID, limit: Int) = MapCache.getOrComputeNullable(
         "MemberCacheService.getRefreshMember",
         classes = listOf(Member::class.java, Anime::class.java, MemberFollowAnime::class.java, EpisodeMapping::class.java, MemberFollowEpisode::class.java),
         key = UUIDPaginationKeyCache(uuid, 1, limit)
-    ) { find(it.uuid)?.let { member -> refreshMemberFactory.toDto(member, it.limit) } }
+    ) { tracer.trace { find(it.uuid)?.let { member -> refreshMemberFactory.toDto(member, it.limit) } } }
 }

@@ -16,10 +16,13 @@ import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.LocalDate
 import java.util.*
 
 class AnimeCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("AnimeCacheService")
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var memberCacheService: MemberCacheService
@@ -42,7 +45,7 @@ class AnimeCacheService : ICacheService {
         "AnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes),
-    ) {
+    ) { tracer.trace {
         PageableDto.fromPageable(
             animeService.findAllBy(
                 it.countryCode,
@@ -54,57 +57,55 @@ class AnimeCacheService : ICacheService {
             ),
             animeFactory
         )
-    }
+    } }
 
     fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: Array<LangType>?) =
         MapCache.getOrCompute(
             "AnimeCacheService.findAllByName",
             classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
             key = CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes),
-        ) {
+        ) { tracer.trace {
             PageableDto.fromPageable(
                 animeService.findAllByName(it.countryCode, it.name, it.page, it.limit, it.searchTypes),
                 animeFactory
             )
-        }
+        } }
 
     fun getAudioLocales(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getAudioLocales",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = StringUtils.EMPTY_STRING,
-    ) { animeService.findAllAudioLocales() }[anime.uuid!!]
+    ) { tracer.trace { animeService.findAllAudioLocales() } }[anime.uuid!!]
 
     fun getSeasons(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getSeasons",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = StringUtils.EMPTY_STRING,
-    ) { animeService.findAllSeasons() }[anime.uuid!!]
+    ) { tracer.trace { animeService.findAllSeasons() } }[anime.uuid!!]
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "AnimeCacheService.find",
         classes = listOf(Anime::class.java),
         key = uuid,
-    ) { animeService.find(it) }
+    ) { tracer.trace { animeService.find(it) } }
 
     fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrComputeNullable(
         "AnimeCacheService.findBySlug",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = countryCode to slug,
-    ) {
-        animeService.findBySlug(it.first, it.second)?.let { anime -> animeFactory.toDto(anime) }
-    }
+    ) { tracer.trace { animeService.findBySlug(it.first, it.second)?.let { anime -> animeFactory.toDto(anime) } } }
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate, searchTypes: Array<LangType>? = null) =
         MapCache.getOrCompute(
             "AnimeCacheService.getWeeklyAnimes",
             classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, MemberFollowAnime::class.java),
             key = CountryCodeLocalDateKeyCache(countryCode, memberUuid, startOfWeekDay, searchTypes),
-        ) {
+        ) { tracer.trace {
             animeService.getWeeklyAnimes(
                 it.countryCode,
                 it.member?.let { uuid -> memberCacheService.find(uuid) },
                 it.localDate,
                 it.searchTypes,
             )
-        }
+        } }
 }

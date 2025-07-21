@@ -7,11 +7,8 @@ import fr.shikkanime.factories.IEpisodeVariantFactory
 import fr.shikkanime.utils.withUTCString
 
 class EpisodeVariantFactory : IEpisodeVariantFactory {
-    @Inject
-    private lateinit var episodeMappingFactory: EpisodeMappingFactory
-
-    @Inject
-    private lateinit var platformFactory: PlatformFactory
+    @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var platformFactory: PlatformFactory
 
     override fun toDto(
         entity: EpisodeVariant,

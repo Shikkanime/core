@@ -7,10 +7,8 @@ import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.repositories.MemberActionRepository
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
@@ -22,13 +20,15 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     }
 
     private val logger = LoggerFactory.getLogger(javaClass)
-
+    private val tracer = TelemetryConfig.getTracer("MemberActionService")
     @Inject private lateinit var memberActionRepository: MemberActionRepository
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var traceActionService: TraceActionService
 
     override fun getRepository() = memberActionRepository
+
+    private fun findByUuidAndCode(uuid: UUID, code: String) = tracer.trace { memberActionRepository.findByUuidAndCode(uuid, code) }
 
     @OptIn(ExperimentalEncodingApi::class)
     private fun toWebToken(memberAction: MemberAction): String = EncryptionManager.toBase64(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
@@ -41,7 +41,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     }
 
     fun validateAction(uuid: UUID, code: String) {
-        val memberAction = memberActionRepository.findByUuidAndCode(uuid, code)
+        val memberAction = findByUuidAndCode(uuid, code)
         checkNotNull(memberAction) { "Invalid action" }
         require(ZonedDateTime.now() < memberAction.creationDateTime.plusMinutes(ACTION_EXPIRED_AFTER)) { "Action expired" }
         doValidateAction(memberAction)
@@ -96,46 +96,48 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     }
 
     private fun doValidateAction(memberAction: MemberAction) {
-        when (memberAction.action) {
-            Action.VALIDATE_EMAIL -> {
-                memberAction.member!!.email = memberAction.email
-                memberService.update(memberAction.member!!)
-                traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
+        tracer.trace {
+            when (memberAction.action) {
+                Action.VALIDATE_EMAIL -> {
+                    memberAction.member!!.email = memberAction.email
+                    memberService.update(memberAction.member!!)
+                    traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
 
-                mailService.save(
-                    Mail(
-                        recipient = memberAction.email!!,
-                        title = "${Constant.NAME} - Adresse email validée",
-                        body = mailService.getFreemarkerContent("/mail/email-associated.ftl").toString()
+                    mailService.save(
+                        Mail(
+                            recipient = memberAction.email!!,
+                            title = "${Constant.NAME} - Adresse email validée",
+                            body = mailService.getFreemarkerContent("/mail/email-associated.ftl").toString()
+                        )
                     )
-                )
+                }
+
+                Action.FORGOT_IDENTIFIER -> {
+                    var identifier: String
+
+                    do {
+                        identifier = StringUtils.generateRandomString(12)
+                    } while (memberService.findByIdentifier(identifier) != null)
+
+                    memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
+                    memberService.update(memberAction.member!!)
+                    traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
+
+                    mailService.save(
+                        Mail(
+                            recipient = memberAction.email!!,
+                            title = "${Constant.NAME} - Votre nouvel identifiant",
+                            body = mailService.getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
+                        )
+                    )
+                }
+
+                else -> TODO("Action not implemented")
             }
 
-            Action.FORGOT_IDENTIFIER -> {
-                var identifier: String
-
-                do {
-                    identifier = StringUtils.generateRandomString(12)
-                } while (memberService.findByIdentifier(identifier) != null)
-
-                memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
-                memberService.update(memberAction.member!!)
-                traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
-
-                mailService.save(
-                    Mail(
-                        recipient = memberAction.email!!,
-                        title = "${Constant.NAME} - Votre nouvel identifiant",
-                        body = mailService.getFreemarkerContent("/mail/your-new-identifier.ftl", identifier).toString()
-                    )
-                )
-            }
-
-            else -> TODO("Action not implemented")
+            memberAction.validated = true
+            memberAction.updateDateTime = ZonedDateTime.now()
+            memberActionRepository.update(memberAction)
         }
-
-        memberAction.validated = true
-        memberAction.updateDateTime = ZonedDateTime.now()
-        memberActionRepository.update(memberAction)
     }
 }

@@ -19,6 +19,8 @@ class MapCache<K : Any, V>(
 
     fun containsKey(key: K) = cache.containsKey(key)
 
+    fun containsKeyAndValid(key: K) = cache.containsKey(key) && !needInvalidation(key)
+
     private fun needInvalidation(key: K): Boolean {
         val (timestamp, _) = cache[key] ?: return false
         return System.currentTimeMillis() - timestamp > duration.toMillis()

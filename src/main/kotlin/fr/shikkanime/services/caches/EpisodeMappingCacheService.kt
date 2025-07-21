@@ -15,13 +15,17 @@ import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.util.*
 
 class EpisodeMappingCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingCacheService")
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
     @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -34,7 +38,7 @@ class EpisodeMappingCacheService : ICacheService {
         "EpisodeMappingCacheService.findAllBy",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit),
-    ) {
+    ) { tracer.trace {
         PageableDto.fromPageable(
             episodeMappingService.findAllBy(
                 it.countryCode,
@@ -43,10 +47,10 @@ class EpisodeMappingCacheService : ICacheService {
                 it.sort,
                 it.page,
                 it.limit,
-            ),
+            ).apply { episodeVariantCacheService.findAllByMappings(*data.toTypedArray()) },
             episodeMappingFactory
         )
-    }
+    } }
 
     fun findAllGroupedBy(
         countryCode: CountryCode?,
@@ -57,12 +61,12 @@ class EpisodeMappingCacheService : ICacheService {
         "EpisodeMappingCacheService.findAllGroupedBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodeSortPaginationKeyCache(countryCode, sort,page, limit),
-    ) {
+    ) { tracer.trace {
         PageableDto.fromPageable(
             episodeMappingService.findAllGroupedBy(it.countryCode, it.sort, it.page, it.limit),
             groupedEpisodeFactory
         )
-    }
+    } }
 
     fun findAllSeo() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllSeo",
@@ -79,8 +83,9 @@ class EpisodeMappingCacheService : ICacheService {
         "EpisodeMappingCacheService.findPreviousAndNextBy",
         classes = listOf(EpisodeMapping::class.java),
         key = animeUuid,
-    ) {
+    ) { tracer.trace {
         val result = episodeMappingService.findAllByAnime(it)
+        episodeVariantCacheService.findAllByMappings(*result.toTypedArray())
 
         result.mapIndexed { index, current ->
             Triple(current.season!!, current.episodeType!!, current.number!!) to Triple(
@@ -89,11 +94,11 @@ class EpisodeMappingCacheService : ICacheService {
                 result.getOrNull(index + 1)?.let { episodeMappingFactory.toDto(it) }
             )
         }.toMap()
-    }[Triple(season, episodeType, number)]
+    } }[Triple(season, episodeType, number)]
 
     fun findMinimalReleaseDateTime() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findMinimalReleaseDateTime",
         classes = listOf(EpisodeMapping::class.java),
         key = StringUtils.EMPTY_STRING,
-    ) { episodeMappingService.findMinimalReleaseDateTime() }
+    ) { tracer.trace { episodeMappingService.findMinimalReleaseDateTime() } }
 }

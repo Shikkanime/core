@@ -11,11 +11,14 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.repositories.MemberFollowEpisodeRepository
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.Response
 import java.time.ZonedDateTime
 import java.util.*
 
 class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFollowEpisodeRepository>() {
+    private val tracer = TelemetryConfig.getTracer("MemberFollowEpisodeCacheService")
     @Inject private lateinit var memberFollowEpisodeRepository: MemberFollowEpisodeRepository
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
@@ -24,20 +27,26 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     override fun getRepository() = memberFollowEpisodeRepository
 
-    fun findAllFollowedEpisodes(member: Member, page: Int, limit: Int) = memberFollowEpisodeRepository.findAllFollowedEpisodes(member, page, limit)
+    fun findAllFollowedEpisodes(member: Member, page: Int, limit: Int) = tracer.trace { memberFollowEpisodeRepository.findAllFollowedEpisodes(member, page, limit) }
 
-    fun findAllFollowedEpisodesUUID(memberUuid: UUID) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(memberUuid)
+    fun findAllFollowedEpisodesUUID(memberUuid: UUID) = tracer.trace { memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(memberUuid) }
 
     fun findAllByEpisode(episodeMapping: EpisodeMapping) =
         memberFollowEpisodeRepository.findAllByEpisode(episodeMapping)
 
-    fun getSeenAndUnseenDuration(member: Member) = memberFollowEpisodeRepository.getSeenAndUnseenDuration(member)
+    fun getSeenAndUnseenDuration(member: Member) = tracer.trace { memberFollowEpisodeRepository.getSeenAndUnseenDuration(member) }
+
+    fun findAllFollowedEpisodesByMemberAndEpisodes(member: Member, episodes: List<EpisodeMapping>) =
+        tracer.trace { memberFollowEpisodeRepository.findAllFollowedEpisodesByMemberAndEpisodes(member, episodes) }
+
+    fun existsByMemberAndEpisode(member: Member, episode: EpisodeMapping) = tracer.trace { memberFollowEpisodeRepository.existsByMemberAndEpisode(member, episode) }
+
+    fun findByMemberAndEpisode(member: Member, episode: EpisodeMapping) = tracer.trace { memberFollowEpisodeRepository.findByMemberAndEpisode(member, episode) }
 
     fun followAll(memberUuid: UUID, anime: GenericDto): Response {
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
-        val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
-            .filter { it.episodeType != EpisodeType.SUMMARY }
-        val followed = memberFollowEpisodeRepository.findAllFollowedEpisodesByMemberAndEpisodes(member, elements)
+        val elements = episodeMappingService.findAllByAnime(anime.uuid).filter { it.episodeType != EpisodeType.SUMMARY }
+        val followed = findAllFollowedEpisodesByMemberAndEpisodes(member, elements)
         val now = ZonedDateTime.now()
 
         val filtered = elements.filter { it.uuid !in followed }.map { MemberFollowEpisode(followDateTime = now, member = member, episode = it) }
@@ -52,7 +61,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
-        if (memberFollowEpisodeRepository.existsByMemberAndEpisode(member, element)) {
+        if (existsByMemberAndEpisode(member, element)) {
             return Response.conflict()
         }
 
@@ -66,7 +75,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
-        val findByMemberAndEpisode = memberFollowEpisodeRepository.findByMemberAndEpisode(member, element)
+        val findByMemberAndEpisode = findByMemberAndEpisode(member, element)
             ?: return Response.conflict()
 
         memberFollowEpisodeRepository.delete(findByMemberAndEpisode)

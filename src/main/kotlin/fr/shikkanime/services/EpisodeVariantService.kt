@@ -11,11 +11,14 @@ import fr.shikkanime.services.caches.RuleCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeVariantService")
     @Inject private lateinit var episodeVariantRepository: EpisodeVariantRepository
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
@@ -31,9 +34,11 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 
-    fun findAllByMapping(mappingUUID: UUID) = episodeVariantRepository.findAllByMapping(mappingUUID)
+    fun findAllByMapping(mappingUUID: UUID) = tracer.trace { episodeVariantRepository.findAllByMapping(mappingUUID) }
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
+
+    fun findAllByMappings(vararg mappingUUIDs: UUID) = tracer.trace { episodeVariantRepository.findAllByMappings(*mappingUUIDs) }
 
     fun findAllVariantReleases(countryCode: CountryCode, member: Member?, startZonedDateTime: ZonedDateTime, endZonedDateTime: ZonedDateTime, searchTypes: Array<LangType>? = null) =
         episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime, searchTypes)

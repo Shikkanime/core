@@ -15,6 +15,7 @@ val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.5.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.19.2"
+val openTelemetry = "1.52.0"
 
 val jdaVersion = "6.0.0-preview"
 val twitter4jVersion = "4.0.7"
@@ -91,6 +92,13 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+
+    implementation("io.opentelemetry:opentelemetry-api:$openTelemetry")
+    implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp:$openTelemetry")
+    implementation("io.opentelemetry:opentelemetry-exporter-logging:$openTelemetry")
+    implementation("io.opentelemetry:opentelemetry-context:$openTelemetry")
+
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("twitter4j-v2:twitter4j-v2-support") {
