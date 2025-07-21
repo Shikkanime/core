@@ -9,10 +9,13 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepository>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingService")
     @Inject private lateinit var episodeMappingRepository: EpisodeMappingRepository
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
@@ -41,7 +44,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String) =
         episodeMappingRepository.findAllSimulcasted(ignoreEpisodeTypes, ignoreAudioLocale)
 
-    fun findAllGroupedBy(countryCode: CountryCode?, page: Int, limit: Int) = episodeMappingRepository.findAllGroupedBy(countryCode, page, limit)
+    fun findAllGroupedBy(countryCode: CountryCode?, page: Int, limit: Int) = tracer.trace { episodeMappingRepository.findAllGroupedBy(countryCode, page, limit) }
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)

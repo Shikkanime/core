@@ -9,6 +9,8 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -22,6 +24,7 @@ import java.time.format.DateTimeFormatter
 
 @Controller("/")
 class SiteController {
+    private val tracer = TelemetryConfig.getTracer("SiteController")
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
@@ -57,39 +60,43 @@ class SiteController {
 
     @Path
     @Get
-    private fun home() = Response.template(
-        Link.HOME,
-        mutableMapOf(
-            "animes" to getFullAnimesSimulcast(),
-            "groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
-                CountryCode.FR,
-                1,
-                8
-            ).data,
+    private fun home() = tracer.trace {
+        Response.template(
+            Link.HOME,
+            mutableMapOf(
+                "animes" to getFullAnimesSimulcast(),
+                "groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
+                    CountryCode.FR,
+                    1,
+                    8
+                ).data,
+            )
         )
-    )
+    }
 
     @Path("catalog/{slug}")
     @Get
     private fun catalogSimulcast(@PathParam slug: String): Response {
-        val findAll = simulcastCacheService.findAll()
-        val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
+        return tracer.trace {
+            val findAll = simulcastCacheService.findAll()
+            val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return@trace Response.notFound()
 
-        return Response.template(
-            Link.CATALOG.template,
-            selectedSimulcast.label,
-            mutableMapOf(
-                "simulcasts" to findAll,
-                "selectedSimulcast" to selectedSimulcast,
-                "animes" to animeCacheService.findAllBy(
-                    CountryCode.FR,
-                    selectedSimulcast.uuid,
-                    listOf(SortParameter("name", SortParameter.Order.ASC)),
-                    1,
-                    102
-                ).data,
+            Response.template(
+                Link.CATALOG.template,
+                selectedSimulcast.label,
+                mutableMapOf(
+                    "simulcasts" to findAll,
+                    "selectedSimulcast" to selectedSimulcast,
+                    "animes" to animeCacheService.findAllBy(
+                        CountryCode.FR,
+                        selectedSimulcast.uuid,
+                        listOf(SortParameter("name", SortParameter.Order.ASC)),
+                        1,
+                        102
+                    ).data,
+                )
             )
-        )
+        }
     }
 
     private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null): Response {

@@ -15,9 +15,12 @@ import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeMappingService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.util.*
 
 class EpisodeMappingCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingCacheService")
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
@@ -56,12 +59,12 @@ class EpisodeMappingCacheService : ICacheService {
         "EpisodeMappingCacheService.findAllGroupedBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         key = CountryCodePaginationKeyCache(countryCode, page, limit),
-    ) {
+    ) { tracer.trace {
         PageableDto.fromPageable(
             episodeMappingService.findAllGroupedBy(it.countryCode, it.page, it.limit),
             groupedEpisodeFactory
         )
-    }
+    } }
 
     fun findAllSeo() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findAllSeo",
