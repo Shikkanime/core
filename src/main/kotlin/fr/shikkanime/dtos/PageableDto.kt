@@ -2,6 +2,8 @@ package fr.shikkanime.dtos
 
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.factories.IGenericFactory
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 
 data class PageableDto<T>(
     val data: Set<T>,
@@ -10,6 +12,8 @@ data class PageableDto<T>(
     val total: Long,
 ) {
     companion object {
+        val tracer = TelemetryConfig.getTracer("PageableDto")
+
         fun <T> empty(): PageableDto<T> {
             return PageableDto(
                 data = emptySet(),
@@ -20,12 +24,14 @@ data class PageableDto<T>(
         }
 
         inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, factory: IGenericFactory<T, D>): PageableDto<D> {
-            return PageableDto(
-                data = pageable.data.asSequence().map { factory.toDto(it) }.toSet(),
-                page = pageable.page,
-                limit = pageable.limit,
-                total = pageable.total,
-            )
+            return tracer.trace("PageableDto.fromPageable") {
+                PageableDto(
+                    data = pageable.data.asSequence().map { factory.toDto(it) }.toSet(),
+                    page = pageable.page,
+                    limit = pageable.limit,
+                    total = pageable.total,
+                )
+            }
         }
 
         inline fun <T : Any, reified R> fromPageable(pageable: Pageable<T>, fn: (T) -> R): PageableDto<R> {
