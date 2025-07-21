@@ -48,4 +48,13 @@ class MemberFollowAnimeCacheService : ICacheService {
             animeFactory
         )
     }
+
+    fun existsByMemberAndAnime(
+        memberUuid: UUID,
+        animeUuid: UUID
+    ) = MapCache.getOrCompute(
+        "MemberFollowAnimeCacheService.existsByMemberAndAnime",
+        classes = listOf(Anime::class.java, MemberFollowAnime::class.java),
+        key = memberUuid to animeUuid,
+    ) { memberFollowAnimeService.existsByMemberAndAnime(it.first, it.second) }
 }

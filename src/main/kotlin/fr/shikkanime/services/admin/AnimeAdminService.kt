@@ -87,7 +87,7 @@ class AnimeAdminService : IAdminService {
         }
 
         memberFollowAnimeService.findAllByAnime(from).forEach { memberFollowAnime ->
-            if (memberFollowAnimeService.existsByMemberAndAnime(memberFollowAnime.member!!, to)) {
+            if (memberFollowAnimeService.existsByMemberAndAnime(memberFollowAnime.member!!.uuid!!, to.uuid!!)) {
                 memberFollowAnimeService.delete(memberFollowAnime)
             } else {
                 memberFollowAnime.anime = to

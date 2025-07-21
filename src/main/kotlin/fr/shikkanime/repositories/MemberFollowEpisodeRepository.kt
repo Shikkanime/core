@@ -63,7 +63,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun existsByMemberAndEpisode(member: Member, episode: EpisodeMapping): Boolean {
+    fun existsByMemberAndEpisode(memberUuid: UUID, episodeUuid: UUID): Boolean {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
@@ -71,8 +71,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             query.select(cb.literal(1))
 
             query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member),
-                cb.equal(root[MemberFollowEpisode_.episode], episode)
+                cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid),
+                cb.equal(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid], episodeUuid)
             )
 
             createReadOnlyQuery(it.createQuery(query).setMaxResults(1))

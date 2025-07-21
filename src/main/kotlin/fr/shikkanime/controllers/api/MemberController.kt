@@ -8,6 +8,7 @@ import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
+import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
@@ -28,6 +29,7 @@ class MemberController : HasPageableRoute() {
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var memberFollowAnimeCacheService: MemberFollowAnimeCacheService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
     @Path("/register")
@@ -91,6 +93,18 @@ class MemberController : HasPageableRoute() {
         }
 
         return Response.created(GenericDto(memberService.forgotIdentifier(findByEmail)))
+    }
+
+    @Path("/animes")
+    @Get
+    @JWTAuthenticated
+    private fun getFollowedAnimes(
+        @JWTUser memberUuid: UUID,
+        @QueryParam("page", "1") pageParam: Int,
+        @QueryParam("limit", "9") limitParam: Int
+    ): Response {
+        val (page, limit) = pageableRoute(pageParam, limitParam, null, null)
+        return Response.ok(memberFollowAnimeCacheService.findAllBy(memberUuid, page, limit))
     }
 
     @Path("/animes")

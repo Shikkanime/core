@@ -29,4 +29,13 @@ class MemberFollowEpisodeCacheService : ICacheService {
            episodeMappingFactory
         )
     }
+
+    fun existsByMemberAndEpisode(
+        memberUuid: UUID,
+        episodeUuid: UUID
+    ) = MapCache.getOrCompute(
+        "MemberFollowEpisodeCacheService.existsByMemberAndEpisode",
+        classes = listOf(EpisodeMapping::class.java, MemberFollowEpisode::class.java),
+        key = memberUuid to episodeUuid,
+    ) { memberFollowEpisodeService.existsByMemberAndEpisode(it.first, it.second) }
 }

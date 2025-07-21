@@ -33,6 +33,9 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     fun getSeenAndUnseenDuration(member: Member) = memberFollowEpisodeRepository.getSeenAndUnseenDuration(member)
 
+    fun existsByMemberAndEpisode(memberUuid: UUID, episodeUuid: UUID) =
+        memberFollowEpisodeRepository.existsByMemberAndEpisode(memberUuid, episodeUuid)
+
     fun followAll(memberUuid: UUID, anime: GenericDto): Response {
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val elements = episodeMappingService.findAllByAnime(animeService.find(anime.uuid) ?: return Response.notFound())
@@ -52,7 +55,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = episodeMappingService.find(episode.uuid) ?: return Response.notFound()
 
-        if (memberFollowEpisodeRepository.existsByMemberAndEpisode(member, element)) {
+        if (existsByMemberAndEpisode(memberUuid, episode.uuid)) {
             return Response.conflict()
         }
 
