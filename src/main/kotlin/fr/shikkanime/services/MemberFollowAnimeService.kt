@@ -9,10 +9,13 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.MemberFollowAnimeRepository
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.Response
 import java.util.*
 
 class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollowAnimeRepository>() {
+    private val tracer = TelemetryConfig.getTracer("MemberFollowAnimeService")
     @Inject private lateinit var memberFollowAnimeRepository: MemberFollowAnimeRepository
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var animeService: AnimeService
@@ -20,7 +23,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     override fun getRepository() = memberFollowAnimeRepository
 
-    fun findAllFollowedAnimes(member: Member, page: Int, limit: Int) = memberFollowAnimeRepository.findAllFollowedAnimes(member, page, limit)
+    fun findAllFollowedAnimes(member: Member, page: Int, limit: Int) = tracer.trace { memberFollowAnimeRepository.findAllFollowedAnimes(member, page, limit) }
 
     fun findAllFollowedAnimesUUID(memberUuid: UUID) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(memberUuid)
 

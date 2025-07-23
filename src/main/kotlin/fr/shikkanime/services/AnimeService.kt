@@ -8,18 +8,15 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.factories.impl.PlatformFactory
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
-import fr.shikkanime.utils.atEndOfWeek
-import fr.shikkanime.utils.withUTC
-import fr.shikkanime.utils.withUTCString
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -28,6 +25,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
+    private val tracer = TelemetryConfig.getTracer("AnimeService")
     @Inject private lateinit var animeRepository: AnimeRepository
     @Inject private lateinit var simulcastService: SimulcastService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
@@ -49,7 +47,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>?,
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes)
+    ) = tracer.trace { animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes) }
 
     fun findAllByName(
         countryCode: CountryCode?,
@@ -57,8 +55,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>?
-    ): Pageable<Anime> {
-        return if (name.length == 1) {
+    ) = tracer.trace {
+        if (name.length == 1) {
             animeRepository.findAllByFirstLetterCategory(countryCode, name, page, limit, searchTypes)
         } else {
             animeRepository.findAllByName(countryCode, name, page, limit, searchTypes)

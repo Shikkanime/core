@@ -11,9 +11,12 @@ import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.factories.impl.MissedAnimeFactory
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.util.*
 
 class MemberFollowAnimeCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("MemberFollowAnimeCacheService")
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var animeFactory: AnimeFactory
@@ -38,14 +41,14 @@ class MemberFollowAnimeCacheService : ICacheService {
         "MemberFollowAnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, MemberFollowAnime::class.java),
         key = UUIDPaginationKeyCache(member, page, limit),
-    ) {
+    ) { tracer.trace {
         PageableDto.fromPageable(
             memberFollowAnimeService.findAllFollowedAnimes(
-                memberCacheService.find(it.uuid) ?: return@getOrCompute PageableDto.empty(),
+                memberCacheService.find(it.uuid) ?: return@trace PageableDto.empty(),
                 it.page,
                 it.limit
             ),
             animeFactory
         )
-    }
+    } }
 }
