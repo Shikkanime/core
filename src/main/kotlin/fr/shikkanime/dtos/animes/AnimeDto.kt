@@ -24,4 +24,5 @@ data class AnimeDto(
     var platformIds: Set<AnimePlatformDto>? = null,
     var thumbnail: String? = null,
     var banner: String? = null,
+    var inWatchlist: Boolean = false
 )

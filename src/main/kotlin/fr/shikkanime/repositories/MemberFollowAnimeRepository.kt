@@ -92,7 +92,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         }
     }
 
-    fun existsByMemberAndAnime(member: Member, anime: Anime): Boolean {
+    fun existsByMemberAndAnime(memberUuid: UUID, animeUuid: UUID): Boolean {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
@@ -100,8 +100,8 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
             query.select(cb.literal(1))
 
             query.where(
-                cb.equal(root[MemberFollowAnime_.member], member),
-                cb.equal(root[MemberFollowAnime_.anime], anime)
+                cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid),
+                cb.equal(root[MemberFollowAnime_.anime][Anime_.uuid], animeUuid)
             )
 
             createReadOnlyQuery(it.createQuery(query).setMaxResults(1))

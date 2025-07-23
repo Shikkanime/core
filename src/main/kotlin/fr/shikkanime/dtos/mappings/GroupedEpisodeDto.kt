@@ -20,5 +20,6 @@ data class GroupedEpisodeDto(
     val duration: Long?,
     val internalUrl: String?,
     val mappings: Set<UUID>,
-    val urls: Set<String>
+    val urls: Set<String>,
+    var inWatchlist: Boolean = false,
 )

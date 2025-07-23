@@ -29,13 +29,14 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
     fun findAllMissedAnimes(member: Member, page: Int, limit: Int) =
         memberFollowAnimeRepository.findAllMissedAnimes(member, page, limit)
 
-    fun existsByMemberAndAnime(member: Member, anime: Anime) = memberFollowAnimeRepository.existsByMemberAndAnime(member, anime)
+    fun existsByMemberAndAnime(memberUuid: UUID, animeUuid: UUID) =
+        memberFollowAnimeRepository.existsByMemberAndAnime(memberUuid, animeUuid)
 
     fun follow(memberUuid: UUID, anime: GenericDto): Response {
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
-        if (memberFollowAnimeRepository.existsByMemberAndAnime(member, element)) {
+        if (existsByMemberAndAnime(memberUuid, anime.uuid)) {
             return Response.conflict()
         }
 
