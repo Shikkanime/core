@@ -144,16 +144,24 @@
 
     <script>
         async function getRules() {
-            const response = await axios.get(`/admin/api/rules`);
-            return response.data;
+            const response = await fetch(`/admin/api/rules`);
+            return response.json();
         }
 
         async function createRule(dto) {
-            await axios.post('/admin/api/rules', dto);
+            await fetch('/admin/api/rules', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dto)
+            });
         }
 
         async function deleteRule(dto) {
-            await axios.delete('/admin/api/rules/' + dto.uuid);
+            await fetch('/admin/api/rules/' + dto.uuid, {
+                method: 'DELETE'
+            });
         }
     </script>
 </@navigation.display>

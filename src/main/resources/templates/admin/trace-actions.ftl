@@ -151,8 +151,8 @@
                 params.append('action', filter.action);
             }
 
-            const response = await axios.get(`/admin/api/trace-actions?` + params.toString());
-            return response.data;
+            const response = await fetch(`/admin/api/trace-actions?` + params.toString());
+            return response.json();
         }
     </script>
 </@navigation.display>

@@ -295,8 +295,8 @@
         async function loadEpisode() {
             const uuid = getUuid();
 
-            return axios.get('/admin/api/episode-mappings/' + uuid)
-                .then(response => response.data)
+            return fetch('/admin/api/episode-mappings/' + uuid)
+                .then(response => response.json())
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -309,7 +309,13 @@
         async function updateEpisode(episode) {
             const uuid = getUuid();
 
-            await axios.put('/admin/api/episode-mappings/' + uuid, episode)
+            await fetch('/admin/api/episode-mappings/' + uuid, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(episode)
+            })
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -325,7 +331,9 @@
         async function deleteEpisode() {
             const uuid = getUuid();
 
-            await axios.delete('/admin/api/episode-mappings/' + uuid)
+            await fetch('/admin/api/episode-mappings/' + uuid, {
+                method: 'DELETE'
+            })
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -334,7 +342,13 @@
         }
 
         async function separateVariant(dto) {
-            await axios.post('/admin/api/episode-variants/' + dto.uuid + '/separate', dto);
+            await fetch('/admin/api/episode-variants/' + dto.uuid + '/separate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(dto)
+            });
         }
 
         const compress = string => {

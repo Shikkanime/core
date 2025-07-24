@@ -277,8 +277,8 @@
         async function loadAnime() {
             const uuid = getUuid();
 
-            return await axios.get('/admin/api/animes/' + uuid)
-                .then(response => response.data)
+            return await fetch('/admin/api/animes/' + uuid)
+                .then(response => response.json())
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -291,7 +291,13 @@
         async function updateAnime(anime) {
             const uuid = getUuid();
 
-            await axios.put('/admin/api/animes/' + uuid, anime)
+            await fetch('/admin/api/animes/' + uuid, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(anime)
+            })
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)
@@ -307,7 +313,7 @@
         async function forceUpdateAnime() {
             const uuid = getUuid();
 
-            await axios.get('/admin/api/animes/' + uuid + '/force-update')
+            await fetch('/admin/api/animes/' + uuid + '/force-update')
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     toastEl.querySelector('.toast-body').textContent = 'Force update requested successfully!';
@@ -327,7 +333,9 @@
         async function deleteAnime() {
             const uuid = getUuid();
 
-            await axios.delete('/admin/api/animes/' + uuid)
+            await fetch('/admin/api/animes/' + uuid, {
+                method: 'DELETE'
+            })
                 .catch(() => {
                     const toastEl = document.getElementById('errorToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

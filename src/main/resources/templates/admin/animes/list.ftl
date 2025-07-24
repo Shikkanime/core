@@ -203,8 +203,8 @@
             }
 
             try {
-                const response = await axios.get(`/api/v1/animes?` + params.toString());
-                return response.data;
+                const response = await fetch(`/api/v1/animes?` + params.toString());
+                return response.json();
             } catch (error) {
                 console.error('Error fetching animes:', error);
                 return {data: [], total: 0, limit: limit || 10};

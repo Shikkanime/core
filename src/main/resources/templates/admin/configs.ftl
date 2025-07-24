@@ -73,13 +73,19 @@
                 params = '?name=' + name;
             }
 
-            return await axios.get('/admin/api/configs' + params)
-                .then(response => response.data)
+            return await fetch('/admin/api/configs' + params)
+                .then(response => response.json())
                 .catch(() => []);
         }
 
         async function updateConfig(config) {
-            await axios.put('/admin/api/configs/' + config.uuid, config)
+            await fetch('/admin/api/configs/' + config.uuid, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            })
                 .then(() => {
                     const toastEl = document.getElementById('successToast');
                     const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastEl)

@@ -121,8 +121,8 @@
             });
 
             try {
-                const response = await axios.get(`/admin/api/members?` + params.toString());
-                return response.data;
+                const response = await fetch(`/admin/api/members?` + params.toString());
+                return response.json();
             } catch (error) {
                 console.error('Error fetching members:', error);
                 return {data: [], total: 0, limit: 14};
