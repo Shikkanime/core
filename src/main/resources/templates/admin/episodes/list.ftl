@@ -345,15 +345,15 @@
                 params.append('season', filter.season);
             }
 
-            const response = await axios.get(`/api/v1/episode-mappings?` + params.toString());
-            return response.data;
+            const response = await fetch(`/api/v1/episode-mappings?` + params.toString());
+            return response.json();
         }
 
         async function getAnimeSuggestions(name, limit) {
             if (!name.trim()) return { data: [] };
             try {
-                const response = await axios.get('/api/v1/animes?name=' + encodeURIComponent(name) + '&limit=' + limit);
-                return response.data;
+                const response = await fetch('/api/v1/animes?name=' + encodeURIComponent(name) + '&limit=' + limit);
+                return response.json();
             } catch (error) {
                 console.error('Error fetching anime suggestions:', error);
                 return { data: [] };
@@ -366,7 +366,13 @@
             }
 
             try {
-                await axios.put('/admin/api/episode-mappings/update-all', updateAll);
+                await fetch('/admin/api/episode-mappings/update-all', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateAll)
+                });
             } catch (e) {
                 console.error(e);
             }

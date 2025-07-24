@@ -36,7 +36,6 @@
     </main>
 
     <script src="/assets/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="/assets/js/axios.min.js" crossorigin="anonymous"></script>
     <script src="/assets/js/main.js" crossorigin="anonymous"></script>
     </body>
     </html>

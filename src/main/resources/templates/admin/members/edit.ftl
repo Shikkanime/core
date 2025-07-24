@@ -95,37 +95,37 @@
         async function loadMember() {
             const uuid = getUuid();
 
-            return await axios.get('/admin/api/members/' + uuid)
-                .then(response => response.data);
+            return await fetch('/admin/api/members/' + uuid)
+                .then(response => response.json());
         }
 
         async function getMemberLoginActivities() {
-            return await axios.get('/admin/api/members/' + getUuid() + '/login-activities')
-                .then(response => response.data)
+            return await fetch('/admin/api/members/' + getUuid() + '/login-activities')
+                .then(response => response.json())
                 .catch(() => []);
         }
 
         async function getMemberFollowAnimeActivities() {
-            return await axios.get('/admin/api/members/' + getUuid() + '/follow-anime-activities')
-                .then(response => response.data)
+            return await fetch('/admin/api/members/' + getUuid() + '/follow-anime-activities')
+                .then(response => response.json())
                 .catch(() => []);
         }
 
         async function getMemberFollowEpisodeActivities() {
-            return await axios.get('/admin/api/members/' + getUuid() + '/follow-episode-activities')
-                .then(response => response.data)
+            return await fetch('/admin/api/members/' + getUuid() + '/follow-episode-activities')
+                .then(response => response.json())
                 .catch(() => []);
         }
 
         async function getAnimes() {
-            return await axios.get('/admin/api/members/' + getUuid() + '/animes?limit=12')
-                .then(response => response.data)
+            return await fetch('/admin/api/members/' + getUuid() + '/animes?limit=12')
+                .then(response => response.json())
                 .catch(() => []);
         }
 
         async function getEpisodes() {
-            return await axios.get('/admin/api/members/' + getUuid() + '/episode-mappings?limit=24')
-                .then(response => response.data)
+            return await fetch('/admin/api/members/' + getUuid() + '/episode-mappings?limit=24')
+                .then(response => response.json())
                 .catch(() => []);
         }
 
