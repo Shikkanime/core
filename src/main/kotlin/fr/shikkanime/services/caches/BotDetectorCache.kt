@@ -12,14 +12,12 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import java.io.StringReader
 import java.net.InetAddress
-import java.time.Duration
 import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.experimental.and
 
 class BotDetectorCache : ICacheService {
     private val httpRequest = HttpRequest()
     private val ipv4Regex = Regex("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?:/[0-9]+)*")
-    private val duration = Duration.ofDays(1)
 
     @Inject private lateinit var configCacheService: ConfigCacheService
 
@@ -44,7 +42,6 @@ class BotDetectorCache : ICacheService {
 
     private fun getGoodBotsIPs() = MapCache.getOrCompute(
         "BotDetectorCache.getGoodBotsIPs",
-        duration = duration,
         key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
@@ -61,7 +58,6 @@ class BotDetectorCache : ICacheService {
 
     private fun getGoodBotsRegex() = MapCache.getOrCompute(
         "BotDetectorCache.getGoodBotsRegex",
-        duration = duration,
         key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
@@ -81,7 +77,6 @@ class BotDetectorCache : ICacheService {
 
     private fun getAbuseIPs() = MapCache.getOrCompute(
         "BotDetectorCache.getAbuseIPs",
-        duration = duration,
         key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {

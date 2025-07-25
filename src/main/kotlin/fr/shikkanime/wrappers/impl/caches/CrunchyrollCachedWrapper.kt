@@ -8,30 +8,20 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
-import java.time.Duration
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
 object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
-    private val defaultCacheDuration = Duration.ofDays(1)
+    private val objectCache = MapCache<Pair<String, String>, BrowseObject>("CrunchyrollCachedWrapper.objectCache") {
+        runBlocking { CrunchyrollWrapper.getObjects(it.first, it.second).first() }
+    }
 
-    private val objectCache = MapCache<Pair<String, String>, BrowseObject>(
-        "CrunchyrollCachedWrapper.objectCache",
-        duration = defaultCacheDuration
-    ) { runBlocking { CrunchyrollWrapper.getObjects(it.first, it.second).first() } }
-
-    private val seriesCache = MapCache<Pair<String, String>, Series>(
-        "CrunchyrollCachedWrapper.seriesCache",
-        duration = defaultCacheDuration
-    ) {
+    private val seriesCache = MapCache<Pair<String, String>, Series>("CrunchyrollCachedWrapper.seriesCache") {
         runBlocking { CrunchyrollWrapper.getSeries(it.first, it.second) }
             .also { series -> objectCache.setIfNotExists(it.first to it.second, series.convertToBrowseObject()) }
     }
 
-    private val episodeCache = MapCache<Pair<String, String>, Episode>(
-        "CrunchyrollCachedWrapper.episodeCache",
-        duration = defaultCacheDuration
-    ) {
+    private val episodeCache = MapCache<Pair<String, String>, Episode>("CrunchyrollCachedWrapper.episodeCache") {
         runBlocking { CrunchyrollWrapper.getEpisode(it.first, it.second) }
             .also { episode -> objectCache.setIfNotExists(it.first to it.second, episode.convertToBrowseObject()) }
     }
@@ -55,7 +45,6 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         id: String
     ) = MapCache.getOrCompute(
         "CrunchyrollCachedWrapper.getSeason",
-        duration = defaultCacheDuration,
         key = locale to id
     ) { runBlocking { CrunchyrollWrapper.getSeason(it.first, it.second) } }
 
@@ -64,7 +53,6 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         id: String
     ) = MapCache.getOrCompute(
         "CrunchyrollCachedWrapper.getSeasonsBySeriesId",
-        duration = defaultCacheDuration,
         key = locale to id
     ) { runBlocking { CrunchyrollWrapper.getSeasonsBySeriesId(it.first, it.second) } }
 
@@ -73,7 +61,6 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         id: String
     ) = MapCache.getOrCompute(
         "CrunchyrollCachedWrapper.getEpisodesBySeasonId",
-        duration = defaultCacheDuration,
         key = locale to id
     ) {
         runBlocking { CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second) }
@@ -94,7 +81,6 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         id: String
     ) = MapCache.getOrCompute(
         "CrunchyrollCachedWrapper.getEpisodeByType",
-        duration = defaultCacheDuration,
         key = Triple(locale, type, id)
     ) {
         runBlocking { CrunchyrollWrapper.getEpisodeDiscoverByType(it.first, it.second, it.third) }
@@ -131,7 +117,6 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         original: Boolean?
     ) = MapCache.getOrCompute(
         "CrunchyrollCachedWrapper.getEpisodesBySeriesId",
-        duration = defaultCacheDuration,
         key = Triple(locale, id, original)
     ) { triple ->
         runBlocking {
