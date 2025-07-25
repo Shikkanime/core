@@ -14,13 +14,10 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 
 object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
-    override suspend fun getEpisodesByShowId(
-        countryCode: CountryCode,
-        id: String
-    ): Array<Episode> {
+    override suspend fun getShow(locale: String, id: String): Show {
         // Make API request
-        val globalJson = fetchPrimeVideoData("$baseUrl/-/${countryCode.name.lowercase()}/detail/$id/ref=atv_sr_fle_c_sre999aa_1_1_1", countryCode.locale)
-        
+        val globalJson = fetchPrimeVideoData("$baseUrl/-/${locale.lowercase().substringAfterLast("-")}/detail/$id/ref=atv_sr_fle_c_sre999aa_1_1_1", locale)
+
         // Extract show data
         val atfState = globalJson.getAsJsonObject("atf").getAsJsonObject("state")
         val pageTitleId = atfState.getAsString("pageTitleId")
@@ -28,13 +25,25 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             ?: throw Exception("Failed to get show")
 
         // Create show object
-        val show = Show(
+        return Show(
+            globalJson,
+            atfState,
             id,
             showJson.getAsString("parentTitle") ?: showJson.getAsString("title")!!,
             showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             showJson.getAsJsonObject("images")!!.getAsString("heroshot")!!,
             showJson.getAsString("synopsis")
         )
+    }
+
+    override suspend fun getEpisodesByShowId(
+        countryCode: CountryCode,
+        id: String
+    ): Array<Episode> {
+        val show = getShow(countryCode.locale, id)
+        val pageTitleId = show.atfState.getAsString("pageTitleId")
+        val showJson = show.atfState.getAsJsonObject("detail").getAsJsonObject("headerDetail").getAsJsonObject(pageTitleId)
+            ?: throw Exception("Failed to get show")
 
         if (showJson.getAsString("entityType") == "Movie") {
             val audioTracks = showJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toHashSet() ?: HashSet()
@@ -60,7 +69,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         }
 
         // Extract season data
-        val seasons = atfState.getAsJsonObject("seasons").getAsJsonArray(pageTitleId)?.map {
+        val seasons = show.atfState.getAsJsonObject("seasons").getAsJsonArray(pageTitleId)?.map {
             Season(
                 it.asJsonObject.getAsString("seasonId")!!,
                 it.asJsonObject.getAsString("displayName")!!,
@@ -75,7 +84,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             val json = if (season.id != pageTitleId) {
                 fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale)
             } else {
-                globalJson
+                show.globalJson
             }
 
             // Extract episodes data
@@ -91,7 +100,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                 }
         }?.toTypedArray() ?: emptyArray()
     }
-    
+
     private fun createEpisode(
         key: String,
         episodeJson: JsonObject,

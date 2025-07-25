@@ -9,6 +9,12 @@ import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import kotlinx.coroutines.runBlocking
 
 object PrimeVideoCachedWrapper : AbstractPrimeVideoWrapper() {
+    override suspend fun getShow(locale: String, id: String) = MapCache.getOrCompute(
+        "PrimeVideoCachedWrapper.getShow",
+        typeToken = object : TypeToken<MapCacheValue<Show>>() {},
+        key = locale to id
+    ) { runBlocking { PrimeVideoWrapper.getShow(it.first, it.second) } }
+
     override suspend fun getEpisodesByShowId(
         countryCode: CountryCode,
         id: String
