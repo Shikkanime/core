@@ -2,15 +2,20 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Mail
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.repositories.MailRepository
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.LoggerFactory
 import freemarker.cache.ClassTemplateLoader
 import freemarker.template.Configuration
 import java.io.StringWriter
 
 class MailService : AbstractService<Mail, MailRepository>() {
-    @Inject
-    private lateinit var mailRepository: MailRepository
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+    @Inject private lateinit var mailRepository: MailRepository
+    @Inject private lateinit var configCacheService: ConfigCacheService
 
     override fun getRepository() = mailRepository
 
@@ -32,5 +37,17 @@ class MailService : AbstractService<Mail, MailRepository>() {
         )
 
         return stringWriter
+    }
+
+    fun saveAdminMail(title: String, body: String) {
+        runCatching {
+            save(
+                Mail(
+                    recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                    title = title,
+                    body = body
+                )
+            )
+        }.onFailure { logger.warning("Error while saving admin mail: ${it.message}") }
     }
 }

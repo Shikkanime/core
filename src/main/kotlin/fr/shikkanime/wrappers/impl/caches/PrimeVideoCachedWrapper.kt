@@ -8,6 +8,12 @@ import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 
 object PrimeVideoCachedWrapper : AbstractPrimeVideoWrapper() {
+    override suspend fun getShow(locale: String, id: String) = MapCache.getOrComputeAsync(
+        "PrimeVideoCachedWrapper.getShow",
+        typeToken = object : TypeToken<MapCacheValue<Show>>() {},
+        key = locale to id
+    ) { PrimeVideoWrapper.getShow(it.first, it.second) }
+
     override suspend fun getEpisodesByShowId(
         countryCode: CountryCode,
         id: String

@@ -100,7 +100,9 @@ abstract class AbstractNetflixWrapper {
     protected fun getCookieValue(netflixId: String, netflixSecureId: String): String =
         "NetflixId=$netflixId; SecureNetflixId=$netflixSecureId"
 
-    protected suspend fun HttpRequest.postGraphQL(countryCode: CountryCode, body: String): HttpResponse {
+    protected suspend fun HttpRequest.postGraphQL(countryCode: CountryCode, body: String) = postGraphQL(countryCode.locale, body)
+
+    protected suspend fun HttpRequest.postGraphQL(locale: String, body: String): HttpResponse {
         val (id, secureId) = getNetflixAuthentification()
 
         return post(
@@ -108,12 +110,12 @@ abstract class AbstractNetflixWrapper {
             headers = mapOf(
                 HttpHeaders.ContentType to ContentType.Application.Json.toString(),
                 HttpHeaders.Cookie to getCookieValue(id, secureId),
-                "x-netflix.context.locales" to countryCode.locale,
+                "x-netflix.context.locales" to locale,
             ),
             body = body
         )
     }
 
-    abstract suspend fun getShow(countryCode: CountryCode, id: Int): Show
+    abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
 }

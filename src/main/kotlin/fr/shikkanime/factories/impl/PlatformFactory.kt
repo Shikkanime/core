@@ -9,7 +9,8 @@ class PlatformFactory : IGenericFactory<Platform, PlatformDto> {
         id = entity.name,
         name = entity.platformName,
         url = entity.url,
-        image = entity.image
+        image = entity.image,
+        isStreaming = entity.isStreamingPlatform
     )
 
     override fun toEntity(dto: PlatformDto) = Platform.findByName(dto.name)!!

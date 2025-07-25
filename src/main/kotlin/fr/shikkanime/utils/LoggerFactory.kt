@@ -31,14 +31,17 @@ class LoggerFactory {
     companion object {
         private val map = mutableMapOf<String, Logger>()
 
+        private val isDev: Boolean
+            get() = Constant.isTest || (System.getenv("IS_DEV")?.toBoolean() ?: false)
+
         private fun buildLogger(name: String): Logger {
             val logger = Logger.getLogger(name)
             logger.useParentHandlers = false
             val consoleHandler = ConsoleHandler()
             consoleHandler.formatter = LogFormatter()
-            consoleHandler.level = Level.ALL
+            consoleHandler.level = if (isDev) Level.ALL else Level.INFO
             logger.addHandler(consoleHandler)
-            logger.level = Level.ALL
+            logger.level = if (isDev) Level.ALL else Level.INFO
             return logger
         }
 

@@ -5,12 +5,15 @@ enum class Platform(
     var url: String,
     var image: String,
     val sortIndex: Short,
+    val isStreamingPlatform: Boolean,
 ) {
-    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 0),
-    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 1),
-    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", 2),
-    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", 3),
-    PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg", 4),
+    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 0, true),
+    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 1, true),
+    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", 2, true),
+    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", 3, true),
+    PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg", 4, true),
+    // Non-streaming platforms
+    ANIL("AniList", "https://anilist.co/", "anilist.jpg", -1, false),
     ;
 
     companion object {

@@ -29,6 +29,7 @@ object LiveChartWrapper : AbstractLiveChartWrapper() {
         Platform.ANIM, Platform.NETF -> "\\d+".toRegex().matches(id)
         Platform.CRUN, Platform.PRIM -> "[A-Z0-9]+".toRegex().matches(id)
         Platform.DISN -> runCatching { UUID.fromString(id) }.isSuccess
+        else -> throw Exception("Invalid platform $platform")
     }
 
     override suspend fun getStreamsByAnimeId(animeId: String): HashMap<Platform, Set<String>> {
