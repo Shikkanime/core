@@ -3,9 +3,11 @@ package fr.shikkanime.utils
 import io.ktor.util.collections.*
 import java.time.Duration
 
+private val defaultCacheDuration: Duration = Duration.ofDays(1)
+
 class MapCache<K : Any, V>(
     name: String,
-    private var duration: Duration? = null,
+    private var duration: Duration = defaultCacheDuration,
     private val classes: List<Class<*>> = emptyList(),
     private val block: (K) -> V,
 ) {
@@ -18,12 +20,8 @@ class MapCache<K : Any, V>(
     fun containsKey(key: K) = cache.containsKey(key)
 
     private fun needInvalidation(key: K): Boolean {
-        if (duration != null) {
-            val (timestamp, _) = cache[key] ?: return false
-            return System.currentTimeMillis() - timestamp > duration!!.toMillis()
-        }
-
-        return false
+        val (timestamp, _) = cache[key] ?: return false
+        return System.currentTimeMillis() - timestamp > duration.toMillis()
     }
 
     operator fun get(key: K): V? {
@@ -48,10 +46,9 @@ class MapCache<K : Any, V>(
     }
 
     fun removeInvalidated() {
-        if (duration == null) return
         val now = System.currentTimeMillis()
 
-        cache.filter { (_, value) -> now - value.first > duration!!.toMillis() }
+        cache.filter { (_, value) -> now - value.first > duration.toMillis() }
             .toMap()
             .forEach { (key, _) -> cache.remove(key) }
     }
@@ -76,7 +73,7 @@ class MapCache<K : Any, V>(
 
         fun <K : Any, V : Any?> getOrComputeNullable(
             name: String,
-            duration: Duration? = null,
+            duration: Duration = defaultCacheDuration,
             classes: List<Class<*>> = emptyList(),
             key: K,
             block: (K) -> V
@@ -89,7 +86,7 @@ class MapCache<K : Any, V>(
 
         fun <K : Any, V> getOrCompute(
             name: String,
-            duration: Duration? = null,
+            duration: Duration = defaultCacheDuration,
             classes: List<Class<*>> = emptyList(),
             key: K,
             block: (K) -> V
