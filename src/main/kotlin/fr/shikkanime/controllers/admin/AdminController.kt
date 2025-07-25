@@ -200,12 +200,9 @@ class AdminController {
             )
         }
 
-        mailService.save(
-            Mail(
-                recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                title = "${Constant.NAME} - $subject",
-                body = bodyEmail
-            )
+        mailService.saveAdminMail(
+            title = "${Constant.NAME} - $subject",
+            body = bodyEmail
         )
 
         return Response.redirect(Link.EMAILS.href)

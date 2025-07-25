@@ -115,29 +115,32 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchAnime(anime: Anime, zonedDateTime: ZonedDateTime): List<UpdatableAnime> {
         val list = mutableListOf<UpdatableAnime>()
 
-        animePlatformService.findAllByAnime(anime).forEach {
-            if (it.lastValidateDateTime != null && it.lastValidateDateTime!!.isBeforeOrEqual(zonedDateTime)) {
-                logger.warning("Deleting old anime platform ${it.platform} for anime ${anime.name} with id ${it.platformId}")
-                animePlatformService.delete(it)
-                traceActionService.createTraceAction(it, TraceAction.Action.DELETE)
-                return@forEach
-            }
-
-            runCatching {
-                val updatableAnime = when (it.platform!!) {
-                    Platform.ANIM -> fetchADNAnime(it)
-                    Platform.CRUN -> fetchCrunchyrollAnime(it)
-                    Platform.DISN -> fetchDisneyPlusAnime(it)
-                    Platform.NETF -> fetchNetflixAnime(it)
-                    Platform.PRIM -> fetchPrimeVideoAnime(it)
+        animePlatformService.findAllByAnime(anime)
+            .filter { it.platform!!.isStreamingPlatform }
+            .forEach {
+                if (it.lastValidateDateTime != null && it.lastValidateDateTime!!.isBeforeOrEqual(zonedDateTime)) {
+                    logger.warning("Deleting old anime platform ${it.platform} for anime ${anime.name} with id ${it.platformId}")
+                    animePlatformService.delete(it)
+                    traceActionService.createTraceAction(it, TraceAction.Action.DELETE)
+                    return@forEach
                 }
 
-                updatableAnime.isValidated = it.lastValidateDateTime != null && it.lastValidateDateTime!!.isAfterOrEqual(zonedDateTime)
-                list.add(updatableAnime)
-            }.onFailure { e ->
-                logger.warning("Error while fetching anime ${anime.name} on platform ${it.platform}: ${e.message}")
+                runCatching {
+                    val updatableAnime = when (it.platform!!) {
+                        Platform.ANIM -> fetchADNAnime(it)
+                        Platform.CRUN -> fetchCrunchyrollAnime(it)
+                        Platform.DISN -> fetchDisneyPlusAnime(it)
+                        Platform.NETF -> fetchNetflixAnime(it)
+                        Platform.PRIM -> fetchPrimeVideoAnime(it)
+                        else -> throw Exception("Invalid platform ${it.platform}")
+                    }
+
+                    updatableAnime.isValidated = it.lastValidateDateTime != null && it.lastValidateDateTime!!.isAfterOrEqual(zonedDateTime)
+                    list.add(updatableAnime)
+                }.onFailure { e ->
+                    logger.warning("Error while fetching anime ${anime.name} on platform ${it.platform}: ${e.message}")
+                }
             }
-        }
 
         return list
     }
@@ -145,7 +148,7 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val countryCode = animePlatform.anime!!.countryCode!!
         val platformId = animePlatform.platformId!!.toInt()
-        val show = AnimationDigitalNetworkCachedWrapper.getShow(countryCode, platformId)
+        val show = AnimationDigitalNetworkCachedWrapper.getShow(countryCode.name, platformId)
         val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(countryCode, platformId)
             .filter { it.releaseDate != null }
 

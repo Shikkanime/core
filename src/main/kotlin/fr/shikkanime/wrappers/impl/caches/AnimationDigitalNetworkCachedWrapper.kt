@@ -23,11 +23,11 @@ object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWra
             .apply { forEach { video -> videoCache.putIfNotExists(countryCode to video.id, video) } }
     }
 
-    override suspend fun getShow(countryCode: CountryCode, id: Int) = MapCache.getOrComputeAsync(
+    override suspend fun getShow(country: String, id: Int) = MapCache.getOrComputeAsync(
         "AnimationDigitalNetworkCachedWrapper.getShow",
         typeToken = object : TypeToken<MapCacheValue<Show>>() {},
-        key = countryCode to id
-    ) { (countryCode, id) -> AnimationDigitalNetworkWrapper.getShow(countryCode, id) }
+        key = country to id
+    ) { (country, id) -> AnimationDigitalNetworkWrapper.getShow(country, id) }
 
     override suspend fun getShowVideos(countryCode: CountryCode, id: Int) = MapCache.getOrComputeAsync(
         "AnimationDigitalNetworkCachedWrapper.getShowVideos",

@@ -166,17 +166,10 @@ class FetchEpisodesJob : AbstractJob {
                 val stringWriter = StringWriter()
                 e.printStackTrace(PrintWriter(stringWriter))
 
-                try {
-                    mailService.save(
-                        Mail(
-                            recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                            title = title,
-                            body = stringWriter.toString().replace("\n", "<br>")
-                        )
-                    )
-                } catch (e: Exception) {
-                    logger.warning("Error while sending mail for $title: ${e.message}")
-                }
+                mailService.saveAdminMail(
+                    title = title,
+                    body = stringWriter.toString().replace("\n", "<br>")
+                )
             }
         }
     }

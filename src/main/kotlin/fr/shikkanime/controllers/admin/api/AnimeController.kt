@@ -51,7 +51,7 @@ class AnimeController : HasPageableRoute() {
     @Path("/{uuid}")
     @Get
     private fun animeDetails(@PathParam uuid: UUID): Response {
-        return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()).apply {
+        return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound(), true).apply {
             thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
             banner = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
             carousel = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.CAROUSEL)?.url

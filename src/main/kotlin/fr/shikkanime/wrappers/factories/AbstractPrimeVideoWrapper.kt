@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.factories
 
+import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
@@ -7,6 +8,8 @@ import java.io.Serializable
 
 abstract class AbstractPrimeVideoWrapper {
     data class Show(
+        val globalJson: JsonObject,
+        val atfState: JsonObject,
         val id: String,
         val name: String,
         val banner: String,
@@ -40,5 +43,6 @@ abstract class AbstractPrimeVideoWrapper {
     protected val baseUrl = "https://www.primevideo.com"
     protected val httpRequest = HttpRequest()
 
+    abstract suspend fun getShow(locale: String, id: String): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: String): Array<Episode>
 }

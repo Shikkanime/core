@@ -7,10 +7,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
@@ -88,6 +85,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllAudioLocales(uuid: UUID) = animeRepository.findAllAudioLocales(uuid)
 
     fun findAllSeasons(uuid: UUID) = animeRepository.findAllSeasons(uuid)
+
+    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuid: UUID, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String) = animeRepository.findAllSimulcastedWithAnimePlatformInvalid(simulcastUuid, platform, lastValidateDateTime, ignoreAudioLocale)
 
     fun preIndex() = animeRepository.preIndex()
 

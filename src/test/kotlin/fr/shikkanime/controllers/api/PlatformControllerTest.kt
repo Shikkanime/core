@@ -28,10 +28,10 @@ class PlatformControllerTest : AbstractControllerTest() {
                 val platforms = ObjectParser.fromJson(bodyAsText(), object : TypeToken<List<PlatformDto>>() {})
                 
                 // Verify we get all platforms
-                assertEquals(Platform.entries.size, platforms.size)
+                assertEquals(Platform.entries.filter { it.isStreamingPlatform }.size, platforms.size)
                 
                 // Verify platforms are sorted by sortIndex
-                val sortedPlatforms = Platform.entries.sortedBy { it.sortIndex }
+                val sortedPlatforms = Platform.entries.filter { it.isStreamingPlatform }.sortedBy { it.sortIndex }
                 platforms.forEachIndexed { index, platformDto ->
                     val expectedPlatform = sortedPlatforms[index]
                     assertEquals(expectedPlatform.name, platformDto.id)

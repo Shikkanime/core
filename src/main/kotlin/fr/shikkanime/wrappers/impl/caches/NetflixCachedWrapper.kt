@@ -9,12 +9,12 @@ import fr.shikkanime.wrappers.impl.NetflixWrapper
 
 object NetflixCachedWrapper : AbstractNetflixWrapper() {
     override suspend fun getShow(
-        countryCode: CountryCode,
+        locale: String,
         id: Int
     ) = MapCache.getOrComputeAsync(
         "NetflixCachedWrapper.getShow",
         typeToken = object : TypeToken<MapCacheValue<Show>>() {},
-        key = countryCode to id
+        key = locale to id
     ) { NetflixWrapper.getShow(it.first, it.second) }
 
     override suspend fun getEpisodesByShowId(

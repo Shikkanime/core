@@ -3,6 +3,7 @@ package fr.shikkanime.repositories
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.Season
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -297,6 +298,33 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
+        }
+    }
+
+    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuid: UUID, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String): List<Anime> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            val simulcastJoin = root.join(Anime_.simulcasts, JoinType.INNER)
+            val animePlatformJoin = root.join(Anime_.platformIds, JoinType.LEFT)
+            animePlatformJoin.on(cb.equal(animePlatformJoin[AnimePlatform_.platform], platform))
+            val mappingJoin = root.join(Anime_.mappings, JoinType.INNER)
+            val variantJoin = mappingJoin.join(EpisodeMapping_.variants, JoinType.INNER)
+
+            query.distinct(true)
+                .select(root)
+                .where(cb.and(
+                    cb.equal(simulcastJoin[Simulcast_.uuid], simulcastUuid),
+                    cb.or(
+                        cb.isNull(animePlatformJoin),
+                        cb.lessThanOrEqualTo(animePlatformJoin[AnimePlatform_.lastValidateDateTime], lastValidateDateTime)
+                    ),
+                    cb.notEqual(variantJoin[EpisodeVariant_.audioLocale], ignoreAudioLocale)
+                ))
+
+            createReadOnlyQuery(it, query).resultList
         }
     }
 

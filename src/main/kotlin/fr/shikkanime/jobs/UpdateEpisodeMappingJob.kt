@@ -208,17 +208,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
         
         lines.forEach { logger.info(it) }
 
-        try {
-            mailService.save(
-                Mail(
-                    recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                    title = "UpdateEpisodeMappingJob - ${newMappings.size} new episodes",
-                    body = lines.joinToString("<br>")
-                )
-            )
-        } catch (e: Exception) {
-            logger.warning("Error while sending mail for UpdateEpisodeMappingJob: ${e.message}")
-        }
+        mailService.saveAdminMail(
+            title = "UpdateEpisodeMappingJob - ${newMappings.size} new episodes",
+            body = lines.joinToString("<br>")
+        )
     }
 
     private suspend fun checkPreviousAndNextEpisodes(
