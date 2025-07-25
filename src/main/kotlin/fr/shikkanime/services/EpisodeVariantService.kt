@@ -33,6 +33,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 
+    fun findAllByAnime(animeUUID: UUID) = episodeVariantRepository.findAllByAnime(animeUUID)
+
     fun findAllByMapping(mappingUUID: UUID) = episodeVariantRepository.findAllByMapping(mappingUUID)
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)

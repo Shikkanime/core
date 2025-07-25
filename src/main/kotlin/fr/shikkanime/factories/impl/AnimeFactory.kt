@@ -21,7 +21,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
         val audioLocales = animeCacheService.getAudioLocales(entity.uuid!!)
         val langTypes = animeCacheService.getLangTypes(entity).toSet()
         val seasons = animeCacheService.findAllSeasons(entity)
-        val platforms = animePlatformCacheService.getAll(entity)
+        val platforms = animePlatformCacheService.findAllByAnime(entity)
 
         return AnimeDto(
             uuid = entity.uuid,

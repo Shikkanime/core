@@ -16,8 +16,8 @@ class AnimePlatformCacheService : ICacheService {
     @Inject private lateinit var animePlatformService: AnimePlatformService
     @Inject private lateinit var animePlatformFactory: AnimePlatformFactory
 
-    fun getAll(anime: Anime) = MapCache.getOrCompute(
-        "AnimePlatformCacheService.getAll",
+    fun findAllByAnime(anime: Anime) = MapCache.getOrCompute(
+        "AnimePlatformCacheService.findAllByAnime",
         classes = listOf(Anime::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
         serializationType = SerializationUtils.SerializationType.JSON,
