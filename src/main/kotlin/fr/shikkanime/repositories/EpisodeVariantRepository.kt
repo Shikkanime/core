@@ -51,6 +51,19 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
+    fun findAllByAnime(animeUUID: UUID): List<EpisodeVariant> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid], animeUUID))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllByMapping(mappingUUID: UUID): List<EpisodeVariant> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
