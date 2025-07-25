@@ -146,7 +146,7 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val countryCode = animePlatform.anime!!.countryCode!!
         val platformId = animePlatform.platformId!!.toInt()
-        val show = AnimationDigitalNetworkCachedWrapper.getShow(countryCode, platformId)
+        val show = AnimationDigitalNetworkCachedWrapper.getShow(countryCode.name, platformId)
         val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(countryCode, platformId)
             .filter { it.releaseDate != null }
 

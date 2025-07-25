@@ -186,4 +186,28 @@ object StringUtils {
 
         return result
     }
+
+    fun similarity(s1: String, s2: String): Double {
+        val longer = if (s1.length > s2.length) s1 else s2
+        val shorter = if (s1.length > s2.length) s2 else s1
+        val longerLength = longer.length
+        if (longerLength == 0) {
+            return 1.0
+        }
+        return (longerLength - levenshteinDistance(longer.lowercase(), shorter.lowercase())) / longerLength.toDouble()
+    }
+
+    private fun levenshteinDistance(s1: String, s2: String): Int {
+        val costs = IntArray(s2.length + 1) { it }
+        for (i in s1.indices) {
+            var lastValue = i + 1
+            for (j in s2.indices) {
+                val currentValue = if (s1[i] == s2[j]) costs[j] else minOf(costs[j], costs[j + 1], lastValue) + 1
+                costs[j] = lastValue
+                lastValue = currentValue
+            }
+            costs[s2.length] = lastValue
+        }
+        return costs[s2.length]
+    }
 }

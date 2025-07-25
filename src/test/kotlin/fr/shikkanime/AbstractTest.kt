@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
-import fr.shikkanime.utils.InvalidationService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +26,7 @@ abstract class AbstractTest {
     @BeforeEach
     open fun setUp() {
         Constant.injector.injectMembers(this)
-        InvalidationService.invalidateAll()
+//        InvalidationService.invalidateAll()
     }
 
     @AfterEach
@@ -35,7 +34,7 @@ abstract class AbstractTest {
         attachmentService.clearPool()
         database.truncate()
         database.clearCache()
-        InvalidationService.invalidateAll()
+//        InvalidationService.invalidateAll()
     }
 
     companion object {
