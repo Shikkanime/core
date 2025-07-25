@@ -77,8 +77,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getShow(countryCode: CountryCode, id: Int): Show {
-        val response = httpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
+    override suspend fun getShow(locale: String, id: Int): Show {
+        val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "DetailModal",
             "variables" to mapOf(
                 "opaqueImageFormat" to "PNG",
@@ -122,7 +122,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
     }
 
     override suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode> {
-        val show = getShow(countryCode, id)
+        val show = getShow(countryCode.locale, id)
         val seasonsResponse = fetchSeasonsData(countryCode, id, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
 

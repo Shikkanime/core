@@ -15,8 +15,8 @@ object AnimationDigitalNetworkWrapper : AbstractAnimationDigitalNetworkWrapper()
         return ObjectParser.fromJson(videos, Array<Video>::class.java)
     }
 
-    override suspend fun getShow(countryCode: CountryCode, id: Int): Show {
-        val response = httpRequest.getWithHeaders(countryCode, "${baseUrl}show/$id?withMicrodata=true")
+    override suspend fun getShow(country: String, id: Int): Show {
+        val response = httpRequest.getWithHeaders(country, "${baseUrl}show/$id?withMicrodata=true")
         require(response.status == HttpStatusCode.OK) { "Failed to get show (${response.status.value})" }
         val showJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("show") ?: throw Exception("Failed to get show")
         return ObjectParser.fromJson(showJson, Show::class.java)
