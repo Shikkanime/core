@@ -63,7 +63,7 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
 
     open fun of(parameters: Parameters) {
         parameters["availableCountries"]?.let {
-            availableCountries = if (it.isNotBlank()) CountryCode.from(it.split(",")) else emptySet()
+            availableCountries = if (it.isNotBlank()) CountryCode.from(it.split(StringUtils.COMMA_STRING)) else emptySet()
         }
         parameters["apiCheckDelayInMinutes"]?.let { apiCheckDelayInMinutes = it.toLong() }
         parameters["blacklistedSimulcasts"]?.let {
@@ -77,7 +77,7 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
             "Available countries",
             name = "availableCountries",
             type = "text",
-            value = availableCountries.joinToString(",")
+            value = availableCountries.joinToString(StringUtils.COMMA_STRING)
         ),
         ConfigurationField(
             "API check delay",

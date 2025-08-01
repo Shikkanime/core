@@ -17,12 +17,13 @@ object StringUtils {
     const val EMPTY_STRING = ""
     const val SPACE_STRING = " "
     const val DASH_STRING = "-"
+    const val COMMA_STRING = ","
     const val ROMAN_NUMBERS_CHECK = "VI"
 
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
     private val regex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([$ROMAN_NUMBERS_CHECK]+$)".toRegex()
-    private val separators = listOf(":", ",", "!", "–", " so ", " - ")
+    private val separators = listOf(":", COMMA_STRING, "!", "–", " so ", " - ")
     private val encasedRegex = "<.*> ?.*".toRegex()
     private val duplicateSpaceRegex = " +".toRegex()
     private val wordSeparatorRegex = "[ \\-']".toRegex()
@@ -51,7 +52,7 @@ object StringUtils {
             // and if the first part meets certain length conditions based on the separator
             // and if the parts do not have the same amount of words when the separator is not a colon
             if (lastPart.count { it == ' ' } >= 2 &&
-                firstPart.length > (if (separator == ",") 6 else 5) &&
+                firstPart.length > (if (separator == COMMA_STRING) 6 else 5) &&
                 (separator == ":" || !isAllPartsHaveSameAmountOfWords(split))) {
                 normalizedName = firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
             }

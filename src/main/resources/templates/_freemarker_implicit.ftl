@@ -43,3 +43,4 @@
 [#-- @ftlvariable name="episodeType" type="fr.shikkanime.entities.enums.EpisodeType" --]
 [#-- @ftlvariable name="jobs" type="kotlin.collections.AbstractList<java.lang.String>" --]
 [#-- @ftlvariable name="groupedEpisodes" type="kotlin.collections.AbstractList<fr.shikkanime.dtos.mappings.GroupedEpisodeDto>" --]
+[#-- @ftlvariable name="sort" type="java.lang.String" --]

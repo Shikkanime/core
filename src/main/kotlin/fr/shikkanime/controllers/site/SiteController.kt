@@ -92,7 +92,8 @@ class SiteController {
         )
     }
 
-    private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null): Response {
+    private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null, sort: String? = null): Response {
+        val isNewest = sort.equals("newest", true)
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
         val seasonDto = dto.seasons?.firstOrNull { it.number == (season ?: it.number) } ?: return Response.redirect("/animes/$slug")
         val limit = configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_EPISODES_SIZE_LIMIT, 24)
@@ -101,10 +102,10 @@ class SiteController {
             dto.uuid,
             seasonDto.number,
             listOf(
-                SortParameter("releaseDateTime", SortParameter.Order.ASC),
-                SortParameter("season", SortParameter.Order.ASC),
-                SortParameter("episodeType", SortParameter.Order.ASC),
-                SortParameter("number", SortParameter.Order.ASC),
+                SortParameter("releaseDateTime", if (isNewest) SortParameter.Order.DESC else SortParameter.Order.ASC),
+                SortParameter("season", if (isNewest) SortParameter.Order.DESC else SortParameter.Order.ASC),
+                SortParameter("episodeType", if (isNewest) SortParameter.Order.DESC else SortParameter.Order.ASC),
+                SortParameter("number", if (isNewest) SortParameter.Order.DESC else SortParameter.Order.ASC),
             ),
             page ?: 1,
             limit
@@ -124,6 +125,7 @@ class SiteController {
                 "showMore" to showMore,
                 "showLess" to ((page ?: 1) > 1),
                 "page" to page,
+                "sort" to if (isNewest) "newest" else "oldest",
             )
         )
     }
@@ -137,8 +139,9 @@ class SiteController {
     private fun animeDetailBySeason(
         @PathParam slug: String,
         @PathParam season: Int,
-        @QueryParam page: Int?
-    ) = getAnimeDetail(slug, season, page)
+        @QueryParam page: Int?,
+        @QueryParam sort: String?,
+    ) = getAnimeDetail(slug, season, page, sort)
 
     @Path("animes/{slug}/season-{season}/{episodeSlug}")
     @Get
@@ -213,7 +216,7 @@ class SiteController {
             mutableMapOf(
                 "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay, searchTypes),
                 "previousWeek" to startOfWeekDay.minusDays(7).takeIf { it >= minimalReleaseDate },
-                "searchTypes" to searchTypes.orEmpty().joinToString(","),
+                "searchTypes" to searchTypes.orEmpty().joinToString(StringUtils.COMMA_STRING),
                 "currentWeek" to startOfWeekDay,
                 "nextWeek" to startOfWeekDay.plusDays(7).takeIf { it <= ZonedDateTime.now().toLocalDate() }
             )

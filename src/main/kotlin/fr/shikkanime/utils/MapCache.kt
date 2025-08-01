@@ -78,10 +78,9 @@ class MapCache<K : Any, V>(
             key: K,
             block: (K) -> V
         ): V? {
-            return globalCaches[name]?.let {
-                @Suppress("UNCHECKED_CAST")
-                (it as MapCache<K, V>)[key]
-            } ?: MapCache(name, duration, classes, block)[key]
+            @Suppress("UNCHECKED_CAST")
+            val mapCache = globalCaches[name] as? MapCache<K, V> ?: MapCache(name, duration, classes, block)
+            return mapCache[key]
         }
 
         fun <K : Any, V> getOrCompute(

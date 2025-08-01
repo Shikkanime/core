@@ -97,7 +97,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         vararg ids: String
     ): List<BrowseObject> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/objects/${ids.joinToString(",")}?locale=$locale")
+        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/objects/${ids.joinToString(StringUtils.COMMA_STRING)}?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get objects (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get objects")
         return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java).toList()

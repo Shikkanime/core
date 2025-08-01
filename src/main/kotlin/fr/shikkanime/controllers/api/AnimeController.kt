@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
@@ -31,7 +32,7 @@ class AnimeController : HasPageableRoute() {
         val name = parameters["name"]
         val sort = parameters["sort"]
         val desc = parameters["desc"]
-        val searchTypes = parameters["searchTypes"]?.split(",")?.map(LangType::valueOf)?.toTypedArray()
+        val searchTypes = parameters["searchTypes"]?.split(StringUtils.COMMA_STRING)?.map(LangType::valueOf)?.toTypedArray()
 
         if (simulcastUuid != null && name != null)
             return Response.conflict(MessageDto.error("You can't use simulcast and name at the same time"))

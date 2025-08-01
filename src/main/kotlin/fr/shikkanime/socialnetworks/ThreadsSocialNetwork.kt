@@ -64,7 +64,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                     token!!,
                     ThreadsWrapper.PostType.IMAGE,
                     message,
-                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=${URLEncoder.encode(EncryptionManager.toGzip(variants.joinToString(",") { it.uuid.toString() }),
+                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=${URLEncoder.encode(EncryptionManager.toGzip(variants.joinToString(StringUtils.COMMA_STRING) { it.uuid.toString() }),
                         StandardCharsets.UTF_8)}",
                     altText = "Image de l'épisode ${variants.first().mapping!!.number} de ${StringUtils.getShortName(variants.first().mapping!!.anime!!.name!!)}"
                 )

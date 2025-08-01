@@ -26,23 +26,24 @@ abstract class AbstractRepository<E : ShikkEntity> {
     }
 
     inline fun <reified C> buildPageableQuery(query: TypedQuery<C>, page: Int, limit: Int): Pageable<C> {
-        val scrollableResults = query.unwrap(Query::class.java)
-            .setReadOnly(true)
-            .setFetchSize(limit)
-            .scroll(ScrollMode.SCROLL_SENSITIVE)
-
         val list = mutableSetOf<C>()
         var total = 0L
 
-        if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
-            (0 until limit).forEach { _ ->
-                val get = scrollableResults.get() as? C ?: return@forEach
-                list.add(get)
-                if (!scrollableResults.next()) return@forEach
-            }
+        query.unwrap(Query::class.java)
+            .setReadOnly(true)
+            .setFetchSize(limit)
+            .scroll(ScrollMode.SCROLL_SENSITIVE)
+            .use { scrollableResults ->
+                if (scrollableResults.first() && scrollableResults.scroll((limit * page) - limit)) {
+                    (0 until limit).forEach { _ ->
+                        val get = scrollableResults.get() as? C ?: return@forEach
+                        list.add(get)
+                        if (!scrollableResults.next()) return@forEach
+                    }
 
-            total = if (scrollableResults.last()) scrollableResults.position.toLong() else 0L
-        }
+                    total = if (scrollableResults.last()) scrollableResults.position.toLong() else 0L
+                }
+            }
 
         return Pageable(list, page, limit, total)
     }
