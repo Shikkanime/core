@@ -282,7 +282,7 @@ private suspend fun callMethodWithParameters(method: KFunction<*>, controller: A
 private fun fromString(value: String?, jvmErasure: KClass<*>): Any? {
     if (jvmErasure == arrayLangTypeKClass) {
         return value?.takeIf { it.isNotBlank() }
-            ?.split(",")
+            ?.split(StringUtils.COMMA_STRING)
             ?.map(LangType::valueOf)
             ?.toTypedArray()
     }

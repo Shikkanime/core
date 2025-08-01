@@ -34,5 +34,5 @@ class ConfigCacheService : ICacheService {
         findByName(configPropertyKey.key)?.propertyValue?.toBoolean() ?: defaultValue
 
     fun getValueAsStringList(configPropertyKey: ConfigPropertyKey) =
-        findByName(configPropertyKey.key)?.propertyValue?.split(",") ?: emptyList()
+        findByName(configPropertyKey.key)?.propertyValue?.split(StringUtils.COMMA_STRING) ?: emptyList()
 }

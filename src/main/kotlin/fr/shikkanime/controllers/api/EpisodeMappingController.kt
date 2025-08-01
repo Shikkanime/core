@@ -7,6 +7,7 @@ import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
 import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
@@ -56,7 +57,7 @@ class EpisodeMappingController : HasPageableRoute() {
         if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
 
         val fromGzip = runCatching { EncryptionManager.fromGzip(uuidsGzip) }.getOrNull() ?: return Response.badRequest()
-        val uuids = fromGzip.split(",").mapNotNull { UUID.fromString(it) }.distinct()
+        val uuids = fromGzip.split(StringUtils.COMMA_STRING).mapNotNull { UUID.fromString(it) }.distinct()
         val variants = uuids.mapNotNull { episodeVariantService.find(it) }
         if (variants.isEmpty()) return Response.notFound()
 

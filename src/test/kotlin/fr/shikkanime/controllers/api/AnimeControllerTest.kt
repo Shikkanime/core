@@ -10,6 +10,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.module
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.StringUtils
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -133,7 +134,7 @@ class AnimeControllerTest : AbstractControllerTest() {
                         "#",
                         StandardCharsets.UTF_8
                     )
-                }&searchTypes=${LangType.entries.joinToString(",")}"
+                }&searchTypes=${LangType.entries.joinToString(StringUtils.COMMA_STRING)}"
             ) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             }.apply {
@@ -168,9 +169,7 @@ class AnimeControllerTest : AbstractControllerTest() {
 
             client.get(
                 "/api/v1/animes?country=${CountryCode.FR}&name=one&page=5&limit=6&searchTypes=${
-                    LangType.entries.joinToString(
-                        ","
-                    )
+                    LangType.entries.joinToString(StringUtils.COMMA_STRING)
                 }"
             ) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())

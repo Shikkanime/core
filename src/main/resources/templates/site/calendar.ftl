@@ -3,7 +3,7 @@
 <#import "components/langType.ftl" as langTypeComponent />
 
 <@navigation.display canonicalUrl="${baseUrl}/calendar">
-    <div class="d-flex align-items-center mt-3" x-data="{
+    <div x-data="{
         searchTypes: <#if searchTypes?? && searchTypes?has_content>[<#list searchTypes?split(',') as searchType>'${searchType}'<#if searchType_has_next>,</#if></#list>]<#else>['SUBTITLES', 'VOICE']</#if>
     }" x-init="
     $watch('searchTypes', (value) => {
@@ -14,19 +14,49 @@
         }
     });
     ">
-        <#if previousWeek??>
-            <a href="${baseUrl}/calendar?date=${previousWeek}<#if searchTypes?? && searchTypes?has_content>&searchTypes=<#list searchTypes?split(',') as searchType>${searchType}<#if searchType_has_next>,</#if></#list></#if>"
-               class="btn btn-dark ms-0 me-3 d-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                     class="bi bi-chevron-left me-1" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                          d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
-                </svg>
-                Semaine précédente
-            </a>
-        </#if>
+        <div class="d-flex align-items-center mt-3">
+            <#if previousWeek??>
+                <a href="${baseUrl}/calendar?date=${previousWeek}<#if searchTypes?? && searchTypes?has_content>&searchTypes=<#list searchTypes?split(',') as searchType>${searchType}<#if searchType_has_next>,</#if></#list></#if>"
+                   class="btn btn-dark ms-0 me-3 d-flex align-items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                         class="bi bi-chevron-left me-1" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                              d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+                    </svg>
+                    Semaine précédente
+                </a>
+            </#if>
 
-        <div class="me-auto d-flex">
+            <div class="d-none d-md-flex me-auto">
+                <div class="form-check me-3">
+                    <input class="form-check-input" type="checkbox" value="SUBTITLES" id="subtitlesInput" x-model="searchTypes">
+                    <label class="form-check-label" for="subtitlesInput">
+                        Sous-titrage
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="VOICE" id="voiceInput" x-model="searchTypes">
+                    <label class="form-check-label" for="voiceInput">
+                        Doublage
+                    </label>
+                </div>
+            </div>
+
+            <#if nextWeek??>
+                <a href="${baseUrl}/calendar?date=${nextWeek}<#if searchTypes?? && searchTypes?has_content>&searchTypes=<#list searchTypes?split(',') as searchType>${searchType}<#if searchType_has_next>,</#if></#list></#if>"
+                   class="btn btn-dark ms-auto me-0 d-flex align-items-center">
+                    Semaine suivante
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                         class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                              d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+                    </svg>
+                </a>
+            </#if>
+        </div>
+
+        <div class="d-flex d-md-none mt-3">
             <div class="form-check me-3">
                 <input class="form-check-input" type="checkbox" value="SUBTITLES" id="subtitlesInput" x-model="searchTypes">
                 <label class="form-check-label" for="subtitlesInput">
@@ -41,18 +71,6 @@
                 </label>
             </div>
         </div>
-
-        <#if nextWeek??>
-            <a href="${baseUrl}/calendar?date=${nextWeek}<#if searchTypes?? && searchTypes?has_content>&searchTypes=<#list searchTypes?split(',') as searchType>${searchType}<#if searchType_has_next>,</#if></#list></#if>"
-               class="btn btn-dark ms-auto me-0 d-flex align-items-center">
-                Semaine suivante
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                     class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                          d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
-                </svg>
-            </a>
-        </#if>
     </div>
 
     <div class="table-responsive">

@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms.configuration
 
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 
 class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixSimulcastDay>() {
@@ -12,10 +13,10 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["episodeType"]?.let { episodeType = EpisodeType.valueOf(it) }
-            parameters["audioLocales"]?.let { audioLocales = it.split(",").toMutableSet() }
+            parameters["audioLocales"]?.let { audioLocales = it.split(StringUtils.COMMA_STRING).toMutableSet() }
             parameters["audioLocaleDelays"]?.let {
                 audioLocaleDelays.clear()
-                it.split(",").forEach { delay ->
+                it.split(StringUtils.COMMA_STRING).forEach { delay ->
                     val parts = delay.split(":")
                     if (parts.size == 2) {
                         audioLocaleDelays[parts[0]] = parts[1].toLongOrNull() ?: 0
@@ -38,7 +39,7 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
                     label = "Audio Locales",
                     name = "audioLocales",
                     type = "text",
-                    value = audioLocales.joinToString(","),
+                    value = audioLocales.joinToString(StringUtils.COMMA_STRING),
                 )
             )
             add(
@@ -47,7 +48,7 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
                     caption = "Format: locale:weeks_delay,locale:weeks_delay (e.g. fr-FR:3)",
                     name = "audioLocaleDelays",
                     type = "text",
-                    value = audioLocaleDelays.entries.joinToString(",") { "${it.key}:${it.value}" },
+                    value = audioLocaleDelays.entries.joinToString(StringUtils.COMMA_STRING) { "${it.key}:${it.value}" },
                 )
             )
         }
