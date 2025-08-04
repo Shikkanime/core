@@ -193,7 +193,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             anime = animeName,
             animeImage = crunchyrollAnimeContent.images!!.fullHDImage!!,
             animeBanner = crunchyrollAnimeContent.images.fullHDBanner!!,
-            animeDescription = crunchyrollAnimeContent.description.normalize(),
+            animeDescription = crunchyrollAnimeContent.getNormalizedDescription().normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
             seasonId = browseObject.episodeMetadata.seasonId,

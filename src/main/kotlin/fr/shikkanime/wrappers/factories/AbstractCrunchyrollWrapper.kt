@@ -155,7 +155,17 @@ abstract class AbstractCrunchyrollWrapper {
         val episodeMetadata: Episode?,
         @SerializedName("slug_title")
         val slugTitle: String?,
-    )
+    ) {
+        fun getNormalizedDescription(): String? {
+            return description?.split("\r\n\r\n")?.let { lines ->
+                when {
+                    lines.size == 2 -> lines[1]
+                    lines.size > 2 -> lines.subList(1, lines.size - 1).joinToString(StringUtils.SPACE_STRING)
+                    else -> lines.firstOrNull()
+                }
+            }
+        }
+    }
 
     data class Localization(
         val title: String,
