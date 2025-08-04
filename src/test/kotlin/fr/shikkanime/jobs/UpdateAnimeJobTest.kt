@@ -118,6 +118,36 @@ class UpdateAnimeJobTest : AbstractTest() {
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2611cd3c30e3fdbb6e563dfdde4a7029.jpg",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/f1c802e3c46fa6bcb76e18cb0ed62637.jpg",
                 expectedDescription = "Née dans une famille où le rôle de \"Sainte\" est transmis de génération en génération, Philia est reconnue comme la plus grande de tous les temps grâce à une éducation très rigoureuse. Cependant, son fiancé, le prince Julius, rompt leurs fiançailles et voilà qu'elle est vendue à un royaume voisin. S'attendant au pire, Philia reçoit pourtant un accueil chaleureux et utilise ses talents de sainte pour protéger des monstres le pays qui l'a accueillie."
+            ),
+            TestCase(
+                name = "Kaiju No. 8",
+                slug = "kaiju-no-8",
+                platforms = listOf(
+                    PlatformData(Platform.CRUN, "GG5H5XQ7D")
+                ),
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/3455ff9a3021e04fefd4fa2a417637b5.jpg",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/c2257c075677c3bfe0d66b46411529fb.jpg",
+                expectedDescription = "L’histoire gravite autour de Kafka Hibino, 32 ans. Il rêve de rejoindre les Forces de Défense pour honorer une promesse faite à son amie d’enfance, Mina Ashiro. Il se lie d’amitié avec son nouveau collègue, Reno Ichikawa, avec qui il nettoie des carcasses de kaiju. La détermination de son ami lui donne le courage de se présenter au concours des Forces afin de protéger l’humanité aux côtés de Mina. Son destin bascule néanmoins lorsqu’il est parasité par un petit kaiju qui lui confère des pouvoirs surhumains. Désormais capable d’affronter ses ennemis d’égal à égal, Kafka se démène pour gagner la confiance de ses équipiers, terrasser des kaijus de plus en plus puissants et assurer la sécurité de la planète."
+            ),
+            TestCase(
+                name = "One Piece",
+                slug = "one-piece",
+                platforms = listOf(
+                    PlatformData(Platform.CRUN, "GRMG8ZQZR")
+                ),
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg",
+                expectedDescription = "Monkey D. Luffy refuse de laisser qui que ce soit ou quoi que ce soit se mettre en travers de sa quête pour devenir le Roi des pirates. Grâce à son pouvoir d'élasticité conféré par un Fruit du Démon, le jeune pirate fougueux cherche le trésor légendaire connu sous le nom de One Piece. Il mettra le cap sur les eaux périlleuses de Grand Line et recrutera l'équipage du Chapeau de paille. Ce capitaine ne jettera jamais l'ancre tant que ses amis et lui n'auront pas réalisé leurs rêves!"
+            ),
+            TestCase(
+                name = "Jujutsu Kaisen",
+                slug = "jujutsu-kaisen",
+                platforms = listOf(
+                    PlatformData(Platform.CRUN, "GRDV0019R")
+                ),
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/e4e80c83c792d81c138e320874dbdffc.jpg",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8b7f5847f9b97f921e41d4ef59fd2d79.jpg",
+                expectedDescription = "Plongez dans une série sombre, palpitante et surnaturelle… Suivez le jeune Yuji Itadori dans son initiation aux dangereux arts de l’exorcisme et au monde des fléaux ! Pour sauver son camarade de classe, Yuji Itadori a mangé… un doigt de démon maudit. Il partage désormais son corps avec Ryomen Sukuna, un démon maléfique connu sous le nom de Roi des Fléaux. Les fléaux sont des forces surnaturelles créées à partir des émotions négatives des humains. Cette énergie occulte est la source de la puissance des exorcistes, aussi bien que des fléaux. Yuji rejoint alors l’école d’exorcisme de Tokyo, qui lutte contre les fléaux. Guidé par son professeur, Satoru Gojo, il se lie d’amitié avec Megumi Fushiguro et Nobara Kugisaki, tous deux élèves de première année."
             )
         )
     }
@@ -127,7 +157,7 @@ class UpdateAnimeJobTest : AbstractTest() {
     data class TestCase(
         val name: String,
         val slug: String,
-        val releaseDateTime: String,
+        val releaseDateTime: String? = null,
         val lastReleaseDateTime: String = StringUtils.EMPTY_STRING,
         val lastUpdateDateTime: String = StringUtils.EMPTY_STRING,
         val platforms: List<PlatformData>,
@@ -140,7 +170,7 @@ class UpdateAnimeJobTest : AbstractTest() {
     @MethodSource("testCases")
     fun `should update anime data`(testCase: TestCase) {
         // Préparation des données
-        val releaseDate = ZonedDateTime.parse(testCase.releaseDateTime)
+        val releaseDate = testCase.releaseDateTime?.let { ZonedDateTime.parse(it) } ?: ZonedDateTime.parse("2025-01-01T00:00:00Z")
         val lastReleaseDate = if (testCase.lastReleaseDateTime.isNotEmpty())
             ZonedDateTime.parse(testCase.lastReleaseDateTime) else releaseDate
         val lastUpdateDate = if (testCase.lastUpdateDateTime.isNotEmpty())

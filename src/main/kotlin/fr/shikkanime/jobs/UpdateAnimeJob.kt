@@ -192,7 +192,7 @@ class UpdateAnimeJob : AbstractJob {
                 put(ImageType.THUMBNAIL, series.images!!.fullHDImage!!)
                 put(ImageType.BANNER, series.images.fullHDBanner!!)
             },
-            description = series.description,
+            description = series.getNormalizedDescription(),
             episodeSize = objects.size
         )
     }
