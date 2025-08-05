@@ -19,9 +19,16 @@ class EpisodeMappingController : HasPageableRoute() {
     private fun getAll(
         @QueryParam country: CountryCode?,
         @QueryParam("page", "1") pageParam: Int,
-        @QueryParam("limit", "9") limitParam: Int
+        @QueryParam("limit", "9") limitParam: Int,
+        @QueryParam("sort") sortParam: String?,
+        @QueryParam("desc") descParam: String?
     ): Response {
-        val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(episodeMappingCacheService.findAllGroupedBy(country, page, limit))
+        val (page, limit, sortParameters) = if (sortParam.isNullOrBlank() && descParam.isNullOrBlank()) {
+            pageableRoute(pageParam, limitParam, "releaseDateTime,animeName,season,episodeType,number", "releaseDateTime,animeName,season,episodeType,number")
+        } else {
+            pageableRoute(pageParam, limitParam, sortParam, descParam)
+        }
+
+        return Response.ok(episodeMappingCacheService.findAllGroupedBy(country, sortParameters, page, limit))
     }
 }
