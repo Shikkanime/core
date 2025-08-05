@@ -8,6 +8,8 @@ import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
@@ -18,6 +20,7 @@ import javax.imageio.ImageIO
 
 @Controller("/api/v1/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingController")
     @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
@@ -42,13 +45,15 @@ class EpisodeMappingController : HasPageableRoute() {
             desc
         )
 
-        return Response.ok(
-            if (memberUuid != null) {
-                memberFollowEpisodeCacheService.findAllBy(memberUuid, page, limit)
-            } else {
-                episodeMappingCacheService.findAllBy(countryCode, animeUuid, season, sortParameters, page, limit)
-            }
-        )
+        return tracer.trace {
+            Response.ok(
+                if (memberUuid != null) {
+                    memberFollowEpisodeCacheService.findAllBy(memberUuid, page, limit)
+                } else {
+                    episodeMappingCacheService.findAllBy(countryCode, animeUuid, season, sortParameters, page, limit)
+                }
+            )
+        }
     }
 
     @Path("/media-image")

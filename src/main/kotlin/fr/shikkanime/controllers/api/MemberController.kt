@@ -10,6 +10,8 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -25,6 +27,7 @@ import java.util.*
 
 @Controller("/api/v1/members")
 class MemberController : HasPageableRoute() {
+    private val tracer = TelemetryConfig.getTracer("MemberController")
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
@@ -33,15 +36,17 @@ class MemberController : HasPageableRoute() {
     @Path("/register")
     @Post
     private fun registerMember(): Response {
-        var identifier: String
+        return tracer.trace {
+            var identifier: String
 
-        do {
-            identifier = StringUtils.generateRandomString(12)
-        } while (memberService.findByIdentifier(identifier) != null)
+            do {
+                identifier = StringUtils.generateRandomString(12)
+            } while (memberService.findByIdentifier(identifier) != null)
 
-        memberService.register(identifier)
-        MapCache.invalidate(Member::class.java)
-        return Response.created(mapOf("identifier" to identifier))
+            memberService.register(identifier)
+            MapCache.invalidate(Member::class.java)
+            Response.created(mapOf("identifier" to identifier))
+        }
     }
 
     @Path("/login")
@@ -51,9 +56,11 @@ class MemberController : HasPageableRoute() {
         @HttpHeader("X-Device") device: String?,
         @HttpHeader("X-Locale") locale: String?,
         @BodyParam identifier: String
-    ) = memberService.login(identifier, appVersion, device, locale)?.let { Response.ok(it) } ?: runBlocking {
-        delay(1000)
-        Response.notFound(MessageDto.error("Member not found"))
+    ) = tracer.trace {
+        memberService.login(identifier, appVersion, device, locale)?.let { Response.ok(it) } ?: runBlocking {
+            delay(1000)
+            Response.notFound(MessageDto.error("Member not found"))
+        }
     }
 
     @Path("/associate-email")
@@ -99,7 +106,7 @@ class MemberController : HasPageableRoute() {
     private fun followAnime(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
-    ) = memberFollowAnimeService.follow(memberUuid, anime)
+    ) = tracer.trace { memberFollowAnimeService.follow(memberUuid, anime) }
 
     @Path("/animes")
     @Delete
@@ -107,7 +114,7 @@ class MemberController : HasPageableRoute() {
     private fun unfollowAnime(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
-    ) = memberFollowAnimeService.unfollow(memberUuid, anime)
+    ) = tracer.trace { memberFollowAnimeService.unfollow(memberUuid, anime) }
 
     @Path("/follow-all-episodes")
     @Put
@@ -115,7 +122,7 @@ class MemberController : HasPageableRoute() {
     private fun followAllEpisodes(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
-    ) = memberFollowEpisodeService.followAll(memberUuid, anime)
+    ) = tracer.trace { memberFollowEpisodeService.followAll(memberUuid, anime) }
 
     @Path("/episodes")
     @Put
@@ -123,7 +130,7 @@ class MemberController : HasPageableRoute() {
     private fun followEpisode(
         @JWTUser memberUuid: UUID,
         @BodyParam episode: GenericDto
-    ) = memberFollowEpisodeService.follow(memberUuid, episode)
+    ) = tracer.trace { memberFollowEpisodeService.follow(memberUuid, episode) }
 
     @Path("/episodes")
     @Delete
@@ -131,7 +138,7 @@ class MemberController : HasPageableRoute() {
     private fun unfollowEpisode(
         @JWTUser memberUuid: UUID,
         @BodyParam episode: GenericDto
-    ) = memberFollowEpisodeService.unfollow(memberUuid, episode)
+    ) = tracer.trace { memberFollowEpisodeService.unfollow(memberUuid, episode) }
 
     @Path("/image")
     @Post
@@ -140,14 +147,16 @@ class MemberController : HasPageableRoute() {
         @JWTUser memberUuid: UUID,
         @BodyParam multiPartData: MultiPartData
     ): Response {
-        try {
-            runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
-        } catch (e: Exception) {
-            return Response.badRequest(MessageDto.error(e.message ?: "Invalid file format"))
-        }
+       return tracer.trace {
+           try {
+               runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
+           } catch (e: Exception) {
+               return@trace Response.badRequest(MessageDto.error(e.message ?: "Invalid file format"))
+           }
 
-        MapCache.invalidate(Member::class.java)
-        return Response.ok()
+           MapCache.invalidate(Member::class.java)
+           Response.ok()
+       }
     }
 
     @Path("/refresh")
@@ -157,7 +166,9 @@ class MemberController : HasPageableRoute() {
         @JWTUser memberUuid: UUID,
         @QueryParam("limit", "9") limitParam: Int
     ): Response {
-        val (_, limit, _) = pageableRoute(null, limitParam, null, null)
-        return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return Response.notFound())
+        return tracer.trace {
+            val (_, limit, _) = pageableRoute(null, limitParam, null, null)
+            Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return@trace Response.notFound())
+        }
     }
 }

@@ -6,15 +6,18 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 
 class ConfigCacheService : ICacheService {
+    private val tracer = TelemetryConfig.getTracer("ConfigCacheService")
     @Inject private lateinit var configService: ConfigService
 
     fun findByName(name: String) = MapCache.getOrCompute(
         "ConfigCacheService.findAll",
         classes = listOf(Config::class.java),
         key = StringUtils.EMPTY_STRING,
-    ) { configService.findAll() }
+    ) { tracer.trace { configService.findAll() } }
         .find { it.propertyKey == name }
 
     fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue

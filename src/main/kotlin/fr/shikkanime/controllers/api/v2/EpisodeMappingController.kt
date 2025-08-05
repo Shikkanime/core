@@ -3,6 +3,8 @@ package fr.shikkanime.controllers.api.v2
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.HasPageableRoute
 import fr.shikkanime.utils.routes.Path
@@ -12,6 +14,7 @@ import fr.shikkanime.utils.routes.param.QueryParam
 
 @Controller("/api/v2/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingController")
     @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     @Path
@@ -20,8 +23,8 @@ class EpisodeMappingController : HasPageableRoute() {
         @QueryParam country: CountryCode?,
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int
-    ): Response {
+    ) = tracer.trace {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(episodeMappingCacheService.findAllGroupedBy(country, page, limit))
+        Response.ok(episodeMappingCacheService.findAllGroupedBy(country, page, limit))
     }
 }
