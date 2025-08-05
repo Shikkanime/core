@@ -54,7 +54,8 @@ private val fromStringConverters = mapOf<KClass<*>, (String?) -> Any?>(
     Platform::class to { Platform.fromNullable(it) },
     String::class to { it },
     Int::class to { it?.toIntOrNull() },
-    Long::class to { it?.toLongOrNull() }
+    Long::class to { it?.toLongOrNull() },
+    Boolean::class to { it?.toBooleanStrictOrNull() },
 )
 private val jvmErasureCache = ConcurrentHashMap<KParameter, KClass<*>>()
 private val mapKClass = Map::class
@@ -291,8 +292,9 @@ private fun fromString(value: String?, jvmErasure: KClass<*>): Any? {
 }
 
 private fun handleHttpHeader(kParameter: KParameter, call: ApplicationCall): Any? {
-    val name = kParameter.findAnnotation<HttpHeader>()!!.name
-    val value = call.request.headers[name]
+    val annotation = kParameter.findAnnotation<HttpHeader>()!!
+    val name = annotation.name
+    val value = call.request.headers[name] ?: annotation.defaultValue.takeIf { it.isNotBlank() }
     return fromString(value, jvmErasureCache.getOrPut(kParameter) { kParameter.type.jvmErasure })
 }
 

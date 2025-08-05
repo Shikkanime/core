@@ -10,6 +10,7 @@ import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
+import fr.shikkanime.utils.routes.param.HttpHeader
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -24,6 +25,7 @@ class AnimeController : HasPageableRoute() {
     @Get
     @JWTAuthenticated(optional = true)
     private fun getAll(
+        @HttpHeader("X-Non-Followed", defaultValue = "false") nonFollowed: Boolean,
         @JWTUser memberUuid: UUID?,
         @QueryParam parameters: Map<String, String>
     ): Response {
@@ -47,14 +49,20 @@ class AnimeController : HasPageableRoute() {
         )
 
         return Response.ok(
-            if (memberUuid != null) {
+            if (!nonFollowed && memberUuid != null) {
                 memberFollowAnimeCacheService.findAllBy(memberUuid, page, limit)
             } else {
-                if (!name.isNullOrBlank()) {
+                val animes = if (!name.isNullOrBlank())
                     animeCacheService.findAllByName(countryCode, name, page, limit, searchTypes)
-                } else {
+                else
                     animeCacheService.findAllBy(countryCode, simulcastUuid, sortParams, page, limit, searchTypes)
+
+                if (memberUuid != null) {
+                    animes.data.asSequence()
+                        .forEach { it.inWatchlist = memberFollowAnimeCacheService.existsByMemberAndAnime(memberUuid, it.uuid!!) }
                 }
+
+                animes
             }
         )
     }
