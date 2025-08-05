@@ -13,7 +13,6 @@ import fr.shikkanime.utils.Constant
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.JoinType
-import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -33,14 +32,16 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
-            val predicates = mutableListOf<Predicate>()
-            anime?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime], it)) }
-            season?.let { predicates.add(cb.equal(root[EpisodeMapping_.season], it)) }
-            countryCode?.let { predicates.add(cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it)) }
+            // Build predicates
+            val predicates = listOfNotNull(
+                anime?.let { cb.equal(root[EpisodeMapping_.anime], it) },
+                season?.let { cb.equal(root[EpisodeMapping_.season], it) },
+                countryCode?.let { cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it) }
+            )
             query.where(*predicates.toTypedArray())
 
+            // Build orders
             val orders = sort.mapNotNull { sortParameter ->
-
                 val field = when (sortParameter.field) {
                     "episodeType" -> root[EpisodeMapping_.episodeType]
                     "releaseDateTime" -> root[EpisodeMapping_.releaseDateTime]
@@ -50,11 +51,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                     "animeName" -> root[EpisodeMapping_.anime][Anime_.name]
                     else -> null
                 }
-
                 field?.let { if (sortParameter.order == SortParameter.Order.ASC) cb.asc(it) else cb.desc(it) }
             }
-
             query.orderBy(orders)
+
             buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
         }
     }
@@ -175,20 +175,21 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
      * This function is paginated and the total is the number of groups.
      *
      * @param countryCode The country code to filter by. If null, all countries are included.
+     * @param sort The sort parameters.
      * @param page The page to get.
      * @param limit The number of items to get.
      * @return A pageable of grouped episodes.
      */
-    fun findAllGroupedBy(countryCode: CountryCode?, page: Int, limit: Int): Pageable<GroupedEpisode> {
+    fun findAllGroupedBy(countryCode: CountryCode?, sort: List<SortParameter>, page: Int, limit: Int): Pageable<GroupedEpisode> {
         return database.entityManager.use { entityManager ->
             val criteriaBuilder = entityManager.criteriaBuilder
-            val dailyMaxReleases = findDailyMaxReleases(entityManager, criteriaBuilder, countryCode, page, limit)
+            val dailyMaxReleases = findDailyMaxReleases(entityManager, criteriaBuilder, countryCode, sort, page, limit)
 
             if (dailyMaxReleases.data.isEmpty()) {
                 return@use Pageable(emptySet(), page, limit, 0)
             }
 
-            val episodeVariants = findEpisodeVariants(entityManager, criteriaBuilder, dailyMaxReleases.data)
+            val episodeVariants = findEpisodeVariants(entityManager, criteriaBuilder, dailyMaxReleases.data, sort)
             val groupedEpisodes = groupEpisodeVariants(episodeVariants)
 
             Pageable(
@@ -204,96 +205,108 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         entityManager: EntityManager,
         criteriaBuilder: CriteriaBuilder,
         countryCode: CountryCode?,
+        sort: List<SortParameter>,
         page: Int,
         limit: Int
     ): Pageable<DailyMaxReleaseInfo> {
-        val dailyMaxReleaseQuery = criteriaBuilder.createQuery(DailyMaxReleaseInfo::class.java)
-        val episodeVariantRoot = dailyMaxReleaseQuery.from(EpisodeVariant::class.java)
+        val query = criteriaBuilder.createQuery(DailyMaxReleaseInfo::class.java)
+        val root = query.from(EpisodeVariant::class.java)
 
-        val variantReleaseDateTimeExpression = episodeVariantRoot[EpisodeVariant_.releaseDateTime]
-        val greatestReleaseDate = criteriaBuilder.greatest(variantReleaseDateTimeExpression)
-        val episodeMappingRoot = episodeVariantRoot[EpisodeVariant_.mapping]
-        val animeRoot = episodeMappingRoot[EpisodeMapping_.anime]
-        val animeUuidExpression = animeRoot[Anime_.uuid]
-        val episodeTypeExpression = episodeMappingRoot[EpisodeMapping_.episodeType]
-
-        val releaseDayExpression = criteriaBuilder.function(
+        val releaseDateTime = root[EpisodeVariant_.releaseDateTime]
+        val mapping = root[EpisodeVariant_.mapping]
+        val anime = mapping[EpisodeMapping_.anime]
+        val releaseDay = criteriaBuilder.function(
             "date_trunc",
             ZonedDateTime::class.java,
             criteriaBuilder.literal("day"),
-            variantReleaseDateTimeExpression
-        ).`as`(ZonedDateTime::class.java)
+            releaseDateTime
+        )
 
-        dailyMaxReleaseQuery.select(
+        query.select(
             criteriaBuilder.construct(
                 DailyMaxReleaseInfo::class.java,
-                animeUuidExpression,
-                episodeTypeExpression,
-                releaseDayExpression,
-                greatestReleaseDate
+                anime[Anime_.uuid],
+                mapping[EpisodeMapping_.episodeType],
+                releaseDay,
+                criteriaBuilder.greatest(releaseDateTime)
             )
         )
 
         countryCode?.let {
-            dailyMaxReleaseQuery.where(
-                criteriaBuilder.equal(
-                    animeRoot[Anime_.countryCode],
-                    it
-                )
-            )
+            query.where(criteriaBuilder.equal(anime[Anime_.countryCode], it))
         }
 
-        dailyMaxReleaseQuery.groupBy(
-            animeUuidExpression,
-            episodeTypeExpression,
-            releaseDayExpression
+        query.groupBy(
+            anime[Anime_.uuid],
+            mapping[EpisodeMapping_.episodeType],
+            releaseDay
         )
 
-        dailyMaxReleaseQuery.orderBy(criteriaBuilder.desc(greatestReleaseDate))
+        val orders = sort.mapNotNull {
+            val field = when (it.field) {
+                "releaseDateTime" -> criteriaBuilder.greatest(releaseDateTime)
+                "episodeType" -> mapping[EpisodeMapping_.episodeType]
+                else -> null
+            }
+            field?.let { field -> if (it.order == SortParameter.Order.ASC) criteriaBuilder.asc(field) else criteriaBuilder.desc(field) }
+        }
 
-        return buildPageableQuery(createReadOnlyQuery(entityManager, dailyMaxReleaseQuery), page, limit)
+        query.orderBy(orders)
+
+        return buildPageableQuery(createReadOnlyQuery(entityManager, query), page, limit)
     }
 
     private fun findEpisodeVariants(
         entityManager: EntityManager,
         criteriaBuilder: CriteriaBuilder,
-        dailyMaxReleases: Set<DailyMaxReleaseInfo>
+        dailyMaxReleases: Set<DailyMaxReleaseInfo>,
+        sort: List<SortParameter>
     ): List<EpisodeVariant> {
         val mainQuery = criteriaBuilder.createQuery(EpisodeVariant::class.java)
-        val episodeVariantRoot = mainQuery.from(EpisodeVariant::class.java)
+        val root = mainQuery.from(EpisodeVariant::class.java)
 
-        episodeVariantRoot.fetch(EpisodeVariant_.mapping, JoinType.INNER)
+        root.fetch(EpisodeVariant_.mapping, JoinType.INNER)
             .fetch(EpisodeMapping_.anime, JoinType.INNER)
 
-        val variantReleaseDateTimeExpression = episodeVariantRoot[EpisodeVariant_.releaseDateTime]
-        val episodeMappingRoot = episodeVariantRoot[EpisodeVariant_.mapping]
-        val episodeTypeExpression = episodeMappingRoot[EpisodeMapping_.episodeType]
-        val animeRoot = episodeMappingRoot[EpisodeMapping_.anime]
-        val animeUuidExpression = animeRoot[Anime_.uuid]
-        val releaseDateTruncated = criteriaBuilder.function(
+        val releaseDateTime = root[EpisodeVariant_.releaseDateTime]
+        val mapping = root[EpisodeVariant_.mapping]
+        val anime = mapping[EpisodeMapping_.anime]
+        val releaseDay = criteriaBuilder.function(
             "date_trunc",
             ZonedDateTime::class.java,
             criteriaBuilder.literal("day"),
-            variantReleaseDateTimeExpression
+            releaseDateTime
         )
 
-        val predicates = dailyMaxReleases.map { dailyMaxRelease ->
-            val animePredicate = criteriaBuilder.equal(animeUuidExpression, dailyMaxRelease.animeUuid)
-            val episodeTypePredicate = criteriaBuilder.equal(episodeTypeExpression, dailyMaxRelease.episodeType)
-            val releaseDayPredicate = criteriaBuilder.equal(releaseDateTruncated, dailyMaxRelease.releaseDay)
-
-            val timeWindowPredicate = criteriaBuilder.between(
-                variantReleaseDateTimeExpression,
-                dailyMaxRelease.maxReleaseTime.minusHours(1),
-                dailyMaxRelease.maxReleaseTime.plusHours(1)
+        val predicates = dailyMaxReleases.map {
+            criteriaBuilder.and(
+                criteriaBuilder.equal(anime[Anime_.uuid], it.animeUuid),
+                criteriaBuilder.equal(mapping[EpisodeMapping_.episodeType], it.episodeType),
+                criteriaBuilder.equal(releaseDay, it.releaseDay),
+                criteriaBuilder.between(
+                    releaseDateTime,
+                    it.maxReleaseTime.minusHours(1),
+                    it.maxReleaseTime.plusHours(1)
+                )
             )
-
-            criteriaBuilder.and(animePredicate, episodeTypePredicate, releaseDayPredicate, timeWindowPredicate)
         }
 
-        mainQuery.select(episodeVariantRoot)
-        mainQuery.where(criteriaBuilder.or(*predicates.toTypedArray()))
-        mainQuery.orderBy(criteriaBuilder.desc(variantReleaseDateTimeExpression))
+        mainQuery.select(root)
+            .where(criteriaBuilder.or(*predicates.toTypedArray()))
+
+        val orders = sort.mapNotNull {
+            val field = when (it.field) {
+                "episodeType" -> mapping[EpisodeMapping_.episodeType]
+                "releaseDateTime" -> releaseDateTime
+                "season" -> mapping[EpisodeMapping_.season]
+                "number" -> mapping[EpisodeMapping_.number]
+                "animeName" -> anime[Anime_.slug]
+                else -> null
+            }
+            field?.let { field -> if (it.order == SortParameter.Order.ASC) criteriaBuilder.asc(field) else criteriaBuilder.desc(field) }
+        }
+
+        mainQuery.orderBy(orders)
 
         return createReadOnlyQuery(entityManager, mainQuery).resultList
     }
