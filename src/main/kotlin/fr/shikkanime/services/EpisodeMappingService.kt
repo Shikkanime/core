@@ -9,10 +9,13 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepository>() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingService")
     @Inject private lateinit var episodeMappingRepository: EpisodeMappingRepository
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
@@ -27,11 +30,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit)
+    ) = tracer.trace { episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit) }
 
-    fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
+    fun findAllByAnime(animeUuid: UUID) = tracer.trace { episodeMappingRepository.findAllByAnime(animeUuid) }
 
-    fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
+    fun findAllByAnime(anime: Anime) = findAllByAnime(anime.uuid!!)
 
     fun findAllNeedUpdate(lastUpdateDateTime: ZonedDateTime, lastImageUpdateDateTime: ZonedDateTime) =
         episodeMappingRepository.findAllNeedUpdate(lastUpdateDateTime, lastImageUpdateDateTime)
@@ -41,7 +44,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String) =
         episodeMappingRepository.findAllSimulcasted(ignoreEpisodeTypes, ignoreAudioLocale)
 
-    fun findAllGroupedBy(countryCode: CountryCode?, sort: List<SortParameter>, page: Int, limit: Int) = episodeMappingRepository.findAllGroupedBy(countryCode, sort, page, limit)
+    fun findAllGroupedBy(countryCode: CountryCode?, sort: List<SortParameter>, page: Int, limit: Int) = tracer.trace { episodeMappingRepository.findAllGroupedBy(countryCode, sort, page, limit) }
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
@@ -52,7 +55,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeMapping) =
         episodeMappingRepository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)
 
-    fun findMinimalReleaseDateTime() = episodeMappingRepository.findMinimalReleaseDateTime()
+    fun findMinimalReleaseDateTime() = tracer.trace { episodeMappingRepository.findMinimalReleaseDateTime() }
 
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 

@@ -3,6 +3,8 @@ package fr.shikkanime.controllers.api.v2
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.HasPageableRoute
 import fr.shikkanime.utils.routes.Path
@@ -12,6 +14,7 @@ import fr.shikkanime.utils.routes.param.QueryParam
 
 @Controller("/api/v2/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
+    private val tracer = TelemetryConfig.getTracer("EpisodeMappingController")
     @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
 
     @Path
@@ -22,13 +25,13 @@ class EpisodeMappingController : HasPageableRoute() {
         @QueryParam("limit", "9") limitParam: Int,
         @QueryParam("sort") sortParam: String?,
         @QueryParam("desc") descParam: String?
-    ): Response {
+    ) = tracer.trace {
         val (page, limit, sortParameters) = if (sortParam.isNullOrBlank() && descParam.isNullOrBlank()) {
             pageableRoute(pageParam, limitParam, "releaseDateTime,animeName,season,episodeType,number", "releaseDateTime,animeName,season,episodeType,number")
         } else {
             pageableRoute(pageParam, limitParam, sortParam, descParam)
         }
 
-        return Response.ok(episodeMappingCacheService.findAllGroupedBy(country, sortParameters, page, limit))
+        Response.ok(episodeMappingCacheService.findAllGroupedBy(country, sortParameters, page, limit))
     }
 }

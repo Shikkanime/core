@@ -6,6 +6,7 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.repositories.AttachmentRepository
 import fr.shikkanime.utils.*
+import fr.shikkanime.utils.TelemetryConfig.trace
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -30,6 +31,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private val httpRequest = HttpRequest()
     private val imageCache = LRUCache<UUID, ByteArray>(100)
     val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet())
+    private val tracer = TelemetryConfig.getTracer("AttachmentService")
 
     @Inject private lateinit var attachmentRepository: AttachmentRepository
     @Inject private lateinit var traceActionService: TraceActionService
@@ -43,7 +45,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime) = attachmentRepository.findAllNeededUpdate(lastUpdateDateTime)
 
-    fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) = attachmentRepository.findByEntityUuidTypeAndActive(entityUuid, type)
+    fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) = tracer.trace { attachmentRepository.findByEntityUuidTypeAndActive(entityUuid, type) }
 
     fun findAllActiveWithUrl() = attachmentRepository.findAllActiveWithUrl()
 
@@ -136,9 +138,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun getFile(attachment: Attachment) = File(Constant.imagesFolder, getFileName(attachment))
 
-    fun getContentFromCache(attachment: Attachment): ByteArray? {
-        return imageCache[attachment.uuid!!]
-    }
+    fun getContentFromCache(attachment: Attachment) = imageCache[attachment.uuid!!]
 
     fun setContentInCache(attachment: Attachment, bytes: ByteArray) {
         imageCache[attachment.uuid!!] = bytes
