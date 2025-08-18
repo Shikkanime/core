@@ -133,7 +133,7 @@
                                                 <div class="h6 text-truncate-2 mb-0 fw-bold">${animeSanitized}</div>
                                                 <#if release.minNumber?? || release.maxNumber?? || release.number??>
                                                     <p class="text-muted mt-1 mb-0">
-                                                        ${su.getEpisodeTypeLabel(release.anime.countryCode, release.episodeType)} <#if isMultipleReleased>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.number?c}</#if>
+                                                        ${su.getEpisodeTypeLabel(release.anime.countryCode, release.episodeType)} <#if isMultipleReleased><#if release.minNumber != release.maxNumber>${release.minNumber?c} - ${release.maxNumber?c}<#else>${release.minNumber?c}</#if><#else>${release.number?c}</#if>
                                                     </p>
                                                 </#if>
                                                 <#list release.langTypes as langType>
