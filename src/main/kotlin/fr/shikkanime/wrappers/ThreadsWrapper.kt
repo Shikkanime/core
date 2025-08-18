@@ -18,6 +18,7 @@ object ThreadsWrapper {
 
     private const val AUTHORIZATION_URL = "https://www.threads.net"
     private const val API_URL = "https://graph.threads.net"
+    private const val API_VERSION = "v1.0"
     private val httpRequest = HttpRequest()
 
     private fun getRedirectUri() = "${Constant.baseUrl}$ADMIN/api/threads".replace("http://", "https://")
@@ -75,7 +76,7 @@ object ThreadsWrapper {
             .joinToString("&")
 
         val createResponse = httpRequest.post(
-            "$API_URL/me/threads?$parameters",
+            "$API_URL/$API_VERSION/me/threads?$parameters",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
 
@@ -83,7 +84,7 @@ object ThreadsWrapper {
         val creationId = ObjectParser.fromJson(createResponse.bodyAsText())["id"].asString
 
         val publishResponse = httpRequest.post(
-            "$API_URL/me/threads_publish?access_token=$accessToken&creation_id=$creationId",
+            "$API_URL/$API_VERSION/me/threads_publish?access_token=$accessToken&creation_id=$creationId",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
 
