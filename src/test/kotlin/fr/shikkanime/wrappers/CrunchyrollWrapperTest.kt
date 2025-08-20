@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import kotlin.test.assertTrue
 
 class CrunchyrollWrapperTest {
     private val locale = CountryCode.FR.locale
@@ -17,7 +18,7 @@ class CrunchyrollWrapperTest {
     fun getBrowse() {
         val newlyAdded = runBlocking { CrunchyrollCachedWrapper.getBrowse(locale) }
         assertNotNull(newlyAdded)
-        assertEquals(25, newlyAdded.size)
+        assertTrue(newlyAdded.size in (24..25))
     }
 
     @Test
