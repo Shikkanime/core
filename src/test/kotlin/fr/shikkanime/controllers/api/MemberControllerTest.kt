@@ -9,7 +9,7 @@ import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.module
 import fr.shikkanime.utils.FileManager
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -179,7 +179,7 @@ class MemberControllerTest : AbstractControllerTest() {
             val findPrivateMember2 = memberService.findByIdentifier(identifier2)!!
             findPrivateMember2.email = "contact@shikkanime.fr"
             memberService.update(findPrivateMember2)
-            MapCache.invalidate(Member::class.java)
+            InvalidationService.invalidate(Member::class.java)
 
             var memberAction: MemberAction?
 

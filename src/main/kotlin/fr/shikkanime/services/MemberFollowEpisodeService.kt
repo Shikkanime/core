@@ -10,7 +10,7 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.repositories.MemberFollowEpisodeRepository
 import fr.shikkanime.services.caches.MemberCacheService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.Response
 import java.time.ZonedDateTime
 import java.util.*
@@ -43,7 +43,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         val filtered = elements.filter { it.uuid !in followed }.map { MemberFollowEpisode(followDateTime = now, member = member, episode = it) }
         memberFollowEpisodeRepository.saveAll(filtered)
         filtered.forEach { traceActionService.createTraceAction(it, TraceAction.Action.CREATE) }
-        MapCache.invalidate(MemberFollowEpisode::class.java)
+        InvalidationService.invalidate(MemberFollowEpisode::class.java)
 
         return Response.ok(AllFollowedEpisodeDto(data = filtered.mapNotNull { it.episode?.uuid }.toSet(), duration = filtered.sumOf { it.episode!!.duration }))
     }
@@ -58,7 +58,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
         val saved = save(MemberFollowEpisode(member = member, episode = element))
         traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
-        MapCache.invalidate(MemberFollowEpisode::class.java)
+        InvalidationService.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()
     }
 
@@ -71,7 +71,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
         memberFollowEpisodeRepository.delete(findByMemberAndEpisode)
         traceActionService.createTraceAction(findByMemberAndEpisode, TraceAction.Action.DELETE)
-        MapCache.invalidate(MemberFollowEpisode::class.java)
+        InvalidationService.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()
     }
 }

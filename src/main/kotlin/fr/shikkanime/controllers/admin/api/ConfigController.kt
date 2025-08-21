@@ -7,7 +7,7 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.factories.impl.ConfigFactory
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -43,7 +43,7 @@ class ConfigController {
         @BodyParam configDto: ConfigDto
     ): Response {
         val config = configService.update(uuid, configDto) ?: return Response.notFound()
-        MapCache.invalidate(Config::class.java)
+        InvalidationService.invalidate(Config::class.java)
         Constant.abstractSocialNetworks.forEach { it.logout() }
         return Response.ok(configFactory.toDto(config))
     }

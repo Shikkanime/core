@@ -4,6 +4,7 @@ import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import java.io.Serializable
 import java.util.*
 
 data class GroupedEpisodeDto(
@@ -21,4 +22,4 @@ data class GroupedEpisodeDto(
     val internalUrl: String?,
     val mappings: Set<UUID>,
     val urls: Set<String>
-)
+) : Serializable

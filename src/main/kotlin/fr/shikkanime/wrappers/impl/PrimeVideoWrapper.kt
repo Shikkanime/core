@@ -15,7 +15,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     override suspend fun getEpisodesByShowId(
         locale: String,
         id: String
-    ): List<Episode> {
+    ): Array<Episode> {
         // Make API request
         val globalJson = fetchPrimeVideoData("$baseUrl/detail/$id/ref=atv_sr_fle_c_Tn74RA_1_1_1", locale)
         
@@ -64,7 +64,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                 .map { (key, element) -> 
                     createEpisode(key, element.asJsonObject, season, show, btfState)
                 }
-        }
+        }.toTypedArray()
     }
     
     private fun createEpisode(

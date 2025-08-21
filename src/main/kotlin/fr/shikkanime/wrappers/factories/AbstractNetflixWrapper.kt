@@ -1,23 +1,26 @@
 package fr.shikkanime.wrappers.factories
 
+import com.google.gson.reflect.TypeToken
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
+import java.io.Serializable
 import java.time.ZonedDateTime
 
 abstract class AbstractNetflixWrapper {
     data class EpisodeMetadata(
         val id: Int,
         val image: String?
-    )
+    ) : Serializable
 
     data class ShowMetadata(
         val thumbnail: String?,
         val banner: String?,
         val carousel: String?,
         val episodes: List<EpisodeMetadata>,
-    )
+    ) : Serializable
 
     data class Show(
         val id: Int,
@@ -32,7 +35,7 @@ abstract class AbstractNetflixWrapper {
         val isPlayable: Boolean,
         val runtimeSec: Long? = null,
         val metadata: ShowMetadata? = null,
-    )
+    ) : Serializable
 
     data class Season(
         val id: Int,
@@ -52,7 +55,7 @@ abstract class AbstractNetflixWrapper {
         val url: String,
         val image: String,
         val duration: Long
-    )
+    ) : Serializable
 
     protected val baseUrl = "https://www.netflix.com"
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
@@ -61,6 +64,7 @@ abstract class AbstractNetflixWrapper {
     @Synchronized
     private fun getIdAndSecureId() = MapCache.getOrCompute(
         "AbstractNetflixWrapper.getIdAndSecureId",
+        typeToken = object : TypeToken<MapCacheValue<Pair<String?, String?>>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
         val cookies = HttpRequest().use { it.getCookiesWithBrowser(baseUrl).associateBy { cookie -> cookie.name!! } }
@@ -82,5 +86,5 @@ abstract class AbstractNetflixWrapper {
     }
 
     abstract suspend fun getShow(locale: String, id: Int): Show
-    abstract suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode>
+    abstract suspend fun getEpisodesByShowId(locale: String, id: Int): Array<Episode>
 }

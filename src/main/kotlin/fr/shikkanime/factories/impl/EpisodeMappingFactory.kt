@@ -10,8 +10,6 @@ import fr.shikkanime.utils.withUTCString
 
 class EpisodeMappingFactory : IEpisodeMappingFactory {
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-    @Inject private lateinit var episodeVariantFactory: EpisodeVariantFactory
-    @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var animeFactory: AnimeFactory
 
     override fun toDto(
@@ -32,15 +30,9 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
             duration = entity.duration,
             title = entity.title,
             description = entity.description,
-            variants = variants.map { episodeVariantFactory.toDto(it, false) }.toSet(),
-            platforms = variants.asSequence()
-                .mapNotNull { it.platform }
-                .sortedBy { it.name }
-                .map { platformFactory.toDto(it) }
-                .toSet(),
-            langTypes = variants.map { LangType.fromAudioLocale(entity.anime!!.countryCode!!, it.audioLocale!!) }
-                .sorted()
-                .toSet(),
+            variants = variants.toSet(),
+            platforms = variants.map { it.platform }.sortedBy { it.name }.toSet(),
+            langTypes = variants.map { LangType.fromAudioLocale(entity.anime!!.countryCode!!, it.audioLocale) }.sorted().toSet(),
         )
     }
 }

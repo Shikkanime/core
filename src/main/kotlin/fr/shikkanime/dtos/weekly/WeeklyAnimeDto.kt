@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import java.io.Serializable
 
 data class WeeklyAnimeDto(
     val anime: AnimeDto,
@@ -18,4 +19,4 @@ data class WeeklyAnimeDto(
     val maxNumber: Int? = null,
     val number: Int? = null,
     val mappings: Set<EpisodeMappingDto>? = null
-)
+) : Serializable

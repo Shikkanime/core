@@ -1,8 +1,11 @@
 package fr.shikkanime.services.caches
 
+import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeMemberUUIDWeekKeyCache
 import fr.shikkanime.caches.CountryCodePlatformWeekKeyCache
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Member
@@ -12,10 +15,7 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.atEndOfTheDay
-import fr.shikkanime.utils.atEndOfWeek
+import fr.shikkanime.utils.*
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -29,8 +29,10 @@ class EpisodeVariantCacheService : ICacheService {
     fun findAllByMapping(episodeMapping: EpisodeMapping) = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllByMapping",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<EpisodeVariantDto>>>() {},
+        serializationType = SerializationUtils.SerializationType.JSON,
         key = episodeMapping.uuid!!,
-    ) { episodeVariantService.findAllByMapping(it) }.toSet()
+    ) { uuid -> episodeVariantService.findAllByMapping(uuid).map { episodeVariantFactory.toDto(it, false) }.toTypedArray() }
 
     fun findAllVariantReleases(
         countryCode: CountryCode,
@@ -41,6 +43,8 @@ class EpisodeVariantCacheService : ICacheService {
     ) = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllVariantReleases",
         classes = listOf(EpisodeVariant::class.java, MemberFollowAnime::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<VariantReleaseDto>>>() {},
+        serializationType = SerializationUtils.SerializationType.OBJECT,
         key = CountryCodeMemberUUIDWeekKeyCache(countryCode, member?.uuid, startOfWeekDay.minusWeeks(1).atStartOfDay(zoneId), startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId), searchTypes),
     ) {
         episodeVariantService.findAllVariantReleases(
@@ -49,7 +53,7 @@ class EpisodeVariantCacheService : ICacheService {
             it.startZonedDateTime,
             it.endZonedDateTime,
             it.searchTypes
-        )
+        ).toTypedArray()
     }
 
     fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
@@ -60,6 +64,7 @@ class EpisodeVariantCacheService : ICacheService {
     ) = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween",
         classes = listOf(EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<Pair<String, ZonedDateTime>>>>() {},
         key = CountryCodePlatformWeekKeyCache(countryCode, platform, startZonedDateTime, endZonedDateTime),
     ) {
         episodeVariantService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
@@ -67,24 +72,27 @@ class EpisodeVariantCacheService : ICacheService {
             it.platform,
             it.startZonedDateTime,
             it.endZonedDateTime
-        )
+        ).toTypedArray()
     }
 
     fun findAllIdentifiers() = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllIdentifiers",
         classes = listOf(EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<HashSet<String>>>() {},
         key = StringUtils.EMPTY_STRING,
     ) { episodeVariantService.findAllIdentifiers() }
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "EpisodeVariantCacheService.find",
         classes = listOf(EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<EpisodeVariantDto>>() {},
         key = uuid,
     ) { episodeVariantService.find(it)?.let { episodeVariantFactory.toDto(it) } }
 
-    fun findByIdentifier(identifier: String) = MapCache.getOrComputeNullable(
+    fun findReleaseDateTimeByIdentifier(identifier: String) = MapCache.getOrComputeNullable(
         "EpisodeVariantCacheService.findByIdentifier",
         classes = listOf(EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<ZonedDateTime>>() {},
         key = identifier,
-    ) { episodeVariantService.findByIdentifier(it) }
+    ) { episodeVariantService.findReleaseDateTimeByIdentifier(it) }
 }

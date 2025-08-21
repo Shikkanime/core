@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberActionService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.JWTAuthenticated
 import fr.shikkanime.utils.routes.Path
@@ -32,7 +32,7 @@ class MemberActionController {
 
         try {
             memberActionService.validateAction(uuid!!, action)
-            MapCache.invalidate(Member::class.java)
+            InvalidationService.invalidate(Member::class.java)
             return Response.ok()
         } catch (e: Exception) {
             return Response.badRequest(MessageDto.error(e.message ?: "An error occurred"))

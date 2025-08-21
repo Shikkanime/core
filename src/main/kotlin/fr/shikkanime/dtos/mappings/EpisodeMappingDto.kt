@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import java.io.Serializable
 import java.util.*
 
 data class EpisodeMappingDto(
@@ -23,4 +24,4 @@ data class EpisodeMappingDto(
     val platforms: Set<PlatformDto>? = null,
     val langTypes: Set<LangType>? = null,
     var image: String? = null,
-)
+) : Serializable

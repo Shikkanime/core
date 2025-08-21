@@ -56,7 +56,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                 encodeAttachment(existingAttachment, url, bytes, async)
                 existingAttachment.lastUpdateDateTime = ZonedDateTime.now()
                 update(existingAttachment)
-                MapCache.invalidate(Attachment::class.java)
+                InvalidationService.invalidate(Attachment::class.java)
             }
 
             return existingAttachment
@@ -67,14 +67,14 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
         if (existingAttachment != null) {
             encodeAttachment(existingAttachment, url, bytes, async)
-            MapCache.invalidate(Attachment::class.java)
+            InvalidationService.invalidate(Attachment::class.java)
             return existingAttachment
         }
 
         val attachment = save(Attachment(entityUuid = entityUuid, type = type, url = url))
         traceActionService.createTraceAction(attachment, TraceAction.Action.CREATE)
         encodeAttachment(attachment, url, bytes, async)
-        MapCache.invalidate(Attachment::class.java)
+        InvalidationService.invalidate(Attachment::class.java)
         return attachment
     }
 
@@ -89,7 +89,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
             }
         )
 
-        MapCache.invalidate(Attachment::class.java)
+        InvalidationService.invalidate(Attachment::class.java)
     }
 
     /**

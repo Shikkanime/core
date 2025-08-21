@@ -17,11 +17,10 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
     @Inject private lateinit var simulcastFactory: SimulcastFactory
-    @Inject private lateinit var animePlatformFactory: AnimePlatformFactory
 
     override fun toDto(entity: Anime): AnimeDto {
-        val audioLocales = animeCacheService.getAudioLocales(entity) ?: emptySet()
-        val seasons = animeCacheService.getSeasons(entity) ?: emptyMap()
+        val audioLocales = animeCacheService.getAudioLocales(entity).toSet()
+        val seasons = animeCacheService.getSeasons(entity)
         val platforms = animePlatformCacheService.getAll(entity)
 
         return AnimeDto(
@@ -38,7 +37,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             audioLocales = audioLocales.takeIf { it.isNotEmpty() },
             langTypes = audioLocales.map { LangType.fromAudioLocale(entity.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),
-            platformIds = platforms.sortedBy { it.platform?.name }.map { animePlatformFactory.toDto(it) }.toSet()
+            platformIds = platforms.sortedBy { it.platform.name }.toSet()
         )
     }
 }

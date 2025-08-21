@@ -15,6 +15,7 @@ val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.5.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.20.0"
+val valkeyVersion = "2.0.1"
 
 val jdaVersion = "6.0.0-preview"
 val twitter4jVersion = "4.0.7"
@@ -32,6 +33,7 @@ plugins {
 
     id("io.ktor.plugin") version "3.2.3"
     id("org.sonarqube") version "6.3.1.5724"
+    id("com.google.osdetector") version "1.7.3"
 
     jacoco
 }
@@ -91,6 +93,14 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+
+    implementation(
+        group = "io.valkey",
+        name = "valkey-glide",
+        version = valkeyVersion,
+        classifier = osdetector.classifier,
+    )
+
     implementation("net.dv8tion:JDA:$jdaVersion")
     implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
     implementation("twitter4j-v2:twitter4j-v2-support") {

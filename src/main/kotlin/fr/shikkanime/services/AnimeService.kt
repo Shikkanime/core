@@ -67,9 +67,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
 
-    fun findAllAudioLocales() = animeRepository.findAllAudioLocales()
+    fun findAllAudioLocales(uuid: UUID) = animeRepository.findAllAudioLocales(uuid)
 
-    fun findAllSeasons() = animeRepository.findAllSeasons()
+    fun findAllSeasons(uuid: UUID) = animeRepository.findAllSeasons(uuid)
 
     fun preIndex() = animeRepository.preIndex()
 
@@ -116,7 +116,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     private fun processReleases(
-        variantReleaseDtos: List<VariantReleaseDto>,
+        variantReleaseDtos: Array<VariantReleaseDto>,
         zoneId: ZoneId,
         weekRange: ClosedRange<LocalDate>
     ): List<Triple<WeeklyAnimeDto, Int, EpisodeType>> {

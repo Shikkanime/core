@@ -8,7 +8,7 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
@@ -197,7 +197,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             ),
             updateMappingDateTime = false
         )
-        MapCache.invalidate(EpisodeVariant::class.java)
+        InvalidationService.invalidate(EpisodeVariant::class.java)
     }
     
     @ParameterizedTest
@@ -305,7 +305,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         mockkStatic(CrunchyrollWrapper::class) {
             coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
             coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns listOf(nextEpisode)
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns arrayOf(nextEpisode)
             coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
@@ -345,7 +345,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         mockkStatic(CrunchyrollWrapper::class) {
             coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
             coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns listOf()
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns arrayOf()
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertNull(result)

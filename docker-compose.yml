@@ -1,6 +1,6 @@
 services:
   shikkanime-db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     restart: always
     container_name: shikkanime-db
     environment:
@@ -9,6 +9,10 @@ services:
       POSTGRES_DB: shikkanime
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
+  shikkanime-valkey:
+    image: valkey/valkey:8.1-alpine
+    container_name: shikkanime-valkey
+    restart: always
   shikkanime-core:
     build:
         context: .
@@ -19,6 +23,8 @@ services:
     depends_on:
       shikkanime-db:
         condition: service_healthy
+      shikkanime-valkey:
+        condition: service_started
     environment:
       DATABASE_URL: jdbc:postgresql://shikkanime-db:5432/shikkanime
       DATABASE_USERNAME: postgres
@@ -29,6 +35,7 @@ services:
       JWT_AUDIENCE: "http://localhost:37100/admin"
       BASE_URL: "http://localhost:37100"
       API_URL: "http://localhost:37100/api"
+      VALKEY_HOST: "shikkanime-valkey"
     volumes:
       - ./data:/app/data/
     healthcheck:

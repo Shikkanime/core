@@ -1,15 +1,14 @@
 package fr.shikkanime.wrappers.factories
 
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import java.io.Serializable
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
@@ -30,7 +29,7 @@ abstract class AbstractCrunchyrollWrapper {
         val type: String,
         val width: Int,
         val height: Int,
-    )
+    ) : Serializable
 
     data class Image(
         val thumbnail: List<List<MediaImage>> = emptyList(),
@@ -38,7 +37,7 @@ abstract class AbstractCrunchyrollWrapper {
         val posterTall: List<List<MediaImage>> = emptyList(),
         @SerializedName("poster_wide")
         val posterWide: List<List<MediaImage>> = emptyList(),
-    ) {
+    ) : Serializable {
         val fullHDThumbnail: String?
             get() = thumbnail.firstOrNull()?.maxByOrNull { it.width }?.source
         val fullHDImage: String?
@@ -50,7 +49,7 @@ abstract class AbstractCrunchyrollWrapper {
     data class Version(
         val guid: String,
         val original: Boolean,
-    )
+    ) : Serializable
 
     data class Series(
         val id: String,
@@ -61,7 +60,7 @@ abstract class AbstractCrunchyrollWrapper {
         val description: String?,
         @SerializedName("is_simulcast")
         val isSimulcast: Boolean,
-    ) {
+    ) : Serializable {
         fun convertToBrowseObject() = BrowseObject(
             id = id,
             images = images,
@@ -76,9 +75,9 @@ abstract class AbstractCrunchyrollWrapper {
     data class Season(
         val id: String,
         @SerializedName("subtitle_locales")
-        val subtitleLocales: List<String>,
-        val keywords: List<String>
-    )
+        val subtitleLocales: Set<String>,
+        val keywords: Set<String>
+    ) : Serializable
 
     data class Episode(
         val id: String,
@@ -120,7 +119,7 @@ abstract class AbstractCrunchyrollWrapper {
         val sequenceNumber: Double,
         @SerializedName("identifier")
         val identifier: String?,
-    ) {
+    ) : Serializable {
         fun index() = ((seasonSequenceNumber - 1) * 100) + sequenceNumber
 
         fun convertToBrowseObject() = BrowseObject(
@@ -155,10 +154,9 @@ abstract class AbstractCrunchyrollWrapper {
         val episodeMetadata: Episode?,
         @SerializedName("slug_title")
         val slugTitle: String?,
-    ) {
+    ) : Serializable {
         val fullHDCarousel: String
             get() = "https://imgsrv.crunchyroll.com/cdn-cgi/image/format=png,quality=100,width=1920/keyart/$id-backdrop_wide"
-
         fun getNormalizedDescription(): String? {
             return description?.split("\r\n\r\n")?.let { lines ->
                 when {
@@ -187,6 +185,7 @@ abstract class AbstractCrunchyrollWrapper {
     private fun getAnonymousAccessToken() = MapCache.getOrCompute(
         "AbstractCrunchyrollWrapper.getAnonymousAccessToken",
         duration = Duration.ofMinutes(30),
+        typeToken = object : TypeToken<MapCacheValue<String>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
@@ -208,13 +207,13 @@ abstract class AbstractCrunchyrollWrapper {
 
     abstract suspend fun getBrowse(locale: String, sortBy: SortType = SortType.NEWLY_ADDED, type: MediaType = MediaType.EPISODE, size: Int = 25, start: Int = 0, simulcast: String? = null): List<BrowseObject>
     abstract suspend fun getSeries(locale: String, id: String): Series
-    abstract suspend fun getSeasonsBySeriesId(locale: String, id: String): List<Season>
+    abstract suspend fun getSeasonsBySeriesId(locale: String, id: String): Array<Season>
     abstract suspend fun getSeason(locale: String, id: String): Season
-    abstract suspend fun getEpisodesBySeasonId(locale: String, id: String): List<Episode>
+    abstract suspend fun getEpisodesBySeasonId(locale: String, id: String): Array<Episode>
     abstract suspend fun getEpisode(locale: String, id: String): Episode
     abstract suspend fun getEpisodeDiscoverByType(locale: String, type: String, id: String): BrowseObject
     abstract suspend fun getObjects(locale: String, vararg ids: String): List<BrowseObject>
-    abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): List<BrowseObject>
+    abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): Array<BrowseObject>
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =
         "${baseUrl}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: StringUtils.EMPTY_STRING}"

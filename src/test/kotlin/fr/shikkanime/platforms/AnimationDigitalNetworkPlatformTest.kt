@@ -7,7 +7,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration.AnimationDigitalNetworkSimulcast
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -205,7 +205,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
                 propertyValue = "\\((premier épisode |diffusion des épisodes |diffusion du premier épisode|diffusion de l'épisode 1 le)"
             )
         )
-        MapCache.invalidate(Config::class.java)
+        InvalidationService.invalidate(Config::class.java)
     }
 
     @ParameterizedTest

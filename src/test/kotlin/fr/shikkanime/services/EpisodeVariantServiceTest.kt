@@ -4,7 +4,7 @@ import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import io.mockk.every
 import io.mockk.mockkClass
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -17,7 +17,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     override fun setUp() {
         super.setUp()
         configService.save(Config(propertyKey = ConfigPropertyKey.SIMULCAST_RANGE.key, propertyValue = "15"))
-        MapCache.invalidate(Config::class.java)
+        InvalidationService.invalidate(Config::class.java)
     }
 
     @Test
@@ -121,7 +121,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     @Test
     fun `save dan da dan multiple platform`() {
         ruleService.save(Rule(platform = Platform.NETF, seriesId = "81736884", seasonId = "1", action = Rule.Action.REPLACE_ANIME_NAME, actionValue = "DAN DA DAN"))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
 
         episodeVariantService.save(
             AbstractPlatform.Episode(
@@ -235,7 +235,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
             )
         )
 
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         val animes = animeService.findAll()
         animes.forEach { println(it.name) }
         assertEquals(1, animes.size)
@@ -249,7 +249,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     fun `save platform episode with rule`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GRMG8ZQZR", seasonId = "GYP8PM4KY", action = Rule.Action.REPLACE_ANIME_NAME, actionValue = "ONE PIECE Log: Fish-Man Island Saga"))
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GRMG8ZQZR", seasonId = "GYP8PM4KY", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "1"))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
 
         episodeVariantService.save(
             AbstractPlatform.Episode(
@@ -290,7 +290,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     @Test
     fun `save platform episode with rule #2`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G649PJ0JY", seasonId = "G609CX8W1", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "4"))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
 
         episodeVariantService.save(
             AbstractPlatform.Episode(
@@ -331,7 +331,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     @Test
     fun `save platform episode with rule #3`() {
         ruleService.save(Rule(platform = Platform.ANIM, seriesId = "1166", seasonId = "1", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "2"))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
 
         episodeVariantService.save(
             AbstractPlatform.Episode(
@@ -372,7 +372,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     @Test
     fun `save platform episode with rule #4`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GYQ43P3E6", seasonId = "G65VCD1KE", action = Rule.Action.ADD_TO_NUMBER, actionValue = "11"))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
 
         episodeVariantService.save(
             AbstractPlatform.Episode(
@@ -413,7 +413,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     fun `save platform episode with rule #5`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G1XHJV2X9", seasonId = "GRGGCVZV0", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "1"))
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G1XHJV2X9", seasonId = "GRGGCVZV0", action = Rule.Action.REPLACE_EPISODE_TYPE, actionValue = "SPECIAL"))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
 
         episodeVariantService.save(
             AbstractPlatform.Episode(

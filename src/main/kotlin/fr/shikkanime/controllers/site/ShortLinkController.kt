@@ -6,7 +6,7 @@ import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberActionService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
@@ -32,7 +32,7 @@ class ShortLinkController {
     private fun validateWebToken(@PathParam webToken: String): Response {
         try {
             memberActionService.validateWebAction(webToken)
-            MapCache.invalidate(Member::class.java)
+            InvalidationService.invalidate(Member::class.java)
             return Response.template("/site/validateAction.ftl")
         } catch (_: Exception) {
             return Response.redirect("/")

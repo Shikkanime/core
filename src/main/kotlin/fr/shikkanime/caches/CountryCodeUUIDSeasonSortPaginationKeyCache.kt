@@ -11,4 +11,8 @@ data class CountryCodeUUIDSeasonSortPaginationKeyCache(
     val sort: List<SortParameter>,
     override val page: Int,
     override val limit: Int,
-) : CountryCodePaginationKeyCache(countryCode, page, limit)
+) : CountryCodePaginationKeyCache(countryCode, page, limit) {
+    override fun toString(): String {
+        return "$countryCode,$uuid,$season,$sort,$page,$limit"
+    }
+}

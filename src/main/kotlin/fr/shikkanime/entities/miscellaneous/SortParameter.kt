@@ -27,4 +27,6 @@ data class SortParameter(
         result = 31 * result + order.hashCode()
         return result
     }
+
+    override fun toString() = "$field,$order"
 }

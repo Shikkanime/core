@@ -194,29 +194,22 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllAudioLocales(): Map<UUID, Set<String>> {
+    fun findAllAudioLocales(uuid: UUID): List<String> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(String::class.java)
+            val root = query.from(EpisodeVariant::class.java)
 
             query.distinct(true)
-                .select(
-                    cb.tuple(
-                        root[Anime_.uuid],
-                        root.join(Anime_.mappings).join(EpisodeMapping_.variants)[EpisodeVariant_.audioLocale]
-                    )
-                )
+                .select(root[EpisodeVariant_.audioLocale])
+                .where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid], uuid))
 
             createReadOnlyQuery(it, query)
                 .resultList
-                .asSequence()
-                .groupBy({ tuple -> tuple[0, UUID::class.java] }, { tuple -> tuple[1, String::class.java] })
-                .mapValues { (_, locales) -> locales.toSet() }
         }
     }
 
-    fun findAllSeasons(): Map<UUID, Map<Int, ZonedDateTime>> {
+    fun findAllSeasons(uuid: UUID): Map<Int, ZonedDateTime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
@@ -225,18 +218,16 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             query.select(
                 cb.tuple(
-                    root[Anime_.uuid],
                     mappingJoin[EpisodeMapping_.season],
                     cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
                 )
-            ).groupBy(root[Anime_.uuid], mappingJoin[EpisodeMapping_.season])
+            ).where(cb.equal(mappingJoin[EpisodeMapping_.anime][Anime_.uuid], uuid))
+                .groupBy(mappingJoin[EpisodeMapping_.season])
                 .orderBy(cb.asc(mappingJoin[EpisodeMapping_.season]))
 
             createReadOnlyQuery(it, query)
                 .resultList
-                .asSequence()
-                .groupBy({ tuple -> tuple[0, UUID::class.java] }, { tuple -> tuple[1, Int::class.java] to tuple[2, ZonedDateTime::class.java] })
-                .mapValues { (_, seasons) -> seasons.toMap() }
+                .associate { tuple -> tuple[0, Int::class.java] to tuple[1, ZonedDateTime::class.java] }
         }
     }
 
