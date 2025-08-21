@@ -28,4 +28,6 @@ open class CountryCodeSortPaginationKeyCache(
         result = 31 * result + sort.hashCode()
         return result
     }
+
+    override fun toString() = "$countryCode,$sort,$page,$limit"
 }

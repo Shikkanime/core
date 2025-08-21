@@ -40,6 +40,6 @@ data class CountryCodeUUIDSortPaginationKeyCache(
     }
 
     override fun toString(): String {
-        return "CountryCodeUUIDSortPaginationKeyCache(countryCode=$countryCode, uuid=$uuid, sort=$sort, page=$page, limit=$limit, searchTypes=${searchTypes?.contentToString()})"
+        return "$countryCode,$uuid,$sort,$page,$limit,${searchTypes?.contentToString()}"
     }
 }
