@@ -8,7 +8,7 @@ import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
@@ -40,7 +40,7 @@ class MemberController : HasPageableRoute() {
         } while (memberService.findByIdentifier(identifier) != null)
 
         memberService.register(identifier)
-        MapCache.invalidate(Member::class.java)
+        InvalidationService.invalidate(Member::class.java)
         return Response.created(mapOf("identifier" to identifier))
     }
 
@@ -146,7 +146,7 @@ class MemberController : HasPageableRoute() {
             return Response.badRequest(MessageDto.error(e.message ?: "Invalid file format"))
         }
 
-        MapCache.invalidate(Member::class.java)
+        InvalidationService.invalidate(Member::class.java)
         return Response.ok()
     }
 

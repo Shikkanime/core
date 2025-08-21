@@ -7,7 +7,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
@@ -193,7 +193,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             ),
             updateMappingDateTime = false
         )
-        MapCache.invalidate(EpisodeVariant::class.java)
+        InvalidationService.invalidate(EpisodeVariant::class.java)
     }
     
     @ParameterizedTest
@@ -350,7 +350,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                         any(String::class),
                     )
                 }
-            } returns listOf(nextEpisode)
+            } returns arrayOf(nextEpisode)
             every {
                 runBlocking {
                     CrunchyrollWrapper.getJvmStaticObjects(
@@ -418,7 +418,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
                         any(String::class),
                     )
                 }
-            } returns listOf()
+            } returns arrayOf()
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertNull(result)

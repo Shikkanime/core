@@ -1,5 +1,6 @@
 package fr.shikkanime.dtos
 
+import java.io.Serializable
 import java.util.*
 
 data class AnimePlatformDto(
@@ -7,4 +8,4 @@ data class AnimePlatformDto(
     val platform: PlatformDto,
     val platformId: String,
     val lastValidateDateTime: String?,
-)
+) : Serializable

@@ -32,6 +32,6 @@ data class CountryCodeLocalDateKeyCache(
     }
 
     override fun toString(): String {
-        return "CountryCodeLocalDateKeyCache(countryCode=$countryCode, member=$member, localDate=$localDate, searchTypes=${searchTypes.contentToString()})"
+        return "$countryCode,$member,$localDate,${searchTypes.contentToString()}"
     }
 }

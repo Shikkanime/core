@@ -5,8 +5,8 @@ import fr.shikkanime.entities.Attachment
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.withUTC
 import java.time.ZonedDateTime
 
@@ -34,6 +34,6 @@ class UpdateAttachmentJob : AbstractJob {
                 attachmentService.encodeAttachment(attachment, attachment.url, null)
             }
 
-        MapCache.invalidate(Attachment::class.java)
+        InvalidationService.invalidate(Attachment::class.java)
     }
 }

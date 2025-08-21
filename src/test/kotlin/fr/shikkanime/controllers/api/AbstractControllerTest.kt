@@ -9,7 +9,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -27,7 +27,7 @@ abstract class AbstractControllerTest : AbstractTest() {
         initOnePiece()
         init7thTimeLoop()
         animeService.recalculateSimulcasts()
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
     }
 
     protected suspend fun ApplicationTestBuilder.registerAndLogin(): Pair<String, String> {
