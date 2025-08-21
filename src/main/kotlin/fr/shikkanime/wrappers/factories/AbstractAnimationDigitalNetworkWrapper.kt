@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.factories
 
 import fr.shikkanime.utils.HttpRequest
+import java.io.Serializable
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
@@ -11,7 +12,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
 
     data class Microdata(
         val startDate: ZonedDateTime,
-    )
+    ) : Serializable
 
     data class Show(
         val id: Int,
@@ -24,7 +25,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val simulcast: Boolean,
         val firstReleaseYear: String,
         val microdata: Microdata? = null,
-    ) {
+    ) : Serializable {
         val fullHDImage: String
             get() = image2x.replace(sizeRegex, "1560x2340")
         val fullHDBanner: String
@@ -45,7 +46,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val duration: Long,
         val languages: List<String> = emptyList(),
         val show: Show,
-    ) {
+    ) : Serializable {
         val fullHDImage: String
             get() = image2x.replace(sizeRegex, "1920x1080")
     }

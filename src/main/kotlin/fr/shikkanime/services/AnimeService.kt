@@ -116,7 +116,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     }
 
     private fun processReleases(
-        variantReleaseDtos: List<VariantReleaseDto>,
+        variantReleaseDtos: Array<VariantReleaseDto>,
         zoneId: ZoneId,
         weekRange: ClosedRange<LocalDate>
     ): List<Triple<WeeklyAnimeDto, Int, EpisodeType>> {
