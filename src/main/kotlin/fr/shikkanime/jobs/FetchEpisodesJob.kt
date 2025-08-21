@@ -110,7 +110,7 @@ class FetchEpisodesJob : AbstractJob {
 
         if (savedEpisodes.isEmpty()) return
 
-        MapCache.invalidate(
+        InvalidationService.invalidate(
             Anime::class.java,
             EpisodeMapping::class.java,
             EpisodeVariant::class.java,

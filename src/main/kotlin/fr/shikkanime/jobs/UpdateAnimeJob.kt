@@ -111,7 +111,7 @@ class UpdateAnimeJob : AbstractJob {
             logger.info("Anime $shortName updated")
         }
 
-        MapCache.invalidate(Anime::class.java)
+        InvalidationService.invalidate(Anime::class.java)
     }
 
     private suspend fun fetchAnime(anime: Anime, zonedDateTime: ZonedDateTime): List<UpdatableAnime> {

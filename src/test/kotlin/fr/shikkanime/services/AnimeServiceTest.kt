@@ -8,7 +8,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -54,7 +54,7 @@ class AnimeServiceTest : AbstractTest() {
             now
         )
 
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
 
         var weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         var releases = weeklyReleases.flatMap { it.releases }
@@ -70,7 +70,7 @@ class AnimeServiceTest : AbstractTest() {
             now.plusMinutes(10)
         )
 
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
 
         weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         releases = weeklyReleases.flatMap { it.releases }
@@ -106,7 +106,7 @@ class AnimeServiceTest : AbstractTest() {
             previousWeek.plusHours(6)
         )
 
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
 
         var weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         var releases = weeklyReleases.flatMap { it.releases }
@@ -124,7 +124,7 @@ class AnimeServiceTest : AbstractTest() {
             now
         )
 
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
 
         weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         releases = weeklyReleases.flatMap { it.releases }
@@ -166,7 +166,7 @@ class AnimeServiceTest : AbstractTest() {
             now.plusMinutes(15)
         )
 
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
 
         val weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
         val releases = weeklyReleases.flatMap { it.releases }

@@ -3,6 +3,7 @@ package fr.shikkanime.dtos.variants
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.enums.Platform
+import java.io.Serializable
 import java.time.ZonedDateTime
 
 data class VariantReleaseDto(
@@ -11,4 +12,4 @@ data class VariantReleaseDto(
     val releaseDateTime: ZonedDateTime,
     val platform: Platform,
     val audioLocale: String,
-)
+) : Serializable

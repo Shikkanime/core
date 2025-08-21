@@ -38,8 +38,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                 )
 
                 val releaseDateTime = identifiers.getOrPut(video.id) {
-                    episodeVariantCacheService.findByIdentifier(episode.getIdentifier())
-                        ?.releaseDateTime ?: episode.releaseDateTime
+                    episodeVariantCacheService.findReleaseDateTimeByIdentifier(episode.getIdentifier()) ?: episode.releaseDateTime
                 }
 
                 key.netflixSimulcast.audioLocaleDelays[episode.audioLocale]?.let { delay ->

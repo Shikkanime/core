@@ -12,8 +12,8 @@ import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
@@ -51,7 +51,7 @@ class FetchOldEpisodesJob : AbstractJob {
             return
         }
 
-        val config = configCacheService.findByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key) ?: run {
+        val config = configService.findAllByName(ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key).firstOrNull() ?: run {
             logger.warning("Config ${ConfigPropertyKey.LAST_FETCH_OLD_EPISODES.key} not found")
             return
         }
@@ -120,7 +120,7 @@ class FetchOldEpisodesJob : AbstractJob {
             log(emailLogs, Level.INFO, "Recalculating simulcasts...")
             animeService.recalculateSimulcasts()
 
-            MapCache.invalidate(
+            InvalidationService.invalidate(
                 Anime::class.java,
                 EpisodeMapping::class.java,
                 EpisodeVariant::class.java,
@@ -132,7 +132,7 @@ class FetchOldEpisodesJob : AbstractJob {
 
         config.propertyValue = from.toString()
         configService.update(config)
-        MapCache.invalidate(Config::class.java)
+        InvalidationService.invalidate(Config::class.java)
         traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
 
         log(emailLogs, Level.INFO, "Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")

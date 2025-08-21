@@ -1,9 +1,10 @@
 package fr.shikkanime.dtos.member
 
+import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
-import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import java.io.Serializable
 
 data class RefreshMemberDto(
     val missedAnimes: PageableDto<MissedAnimeDto>,
@@ -11,4 +12,4 @@ data class RefreshMemberDto(
     val followedEpisodes: PageableDto<EpisodeMappingDto>,
     val totalDuration: Long,
     val totalUnseenDuration: Long,
-)
+) : Serializable

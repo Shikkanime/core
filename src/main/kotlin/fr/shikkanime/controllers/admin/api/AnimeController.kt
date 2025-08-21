@@ -13,7 +13,7 @@ import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.admin.AnimeAdminService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -35,7 +35,7 @@ class AnimeController : HasPageableRoute() {
     @AdminSessionAuthenticated
     private fun forceUpdateAllAnimes(): Response {
         animeAdminService.forceUpdateAll()
-        MapCache.invalidate(Anime::class.java)
+        InvalidationService.invalidate(Anime::class.java)
         return Response.redirect(Link.ANIMES.href)
     }
 
@@ -44,7 +44,7 @@ class AnimeController : HasPageableRoute() {
     @AdminSessionAuthenticated
     private fun forceUpdateAnime(@PathParam uuid: UUID): Response {
         animeAdminService.forceUpdate(uuid) ?: return Response.notFound()
-        MapCache.invalidate(Anime::class.java)
+        InvalidationService.invalidate(Anime::class.java)
         return Response.ok()
     }
 
@@ -67,7 +67,7 @@ class AnimeController : HasPageableRoute() {
         @BodyParam animeDto: AnimeDto
     ): Response {
         val updated = animeAdminService.update(uuid, animeDto) ?: return Response.notFound()
-        MapCache.invalidate(Anime::class.java)
+        InvalidationService.invalidate(Anime::class.java)
         return Response.ok(animeFactory.toDto(updated))
     }
 
@@ -76,7 +76,7 @@ class AnimeController : HasPageableRoute() {
     @AdminSessionAuthenticated
     private fun deleteAnime(@PathParam uuid: UUID): Response {
         animeAdminService.delete(animeService.find(uuid) ?: return Response.notFound())
-        MapCache.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
+        InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.noContent()
     }
 

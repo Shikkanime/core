@@ -107,7 +107,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, id: Int): List<Episode> {
+    override suspend fun getEpisodesByShowId(locale: String, id: Int): Array<Episode> {
         val show = getShow(locale, id)
         val seasonsResponse = fetchSeasonsData(locale, id, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
@@ -116,7 +116,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             createMovieEpisode(show, id)
         } else {
             createSeriesEpisodes(locale, show, firstVideoObject)
-        }
+        }.toTypedArray()
     }
 
     private suspend fun fetchSeasonsData(locale: String, id: Int, seasonCount: Int): HttpResponse {

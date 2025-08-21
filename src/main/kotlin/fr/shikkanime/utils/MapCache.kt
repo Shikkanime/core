@@ -1,94 +1,83 @@
 package fr.shikkanime.utils
 
-import io.ktor.util.collections.*
+import com.google.gson.reflect.TypeToken
+import fr.shikkanime.utils.strategies.InMemoryCacheStrategy
+import fr.shikkanime.utils.strategies.ValkeyCacheStrategy
+import java.io.Serializable
 import java.time.Duration
 
 private val defaultCacheDuration: Duration = Duration.ofDays(1)
+private val defaultSerializationType = SerializationUtils.SerializationType.JSON
 
-class MapCache<K : Any, V>(
+data class MapCacheValue<V : Serializable>(
+    val timestamp: Long,
+    val value: V
+) : Serializable
+
+class MapCache<K : Any, V : Serializable>(
     name: String,
     private var duration: Duration = defaultCacheDuration,
-    private val classes: List<Class<*>> = emptyList(),
-    private val block: (K) -> V,
-) {
-    private val cache: ConcurrentMap<K, Pair<Long, V>> = ConcurrentMap()
+    classes: List<Class<*>> = emptyList(),
+    typeToken: TypeToken<MapCacheValue<V>>,
+    serializationType: SerializationUtils.SerializationType = defaultSerializationType,
+    private val block: (K) -> V?,
+) : InvalidationService(classes) {
+    private val cacheStrategy = if (!AsynchronizedGlideClient.isAvailable()) InMemoryCacheStrategy<K, MapCacheValue<V>>() else ValkeyCacheStrategy<K, MapCacheValue<V>>(name, serializationType, typeToken)
 
     init {
-        globalCaches[name] = this
+        register(name, this)
     }
 
-    fun containsKey(key: K) = cache.containsKey(key)
-
-    private fun needInvalidation(key: K): Boolean {
-        val (timestamp, _) = cache[key] ?: return false
-        return System.currentTimeMillis() - timestamp > duration.toMillis()
-    }
+    fun containsKey(key: K) = cacheStrategy.containsKey(key)
 
     operator fun get(key: K): V? {
-        val cachedValue = cache[key]
+        val cachedValue = cacheStrategy[key]
 
-        if (cachedValue == null || needInvalidation(key)) {
+        if (cachedValue == null || System.currentTimeMillis() - cachedValue.timestamp > duration.toMillis()) {
             val newValue = block(key)
-            cache[key] = System.currentTimeMillis() to newValue
+
+            if (newValue != null)
+                cacheStrategy.put(key, MapCacheValue(System.currentTimeMillis(), newValue))
+            else
+                cacheStrategy.remove(key)
+
             return newValue
         }
 
-        return cachedValue.second
+        return cachedValue.value
     }
 
-    fun setIfNotExists(key: K, value: V & Any) {
-        if (!containsKey(key))
-            cache.put(key, System.currentTimeMillis() to value)
+    fun putIfNotExists(key: K, value: V) {
+        cacheStrategy.putIfNotExists(key, MapCacheValue(System.currentTimeMillis(), value))
     }
 
-    fun invalidate() {
-        cache.clear()
-    }
-
-    fun removeInvalidated() {
-        val now = System.currentTimeMillis()
-
-        cache.filter { (_, value) -> now - value.first > duration.toMillis() }
-            .toMap()
-            .forEach { (key, _) -> cache.remove(key) }
+    override fun invalidate() {
+        cacheStrategy.clear()
     }
 
     companion object {
-        private val globalCaches: ConcurrentMap<String, MapCache<*, *>> = ConcurrentMap()
-
-        fun invalidate(vararg classes: Class<*>) {
-            globalCaches.forEach { (_, cache) ->
-                if (cache.classes.any { clazz -> clazz in classes })
-                    cache.invalidate()
-                cache.removeInvalidated()
-            }
-        }
-
-        // For test only
-        fun invalidateAll() {
-            globalCaches.forEach { (_, cache) ->
-                cache.invalidate()
-            }
-        }
-
-        fun <K : Any, V : Any?> getOrComputeNullable(
+        fun <K : Any, V : Serializable> getOrComputeNullable(
             name: String,
             duration: Duration = defaultCacheDuration,
             classes: List<Class<*>> = emptyList(),
+            typeToken: TypeToken<MapCacheValue<V>>,
+            serializationType: SerializationUtils.SerializationType = defaultSerializationType,
             key: K,
-            block: (K) -> V
+            block: (K) -> V?
         ): V? {
             @Suppress("UNCHECKED_CAST")
-            val mapCache = globalCaches[name] as? MapCache<K, V> ?: MapCache(name, duration, classes, block)
+            val mapCache = getByNameAndType(name, MapCache::class) as? MapCache<K, V> ?: MapCache(name, duration, classes, typeToken, serializationType, block)
             return mapCache[key]
         }
 
-        fun <K : Any, V> getOrCompute(
+        fun <K : Any, V : Serializable> getOrCompute(
             name: String,
             duration: Duration = defaultCacheDuration,
             classes: List<Class<*>> = emptyList(),
+            typeToken: TypeToken<MapCacheValue<V>>,
+            serializationType: SerializationUtils.SerializationType = defaultSerializationType,
             key: K,
             block: (K) -> V
-        ) = getOrComputeNullable(name, duration, classes, key, block)!!
+        ) = getOrComputeNullable(name, duration, classes, typeToken, serializationType, key, block)!!
     }
 }

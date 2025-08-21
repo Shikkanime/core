@@ -13,7 +13,7 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -91,7 +91,7 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun invalidateSimulcasts(): Response {
         animeService.recalculateSimulcasts()
-        MapCache.invalidate(
+        InvalidationService.invalidate(
             Anime::class.java,
             EpisodeMapping::class.java,
             EpisodeVariant::class.java,

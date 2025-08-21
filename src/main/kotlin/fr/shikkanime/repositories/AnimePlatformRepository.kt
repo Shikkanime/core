@@ -3,18 +3,20 @@ package fr.shikkanime.repositories
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.AnimePlatform_
+import fr.shikkanime.entities.Anime_
 import fr.shikkanime.entities.enums.Platform
+import java.util.*
 
 class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
     override fun getEntityClass() = AnimePlatform::class.java
 
-    fun findAllByAnime(anime: Anime): List<AnimePlatform> {
+    fun findAllByAnime(uuid: UUID): List<AnimePlatform> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
-            query.where(cb.equal(root[AnimePlatform_.anime], anime))
+            query.where(cb.equal(root[AnimePlatform_.anime][Anime_.uuid], uuid))
 
             createReadOnlyQuery(it, query)
                 .resultList

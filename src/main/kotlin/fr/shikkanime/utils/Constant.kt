@@ -54,6 +54,8 @@ object Constant {
     const val DEFAULT_CACHE_DURATION = 31536000 // 1 year
     const val MAX_DESCRIPTION_LENGTH = 1_000
     val oldLastUpdateDateTime: ZonedDateTime = ZonedDateTime.parse("2000-01-01T00:00:00Z")
+    val valkeyHost: String = System.getenv("VALKEY_HOST") ?: "localhost"
+    val valkeyPort: Int = (System.getenv("VALKEY_PORT")?.toIntOrNull() ?: 6379)
 
     init {
         abstractPlatforms.forEach {

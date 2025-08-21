@@ -2,13 +2,14 @@ package fr.shikkanime.dtos
 
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.factories.IGenericFactory
+import java.io.Serializable
 
 data class PageableDto<T>(
     val data: Set<T>,
     val page: Int,
     val limit: Int,
     val total: Long,
-) {
+) : Serializable {
     companion object {
         fun <T> empty(): PageableDto<T> {
             return PageableDto(

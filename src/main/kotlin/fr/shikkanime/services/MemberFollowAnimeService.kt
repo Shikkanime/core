@@ -8,7 +8,7 @@ import fr.shikkanime.entities.MemberFollowAnime
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.MemberFollowAnimeRepository
 import fr.shikkanime.services.caches.MemberCacheService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.Response
 import java.util.*
 
@@ -41,7 +41,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
         val saved = save(MemberFollowAnime(member = member, anime = element))
         traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
-        MapCache.invalidate(MemberFollowAnime::class.java)
+        InvalidationService.invalidate(MemberFollowAnime::class.java)
         return Response.ok()
     }
 
@@ -54,7 +54,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
         memberFollowAnimeRepository.delete(findByMemberAndAnime)
         traceActionService.createTraceAction(findByMemberAndAnime, TraceAction.Action.DELETE)
-        MapCache.invalidate(MemberFollowAnime::class.java)
+        InvalidationService.invalidate(MemberFollowAnime::class.java)
         return Response.ok()
     }
 }

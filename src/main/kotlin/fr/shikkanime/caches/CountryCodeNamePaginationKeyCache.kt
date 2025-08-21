@@ -35,6 +35,6 @@ data class CountryCodeNamePaginationKeyCache(
     }
 
     override fun toString(): String {
-        return "CountryCodeNamePaginationKeyCache(countryCode=$countryCode, name='$name', page=$page, limit=$limit, searchTypes=${searchTypes?.contentToString()})"
+        return "$countryCode,'$name',$page,$limit,${searchTypes?.contentToString()}"
     }
 }

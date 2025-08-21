@@ -42,7 +42,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): List<Episode> {
+    override suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode> {
         val show = getShow(showId)
         val episodes = mutableListOf<Episode>()
 
@@ -73,7 +73,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
                         val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
                         val resourceId = actionJsonObject.getAsString("resourceId")!!
-                        val audioLocales = if (checkAudioLocales) getAudioLocales(resourceId) else setOf("ja-JP")
+                        val audioLocales = if (checkAudioLocales) getAudioLocales(resourceId) else arrayOf("ja-JP")
 
                         episodes.add(
                             Episode(
@@ -98,10 +98,10 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             } while (hasMore)
         }
 
-        return episodes
+        return episodes.toTypedArray()
     }
 
-    override suspend fun getAudioLocales(resourceId: String): Set<String> {
+    override suspend fun getAudioLocales(resourceId: String): Array<String> {
         val headers = mapOf(
             "x-application-version" to "1.1.2",
             "x-bamsdk-client-id" to "disney-svod-3d9324fc",
@@ -153,11 +153,12 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             .mapNotNull { it.asJsonObject.getAsString("language") }
             .toSet()
 
-        if (subtitleLocales.none { it in supportedLanguages }) return emptySet()
+        if (subtitleLocales.none { it in supportedLanguages }) return emptyArray()
 
         return audioLocales
             .map { if (it == "ja") "ja-JP" else it }
             .filter { it == "ja-JP" || it in supportedLanguages }
             .toSet()
+            .toTypedArray()
     }
 }

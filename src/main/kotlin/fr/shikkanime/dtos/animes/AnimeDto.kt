@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
+import java.io.Serializable
 import java.util.*
 
 data class AnimeDto(
@@ -25,4 +26,4 @@ data class AnimeDto(
     var thumbnail: String? = null,
     var banner: String? = null,
     var carousel: String? = null,
-)
+) : Serializable

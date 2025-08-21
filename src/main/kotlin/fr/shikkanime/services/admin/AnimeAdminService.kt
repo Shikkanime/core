@@ -136,16 +136,14 @@ class AnimeAdminService : IAdminService {
     }
 
     fun getAlerts(page: Int, limit: Int): PageableDto<AnimeAlertDto> {
-        val allSeasons = animeService.findAllSeasons()
-        val allAudioLocales = animeService.findAllAudioLocales()
         val invalidAnimes = mutableMapOf<Anime, Pair<ZonedDateTime, MutableSet<AnimeError>>>()
 
         animeService.findAll().forEach { anime ->
-            val animeSeasons = allSeasons[anime.uuid!!] ?: return@forEach
+            val seasons = animeService.findAllSeasons(anime.uuid!!)
 
-            animeSeasons.map { it.key }.toSortedSet().zipWithNext().forEach { (current, next) ->
+            seasons.map { it.key }.toSortedSet().zipWithNext().forEach { (current, next) ->
                 if (current + 1 != next) {
-                    invalidAnimes.getOrPut(anime) { (animeSeasons[current] ?: ZonedDateTime.now()) to mutableSetOf() }.second
+                    invalidAnimes.getOrPut(anime) { (seasons[current] ?: ZonedDateTime.now()) to mutableSetOf() }.second
                         .add(AnimeError(ErrorType.INVALID_CHAIN_SEASON, "$current -> $next"))
                 }
             }
@@ -163,7 +161,7 @@ class AnimeAdminService : IAdminService {
             ).groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
             .values.forEach { episodes ->
                 val anime = episodes.first().anime!!
-                val audioLocales = allAudioLocales[anime.uuid!!] ?: return@forEach
+                val audioLocales = animeService.findAllAudioLocales(anime.uuid!!)
 
                 if (episodes.first().episodeType == EpisodeType.EPISODE) {
                     episodes.groupBy { it.releaseDateTime.toLocalDate() }

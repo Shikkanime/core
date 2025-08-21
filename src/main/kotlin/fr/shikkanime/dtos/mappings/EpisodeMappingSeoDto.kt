@@ -1,6 +1,7 @@
 package fr.shikkanime.dtos.mappings
 
 import fr.shikkanime.entities.enums.EpisodeType
+import java.io.Serializable
 import java.time.ZonedDateTime
 
 data class EpisodeMappingSeoDto(
@@ -9,4 +10,4 @@ data class EpisodeMappingSeoDto(
     val episodeType: EpisodeType,
     val number: Int,
     val lastReleaseDateTime: ZonedDateTime
-)
+) : Serializable

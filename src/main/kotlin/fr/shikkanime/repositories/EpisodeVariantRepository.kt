@@ -178,13 +178,14 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findByIdentifier(identifier: String): EpisodeVariant? {
+    fun findReleaseDateTimeByIdentifier(identifier: String): ZonedDateTime? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
 
-            val query = cb.createQuery(getEntityClass())
+            val query = cb.createQuery(ZonedDateTime::class.java)
             val root = query.from(getEntityClass())
 
+            query.select(root[EpisodeVariant_.releaseDateTime])
             query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
 
             createReadOnlyQuery(it, query)

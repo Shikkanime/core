@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.factories
 
 import fr.shikkanime.utils.HttpRequest
+import java.io.Serializable
 
 abstract class AbstractPrimeVideoWrapper {
     data class Show(
@@ -9,7 +10,7 @@ abstract class AbstractPrimeVideoWrapper {
         val banner: String,
         val carousel: String,
         val description: String?,
-    )
+    ) : Serializable
 
     data class Season(
         val id: String,
@@ -31,10 +32,10 @@ abstract class AbstractPrimeVideoWrapper {
         val duration: Long,
         val audioLocales: Set<String>,
         val subtitleLocales: Set<String>,
-    )
+    ) : Serializable
 
     protected val baseUrl = "https://www.primevideo.com"
     protected val httpRequest = HttpRequest()
 
-    abstract suspend fun getEpisodesByShowId(locale: String, id: String): List<Episode>
+    abstract suspend fun getEpisodesByShowId(locale: String, id: String): Array<Episode>
 }
