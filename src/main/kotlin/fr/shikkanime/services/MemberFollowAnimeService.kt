@@ -9,10 +9,13 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.MemberFollowAnimeRepository
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.Response
 import java.util.*
 
 class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollowAnimeRepository>() {
+    private val tracer = TelemetryConfig.getTracer("MemberFollowAnimeService")
     @Inject private lateinit var memberFollowAnimeRepository: MemberFollowAnimeRepository
     @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var animeService: AnimeService
@@ -20,22 +23,24 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
 
     override fun getRepository() = memberFollowAnimeRepository
 
-    fun findAllFollowedAnimes(member: Member, page: Int, limit: Int) = memberFollowAnimeRepository.findAllFollowedAnimes(member, page, limit)
+    fun findAllFollowedAnimes(member: Member, page: Int, limit: Int) = tracer.trace { memberFollowAnimeRepository.findAllFollowedAnimes(member, page, limit) }
 
-    fun findAllFollowedAnimesUUID(memberUuid: UUID) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(memberUuid)
+    fun findAllFollowedAnimesUUID(memberUuid: UUID) = tracer.trace { memberFollowAnimeRepository.findAllFollowedAnimesUUID(memberUuid) }
 
     fun findAllByAnime(anime: Anime) = memberFollowAnimeRepository.findAllByAnime(anime)
 
     fun findAllMissedAnimes(member: Member, page: Int, limit: Int) =
-        memberFollowAnimeRepository.findAllMissedAnimes(member, page, limit)
+        tracer.trace { memberFollowAnimeRepository.findAllMissedAnimes(member, page, limit) }
 
-    fun existsByMemberAndAnime(member: Member, anime: Anime) = memberFollowAnimeRepository.existsByMemberAndAnime(member, anime)
+    fun existsByMemberAndAnime(member: Member, anime: Anime) = tracer.trace { memberFollowAnimeRepository.existsByMemberAndAnime(member, anime) }
+
+    fun findByMemberAndAnime(member: Member, anime: Anime) = tracer.trace { memberFollowAnimeRepository.findByMemberAndAnime(member, anime) }
 
     fun follow(memberUuid: UUID, anime: GenericDto): Response {
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
-        if (memberFollowAnimeRepository.existsByMemberAndAnime(member, element)) {
+        if (existsByMemberAndAnime(member, element)) {
             return Response.conflict()
         }
 
@@ -49,7 +54,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
         val member = memberCacheService.find(memberUuid) ?: return Response.notFound()
         val element = animeService.find(anime.uuid) ?: return Response.notFound()
 
-        val findByMemberAndAnime = memberFollowAnimeRepository.findByMemberAndAnime(member, element)
+        val findByMemberAndAnime = findByMemberAndAnime(member, element)
             ?: return Response.conflict()
 
         memberFollowAnimeRepository.delete(findByMemberAndAnime)

@@ -5,6 +5,8 @@ import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.entities.Member
 import fr.shikkanime.services.MemberActionService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.JWTAuthenticated
 import fr.shikkanime.utils.routes.Path
@@ -16,6 +18,7 @@ import java.util.*
 
 @Controller("/api/v1/member-actions")
 class MemberActionController {
+    private val tracer = TelemetryConfig.getTracer("MemberActionController")
     @Inject private lateinit var memberActionService: MemberActionService
 
     @Path("/validate")
@@ -31,7 +34,7 @@ class MemberActionController {
             return Response.badRequest(MessageDto.error("Action is required"))
 
         try {
-            memberActionService.validateAction(uuid!!, action)
+            tracer.trace { memberActionService.validateAction(uuid!!, action) }
             MapCache.invalidate(Member::class.java)
             return Response.ok()
         } catch (e: Exception) {

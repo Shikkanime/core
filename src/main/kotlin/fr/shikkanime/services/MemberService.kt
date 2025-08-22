@@ -9,10 +9,8 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.factories.impl.MemberFactory
 import fr.shikkanime.repositories.MemberRepository
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.RandomManager
+import fr.shikkanime.utils.*
+import fr.shikkanime.utils.TelemetryConfig.trace
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
@@ -24,7 +22,7 @@ import javax.imageio.ImageIO
 
 class MemberService : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
-
+    private val tracer = TelemetryConfig.getTracer("MemberService")
     @Inject private lateinit var memberRepository: MemberRepository
     @Inject private lateinit var memberActionService: MemberActionService
     @Inject private lateinit var traceActionService: TraceActionService
@@ -45,7 +43,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
     fun findByIdentifier(identifier: String) =
-        memberRepository.findByIdentifier(EncryptionManager.toSHA512(identifier))
+        tracer.trace { memberRepository.findByIdentifier(EncryptionManager.toSHA512(identifier)) }
 
     fun findByEmail(email: String) = memberRepository.findByEmail(email)
 
@@ -71,32 +69,35 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     }
 
     fun register(identifier: String): Member {
-        val saved = save(
-            Member(
-                isPrivate = true,
-                username = EncryptionManager.toSHA512(identifier),
-                encryptedPassword = byteArrayOf()
+        return tracer.trace {
+            val saved = save(
+                Member(
+                    isPrivate = true,
+                    username = EncryptionManager.toSHA512(identifier),
+                    encryptedPassword = byteArrayOf()
+                )
             )
-        )
 
-        traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
-        return saved
+            traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
+            saved
+        }
     }
 
     fun login(identifier: String, appVersion: String? = null, device: String? = null, locale: String? = null): MemberDto? {
-        val member = findByIdentifier(identifier) ?: return null
+        return tracer.trace {
+            val member = findByIdentifier(identifier) ?: return@trace null
 
-        val traceData = if (!appVersion.isNullOrBlank() && !device.isNullOrBlank() && !locale.isNullOrBlank()) {
-            ObjectParser.toJson(mapOf(
-                "appVersion" to appVersion,
-                "device" to device,
-                "locale" to locale
-            ))
-        } else null
+            val traceData = if (!appVersion.isNullOrBlank() && !device.isNullOrBlank() && !locale.isNullOrBlank()) {
+                ObjectParser.toJson(mapOf(
+                    "appVersion" to appVersion,
+                    "device" to device,
+                    "locale" to locale
+                ))
+            } else null
 
-        traceActionService.createTraceAction(member, TraceAction.Action.LOGIN, traceData)
-
-        return memberFactory.toDto(member)
+            traceActionService.createTraceAction(member, TraceAction.Action.LOGIN, traceData)
+            memberFactory.toDto(member)
+        }
     }
 
     fun associateEmail(memberUuid: UUID, email: String): UUID {

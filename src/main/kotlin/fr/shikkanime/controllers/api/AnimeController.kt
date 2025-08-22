@@ -7,6 +7,8 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.MemberFollowAnimeCacheService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.TelemetryConfig
+import fr.shikkanime.utils.TelemetryConfig.trace
 import fr.shikkanime.utils.atStartOfWeek
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
@@ -17,6 +19,7 @@ import java.util.*
 
 @Controller("/api/v1/animes")
 class AnimeController : HasPageableRoute() {
+    private val tracer = TelemetryConfig.getTracer("AnimeController")
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var memberFollowAnimeCacheService: MemberFollowAnimeCacheService
 
@@ -46,17 +49,17 @@ class AnimeController : HasPageableRoute() {
             desc
         )
 
-        return Response.ok(
-            if (memberUuid != null) {
-                memberFollowAnimeCacheService.findAllBy(memberUuid, page, limit)
-            } else {
-                if (!name.isNullOrBlank()) {
+        return tracer.trace {
+            Response.ok(
+                if (memberUuid != null) {
+                    memberFollowAnimeCacheService.findAllBy(memberUuid, page, limit)
+                } else if (!name.isNullOrBlank()) {
                     animeCacheService.findAllByName(countryCode, name, page, limit, searchTypes)
                 } else {
                     animeCacheService.findAllBy(countryCode, simulcastUuid, sortParams, page, limit, searchTypes)
                 }
-            }
-        )
+            )
+        }
     }
 
     @Path("/weekly")
@@ -74,7 +77,7 @@ class AnimeController : HasPageableRoute() {
             return Response.badRequest(MessageDto.error("Invalid week format"))
         }.atStartOfWeek()
 
-        return Response.ok(animeCacheService.getWeeklyAnimes(country, memberUuid, startOfWeekDay, searchTypes))
+        return tracer.trace { Response.ok(animeCacheService.getWeeklyAnimes(country, memberUuid, startOfWeekDay, searchTypes)) }
     }
 
     @Path("/missed")
@@ -86,6 +89,6 @@ class AnimeController : HasPageableRoute() {
         @QueryParam("limit", "9") limitParam: Int
     ): Response {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(memberFollowAnimeCacheService.getMissedAnimes(uuid, page, limit))
+        return tracer.trace { Response.ok(memberFollowAnimeCacheService.getMissedAnimes(uuid, page, limit)) }
     }
 }
