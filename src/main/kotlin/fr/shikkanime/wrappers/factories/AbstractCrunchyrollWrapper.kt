@@ -191,7 +191,7 @@ abstract class AbstractCrunchyrollWrapper {
                 "${baseUrl}auth/v1/token",
                 headers = mapOf(
                     HttpHeaders.ContentType to "application/x-www-form-urlencoded",
-                    HttpHeaders.Authorization to "Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=",
+                    HttpHeaders.Authorization to "Basic bjBxMm54bDM3emlnMGRxbjBhaW86UDBqM2hlNE44VUc4VzJ3MC1QdkRhZGpHdXY2MmZOMmQ=",
                     "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
                 ),
                 body = "grant_type=client_id&client_id=offline_access"
