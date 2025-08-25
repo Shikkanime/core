@@ -7,7 +7,7 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
@@ -29,7 +29,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         )
 
-        MapCache.invalidate(Config::class.java)
+        InvalidationService.invalidate(Config::class.java)
     }
 
     data class TestCase(
@@ -359,7 +359,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         )
 
-        MapCache.invalidate(Config::class.java)
+        InvalidationService.invalidate(Config::class.java)
 
         val zonedDateTime = ZonedDateTime.now().minusMonths(2)
         
@@ -403,7 +403,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
             )
         }
 
-        MapCache.invalidateAll()
+        InvalidationService.invalidateAll()
 
         // Run the job
         updateEpisodeMappingJob.run()

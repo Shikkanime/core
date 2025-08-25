@@ -7,7 +7,7 @@ import fr.shikkanime.dtos.RuleDto
 import fr.shikkanime.entities.Rule
 import fr.shikkanime.factories.impl.RuleFactory
 import fr.shikkanime.services.RuleService
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -37,7 +37,7 @@ class RuleController {
             Response.badRequest(MessageDto.error("UUID must be null"))
 
         val rule = ruleService.save(ruleFactory.toEntity(ruleDto))
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
         return Response.ok(ruleFactory.toDto(rule))
     }
 
@@ -47,7 +47,7 @@ class RuleController {
     private fun deleteRule(@PathParam uuid: UUID): Response {
         val rule = ruleService.find(uuid) ?: return Response.notFound()
         ruleService.delete(rule)
-        MapCache.invalidate(Rule::class.java)
+        InvalidationService.invalidate(Rule::class.java)
         return Response.noContent()
     }
 }
