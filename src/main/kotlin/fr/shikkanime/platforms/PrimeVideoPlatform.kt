@@ -3,6 +3,7 @@ package fr.shikkanime.platforms
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
@@ -78,8 +79,11 @@ class PrimeVideoPlatform :
                 countryCode = countryCode,
                 animeId = episode.show.id,
                 anime = episode.show.name,
-                animeImage = showImage,
-                animeBanner = episode.show.banner,
+                animeAttachments = mapOf(
+                    ImageType.THUMBNAIL to showImage,
+                    ImageType.BANNER to episode.show.banner,
+                    ImageType.CAROUSEL to episode.show.carousel
+                ),
                 animeDescription = episode.show.description,
                 releaseDateTime = zonedDateTime,
                 episodeType = episodeType,

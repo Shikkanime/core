@@ -157,7 +157,8 @@ class UpdateAnimeJob : AbstractJob {
             lastReleaseDateTime = showVideos.maxOf { it.releaseDate!! },
             attachments = mapOf(
                 ImageType.THUMBNAIL to show.fullHDImage,
-                ImageType.BANNER to show.fullHDBanner
+                ImageType.BANNER to show.fullHDBanner,
+                ImageType.CAROUSEL to show.fullHDCarousel
             ),
             description = show.summary,
             episodeSize = showVideos.size
@@ -188,10 +189,11 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.CRUN,
             lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
-            attachments = buildMap {
-                put(ImageType.THUMBNAIL, series.images!!.fullHDImage!!)
-                put(ImageType.BANNER, series.images.fullHDBanner!!)
-            },
+            attachments = mapOf(
+                ImageType.THUMBNAIL to series.images!!.fullHDImage!!,
+                ImageType.BANNER to series.images.fullHDBanner!!,
+                ImageType.CAROUSEL to series.fullHDCarousel
+            ),
             description = series.getNormalizedDescription(),
             episodeSize = objects.size
         )
@@ -208,10 +210,11 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.DISN,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            attachments = buildMap {
-                put(ImageType.THUMBNAIL, show.image)
-                put(ImageType.BANNER, show.banner)
-            },
+            attachments = mapOf(
+                ImageType.THUMBNAIL to show.image,
+                ImageType.BANNER to show.banner,
+                ImageType.CAROUSEL to show.carousel
+            ),
             description = show.description,
             episodeSize = episodes.size
         )
@@ -236,6 +239,7 @@ class UpdateAnimeJob : AbstractJob {
             attachments = buildMap {
                 show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
                 put(ImageType.BANNER, show.banner)
+                put(ImageType.CAROUSEL, show.carousel)
             },
             description = show.description,
             episodeSize = episodes.size
@@ -258,7 +262,10 @@ class UpdateAnimeJob : AbstractJob {
         return UpdatableAnime(
             platform = Platform.PRIM,
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            attachments = buildMap { put(ImageType.BANNER, show.banner) },
+            attachments = mapOf(
+                ImageType.BANNER to show.banner,
+                ImageType.CAROUSEL to show.carousel
+            ),
             description = show.description,
             episodeSize = episodes.size
         )

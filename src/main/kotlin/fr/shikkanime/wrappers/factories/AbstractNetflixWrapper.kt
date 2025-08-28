@@ -15,7 +15,7 @@ abstract class AbstractNetflixWrapper {
     data class ShowMetadata(
         val thumbnail: String?,
         val banner: String?,
-        val cover: String?,
+        val carousel: String?,
         val episodes: List<EpisodeMetadata>,
     )
 
@@ -24,6 +24,7 @@ abstract class AbstractNetflixWrapper {
         val name: String,
         val thumbnail: String?,
         val banner: String,
+        val carousel: String,
         val description: String?,
         val seasonCount: Int?,
         val availabilityStartTime: ZonedDateTime?,

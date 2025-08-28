@@ -170,8 +170,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             ).apply {
                 // Create attachments for the anime if not in test mode
                 if (!Constant.isTest) {
-                    attachmentService.createAttachmentOrMarkAsActive(uuid!!, ImageType.THUMBNAIL, url = episode.animeImage, async = async)
-                    attachmentService.createAttachmentOrMarkAsActive(uuid, ImageType.BANNER, url = episode.animeBanner, async = async)
+                    episode.animeAttachments.forEach { (imageType, url) ->
+                        attachmentService.createAttachmentOrMarkAsActive(uuid!!, imageType, url = url, async = async)
+                    }
                 }
             }
 

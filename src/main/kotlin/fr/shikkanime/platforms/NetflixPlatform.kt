@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
@@ -73,8 +74,11 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         countryCode = countryCode,
         animeId = episode.show.id.toString(),
         anime = episode.show.name,
-        animeImage = episode.show.thumbnail ?: showImage,
-        animeBanner = episode.show.banner,
+        animeAttachments = mapOf(
+            ImageType.THUMBNAIL to (episode.show.thumbnail ?: showImage),
+            ImageType.BANNER to episode.show.banner,
+            ImageType.CAROUSEL to episode.show.carousel
+        ),
         animeDescription = episode.show.description,
         releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
         episodeType = episodeType,

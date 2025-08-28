@@ -29,13 +29,14 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             ?.toSet() ?: emptySet()
 
         val showObject = jsonObject.getAsJsonObject("visuals")
-        val tileObject = showObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!.getAsJsonObject("tile")!!
+        val standardArtworkTile = showObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!
 
         return Show(
             id = id,
             name = showObject.getAsString("title")!!,
-            image = getImageUrl(tileObject.getAsJsonObject("0.71")!!.getAsString("imageId")!!),
-            banner = getImageUrl(tileObject.getAsJsonObject("1.33")!!.getAsString("imageId")!!),
+            image = getImageUrl(standardArtworkTile.getAsJsonObject("tile")!!.getAsJsonObject("0.71")!!.getAsString("imageId")!!),
+            banner = getImageUrl(standardArtworkTile.getAsJsonObject("tile")!!.getAsJsonObject("1.33")!!.getAsString("imageId")!!),
+            carousel = getImageUrl(standardArtworkTile.getAsJsonObject("background")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
             description = showObject.getAsJsonObject("description")?.getAsString("full"),
             seasons = seasons
         )

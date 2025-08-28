@@ -7,6 +7,7 @@ import java.time.ZonedDateTime
 abstract class AbstractAnimationDigitalNetworkWrapper {
     companion object {
         private val sizeRegex = "\\d+x\\d+".toRegex()
+        private val licenceSizeRegex = "\\d+x\\d+".toRegex()
     }
 
     data class Microdata(
@@ -29,6 +30,8 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
             get() = image2x.replace(sizeRegex, "1560x2340")
         val fullHDBanner: String
             get() = imageHorizontal2x.replace(sizeRegex, "1920x1080")
+        val fullHDCarousel: String
+            get() = imageHorizontal2x.replace("license_", "carousel169_").replace(licenceSizeRegex, "1920x1080")
     }
 
     data class Video(
