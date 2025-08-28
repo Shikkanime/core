@@ -95,7 +95,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             id,
             showJson.getAsString("title")!!,
             metadata?.thumbnail,
-            metadata?.banner ?: showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
+            metadata?.banner ?: showJson.getAsJsonObject("boxartHighRes")!!.getAsString("url")!!.substringBefore("?"),
+            metadata?.carousel ?: showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
             showJson.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
@@ -165,7 +166,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.name.normalize(),
                 show.description?.normalize(),
                 "$baseUrl/watch/${show.id}",
-                show.metadata?.cover ?: show.banner.substringBefore("?"),
+                show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!
             )
         )

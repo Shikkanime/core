@@ -1,10 +1,7 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -191,8 +188,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             countryCode = countryCode,
             animeId = browseObject.episodeMetadata.seriesId,
             anime = animeName,
-            animeImage = crunchyrollAnimeContent.images!!.fullHDImage!!,
-            animeBanner = crunchyrollAnimeContent.images.fullHDBanner!!,
+            animeAttachments = mapOf(
+                ImageType.THUMBNAIL to crunchyrollAnimeContent.images!!.fullHDImage!!,
+                ImageType.BANNER to crunchyrollAnimeContent.images.fullHDBanner!!,
+                ImageType.CAROUSEL to crunchyrollAnimeContent.fullHDCarousel,
+            ),
             animeDescription = crunchyrollAnimeContent.getNormalizedDescription().normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,

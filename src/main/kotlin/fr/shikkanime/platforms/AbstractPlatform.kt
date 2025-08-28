@@ -2,6 +2,7 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformConfiguration
 import fr.shikkanime.utils.*
@@ -15,8 +16,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val countryCode: CountryCode,
         val animeId: String,
         var anime: String,
-        val animeImage: String,
-        val animeBanner: String,
+        val animeAttachments: Map<ImageType, String>,
         val animeDescription: String?,
         var releaseDateTime: ZonedDateTime,
         var episodeType: EpisodeType,
@@ -39,7 +39,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
 
     val logger = LoggerFactory.getLogger(javaClass)
     var configuration: C? = null
-    val apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
+    val apiCache = mutableMapOf<K, Pair<ZonedDateTime, V>>()
 
     protected fun isBlacklisted(name: String): Boolean {
         val shortName = StringUtils.getShortName(name)
@@ -56,22 +56,27 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         apiCache.clear()
     }
 
-    fun getApiContent(key: K, zonedDateTime: ZonedDateTime): V {
-        val entry = apiCache.entries.firstOrNull { it.key.first == key }
+    private fun isEntryExpired(lastFetch: ZonedDateTime, currentTime: ZonedDateTime): Boolean {
+        val expirationTime = lastFetch.plusMinutes(configuration!!.apiCheckDelayInMinutes)
+        return currentTime.isAfterOrEqual(expirationTime)
+    }
 
-        if (entry == null || zonedDateTime.isAfterOrEqual(entry.key.second.plusMinutes(configuration!!.apiCheckDelayInMinutes))) {
-            val values = runBlocking { fetchApiContent(key, zonedDateTime) }
+    fun getApiContent(key: K, currentTime: ZonedDateTime): V {
+        val normalizedTime = currentTime.withSecond(0).withNano(0)
+        val cacheEntry = apiCache[key]
+        val (lastFetch, cachedValue) = cacheEntry ?: (normalizedTime to null)
 
-            if (values == null) {
-                logger.warning("API content is null for $key")
-                return values
-            }
+        if (cachedValue == null || isEntryExpired(lastFetch, normalizedTime)) {
+            val result = runCatching { runBlocking { fetchApiContent(key, normalizedTime) } }
+                .getOrElse { exception ->
+                    logger.warning("Error fetching API content for key $key on ${getPlatform().name}: ${exception.message}")
+                    throw exception
+                }
 
-            apiCache.remove(entry?.key)
-            apiCache[Pair(key, zonedDateTime)] = values
+            apiCache[key] = normalizedTime to result
         }
 
-        return apiCache.entries.firstOrNull { it.key.first == key }!!.value
+        return apiCache[key]?.second ?: throw IllegalStateException("Cache entry for key $key should not be null here")
     }
 
     fun loadConfiguration(): C {
