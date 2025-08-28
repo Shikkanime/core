@@ -11,6 +11,7 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
@@ -221,14 +222,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
         mockkStatic(CrunchyrollWrapper::class) {
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getUpNext(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } returns expectedEpisode
+            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } returns expectedEpisode
             val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
             assertEquals(expectedEpisode, result)
         }
@@ -263,30 +257,9 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
         mockkStatic(CrunchyrollWrapper::class) {
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getUpNext(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } throws Exception()
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticEpisode(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } returns episode
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticObjects(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } returns listOf(expectedEpisode)
+            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
+            coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
             val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
             assertEquals(expectedEpisode, result)
         }
@@ -327,38 +300,10 @@ class CrunchyrollPlatformTest : AbstractTest() {
         every { nextEpisode.convertToBrowseObject() } returns expectedEpisode
 
         mockkStatic(CrunchyrollWrapper::class) {
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getUpNext(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } throws Exception()
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticEpisode(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } returns episode
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(
-                        any(String::class),
-                        any(String::class),
-                    )
-                }
-            } returns listOf(nextEpisode)
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticObjects(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } returns listOf(expectedEpisode)
+            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns listOf(nextEpisode)
+            coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertEquals(expectedEpisode, result)
@@ -395,30 +340,9 @@ class CrunchyrollPlatformTest : AbstractTest() {
         )
 
         mockkStatic(CrunchyrollWrapper::class) {
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getUpNext(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } throws Exception()
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticEpisode(
-                        any(String::class),
-                        any(String::class)
-                    )
-                }
-            } returns episode
-            every {
-                runBlocking {
-                    CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(
-                        any(String::class),
-                        any(String::class),
-                    )
-                }
-            } returns listOf()
+            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
+            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns listOf()
 
             val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
             assertNull(result)
