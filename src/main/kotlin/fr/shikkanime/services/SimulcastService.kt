@@ -6,7 +6,7 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.factories.impl.SimulcastFactory
 import fr.shikkanime.repositories.SimulcastRepository
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.withUTCString
 import java.time.ZonedDateTime
 
@@ -30,7 +30,7 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     override fun save(entity: Simulcast): Simulcast {
         val save = super.save(entity)
         traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
-        MapCache.invalidate(Simulcast::class.java)
+        InvalidationService.invalidate(Simulcast::class.java)
         return save
     }
 

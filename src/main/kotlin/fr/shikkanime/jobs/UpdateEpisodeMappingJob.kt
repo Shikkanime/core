@@ -74,7 +74,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         logger.info("Episodes updated")
 
         if (needRefreshCache.get()) {
-            MapCache.invalidate(
+            InvalidationService.invalidate(
                 Anime::class.java,
                 EpisodeMapping::class.java,
                 EpisodeVariant::class.java,
@@ -447,7 +447,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
             val checkAudioLocales = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
-            val platformEpisodes = ids.flatMap { DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, it, checkAudioLocales) }
+            val platformEpisodes = ids.flatMap { DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, it, checkAudioLocales).toList() }
             val episode = platformEpisodes.find { it.id == id || it.oldId == id } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id, identifiers)
@@ -473,7 +473,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         runCatching {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
-            val platformEpisodes = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, it.toInt()) }
+            val platformEpisodes = ids.flatMap { NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, it.toInt()).toList() }
             val episode = platformEpisodes.find { it.id.toString() == id || it.oldId == id } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
@@ -502,7 +502,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         runCatching {
             val id = StringUtils.getVideoOldIdOrId(episodeVariant.identifier!!) ?: return
             val ids = animePlatformService.findAllIdByAnimeAndPlatform(episodeMapping.anime!!, episodeVariant.platform!!)
-            val platformEpisodes = ids.flatMap { PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, it) }
+            val platformEpisodes = ids.flatMap { PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, it).toList() }
             val episode = platformEpisodes.find { it.id == id || id in it.oldIds || (it.season == episodeMapping.season && it.number == episodeMapping.number) } ?: return
 
             updateIdentifier(episodeVariant, id, episode.id, identifiers)
@@ -537,11 +537,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         
         val variantIds = mainObject.getVariants().subtract(browseObjects.map { it.id }.toSet())
         val variantObjects = variantIds.chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
-            .flatMap { chunk ->
-                HttpRequest.retry(3) {
-                    CrunchyrollCachedWrapper.getObjects(countryCode.locale, *chunk.toTypedArray())
-                }
-            }
+            .flatMap { chunk -> CrunchyrollCachedWrapper.getObjects(countryCode.locale, *chunk.toTypedArray()) }
 
         return (browseObjects + variantObjects).mapNotNull { browseObject ->
             try {

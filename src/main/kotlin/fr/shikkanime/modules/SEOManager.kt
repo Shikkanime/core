@@ -12,7 +12,8 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 
 private fun <T> List<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else null
-private fun <T> List<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter(predicate).randomIfNotEmpty()
+private fun <T> Array<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else null
+private fun <T> Array<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter(predicate).randomIfNotEmpty()
 
 fun setGlobalAttributes(
     isBot: Boolean,

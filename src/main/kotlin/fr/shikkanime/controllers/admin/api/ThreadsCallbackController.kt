@@ -10,7 +10,7 @@ import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.socialnetworks.ThreadsSocialNetwork
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -48,7 +48,7 @@ class ThreadsCallbackController {
                 configCacheService.findByName(ConfigPropertyKey.THREADS_ACCESS_TOKEN.key)?.let {
                     it.propertyValue = longLivedAccessToken
                     configService.update(it)
-                    MapCache.invalidate(Config::class.java)
+                    InvalidationService.invalidate(Config::class.java)
                     Constant.injector.getInstance(ThreadsSocialNetwork::class.java).logout()
                 }
 

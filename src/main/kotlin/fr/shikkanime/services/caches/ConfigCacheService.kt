@@ -1,10 +1,13 @@
 package fr.shikkanime.services.caches
 
+import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.ConfigService
 import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.MapCacheValue
+import fr.shikkanime.utils.SerializationUtils
 import fr.shikkanime.utils.StringUtils
 
 class ConfigCacheService : ICacheService {
@@ -13,8 +16,10 @@ class ConfigCacheService : ICacheService {
     fun findByName(name: String) = MapCache.getOrCompute(
         "ConfigCacheService.findAll",
         classes = listOf(Config::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<Config>>>() {},
+        serializationType = SerializationUtils.SerializationType.OBJECT,
         key = StringUtils.EMPTY_STRING,
-    ) { configService.findAll() }
+    ) { configService.findAll().toTypedArray() }
         .find { it.propertyKey == name }
 
     fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue

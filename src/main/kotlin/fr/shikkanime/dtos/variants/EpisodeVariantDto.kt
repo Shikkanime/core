@@ -2,6 +2,7 @@ package fr.shikkanime.dtos.variants
 
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import java.io.Serializable
 import java.util.*
 
 data class EpisodeVariantDto(
@@ -13,4 +14,4 @@ data class EpisodeVariantDto(
     val identifier: String,
     val url: String,
     val uncensored: Boolean,
-)
+) : Serializable
