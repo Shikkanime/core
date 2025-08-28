@@ -2,6 +2,7 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformConfiguration
 import fr.shikkanime.utils.*
@@ -15,8 +16,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val countryCode: CountryCode,
         val animeId: String,
         var anime: String,
-        val animeImage: String,
-        val animeBanner: String,
+        val animeAttachments: Map<ImageType, String>,
         val animeDescription: String?,
         var releaseDateTime: ZonedDateTime,
         var episodeType: EpisodeType,
@@ -37,9 +37,15 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         fun getIdentifier() = StringUtils.getIdentifier(countryCode, platform, id, audioLocale, uncensored)
     }
 
+    data class CacheEntry<V>(
+        val lastFetch: ZonedDateTime,
+        val cachedValue: V?,
+        val hasError: Boolean
+    )
+
     val logger = LoggerFactory.getLogger(javaClass)
     var configuration: C? = null
-    val apiCache = mutableMapOf<Pair<K, ZonedDateTime>, V>()
+    val apiCache = mutableMapOf<K, CacheEntry<V>>()
 
     protected fun isBlacklisted(name: String): Boolean {
         val shortName = StringUtils.getShortName(name)
@@ -56,22 +62,45 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         apiCache.clear()
     }
 
-    fun getApiContent(key: K, zonedDateTime: ZonedDateTime): V {
-        val entry = apiCache.entries.firstOrNull { it.key.first == key }
+    private fun shouldFetchContent(key: K, currentTime: ZonedDateTime): Boolean {
+        val cacheEntry = apiCache[key] ?: return true
+        val delayMinutes = configuration!!.apiCheckDelayInMinutes
 
-        if (entry == null || zonedDateTime.isAfterOrEqual(entry.key.second.plusMinutes(configuration!!.apiCheckDelayInMinutes))) {
-            val values = runBlocking { fetchApiContent(key, zonedDateTime) }
-
-            if (values == null) {
-                logger.warning("API content is null for $key")
-                return values
-            }
-
-            apiCache.remove(entry?.key)
-            apiCache[Pair(key, zonedDateTime)] = values
+        if (cacheEntry.hasError || cacheEntry.cachedValue == null || delayMinutes <= 0) {
+            return true
         }
 
-        return apiCache.entries.firstOrNull { it.key.first == key }!!.value
+        return currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0
+    }
+
+    fun getApiContent(key: K, currentTime: ZonedDateTime): V {
+        if (shouldFetchContent(key, currentTime)) {
+            val result = runCatching { runBlocking { fetchApiContent(key, currentTime) } }
+                .fold(
+                    onSuccess = { fetchResult ->
+                        // Succès : on met en cache avec hasError = false
+                        apiCache[key] = CacheEntry(currentTime, fetchResult, false)
+                        fetchResult
+                    },
+                    onFailure = { exception ->
+                        logger.warning("Error fetching API content for key $key on ${getPlatform().name}: ${exception.message}")
+
+                        // En cas d'erreur, on marque hasError = true et on garde l'ancienne valeur si elle existe
+                        val currentCache = apiCache[key]
+                        val existingValue = currentCache?.cachedValue
+
+                        apiCache[key] = CacheEntry(currentTime, existingValue, true)
+
+                        // Si on a une valeur en cache, on la retourne, sinon on propage l'erreur
+                        existingValue ?: throw exception
+                    }
+                )
+
+            return result
+        }
+
+        // On retourne la valeur en cache
+        return apiCache[key]?.cachedValue ?: throw IllegalStateException("Cache entry for key $key should not be null here")
     }
 
     fun loadConfiguration(): C {

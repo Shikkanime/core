@@ -55,6 +55,7 @@ class AnimeController : HasPageableRoute() {
         return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()).apply {
             thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
             banner = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
+            carousel = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.CAROUSEL)?.url
         })
     }
 

@@ -2,10 +2,7 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
@@ -68,8 +65,11 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
             countryCode = countryCode,
             animeId = episode.show.id,
             anime = episode.show.name,
-            animeImage = episode.show.image,
-            animeBanner = episode.show.banner,
+            animeAttachments = mapOf(
+                ImageType.THUMBNAIL to episode.show.image,
+                ImageType.BANNER to episode.show.banner,
+                ImageType.CAROUSEL to episode.show.carousel,
+            ),
             animeDescription = episode.show.description,
             releaseDateTime = zonedDateTime,
             episodeType = EpisodeType.EPISODE,

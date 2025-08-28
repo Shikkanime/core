@@ -7,6 +7,7 @@ abstract class AbstractPrimeVideoWrapper {
         val id: String,
         val name: String,
         val banner: String,
+        val carousel: String,
         val description: String?,
     )
 

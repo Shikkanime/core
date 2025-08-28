@@ -5,6 +5,7 @@ import fr.shikkanime.AbstractTest
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.MapCache
@@ -173,8 +174,10 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 CountryCode.FR,
                 "G1XHJV0XM",
                 "Alya Sometimes Hides Her Feelings in Russian",
-                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b0bdcf73a7e00f9bc75131088970288d.jpg",
-                "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2db2c99a90bc322a2fe8a2fa07810fd5.jpg",
+                mapOf(
+                    ImageType.THUMBNAIL to "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b0bdcf73a7e00f9bc75131088970288d.jpg",
+                    ImageType.BANNER to "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2db2c99a90bc322a2fe8a2fa07810fd5.jpg",
+                ),
                 "Dans sa nouvelle école, Alya, étudiante au comportement glacial, fait tourner les têtes. Malgré ses excellents résultats en classe, elle garde ses distances avec tout le monde, en particulier avec l'intello Masachika Kuze. Jusqu'à ce qu'elle lui fasse un compliment en... russe ! À l'insu d'Alya, Kuze la comprend parfaitement, mais joue le jeu. Leurs malentendus hilarants se transformeront-ils en amour ?",
                 ZonedDateTime.parse("2024-07-10T15:00:00Z"),
                 EpisodeType.EPISODE,
