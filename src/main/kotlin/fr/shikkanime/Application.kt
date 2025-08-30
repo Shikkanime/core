@@ -20,6 +20,7 @@ private val logger = LoggerFactory.getLogger(Constant.NAME)
 
 fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
+    TelemetryConfig.initialize()
 
     logger.info("Testing Playwright installation...")
     checkPlaywrightInstallation()
