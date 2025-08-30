@@ -1,10 +1,7 @@
 package fr.shikkanime.platforms
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.exceptions.NotSimulcastedMediaException
@@ -130,8 +127,11 @@ class AnimationDigitalNetworkPlatform :
                 countryCode = countryCode,
                 animeId = video.show.id.toString(),
                 anime = animeName,
-                animeImage = video.show.fullHDImage,
-                animeBanner = video.show.fullHDBanner,
+                animeAttachments = mapOf(
+                    ImageType.THUMBNAIL to video.show.fullHDImage,
+                    ImageType.BANNER to video.show.fullHDBanner,
+                    ImageType.CAROUSEL to video.show.fullHDCarousel
+                ),
                 animeDescription = video.show.summary.normalize(),
                 releaseDateTime = requireNotNull(video.releaseDate) { "Release date is null" },
                 episodeType = episodeType,

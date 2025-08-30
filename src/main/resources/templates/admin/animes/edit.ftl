@@ -202,7 +202,7 @@
                             <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=THUMBNAIL'" class="w-25" alt="Anime thumbnail">
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row mb-2">
                         <div :class="'col-md-' + titleSize">
                             <label for="banner" class="form-label">Banner</label>
                         </div>
@@ -220,6 +220,26 @@
                             </div>
 
                             <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=BANNER'" class="w-25" alt="Anime banner">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div :class="'col-md-' + titleSize">
+                            <label for="banner" class="form-label">Carousel</label>
+                        </div>
+
+                        <div :class="'col-md-' + (12 - titleSize)">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" id="carousel" name="carousel"
+                                       x-model="anime.carousel" aria-label="Carousel"
+                                       aria-describedby="basic-addon">
+
+                                <a class="input-group-text" id="basic-addon"
+                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.carousel">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </div>
+
+                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=CAROUSEL'" class="w-25" alt="Anime carousel">
                         </div>
                     </div>
                 </div>

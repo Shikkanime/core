@@ -16,6 +16,7 @@ abstract class AbstractDisneyPlusWrapper {
         val name: String,
         val image: String,
         val banner: String,
+        val carousel: String,
         val description: String?,
         val seasons: Set<String>
     )
