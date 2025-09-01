@@ -2,7 +2,7 @@ package fr.shikkanime.controllers.api.v2
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.services.caches.EpisodeMappingCacheService
+import fr.shikkanime.services.caches.GroupedEpisodeCacheService
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.HasPageableRoute
 import fr.shikkanime.utils.routes.Path
@@ -12,7 +12,7 @@ import fr.shikkanime.utils.routes.param.QueryParam
 
 @Controller("/api/v2/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
-    @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var groupedEpisodeCacheService: GroupedEpisodeCacheService
 
     @Path
     @Get
@@ -29,6 +29,6 @@ class EpisodeMappingController : HasPageableRoute() {
             pageableRoute(pageParam, limitParam, sortParam, descParam)
         }
 
-        return Response.ok(episodeMappingCacheService.findAllGroupedBy(country, sortParameters, page, limit))
+        return Response.ok(groupedEpisodeCacheService.findAllBy(country, sortParameters, page, limit))
     }
 }

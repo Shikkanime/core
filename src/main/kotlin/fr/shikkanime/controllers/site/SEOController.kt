@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
+import fr.shikkanime.services.caches.GroupedEpisodeCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.routes.Controller
@@ -22,6 +23,7 @@ class SEOController {
     private fun ZonedDateTime.formatDateTime() = this.withUTCString().replace("Z", "+00:00")
 
     @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
+    @Inject private lateinit var groupedEpisodeCacheService: GroupedEpisodeCacheService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
 
     @Path("robots.txt")
@@ -94,7 +96,7 @@ class SEOController {
     private fun feedRss() = Response.template(
         "/site/seo/rss.ftl",
         null,
-        mutableMapOf("groupedEpisodes" to episodeMappingCacheService.findAllGroupedBy(
+        mutableMapOf("groupedEpisodes" to groupedEpisodeCacheService.findAllBy(
             CountryCode.FR,
             listOf(
                 SortParameter("releaseDateTime", SortParameter.Order.DESC),
