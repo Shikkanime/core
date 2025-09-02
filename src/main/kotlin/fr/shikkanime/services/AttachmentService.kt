@@ -45,7 +45,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) = attachmentRepository.findByEntityUuidTypeAndActive(entityUuid, type)
 
-    fun findAllActiveWithUrl() = attachmentRepository.findAllActiveWithUrl()
+    fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = attachmentRepository.findAllActiveWithUrlAndNotIn(uuids)
 
     fun createAttachmentOrMarkAsActive(entityUuid: UUID, type: ImageType, url: String? = null, bytes: ByteArray? = null, async: Boolean = true): Attachment {
         val attachments = findAllByEntityUuidAndType(entityUuid, type)
@@ -80,13 +80,10 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun encodeAllActiveWithUrlAndWithoutFile() {
         val now = ZonedDateTime.now()
-        val files = Constant.imagesFolder.list().toHashSet()
+        val files = Constant.imagesFolder.list().map { UUID.fromString(it.substringBeforeLast(".")) }.toHashSet()
 
         updateAll(
-            findAllActiveWithUrl().onEach {
-                if (getFileName(it) in files)
-                    return@onEach
-
+            findAllActiveWithUrlAndNotIn(files).onEach {
                 it.lastUpdateDateTime = now
                 encodeAttachment(it, it.url, null)
             }

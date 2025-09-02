@@ -32,9 +32,11 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
             val root = query.from(getEntityClass())
 
             query.where(
-                cb.lessThanOrEqualTo(root[Attachment_.lastUpdateDateTime], lastUpdateDateTime),
-                cb.isNotNull(root[Attachment_.url]),
-                cb.isTrue(root[Attachment_.active]),
+                cb.and(
+                    cb.lessThanOrEqualTo(root[Attachment_.lastUpdateDateTime], lastUpdateDateTime),
+                    cb.isNotNull(root[Attachment_.url]),
+                    cb.isTrue(root[Attachment_.active])
+                )
             )
 
             createReadOnlyQuery(it, query)
@@ -42,15 +44,18 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun findAllActiveWithUrl(): List<Attachment> {
+    fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>): List<Attachment> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
             query.where(
-                cb.isTrue(root[Attachment_.active]),
-                cb.isNotNull(root[Attachment_.url])
+                cb.and(
+                    cb.isTrue(root[Attachment_.active]),
+                    cb.isNotNull(root[Attachment_.url]),
+                    root[Attachment_.uuid].`in`(uuids).not()
+                )
             )
 
             createReadOnlyQuery(it, query)
