@@ -40,7 +40,7 @@ jobs:
 
   docker:
     name: Build and push Docker image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-arm
     needs: [ test ]
     steps:
       - uses: actions/checkout@v5
