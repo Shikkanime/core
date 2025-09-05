@@ -98,7 +98,7 @@ dependencies {
         group = "io.valkey",
         name = "valkey-glide",
         version = valkeyVersion,
-        classifier = osdetector.classifier,
+        classifier = "linux-aarch_64",
     )
 
     implementation("net.dv8tion:JDA:$jdaVersion")
