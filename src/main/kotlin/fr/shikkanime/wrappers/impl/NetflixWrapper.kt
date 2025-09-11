@@ -11,11 +11,27 @@ import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
+import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.ZonedDateTime
 
 object NetflixWrapper : AbstractNetflixWrapper() {
+    data class NetflixAuthentification(
+        val id: String,
+        val secureId: String,
+        val authUrl: String
+    )
+
+    private fun getNetflixAuthentificationFromConfig(): NetflixAuthentification {
+        val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+        val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
+        val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
+        val netflixAuthUrl = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_AUTH_URL)
+        require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true && netflixAuthUrl?.isNotBlank() == true) { "NetflixId, NetflixSecureId and NetflixAuthUrl must be set in the configuration" }
+        return NetflixAuthentification(netflixId, netflixSecureId, netflixAuthUrl)
+    }
+
     private fun extractMaxUrl(json: JsonObject, arrayName: String): String? {
         return json.getAsJsonArray(arrayName)
             .map { it.asJsonObject }
@@ -24,22 +40,14 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.substringBefore("?")
     }
 
-    private fun getIdAndSecureIdFromConfig(): Pair<String?, String?> {
-        val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
-        val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
-        val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
-        require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true) { "NetflixId and NetflixSecureId must be set in the configuration" }
-        return Pair(netflixId, netflixSecureId)
-    }
-
     private suspend fun getMetadata(id: Int): ShowMetadata {
-        val (netflixId, netflixSecureId) = getIdAndSecureIdFromConfig()
+        val netflixAuthentification = getNetflixAuthentificationFromConfig()
 
         val response = httpRequest.get(
             "$baseUrl/nq/website/memberapi/release/metadata?movieid=$id&imageFormat=jpg",
             mapOf(
                 "Content-Type" to "application/json",
-                "Cookie" to "NetflixId=$netflixId; SecureNetflixId=$netflixSecureId"
+                "Cookie" to "NetflixId=${netflixAuthentification.id}; SecureNetflixId=${netflixAuthentification.secureId}"
             )
         )
         require(response.status == HttpStatusCode.OK) { "Failed to get metadata (${response.status.value} - ${response.bodyAsText()})" }
@@ -146,7 +154,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.firstOrNull()?.asJsonObject
     }
 
-    private fun createMovieEpisode(show: Show, id: Int): List<Episode> {
+    private suspend fun createMovieEpisode(show: Show, id: Int): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
         val isAvailable = show.isAvailable
         val isPlayable = show.isPlayable
@@ -167,7 +175,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.description?.normalize(),
                 "$baseUrl/watch/${show.id}",
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
-                show.runtimeSec!!
+                show.runtimeSec!!,
+                runCatching { getEpisodeAudioTrackList(show.id) }.getOrNull() ?: emptySet()
             )
         )
     }
@@ -226,7 +235,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode? {
+    private suspend fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode? {
         val episode = episodeJson.getAsJsonObject("node")
         val episodeId = episode.getAsInt("videoId")!!
         val episodeNumber = episode.getAsInt("number")!!
@@ -250,7 +259,35 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             "$baseUrl/watch/$episodeId",
             show.metadata?.episodes?.find { it.id == episodeId }?.image
                 ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
-            episode.getAsInt("runtimeSec")!!.toLong()
+            episode.getAsInt("runtimeSec")!!.toLong(),
+            runCatching { getEpisodeAudioTrackList(episodeId) }.getOrNull() ?: emptySet()
         )
+    }
+
+    suspend fun getEpisodeAudioTrackList(id: Int): Set<String> {
+        val netflixAuthentification = getNetflixAuthentificationFromConfig()
+
+        val response = httpRequest.post(
+            "$baseUrl/nq/website/memberapi/release/pathEvaluator?method=call&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
+            mapOf("Cookie" to "NetflixId=${netflixAuthentification.id}; SecureNetflixId=${netflixAuthentification.secureId}"),
+            FormDataContent(parametersOf(
+                "callPath" to listOf("[\"videos\",$id,\"audio\"]"),
+                "authURL" to listOf(netflixAuthentification.authUrl)
+            ))
+        )
+        require(response.status == HttpStatusCode.OK) { "Failed to get audio tracks (${response.status.value} - ${response.bodyAsText()})" }
+        val audioTracks = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("jsonGraph")
+            ?.getAsJsonObject("videos")
+            ?.getAsJsonObject(id.toString())
+            ?.getAsJsonObject("audio")
+            ?.getAsJsonArray("value")
+            ?.map { it.asJsonObject.getAsString("isoCode") }
+            ?: throw Exception("Failed to get metadata")
+
+        return buildSet {
+            if ("ja-jpn" in audioTracks) add("ja-JP")
+            if ("ja-jpn" !in audioTracks && "en-eng" in audioTracks) add("en-US")
+            if ("fr-fra" in audioTracks) add("fr-FR")
+        }
     }
 }

@@ -1,21 +1,17 @@
 package fr.shikkanime.platforms
 
-import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
 import java.time.ZonedDateTime
 
 class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
-    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
@@ -25,10 +21,11 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
         val episodes = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
-        val identifiers = mutableMapOf<Int, ZonedDateTime>()
 
         return episodes.flatMap { video ->
-            key.netflixSimulcast.audioLocales.map { audioLocale ->
+            val audioLocales = video.audioLocales.takeIf { it.isNotEmpty() } ?: key.netflixSimulcast.audioLocales
+
+            audioLocales.map { audioLocale ->
                 val episode = convertEpisode(
                     key.countryCode,
                     key.netflixSimulcast.image,
@@ -37,12 +34,8 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                     audioLocale
                 )
 
-                val releaseDateTime = identifiers.getOrPut(video.id) {
-                    episodeVariantCacheService.findReleaseDateTimeByIdentifier(episode.getIdentifier()) ?: episode.releaseDateTime
-                }
-
                 key.netflixSimulcast.audioLocaleDelays[episode.audioLocale]?.let { delay ->
-                    episode.releaseDateTime = releaseDateTime.plusWeeks(delay)
+                    episode.releaseDateTime = zonedDateTime.minusWeeks(delay)
                 }
 
                 episode

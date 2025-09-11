@@ -54,7 +54,8 @@ abstract class AbstractNetflixWrapper {
         val description: String?,
         val url: String,
         val image: String,
-        val duration: Long
+        val duration: Long,
+        val audioLocales: Set<String>,
     ) : Serializable
 
     protected val baseUrl = "https://www.netflix.com"

@@ -33,7 +33,6 @@ plugins {
 
     id("io.ktor.plugin") version "3.3.0"
     id("org.sonarqube") version "6.3.1.5724"
-    id("com.google.osdetector") version "1.7.3"
 
     jacoco
 }

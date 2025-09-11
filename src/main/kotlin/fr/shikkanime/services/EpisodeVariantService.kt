@@ -51,8 +51,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         endZonedDateTime
     )
 
-    fun findReleaseDateTimeByIdentifier(identifier: String) = episodeVariantRepository.findReleaseDateTimeByIdentifier(identifier)
-
     /**
      * Determines the appropriate simulcast for a given anime and episode mapping.
      *
