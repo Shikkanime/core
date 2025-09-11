@@ -88,11 +88,4 @@ class EpisodeVariantCacheService : ICacheService {
         typeToken = object : TypeToken<MapCacheValue<EpisodeVariantDto>>() {},
         key = uuid,
     ) { episodeVariantService.find(it)?.let { episodeVariantFactory.toDto(it) } }
-
-    fun findReleaseDateTimeByIdentifier(identifier: String) = MapCache.getOrComputeNullable(
-        "EpisodeVariantCacheService.findByIdentifier",
-        classes = listOf(EpisodeVariant::class.java),
-        typeToken = object : TypeToken<MapCacheValue<ZonedDateTime>>() {},
-        key = identifier,
-    ) { episodeVariantService.findReleaseDateTimeByIdentifier(it) }
 }

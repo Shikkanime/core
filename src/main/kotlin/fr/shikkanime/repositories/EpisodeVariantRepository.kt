@@ -71,8 +71,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         endZonedDateTime: ZonedDateTime,
         searchTypes: Array<LangType>? = null,
     ): List<VariantReleaseDto> {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
+        return database.entityManager.use { entityManager ->
+            val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(VariantReleaseDto::class.java)
             val root = query.from(Anime::class.java)
             val mappingsJoin = root.join(Anime_.mappings)
@@ -123,7 +123,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 cb.asc(mappingsJoin[EpisodeMapping_.number])
             )
 
-            createReadOnlyQuery(it, query)
+            createReadOnlyQuery(entityManager, query)
                 .resultList
         }
     }
@@ -174,23 +174,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(query)
                 .resultList
-                .map { it[0] as String to it[1] as ZonedDateTime }
-        }
-    }
-
-    fun findReleaseDateTimeByIdentifier(identifier: String): ZonedDateTime? {
-        return database.entityManager.use {
-            val cb = it.criteriaBuilder
-
-            val query = cb.createQuery(ZonedDateTime::class.java)
-            val root = query.from(getEntityClass())
-
-            query.select(root[EpisodeVariant_.releaseDateTime])
-            query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
-
-            createReadOnlyQuery(it, query)
-                .resultList
-                .firstOrNull()
+                .map { tuple -> tuple[0, String::class.java] to tuple[1, ZonedDateTime::class.java] }
         }
     }
 }
