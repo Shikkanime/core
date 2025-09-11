@@ -28,7 +28,9 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         val identifiers = mutableMapOf<Int, ZonedDateTime>()
 
         return episodes.flatMap { video ->
-            key.netflixSimulcast.audioLocales.map { audioLocale ->
+            val audioLocales = video.audioLocales.takeIf { it.isNotEmpty() } ?: key.netflixSimulcast.audioLocales
+
+            audioLocales.map { audioLocale ->
                 val episode = convertEpisode(
                     key.countryCode,
                     key.netflixSimulcast.image,
