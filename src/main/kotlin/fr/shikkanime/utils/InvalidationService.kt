@@ -18,6 +18,8 @@ abstract class InvalidationService(open val classes: List<Class<*>>) {
                 if (cache.classes.any { clazz -> clazz in classes })
                     cache.invalidate()
             }
+
+            AsynchronizedGlideClient.del()
         }
 
         // For test only

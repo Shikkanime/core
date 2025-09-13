@@ -15,7 +15,7 @@ class ValkeyCacheStrategy<K, V>(
     }
 
     private fun keys(): List<String> {
-        return AsynchronizedGlideClient.search("$name*").filter {
+        return AsynchronizedGlideClient.searchAll("$name*").filter {
             val substringAfter = it.substringAfter(name)
             substringAfter.isBlank() || substringAfter.startsWith(":")
         }
@@ -44,6 +44,6 @@ class ValkeyCacheStrategy<K, V>(
         val keys = keys()
 
         if (keys.isNotEmpty())
-            AsynchronizedGlideClient.del(keys.toTypedArray())
+            AsynchronizedGlideClient.delInPool(keys)
     }
 }
