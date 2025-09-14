@@ -9,6 +9,7 @@ import fr.shikkanime.entities.miscellaneous.SortParameter
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.*
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
@@ -262,24 +263,31 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         sort: List<SortParameter>
     ): Set<GroupedEpisode> {
         val groupIdentifierMap = groups.associateBy {
-            Triple(it.animeUuid, it.episodeType, it.representativeReleaseTime)
+            it.animeUuid to Triple(it.episodeType, it.releaseDay, it.hourGroup)
         }
 
         return variants.groupBy { variant ->
-            val animeUuid = variant.mapping!!.anime!!.uuid!!
-            val episodeType = variant.mapping!!.episodeType!!
             val releaseTime = variant.releaseDateTime
+            val releaseDay = releaseTime.truncatedTo(ChronoUnit.DAYS)
+            val minutesOfDay = releaseTime.hour * 60 + releaseTime.minute
+            val shiftedMinutes = minutesOfDay + 30
+            val hourGroup = shiftedMinutes / 120
 
-            groupIdentifierMap.entries.find { (key, _) ->
-                key.first == animeUuid && key.second == episodeType &&
-                        releaseTime in key.third.minusHours(1)..key.third.plusHours(1)
-            }?.value ?: throw IllegalStateException("Variant does not belong to any group")
+            val groupKey = variant.mapping!!.anime!!.uuid!! to Triple(
+                variant.mapping!!.episodeType!!,
+                releaseDay,
+                hourGroup
+            )
+
+            groupIdentifierMap[groupKey]
+                ?: throw IllegalStateException("Variant does not belong to any group. Variant release time: ${variant.releaseDateTime}")
         }
             .values
             .map(::toGroupedEpisode)
             .sortedWith(getGroupedEpisodeComparator(sort))
             .toSet()
     }
+
 
     /**
      * Creates a comparator to sort [GroupedEpisode] objects based on the API sort parameters.
