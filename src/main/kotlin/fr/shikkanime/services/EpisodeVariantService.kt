@@ -61,7 +61,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
      *
      * @return The determined `Simulcast` entity.
      */
-    fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true): Simulcast {
+    fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true, simulcasts: Collection<Simulcast>? = null): Simulcast {
         // Retrieve the simulcast range configuration value
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
 
@@ -69,10 +69,10 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
 
         // Map the adjusted dates to their corresponding simulcast seasons and years
-        val simulcasts = adjustedDates.map { Simulcast(season = Season.entries[(it.monthValue - 1) / 3], year = it.year) }
+        val adjustedSimulcasts = adjustedDates.map { Simulcast(season = Season.entries[(it.monthValue - 1) / 3], year = it.year) }
 
         // Extract the previous, current, and next simulcasts
-        val (previousSimulcast, currentSimulcast, nextSimulcast) = simulcasts
+        val (previousSimulcast, currentSimulcast, nextSimulcast) = adjustedSimulcasts
 
         // Check if the anime's release date-time is before the earliest adjusted date
         val isAnimeReleaseDateTimeBeforeMinusXDays = anime.releaseDateTime < adjustedDates.first()
@@ -106,7 +106,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         }
 
         // Retrieve the simulcast from the cache or return the chosen simulcast
-        return simulcastService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
+        return simulcasts?.find { it.year == chosenSimulcast.year && it.season == chosenSimulcast.season }
+            ?: simulcastService.findBySeasonAndYear(chosenSimulcast.season!!, chosenSimulcast.year!!)
             ?: chosenSimulcast
     }
 

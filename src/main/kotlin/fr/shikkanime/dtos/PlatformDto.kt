@@ -7,4 +7,8 @@ data class PlatformDto(
     val name: String,
     val url: String,
     val image: String
-) : Serializable
+) : Serializable, Comparable<PlatformDto> {
+    override fun compareTo(other: PlatformDto): Int {
+        return name.compareTo(other.name)
+    }
+}

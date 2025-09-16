@@ -78,13 +78,13 @@ class AnimeCacheService : ICacheService {
             )
         }
 
-    fun getAudioLocales(anime: Anime) = MapCache.getOrCompute(
-        "AnimeCacheService.getAudioLocales",
+    fun getLangTypes(anime: Anime) = MapCache.getOrCompute(
+        "AnimeCacheService.getLangTypes",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
+        typeToken = object : TypeToken<MapCacheValue<Array<LangType>>>() {},
         serializationType = SerializationUtils.SerializationType.JSON,
-        key = anime.uuid!!,
-    ) { uuid -> animeService.findAllAudioLocales(uuid).toTypedArray() }
+        key = anime.countryCode!! to anime.uuid!!,
+    ) { (countryCode, uuid) -> animeService.findAllAudioLocales(uuid).map { LangType.fromAudioLocale(countryCode, it) }.sorted().toTypedArray() }
 
     fun getSeasons(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getSeasons",

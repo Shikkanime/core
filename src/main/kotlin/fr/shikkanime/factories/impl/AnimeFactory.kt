@@ -4,12 +4,12 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.AnimePlatformCacheService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
 import org.hibernate.Hibernate
 
@@ -19,7 +19,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
     @Inject private lateinit var simulcastFactory: SimulcastFactory
 
     override fun toDto(entity: Anime): AnimeDto {
-        val audioLocales = animeCacheService.getAudioLocales(entity).toSet()
+        val langTypes = animeCacheService.getLangTypes(entity).toSet()
         val seasons = animeCacheService.getSeasons(entity)
         val platforms = animePlatformCacheService.getAll(entity)
 
@@ -34,10 +34,9 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             lastUpdateDateTime = entity.lastUpdateDateTime.withUTCString(),
             description = entity.description,
             simulcasts = if (Hibernate.isInitialized(entity.simulcasts)) entity.simulcasts.sortBySeasonAndYear().map { simulcastFactory.toDto(it) }.toSet() else null,
-            audioLocales = audioLocales.takeIf { it.isNotEmpty() },
-            langTypes = audioLocales.map { LangType.fromAudioLocale(entity.countryCode, it) }.distinct().sorted().takeIf { it.isNotEmpty() }?.toSet(),
+            langTypes = langTypes,
             seasons = seasons.map { (season, lastReleaseDateTime) -> SeasonDto(season, lastReleaseDateTime.withUTCString()) }.takeIf { it.isNotEmpty() }?.toSet(),
-            platformIds = platforms.sortedBy { it.platform.name }.toSet()
+            platformIds = platforms.toTreeSet()
         )
     }
 }

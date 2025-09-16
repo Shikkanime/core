@@ -15,9 +15,7 @@
                             <#assign platforms = []>
 
                             <#list anime.platformIds as platform>
-                                <#if platforms?filter(p -> p.id == platform.platform.id)?size != 0>
-                                    <#continue>
-                                <#else>
+                                <#if platforms?filter(p -> p.id == platform.platform.id)?size == 0>
                                     <#assign platforms = platforms + [platform.platform]>
                                 </#if>
                             </#list>
