@@ -81,7 +81,8 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
             variants = originalDto.variants?.filter { it.uuid != variant2.uuid }?.toSet(),
             platforms = originalDto.platforms,
             langTypes = originalDto.langTypes,
-            image = originalDto.image
+            image = originalDto.image,
+            sources = emptySet()
         )
 
         // Act

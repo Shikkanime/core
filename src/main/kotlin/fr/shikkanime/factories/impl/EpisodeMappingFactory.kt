@@ -6,21 +6,24 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.factories.IEpisodeMappingFactory
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
+import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
 
 class EpisodeMappingFactory : IEpisodeMappingFactory {
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var episodeSourceFactory: EpisodeSourceFactory
 
     override fun toDto(
         entity: EpisodeMapping,
         useAnime: Boolean
     ): EpisodeMappingDto {
         val variants = episodeVariantCacheService.findAllByMapping(entity)
+        val countryCode = entity.anime!!.countryCode!!
 
         return EpisodeMappingDto(
             uuid = entity.uuid!!,
-            anime = if (useAnime) animeFactory.toDto(entity.anime!!) else null,
+            anime = animeFactory.takeIf { useAnime }?.toDto(entity.anime!!),
             releaseDateTime = entity.releaseDateTime.withUTCString(),
             lastReleaseDateTime = entity.lastReleaseDateTime.withUTCString(),
             lastUpdateDateTime = entity.lastUpdateDateTime.withUTCString(),
@@ -31,8 +34,9 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
             title = entity.title,
             description = entity.description,
             variants = variants.toSet(),
-            platforms = variants.map { it.platform }.sortedBy { it.name }.toSet(),
-            langTypes = variants.map { LangType.fromAudioLocale(entity.anime!!.countryCode!!, it.audioLocale) }.sorted().toSet(),
+            platforms = variants.map { it.platform }.toTreeSet(),
+            langTypes = variants.map { LangType.fromAudioLocale(countryCode, it.audioLocale) }.toTreeSet(),
+            sources = variants.map { episodeSourceFactory.toDto(countryCode, it) }.toTreeSet(),
         )
     }
 }

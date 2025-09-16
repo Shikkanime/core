@@ -33,9 +33,17 @@
                 </h1>
 
                 <div class="mt-1">
-                    <#list episodeMapping.langTypes as langType>
+                    <#assign uniqueSources = [] />
+
+                    <#list episodeMapping.sources as source>
+                        <#if uniqueSources?filter(s -> s.langType == source.langType)?size == 0>
+                            <#assign uniqueSources = uniqueSources + [source]>
+                        </#if>
+                    </#list>
+
+                    <#list uniqueSources as source>
                         <p class="text-muted mb-0">
-                            <@langTypeComponent.display langType=langType />
+                            <@langTypeComponent.display langType=source.langType />
                         </p>
                     </#list>
                 </div>
@@ -63,19 +71,25 @@
     </div>
 
     <div class="row g-3 justify-content-center">
-        <#list episodeMapping.platforms as platform>
-            <div class="col-12 col-md-${12 / episodeMapping.platforms?size}">
-                <article class="shikk-element d-flex justify-content-center align-items-center" style="height: 100px;">
-                    <#assign episodePlatformUrl = episodeMapping.variants?filter(v -> v.platform.id == platform.id)?first.url>
+        <#assign uniqueSources = [] />
 
-                    <a href="${episodePlatformUrl}" target="_blank" rel="noopener noreferrer"
+        <#list episodeMapping.sources as source>
+            <#if uniqueSources?filter(s -> s.platform.id == source.platform.id)?size == 0>
+                <#assign uniqueSources = uniqueSources + [source]>
+            </#if>
+        </#list>
+
+        <#list uniqueSources as source>
+            <div class="col-12 col-md-${12 / uniqueSources?size}">
+                <article class="shikk-element d-flex justify-content-center align-items-center" style="height: 100px;">
+                    <a href="${source.url}" target="_blank" rel="noopener noreferrer"
                        class="text-center text-decoration-none text-white fw-bold">
                         Redirection vers
                         <br>
-                        <img loading="lazy" src="${baseUrl}/assets/img/platforms/${platform.image}"
-                             alt="${platform.name}"
+                        <img loading="lazy" src="${baseUrl}/assets/img/platforms/${source.platform.image}"
+                             alt="${source.platform.name}"
                              class="rounded-circle mx-1" width="20"
-                             height="20"> ${platform.name}
+                             height="20"> ${source.platform.name}
                     </a>
                 </article>
             </div>

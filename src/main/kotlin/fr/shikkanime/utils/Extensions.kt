@@ -4,6 +4,7 @@ import com.mortennobel.imagescaling.ResampleOp
 import java.awt.image.BufferedImage
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 fun ZonedDateTime.withUTC(): ZonedDateTime = this.withZoneSameInstant(Constant.utcZoneId)
 
@@ -29,3 +30,8 @@ fun String?.normalize(): String? {
         ?.trim()
         ?.ifBlank { null }
 }
+
+fun <T> Array<T>.toTreeSet(comparator: Comparator<T>): TreeSet<T> = TreeSet(comparator).also { it.addAll(this) }
+fun <T> Array<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>().also { it.addAll(this) }
+fun <T> Iterable<T>.toTreeSet(comparator: Comparator<T>): TreeSet<T> = TreeSet(comparator).also { it.addAll(this) }
+fun <T> Iterable<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>().also { it.addAll(this) }

@@ -284,8 +284,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         }
             .values
             .map(::toGroupedEpisode)
-            .sortedWith(getGroupedEpisodeComparator(sort))
-            .toSet()
+            .toSortedSet(getGroupedEpisodeComparator(sort))
     }
 
 
@@ -346,6 +345,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
             audioLocales = variants.map { it.audioLocale!! }.toSet(),
             urls = variants.map { it.url!! }.toSet(),
             mappings = mappingUuids,
+            variants = variants,
             title = if (isSingleMapping) firstMapping.title else null,
             description = if (isSingleMapping) firstMapping.description else null,
             duration = if (isSingleMapping) firstMapping.duration else null

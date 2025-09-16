@@ -130,66 +130,69 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
             val key = "${pair.first}-${pair.second.uuid}"
 
             values.groupBy { variantReleaseDto ->
-                val groupKey = groups.entries.firstOrNull { it.key.first == key && isTimeInRange(variantReleaseDto.releaseDateTime.toLocalTime(), it.key.second.toLocalTime(), 1) }
+                val groupKey = groups.entries.firstOrNull { it.key.first == key && isTimeInRange(variantReleaseDto.releaseDateTime.toLocalTime(), it.key.second.toLocalTime(), 2) }
                 groupKey?.value ?: UUID.randomUUID().also { groups[key to variantReleaseDto.releaseDateTime] = it }
             }.flatMap { (_, hourValues) ->
                 val filter = hourValues.filter(isCurrentWeek)
-                createWeeklyAnimeDtos(filter, hourValues, pair)
+                createWeeklyAnimeDtos(pair.second, filter, hourValues)
             }
         }
     }
 
     private fun createWeeklyAnimeDtos(
+        anime: Anime,
         filter: List<VariantReleaseDto>,
-        hourValues: List<VariantReleaseDto>,
-        pair: Pair<String, Anime>
+        hourValues: List<VariantReleaseDto>
     ): List<Triple<WeeklyAnimeDto, Int, EpisodeType>> {
         val mappings = filter.asSequence()
             .map { it.episodeMapping }
             .distinctBy { it.uuid }
-            .sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
-            .toSet()
+            .toSortedSet(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number }))
 
         return mappings.groupBy { it.episodeType }
             .ifEmpty { mapOf(null to mappings) }
             .map { (episodeType, episodeMappings) ->
-                createWeeklyAnimeDto(filter, hourValues, pair, episodeType, episodeMappings.toSet())
+                createWeeklyAnimeDto(anime, filter, hourValues, episodeType, episodeMappings)
             }
     }
 
     private fun createWeeklyAnimeDto(
+        anime: Anime,
         filter: List<VariantReleaseDto>,
         hourValues: List<VariantReleaseDto>,
-        pair: Pair<String, Anime>,
         episodeType: EpisodeType?,
-        episodeMappings: Set<EpisodeMapping>
+        episodeMappings: Collection<EpisodeMapping>
     ): Triple<WeeklyAnimeDto, Int, EpisodeType> {
-        val platforms = filter.map { it.platform }.ifEmpty { hourValues.map { it.platform } }.sortedBy { it.name }.toSet()
-        val releaseDateTime = filter.minOfOrNull { it.releaseDateTime } ?: hourValues.minOf { it.releaseDateTime }
-        val langTypes = filter.map {
-            LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale)
-        }
-            .sorted()
-            .ifEmpty {
-                hourValues.map { LangType.fromAudioLocale(pair.second.countryCode!!, it.audioLocale) }
-                    .sorted()
-            }.toSet()
+        val variantReleases = filter.ifEmpty { hourValues }
+
+        val platforms = variantReleases.map { it.platform }.toSortedSet()
+        val releaseDateTime = variantReleases.minOf { it.releaseDateTime }
+        val langTypes = variantReleases
+            .map { LangType.fromAudioLocale(anime.countryCode!!, it.audioLocale) }
+            .toSortedSet()
 
         return Triple(
             WeeklyAnimeDto(
-                animeFactory.toDto(pair.second),
+                animeFactory.toDto(anime),
                 platforms.map { platformFactory.toDto(it) }.toSet(),
                 releaseDateTime.withUTCString(),
                 buildString {
-                    append("/animes/${pair.second.slug}")
+                    append("/animes/${anime.slug}")
 
-                    episodeMappings.takeIf { it.isNotEmpty() }?.let {
-                        if (it.minOf { it.season!! } == it.maxOf { it.season!! }) {
-                            append("/season-${it.first().season}")
-                            if (it.size <= 1) append("/${it.first().episodeType!!.slug}-${it.first().number}")
+                    val season = episodeMappings.takeIf { it.isNotEmpty() }
+                        ?.takeIf { mappings -> mappings.all { it.season == mappings.first().season } }
+                        ?.first()?.season
+                        ?: hourValues.map { it.episodeMapping.season }.distinct().singleOrNull()
+
+                    season?.let {
+                        append("/season-$it")
+                        if (episodeMappings.size == 1) {
+                            val episode = episodeMappings.first()
+                            append("/${episode.episodeType!!.slug}-${episode.number}")
                         }
                     }
-                },
+                }
+                ,
                 langTypes,
                 episodeType,
                 episodeMappings.minOfOrNull { it.number!! },
@@ -197,7 +200,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 episodeMappings.firstOrNull()?.number,
                 episodeMappings.takeIf { it.isNotEmpty() }?.map { episodeMappingFactory.toDto(it) }?.toSet()
             ),
-            filter.ifEmpty { hourValues }.distinctBy { it.episodeMapping.uuid }.size,
+            variantReleases.distinctBy { it.episodeMapping.uuid }.size,
             hourValues.first().episodeMapping.episodeType!!
         )
     }
@@ -241,12 +244,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
             WeeklyAnimesDto(
                 date.format(dateFormatter).capitalizeWords(),
-                tuplesDay.sortedWith(
+                tuplesDay.toSortedSet(
                     compareBy(
                         { ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).toLocalTime() },
                         { it.anime.shortName }
                     )
-                ).toSet()
+                )
             )
         }
     }
@@ -267,6 +270,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeMappingService.updateAllReleaseDate()
         animeRepository.updateAllReleaseDate()
 
+        val simulcasts = simulcastService.findAll().toMutableList()
+
         val groupedAnimes = findAll()
             .onEach { it.simulcasts = mutableSetOf() }
             .groupBy { it.countryCode!! }
@@ -284,8 +289,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                                 it.episodeType == episodeMapping.episodeType
                     }.maxOfOrNull { it.releaseDateTime }
 
-                    val simulcast = episodeVariantService.getSimulcast(anime, episodeMapping, previousReleaseDateTime, sqlCheck = false)
+                    val simulcast = episodeVariantService.getSimulcast(anime, episodeMapping, previousReleaseDateTime, sqlCheck = false, simulcasts = simulcasts)
                     addSimulcastToAnime(anime, simulcast)
+
+                    if (simulcasts.none { it.uuid == simulcast.uuid }) {
+                        simulcasts.add(simulcast)
+                    }
                 }
             }
         }

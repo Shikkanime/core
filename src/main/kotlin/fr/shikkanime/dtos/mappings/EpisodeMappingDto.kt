@@ -1,5 +1,6 @@
 package fr.shikkanime.dtos.mappings
 
+import fr.shikkanime.dtos.EpisodeSourceDto
 import fr.shikkanime.dtos.PlatformDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
@@ -21,7 +22,8 @@ data class EpisodeMappingDto(
     val title: String?,
     val description: String?,
     val variants: Set<EpisodeVariantDto>? = null,
-    val platforms: Set<PlatformDto>? = null,
-    val langTypes: Set<LangType>? = null,
+    @Deprecated("Use sources instead") val platforms: Set<PlatformDto>? = null,
+    @Deprecated("Use sources instead") val langTypes: Set<LangType>? = null,
     var image: String? = null,
+    val sources: Set<EpisodeSourceDto>,
 ) : Serializable

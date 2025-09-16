@@ -16,9 +16,17 @@
                              width="640" height="360">
 
                         <div class="platforms">
-                            <#list episodeMapping.platforms as platform>
-                                <img loading="lazy" src="${baseUrl}/assets/img/platforms/${platform.image}"
-                                     alt="${platform.name}"
+                            <#assign uniqueSources = [] />
+
+                            <#list episodeMapping.sources as source>
+                                <#if uniqueSources?filter(s -> s.platform.id == source.platform.id)?size == 0>
+                                    <#assign uniqueSources = uniqueSources + [source]>
+                                </#if>
+                            </#list>
+
+                            <#list uniqueSources as sources>
+                                <img loading="lazy" src="${baseUrl}/assets/img/platforms/${sources.platform.image}"
+                                     alt="${sources.platform.name}"
                                      class="rounded-circle ms-1" width="20"
                                      height="20">
                             </#list>
@@ -39,8 +47,16 @@
                         </div>
                     </#if>
 
-                    <#list episodeMapping.langTypes as langTypes>
-                        <p class="text-muted my-0"><@langTypeComponent.display langType=langTypes /></p>
+                    <#assign uniqueSources = [] />
+
+                    <#list episodeMapping.sources as source>
+                        <#if uniqueSources?filter(s -> s.langType == source.langType)?size == 0>
+                            <#assign uniqueSources = uniqueSources + [source]>
+                        </#if>
+                    </#list>
+
+                    <#list uniqueSources as source>
+                        <p class="text-muted my-0"><@langTypeComponent.display langType=source.langType /></p>
                     </#list>
                 </div>
 
