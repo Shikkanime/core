@@ -24,16 +24,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'corretto'
           cache: gradle
+
       - name: Install Webp
         run: sudo apt install -y webp
+
       - name: Install Playwright
         run: npx -y playwright install --with-deps
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start valkey
+        run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
+
       - name: Build and test
         run: ./gradlew clean test --info
         continue-on-error: ${{ github.event.inputs.bypass_tests }}
@@ -45,7 +55,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Pull the latest commits
       - name: Pull latest commits
         run: git pull
 
@@ -84,6 +93,12 @@ jobs:
 
           # Update the file
           sed -i "s|$PROJECT_VERSION|${{ env.VERSION }}|g" build.gradle.kts
+
+      - name: Update Valkey classifier in build.gradle.kts
+        run: |
+          #!/bin/bash
+          # Update the file
+          sed -i "s|osdetector.classifier|\"linux-aarch_64\"|g" build.gradle.kts
 
       - name: Build
         run: gradle clean installDist
@@ -141,7 +156,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Pull the latest commits
       - name: Pull latest commits
         run: git pull
 
