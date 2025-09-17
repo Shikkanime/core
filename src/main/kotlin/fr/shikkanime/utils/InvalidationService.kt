@@ -27,6 +27,8 @@ abstract class InvalidationService(open val classes: List<Class<*>>) {
             globalCaches.forEach { (_, cache) ->
                 cache.invalidate()
             }
+
+            AsynchronizedGlideClient.del()
         }
 
         fun <T : InvalidationService> getByNameAndType(
