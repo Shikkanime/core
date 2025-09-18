@@ -2,7 +2,7 @@
 
 <@navigation.display>
     <div x-data="{ display: 'CPU' }">
-        <div class="d-flex align-items-center mb-3 gap-3">
+        <div class="d-flex align-items-center mb-3 gap-3 flex-wrap">
             <div class="row g-3 align-items-center">
                 <div class="col-auto">
                     <select class="form-select" id="datemenu">
@@ -11,75 +11,82 @@
                         <option value="168">Last 7 days</option>
                     </select>
                 </div>
+                <div class="col-auto">
+                    <select class="form-select" id="activedaysmenu" title="Active days threshold">
+                        <option value="1">Active users: 1+ day</option>
+                        <option value="2" selected>Active users: 2+ days</option>
+                        <option value="3">Active users: 3+ days</option>
+                        <option value="7">Active users: 7+ days</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select class="form-select" id="daysmenu" title="Analytics date range">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
             </div>
-            <button class="btn" @click="display = 'CPU'" :class="{ 'btn-dark': display === 'CPU', 'btn-outline-dark': display !== 'CPU' }">CPU</button>
-            <button class="btn" @click="display = 'Memory'" :class="{ 'btn-dark': display === 'Memory', 'btn-outline-dark': display !== 'Memory' }">Memory</button>
+            <div class="ms-auto d-flex gap-2">
+                <button class="btn" @click="display = 'CPU'" :class="{ 'btn-dark': display === 'CPU', 'btn-outline-dark': display !== 'CPU' }">CPU</button>
+                <button class="btn" @click="display = 'Memory'" :class="{ 'btn-dark': display === 'Memory', 'btn-outline-dark': display !== 'Memory' }">Memory</button>
+            </div>
         </div>
 
-        <div class="row g-4">
-            <div class="col-md-6">
+        <div class="row g-2">
+            <!-- Line charts group -->
+            <!-- CPU/Memory time series -->
+            <div class="col-12 col-lg-4">
                 <div class="card p-3">
-                    <div style="height: 50vh">
+                    <div style="height: 28vh">
                         <canvas id="cpuLoadChart" x-show="display === 'CPU'"></canvas>
                         <canvas id="memoryUsageChart" x-show="display === 'Memory'"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <!-- Attachments cumulative line -->
+            <div class="col-12 col-lg-4">
                 <div class="card p-3">
-                    <div style="height: 50vh">
-                        <canvas id="loginCountChart"></canvas>
+                    <div style="height: 28vh">
+                        <canvas id="attachmentsChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <!-- Returning users by version over time (stacked area) -->
+            <div class="col-12 col-lg-4">
                 <div class="card p-3">
-                    <div class="d-flex flex-column flex-md-row mb-3 mb-md-4 justify-content-center">
-                        <h4 class="card-title">Simulcasts</h4>
-
-                        <div class="ms-md-auto me-md-0">
-                            <a id="simulcasts-invalidate" href="/admin/simulcasts-invalidate"
-                               class="btn btn-danger">Invalidate</a>
-                            <button id="simulcasts-show" class="btn btn-success">Show all</button>
-                        </div>
-
-                        <script>
-                            document.getElementById('simulcasts-show').addEventListener('click', function () {
-                                document.querySelectorAll('.list-group-item.d-none').forEach(function (element) {
-                                    element.classList.remove('d-none');
-                                });
-                            });
-                        </script>
+                    <div style="height: 28vh">
+                        <canvas id="usersByVersionChart"></canvas>
                     </div>
-
-                    <ul class="list-group list-group-numbered">
-                        <#list simulcasts as simulcast>
-                            <li class="list-group-item d-flex justify-content-between align-items-start <#if simulcast_index<5><#else>d-none</#if>">
-                                <div class="ms-2 me-auto">
-                                    <div class="fw-bold">${simulcast.season} ${simulcast.year?c}</div>
-                                </div>
-
-                                <span class="badge text-bg-primary rounded-pill">
-                                    ${simulcast.animesCount}
-                                </span>
-                            </li>
-                        </#list>
-                    </ul>
                 </div>
             </div>
 
-            <div class="col-md-6">
+            <!-- Pie charts group -->
+            <!-- Versions pie -->
+            <div class="col-12 col-md-4">
                 <div class="card p-3">
-                    <h4 class="card-title mb-3 mb-md-4">Images</h4>
+                    <div style="height: 22vh">
+                        <canvas id="versionsPie"></canvas>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label" for="size">Size</label>
-                            <input id="size" name="size" type="number" class="form-control disabled" value="${size?c}"
-                                   disabled>
-                        </div>
+            <!-- Locales pie -->
+            <div class="col-12 col-md-4">
+                <div class="card p-3">
+                    <div style="height: 22vh">
+                        <canvas id="localesPie"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Devices pie -->
+            <div class="col-12 col-md-4">
+                <div class="card p-3">
+                    <div style="height: 22vh">
+                        <canvas id="devicesPie"></canvas>
                     </div>
                 </div>
             </div>

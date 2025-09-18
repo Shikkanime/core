@@ -8,7 +8,6 @@ import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
-import java.time.LocalDate
 
 @Controller("$ADMIN/api/trace-actions")
 class TraceActionController : HasPageableRoute() {
@@ -27,10 +26,4 @@ class TraceActionController : HasPageableRoute() {
         val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
         return Response.ok(PageableDto.fromPageable(traceActionService.findAllBy(entityTypeParam, actionParam, page, limit), traceActionFactory))
     }
-
-    @Path("/login-counts")
-    @Get
-    @AdminSessionAuthenticated
-    private fun getLoginCounts(@QueryParam(defaultValue = "30") days: Long) =
-        Response.ok(traceActionService.getLoginCountsAfter(LocalDate.now().minusDays(days)))
 }

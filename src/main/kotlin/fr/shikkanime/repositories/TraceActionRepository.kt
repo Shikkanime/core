@@ -1,6 +1,5 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.LoginCountDto
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.TraceAction_
 import fr.shikkanime.entities.miscellaneous.Pageable
@@ -26,35 +25,22 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getLoginCountsAfter(date: LocalDate): List<LoginCountDto> {
+    fun getAnalyticsTraceActions(date: LocalDate): List<TraceAction> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
             val actionDate = cb.function("DATE", LocalDate::class.java, root[TraceAction_.actionDateTime])
 
-            query.select(
-                cb.tuple(
-                    actionDate,
-                    cb.countDistinct(root[TraceAction_.entityUuid]),
-                    cb.count(root[TraceAction_.entityUuid])
+            query.select(root)
+                .where(
+                    cb.greaterThan(actionDate, date),
+                    cb.equal(root[TraceAction_.entityType], "Member"),
+                    cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
                 )
-            ).where(
-                cb.greaterThanOrEqualTo(actionDate, date),
-                cb.equal(root[TraceAction_.entityType], "Member"),
-                cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
-            ).groupBy(actionDate)
 
             createReadOnlyQuery(it, query)
-                .resultStream
-                .map { tuple ->
-                    LoginCountDto(
-                        date = tuple[0, LocalDate::class.java].toString(),
-                        distinctCount = tuple[1, Long::class.java],
-                        count = tuple[2, Long::class.java]
-                    )
-                }
-                .toList()
+                .resultList
         }
     }
 }
