@@ -63,6 +63,19 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
+    fun findAllActive(): List<Attachment> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.isTrue(root[Attachment_.active]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType): Attachment? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

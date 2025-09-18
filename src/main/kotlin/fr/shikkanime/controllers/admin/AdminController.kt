@@ -7,11 +7,9 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -32,10 +30,8 @@ const val ADMIN = "/admin"
 @Controller(ADMIN)
 class AdminController {
     @Inject private lateinit var memberService: MemberService
-    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var configCacheService: ConfigCacheService
-    @Inject private lateinit var attachmentService: AttachmentService
     @Inject private lateinit var mailService: MailService
 
     @Path
@@ -78,13 +74,7 @@ class AdminController {
     @Path("/dashboard")
     @Get
     @AdminSessionAuthenticated
-    private fun getDashboard() = Response.template(
-        Link.DASHBOARD,
-        mapOf(
-            "simulcasts" to simulcastCacheService.findAll(),
-            "size" to Constant.imagesFolder.listFiles().size
-        )
-    )
+    private fun getDashboard() = Response.template(Link.DASHBOARD)
 
     @Path("/simulcasts-invalidate")
     @Get

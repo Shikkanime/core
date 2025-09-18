@@ -47,6 +47,8 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = attachmentRepository.findAllActiveWithUrlAndNotIn(uuids)
 
+    fun findAllActive() = attachmentRepository.findAllActive()
+
     fun createAttachmentOrMarkAsActive(entityUuid: UUID, type: ImageType, url: String? = null, bytes: ByteArray? = null, async: Boolean = true): Attachment {
         val attachments = findAllByEntityUuidAndType(entityUuid, type)
         val existingAttachment = attachments.find { it.url == url }
