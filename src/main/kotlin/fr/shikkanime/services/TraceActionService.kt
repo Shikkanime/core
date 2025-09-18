@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.TraceActionRepository
+import java.time.LocalDate
 import java.time.ZonedDateTime
 
 class TraceActionService : AbstractService<TraceAction, TraceActionRepository>() {
@@ -14,7 +15,7 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
 
     fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) = traceActionRepository.findAllBy(entityType, action, page, limit)
 
-    fun getLoginCountsAfter(date: ZonedDateTime) = traceActionRepository.getLoginCountsAfter(date)
+    fun getLoginCountsAfter(date: LocalDate) = traceActionRepository.getLoginCountsAfter(date)
 
     fun createTraceAction(shikkEntity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
         TraceAction(

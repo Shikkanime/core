@@ -5,7 +5,6 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.TraceAction_
 import fr.shikkanime.entities.miscellaneous.Pageable
 import java.time.LocalDate
-import java.time.ZonedDateTime
 
 class TraceActionRepository : AbstractRepository<TraceAction>() {
     override fun getEntityClass() = TraceAction::class.java
@@ -27,32 +26,32 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getLoginCountsAfter(date: ZonedDateTime): List<LoginCountDto> {
+    fun getLoginCountsAfter(date: LocalDate): List<LoginCountDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
-            val function = cb.function("DATE", LocalDate::class.java, root[TraceAction_.actionDateTime])
+            val actionDate = cb.function("DATE", LocalDate::class.java, root[TraceAction_.actionDateTime])
 
             query.select(
                 cb.tuple(
-                    function,
+                    actionDate,
                     cb.countDistinct(root[TraceAction_.entityUuid]),
                     cb.count(root[TraceAction_.entityUuid])
                 )
             ).where(
-                cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], date),
+                cb.greaterThanOrEqualTo(actionDate, date),
                 cb.equal(root[TraceAction_.entityType], "Member"),
                 cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
-            ).groupBy(function)
+            ).groupBy(actionDate)
 
             createReadOnlyQuery(it, query)
                 .resultStream
                 .map { tuple ->
                     LoginCountDto(
-                        date = (tuple[0] as LocalDate).toString(),
-                        distinctCount = tuple[1] as Long,
-                        count = tuple[2] as Long
+                        date = tuple[0, LocalDate::class.java].toString(),
+                        distinctCount = tuple[1, Long::class.java],
+                        count = tuple[2, Long::class.java]
                     )
                 }
                 .toList()
