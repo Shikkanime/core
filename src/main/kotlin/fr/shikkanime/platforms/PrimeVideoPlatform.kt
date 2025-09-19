@@ -24,7 +24,7 @@ class PrimeVideoPlatform :
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
-        val episodes = PrimeVideoWrapper.getEpisodesByShowId(key.countryCode.locale, key.primeVideoSimulcast.name)
+        val episodes = PrimeVideoWrapper.getEpisodesByShowId(key.countryCode, key.primeVideoSimulcast.name)
 
         return episodes.flatMap {
             try {
@@ -35,9 +35,6 @@ class PrimeVideoPlatform :
                     zonedDateTime.minusMinutes(1),
                     key.primeVideoSimulcast.episodeType
                 )
-            } catch (_: EpisodeNoSubtitlesOrVoiceException) {
-                // Ignore
-                emptyList()
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error on converting episode", e)
                 emptyList()

@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.factories
 
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
 import java.io.Serializable
 
@@ -37,5 +38,5 @@ abstract class AbstractPrimeVideoWrapper {
     protected val baseUrl = "https://www.primevideo.com"
     protected val httpRequest = HttpRequest()
 
-    abstract suspend fun getEpisodesByShowId(locale: String, id: String): Array<Episode>
+    abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: String): Array<Episode>
 }

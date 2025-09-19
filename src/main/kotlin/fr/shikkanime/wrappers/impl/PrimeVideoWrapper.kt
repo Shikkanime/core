@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.impl
 
 import com.google.gson.JsonObject
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -13,11 +14,11 @@ import io.ktor.http.*
 
 object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     override suspend fun getEpisodesByShowId(
-        locale: String,
+        countryCode: CountryCode,
         id: String
     ): Array<Episode> {
         // Make API request
-        val globalJson = fetchPrimeVideoData("$baseUrl/detail/$id/ref=atv_sr_fle_c_Tn74RA_1_1_1", locale)
+        val globalJson = fetchPrimeVideoData("$baseUrl/-/${countryCode.name.lowercase()}/detail/$id/ref=atv_sr_fle_c_sre999aa_1_1_1", countryCode.locale)
         
         // Extract show data
         val atfState = globalJson.getAsJsonObject("atf").getAsJsonObject("state")
@@ -48,7 +49,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         return seasons.flatMap { season ->
             // Use existing JSON for main page or fetch season-specific data
             val json = if (season.id != pageTitleId) {
-                fetchPrimeVideoData("$baseUrl${season.link}", locale)
+                fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale)
             } else {
                 globalJson
             }
@@ -89,7 +90,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             episodeNumber,
             episodeJson.getAsString("title")!!,
             episodeJson.getAsString("synopsis")!!,
-            "$baseUrl${btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")}",
+            "$baseUrl${btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")}?autoplay=1&t=0",
             episodeJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             episodeJson.getAsLong("duration", -1),
             buildSet {
@@ -105,7 +106,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = httpRequest.get(
-            "$url?dvWebSPAClientVersion=1.0.105438.0",
+            "$url?dvWebSPAClientVersion=1.0.111788.0",
             headers = mapOf(
                 "Accept" to "application/json",
                 "Cookie" to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
