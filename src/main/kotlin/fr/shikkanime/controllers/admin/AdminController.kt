@@ -90,6 +90,14 @@ class AdminController {
         return Response.redirect(Link.DASHBOARD.href)
     }
 
+    @Path("/caches-invalidate")
+    @Get
+    @AdminSessionAuthenticated
+    private fun invalidateCaches(): Response {
+        InvalidationService.invalidateAll()
+        return Response.redirect(Link.DASHBOARD.href)
+    }
+
     @Path("/animes")
     @Get
     @AdminSessionAuthenticated

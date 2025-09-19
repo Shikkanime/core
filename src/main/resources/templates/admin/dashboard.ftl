@@ -22,6 +22,21 @@
                 <option value="30" selected>Last 30 days</option>
                 <option value="90">Last 90 days</option>
             </select>
+
+            <div class="dropdown">
+                <button class="btn btn-light" type="button" id="actionsMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="actionsMenuButton">
+                    <li>
+                        <a class="dropdown-item" href="/admin/simulcasts-invalidate">
+                            Invalid simulcasts
+                        </a><a class="dropdown-item" href="/admin/caches-invalidate">
+                            Invalid all caches
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -48,22 +63,7 @@
         <!-- Simulcasts bar chart -->
         <div class="col-12 col-md-6">
             <div class="card p-3">
-                <div class="d-flex align-items-end justify-content-end">
-                    <div class="dropdown">
-                        <button class="btn btn-light" type="button" id="actionsMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-three-dots-vertical"></i>
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="actionsMenuButton">
-                            <li>
-                                <a class="dropdown-item" href="/admin/simulcasts-invalidate">
-                                    Invalid simulcasts
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div style="height: 32vh">
+                <div style="height: 36vh">
                     <canvas id="simulcastsBarChart"></canvas>
                 </div>
             </div>
