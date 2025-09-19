@@ -198,7 +198,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 episodeMappings.minOfOrNull { it.number!! },
                 episodeMappings.maxOfOrNull { it.number!! },
                 episodeMappings.firstOrNull()?.number,
-                episodeMappings.takeIf { it.isNotEmpty() }?.map { episodeMappingFactory.toDto(it) }?.toSet()
+                episodeMappings.takeIf { it.isNotEmpty() }?.map { episodeMappingFactory.toDto(it, false) }?.toSet()
             ),
             variantReleases.distinctBy { it.episodeMapping.uuid }.size,
             hourValues.first().episodeMapping.episodeType!!
