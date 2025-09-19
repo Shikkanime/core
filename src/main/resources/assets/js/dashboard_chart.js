@@ -8,6 +8,7 @@ const versionsPieElement = document.getElementById('versionsPie').getContext('2d
 const localesPieElement = document.getElementById('localesPie').getContext('2d');
 const devicesPieElement = document.getElementById('devicesPie').getContext('2d');
 const usersByVersionChartElement = document.getElementById('usersByVersionChart').getContext('2d');
+const simulcastsBarChartElement = document.getElementById('simulcastsBarChart') ? document.getElementById('simulcastsBarChart').getContext('2d') : null;
 
 const colorPalette = [
     '#4e79a7','#f28e2c','#e15759','#76b7b2','#59a14f','#edc949','#af7aa1','#ff9da7','#9c755f','#bab0ab',
@@ -52,6 +53,16 @@ const attachmentsChart = createLineChart(attachmentsChartElement, 'Attachments',
 const versionsPie = createPieChart(versionsPieElement, 'Versions');
 const localesPie = createPieChart(localesPieElement, 'Locales');
 const devicesPie = createPieChart(devicesPieElement, 'Devices');
+
+const simulcastsBarChart = simulcastsBarChartElement ? new Chart(simulcastsBarChartElement, {
+    type: 'bar',
+    data: { labels: [], datasets: [{ label: "Animés", data: [], backgroundColor: '#4e79a7' }] },
+    options: {
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } },
+        plugins: { legend: { display: false } }
+    }
+}) : null;
 
 const usersByVersionChart = new Chart(usersByVersionChartElement, {
     type: 'line',
@@ -149,6 +160,18 @@ const setChartData = async () => {
     usersByVersionChart.data.labels = uniqueDates;
     usersByVersionChart.data.datasets = Array.from(seriesMap.values());
     usersByVersionChart.update();
+
+    if (simulcastsBarChart) {
+        const simulcasts = await fetch('/api/v1/simulcasts').then(r => r.json());
+        const seasonOrder = { WINTER: 0, SPRING: 1, SUMMER: 2, AUTUMN: 3 };
+        const sorted = simulcasts.slice().sort((a, b) => {
+            if (a.year === b.year) return seasonOrder[a.season] - seasonOrder[b.season];
+            return a.year - b.year;
+        });
+        simulcastsBarChart.data.labels = sorted.map(s => s.season + ' ' + s.year);
+        simulcastsBarChart.data.datasets[0].data = sorted.map(s => s.animesCount || 0);
+        simulcastsBarChart.update();
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => setChartData());
