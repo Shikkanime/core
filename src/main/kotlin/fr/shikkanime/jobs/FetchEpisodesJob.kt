@@ -77,7 +77,6 @@ class FetchEpisodesJob : AbstractJob {
         }
 
         val identifiers = episodeVariantCacheService.findAllIdentifiers()
-        val alreadyInDatabaseEpisodes = mutableListOf<AbstractPlatform.Episode>()
 
         val savedEpisodes = episodes.asSequence()
             .sortedWith(
@@ -94,18 +93,6 @@ class FetchEpisodesJob : AbstractJob {
             .filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) && it.getIdentifier() !in identifiers }
             .mapNotNull {
                 try {
-                    if (episodeVariantService.existsByAttributes(
-                        it.countryCode,
-                        it.season,
-                        it.episodeType,
-                        it.number,
-                        it.platform,
-                        it.audioLocale,
-                    )) {
-                        logger.warning("Episode ${it.getIdentifier()} (${it.anime}) has already a same variant in database")
-                        alreadyInDatabaseEpisodes.add(it)
-                    }
-
                     val savedEpisode = episodeVariantService.save(
                         it,
                         async = configCacheService.getValueAsBoolean(ConfigPropertyKey.ASYNC_FETCH_EPISODE_IMAGES, true)
@@ -121,8 +108,6 @@ class FetchEpisodesJob : AbstractJob {
 
         isRunning = false
 
-        sendAlreadyInDatabaseNotification(alreadyInDatabaseEpisodes)
-
         if (savedEpisodes.isEmpty()) return
 
         InvalidationService.invalidate(
@@ -134,30 +119,6 @@ class FetchEpisodesJob : AbstractJob {
 
         sendToNetworks(savedEpisodes)
     }
-
-    private fun sendAlreadyInDatabaseNotification(episodes: List<AbstractPlatform.Episode>) {
-        if (episodes.isEmpty()) {
-            return
-        }
-
-        try {
-            val body = """
-                The following episodes have already a same variant in database:<br/>
-                ${episodes.joinToString("<br/>") { "<b>${it.anime}</b> (${it.getIdentifier()}) - S${it.season} ${it.episodeType} ${it.number} (${it.audioLocale})" }}
-            """.trimIndent()
-
-            val mail = Mail(
-                recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                title = "FetchEpisodesJob - Already in database episodes",
-                body = body
-            )
-
-            mailService.save(mail)
-        } catch (e: Exception) {
-            logger.warning("Error while sending mail for FetchEpisodesJob: ${e.message}")
-        }
-    }
-
 
     private fun getTypeIdentifier(tuple: Tuple): String {
         val countryCode = tuple[0, CountryCode::class.java]

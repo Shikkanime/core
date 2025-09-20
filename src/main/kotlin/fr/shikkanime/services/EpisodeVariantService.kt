@@ -51,15 +51,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         endZonedDateTime
     )
 
-    fun existsByAttributes(
-        countryCode: CountryCode,
-        season: Int,
-        episodeType: EpisodeType,
-        number: Int,
-        platform: Platform,
-        audioLocale: String
-    ) = episodeVariantRepository.existsByAttributes(countryCode, season, episodeType, number, platform, audioLocale)
-
     /**
      * Determines the appropriate simulcast for a given anime and episode mapping.
      *
