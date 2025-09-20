@@ -3,6 +3,7 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import jakarta.persistence.Tuple
@@ -177,4 +178,36 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .map { tuple -> tuple[0, String::class.java] to tuple[1, ZonedDateTime::class.java] }
         }
     }
+
+    fun existsByAttributes(
+        countryCode: CountryCode,
+        season: Int,
+        episodeType: EpisodeType,
+        number: Int,
+        platform: Platform,
+        audioLocale: String
+    ): Boolean {
+        return database.entityManager.use { em ->
+            val cb = em.criteriaBuilder
+            val query = cb.createQuery(Long::class.java)
+            val root = query.from(getEntityClass())
+            val mapping = root[EpisodeVariant_.mapping]
+            val anime = mapping[EpisodeMapping_.anime]
+
+            query.select(cb.count(root))
+                .where(
+                    cb.and(
+                        cb.equal(anime[Anime_.countryCode], countryCode),
+                        cb.equal(mapping[EpisodeMapping_.season], season),
+                        cb.equal(mapping[EpisodeMapping_.episodeType], episodeType),
+                        cb.equal(mapping[EpisodeMapping_.number], number),
+                        cb.equal(root[EpisodeVariant_.platform], platform),
+                        cb.equal(root[EpisodeVariant_.audioLocale], audioLocale)
+                    )
+                )
+
+            (createReadOnlyQuery(em, query).singleResult ?: 0L) > 0L
+        }
+    }
+
 }
