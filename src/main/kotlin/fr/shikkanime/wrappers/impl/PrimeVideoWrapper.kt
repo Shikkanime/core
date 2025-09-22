@@ -108,8 +108,8 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         val response = httpRequest.get(
             "$url?dvWebSPAClientVersion=1.0.111788.0",
             headers = mapOf(
-                "Accept" to "application/json",
-                "Cookie" to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
+                "Accept" to ContentType.Application.Json.toString(),
+                HttpHeaders.Cookie to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
                 "x-requested-with" to "WebSPA"
             )
         )

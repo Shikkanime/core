@@ -108,4 +108,5 @@
     <!-- August 2025 -->
     <!-- September 2025 -->
     <include file="/db/changelog/2025/09/01-changelog.xml"/>
+    <include file="/db/changelog/2025/09/02-changelog.xml"/>
 </databaseChangeLog>

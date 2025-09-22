@@ -8,21 +8,13 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
     data class NetflixSimulcastDay(
         var episodeType: EpisodeType = EpisodeType.EPISODE,
         var audioLocales: MutableSet<String> = mutableSetOf("ja-JP"),
-        var audioLocaleDelays: MutableMap<String, Long> = mutableMapOf(),
+        var audioLocaleHasDelay: MutableSet<String> = mutableSetOf(),
     ) : ReleaseDayPlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["episodeType"]?.let { episodeType = EpisodeType.valueOf(it) }
             parameters["audioLocales"]?.let { audioLocales = it.split(StringUtils.COMMA_STRING).toMutableSet() }
-            parameters["audioLocaleDelays"]?.let {
-                audioLocaleDelays.clear()
-                it.split(StringUtils.COMMA_STRING).forEach { delay ->
-                    val parts = delay.split(":")
-                    if (parts.size == 2) {
-                        audioLocaleDelays[parts[0]] = parts[1].toLongOrNull() ?: 0
-                    }
-                }
-            }
+            parameters["audioLocaleHasDelay"]?.let { audioLocaleHasDelay = it.split(StringUtils.COMMA_STRING).toMutableSet() }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
@@ -45,10 +37,10 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
             add(
                 ConfigurationField(
                     label = "Audio Locale Delays",
-                    caption = "Format: locale:weeks_delay,locale:weeks_delay (e.g. fr-FR:3)",
-                    name = "audioLocaleDelays",
+                    caption = "Format: locale (e.g. fr-FR)",
+                    name = "audioLocaleHasDelay",
                     type = "text",
-                    value = audioLocaleDelays.entries.joinToString(StringUtils.COMMA_STRING) { "${it.key}:${it.value}" },
+                    value = audioLocaleHasDelay.joinToString(StringUtils.COMMA_STRING),
                 )
             )
         }
@@ -60,7 +52,7 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
 
             if (episodeType != other.episodeType) return false
             if (audioLocales != other.audioLocales) return false
-            if (audioLocaleDelays != other.audioLocaleDelays) return false
+            if (audioLocaleHasDelay != other.audioLocaleHasDelay) return false
 
             return true
         }
@@ -69,7 +61,7 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
             var result = super.hashCode()
             result = 31 * result + episodeType.hashCode()
             result = 31 * result + audioLocales.hashCode()
-            result = 31 * result + audioLocaleDelays.hashCode()
+            result = 31 * result + audioLocaleHasDelay.hashCode()
             return result
         }
     }

@@ -1,35 +1,38 @@
 package fr.shikkanime.wrappers.impl
 
 import com.google.gson.JsonObject
+import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
-import io.ktor.client.request.forms.FormDataContent
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
+import java.time.Duration
 import java.time.ZonedDateTime
 
 object NetflixWrapper : AbstractNetflixWrapper() {
-    data class NetflixAuthentification(
-        val id: String,
-        val secureId: String,
-        val authUrl: String
-    )
+    private val logger = LoggerFactory.getLogger(javaClass)
 
-    private fun getNetflixAuthentificationFromConfig(): NetflixAuthentification {
+    private fun getNetflixAuthentificationFromConfig() = MapCache.getOrCompute(
+        "NetflixWrapper.getNetflixAuthentificationFromConfig",
+        typeToken = object : TypeToken<MapCacheValue<NetflixAuthentification>>() {},
+        duration = Duration.ofHours(1),
+        classes = listOf(Config::class.java),
+        key = StringUtils.EMPTY_STRING
+    ) {
         val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
         val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
         val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
-        val netflixAuthUrl = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_AUTH_URL)
-        require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true && netflixAuthUrl?.isNotBlank() == true) { "NetflixId, NetflixSecureId and NetflixAuthUrl must be set in the configuration" }
-        return NetflixAuthentification(netflixId, netflixSecureId, netflixAuthUrl)
+        require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true) { "NetflixId and NetflixSecureId must be set in the configuration" }
+        val authUrl = runBlocking { extractAuthUrl(httpRequest.get(baseUrl, mapOf(HttpHeaders.Cookie to getCookieValue(netflixId, netflixSecureId))).bodyAsText()) }
+        NetflixAuthentification(netflixId, netflixSecureId, authUrl)
     }
 
     private fun extractMaxUrl(json: JsonObject, arrayName: String): String? {
@@ -46,8 +49,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val response = httpRequest.get(
             "$baseUrl/nq/website/memberapi/release/metadata?movieid=$id&imageFormat=jpg",
             mapOf(
-                "Content-Type" to "application/json",
-                "Cookie" to "NetflixId=${netflixAuthentification.id}; SecureNetflixId=${netflixAuthentification.secureId}"
+                HttpHeaders.ContentType to ContentType.Application.Json.toString(),
+                HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)
             )
         )
         require(response.status == HttpStatusCode.OK) { "Failed to get metadata (${response.status.value} - ${response.bodyAsText()})" }
@@ -176,7 +179,9 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 "$baseUrl/watch/${show.id}",
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
-                runCatching { getEpisodeAudioTrackList(show.id) }.getOrNull() ?: emptySet()
+                runCatching { getEpisodeAudioTrackList(show.id) }
+                    .onFailure { logger.warning("Failed to get audio tracks for movie $id: ${it.message}") }
+                    .getOrNull() ?: emptySet()
             )
         )
     }
@@ -260,7 +265,9 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             show.metadata?.episodes?.find { it.id == episodeId }?.image
                 ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
             episode.getAsInt("runtimeSec")!!.toLong(),
-            runCatching { getEpisodeAudioTrackList(episodeId) }.getOrNull() ?: emptySet()
+            runCatching { getEpisodeAudioTrackList(episodeId) }
+                .onFailure { logger.warning("Failed to get audio tracks for episode $episodeId: ${it.message}") }
+                .getOrNull() ?: emptySet()
         )
     }
 
@@ -269,10 +276,10 @@ object NetflixWrapper : AbstractNetflixWrapper() {
 
         val response = httpRequest.post(
             "$baseUrl/nq/website/memberapi/release/pathEvaluator?method=call&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
-            mapOf("Cookie" to "NetflixId=${netflixAuthentification.id}; SecureNetflixId=${netflixAuthentification.secureId}"),
+            mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
             FormDataContent(parametersOf(
                 "callPath" to listOf("[\"videos\",$id,\"audio\"]"),
-                "authURL" to listOf(netflixAuthentification.authUrl)
+                "authURL" to listOf(netflixAuthentification.authUrl),
             ))
         )
         require(response.status == HttpStatusCode.OK) { "Failed to get audio tracks (${response.status.value} - ${response.bodyAsText()})" }
