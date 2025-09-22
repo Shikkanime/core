@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.factories
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
 import java.io.Serializable
 
@@ -25,6 +26,7 @@ abstract class AbstractPrimeVideoWrapper {
         val oldIds: Set<String>,
         val id: String,
         val season: Int,
+        val episodeType: EpisodeType,
         val number: Int,
         val title: String?,
         val description: String?,

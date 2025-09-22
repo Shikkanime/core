@@ -25,7 +25,6 @@ enum class ConfigPropertyKey(val key: String) {
     EMAIL_PASSWORD("email_password"),
     EMAIL_PORT("email_port"),
     EMAIL_USERNAME("email_username"),
-    FETCH_OLD_EPISODES_LIMIT("fetch_old_episodes_limit"),
     FETCH_OLD_EPISODES_RANGE("fetch_old_episodes_range"),
     GOOGLE_SITE_VERIFICATION_ID("google_site_verification_id"),
     LAST_FETCH_OLD_EPISODES("last_fetch_old_episodes"),

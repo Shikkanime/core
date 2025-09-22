@@ -41,6 +41,12 @@ object Constant {
             if (!folder.exists()) folder.mkdirs()
             return folder
         }
+    val exportsFolder: File
+        get() {
+            val folder = File(dataFolder, "exports")
+            if (!folder.exists()) folder.mkdirs()
+            return folder
+        }
 
     val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
     val utcZoneId: ZoneId = ZoneId.of("UTC")

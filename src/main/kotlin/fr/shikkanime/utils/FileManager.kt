@@ -66,7 +66,6 @@ object FileManager {
             
             // Read the converted image
             return tempOutputFile.readBytes()
-            
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Failed to convert image to WebP", e)
             throw e

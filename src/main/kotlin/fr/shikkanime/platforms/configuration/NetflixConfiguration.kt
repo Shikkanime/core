@@ -1,31 +1,20 @@
 package fr.shikkanime.platforms.configuration
 
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 
 class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixSimulcastDay>() {
     data class NetflixSimulcastDay(
-        var episodeType: EpisodeType = EpisodeType.EPISODE,
         var audioLocales: MutableSet<String> = mutableSetOf("ja-JP"),
         var audioLocaleHasDelay: MutableSet<String> = mutableSetOf(),
     ) : ReleaseDayPlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
-            parameters["episodeType"]?.let { episodeType = EpisodeType.valueOf(it) }
             parameters["audioLocales"]?.let { audioLocales = it.split(StringUtils.COMMA_STRING).toMutableSet() }
             parameters["audioLocaleHasDelay"]?.let { audioLocaleHasDelay = it.split(StringUtils.COMMA_STRING).toMutableSet() }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
-            add(
-                ConfigurationField(
-                    label = "Episode Type",
-                    name = "episodeType",
-                    type = "text",
-                    value = episodeType.name,
-                )
-            )
             add(
                 ConfigurationField(
                     label = "Audio Locales",
@@ -50,7 +39,6 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
             if (other !is NetflixSimulcastDay) return false
             if (!super.equals(other)) return false
 
-            if (episodeType != other.episodeType) return false
             if (audioLocales != other.audioLocales) return false
             if (audioLocaleHasDelay != other.audioLocaleHasDelay) return false
 
@@ -59,7 +47,6 @@ class NetflixConfiguration : PlatformConfiguration<NetflixConfiguration.NetflixS
 
         override fun hashCode(): Int {
             var result = super.hashCode()
-            result = 31 * result + episodeType.hashCode()
             result = 31 * result + audioLocales.hashCode()
             result = 31 * result + audioLocaleHasDelay.hashCode()
             return result

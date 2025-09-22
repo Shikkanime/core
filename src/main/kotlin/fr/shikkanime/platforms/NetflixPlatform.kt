@@ -2,7 +2,6 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
@@ -27,7 +26,6 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
                     key.countryCode,
                     key.netflixSimulcast.image,
                     video,
-                    key.netflixSimulcast.episodeType,
                     audioLocale
                 ).apply {
                     if (key.netflixSimulcast.audioLocaleHasDelay.contains(audioLocale)) {
@@ -50,7 +48,6 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         countryCode: CountryCode,
         showImage: String,
         episode: AbstractNetflixWrapper.Episode,
-        episodeType: EpisodeType,
         audioLocale: String,
     ) = Episode(
         countryCode = countryCode,
@@ -63,7 +60,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
         ),
         animeDescription = episode.show.description,
         releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
-        episodeType = episodeType,
+        episodeType = episode.episodeType,
         seasonId = episode.season.toString(),
         season = episode.season,
         number = episode.number,

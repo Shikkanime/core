@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -173,6 +174,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.id,
                 releaseDateTime,
                 1,
+                EpisodeType.FILM,
                 1,
                 show.name.normalize(),
                 show.description?.normalize(),
@@ -258,6 +260,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             episodeId,
             releaseDateTime,
             seasonNumber,
+            EpisodeType.EPISODE,
             episodeNumber,
             episode.getAsString("title")?.normalize(),
             episode.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),

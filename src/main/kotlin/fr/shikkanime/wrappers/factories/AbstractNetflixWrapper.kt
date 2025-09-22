@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.factories
 
 import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
@@ -56,6 +57,7 @@ abstract class AbstractNetflixWrapper {
         val id: Int,
         val releaseDateTime: ZonedDateTime?,
         val season: Int,
+        val episodeType: EpisodeType,
         val number: Int,
         val title: String?,
         val description: String?,
