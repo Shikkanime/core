@@ -1,18 +1,13 @@
 package fr.shikkanime.platforms.configuration
 
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.StringUtils
 import io.ktor.http.*
 
 class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.PrimeVideoSimulcast>() {
-    data class PrimeVideoSimulcast(
-        var releaseTime: String = StringUtils.EMPTY_STRING,
-        var episodeType: EpisodeType = EpisodeType.EPISODE,
-    ) : ReleaseDayPlatformSimulcast() {
+    data class PrimeVideoSimulcast(var releaseTime: String = StringUtils.EMPTY_STRING) : ReleaseDayPlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
             parameters["releaseTime"]?.let { releaseTime = it }
-            parameters["episodeType"]?.let { episodeType = EpisodeType.valueOf(it) }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
@@ -25,14 +20,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
                     value = releaseTime
                 ),
             )
-            add(
-                ConfigurationField(
-                    label = "Episode Type",
-                    name = "episodeType",
-                    type = "text",
-                    value = episodeType.name,
-                )
-            )
         }
 
         override fun equals(other: Any?): Boolean {
@@ -41,7 +28,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
             if (!super.equals(other)) return false
 
             if (releaseTime != other.releaseTime) return false
-            if (episodeType != other.episodeType) return false
 
             return true
         }
@@ -49,7 +35,6 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
         override fun hashCode(): Int {
             var result = super.hashCode()
             result = 31 * result + releaseTime.hashCode()
-            result = 31 * result + episodeType.hashCode()
             return result
         }
     }

@@ -484,7 +484,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     countryCode,
                     StringUtils.EMPTY_STRING,
                     episode,
-                    episodeMapping.episodeType!!,
                     episodeVariant.audioLocale!!
                 )
             )
@@ -513,8 +512,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
                     countryCode,
                     StringUtils.EMPTY_STRING,
                     episode,
-                    releaseDateTime,
-                    episodeMapping.episodeType!!,
+                    releaseDateTime
                 )
             )
         }

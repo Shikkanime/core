@@ -2,7 +2,6 @@ package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
@@ -32,8 +31,7 @@ class PrimeVideoPlatform :
                     key.countryCode,
                     key.primeVideoSimulcast.image,
                     it,
-                    zonedDateTime.minusMinutes(1),
-                    key.primeVideoSimulcast.episodeType
+                    zonedDateTime.minusMinutes(1)
                 )
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error on converting episode", e)
@@ -63,7 +61,6 @@ class PrimeVideoPlatform :
         showImage: String,
         episode: AbstractPrimeVideoWrapper.Episode,
         zonedDateTime: ZonedDateTime,
-        episodeType: EpisodeType,
     ): List<Episode> {
         val isDubbed = countryCode.locale in episode.audioLocales
         val subtitles = episode.subtitleLocales
@@ -83,7 +80,7 @@ class PrimeVideoPlatform :
                 ),
                 animeDescription = episode.show.description,
                 releaseDateTime = zonedDateTime,
-                episodeType = episodeType,
+                episodeType = episode.episodeType,
                 seasonId = episode.season.toString(),
                 season = episode.season,
                 number = episode.number,

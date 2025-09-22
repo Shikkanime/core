@@ -17,6 +17,7 @@ enum class Link(
     PLATFORMS("$ADMIN/platforms", "/admin/platforms/list.ftl", "bi bi-display", "Platforms"),
     ANIMES("$ADMIN/animes", "/admin/animes/list.ftl", "bi bi-file-earmark-play", "Animes"),
     EPISODES("$ADMIN/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
+    EPISODE_MANAGER("$ADMIN/episode-manager", "/admin/episode-manager.ftl", "bi bi-kanban", "Episode manager"),
     TRACE_ACTIONS("$ADMIN/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
     ANIME_ALERTS("$ADMIN/anime-alerts", "/admin/anime-alerts.ftl", "bi bi-bug", "Anime alerts"),
     MEMBERS("$ADMIN/members", "/admin/members/list.ftl", "bi bi-people", "Members"),

@@ -16,6 +16,7 @@ val firebaseVersion = "9.6.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.20.0"
 val valkeyVersion = "2.0.1"
+val apachePoiVersion = "5.4.1"
 
 val jdaVersion = "6.0.0-preview"
 
@@ -92,13 +93,9 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-
-    implementation(
-        group = "io.valkey",
-        name = "valkey-glide",
-        version = valkeyVersion,
-        classifier = osdetector.classifier,
-    )
+    implementation(group = "io.valkey", name = "valkey-glide", version = valkeyVersion, classifier = osdetector.classifier)
+    implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
+    implementation("org.apache.poi:poi:$apachePoiVersion")
 
     implementation("net.dv8tion:JDA:$jdaVersion")
 

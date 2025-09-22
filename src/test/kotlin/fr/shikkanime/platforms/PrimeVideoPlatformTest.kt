@@ -84,6 +84,14 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 testDate = "2025-04-05T00:01:00Z",
                 imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx167336-KpGIIBie71OX.png",
                 expectedAudioLocales = setOf("en-US", "fr-FR")
+            ),
+            SimulcastTestCase(
+                "0ITMHDR4DYNJDXLMAJ627H0ELR",
+                "NINTAMA RANTARŌ: MAÎTRE INVINCIBLE DES NINJAS DOKUTAKE",
+                releaseDay = 0,
+                testDate = "2024-12-20T00:00:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/6/74028l.jpg",
+                expectedAudioLocales = setOf("ja-JP")
             )
         )
     }

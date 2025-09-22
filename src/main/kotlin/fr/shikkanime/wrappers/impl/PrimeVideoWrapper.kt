@@ -2,6 +2,7 @@ package fr.shikkanime.wrappers.impl
 
 import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -29,14 +30,37 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         // Create show object
         val show = Show(
             id,
-            showJson.getAsString("parentTitle")!!,
+            showJson.getAsString("parentTitle") ?: showJson.getAsString("title")!!,
             showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             showJson.getAsJsonObject("images")!!.getAsString("heroshot")!!,
             showJson.getAsString("synopsis")
         )
 
+        if (showJson.getAsString("entityType") == "Movie") {
+            val audioTracks = showJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toHashSet() ?: HashSet()
+            val subtitles = showJson.getAsJsonArray("subtitles")?.map { it.asString }?.toHashSet() ?: HashSet()
+
+            return arrayOf(
+                Episode(
+                    show,
+                    emptySet(),
+                    pageTitleId!!.substringAfterLast("."),
+                    1,
+                    EpisodeType.FILM,
+                    1,
+                    show.name,
+                    show.description,
+                    "$baseUrl$id?autoplay=1&t=0",
+                    showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
+                    showJson.getAsLong("duration", -1),
+                    getAudioLocales(audioTracks),
+                    getSubtitleLocales(subtitles),
+                )
+            )
+        }
+
         // Extract season data
-        val seasons = atfState.getAsJsonObject("seasons").getAsJsonArray(pageTitleId).map {
+        val seasons = atfState.getAsJsonObject("seasons").getAsJsonArray(pageTitleId)?.map {
             Season(
                 it.asJsonObject.getAsString("seasonId")!!,
                 it.asJsonObject.getAsString("displayName")!!,
@@ -46,7 +70,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         }
 
         // Process all seasons and extract episodes
-        return seasons.flatMap { season ->
+        return seasons?.flatMap { season ->
             // Use existing JSON for main page or fetch season-specific data
             val json = if (season.id != pageTitleId) {
                 fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale)
@@ -65,7 +89,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                 .map { (key, element) -> 
                     createEpisode(key, element.asJsonObject, season, show, btfState)
                 }
-        }.toTypedArray()
+        }?.toTypedArray() ?: emptyArray()
     }
     
     private fun createEpisode(
@@ -87,23 +111,28 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             ),
             key.substringAfterLast("."),
             season.number,
+            EpisodeType.EPISODE,
             episodeNumber,
             episodeJson.getAsString("title")!!,
             episodeJson.getAsString("synopsis")!!,
             "$baseUrl${btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")}?autoplay=1&t=0",
             episodeJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             episodeJson.getAsLong("duration", -1),
-            buildSet {
-                if ("日本語" in audioTracks) add("ja-JP")
-                if ("日本語" !in audioTracks && "English" in audioTracks) add("en-US")
-                if ("Français" in audioTracks) add("fr-FR")
-            },
-            buildSet {
-                if ("Français (France)" in subtitles || "Français" in subtitles) add("fr-FR")
-            },
+            getAudioLocales(audioTracks),
+            getSubtitleLocales(subtitles),
         )
     }
-    
+
+    private fun getAudioLocales(audioTracks: HashSet<String>): Set<String> = buildSet {
+        if ("日本語" in audioTracks) add("ja-JP")
+        if ("日本語" !in audioTracks && "English" in audioTracks) add("en-US")
+        if ("Français" in audioTracks) add("fr-FR")
+    }
+
+    private fun getSubtitleLocales(subtitles: java.util.HashSet<String>): Set<String> = buildSet {
+        if ("Français (France)" in subtitles || "Français" in subtitles) add("fr-FR")
+    }
+
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = httpRequest.get(
             "$url?dvWebSPAClientVersion=1.0.111788.0",
