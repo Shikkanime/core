@@ -78,10 +78,7 @@ class HttpRequest(
         }
 
         playwright = Playwright.create()
-        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true).setFirefoxUserPrefs(mapOf(
-            "media.eme.enabled" to true,
-            "media.gmp-manager.updateEnabled" to true,
-        )))
+        browser = playwright?.firefox()?.launch(BrowserType.LaunchOptions().setHeadless(true))
 
         context = if (countryCode != null)
             browser?.newContext(
@@ -121,7 +118,7 @@ class HttpRequest(
         return Jsoup.parse(content)
     }
 
-    fun getCookiesWithBrowser(url: String): List<Cookie> {
+    fun getCookiesWithBrowser(url: String): Pair<Document, List<Cookie>> {
         initBrowser()
         logger.info("Making request to $url... (BROWSER)")
 
@@ -132,7 +129,7 @@ class HttpRequest(
 
         val cookies = context?.cookies(url) ?: emptyList()
         logger.info("Request to $url done in ${takeMs}ms (BROWSER)")
-        return cookies
+        return Jsoup.parse(page?.content() ?: throw Exception("Content is null")) to cookies
     }
 
     override fun close() {

@@ -19,42 +19,32 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
     override suspend fun fetchApiContent(
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ): List<Episode> {
-        val episodes = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
-
-        return episodes.flatMap { video ->
-            val audioLocales = video.audioLocales.takeIf { it.isNotEmpty() } ?: key.netflixSimulcast.audioLocales
-
+    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
+        .flatMap { video ->
+            val audioLocales = video.audioLocales.ifEmpty { key.netflixSimulcast.audioLocales }
             audioLocales.map { audioLocale ->
-                val episode = convertEpisode(
+                convertEpisode(
                     key.countryCode,
                     key.netflixSimulcast.image,
                     video,
                     key.netflixSimulcast.episodeType,
                     audioLocale
-                )
-
-                key.netflixSimulcast.audioLocaleDelays[episode.audioLocale]?.let { delay ->
-                    episode.releaseDateTime = zonedDateTime.minusWeeks(delay)
+                ).apply {
+                    if (key.netflixSimulcast.audioLocaleHasDelay.contains(audioLocale)) {
+                        releaseDateTime = zonedDateTime
+                    }
                 }
-
-                episode
             }
         }
+
+    override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
+        configuration!!.simulcasts
+            .filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
+            .flatMap { simulcast ->
+                getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
+            }
     }
 
-    override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
-        val list = mutableListOf<Episode>()
-
-        configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
-                .forEach { simulcast ->
-                    list.addAll(getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime))
-                }
-        }
-
-        return list
-    }
 
     fun convertEpisode(
         countryCode: CountryCode,

@@ -24,7 +24,7 @@ class NetflixPlatformTest : AbstractTest() {
         val testDate: String,
         val imageUrl: String,
         val audioLocales: Set<String> = setOf("ja-JP"),
-        val audioLocaleDelays: Map<String, Long> = emptyMap()
+        val audioLocaleDelays: Set<String> = setOf()
     )
 
     companion object {
@@ -58,7 +58,7 @@ class NetflixPlatformTest : AbstractTest() {
                 testDate = "2025-03-24T14:00:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1147/122444l.jpg",
                 audioLocales = setOf("ja-JP", "fr-FR"),
-                audioLocaleDelays = mapOf("fr-FR" to 1L)
+                audioLocaleDelays = setOf("fr-FR")
             ),
             NetflixTestCase(
                 netflixId = "81208936",
@@ -94,7 +94,7 @@ class NetflixPlatformTest : AbstractTest() {
             }
             
             if (testCase.audioLocaleDelays.isNotEmpty()) {
-                audioLocaleDelays = testCase.audioLocaleDelays.toMutableMap()
+                audioLocaleHasDelay = testCase.audioLocaleDelays.toMutableSet()
             }
         }
         

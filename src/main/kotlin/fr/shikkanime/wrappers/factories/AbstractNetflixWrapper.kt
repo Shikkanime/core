@@ -6,10 +6,17 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import java.io.Serializable
 import java.time.ZonedDateTime
 
 abstract class AbstractNetflixWrapper {
+    data class NetflixAuthentification(
+        val id: String,
+        val secureId: String,
+        val authUrl: String
+    ) : Serializable
+
     data class EpisodeMetadata(
         val id: Int,
         val image: String?
@@ -62,24 +69,40 @@ abstract class AbstractNetflixWrapper {
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
     protected val httpRequest = HttpRequest()
 
-    @Synchronized
-    private fun getIdAndSecureId() = MapCache.getOrCompute(
-        "AbstractNetflixWrapper.getIdAndSecureId",
-        typeToken = object : TypeToken<MapCacheValue<Pair<String?, String?>>>() {},
-        key = StringUtils.EMPTY_STRING
-    ) {
-        val cookies = HttpRequest().use { it.getCookiesWithBrowser(baseUrl).associateBy { cookie -> cookie.name!! } }
-        return@getOrCompute cookies["NetflixId"]?.value to cookies["SecureNetflixId"]?.value
+    private fun decodeUtf8(input: String) = input.replace("""\\x([0-9A-Fa-f]{2})""".toRegex()) { matchResult ->
+        val hexCode = matchResult.groupValues[1]
+        hexCode.toInt(16).toChar().toString()
     }
 
+    protected fun extractAuthUrl(html: String): String = decodeUtf8(html.substringAfter("authURL\":\"").substringBefore("\""))
+
+    @Synchronized
+    private fun getNetflixAuthentification() = MapCache.getOrCompute(
+        "AbstractNetflixWrapper.getNetflixAuthentification",
+        typeToken = object : TypeToken<MapCacheValue<NetflixAuthentification>>() {},
+        key = StringUtils.EMPTY_STRING
+    ) {
+        val documentAndCookies = HttpRequest().use { it.getCookiesWithBrowser(baseUrl) }
+        val cookies = documentAndCookies.second.associateBy { cookie -> cookie.name!! }
+
+        return@getOrCompute NetflixAuthentification(
+            requireNotNull(cookies["NetflixId"]?.value),
+            requireNotNull(cookies["SecureNetflixId"]?.value),
+            extractAuthUrl(documentAndCookies.first.html())
+        )
+    }
+
+    protected fun getCookieValue(netflixId: String, netflixSecureId: String): String =
+        "NetflixId=$netflixId; SecureNetflixId=$netflixSecureId"
+
     protected suspend fun HttpRequest.postGraphQL(locale: String, body: String): HttpResponse {
-        val (id, secureId) = getIdAndSecureId()
+        val (id, secureId) = getNetflixAuthentification()
 
         return post(
             apiUrl,
             headers = mapOf(
-                "Content-Type" to "application/json",
-                "Cookie" to "NetflixId=$id; SecureNetflixId=$secureId",
+                HttpHeaders.ContentType to ContentType.Application.Json.toString(),
+                HttpHeaders.Cookie to getCookieValue(id, secureId),
                 "x-netflix.context.locales" to locale,
             ),
             body = body
