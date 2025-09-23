@@ -13,7 +13,7 @@ on:
         type: boolean
 
 env:
-  JAVA_VERSION: 21
+  JAVA_VERSION: 25
   REGISTRY_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/shikkanime-core
   V-VERSION: v${{ github.event.inputs.version }}
   VERSION: ${{ github.event.inputs.version }}
