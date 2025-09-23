@@ -25,7 +25,7 @@ val h2Version = "2.4.240"
 val mockkVersion = "1.14.6"
 
 plugins {
-    val kotlinVersion = "2.2.21"
+    val kotlinVersion = "2.3.0-RC"
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
@@ -50,6 +50,7 @@ application {
         "-Dio.ktor.development=$isDevelopment",
         "--add-modules",
         "jdk.incubator.vector",
+        "-XX:+UseCompactObjectHeaders"
     )
 }
 
