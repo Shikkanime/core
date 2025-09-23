@@ -25,7 +25,7 @@ val h2Version = "2.4.240"
 val mockkVersion = "1.14.9"
 
 plugins {
-    val kotlinVersion = "2.2.21"
+    val kotlinVersion = "2.3.0"
 
     kotlin("jvm") version kotlinVersion
     kotlin("plugin.serialization") version kotlinVersion
@@ -51,7 +51,9 @@ application {
         "--add-modules",
         "jdk.incubator.vector",
         "-XX:+HeapDumpOnOutOfMemoryError",
-        "-XX:HeapDumpPath=./dumps/java_pid.hprof"
+        "-XX:HeapDumpPath=./dumps/java_pid.hprof",
+        "-XX:+UseCompactObjectHeaders",
+        "-XX:+UseShenandoahGC"
     )
 }
 

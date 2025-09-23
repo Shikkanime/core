@@ -1,4 +1,4 @@
-ARG JAVA_VERSION=21
+ARG JAVA_VERSION=25
 ARG PLAYWRIGHT_VERSION=1.57.0
 
 FROM amazoncorretto:${JAVA_VERSION} AS java
@@ -12,6 +12,7 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
 
 ARG JAVA_VERSION
 COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
+COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto/lib/security/cacerts /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto/lib/security/cacerts
 
 ENV LANG=C.UTF-8 \
     JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto \
