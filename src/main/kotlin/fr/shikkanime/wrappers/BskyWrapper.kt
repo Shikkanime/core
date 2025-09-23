@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 import java.util.regex.MatchResult
 import java.util.regex.Pattern
 
-private const val TYPE = "\$type"
+private const val TYPE = $$"$type"
 
 object BskyWrapper {
     data class Image(
@@ -144,7 +144,7 @@ object BskyWrapper {
             }
 
             recordMap.putIfAbsent("embed", mutableMapOf(
-                "\$type" to "app.bsky.embed.external",
+                $$"$type" to "app.bsky.embed.external",
                 "external" to mapOf(
                     "uri" to embed,
                     "title" to title,

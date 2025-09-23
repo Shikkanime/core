@@ -18,7 +18,6 @@ val jacksonVersion = "2.20.0"
 val valkeyVersion = "2.0.1"
 
 val jdaVersion = "6.0.0-preview"
-val twitter4jVersion = "4.0.7"
 
 val junitVersion = "5.13.4"
 val h2Version = "2.3.232"
@@ -102,12 +101,6 @@ dependencies {
     )
 
     implementation("net.dv8tion:JDA:$jdaVersion")
-    implementation("org.twitter4j:twitter4j-core:$twitter4jVersion")
-    implementation("twitter4j-v2:twitter4j-v2-support") {
-        version {
-            branch = "master"
-        }
-    }
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 

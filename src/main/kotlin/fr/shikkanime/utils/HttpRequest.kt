@@ -7,7 +7,9 @@ import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
+import io.ktor.http.content.*
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -41,33 +43,37 @@ class HttpRequest(
     }
 
     suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
-        val httpClient = httpClient()
-
         logger.info("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
-        val response = httpClient.get(url) {
-            headers.forEach { (key, value) ->
-                header(key, value)
+
+        val response = httpClient().use {
+            it.get(url) {
+                headers.forEach(::header)
             }
         }
 
-        httpClient.close()
         logger.info("Request to $url done in ${System.currentTimeMillis() - start}ms (GET)")
         return response
     }
 
     suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: Any? = null): HttpResponse {
-        val httpClient = httpClient()
         logger.info("Making request to $url... (POST)")
         val start = System.currentTimeMillis()
-        val response = httpClient.post(url) {
-            headers.forEach { (key, value) ->
-                header(key, value)
-            }
 
-            body?.let { setBody(it) }
+        val response = httpClient().use {
+            if (body is List<*> && body.all { element -> element is PartData }) {
+                @Suppress("UNCHECKED_CAST")
+                it.submitFormWithBinaryData(url, body as List<PartData>) {
+                    headers.forEach(::header)
+                }
+            } else {
+                it.post(url) {
+                    headers.forEach(::header)
+                    body?.let(::setBody)
+                }
+            }
         }
-        httpClient.close()
+
         logger.info("Request to $url done in ${System.currentTimeMillis() - start}ms (POST)")
         return response
     }
