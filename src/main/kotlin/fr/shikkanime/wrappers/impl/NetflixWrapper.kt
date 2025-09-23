@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.impl
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.Config
@@ -115,7 +116,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             showJson.getAsBoolean("isAvailable") ?: false,
             showJson.getAsBoolean("isPlayable") ?: false,
             showJson.getAsInt("runtimeSec")?.toLong(),
-            metadata
+            metadata,
+            showJson
         )
     }
 
@@ -123,11 +125,11 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val show = getShow(locale, id)
         val seasonsResponse = fetchSeasonsData(locale, id, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
-        
-        return if (firstVideoObject?.getAsString("__typename") == "Movie") {
-            createMovieEpisode(show, id)
-        } else {
-            createSeriesEpisodes(locale, show, firstVideoObject)
+
+        return when (firstVideoObject?.getAsString("__typename")) {
+            "Season" -> getEpisodesByShowId(locale, show.json!!.getAsJsonObject("parentShow").getAsInt("videoId")!!).toList()
+            "Movie" -> createMovieEpisode(show, id)
+            else -> createSeriesEpisodes(locale, show, firstVideoObject)
         }.toTypedArray()
     }
 
@@ -199,7 +201,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private fun parseSeasons(seasonsJson: com.google.gson.JsonArray): List<Season> {
+    private fun parseSeasons(seasonsJson: JsonArray): List<Season> {
         return seasonsJson.map { seasonJson ->
             val season = seasonJson.asJsonObject.getAsJsonObject("node")
             Season(

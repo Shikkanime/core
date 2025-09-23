@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.factories
 
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
@@ -43,6 +44,7 @@ abstract class AbstractNetflixWrapper {
         val isPlayable: Boolean,
         val runtimeSec: Long? = null,
         val metadata: ShowMetadata? = null,
+        val json: JsonObject? = null,
     ) : Serializable
 
     data class Season(

@@ -75,6 +75,14 @@ class NetflixPlatformTest : AbstractTest() {
                 testDate = "2025-04-29T21:30:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1825/110716l.jpg",
                 audioLocales = setOf("ja-JP", "fr-FR")
+            ),
+            NetflixTestCase(
+                netflixId = "81050091",
+                expectedAnimeName = "The Grimm Variations",
+                releaseDay = 0,
+                testDate = "2024-04-17T07:00:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1095/142224l.jpg",
+                audioLocales = setOf("ja-JP", "fr-FR")
             )
         )
     }
