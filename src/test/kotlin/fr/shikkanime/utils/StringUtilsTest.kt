@@ -76,6 +76,21 @@ class StringUtilsTest {
             "Fate/Zero" to "Fate/Zero",
             "Fate/stay night Unlimited Blade Works" to "Fate/stay night Unlimited Blade Works",
             "Watari-kun's ****** Is about to Collapse" to "Watari-kun's ****** Is about to Collapse",
+            "Let's Play" to "Let's Play",
+            "My Status as an Assassin Obviously Exceeds the Hero's" to "My Status as an Assassin Obviously Exceeds the Hero's",
+            "A Gatherer's Adventure in Isekai" to "A Gatherer's Adventure in Isekai",
+            "A Mangaka's Weirdly Wonderful Workplace" to "A Mangaka's Weirdly Wonderful Workplace",
+            "A Wild Last Boss Appeared!" to "A Wild Last Boss Appeared!",
+            "Alma-chan Wants to Be a Family!" to "Alma-chan Wants to Be a Family!",
+            "Dad is a Hero, Mom is a Spirit, I'm a Reincarnator" to "Dad is a Hero, Mom is a Spirit, I'm a Reincarnator",
+            "Hero Skill - Achats en ligne" to "Hero Skill",
+            "Kakuriyo -Bed & Breakfast for Spirits-" to "Kakuriyo",
+            "Li'l Miss Vampire Can't Suck Right" to "Li'l Miss Vampire Can't Suck Right",
+            "Pass the Monster Meat, Milady!" to "Pass the Monster Meat, Milady!",
+            "Plus-sized Misadventures in Love!" to "Plus-sized Misadventures in Love!",
+            "SI-VIS: The Sound of Heroes" to "SI-VIS",
+            "The Fated Magical Princess: Who Made Me a Princess" to "The Fated Magical Princess",
+            "Yano-kun's Ordinary Days" to "Yano-kun's Ordinary Days",
         )
 
         list.forEach { (input, expected) ->
