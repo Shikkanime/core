@@ -20,11 +20,12 @@ import javax.imageio.ImageIO
 object MediaImage {
     private const val BLUR_SIZE = 25
     private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
+    private val httpRequest = HttpRequest()
 
-    fun toMediaImage(vararg variant: EpisodeVariant): BufferedImage {
-        require(variant.isNotEmpty()) { "The variants list is empty" }
-        require(variant.map { it.mapping!!.anime!! }.distinctBy { it.uuid!! }.size == 1) { "The variants list must be from the same anime" }
-        require(variant.map { it.mapping!!.episodeType }.distinct().size == 1) { "The variants list must be from the same episode type" }
+    fun toMediaImage(vararg variants: EpisodeVariant): BufferedImage {
+        require(variants.isNotEmpty()) { "The variants list is empty" }
+        require(variants.map { it.mapping!!.anime!! }.distinctBy { it.uuid!! }.size == 1) { "The variants list must be from the same anime" }
+        require(variants.map { it.mapping!!.episodeType }.distinct().size == 1) { "The variants list must be from the same episode type" }
 
         val bannerImage = loadAndResizeBannerImage()
         val font = loadCustomFont()
@@ -33,8 +34,8 @@ object MediaImage {
         val graphics = setupGraphics(mediaImage)
 
         drawBackground(mediaImage, graphics)
-        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, variant.first().mapping!!.anime!!)
-        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, *variant)
+        val resizedHeight = drawAnimeImageAndBanner(mediaImage, graphics, variants.first().mapping!!.anime!!)
+        drawEpisodeInformation(mediaImage, graphics, resizedHeight, font, *variants)
 
         graphics.drawImage(
             bannerImage,
@@ -98,7 +99,7 @@ object MediaImage {
     }
 
     fun getLongTimeoutImage(url: String): BufferedImage =
-        ByteArrayInputStream(runBlocking { HttpRequest().get(url).readRawBytes() }).use { ImageIO.read(it) }
+        ByteArrayInputStream(runBlocking { httpRequest.get(url).readRawBytes() }).use { ImageIO.read(it) }
 
     private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
         val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)

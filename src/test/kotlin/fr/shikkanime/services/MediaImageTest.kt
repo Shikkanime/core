@@ -13,6 +13,10 @@ class MediaImageTest {
         MediaImage.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/3cfa2215-a96d-4064-a2bd-1ebd5dbe1eec/compose")
         MediaImage.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/707bc5c2-f9ef-4eeb-8c3e-3967e54a62bf/compose")
         MediaImage.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/6b27e3d6-74e5-4ea1-a0f1-79ca316dd9b0/compose")
+
+        MediaImage.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/60d5377a-c368-4236-9e27-3fab46ecc47f/compose")
+        MediaImage.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/4ada8f8d-e3f8-4f3b-a911-9f8d613ee31e/compose")
+        MediaImage.getLongTimeoutImage("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/1c840684-5985-44b5-86ef-1627011521fc/compose")
     }
 
     @Test

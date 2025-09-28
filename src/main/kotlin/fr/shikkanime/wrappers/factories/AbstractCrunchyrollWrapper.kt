@@ -214,6 +214,7 @@ abstract class AbstractCrunchyrollWrapper {
     abstract suspend fun getEpisodeDiscoverByType(locale: String, type: String, id: String): BrowseObject
     abstract suspend fun getObjects(locale: String, vararg ids: String): List<BrowseObject>
     abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): Array<BrowseObject>
+    abstract suspend fun getSimulcasts(locale: String): Array<Simulcast>
 
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =
         "${baseUrl}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: StringUtils.EMPTY_STRING}"

@@ -149,6 +149,12 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         }
     }
 
+    override suspend fun getSimulcasts(locale: String) = MapCache.getOrCompute(
+        "CrunchyrollCachedWrapper.getSimulcasts",
+        typeToken = object : TypeToken<MapCacheValue<Array<Simulcast>>>() {},
+        key = locale
+    ) { locale -> runBlocking { CrunchyrollWrapper.getSimulcasts(locale) } }
+
     private val seriesRegex = "/series/([A-Z0-9]{9})/".toRegex()
     private val episodeRegex = "/watch/([A-Z0-9]{9})".toRegex()
 
