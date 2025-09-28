@@ -124,4 +124,11 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
 
         return (browseObjects + variantObjects).toTypedArray()
     }
+
+    override suspend fun getSimulcasts(locale: String): Array<Simulcast> {
+        val response = httpRequest.getWithAccessToken("${baseUrl}content/v1/season_list?locale=$locale")
+        require(response.status == HttpStatusCode.OK) { "Failed to get simulcasts (${response.status.value})" }
+        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items") ?: throw Exception("Failed to get simulcasts")
+        return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java)
+    }
 }

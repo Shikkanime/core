@@ -75,36 +75,60 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         zonedDateTime: ZonedDateTime,
         alreadyFetched: List<Episode>
     ): List<Episode> {
-        val list = mutableListOf<Episode>()
         val previousWeek = zonedDateTime.minusWeeks(1)
-        val previousWeekLocalDate = previousWeek.toLocalDate()
 
-        episodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
-            countryCode,
-            getPlatform(),
-            previousWeekLocalDate.atStartOfDay(Constant.utcZoneId),
-            previousWeekLocalDate.atEndOfTheDay(Constant.utcZoneId)
-        ).filter { (_, releaseDateTime) -> previousWeek.isAfterOrEqual(releaseDateTime) }
-            .forEach { (identifier, _) ->
-                val crunchyrollId = StringUtils.getVideoOldIdOrId(identifier) ?: run {
-                    logger.warning("Crunchyroll ID not found in $identifier")
-                    return@forEach
+        val predictedNextEpisodes =
+            episodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+                countryCode,
+                getPlatform(),
+                previousWeek.toLocalDate().atStartOfDay(Constant.utcZoneId),
+                previousWeek.toLocalDate().atEndOfTheDay(Constant.utcZoneId)
+            ).filter { (_, releaseDateTime) -> previousWeek.isAfterOrEqual(releaseDateTime) }
+                .mapNotNull { (identifier, _) ->
+                    val crunchyrollId = StringUtils.getVideoOldIdOrId(identifier) ?: run {
+                        logger.warning("Crunchyroll ID not found in $identifier")
+                        return@mapNotNull null
+                    }
+
+                    val nextEpisode = getNextEpisode(countryCode, crunchyrollId) ?: run {
+                        logger.warning("Next episode not found for $crunchyrollId")
+                        return@mapNotNull null
+                    }
+
+                    if (alreadyFetched.any { it.id == nextEpisode.id }) {
+                        logger.warning("Episode ${nextEpisode.id} already fetched")
+                        return@mapNotNull null
+                    }
+
+                    nextEpisode
                 }
 
-                val nextEpisode = getNextEpisode(countryCode, crunchyrollId) ?: run {
-                    logger.warning("Next episode not found for $crunchyrollId")
-                    return@forEach
+        val simulcastEpisodes =
+            CrunchyrollCachedWrapper.getSimulcasts(countryCode.locale).firstOrNull()?.let { simulcast ->
+                val fetchApiSize = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
+
+                CrunchyrollWrapper.getBrowse(
+                    locale = countryCode.locale,
+                    sortBy = AbstractCrunchyrollWrapper.SortType.NEWLY_ADDED,
+                    type = AbstractCrunchyrollWrapper.MediaType.SERIES,
+                    size = fetchApiSize,
+                    start = 0,
+                    simulcast = simulcast.id
+                ).flatMap {
+                    CrunchyrollWrapper.getEpisodesBySeriesId(
+                        countryCode.locale,
+                        it.id
+                    ).toList()
                 }
+            } ?: emptyList()
 
-                if (alreadyFetched.any { it.id == nextEpisode.id }) {
-                    logger.warning("Episode ${nextEpisode.id} already fetched")
-                    return@forEach
-                }
+        val futureEpisodes = mutableListOf<Episode>()
 
-                addToList(list, countryCode, nextEpisode)
-            }
+        (predictedNextEpisodes + simulcastEpisodes)
+            .distinctBy { it.id }
+            .forEach { addToList(futureEpisodes, countryCode, it) }
 
-        return list
+        return futureEpisodes
     }
 
     suspend fun getNextEpisode(countryCode: CountryCode, id: String): AbstractCrunchyrollWrapper.BrowseObject? {
