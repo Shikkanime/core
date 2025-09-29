@@ -35,3 +35,5 @@ fun <T> Array<T>.toTreeSet(comparator: Comparator<T>): TreeSet<T> = TreeSet(comp
 fun <T> Array<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>().also { it.addAll(this) }
 fun <T> Iterable<T>.toTreeSet(comparator: Comparator<T>): TreeSet<T> = TreeSet(comparator).also { it.addAll(this) }
 fun <T> Iterable<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>().also { it.addAll(this) }
+
+fun ByteArray?.isNullOrEmpty(): Boolean = this == null || this.isEmpty()

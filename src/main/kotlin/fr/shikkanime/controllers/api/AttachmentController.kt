@@ -50,6 +50,6 @@ class AttachmentController {
             bytes
         }
 
-        return Response.multipart(imageBytes, ContentType.parse("image/webp"))
+        return Response.multipart(imageBytes, ContentType.Image.WEBP)
     }
 }

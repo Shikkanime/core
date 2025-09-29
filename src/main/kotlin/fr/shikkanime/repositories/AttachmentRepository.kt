@@ -54,6 +54,7 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
                 cb.and(
                     cb.isTrue(root[Attachment_.active]),
                     cb.isNotNull(root[Attachment_.url]),
+                    cb.notEqual(root[Attachment_.url], ""),
                     root[Attachment_.uuid].`in`(uuids).not()
                 )
             )
