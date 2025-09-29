@@ -50,6 +50,7 @@ application {
         "-Dio.ktor.development=$isDevelopment",
         "--add-modules",
         "jdk.incubator.vector",
+        "-XX:+UseCompactObjectHeaders"
     )
 }
 

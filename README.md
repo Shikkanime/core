@@ -54,7 +54,7 @@ Sends notifications about new episodes to:
 
 ### Prerequisites
 
-- **JDK 21** or higher
+- **JDK 25** or higher
 - **PostgreSQL** database
 - **Docker** (optional, for containerized deployment)
 
