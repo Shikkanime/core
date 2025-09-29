@@ -10,6 +10,7 @@ import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -31,6 +32,7 @@ import java.time.ZonedDateTime
 
 @Controller("$ADMIN/episode-manager")
 class AdminEpisodeManagerController {
+    private val logger = LoggerFactory.getLogger(javaClass)
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path
@@ -69,9 +71,8 @@ class AdminEpisodeManagerController {
     private fun getDelete(@QueryParam file: String): Response {
         val requestedFile = File(Constant.exportsFolder, file)
 
-        if (requestedFile.run { exists() && name.endsWith(".xlsx") }) {
-            requestedFile.delete()
-        }
+        if (requestedFile.run { exists() && name.endsWith(".xlsx") } && !requestedFile.delete())
+            logger.warning("Could not delete file: ${requestedFile.absolutePath}")
 
         return Response.redirect(Link.EPISODE_MANAGER.href)
     }
@@ -133,7 +134,9 @@ class AdminEpisodeManagerController {
             }.toList()
         }
 
-        file.delete()
+        if (!file.delete())
+            logger.warning("Could not delete file: ${file.absolutePath}")
+
         episodes.forEach { episodeVariantService.save(it) }
 
         InvalidationService.invalidate(
