@@ -175,6 +175,21 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
+    fun findAllBySimulcast(simulcastUuid: UUID): List<Anime> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            val simulcastJoin = root.join(Anime_.simulcasts)
+
+            query.where(cb.equal(simulcastJoin[Simulcast_.uuid], simulcastUuid))
+                .orderBy(cb.asc(root[Anime_.slug]))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime): List<Anime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
