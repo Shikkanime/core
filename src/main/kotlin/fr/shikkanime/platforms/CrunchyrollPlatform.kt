@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
+import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
@@ -18,6 +19,7 @@ import java.util.logging.Level
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<AbstractCrunchyrollWrapper.BrowseObject>>() {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
 
     override fun getPlatform(): Platform = Platform.CRUN
 
@@ -103,9 +105,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     nextEpisode
                 }
 
-        val simulcastEpisodes =
-            CrunchyrollCachedWrapper.getSimulcasts(countryCode.locale).firstOrNull()?.let { simulcast ->
+        val simulcastEpisodes = CrunchyrollCachedWrapper.getSimulcasts(countryCode.locale)
+            .firstOrNull()
+            ?.let { simulcast ->
                 val fetchApiSize = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
+                val currentSimulcastAnimes = animeCacheService.findAllByCurrentSimulcast()
 
                 CrunchyrollWrapper.getBrowse(
                     locale = countryCode.locale,
@@ -114,12 +118,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     size = fetchApiSize,
                     start = 0,
                     simulcast = simulcast.id
-                ).flatMap {
-                    CrunchyrollWrapper.getEpisodesBySeriesId(
-                        countryCode.locale,
-                        it.id
-                    ).toList()
-                }
+                ).filterNot { series ->
+                    currentSimulcastAnimes.any { anime ->
+                        anime.platformIds?.any { it.platform.id == getPlatform().name && it.platformId == series.id } == true
+                    }
+                }.flatMap { series -> CrunchyrollWrapper.getEpisodesBySeriesId(countryCode.locale, series.id).toList() }
             } ?: emptyList()
 
         val futureEpisodes = mutableListOf<Episode>()

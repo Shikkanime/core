@@ -5,7 +5,6 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.services.SimulcastService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
@@ -30,14 +29,6 @@ class SimulcastCacheService : ICacheService {
         serializationType = SerializationUtils.SerializationType.OBJECT,
         key = uuid
     ) { simulcastService.find(it) }
-
-    fun findBySeasonAndYear(season: Season, year: Int) = MapCache.getOrComputeNullable(
-        "SimulcastCacheService.findBySeasonAndYear",
-        classes = listOf(Simulcast::class.java),
-        typeToken = object : TypeToken<MapCacheValue<Simulcast>>() {},
-        serializationType = SerializationUtils.SerializationType.OBJECT,
-        key = season to year,
-    ) { simulcastService.findBySeasonAndYear(it.first, it.second) }
 
     val currentSimulcast: SimulcastDto?
         get() = findAll().firstOrNull()

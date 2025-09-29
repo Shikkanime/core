@@ -22,7 +22,7 @@ data class PageableDto<T>(
 
         inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, factory: IGenericFactory<T, D>): PageableDto<D> {
             return PageableDto(
-                data = pageable.data.asSequence().map { factory.toDto(it) }.toSet(),
+                data = pageable.data.asSequence().map(factory::toDto).toSet(),
                 page = pageable.page,
                 limit = pageable.limit,
                 total = pageable.total,

@@ -8,10 +8,7 @@ import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.MemberFollowAnime
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -55,7 +52,7 @@ class AnimeCacheService : ICacheService {
         PageableDto.fromPageable(
             animeService.findAllBy(
                 it.countryCode,
-                it.uuid?.let { uuid -> simulcastCacheService.find(uuid) },
+                it.uuid?.let(simulcastCacheService::find),
                 it.sort,
                 it.page,
                 it.limit,
@@ -77,6 +74,21 @@ class AnimeCacheService : ICacheService {
                 animeFactory
             )
         }
+
+    fun findAllByCurrentSimulcast(): Array<AnimeDto> {
+        val currentSimulcastUuid = simulcastCacheService.currentSimulcast?.uuid ?: return emptyArray()
+
+        return MapCache.getOrCompute(
+            "AnimeCacheService.findAllByCurrentSimulcast",
+            classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java),
+            typeToken = object : TypeToken<MapCacheValue<Array<AnimeDto>>>() {},
+            key = currentSimulcastUuid
+        ) {
+            animeService.findAllBySimulcast(it)
+                .map(animeFactory::toDto)
+                .toTypedArray()
+        }
+    }
 
     fun getLangTypes(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getLangTypes",
@@ -107,7 +119,7 @@ class AnimeCacheService : ICacheService {
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<AnimeDto>>() {},
         key = countryCode to slug,
-    ) { animeService.findBySlug(it.first, it.second)?.let { anime -> animeFactory.toDto(anime) } }
+    ) { animeService.findBySlug(it.first, it.second)?.let(animeFactory::toDto) }
 
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate, searchTypes: Array<LangType>? = null) =
         MapCache.getOrCompute(
@@ -119,7 +131,7 @@ class AnimeCacheService : ICacheService {
         ) {
             animeService.getWeeklyAnimes(
                 it.countryCode,
-                it.member?.let { uuid -> memberCacheService.find(uuid) },
+                it.member?.let(memberCacheService::find),
                 it.localDate,
                 it.searchTypes,
             ).toTypedArray()

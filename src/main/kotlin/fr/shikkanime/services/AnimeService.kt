@@ -65,6 +65,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }
     }
 
+    fun findAllBySimulcast(simulcastUuid: UUID) = animeRepository.findAllBySimulcast(simulcastUuid)
+
     fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
 
     fun findAllAudioLocales(uuid: UUID) = animeRepository.findAllAudioLocales(uuid)
