@@ -17,19 +17,25 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
 private const val FAILED_TO_ENCODE_MESSAGE = "Failed to encode image to WebP"
+private const val INVALIDATION_DELAY_MS = 5000L
 
 class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val nThreads = Runtime.getRuntime().availableProcessors()
     private var threadPool = Executors.newFixedThreadPool(nThreads)
+    private var invalidationScheduler = Executors.newSingleThreadScheduledExecutor()
     private val httpRequest = HttpRequest()
     private val imageCache = LRUCache<UUID, ByteArray>(100)
     val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet())
+
+    @Volatile private var pendingInvalidation: ScheduledFuture<*>? = null
 
     @Inject private lateinit var attachmentRepository: AttachmentRepository
     @Inject private lateinit var traceActionService: TraceActionService
@@ -49,16 +55,35 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun findAllActive() = attachmentRepository.findAllActive()
 
+    private fun scheduleInvalidation() {
+        synchronized(this) {
+            try {
+                pendingInvalidation?.cancel(false)
+            } catch (e: Exception) {
+                logger.log(Level.FINE, "No pending invalidation to cancel", e)
+            }
+
+            pendingInvalidation = invalidationScheduler.schedule({
+                try {
+                    logger.info("Performing invalidation for Attachment")
+                    InvalidationService.invalidate(Attachment::class.java)
+                } catch (e: Exception) {
+                    logger.log(Level.WARNING, "Failed to perform invalidation", e)
+                }
+            }, INVALIDATION_DELAY_MS, TimeUnit.MILLISECONDS)
+        }
+    }
+
     fun createAttachmentOrMarkAsActive(entityUuid: UUID, type: ImageType, url: String? = null, bytes: ByteArray? = null, async: Boolean = true): Attachment {
         val attachments = findAllByEntityUuidAndType(entityUuid, type)
         val existingAttachment = attachments.find { it.url == url }
 
         if (existingAttachment?.active == true) {
-            if (bytes?.isNotEmpty() == true || !getFile(existingAttachment).exists()) {
+            if (!bytes.isNullOrEmpty() || !getFile(existingAttachment).exists()) {
                 encodeAttachment(existingAttachment, url, bytes, async)
                 existingAttachment.lastUpdateDateTime = ZonedDateTime.now()
                 update(existingAttachment)
-                InvalidationService.invalidate(Attachment::class.java)
+                scheduleInvalidation()
             }
 
             return existingAttachment
@@ -69,29 +94,34 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
         if (existingAttachment != null) {
             encodeAttachment(existingAttachment, url, bytes, async)
-            InvalidationService.invalidate(Attachment::class.java)
+            scheduleInvalidation()
             return existingAttachment
         }
 
         val attachment = save(Attachment(entityUuid = entityUuid, type = type, url = url))
         traceActionService.createTraceAction(attachment, TraceAction.Action.CREATE)
         encodeAttachment(attachment, url, bytes, async)
-        InvalidationService.invalidate(Attachment::class.java)
+        scheduleInvalidation()
         return attachment
     }
 
     fun encodeAllActiveWithUrlAndWithoutFile() {
         val now = ZonedDateTime.now()
-        val files = Constant.imagesFolder.list().map { UUID.fromString(it.substringBeforeLast(".")) }.toHashSet()
+        val existingFiles = Constant.imagesFolder.list().mapNotNull {
+            runCatching { UUID.fromString(it.substringBeforeLast(".")) }.getOrNull()
+        }.toHashSet()
 
-        updateAll(
-            findAllActiveWithUrlAndNotIn(files).onEach {
-                it.lastUpdateDateTime = now
-                encodeAttachment(it, it.url, null)
-            }
-        )
+        val attachmentsToUpdate = findAllActiveWithUrlAndNotIn(existingFiles)
+        if (attachmentsToUpdate.isEmpty()) return
+        logger.info("Encoding ${attachmentsToUpdate.size} attachments")
 
-        InvalidationService.invalidate(Attachment::class.java)
+        attachmentsToUpdate.forEach {
+            it.lastUpdateDateTime = now
+            encodeAttachment(it, it.url, null)
+        }
+
+        updateAll(attachmentsToUpdate)
+        scheduleInvalidation()
     }
 
     /**
@@ -108,7 +138,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
      */
     fun encodeAttachment(attachment: Attachment, url: String?, bytes: ByteArray?, async: Boolean = true) {
         // Ensure that at least one of `url` or `bytes` is provided
-        require(url != null || bytes != null) { "Either url or bytes must be provided" }
+        require(!url.isNullOrBlank() || !bytes.isNullOrEmpty()) { "Either url or bytes must be provided" }
 
         // Retrieve the UUID of the attachment; return if it is null
         val uuid = attachment.uuid ?: return
@@ -146,16 +176,22 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private fun removeFile(attachment: Attachment) {
         if (!getFile(attachment).delete())
             logger.warning("Failed to delete file ${getFile(attachment)}")
+
+        imageCache.remove(attachment.uuid!!)
+        attachment.active = false
+        attachment.lastUpdateDateTime = ZonedDateTime.now()
+        update(attachment)
+        scheduleInvalidation()
     }
 
     private fun taskEncode(attachment: Attachment, url: String?, bytes: ByteArray?) {
-        val attachmentBytes = if (!url.isNullOrBlank() && (bytes == null || bytes.isEmpty())) {
+        val attachmentBytes = if (!url.isNullOrBlank() && bytes.isNullOrEmpty()) {
             val (httpResponse, urlBytes) = runBlocking {
                 val response = httpRequest.get(url)
                 response to response.readRawBytes()
             }
 
-            if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty()) {
+            if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty() || httpResponse.contentType()?.withoutParameters() !in listOf(ContentType.Image.PNG, ContentType.Image.JPEG)) {
                 logger.warning(FAILED_TO_ENCODE_MESSAGE)
                 removeFile(attachment)
                 return
