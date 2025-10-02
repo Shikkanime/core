@@ -16,8 +16,11 @@ class AnimePlatformService : AbstractService<AnimePlatform, AnimePlatformReposit
 
     fun findAllByAnime(anime: Anime) = animePlatformRepository.findAllByAnime(anime.uuid!!)
 
+    fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) =
+        animePlatformRepository.findAllIdByAnimeAndPlatform(animeUuid, platform)
+
     fun findAllIdByAnimeAndPlatform(anime: Anime, platform: Platform) =
-        animePlatformRepository.findAllIdByAnimeAndPlatform(anime, platform)
+        findAllIdByAnimeAndPlatform(anime.uuid!!, platform)
 
     fun findByAnimePlatformAndId(anime: Anime, platform: Platform, platformId: String) =
         animePlatformRepository.findByAnimePlatformAndId(anime, platform, platformId)

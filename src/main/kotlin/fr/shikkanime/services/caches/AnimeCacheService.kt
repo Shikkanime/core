@@ -121,6 +121,13 @@ class AnimeCacheService : ICacheService {
         key = countryCode to slug,
     ) { animeService.findBySlug(it.first, it.second)?.let(animeFactory::toDto) }
 
+    fun findByName(countryCode: CountryCode, name: String) = MapCache.getOrComputeNullable(
+        "AnimeCacheService.findByName",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<AnimeDto>>() {},
+        key = countryCode to name,
+    ) { animeService.findByName(it.first, it.second)?.let(animeFactory::toDto) }
+
     fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate, searchTypes: Array<LangType>? = null) =
         MapCache.getOrCompute(
             "AnimeCacheService.getWeeklyAnimes",

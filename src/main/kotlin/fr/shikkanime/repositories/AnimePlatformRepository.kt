@@ -23,7 +23,7 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         }
     }
 
-    fun findAllIdByAnimeAndPlatform(anime: Anime, platform: Platform): List<String> {
+    fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform): List<String> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
@@ -32,7 +32,7 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
 
             query.where(
                 cb.and(
-                    cb.equal(root[AnimePlatform_.anime], anime),
+                    cb.equal(root[AnimePlatform_.anime][Anime_.uuid], animeUuid),
                     cb.equal(root[AnimePlatform_.platform], platform)
                 )
             )

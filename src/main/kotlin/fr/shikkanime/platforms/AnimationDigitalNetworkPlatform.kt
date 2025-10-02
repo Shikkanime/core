@@ -6,6 +6,8 @@ import fr.shikkanime.exceptions.AnimeException
 import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.exceptions.NotSimulcastedMediaException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
+import fr.shikkanime.services.caches.AnimeCacheService
+import fr.shikkanime.services.caches.AnimePlatformCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
@@ -26,6 +28,8 @@ private const val SHOW_TYPE_OAV = "OAV"
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
     @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
 
     override fun getPlatform(): Platform = Platform.ANIM
 
@@ -42,21 +46,20 @@ class AnimationDigitalNetworkPlatform :
         val latestVideos = AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate()).toMutableList()
 
         latestVideos.addAll(
-            latestVideos.flatMap { video ->
-                val animeName = cleanAnimeName(video.show.shortTitle?.takeIf { it.isNotBlank() } ?: video.show.title, video.season?.toIntOrNull()?.toString() ?: "1").lowercase()
-
-                configuration?.simulcasts
-                    ?.find { it.name.equals(animeName, ignoreCase = true) && it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
-                    ?.audioLocaleDelay
-                    ?.let {
-                        AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate().minusWeeks(it))
-                            .filter { latestVideo -> latestVideo.show.id == video.show.id }
-                            // Apply the current date to the video
-                            .onEach { delayedVideo ->
-                                delayedVideo.releaseDate = zonedDateTime.toLocalDate().atTime(video.releaseDate?.toLocalTime()).atZone(zonedDateTime.zone)
+            configuration?.simulcasts
+                ?.filter { it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
+                ?.flatMap { simulcast ->
+                    animeCacheService.findByName(key, simulcast.name)?.let { anime ->
+                        animePlatformCacheService.findAllIdByAnimeAndPlatform(anime.uuid!!, getPlatform())
+                            .flatMap { platformId ->
+                                platformId.toIntOrNull()?.let { id ->
+                                    AnimationDigitalNetworkWrapper.getShowVideos(id)
+                                        .onEach { it.releaseDate = zonedDateTime }
+                                        .toList()
+                                } ?: emptyList()
                             }
                     } ?: emptyList()
-            }
+                } ?: emptyList()
         )
 
         return latestVideos.toTypedArray()
