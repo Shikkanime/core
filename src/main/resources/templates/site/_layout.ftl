@@ -59,7 +59,7 @@
             <link rel="manifest" href="/assets/site.webmanifest">
 
             <link rel="stylesheet" href="/assets/css/bootstrap.min.css" crossorigin="anonymous">
-            <link rel="stylesheet" href="/assets/css/purged/main.min.css" crossorigin="anonymous">
+            <link rel="stylesheet" href="/assets/css/main.css" crossorigin="anonymous">
             <script defer src="/assets/js/alpinejs.min.js" crossorigin="anonymous"></script>
 
             <#if additionalHeadTags?? && additionalHeadTags?length != 0>

@@ -116,18 +116,6 @@ body {
   }
 }
 
-.anime-infos {
-  @media (min-width: 576px) {
-    position: relative;
-    margin-top: -100px;
-  }
-
-  @media (max-width: 575px) {
-    position: relative;
-    margin-top: -22.5rem;
-  }
-}
-
 .callout {
   padding: 1.25rem;
   color: #fff;
@@ -135,4 +123,103 @@ body {
   border-left: 0.25rem solid #5a5a5a;
   display: flex;
   align-items: center;
+}
+
+.anime-card {
+  margin-top: 1rem;
+  position: relative;
+  color: black;
+  border-radius: var(--card-border-radius);
+
+  .anime-banner {
+    border-radius: var(--card-border-radius);
+    height: 50vh;
+    width: 100%;
+    object-fit: cover;
+    position: relative;
+  }
+
+  .anime-gradient {
+    border-radius: var(--card-border-radius);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(0.5rem);
+  }
+
+  .anime-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 1rem;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: var(--card-border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(0.25rem);
+    z-index: 1;
+    padding: 1rem;
+    max-width: 50%;
+    max-height: 50%;
+
+    @media (max-width: 768px) {
+      max-width: 90%;
+      max-height: 90%;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      max-height: 4.5rem;
+      overflow: hidden;
+
+      .tag {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(0.25rem);
+        border-radius: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        color: #282828;
+        text-decoration: none;
+
+        &:hover {
+          transform: scale(1.05);
+          transition: transform 0.2s;
+        }
+      }
+    }
+
+    .title {
+      font-size: 1.5rem;
+    }
+
+    .description {
+      margin-top: 1rem;
+      margin-bottom: 0;
+      font-size: 1rem;
+      @include text-truncate(3);
+      color: #282828;
+
+      @media (max-width: 768px) {
+        @include text-truncate(5);
+      }
+    }
+  }
+}
+
+.filter-bar {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--card-bg);
+  border-radius: var(--card-border-radius);
+  padding: 0.5rem 1rem;
 }
