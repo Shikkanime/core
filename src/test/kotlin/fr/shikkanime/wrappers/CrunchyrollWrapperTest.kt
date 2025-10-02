@@ -6,9 +6,7 @@ import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 
 class CrunchyrollWrapperTest {
     private val locale = CountryCode.FR.locale
@@ -50,16 +48,6 @@ class CrunchyrollWrapperTest {
         val nextEpisode = runBlocking { CrunchyrollCachedWrapper.getUpNext(locale, "G14U47QGQ") }
         assertNotNull(nextEpisode)
         assertEquals("GJWU2WNE7", nextEpisode.id)
-    }
-
-    @Test
-    fun getSimulcastCalendarWithDates() {
-        val episodes = CrunchyrollCachedWrapper.getSimulcastCalendarWithDates(
-            CountryCode.FR,
-            setOf(LocalDate.parse("2024-01-01"))
-        )
-
-        assumeTrue(episodes.isNotEmpty())
     }
 
     @Test

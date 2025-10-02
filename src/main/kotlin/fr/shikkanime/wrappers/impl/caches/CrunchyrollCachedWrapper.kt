@@ -1,16 +1,11 @@
 package fr.shikkanime.wrappers.impl.caches
 
 import com.google.gson.reflect.TypeToken
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
-import io.ktor.client.statement.*
-import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import org.jsoup.Jsoup
-import java.time.LocalDate
-import java.time.ZonedDateTime
 
 object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     private val objectCache = MapCache<Pair<String, String>, BrowseObject>(
@@ -154,53 +149,4 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         typeToken = object : TypeToken<MapCacheValue<Array<Simulcast>>>() {},
         key = locale
     ) { locale -> runBlocking { CrunchyrollWrapper.getSimulcasts(locale) } }
-
-    private val seriesRegex = "/series/([A-Z0-9]{9})/".toRegex()
-    private val episodeRegex = "/watch/([A-Z0-9]{9})".toRegex()
-
-    fun getSimulcastCalendarWithDates(countryCode: CountryCode, dates: Set<LocalDate>): List<BrowseObject> {
-        val startOfWeekDates = dates.map { it.atStartOfWeek() }.distinct()
-        val releaseDateTimes = mutableSetOf<ZonedDateTime>()
-        val seriesIds = mutableSetOf<String>()
-        val episodeIds = mutableSetOf<String>()
-
-        startOfWeekDates.parallelStream().forEach { date ->
-            val document = HttpRequest.retry(5) {
-                Jsoup.parse(
-                    httpRequest.get("$baseUrl${countryCode.name.lowercase()}/simulcastcalendar?filter=premium&date=$date").apply {
-                        require(status == HttpStatusCode.OK)
-                    }.bodyAsText())
-            }
-
-            document.select("article.release").forEach { element ->
-                val releaseDateTime = ZonedDateTime.parse(element.select("time").attr("datetime")).withUTC()
-                releaseDateTimes.add(releaseDateTime)
-
-                if (StringUtils.DASH_STRING in element.attr("data-episode-num")) {
-                    seriesIds.add(seriesRegex.find(element.select("a[href~=${seriesRegex.pattern}]").attr("href"))!!.groupValues[1])
-                } else {
-                    episodeIds.add(episodeRegex.find(element.select("a[href~=${episodeRegex.pattern}]").attr("href"))!!.groupValues[1])
-                }
-            }
-        }
-
-        return runBlocking {
-            episodeIds.addAll(
-                seriesIds
-                    .flatMap { seriesId -> getSeasonsBySeriesId(countryCode.locale, seriesId).toList() }
-                    .flatMap { season -> getEpisodesBySeasonId(countryCode.locale, season.id).toList() }
-                    .flatMap { episode -> (listOf(episode.id) + episode.getVariants(null)) }
-                    .distinct()
-            )
-
-            episodeIds.chunked(CRUNCHYROLL_CHUNK)
-                .flatMap { chunk -> getObjects(countryCode.locale, *chunk.toTypedArray()) }
-                .filter { it.episodeMetadata!!.premiumAvailableDate.withUTC() in releaseDateTimes }
-                .toList()
-                .apply {
-                    map { it.episodeMetadata!!.seriesId }.distinct().forEach { getObjects(countryCode.locale, it) }
-                    map { it.episodeMetadata!!.seasonId }.distinct().forEach { getSeason(countryCode.locale, it) }
-                }
-        }
-    }
 }
