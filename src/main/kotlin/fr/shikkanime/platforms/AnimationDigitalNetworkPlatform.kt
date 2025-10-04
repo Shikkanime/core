@@ -47,13 +47,14 @@ class AnimationDigitalNetworkPlatform :
 
         latestVideos.addAll(
             configuration?.simulcasts
-                ?.filter { it.audioLocaleDelay?.let { delay -> delay > 0 } == true }
+                ?.filter { it.audioLocaleDelay == zonedDateTime.dayOfWeek.value }
                 ?.flatMap { simulcast ->
                     animeCacheService.findByName(key, simulcast.name)?.let { anime ->
                         animePlatformCacheService.findAllIdByAnimeAndPlatform(anime.uuid!!, getPlatform())
                             .flatMap { platformId ->
                                 platformId.toIntOrNull()?.let { id ->
                                     AnimationDigitalNetworkWrapper.getShowVideos(id)
+                                        .filter { it.releaseDate != null && it.releaseDate!!.toLocalTime() >= zonedDateTime.toLocalTime() }
                                         .onEach { it.releaseDate = zonedDateTime }
                                         .toList()
                                 } ?: emptyList()

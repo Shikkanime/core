@@ -5,11 +5,11 @@ import io.ktor.http.*
 
 class AnimationDigitalNetworkConfiguration : PlatformConfiguration<AnimationDigitalNetworkSimulcast>() {
     data class AnimationDigitalNetworkSimulcast(
-        var audioLocaleDelay: Long? = null,
+        var audioLocaleDelay: Int? = null,
     ) : PlatformSimulcast() {
         override fun of(parameters: Parameters) {
             super.of(parameters)
-            parameters["audioLocaleDelay"]?.let { audioLocaleDelay = it.toLongOrNull() }
+            parameters["audioLocaleDelay"]?.let { audioLocaleDelay = it.toIntOrNull() }
         }
 
         override fun toConfigurationFields() = super.toConfigurationFields().apply {
