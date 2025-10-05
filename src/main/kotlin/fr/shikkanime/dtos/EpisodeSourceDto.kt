@@ -9,6 +9,6 @@ data class EpisodeSourceDto(
     val langType: LangType
 ) : Serializable, Comparable<EpisodeSourceDto> {
     override fun compareTo(other: EpisodeSourceDto): Int {
-        return compareBy<EpisodeSourceDto>({ it.platform.name }, { it.langType }).compare(this, other)
+        return compareBy<EpisodeSourceDto>({ it.langType }, { it.platform.name }).compare(this, other)
     }
 }
