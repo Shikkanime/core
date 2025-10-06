@@ -10,6 +10,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.RuleCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.indexers.GroupedIndexer
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -27,6 +28,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject private lateinit var attachmentService: AttachmentService
 
     override fun getRepository() = episodeVariantRepository
+
+    fun preIndex() = episodeVariantRepository.preIndex()
 
     fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
 
@@ -220,6 +223,15 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         // Log the creation of the `EpisodeVariant`
         traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
+
+        // Add the episode variant to the GroupedIndexer
+        GroupedIndexer.add(
+            savedEntity.mapping!!.anime!!.countryCode!!,
+            savedEntity.mapping!!.anime!!.slug!!,
+            savedEntity.mapping!!.episodeType!!,
+            savedEntity.releaseDateTime,
+            savedEntity.uuid!!
+        )
 
         // Return the saved entity
         return savedEntity

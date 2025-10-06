@@ -69,6 +69,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         if (needRecalculate.get()) {
             logger.info("Recalculating simulcasts...")
             animeService.recalculateSimulcasts()
+            episodeVariantService.preIndex()
         }
 
         logger.info("Episodes updated")

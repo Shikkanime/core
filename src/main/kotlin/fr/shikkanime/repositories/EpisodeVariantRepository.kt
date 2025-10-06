@@ -3,8 +3,10 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.indexers.GroupedIndexer
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
@@ -13,6 +15,38 @@ import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     override fun getEntityClass() = EpisodeVariant::class.java
+
+    fun preIndex() {
+        database.entityManager.use {
+            val cb = it.criteriaBuilder
+
+            val query = cb.createTupleQuery().apply {
+                val root = from(getEntityClass())
+                distinct(true)
+                select(
+                    cb.tuple(
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode],
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.slug],
+                        root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+                        root[EpisodeVariant_.releaseDateTime],
+                        root[EpisodeVariant_.uuid]
+                    )
+                )
+            }
+
+            GroupedIndexer.clear()
+
+            createReadOnlyQuery(it, query).resultStream.forEach { tuple ->
+                GroupedIndexer.add(
+                    tuple[0, CountryCode::class.java],
+                    tuple[1, String::class.java],
+                    tuple[2, EpisodeType::class.java],
+                    tuple[3, ZonedDateTime::class.java],
+                    tuple[4, UUID::class.java]
+                )
+            }
+        }
+    }
 
     override fun findAll(): List<EpisodeVariant> {
         return database.entityManager.use {

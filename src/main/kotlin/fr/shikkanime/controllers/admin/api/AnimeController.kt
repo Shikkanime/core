@@ -12,6 +12,7 @@ import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.AttachmentService
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.admin.AnimeAdminService
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.*
@@ -29,6 +30,7 @@ class AnimeController : HasPageableRoute() {
     @Inject private lateinit var animeAdminService: AnimeAdminService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path("/force-update-all")
     @Get
@@ -67,6 +69,7 @@ class AnimeController : HasPageableRoute() {
         @BodyParam animeDto: AnimeDto
     ): Response {
         val updated = animeAdminService.update(uuid, animeDto) ?: return Response.notFound()
+        episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java)
         return Response.ok(animeFactory.toDto(updated))
     }
@@ -76,6 +79,7 @@ class AnimeController : HasPageableRoute() {
     @AdminSessionAuthenticated
     private fun deleteAnime(@PathParam uuid: UUID): Response {
         animeAdminService.delete(animeService.find(uuid) ?: return Response.notFound())
+        episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.noContent()
     }

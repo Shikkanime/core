@@ -27,6 +27,7 @@ abstract class AbstractControllerTest : AbstractTest() {
         initOnePiece()
         init7thTimeLoop()
         animeService.recalculateSimulcasts()
+        episodeVariantService.preIndex()
         InvalidationService.invalidateAll()
     }
 
