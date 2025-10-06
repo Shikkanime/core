@@ -4,10 +4,7 @@ import fr.shikkanime.jobs.*
 import fr.shikkanime.modules.configureHTTP
 import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.AttachmentService
-import fr.shikkanime.services.EpisodeMappingService
-import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.admin.AnimeAdminService
 import fr.shikkanime.utils.*
 import io.ktor.server.application.*
@@ -24,19 +21,21 @@ fun main(args: Array<String>) {
     logger.info("Testing Playwright installation...")
     checkPlaywrightInstallation()
 
-    logger.info("Pre-indexing anime data...")
-    val animeService = Constant.injector.getInstance(AnimeService::class.java)
-    val memberService = Constant.injector.getInstance(MemberService::class.java)
-    val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
-    animeService.preIndex()
-
     logger.info("Loading attachments cache...")
+    val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
     attachmentService.encodeAllActiveWithUrlAndWithoutFile()
 
     logger.info("Updating and deleting data...")
     updateAndDeleteData()
 
+    logger.info("Pre-indexing anime data...")
+    val animeService = Constant.injector.getInstance(AnimeService::class.java)
+    val episodeVariantService = Constant.injector.getInstance(EpisodeVariantService::class.java)
+    animeService.preIndex()
+    episodeVariantService.preIndex()
+
     try {
+        val memberService = Constant.injector.getInstance(MemberService::class.java)
         memberService.initDefaultAdminUser()
     } catch (_: IllegalStateException) {
         logger.info("Admin user already exists")

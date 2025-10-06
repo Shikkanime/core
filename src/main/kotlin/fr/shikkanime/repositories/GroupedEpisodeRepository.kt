@@ -2,36 +2,17 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import fr.shikkanime.utils.indexers.GroupedIndexer
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.*
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 import java.util.*
 
 class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
     override fun getEntityClass() = EpisodeMapping::class.java
-
-    /**
-     * Represents the unique identifier for a group of episodes.
-     * Episodes are grouped by anime, type, the day of release, and a 2-hour block within that day.
-     *
-     * @property animeUuid The UUID of the anime.
-     * @property episodeType The type of the episode (e.g., EPISODE, FILM).
-     * @property releaseDay The truncated day of release.
-     * @property hourGroup The 2-hour block index (0-11) within the release day.
-     * @property representativeReleaseTime The earliest release time within the group, used as a reference.
-     */
-    private data class GroupIdentifier(
-        val animeUuid: UUID,
-        val episodeType: EpisodeType,
-        val releaseDay: ZonedDateTime,
-        val hourGroup: Int,
-        val representativeReleaseTime: ZonedDateTime
-    )
 
     /**
      * Defines the available fields for sorting grouped episodes.
@@ -100,14 +81,13 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
     fun findAllBy(countryCode: CountryCode?, sort: List<SortParameter>, page: Int, limit: Int): Pageable<GroupedEpisode> {
         return database.entityManager.use { entityManager ->
             val cb = entityManager.criteriaBuilder
-
-            val pagedGroupIdentifiers = findPagedGroupIdentifiers(entityManager, cb, countryCode, sort, page, limit)
+            val pagedGroupIdentifiers = paginateGroupedEpisodes(countryCode, sort, page, limit)
 
             if (pagedGroupIdentifiers.data.isEmpty()) {
                 return@use Pageable(emptySet(), page, limit, 0)
             }
 
-            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data, sort)
+            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { it.first.variantsUuid }.toSet(), sort)
             val groupedEpisodes = groupVariants(variantsInGroups, pagedGroupIdentifiers.data, sort)
 
             Pageable(
@@ -119,96 +99,44 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    private fun getHourExpression(cb: CriteriaBuilder, releaseDateTime: Expression<ZonedDateTime>): Expression<Int> {
-        return if (database.dialect().contains("PostgreSQL", ignoreCase = true)) {
-            cb.function("date_part", Int::class.java, cb.literal("hour"), releaseDateTime)
-        } else {
-            cb.function("HOUR", Int::class.java, releaseDateTime)
-        }
-    }
-
-    private fun getMinuteExpression(cb: CriteriaBuilder, releaseDateTime: Expression<ZonedDateTime>): Expression<Int> {
-        return if (database.dialect().contains("PostgreSQL", ignoreCase = true)) {
-            cb.function("date_part", Int::class.java, cb.literal("minute"), releaseDateTime)
-        } else {
-            cb.function("MINUTE", Int::class.java, releaseDateTime)
-        }
-    }
-
-    /**
-     * Finds the paginated list of group identifiers.
-     * Each identifier represents a unique group of episodes for a given page.
-     *
-     * @param em The EntityManager.
-     * @param cb The CriteriaBuilder.
-     * @param countryCode Optional country code to filter by.
-     * @param sort The sorting parameters.
-     * @param page The page number.
-     * @param limit The page size.
-     * @return A [Pageable] of [GroupIdentifier].
-     */
-    private fun findPagedGroupIdentifiers(
-        em: EntityManager,
-        cb: CriteriaBuilder,
+    private fun paginateGroupedEpisodes(
         countryCode: CountryCode?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): Pageable<GroupIdentifier> {
-        val query = cb.createQuery(GroupIdentifier::class.java)
-        val root = query.from(EpisodeVariant::class.java)
-        val mapping = root[EpisodeVariant_.mapping]
-        val anime = mapping[EpisodeMapping_.anime]
-        val releaseDateTime = root[EpisodeVariant_.releaseDateTime]
-
-        val releaseDay = cb.function("date_trunc", ZonedDateTime::class.java, cb.literal("day"), releaseDateTime)
-        val hour = getHourExpression(cb, releaseDateTime)
-        val minute = getMinuteExpression(cb, releaseDateTime)
-        val minutesOfDay = cb.sum(cb.prod(hour, 60), minute)
-        val shiftedMinutes = cb.sum(minutesOfDay, 30)
-        val hourGroup = cb.floor(cb.quot(shiftedMinutes, 120)).`as`(Int::class.java)
-
-        query.select(
-            cb.construct(
-                GroupIdentifier::class.java,
-                anime[Anime_.uuid],
-                mapping[EpisodeMapping_.episodeType],
-                releaseDay,
-                hourGroup,
-                cb.least(releaseDateTime)
-            )
-        )
-
-        countryCode?.let { query.where(cb.equal(anime[Anime_.countryCode], it)) }
-
-        query.groupBy(
-            anime[Anime_.uuid],
-            mapping[EpisodeMapping_.episodeType],
-            releaseDay,
-            hourGroup
-        )
-
-        val groupSortExpression = cb.least(releaseDateTime)
-        val sortExpressions = mapOf(SortField.EPISODE_TYPE to mapping[EpisodeMapping_.episodeType])
-        val orders = sort.mapNotNull { SortField.toCriteriaOrder(it, cb, groupSortExpression, sortExpressions) }
-        query.orderBy(orders)
-
-        return buildPageableQuery(createReadOnlyQuery(em, query), page, limit)
-    }
+    ): Pageable<Pair<GroupedIndexer.IndexedData, GroupedIndexer.CompositeIndex>> = GroupedIndexer.pageable(
+        filter = { countryCode == null || it.key.countryCode == countryCode },
+        comparator = Comparator { a, b ->
+            for (param in sort) {
+                val comparison = when (SortField.from(param.field)) {
+                    SortField.RELEASE_DATE_TIME -> a.first.releaseDateTime.compareTo(b.first.releaseDateTime)
+                    SortField.EPISODE_TYPE -> a.second.episodeType.compareTo(b.second.episodeType)
+                    SortField.ANIME_NAME -> a.second.animeSlug.compareTo(b.second.animeSlug)
+                    else -> 0
+                }
+                if (comparison != 0) {
+                    return@Comparator if (param.order == SortParameter.Order.ASC) comparison else -comparison
+                }
+            }
+            0
+        },
+        page = page,
+        limit = limit,
+    )
 
     /**
      * Fetches all [EpisodeVariant] entities that belong to a given set of group identifiers.
      *
      * @param em The EntityManager.
      * @param cb The CriteriaBuilder.
-     * @param groups The set of [GroupIdentifier] to fetch variants for.
+     * @param uuids The set of group identifiers to fetch variants for.
      * @param sort The sorting parameters to apply to the variants within their groups.
      * @return A list of [EpisodeVariant].
      */
     private fun findVariantsInGroups(
         em: EntityManager,
         cb: CriteriaBuilder,
-        groups: Set<GroupIdentifier>,
+        uuids: Set<UUID>,
         sort: List<SortParameter>
     ): List<EpisodeVariant> {
         val query = cb.createQuery(EpisodeVariant::class.java)
@@ -217,25 +145,8 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
 
         val mapping = root[EpisodeVariant_.mapping]
         val anime = mapping[EpisodeMapping_.anime]
-        val releaseDateTime = root[EpisodeVariant_.releaseDateTime]
 
-        val releaseDay = cb.function("date_trunc", ZonedDateTime::class.java, cb.literal("day"), releaseDateTime)
-        val hour = getHourExpression(cb, releaseDateTime)
-        val minute = getMinuteExpression(cb, releaseDateTime)
-        val minutesOfDay = cb.sum(cb.prod(hour, 60), minute)
-        val shiftedMinutes = cb.sum(minutesOfDay, 30)
-        val hourGroup = cb.floor(cb.quot(shiftedMinutes, 120))
-
-        val predicates = groups.map {
-            cb.and(
-                cb.equal(anime[Anime_.uuid], it.animeUuid),
-                cb.equal(mapping[EpisodeMapping_.episodeType], it.episodeType),
-                cb.equal(releaseDay, it.releaseDay),
-                cb.equal(hourGroup, it.hourGroup)
-            )
-        }
-
-        query.where(cb.or(*predicates.toTypedArray()))
+        query.where(root[EpisodeVariant_.uuid].`in`(uuids))
 
         val sortExpressions = mapOf(
             SortField.EPISODE_TYPE to mapping[EpisodeMapping_.episodeType],
@@ -243,7 +154,8 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
             SortField.NUMBER to mapping[EpisodeMapping_.number],
             SortField.ANIME_NAME to anime[Anime_.slug]
         )
-        val orders = sort.mapNotNull { SortField.toCriteriaOrder(it, cb, releaseDateTime, sortExpressions) }
+
+        val orders = sort.mapNotNull { SortField.toCriteriaOrder(it, cb, root[EpisodeVariant_.releaseDateTime], sortExpressions) }
         query.orderBy(orders)
 
         return createReadOnlyQuery(em, query).resultList
@@ -253,36 +165,16 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
      * Groups a flat list of variants into [GroupedEpisode] objects based on the provided group identifiers.
      *
      * @param variants The list of [EpisodeVariant] to group.
-     * @param groups The set of [GroupIdentifier] defining the groups.
+     * @param groupIdentifiers The identifiers of the groups to form.
      * @param sort The sorting parameters to apply to the final list of [GroupedEpisode].
      * @return A sorted set of [GroupedEpisode].
      */
     private fun groupVariants(
         variants: List<EpisodeVariant>,
-        groups: Set<GroupIdentifier>,
+        groupIdentifiers: Set<Pair<GroupedIndexer.IndexedData, GroupedIndexer.CompositeIndex>>,
         sort: List<SortParameter>
     ): Set<GroupedEpisode> {
-        val groupIdentifierMap = groups.associateBy {
-            it.animeUuid to Triple(it.episodeType, it.releaseDay, it.hourGroup)
-        }
-
-        return variants.groupBy { variant ->
-            val releaseTime = variant.releaseDateTime
-            val releaseDay = releaseTime.truncatedTo(ChronoUnit.DAYS)
-            val minutesOfDay = releaseTime.hour * 60 + releaseTime.minute
-            val shiftedMinutes = minutesOfDay + 30
-            val hourGroup = shiftedMinutes / 120
-
-            val groupKey = variant.mapping!!.anime!!.uuid!! to Triple(
-                variant.mapping!!.episodeType!!,
-                releaseDay,
-                hourGroup
-            )
-
-            groupIdentifierMap[groupKey]
-                ?: throw IllegalStateException("Variant does not belong to any group. Variant release time: ${variant.releaseDateTime}")
-        }
-            .values
+        return variants.groupBy { variant -> groupIdentifiers.find { it.first.variantsUuid.contains(variant.uuid) }!! }.values
             .map(::toGroupedEpisode)
             .toSortedSet(getGroupedEpisodeComparator(sort))
     }

@@ -13,6 +13,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.EpisodeMappingService
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.admin.EpisodeMappingAdminService
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
@@ -32,6 +33,7 @@ class EpisodeMappingController {
     @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
     @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path("/update-all")
     @Put
@@ -51,6 +53,7 @@ class EpisodeMappingController {
             return Response.badRequest(MessageDto.error("At least one field must be set"))
 
         episodeMappingAdminService.updateAll(updateAllEpisodeMappingDto)
+        episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         return Response.ok()
     }
@@ -71,6 +74,7 @@ class EpisodeMappingController {
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
         val updated = episodeMappingAdminService.update(uuid, episodeMappingDto)
+        episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.ok(episodeMappingFactory.toDto(updated ?: return Response.noContent()))
     }
@@ -80,6 +84,7 @@ class EpisodeMappingController {
     @AdminSessionAuthenticated
     private fun deleteEpisode(@PathParam uuid: UUID): Response {
         episodeMappingService.delete(episodeMappingService.find(uuid) ?: return Response.notFound())
+        episodeVariantService.preIndex()
         InvalidationService.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
         return Response.noContent()
     }

@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -33,6 +34,7 @@ class AdminController {
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path
     @Get
@@ -81,6 +83,7 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun invalidateSimulcasts(): Response {
         animeService.recalculateSimulcasts()
+        episodeVariantService.preIndex()
         InvalidationService.invalidate(
             Anime::class.java,
             EpisodeMapping::class.java,

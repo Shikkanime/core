@@ -101,6 +101,8 @@ class EpisodeMappingControllerTest : AbstractControllerTest() {
             )
         )
 
+        episodeVariantService.preIndex()
+
         testApplication {
             application {
                 module()
