@@ -12,6 +12,8 @@ import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     override suspend fun getEpisodesByShowId(
@@ -71,24 +73,54 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
 
         // Process all seasons and extract episodes
         return seasons?.flatMap { season ->
-            // Use existing JSON for main page or fetch season-specific data
-            val json = if (season.id != pageTitleId) {
-                fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale)
-            } else {
-                globalJson
+            val json = if (season.id != pageTitleId) fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale) else globalJson
+            val btfState = json.getAsJsonObject("btf").getAsJsonObject("state")
+            val episodes = mutableSetOf<Episode>()
+
+            // Extract episodes from the current JSON
+            btfState.getAsJsonObject("detail").getAsJsonObject("detail")?.let { episodesJson ->
+                episodes.addAll(
+                    episodesJson.entrySet()
+                        .filter { (_, element) -> element.asJsonObject.getAsString("titleType") == "episode" }
+                        .map { (key, element) ->
+                            createEpisode(key, element.asJsonObject, season, show, btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")!!, btfState)
+                        }
+                )
+            } ?: throw Exception("Failed to get episodes")
+
+            // Handle pagination for additional episodes
+            var token = btfState.getAsJsonObject("episodeList")
+                .getAsJsonObject("actions")
+                .getAsJsonArray("pagination")
+                ?.find { it.asJsonObject.getAsString("tokenType") == "NextPage" }
+                ?.asJsonObject?.getAsString("token")
+
+            while (!token.isNullOrEmpty()) {
+                val dataObject = loadMoreData(season.id, token)
+
+                token = dataObject.getAsJsonObject("actions").getAsJsonArray("pagination")
+                    ?.find { it.asJsonObject.getAsString("tokenType") == "NextPage" }
+                    ?.asJsonObject?.getAsString("token")
+
+                dataObject.getAsJsonArray("episodes")?.let { episodesArray ->
+                    episodes.addAll(
+                        episodesArray.filter { it.asJsonObject?.getAsJsonObject("detail")?.getAsString("titleType") == "episode" }
+                            .map {
+                                val detailObject = it.asJsonObject!!.getAsJsonObject("detail")!!
+                                createEpisode(
+                                    detailObject.getAsString("catalogId")!!,
+                                    detailObject,
+                                    season,
+                                    show,
+                                    it.asJsonObject.getAsJsonObject("self").getAsString("link")!!,
+                                    null
+                                )
+                            }
+                    )
+                }
             }
 
-            // Extract episodes data
-            val btfState = json.getAsJsonObject("btf").getAsJsonObject("state")
-            val episodesJson = btfState.getAsJsonObject("detail").getAsJsonObject("detail")
-                ?: throw Exception("Failed to get episodes")
-
-            // Map JSON to Episode objects
-            episodesJson.entrySet().asSequence()
-                .filter { (_, element) -> element.asJsonObject.getAsString("titleType") == "episode" }
-                .map { (key, element) -> 
-                    createEpisode(key, element.asJsonObject, season, show, btfState)
-                }
+            episodes
         }?.toTypedArray() ?: emptyArray()
     }
     
@@ -97,7 +129,8 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         episodeJson: JsonObject,
         season: Season,
         show: Show,
-        btfState: JsonObject
+        link: String,
+        btfState: JsonObject?
     ): Episode {
         val episodeNumber = episodeJson.getAsInt("episodeNumber")!!
         val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toHashSet() ?: HashSet()
@@ -105,17 +138,17 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
 
         return Episode(
             show,
-            setOf(
-                EncryptionManager.toSHA512("${show.id}-${season.number}-$episodeNumber").substring(0..<8),
-                btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("compactGTI")!!
-            ),
+            buildSet {
+                add(EncryptionManager.toSHA512("${show.id}-${season.number}-$episodeNumber").substring(0..<8))
+                btfState?.let { add(it.getAsJsonObject("self").getAsJsonObject(key).getAsString("compactGTI")!!) }
+            },
             key.substringAfterLast("."),
             season.number,
             EpisodeType.EPISODE,
             episodeNumber,
             episodeJson.getAsString("title")!!,
             episodeJson.getAsString("synopsis")!!,
-            "$baseUrl${btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")}?autoplay=1&t=0",
+            "$baseUrl$link?autoplay=1&t=0",
             episodeJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             episodeJson.getAsLong("duration", -1),
             getAudioLocales(audioTracks),
@@ -129,8 +162,8 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         if ("Français" in audioTracks) add("fr-FR")
     }
 
-    private fun getSubtitleLocales(subtitles: java.util.HashSet<String>): Set<String> = buildSet {
-        if ("Français (France)" in subtitles || "Français" in subtitles) add("fr-FR")
+    private fun getSubtitleLocales(subtitles: HashSet<String>): Set<String> = buildSet {
+        if ("Français (France)" in subtitles || "Français" in subtitles || "Français [CC]" in subtitles) add("fr-FR")
     }
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
@@ -151,5 +184,18 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             .getAsJsonArray("page")[0].asJsonObject
             .getAsJsonObject("assembly").getAsJsonArray("body")[0].asJsonObject
             .getAsJsonObject("props") ?: throw Exception("Failed to parse response")
+    }
+
+    private suspend fun loadMoreData(id: String, token: String): JsonObject {
+        val response = httpRequest.get(
+            "$baseUrl/api/getDetailWidgets?titleID=$id&widgets=${URLEncoder.encode("[{\"widgetType\":\"EpisodeList\",\"widgetToken\":\"$token\"}]", StandardCharsets.UTF_8)}",
+            headers = mapOf("Accept" to ContentType.Application.Json.toString())
+        )
+
+        require(response.status == HttpStatusCode.OK) { "Failed to load more data (${response.status.value} - ${response.bodyAsText()})" }
+
+        return ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonObject("widgets")
+            .getAsJsonObject("episodeList") ?: throw Exception("Failed to parse response")
     }
 }

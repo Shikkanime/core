@@ -92,6 +92,14 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 testDate = "2024-12-20T00:00:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/6/74028l.jpg",
                 expectedAudioLocales = setOf("ja-JP")
+            ),
+            SimulcastTestCase(
+                "0MNO6WKB8I3016041RSOV5NKH4",
+                "Boruto - Naruto Next Generations",
+                releaseDay = 0,
+                testDate = "2025-10-07T00:00:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1091/99847l.jpg",
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             )
         )
     }
