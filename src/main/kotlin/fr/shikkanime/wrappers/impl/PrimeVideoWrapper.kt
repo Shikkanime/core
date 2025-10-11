@@ -90,15 +90,16 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
 
             // Handle pagination for additional episodes
             var token = btfState.getAsJsonObject("episodeList")
-                .getAsJsonObject("actions")
-                .getAsJsonArray("pagination")
+                ?.getAsJsonObject("actions")
+                ?.getAsJsonArray("pagination")
                 ?.find { it.asJsonObject.getAsString("tokenType") == "NextPage" }
                 ?.asJsonObject?.getAsString("token")
 
             while (!token.isNullOrEmpty()) {
                 val dataObject = loadMoreData(season.id, token)
 
-                token = dataObject.getAsJsonObject("actions").getAsJsonArray("pagination")
+                token = dataObject.getAsJsonObject("actions")
+                    ?.getAsJsonArray("pagination")
                     ?.find { it.asJsonObject.getAsString("tokenType") == "NextPage" }
                     ?.asJsonObject?.getAsString("token")
 

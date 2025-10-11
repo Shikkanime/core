@@ -100,6 +100,14 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 testDate = "2025-10-07T00:00:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1091/99847l.jpg",
                 expectedAudioLocales = setOf("ja-JP", "fr-FR")
+            ),
+            SimulcastTestCase(
+                "0O1YMOCTYRHW1QWHTGOS6YASPJ",
+                "TATSUKI FUJIMOTO ANTHOLOGIE 17-26",
+                releaseDay = 0,
+                testDate = "2025-10-11T00:00:00Z",
+                imageUrl = "https://cdn.myanimelist.net/images/anime/1864/151837l.jpg",
+                expectedAudioLocales = setOf("ja-JP", "fr-FR")
             )
         )
     }
