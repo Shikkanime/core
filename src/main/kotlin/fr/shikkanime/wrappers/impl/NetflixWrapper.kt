@@ -184,6 +184,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
                 runCatching { getEpisodeAudioTrackList(show.id) }
+                    .map { it[show.id] ?: emptySet() }
                     .onFailure { logger.warning("Failed to get audio tracks for movie $id: ${it.message}") }
                     .getOrNull() ?: emptySet()
             )
@@ -228,8 +229,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 )
             )
         )))
-        require(response.status == HttpStatusCode.OK) { 
-            "Failed to get episodes (${response.status.value} - ${response.bodyAsText()})" 
+        require(response.status == HttpStatusCode.OK) {
+            "Failed to get episodes (${response.status.value} - ${response.bodyAsText()})"
         }
 
         val episodesJson = ObjectParser.fromJson(response.bodyAsText())
@@ -239,12 +240,25 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.getAsJsonObject("episodes")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get episodes")
 
+        val episodeIds = episodesJson.mapNotNull { it.asJsonObject.getAsJsonObject("node")?.getAsInt("videoId") }.toIntArray()
+
+        val audioTracksMap = if (episodeIds.isNotEmpty())
+            runCatching { getEpisodeAudioTrackList(*episodeIds) }
+                .onFailure { logger.warning("Failed to get audio tracks for season ${season.id}: ${it.message}") }
+                .getOrNull() ?: emptyMap()
+        else emptyMap()
+
         return episodesJson.mapNotNull { episodeJson ->
-            createEpisodeFromJson(show, episodeJson.asJsonObject, seasonNumber)
+            createEpisodeFromJson(show, episodeJson.asJsonObject, seasonNumber, audioTracksMap)
         }
     }
 
-    private suspend fun createEpisodeFromJson(show: Show, episodeJson: JsonObject, seasonNumber: Int): Episode? {
+    private fun createEpisodeFromJson(
+        show: Show,
+        episodeJson: JsonObject,
+        seasonNumber: Int,
+        audioTracksMap: Map<Int, Set<String>>
+    ): Episode? {
         val episode = episodeJson.getAsJsonObject("node")
         val episodeId = episode.getAsInt("videoId")!!
         val episodeNumber = episode.getAsInt("number")!!
@@ -270,36 +284,40 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             show.metadata?.episodes?.find { it.id == episodeId }?.image
                 ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
             episode.getAsInt("runtimeSec")!!.toLong(),
-            runCatching { getEpisodeAudioTrackList(episodeId) }
-                .onFailure { logger.warning("Failed to get audio tracks for episode $episodeId: ${it.message}") }
-                .getOrNull() ?: emptySet()
+            audioTracksMap[episodeId] ?: emptySet()
         )
     }
 
-    suspend fun getEpisodeAudioTrackList(id: Int): Set<String> {
+    suspend fun getEpisodeAudioTrackList(vararg ids: Int): Map<Int, Set<String>> {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
-
         val response = httpRequest.post(
             "$baseUrl/nq/website/memberapi/release/pathEvaluator?method=call&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
             mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
-            FormDataContent(parametersOf(
-                "callPath" to listOf("[\"videos\",$id,\"audio\"]"),
-                "authURL" to listOf(netflixAuthentification.authUrl),
-            ))
+            FormDataContent(
+                parametersOf(
+                    "callPath" to listOf("[\"videos\",[${ids.joinToString(",")}],\"audio\"]"),
+                    "authURL" to listOf(netflixAuthentification.authUrl),
+                )
+            )
         )
         require(response.status == HttpStatusCode.OK) { "Failed to get audio tracks (${response.status.value} - ${response.bodyAsText()})" }
-        val audioTracks = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("jsonGraph")
+        val videoGraph = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("jsonGraph")
             ?.getAsJsonObject("videos")
-            ?.getAsJsonObject(id.toString())
-            ?.getAsJsonObject("audio")
-            ?.getAsJsonArray("value")
-            ?.map { it.asJsonObject.getAsString("isoCode") }
-            ?: throw Exception("Failed to get metadata")
 
-        return buildSet {
-            if ("ja-jpn" in audioTracks) add("ja-JP")
-            if ("ja-jpn" !in audioTracks && "en-eng" in audioTracks) add("en-US")
-            if ("fr-fra" in audioTracks) add("fr-FR")
-        }
+        return ids.associateWith { id ->
+            runCatching {
+                val audioTracks = videoGraph
+                    ?.getAsJsonObject(id.toString())
+                    ?.getAsJsonObject("audio")
+                    ?.getAsJsonArray("value")
+                    ?.map { it.asJsonObject.getAsString("isoCode") }
+                    ?: throw Exception("Failed to get metadata")
+                buildSet {
+                    if ("ja-jpn" in audioTracks) add("ja-JP")
+                    if ("ja-jpn" !in audioTracks && "en-eng" in audioTracks) add("en-US")
+                    if ("fr-fra" in audioTracks) add("fr-FR")
+                }
+            }.getOrNull() ?: emptySet()
+        }.filterValues { it.isNotEmpty() }
     }
 }
