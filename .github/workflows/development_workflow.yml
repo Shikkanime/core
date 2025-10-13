@@ -23,11 +23,10 @@ jobs:
           distribution: 'corretto'
           cache: gradle
 
-      - name: Install Webp
-        run: sudo apt install -y webp
-
-      - name: Install Playwright
-        run: npx -y playwright install --with-deps
+      - name: Install dependencies
+        run: |
+          sudo apt install -y webp
+          npx -y playwright install --with-deps
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -66,11 +65,10 @@ jobs:
           distribution: 'corretto'
           cache: gradle
 
-      - name: Install Webp
-        run: sudo apt install -y webp
-
-      - name: Install Playwright
-        run: npx -y playwright install --with-deps
+      - name: Install dependencies
+        run: |
+          sudo apt install -y webp
+          npx -y playwright install --with-deps
 
       - name: Build and test
         run: ./gradlew clean test --info
@@ -100,12 +98,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Update Valkey classifier in build.gradle.kts
-        run: |
-          #!/bin/bash
-          # Update the file
-          sed -i "s|osdetector.classifier|\"linux-aarch_64\"|g" build.gradle.kts
 
       - name: Build
         run: gradle clean installDist -x test

@@ -32,11 +32,10 @@ jobs:
           distribution: 'corretto'
           cache: gradle
 
-      - name: Install Webp
-        run: sudo apt install -y webp
-
-      - name: Install Playwright
-        run: npx -y playwright install --with-deps
+      - name: Install dependencies
+        run: |
+          sudo apt install -y webp
+          npx -y playwright install --with-deps
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -86,19 +85,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Update version in build.gradle.kts
+      - name: Update build.gradle.kts
         run: |
-          #!/bin/bash
-          PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
-
-          # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ env.VERSION }}|g" build.gradle.kts
-
-      - name: Update Valkey classifier in build.gradle.kts
-        run: |
-          #!/bin/bash
-          # Update the file
-          sed -i "s|osdetector.classifier|\"linux-aarch_64\"|g" build.gradle.kts
+          sed -i "s|$(grep -oP 'version = "\K[^"]*' build.gradle.kts)|${{ env.VERSION }}|g" build.gradle.kts
+          sed -i 's|osdetector.classifier|"linux-aarch_64"|g' build.gradle.kts
 
       - name: Build
         run: gradle clean installDist
