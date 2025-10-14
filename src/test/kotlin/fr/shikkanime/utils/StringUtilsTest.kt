@@ -12,7 +12,7 @@ class StringUtilsTest {
             "Banished from the Hero's Party, I Decided to Live a Quiet Life in the Countryside" to "Banished from the Hero's Party",
             "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!" to "7th Time Loop",
             "Shangri-La Frontier" to "Shangri-La Frontier",
-            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa",
+            "Captain Tsubasa Saison 2, Junior Youth Arc" to "Captain Tsubasa, Junior Youth Arc",
             "SPY x FAMILY" to "SPY x FAMILY",
             "The Strongest Tank's Labyrinth Raids -A Tank with a Rare 9999 Resistance Skill Got Kicked from the Hero's Party-" to "The Strongest Tank's Labyrinth Raids",
             "Firefighter Daigo: Rescuer in Orange" to "Firefighter Daigo",
@@ -91,6 +91,7 @@ class StringUtilsTest {
             "SI-VIS: The Sound of Heroes" to "SI-VIS",
             "The Fated Magical Princess: Who Made Me a Princess" to "The Fated Magical Princess",
             "Yano-kun's Ordinary Days" to "Yano-kun's Ordinary Days",
+            "With you, Our Love will Make it Through" to "With you, Our Love will Make it Through"
         )
 
         list.forEach { (input, expected) ->

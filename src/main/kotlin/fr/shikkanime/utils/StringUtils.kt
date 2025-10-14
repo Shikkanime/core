@@ -39,26 +39,22 @@ object StringUtils {
             else -> regex.replace(fullName, SPACE_STRING).trim()
         }
 
-        for (separator in separators) {
-            if (separator !in normalizedName) {
-                continue
+        separators.filter { it in normalizedName }
+            .forEach { separator ->
+                val parts = normalizedName.split(separator)
+                val firstPart = parts[0].trim()
+                val lastPart = parts.drop(1).joinToString(SPACE_STRING).trim()
+
+                if (lastPart.count { it == ' ' } >= 2 &&
+                    ((separator != COMMA_STRING && firstPart.length > 5) || firstPart.count { it == ' ' } >= 2) &&
+                    (separator == ":" || !isAllPartsHaveSameAmountOfWords(parts))) {
+                    normalizedName = firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
+                }
             }
 
-            val split = normalizedName.split(separator)
-            val firstPart = split[0].trim()
-            val lastPart = split.drop(1).joinToString(SPACE_STRING).trim()
-
-            // Check if the last part of the name contains at least two spaces
-            // and if the first part meets certain length conditions based on the separator
-            // and if the parts do not have the same amount of words when the separator is not a colon
-            if (lastPart.count { it == ' ' } >= 2 &&
-                firstPart.length > (if (separator == COMMA_STRING) 6 else 5) &&
-                (separator == ":" || !isAllPartsHaveSameAmountOfWords(split))) {
-                normalizedName = firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
-            }
-        }
-
-        return normalizedName.replace(duplicateSpaceRegex, SPACE_STRING).trim()
+        return normalizedName.replace(" ,", COMMA_STRING)
+            .replace(duplicateSpaceRegex, SPACE_STRING)
+            .trim()
     }
 
     fun getHashtag(shortName: String) =
