@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.variants.VariantReleaseDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
@@ -14,7 +15,9 @@ import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.factories.impl.PlatformFactory
 import fr.shikkanime.repositories.AnimeRepository
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
+import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import fr.shikkanime.utils.atEndOfWeek
@@ -29,6 +32,8 @@ import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var animeRepository: AnimeRepository
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var simulcastService: SimulcastService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
@@ -67,7 +72,21 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllBySimulcast(simulcastUuid: UUID) = animeRepository.findAllBySimulcast(simulcastUuid)
 
-    fun findAllNeedUpdate(lastDateTime: ZonedDateTime) = animeRepository.findAllNeedUpdate(lastDateTime)
+    fun findAllNeedUpdate(): List<Anime> {
+        val simulcasts = simulcastCacheService.findAll()
+
+        val currentSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_CURRENT_SEASON, 7).toLong()
+        val lastSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_LAST_SEASON, 30).toLong()
+        val othersDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_OTHERS, 90).toLong()
+
+        return animeRepository.findAllNeedUpdate(
+            currentSimulcastUuid = simulcasts.getOrNull(0)?.uuid,
+            lastSimulcastUuid = simulcasts.getOrNull(1)?.uuid,
+            currentSeasonDelay = currentSeasonDelay,
+            lastSeasonDelay = lastSeasonDelay,
+            othersDelay = othersDelay
+        )
+    }
 
     fun findAllAudioLocales(uuid: UUID) = animeRepository.findAllAudioLocales(uuid)
 
