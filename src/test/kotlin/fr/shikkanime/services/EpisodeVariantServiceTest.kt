@@ -31,7 +31,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
         every { episode.number } returns 1
 
         animeService.save(anime)
-        val simulcast = episodeVariantService.getSimulcast(anime, episode)
+        val simulcast = episodeVariantService.getSimulcast(anime = anime, entity = episode)
 
         assertEquals(Season.WINTER, simulcast.season)
         assertEquals(2024, simulcast.year)
@@ -73,7 +73,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
         every { episode.episodeType } returns EpisodeType.EPISODE
         every { episode.number } returns 12
 
-        val simulcast = episodeVariantService.getSimulcast(anime, episode)
+        val simulcast = episodeVariantService.getSimulcast(anime = anime, entity = episode)
 
         assertEquals(Season.AUTUMN, simulcast.season)
         assertEquals(2023, simulcast.year)

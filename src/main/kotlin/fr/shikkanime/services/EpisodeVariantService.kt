@@ -64,10 +64,15 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
      *
      * @return The determined `Simulcast` entity.
      */
-    fun getSimulcast(anime: Anime, entity: EpisodeMapping, previousReleaseDateTime: ZonedDateTime? = null, sqlCheck: Boolean = true, simulcasts: Collection<Simulcast>? = null): Simulcast {
-        // Retrieve the simulcast range configuration value
-        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
-
+    fun getSimulcast(
+        simulcastRange: Int = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1),
+        simulcastRangeDelay: Int = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 3),
+        anime: Anime,
+        entity: EpisodeMapping,
+        previousReleaseDateTime: ZonedDateTime? = null,
+        sqlCheck: Boolean = true,
+        simulcasts: Collection<Simulcast>? = null
+    ): Simulcast {
         // Generate a list of adjusted dates based on the simulcast range
         val adjustedDates = (-simulcastRange..simulcastRange step simulcastRange).map { entity.releaseDateTime.plusDays(it.toLong()) }
 
@@ -95,10 +100,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
             // If the episode number is greater than 1 and the anime's release date-time is before the earliest adjusted date,
             // and the difference in months is either -1 or greater than or equal to the configured delay, choose the next simulcast
-            entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && (diff == -1L || diff >= configCacheService.getValueAsInt(
-                ConfigPropertyKey.SIMULCAST_RANGE_DELAY,
-                3
-            )) -> nextSimulcast
+            entity.number!! > 1 && isAnimeReleaseDateTimeBeforeMinusXDays && (diff == -1L || diff >= simulcastRangeDelay) -> nextSimulcast
 
             // If the episode number is greater than 1 and the anime's release date-time is before the earliest adjusted date,
             // and the current simulcast is not the previous simulcast, choose the previous simulcast
@@ -349,7 +351,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         // Check if the episode's audio locale differs from the country's locale
         if (episode.audioLocale != episode.countryCode.locale) {
             // Determine the appropriate simulcast for the anime and mapping
-            val simulcast = getSimulcast(anime, mapping)
+            val simulcast = getSimulcast(anime = anime, entity = mapping)
             // Add the simulcast to the anime and check if it was successfully added
             val added = animeService.addSimulcastToAnime(anime, simulcast)
             needAnimeUpdate = needAnimeUpdate || added

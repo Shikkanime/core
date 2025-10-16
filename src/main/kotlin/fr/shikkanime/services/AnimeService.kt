@@ -291,6 +291,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeMappingService.updateAllReleaseDate()
         animeRepository.updateAllReleaseDate()
 
+        val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
+        val simulcastRangeDelay = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 3)
         val simulcasts = simulcastService.findAll().toMutableList()
 
         val groupedAnimes = findAll()
@@ -310,7 +312,15 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                                 it.episodeType == episodeMapping.episodeType
                     }.maxOfOrNull { it.releaseDateTime }
 
-                    val simulcast = episodeVariantService.getSimulcast(anime, episodeMapping, previousReleaseDateTime, sqlCheck = false, simulcasts = simulcasts)
+                    val simulcast = episodeVariantService.getSimulcast(
+                        simulcastRange,
+                        simulcastRangeDelay,
+                        anime,
+                        episodeMapping,
+                        previousReleaseDateTime,
+                        sqlCheck = false,
+                        simulcasts = simulcasts
+                    )
                     addSimulcastToAnime(anime, simulcast)
 
                     if (simulcasts.none { it.uuid == simulcast.uuid }) {

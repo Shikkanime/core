@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1760621527152"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_episode_variant_audio_locale" tableName="episode_variant"/>
+            </not>
+        </preConditions>
+
+        <createIndex indexName="idx_episode_variant_audio_locale" tableName="episode_variant">
+            <column name="audio_locale"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

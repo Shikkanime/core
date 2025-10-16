@@ -19,6 +19,10 @@ import java.util.*
             name = "idx_episode_variant_release_date_mapping_uuid",
             columnList = "release_date_time, mapping_uuid"
         ),
+        Index(
+            name = "idx_episode_variant_audio_locale",
+            columnList = "audio_locale"
+        ),
     ]
 )
 @Cacheable
