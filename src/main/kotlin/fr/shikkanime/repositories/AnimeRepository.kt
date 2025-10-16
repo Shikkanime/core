@@ -190,24 +190,56 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllNeedUpdate(lastDateTime: ZonedDateTime): List<Anime> {
+    fun findAllNeedUpdate(
+        currentSimulcastUuid: UUID?,
+        lastSimulcastUuid: UUID?,
+        currentSeasonDelay: Long,
+        lastSeasonDelay: Long,
+        othersDelay: Long
+    ): List<Anime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
+            val simulcastJoin = root.join(Anime_.simulcasts, JoinType.LEFT)
+            val now = ZonedDateTime.now()
+
+            val predicates = buildSet {
+                currentSimulcastUuid?.let { uuid ->
+                    add(cb.and(
+                        cb.equal(simulcastJoin[Simulcast_.uuid], uuid),
+                        cb.lessThanOrEqualTo(root[Anime_.lastUpdateDateTime], now.minusDays(currentSeasonDelay))
+                    ))
+                }
+                lastSimulcastUuid?.let { uuid ->
+                    add(cb.and(
+                        cb.equal(simulcastJoin[Simulcast_.uuid], uuid),
+                        cb.lessThanOrEqualTo(root[Anime_.lastUpdateDateTime], now.minusDays(lastSeasonDelay))
+                    ))
+                }
+                add(cb.and(
+                    cb.not(root[Anime_.uuid].`in`(query.subquery(UUID::class.java).apply {
+                        val subRoot = from(Anime::class.java)
+                        select(subRoot[Anime_.uuid])
+                            .where(subRoot.join(Anime_.simulcasts)[Simulcast_.uuid]
+                                .`in`(listOfNotNull(currentSimulcastUuid, lastSimulcastUuid)))
+                    })),
+                    cb.lessThanOrEqualTo(root[Anime_.lastUpdateDateTime], now.minusDays(othersDelay))
+                ))
+            }
 
             query.where(
-                cb.or(
-                    cb.isNull(root[Anime_.lastUpdateDateTime]),
-                    cb.lessThanOrEqualTo(root[Anime_.lastUpdateDateTime], lastDateTime),
-                ),
-                cb.isNotEmpty(root[Anime_.platformIds]),
+                cb.and(
+                    cb.or(*predicates.toTypedArray()),
+                    cb.isNotEmpty(root[Anime_.platformIds])
+                )
             ).orderBy(cb.asc(root[Anime_.lastUpdateDateTime]))
+                .distinct(true)
 
-            createReadOnlyQuery(it, query)
-                .resultList
+            createReadOnlyQuery(it, query).resultList
         }
     }
+
 
     fun findAllAudioLocales(uuid: UUID): List<String> {
         return database.entityManager.use {

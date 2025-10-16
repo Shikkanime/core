@@ -41,7 +41,6 @@ enum class ConfigPropertyKey(val key: String) {
     TWITTER_CONSUMER_SECRET("twitter_consumer_secret"),
     TWITTER_FIRST_MESSAGE("twitter_first_message"),
     TWITTER_SECOND_MESSAGE("twitter_second_message"),
-    UPDATE_ANIME_DELAY("update_anime_delay"),
     UPDATE_ANIME_SIZE("update_anime_size"),
     UPDATE_EPISODE_DELAY("update_episode_delay"),
     UPDATE_EPISODE_SIZE("update_episode_size"),
@@ -59,4 +58,7 @@ enum class ConfigPropertyKey(val key: String) {
     TWITTER_ENABLED("twitter_enabled"),
     NETFLIX_ID("netflix_id"),
     NETFLIX_SECURE_ID("netflix_secure_id"),
+    UPDATE_ANIME_DELAY_CURRENT_SEASON("update_anime_delay_current_season"),
+    UPDATE_ANIME_DELAY_LAST_SEASON("update_anime_delay_last_season"),
+    UPDATE_ANIME_DELAY_OTHERS("update_anime_delay_others"),
 }

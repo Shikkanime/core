@@ -39,8 +39,7 @@ class UpdateAnimeJob : AbstractJob {
 
     override fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val lastDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY, 30).toLong())
-        val animes = animeService.findAllNeedUpdate(lastDateTime)
+        val animes = animeService.findAllNeedUpdate()
         logger.info("Found ${animes.size} animes to update")
 
         val needUpdateAnimes = animes.shuffled()
