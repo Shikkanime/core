@@ -15,13 +15,12 @@ class ConfigCacheService : ICacheService {
     @Inject private lateinit var configService: ConfigService
     @Inject private lateinit var configFactory: ConfigFactory
 
-    fun findByName(name: String) = MapCache.getOrCompute(
+    fun findByName(name: String) = MapCache.getOrComputeNullable(
         "ConfigCacheService.findAll",
         classes = listOf(Config::class.java),
-        typeToken = object : TypeToken<MapCacheValue<Array<ConfigDto>>>() {},
-        key = StringUtils.EMPTY_STRING,
-    ) { configService.findAll().map { configFactory.toDto(it) }.toTypedArray() }
-        .find { it.propertyKey == name }
+        typeToken = object : TypeToken<MapCacheValue<ConfigDto>>() {},
+        key = name,
+    ) { configService.findByName(it)?.let(configFactory::toDto) }
 
     fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue
 
