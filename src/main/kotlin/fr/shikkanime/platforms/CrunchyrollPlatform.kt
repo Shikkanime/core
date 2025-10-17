@@ -46,9 +46,19 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 ).toList()
             } ?: getApiContent(countryCode, zonedDateTime).toMutableList()
 
+            // Preload all series
+            runCatching {
+                runBlocking {
+                    CrunchyrollCachedWrapper.getObjects(
+                        countryCode.locale,
+                        *api.mapNotNull { it.episodeMetadata?.seriesId }.distinct().toTypedArray()
+                    )
+                }
+            }
+
             api.forEach { addToList(list, countryCode, it) }
 
-            runBlocking { list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, list)) }
+            runBlocking { list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, bypassFileContent?.exists() != true, list)) }
         }
 
         return list
@@ -75,6 +85,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     private suspend fun predictFutureEpisodes(
         countryCode: CountryCode,
         zonedDateTime: ZonedDateTime,
+        shouldFetchSimulcasts: Boolean,
         alreadyFetched: List<Episode>
     ): List<Episode> {
         val previousWeek = zonedDateTime.minusWeeks(1)
@@ -105,25 +116,28 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                     nextEpisode
                 }
 
-        val simulcastEpisodes = CrunchyrollCachedWrapper.getSimulcasts(countryCode.locale)
-            .firstOrNull()
-            ?.let { simulcast ->
-                val fetchApiSize = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
-                val currentSimulcastAnimes = animeCacheService.findAllByCurrentSimulcast()
+        val simulcastEpisodes = if (shouldFetchSimulcasts)
+            CrunchyrollCachedWrapper.getSimulcasts(countryCode.locale)
+                .firstOrNull()
+                ?.let { simulcast ->
+                    val fetchApiSize = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
+                    val currentSimulcastAnimes = animeCacheService.findAllByCurrentSimulcast()
 
-                CrunchyrollWrapper.getBrowse(
-                    locale = countryCode.locale,
-                    sortBy = AbstractCrunchyrollWrapper.SortType.NEWLY_ADDED,
-                    type = AbstractCrunchyrollWrapper.MediaType.SERIES,
-                    size = fetchApiSize,
-                    start = 0,
-                    simulcast = simulcast.id
-                ).filterNot { series ->
-                    currentSimulcastAnimes.any { anime ->
-                        anime.platformIds?.any { it.platform.id == getPlatform().name && it.platformId == series.id } == true
-                    }
-                }.flatMap { series -> CrunchyrollWrapper.getEpisodesBySeriesId(countryCode.locale, series.id).toList() }
-            } ?: emptyList()
+                    CrunchyrollWrapper.getBrowse(
+                        locale = countryCode.locale,
+                        sortBy = AbstractCrunchyrollWrapper.SortType.NEWLY_ADDED,
+                        type = AbstractCrunchyrollWrapper.MediaType.SERIES,
+                        size = fetchApiSize,
+                        start = 0,
+                        simulcast = simulcast.id
+                    ).filterNot { series ->
+                        currentSimulcastAnimes.any { anime ->
+                            anime.platformIds?.any { it.platform.id == getPlatform().name && it.platformId == series.id } == true
+                        }
+                    }.flatMap { series -> CrunchyrollWrapper.getEpisodesBySeriesId(countryCode.locale, series.id).toList() }
+                } ?: emptyList()
+        else
+            emptyList()
 
         val futureEpisodes = mutableListOf<Episode>()
 
@@ -239,28 +253,20 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val specialEpisodeRegex = "SP(\\d*)".toRegex()
 
         var episodeType = when {
-            episode.seasonSlugTitle?.contains("movie", true) == true || season.keywords.any {
-                it.contains(
-                    "movie",
-                    true
-                )
-            } -> EpisodeType.FILM
+            episode.seasonSlugTitle?.contains("movie", true) == true ||
+                    season.keywords.any { it.contains("movie", true) } -> EpisodeType.FILM
             number == -1 -> EpisodeType.SPECIAL
             else -> EpisodeType.EPISODE
         }
 
-        specialEpisodeRegex.find(episode.numberString)?.let {
+        specialEpisodeRegex.find(episode.numberString)?.groupValues?.get(1)?.toIntOrNull()?.let {
             episodeType = EpisodeType.SPECIAL
-            number = it.groupValues[1].toIntOrNull() ?: -1
+            number = it
         }
 
         episode.identifier?.let { identifier ->
-            "(.+)\\|(.+)\\|(.+)".toRegex().find(identifier)?.let {
-                when (it.groupValues[2]) {
-                    "OAD" -> {
-                        episodeType = EpisodeType.SPECIAL
-                    }
-                }
+            "(.+)\\|(.+)\\|(.+)".toRegex().find(identifier)?.groupValues?.get(2)?.let {
+                if (it == "OAD") episodeType = EpisodeType.SPECIAL
             }
         }
 

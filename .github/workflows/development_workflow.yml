@@ -6,9 +6,6 @@ on:
   push:
     branches: [master]
 
-env:
-  JAVA_VERSION: 21
-
 jobs:
   test_with_valkey:
     name: Test and analyze (with Valkey)
@@ -16,18 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Install Webp
-        run: sudo apt install -y webp
-
-      - name: Install Playwright
-        run: npx -y playwright install --with-deps
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -59,18 +46,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Install Webp
-        run: sudo apt install -y webp
-
-      - name: Install Playwright
-        run: npx -y playwright install --with-deps
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Build and test
         run: ./gradlew clean test --info
@@ -86,12 +63,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -100,12 +73,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Update Valkey classifier in build.gradle.kts
-        run: |
-          #!/bin/bash
-          # Update the file
-          sed -i "s|osdetector.classifier|\"linux-aarch_64\"|g" build.gradle.kts
 
       - name: Build
         run: gradle clean installDist -x test

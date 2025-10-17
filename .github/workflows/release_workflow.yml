@@ -13,7 +13,6 @@ on:
         type: boolean
 
 env:
-  JAVA_VERSION: 21
   REGISTRY_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/shikkanime-core
   V-VERSION: v${{ github.event.inputs.version }}
   VERSION: ${{ github.event.inputs.version }}
@@ -25,18 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Install Webp
-        run: sudo apt install -y webp
-
-      - name: Install Playwright
-        run: npx -y playwright install --with-deps
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -58,12 +47,8 @@ jobs:
       - name: Pull latest commits
         run: git pull
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Docker meta
         id: meta
@@ -86,19 +71,10 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Update version in build.gradle.kts
+      - name: Update build.gradle.kts
         run: |
-          #!/bin/bash
-          PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
-
-          # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ env.VERSION }}|g" build.gradle.kts
-
-      - name: Update Valkey classifier in build.gradle.kts
-        run: |
-          #!/bin/bash
-          # Update the file
-          sed -i "s|osdetector.classifier|\"linux-aarch_64\"|g" build.gradle.kts
+          sed -i "s|$(grep -oP 'version = "\K[^"]*' build.gradle.kts)|${{ env.VERSION }}|g" build.gradle.kts
+          sed -i 's|osdetector.classifier|"linux-aarch_64"|g' build.gradle.kts
 
       - name: Build
         run: gradle clean installDist

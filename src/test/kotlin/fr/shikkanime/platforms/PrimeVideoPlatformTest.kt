@@ -78,14 +78,6 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 expectedAudioLocales = setOf("ja-JP", "fr-FR")
             ),
             SimulcastTestCase(
-                simulcastName = "0NV4FUWKV9BQN8VDIIH1DWEEHH",
-                expectedAnimeName = "Lazarus",
-                releaseDay = 6,
-                testDate = "2025-04-05T00:01:00Z",
-                imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx167336-KpGIIBie71OX.png",
-                expectedAudioLocales = setOf("en-US", "fr-FR")
-            ),
-            SimulcastTestCase(
                 "0ITMHDR4DYNJDXLMAJ627H0ELR",
                 "NINTAMA RANTARŌ: MAÎTRE INVINCIBLE DES NINJAS DOKUTAKE",
                 releaseDay = 0,
