@@ -13,7 +13,6 @@ on:
         type: boolean
 
 env:
-  JAVA_VERSION: 21
   REGISTRY_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/shikkanime-core
   V-VERSION: v${{ github.event.inputs.version }}
   VERSION: ${{ github.event.inputs.version }}
@@ -25,17 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
-
-      - name: Install dependencies
-        run: |
-          sudo apt install -y webp
-          npx -y playwright install --with-deps
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -57,12 +47,8 @@ jobs:
       - name: Pull latest commits
         run: git pull
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'corretto'
-          cache: gradle
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
 
       - name: Docker meta
         id: meta
