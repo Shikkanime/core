@@ -3,7 +3,7 @@ ARG PLAYWRIGHT_VERSION=1.55.0
 
 FROM amazoncorretto:${JAVA_VERSION} AS java
 
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 ARG PLAYWRIGHT_VERSION
 RUN npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps firefox
 ARG JAVA_VERSION
