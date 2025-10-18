@@ -75,19 +75,23 @@ class AnimeCacheService : ICacheService {
             )
         }
 
-    fun findAllByCurrentSimulcast(): Array<AnimeDto> {
-        val currentSimulcastUuid = simulcastCacheService.currentSimulcast?.uuid ?: return emptyArray()
+    private fun findAllBySimulcast(simulcastUuid: UUID) = MapCache.getOrCompute(
+        "AnimeCacheService.findAllBySimulcast",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<AnimeDto>>>() {},
+        key = simulcastUuid
+    ) {
+        animeService.findAllBySimulcast(it)
+            .map(animeFactory::toDto)
+            .toTypedArray()
+    }
 
-        return MapCache.getOrCompute(
-            "AnimeCacheService.findAllByCurrentSimulcast",
-            classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java),
-            typeToken = object : TypeToken<MapCacheValue<Array<AnimeDto>>>() {},
-            key = currentSimulcastUuid
-        ) {
-            animeService.findAllBySimulcast(it)
-                .map(animeFactory::toDto)
-                .toTypedArray()
-        }
+    fun findAllByCurrentSimulcastAndLastSimulcast(): Array<AnimeDto> {
+        return simulcastCacheService.findAll()
+            .take(2)
+            .mapNotNull { it.uuid }
+            .flatMap { findAllBySimulcast(it).asIterable() }
+            .toTypedArray()
     }
 
     fun getLangTypes(anime: Anime) = MapCache.getOrCompute(

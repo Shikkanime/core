@@ -121,7 +121,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 .firstOrNull()
                 ?.let { simulcast ->
                     val fetchApiSize = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
-                    val currentSimulcastAnimes = animeCacheService.findAllByCurrentSimulcast()
+                    val currentSimulcastAnimes = animeCacheService.findAllByCurrentSimulcastAndLastSimulcast()
 
                     CrunchyrollWrapper.getBrowse(
                         locale = countryCode.locale,
@@ -131,9 +131,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                         start = 0,
                         simulcast = simulcast.id
                     ).filterNot { series ->
-                        currentSimulcastAnimes.any { anime ->
-                            anime.platformIds?.any { it.platform.id == getPlatform().name && it.platformId == series.id } == true
-                        }
+                        currentSimulcastAnimes.any { anime -> anime.platformIds?.any { it.platform.id == getPlatform().name && it.platformId == series.id } == true } ||
+                                alreadyFetched.any { it.animeId == series.id }
                     }.flatMap { series -> CrunchyrollWrapper.getEpisodesBySeriesId(countryCode.locale, series.id).toList() }
                 } ?: emptyList()
         else

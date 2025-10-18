@@ -23,7 +23,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
         val seasons = animeCacheService.getSeasons(entity)
         val platforms = animePlatformCacheService.getAll(entity)
 
-        return AnimeDto(
+         return AnimeDto(
             uuid = entity.uuid,
             countryCode = entity.countryCode!!,
             name = entity.name!!,

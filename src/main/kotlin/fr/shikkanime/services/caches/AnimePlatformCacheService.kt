@@ -22,7 +22,7 @@ class AnimePlatformCacheService : ICacheService {
         typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
         serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.uuid!!,
-    ) { uuid -> animePlatformService.findAllByAnime(uuid).map { animePlatformFactory.toDto(it) }.toTypedArray() }
+    ) { uuid -> animePlatformService.findAllByAnime(uuid).map(animePlatformFactory::toDto).toTypedArray() }
 
     fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) = MapCache.getOrCompute(
         "AnimePlatformCacheService.findAllIdByAnimeAndPlatform",
