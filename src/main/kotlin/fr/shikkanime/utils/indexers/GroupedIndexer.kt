@@ -3,10 +3,12 @@ package fr.shikkanime.utils.indexers
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.miscellaneous.Pageable
-import fr.shikkanime.utils.isAfterOrEqual
-import fr.shikkanime.utils.isBeforeOrEqual
 import java.time.ZonedDateTime
 import java.util.*
+
+private typealias IndexedData = TreeMap<ZonedDateTime, MutableSet<UUID>>
+private typealias IndexedDataEntry = Map.Entry<ZonedDateTime, MutableSet<UUID>>
+typealias ReverseIndexedRecord = Pair<IndexedDataEntry, GroupedIndexer.CompositeIndex>
 
 object GroupedIndexer {
     data class CompositeIndex(
@@ -15,19 +17,7 @@ object GroupedIndexer {
         val episodeType: EpisodeType
     )
 
-    data class IndexedData(
-        val releaseDateTime: ZonedDateTime,
-        val variantsUuid: Set<UUID>
-    )
-
-    fun isTimeInRange(timeToCheck: ZonedDateTime, referenceTime: ZonedDateTime, toleranceHours: Long): Boolean {
-        val minTime = referenceTime.minusHours(toleranceHours)
-        val maxTime = referenceTime.plusHours(toleranceHours)
-
-        return timeToCheck.isAfterOrEqual(minTime) && timeToCheck.isBeforeOrEqual(maxTime)
-    }
-
-    private val index = HashMap<CompositeIndex, Set<IndexedData>>()
+    private val index = HashMap<CompositeIndex, IndexedData>()
 
     fun clear() {
         index.clear()
@@ -41,24 +31,27 @@ object GroupedIndexer {
         variantUuid: UUID
     ) {
         val key = CompositeIndex(countryCode, animeSlug, episodeType)
-        val existingData = index[key].orEmpty()
-        val indexedData = existingData.find { isTimeInRange(releaseDateTime, it.releaseDateTime, 2) }
-        val updatedData = indexedData?.copy(variantsUuid = indexedData.variantsUuid + variantUuid) ?: IndexedData(releaseDateTime, setOf(variantUuid))
-        index[key] = (if (indexedData != null) existingData - indexedData else existingData) + updatedData
+        val existingData = index.getOrPut(key) { TreeMap() }
+        val matchingMin = releaseDateTime.minusHours(2)
+        val matchingMax = releaseDateTime.plusHours(2)
+        val indexedData = existingData.subMap(matchingMin, true, matchingMax, true).firstEntry()
+        indexedData?.let { existingData.remove(it.key, it.value) }
+        val updatedData = indexedData?.apply { value.add(variantUuid) } ?: AbstractMap.SimpleEntry(releaseDateTime, mutableSetOf(variantUuid))
+        existingData[updatedData.key] = updatedData.value
     }
 
     fun pageable(
         page: Int,
         limit: Int,
-        filter: ((Map.Entry<CompositeIndex, Set<IndexedData>>) -> Boolean)? = null,
-        comparator: Comparator<Pair<IndexedData, CompositeIndex>>? = null
-    ): Pageable<Pair<IndexedData, CompositeIndex>> {
+        filter: ((Map.Entry<CompositeIndex, IndexedData>) -> Boolean)? = null,
+        comparator: Comparator<ReverseIndexedRecord>? = null
+    ): Pageable<ReverseIndexedRecord> {
         val filteredIndex = index.asSequence().let { if (filter != null) it.filter(filter) else it }
         val sortedIndex = filteredIndex
-            .flatMap { entry -> entry.value.map { data -> data to entry.key } }
+            .flatMap { entry -> entry.value.asSequence().map { data -> data to entry.key } }
             .let { if (comparator != null) it.sortedWith(comparator) else it }
         val total = sortedIndex.count().toLong()
-        val pagedIndex = sortedIndex.drop((page - 1) * limit).take(limit).toSet()
+        val pagedIndex = sortedIndex.drop((page - 1).coerceAtLeast(0) * limit).take(limit).toSet()
         return Pageable(pagedIndex, page, limit, total)
     }
 }
