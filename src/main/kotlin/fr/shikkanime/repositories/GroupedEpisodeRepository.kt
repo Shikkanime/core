@@ -6,6 +6,7 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.indexers.GroupedIndexer
+import fr.shikkanime.utils.indexers.ReverseIndexedRecord
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.*
 import java.time.ZonedDateTime
@@ -87,7 +88,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
                 return@use Pageable(emptySet(), page, limit, 0)
             }
 
-            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { it.first.variantsUuid }.toSet(), sort)
+            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { it.first.value }.toSet(), sort)
             val groupedEpisodes = groupVariants(variantsInGroups, pagedGroupIdentifiers.data, sort)
 
             Pageable(
@@ -104,12 +105,12 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): Pageable<Pair<GroupedIndexer.IndexedData, GroupedIndexer.CompositeIndex>> = GroupedIndexer.pageable(
+    ): Pageable<ReverseIndexedRecord> = GroupedIndexer.pageable(
         filter = { countryCode == null || it.key.countryCode == countryCode },
         comparator = Comparator { a, b ->
             for (param in sort) {
                 val comparison = when (SortField.from(param.field)) {
-                    SortField.RELEASE_DATE_TIME -> a.first.releaseDateTime.compareTo(b.first.releaseDateTime)
+                    SortField.RELEASE_DATE_TIME -> a.first.key.compareTo(b.first.key)
                     SortField.EPISODE_TYPE -> a.second.episodeType.compareTo(b.second.episodeType)
                     SortField.ANIME_NAME -> a.second.animeSlug.compareTo(b.second.animeSlug)
                     else -> 0
@@ -171,10 +172,10 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
      */
     private fun groupVariants(
         variants: List<EpisodeVariant>,
-        groupIdentifiers: Set<Pair<GroupedIndexer.IndexedData, GroupedIndexer.CompositeIndex>>,
+        groupIdentifiers: Set<ReverseIndexedRecord>,
         sort: List<SortParameter>
     ): Set<GroupedEpisode> {
-        return variants.groupBy { variant -> groupIdentifiers.find { it.first.variantsUuid.contains(variant.uuid) }!! }.values
+        return variants.groupBy { variant -> groupIdentifiers.find { it.first.value.contains(variant.uuid) }!! }.values
             .map(::toGroupedEpisode)
             .toSortedSet(getGroupedEpisodeComparator(sort))
     }
