@@ -29,14 +29,30 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             ?.toSet() ?: emptySet()
 
         val showObject = jsonObject.getAsJsonObject("visuals")
-        val standardArtworkTile = showObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!
+        val standardArtworkTile = showObject.getAsJsonObject("artwork")?.getAsJsonObject("standard")
+        
+        val title = showObject.getAsString("title")
+        requireNotNull(title) { "Show title is required but was null" }
+        
+        val tile = standardArtworkTile?.getAsJsonObject("tile")
+        val background = standardArtworkTile?.getAsJsonObject("background")
+        
+        val imageId071 = tile?.getAsJsonObject("0.71")?.getAsString("imageId")
+        // Try 1.33 first, fallback to 1.78 from tile if 1.33 is not available
+        val imageId133 = tile?.getAsJsonObject("1.33")?.getAsString("imageId") 
+            ?: tile?.getAsJsonObject("1.78")?.getAsString("imageId")
+        val imageId178 = background?.getAsJsonObject("1.78")?.getAsString("imageId")
+        
+        requireNotNull(imageId071) { "Show image (0.71) is required but was null" }
+        requireNotNull(imageId133) { "Show banner (1.33 or 1.78 from tile) is required but was null" }
+        requireNotNull(imageId178) { "Show carousel (1.78) is required but was null" }
 
         return Show(
             id = id,
-            name = showObject.getAsString("title")!!,
-            image = getImageUrl(standardArtworkTile.getAsJsonObject("tile")!!.getAsJsonObject("0.71")!!.getAsString("imageId")!!),
-            banner = getImageUrl(standardArtworkTile.getAsJsonObject("tile")!!.getAsJsonObject("1.33")!!.getAsString("imageId")!!),
-            carousel = getImageUrl(standardArtworkTile.getAsJsonObject("background")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
+            name = title,
+            image = getImageUrl(imageId071),
+            banner = getImageUrl(imageId133),
+            carousel = getImageUrl(imageId178),
             description = showObject.getAsJsonObject("description")?.getAsString("full"),
             seasons = seasons
         )

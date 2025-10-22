@@ -42,14 +42,18 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         configuration!!.availableCountries.forEach { countryCode ->
             configuration!!.simulcasts.filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
                 .forEach { simulcast ->
-                    list.addAll(
-                        getApiContent(
-                            CountryCodeReleaseDayPlatformSimulcastKeyCache(
-                                countryCode,
-                                simulcast
-                            ), zonedDateTime
+                    runCatching {
+                        list.addAll(
+                            getApiContent(
+                                CountryCodeReleaseDayPlatformSimulcastKeyCache(
+                                    countryCode,
+                                    simulcast
+                                ), zonedDateTime
+                            )
                         )
-                    )
+                    }.onFailure { exception ->
+                        logger.warning("Error fetching episodes for show ${simulcast.name} (${countryCode.name}): ${exception.message}")
+                    }
                 }
         }
 
