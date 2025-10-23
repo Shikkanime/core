@@ -1,9 +1,12 @@
 :root {
-  --card-bg: #FFFFFF14;
+  --card-bg: oklch(0.2 0 264);
   --card-bg-hover: rgba(0, 0, 0, 0.75);
   --card-border-radius: 1rem;
   --card-img-padding: 0.5rem;
   --card-content-padding: 0.5rem;
+  --shadow-s: inset 0 1px 2px #ffffff30,
+  0 1px 2px #00000030,
+  0 2px 4px #00000015;
 }
 
 @font-face {
@@ -15,7 +18,7 @@
 }
 
 body {
-  background-color: #000;
+  background-color: oklch(0.1 0 264);
   font-family: Satoshi, sans-serif;
 }
 
@@ -52,6 +55,7 @@ body {
   border-radius: var(--card-border-radius);
   background-color: var(--card-bg);
   overflow: hidden;
+  box-shadow: var(--shadow-s);
 
   a {
     text-decoration: none;

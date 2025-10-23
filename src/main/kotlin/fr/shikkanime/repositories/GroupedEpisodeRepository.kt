@@ -88,7 +88,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
                 return@use Pageable(emptySet(), page, limit, 0)
             }
 
-            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { it.first.value }.toSet(), sort)
+            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { it.first.value.map { it.uuid } }.toSet(), sort)
             val groupedEpisodes = groupVariants(variantsInGroups, pagedGroupIdentifiers.data, sort)
 
             Pageable(
@@ -105,8 +105,8 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): Pageable<ReverseIndexedRecord> = GroupedIndexer.pageable(
-        filter = { countryCode == null || it.key.countryCode == countryCode },
+    ): Pageable<ReverseIndexedRecord> = GroupedIndexer.pageableRecords(
+        filter = { (_, compositeIndex) -> countryCode == null || compositeIndex.countryCode == countryCode },
         comparator = Comparator { a, b ->
             for (param in sort) {
                 val comparison = when (SortField.from(param.field)) {
@@ -175,7 +175,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         groupIdentifiers: Set<ReverseIndexedRecord>,
         sort: List<SortParameter>
     ): Set<GroupedEpisode> {
-        return variants.groupBy { variant -> groupIdentifiers.find { it.first.value.contains(variant.uuid) }!! }.values
+        return variants.groupBy { variant -> groupIdentifiers.find { it.first.value.any { data -> data.uuid == variant.uuid } }!! }.values
             .map(::toGroupedEpisode)
             .toSortedSet(getGroupedEpisodeComparator(sort))
     }

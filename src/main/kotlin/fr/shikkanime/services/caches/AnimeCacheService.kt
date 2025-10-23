@@ -25,7 +25,6 @@ import java.util.*
 class AnimeCacheService : ICacheService {
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
-    @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var animeFactory: AnimeFactory
 
     fun findAll() = MapCache.getOrCompute(
@@ -142,7 +141,7 @@ class AnimeCacheService : ICacheService {
         ) {
             animeService.getWeeklyAnimes(
                 it.countryCode,
-                it.member?.let(memberCacheService::find),
+                it.member,
                 it.localDate,
                 it.searchTypes,
             ).toTypedArray()

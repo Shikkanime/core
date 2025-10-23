@@ -54,6 +54,7 @@ class AnimeServiceTest : AbstractTest() {
             now
         )
 
+        episodeVariantService.preIndex()
         InvalidationService.invalidateAll()
 
         var weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
@@ -70,6 +71,7 @@ class AnimeServiceTest : AbstractTest() {
             now.plusMinutes(10)
         )
 
+        episodeVariantService.preIndex()
         InvalidationService.invalidateAll()
 
         weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
@@ -106,6 +108,7 @@ class AnimeServiceTest : AbstractTest() {
             previousWeek.plusHours(6)
         )
 
+        episodeVariantService.preIndex()
         InvalidationService.invalidateAll()
 
         var weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
@@ -124,6 +127,7 @@ class AnimeServiceTest : AbstractTest() {
             now
         )
 
+        episodeVariantService.preIndex()
         InvalidationService.invalidateAll()
 
         weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
@@ -166,6 +170,7 @@ class AnimeServiceTest : AbstractTest() {
             now.plusMinutes(15)
         )
 
+        episodeVariantService.preIndex()
         InvalidationService.invalidateAll()
 
         val weeklyReleases = animeService.getWeeklyAnimes(CountryCode.FR, null, now.toLocalDate().atStartOfWeek())
