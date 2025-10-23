@@ -37,9 +37,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
-    fun findAllVariantReleases(countryCode: CountryCode, member: Member?, startZonedDateTime: ZonedDateTime, endZonedDateTime: ZonedDateTime, searchTypes: Array<LangType>? = null) =
-        episodeVariantRepository.findAllVariantReleases(countryCode, member, startZonedDateTime, endZonedDateTime, searchTypes)
-
     fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
 
     fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
@@ -229,10 +226,12 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         // Add the episode variant to the GroupedIndexer
         GroupedIndexer.add(
             savedEntity.mapping!!.anime!!.countryCode!!,
+            savedEntity.mapping!!.anime!!.uuid!!,
             savedEntity.mapping!!.anime!!.slug!!,
             savedEntity.mapping!!.episodeType!!,
             savedEntity.releaseDateTime,
-            savedEntity.uuid!!
+            savedEntity.uuid!!,
+            savedEntity.audioLocale!!
         )
 
         // Return the saved entity

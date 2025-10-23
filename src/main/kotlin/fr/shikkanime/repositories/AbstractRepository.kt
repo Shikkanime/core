@@ -67,6 +67,16 @@ abstract class AbstractRepository<E : ShikkEntity> {
         }
     }
 
+    fun findAllByUuids(uuids: Collection<UUID>): List<E> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+            query.where(root[ShikkEntity_.uuid].`in`(uuids))
+            createReadOnlyQuery(it, query).resultList
+        }
+    }
+
     open fun find(uuid: UUID): E? {
         return database.entityManager.use {
             it.find(getEntityClass(), uuid)
@@ -103,13 +113,5 @@ abstract class AbstractRepository<E : ShikkEntity> {
         database.inTransaction {
             it.remove(entity)
         }
-    }
-
-    fun deleteAll(entityManager: EntityManager) {
-        val cb = entityManager.criteriaBuilder
-        val query = cb.createCriteriaDelete(getEntityClass())
-        query.from(getEntityClass())
-
-        entityManager.createQuery(query).executeUpdate()
     }
 }

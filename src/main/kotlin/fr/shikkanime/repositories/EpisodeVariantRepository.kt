@@ -1,15 +1,15 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.dtos.variants.VariantReleaseDto
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Anime_
+import fr.shikkanime.entities.EpisodeMapping_
+import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.EpisodeVariant_
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.indexers.GroupedIndexer
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
-import jakarta.persistence.criteria.Predicate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -23,14 +23,29 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val query = cb.createTupleQuery().apply {
                 val root = from(getEntityClass())
                 distinct(true)
+
+                val episodeMappingRoot = root[EpisodeVariant_.mapping]
+                val animeRoot = episodeMappingRoot[EpisodeMapping_.anime]
+
                 select(
+
                     cb.tuple(
-                        root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.countryCode],
-                        root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.slug],
-                        root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType],
+                        animeRoot[Anime_.countryCode],
+                        animeRoot[Anime_.uuid],
+                        animeRoot[Anime_.slug],
+                        episodeMappingRoot[EpisodeMapping_.episodeType],
                         root[EpisodeVariant_.releaseDateTime],
-                        root[EpisodeVariant_.uuid]
+                        root[EpisodeVariant_.uuid],
+                        root[EpisodeVariant_.audioLocale]
                     )
+                )
+
+                orderBy(
+                    cb.asc(animeRoot[Anime_.countryCode]),
+                    cb.asc(animeRoot[Anime_.slug]),
+                    cb.asc(episodeMappingRoot[EpisodeMapping_.episodeType]),
+                    cb.asc(root[EpisodeVariant_.releaseDateTime]),
+                    cb.desc(root[EpisodeVariant_.audioLocale])
                 )
             }
 
@@ -39,10 +54,12 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             createReadOnlyQuery(it, query).resultStream.forEach { tuple ->
                 GroupedIndexer.add(
                     tuple[0, CountryCode::class.java],
-                    tuple[1, String::class.java],
-                    tuple[2, EpisodeType::class.java],
-                    tuple[3, ZonedDateTime::class.java],
-                    tuple[4, UUID::class.java]
+                    tuple[1, UUID::class.java],
+                    tuple[2, String::class.java],
+                    tuple[3, EpisodeType::class.java],
+                    tuple[4, ZonedDateTime::class.java],
+                    tuple[5, UUID::class.java],
+                    tuple[6, String::class.java]
                 )
             }
         }
@@ -94,70 +111,6 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.uuid], mappingUUID))
 
             createReadOnlyQuery(it, query)
-                .resultList
-        }
-    }
-
-    fun findAllVariantReleases(
-        countryCode: CountryCode,
-        member: Member?,
-        startZonedDateTime: ZonedDateTime,
-        endZonedDateTime: ZonedDateTime,
-        searchTypes: Array<LangType>? = null,
-    ): List<VariantReleaseDto> {
-        return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(VariantReleaseDto::class.java)
-            val root = query.from(Anime::class.java)
-            val mappingsJoin = root.join(Anime_.mappings)
-            val variantsJoin = mappingsJoin.join(EpisodeMapping_.variants)
-
-            query.select(
-                cb.construct(
-                    VariantReleaseDto::class.java,
-                    root,
-                    mappingsJoin,
-                    variantsJoin[EpisodeVariant_.releaseDateTime],
-                    variantsJoin[EpisodeVariant_.platform],
-                    variantsJoin[EpisodeVariant_.audioLocale],
-                )
-            )
-
-            val predicate = mutableListOf(
-                cb.equal(root[Anime_.countryCode], countryCode),
-                cb.between(variantsJoin[EpisodeVariant_.releaseDateTime], startZonedDateTime, endZonedDateTime)
-            )
-
-            member?.let {
-                val followedJoin = root.join(Anime_.followings)
-                val members = followedJoin.join(MemberFollowAnime_.member)
-                predicate.add(cb.equal(members, it))
-            }
-
-            val orPredicate = mutableListOf<Predicate>()
-
-            searchTypes?.let { st ->
-                st.forEach { langType ->
-                    when (langType) {
-                        LangType.SUBTITLES -> orPredicate.add(cb.notEqual(variantsJoin[EpisodeVariant_.audioLocale], countryCode.locale))
-                        LangType.VOICE -> orPredicate.add(cb.equal(variantsJoin[EpisodeVariant_.audioLocale], countryCode.locale))
-                    }
-                }
-            }
-
-            query.where(
-                *predicate.toTypedArray(),
-                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
-            )
-
-            query.orderBy(
-                cb.asc(variantsJoin[EpisodeVariant_.releaseDateTime]),
-                cb.asc(mappingsJoin[EpisodeMapping_.season]),
-                cb.asc(mappingsJoin[EpisodeMapping_.episodeType]),
-                cb.asc(mappingsJoin[EpisodeMapping_.number])
-            )
-
-            createReadOnlyQuery(entityManager, query)
                 .resultList
         }
     }

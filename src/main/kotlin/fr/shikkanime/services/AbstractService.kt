@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.repositories.AbstractRepository
-import jakarta.persistence.EntityManager
 import java.util.*
 
 abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
@@ -11,6 +10,8 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
     open fun findAll() = getRepository().findAll()
 
     fun findAllUuids() = getRepository().findAllUuids()
+
+    fun findAllByUuids(uuids: Collection<UUID>) = getRepository().findAllByUuids(uuids)
 
     fun find(uuid: UUID?) = if (uuid != null) getRepository().find(uuid) else null
 
@@ -21,6 +22,4 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
     fun updateAll(entities: List<E>) = getRepository().updateAll(entities)
 
     open fun delete(entity: E) = getRepository().delete(entity)
-
-    fun deleteAll(entityManager: EntityManager) = getRepository().deleteAll(entityManager)
 }
