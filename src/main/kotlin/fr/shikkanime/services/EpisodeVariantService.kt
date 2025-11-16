@@ -225,12 +225,15 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         // Add the episode variant to the GroupedIndexer
         GroupedIndexer.add(
-            savedEntity.mapping!!.anime!!.countryCode!!,
-            savedEntity.mapping!!.anime!!.uuid!!,
-            savedEntity.mapping!!.anime!!.slug!!,
-            savedEntity.mapping!!.episodeType!!,
-            savedEntity.releaseDateTime,
+            GroupedIndexer.CompositeIndex(
+                savedEntity.mapping!!.anime!!.countryCode!!,
+                savedEntity.mapping!!.anime!!.uuid!!,
+                savedEntity.mapping!!.anime!!.slug!!,
+                savedEntity.mapping!!.episodeType!!
+            ),
             savedEntity.uuid!!,
+            savedEntity.mapping!!.uuid!!,
+            savedEntity.releaseDateTime,
             savedEntity.audioLocale!!
         )
 

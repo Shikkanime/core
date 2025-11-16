@@ -7,7 +7,7 @@ enum class CountryCode(
     val longitude: Double,
     val excludedLocales: Set<String>
 ) {
-    FR("fr-FR", "Europe/Paris", 48.866667, 2.333333, setOf("en-US", "de-DE")),
+    FR("fr-FR", "Europe/Paris", 48.866667, 2.333333, setOf("en-US", "de-DE", "pt-BR", "es-419")),
     ;
 
     companion object {
