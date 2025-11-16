@@ -82,7 +82,7 @@ class AnimeServiceTest : AbstractTest() {
 
     @Test
     fun getWeeklyAnimes_shouldCreateSeparateReleases_forDifferentEpisodesOnSameDay() {
-        val now = ZonedDateTime.now().withHour(17).withMinute(0).withSecond(0).withNano(0)
+        val now = ZonedDateTime.now().withHour(16).withMinute(0).withSecond(0).withNano(0)
         val previousWeek = now.minusWeeks(1)
         val anime = createAnime("A")
 
