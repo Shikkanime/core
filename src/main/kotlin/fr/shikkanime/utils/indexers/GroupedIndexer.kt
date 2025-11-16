@@ -23,6 +23,7 @@ object GroupedIndexer {
 
     data class Data(
         val uuid: UUID,
+        val mappingUuid: UUID,
         val audioLocale: String
     )
 
@@ -33,31 +34,29 @@ object GroupedIndexer {
     }
 
     fun add(
-        countryCode: CountryCode,
-        animeUuid: UUID,
-        animeSlug: String,
-        episodeType: EpisodeType,
-        releaseDateTime: ZonedDateTime,
+        key: CompositeIndex,
         variantUuid: UUID,
+        mappingUuid: UUID,
+        releaseDateTime: ZonedDateTime,
         audioLocale: String
     ) {
-        val key = CompositeIndex(countryCode, animeUuid, animeSlug, episodeType)
         val existingData = index.getOrPut(key) { TreeMap() }
+
+        val mappingDatas = existingData.values.flatten().filter { it.uuid != variantUuid && it.mappingUuid == mappingUuid }
+        val langType = LangType.fromAudioLocale(key.countryCode, audioLocale)
+        if (mappingDatas.isNotEmpty()
+            && langType == LangType.SUBTITLES
+            && mappingDatas.any { it.uuid != variantUuid && LangType.fromAudioLocale(key.countryCode, it.audioLocale) == LangType.SUBTITLES }
+            && audioLocale in key.countryCode.excludedLocales) {
+            return
+        }
+
         val matchingMin = releaseDateTime.minusHours(2)
         val matchingMax = releaseDateTime.plusHours(2)
         val indexedData: IndexedDataEntry? = existingData.subMap(matchingMin, true, matchingMax, true).firstEntry()
 
-        // If the lang type of the audioLocale is SUBTITLES and it's already present in the indexed data and if audioLocale is 'en-US', skip it
-        val langType = LangType.fromAudioLocale(countryCode, audioLocale)
-        if (indexedData != null
-            && langType == LangType.SUBTITLES
-            && indexedData.value.any { it.uuid != variantUuid && LangType.fromAudioLocale(countryCode, it.audioLocale) == LangType.SUBTITLES }
-            && audioLocale in countryCode.excludedLocales) {
-            return
-        }
-
         indexedData?.let { existingData.remove(it.key, it.value) }
-        val updatedData = indexedData?.apply { value.add(Data(variantUuid, audioLocale)) } ?: AbstractMap.SimpleEntry(releaseDateTime, mutableSetOf(Data(variantUuid, audioLocale)))
+        val updatedData = indexedData?.apply { value.add(Data(variantUuid, mappingUuid, audioLocale)) } ?: AbstractMap.SimpleEntry(releaseDateTime, mutableSetOf(Data(variantUuid, mappingUuid, audioLocale)))
         existingData[updatedData.key] = updatedData.value
     }
 

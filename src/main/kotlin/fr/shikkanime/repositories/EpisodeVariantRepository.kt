@@ -28,11 +28,11 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 val animeRoot = episodeMappingRoot[EpisodeMapping_.anime]
 
                 select(
-
                     cb.tuple(
                         animeRoot[Anime_.countryCode],
                         animeRoot[Anime_.uuid],
                         animeRoot[Anime_.slug],
+                        episodeMappingRoot[EpisodeMapping_.uuid],
                         episodeMappingRoot[EpisodeMapping_.episodeType],
                         root[EpisodeVariant_.releaseDateTime],
                         root[EpisodeVariant_.uuid],
@@ -53,13 +53,16 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(it, query).resultStream.forEach { tuple ->
                 GroupedIndexer.add(
-                    tuple[0, CountryCode::class.java],
-                    tuple[1, UUID::class.java],
-                    tuple[2, String::class.java],
-                    tuple[3, EpisodeType::class.java],
-                    tuple[4, ZonedDateTime::class.java],
-                    tuple[5, UUID::class.java],
-                    tuple[6, String::class.java]
+                    GroupedIndexer.CompositeIndex(
+                        tuple[0, CountryCode::class.java],
+                        tuple[1, UUID::class.java],
+                        tuple[2, String::class.java],
+                        tuple[4, EpisodeType::class.java],
+                    ),
+                    tuple[6, UUID::class.java],
+                    tuple[3, UUID::class.java],
+                    tuple[5, ZonedDateTime::class.java],
+                    tuple[7, String::class.java]
                 )
             }
         }
