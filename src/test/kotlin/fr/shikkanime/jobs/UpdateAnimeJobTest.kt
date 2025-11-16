@@ -40,8 +40,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.ANIM, "1188"),
                     PlatformData(Platform.CRUN, "G0XHWM100")
                 ),
-                expectedThumbnail = "https://image.animationdigitalnetwork.com/license/mydeerfriendnokotan/tv/web/affiche_1560x2340.jpg",
-                expectedBanner = "https://image.animationdigitalnetwork.com/license/mydeerfriendnokotan/tv/web/license_1920x1080.jpg",
+                expectedThumbnail = "https://media.animationdigitalnetwork.com/images/show/e8658ad3-8515-41f0-b276-70817ab1acca/affiche.width=1560,height=2340,quality=100",
+                expectedBanner = "https://media.animationdigitalnetwork.com/images/show/e8658ad3-8515-41f0-b276-70817ab1acca/license.width=1920,height=1080,quality=100",
                 expectedDescription = "Adulée par ses camarades pour son assiduité et sa beauté, Torako cache pour autant un lourd passé de délinquante. Mais lorsque la pétillante Nokotan est transférée dans sa classe, c’est la panique. Avec son nez capable de flairer les reliquats de sa vie antérieure, le chaos s’immisce peu à peu dans son quotidien. Qui est cette mystérieuse jeune fille aux bois de cerf ? Une comédie déjantée à découvrir dès maintenant !"
             ),
             TestCase(
@@ -53,8 +53,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.CRUN, "G6NQ5DWZ6"),
                     PlatformData(Platform.ANIM, "405"),
                 ),
-                expectedThumbnail = "https://image.animationdigitalnetwork.com/license/mha/tv/web/affiche_1560x2340.jpg",
-                expectedBanner = "https://image.animationdigitalnetwork.com/license/mha/tv/web/license_1920x1080.jpg",
+                expectedThumbnail = "https://media.animationdigitalnetwork.com/images/show/58d38909-7a89-4102-9c48-ca49c16ac623/affiche.width=1560,height=2340,quality=100",
+                expectedBanner = "https://media.animationdigitalnetwork.com/images/show/58d38909-7a89-4102-9c48-ca49c16ac623/license.width=1920,height=1080,quality=100",
                 expectedDescription = "Dans une société où la majorité des individus possèdent un « Alter », un pouvoir singulier qui permet de se démarquer, Izuku Midoriya fait figure d’exception et en est dépourvu. Cependant, son courage inébranlable et sa volonté d’acier captivent All Might, héros emblématique, qui choisit de lui transmettre le « One For All », un Alter légendaire. Ainsi commence pour l’adolescent un long chemin jalonné de défis."
             ),
             TestCase(
@@ -79,8 +79,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.ANIM, "1260"),
                     PlatformData(Platform.CRUN, "GRMG8ZQZR")
                 ),
-                expectedThumbnail = "https://image.animationdigitalnetwork.com/license/onepiecefishmansaga/tv/web/affiche_1560x2340.jpg",
-                expectedBanner = "https://image.animationdigitalnetwork.com/license/onepiecefishmansaga/tv/web/license_1920x1080.jpg",
+                expectedThumbnail = "https://media.animationdigitalnetwork.com/images/show/8d045df5-44cc-47d2-98ed-18d7f80318e6/affiche.width=1560,height=2340,quality=100",
+                expectedBanner = "https://media.animationdigitalnetwork.com/images/show/8d045df5-44cc-47d2-98ed-18d7f80318e6/license.width=1920,height=1080,quality=100",
                 expectedDescription = "Après deux ans de séparation, le grand jour est enfin arrivé : l’équipage du Chapeau de paille se réunit à nouveau sur l’archipel Sabaody. Forts de leur expérience et prêts à affronter le Nouveau Monde, ils se préparent à naviguer sous l’eau, avec un Thousand Sunny désormais équipé pour atteindre leur prochaine destination : l’Île des Hommes-Poissons, un paradis sous-marin à plus de 10 000 mètres de profondeur !"
             ),
             TestCase(
@@ -92,8 +92,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.CRUN, "GG5H5XQ0D"),
                     PlatformData(Platform.NETF, "81736884")
                 ),
-                expectedThumbnail = "https://image.animationdigitalnetwork.com/license/dandadan/tv/web/affiche_1560x2340.jpg",
-                expectedBanner = "https://image.animationdigitalnetwork.com/license/dandadan/tv/web/license_1920x1080.jpg",
+                expectedThumbnail = "https://media.animationdigitalnetwork.com/images/show/7ae5e0e2-277a-4fd8-bbd3-dceb58ce43df/affiche.width=1560,height=2340,quality=100",
+                expectedBanner = "https://media.animationdigitalnetwork.com/images/show/7ae5e0e2-277a-4fd8-bbd3-dceb58ce43df/license.width=1920,height=1080,quality=100",
                 expectedDescription = "Si Momo Ayase est persuadée de l’existence des fantômes, Okarun, quant à lui, croit dur comme fer à la présence d’extraterrestres. Pour démontrer la véracité de leurs propos, ils se lancent un pari fou : explorer des lieux chargés d’énergie occulte, sans se douter un seul instant qu’ils sont sur le point de vivre une aventure des plus singulières…"
             ),
             TestCase(
@@ -104,8 +104,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.ANIM, "1258"),
                     PlatformData(Platform.CRUN, "GRMG8ZQZR")
                 ),
-                expectedThumbnail = "https://image.animationdigitalnetwork.com/license/onepiecefanletter/tv/web/affiche_1560x2340.jpg",
-                expectedBanner = "https://image.animationdigitalnetwork.com/license/onepiecefanletter/tv/web/license_1920x1080.jpg",
+                expectedThumbnail = "https://media.animationdigitalnetwork.com/images/show/02366b98-198d-4682-9ab0-7b4615781faf/affiche.width=1560,height=2340,quality=100",
+                expectedBanner = "https://media.animationdigitalnetwork.com/images/show/02366b98-198d-4682-9ab0-7b4615781faf/license.width=1920,height=1080,quality=100",
                 expectedDescription = "L’intrigue se déroule sur l’île de Sabaody, deux ans après la bataille de Marine Ford, où Luffy a tragiquement perdu son frère, Ace. Une jeune fille, fascinée par Nami, entreprend alors une aventure hors du commun."
             ),
             TestCase(
