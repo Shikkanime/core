@@ -46,6 +46,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     data class EpisodeTestCase(
         val testDate: String,
         val simulcastNames: List<String>,
+        val expectedEpisodes: Boolean = true,
         val expectedAnimeName: String,
         val episodeType: EpisodeType? = null,
         val expectedEpisodeCount: Int? = null,
@@ -108,6 +109,12 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 expectedAnimeName = "Gridman Universe",
                 expectedEpisodeCount = 1,
                 episodeType = EpisodeType.FILM
+            ),
+            EpisodeTestCase(
+                testDate = "2025-11-16T08:30:00Z",
+                simulcastNames = listOf(),
+                expectedAnimeName = "Jujutsu Kaisen",
+                expectedEpisodes = false
             )
         )
         
@@ -143,7 +150,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         ).filterNot { it.anime != testCase.expectedAnimeName }
         
         // Verify common expectations
-        assertTrue(episodes.isNotEmpty())
+        assertEquals(testCase.expectedEpisodes, episodes.isNotEmpty())
         
         // Verify specific expectations if provided
         if (testCase.expectedEpisodeCount != null) {
