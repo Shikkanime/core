@@ -16,7 +16,7 @@ val firebaseVersion = "9.7.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.20.1"
 val valkeyVersion = "2.0.1"
-val apachePoiVersion = "5.4.1"
+val apachePoiVersion = "5.5.0"
 
 val jdaVersion = "6.1.0"
 
