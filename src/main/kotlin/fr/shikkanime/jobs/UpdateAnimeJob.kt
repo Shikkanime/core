@@ -144,9 +144,10 @@ class UpdateAnimeJob : AbstractJob {
     }
 
     private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
+        val countryCode = animePlatform.anime!!.countryCode!!
         val platformId = animePlatform.platformId!!.toInt()
-        val show = AnimationDigitalNetworkCachedWrapper.getShow(platformId)
-        val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(platformId)
+        val show = AnimationDigitalNetworkCachedWrapper.getShow(countryCode, platformId)
+        val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(countryCode, platformId)
             .filter { it.releaseDate != null }
 
         require(showVideos.isNotEmpty()) { "No episode found for ADN anime ${show.title}" }

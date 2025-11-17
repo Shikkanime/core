@@ -34,6 +34,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     private val httpRequest = HttpRequest()
     private val imageCache = LRUCache<UUID, ByteArray>(100)
     val inProgressAttachments: MutableSet<UUID> = Collections.synchronizedSet(HashSet())
+    private val contentTypes = listOf(ContentType.Image.PNG, ContentType.Image.JPEG, ContentType.parse("image/jpg"))
 
     @Volatile private var pendingInvalidation: ScheduledFuture<*>? = null
 
@@ -191,7 +192,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                 response to response.readRawBytes()
             }
 
-            if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty() || httpResponse.contentType()?.withoutParameters() !in listOf(ContentType.Image.PNG, ContentType.Image.JPEG)) {
+            if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty() || httpResponse.contentType()?.withoutParameters() !in contentTypes) {
                 logger.warning(FAILED_TO_ENCODE_MESSAGE)
                 removeFile(attachment)
                 return

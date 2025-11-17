@@ -258,7 +258,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
             runCatching {
                 runBlocking {
                     when (platform) {
-                        Platform.ANIM -> animationDigitalNetworkPlatform.convertEpisode(countryCode, AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()), ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)
+                        Platform.ANIM -> animationDigitalNetworkPlatform.convertEpisode(countryCode, AnimationDigitalNetworkCachedWrapper.getVideo(countryCode, id.toInt()), ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)
                         Platform.CRUN -> listOf(crunchyrollPlatform.convertEpisode(countryCode, CrunchyrollCachedWrapper.getObjects(countryCode.locale, id).first(), needSimulcast = false))
                         else -> emptyList()
                     }
@@ -414,7 +414,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     ) {
         runCatching {
             val videoId = StringUtils.getVideoOldIdOrId(identifier)!!.toInt()
-            val video = AnimationDigitalNetworkCachedWrapper.getVideo(videoId)
+            val video = AnimationDigitalNetworkCachedWrapper.getVideo(countryCode, videoId)
             episodes.addAll(
                 animationDigitalNetworkPlatform.convertEpisode(
                     countryCode, video, ZonedDateTime.now(),
@@ -560,7 +560,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
         return when (platform) {
             Platform.ANIM -> runCatching {
                 AnimationDigitalNetworkCachedWrapper.getPreviousVideo(
-                    AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
+                    countryCode,
+                    AnimationDigitalNetworkCachedWrapper.getVideo(countryCode, id.toInt()).show.id,
                     id.toInt()
                 )?.id?.toString()
             }.onFailure {
@@ -604,7 +605,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
         return when (platform) {
             Platform.ANIM -> runCatching {
                 AnimationDigitalNetworkCachedWrapper.getNextVideo(
-                    AnimationDigitalNetworkCachedWrapper.getVideo(id.toInt()).show.id,
+                    countryCode,
+                    AnimationDigitalNetworkCachedWrapper.getVideo(countryCode, id.toInt()).show.id,
                     id.toInt()
                 )?.id?.toString()
             }.onFailure {

@@ -1,5 +1,6 @@
 package fr.shikkanime.wrappers.factories
 
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
 import java.io.Serializable
 import java.time.LocalDate
@@ -65,20 +66,20 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
     protected val baseUrl = "https://gw.api.animationdigitalnetwork.com/"
     protected val httpRequest = HttpRequest()
 
-    abstract suspend fun getLatestVideos(date: LocalDate): Array<Video>
-    abstract suspend fun getShow(id: Int): Show
-    abstract suspend fun getShowVideos(id: Int): Array<Video>
-    abstract suspend fun getVideo(id: Int): Video
+    abstract suspend fun getLatestVideos(countryCode: CountryCode, date: LocalDate): Array<Video>
+    abstract suspend fun getShow(countryCode: CountryCode, id: Int): Show
+    abstract suspend fun getShowVideos(countryCode: CountryCode, id: Int): Array<Video>
+    abstract suspend fun getVideo(countryCode: CountryCode, id: Int): Video
 
-    suspend fun getPreviousVideo(showId: Int, videoId: Int): Video? {
-        val videos = getShowVideos(showId)
+    suspend fun getPreviousVideo(countryCode: CountryCode, showId: Int, videoId: Int): Video? {
+        val videos = getShowVideos(countryCode, showId)
         val videoIndex = videos.indexOfFirst { it.id == videoId }
         require(videoIndex != -1) { "Video not found" }
         return if (videoIndex == 0) null else videos[videoIndex - 1]
     }
 
-    suspend fun getNextVideo(showId: Int, videoId: Int): Video? {
-        val videos = getShowVideos(showId)
+    suspend fun getNextVideo(countryCode: CountryCode, showId: Int, videoId: Int): Video? {
+        val videos = getShowVideos(countryCode, showId)
         val videoIndex = videos.indexOfFirst { it.id == videoId }
         require(videoIndex != -1) { "Video not found" }
         return if (videoIndex == videos.size - 1) null else videos[videoIndex + 1]
