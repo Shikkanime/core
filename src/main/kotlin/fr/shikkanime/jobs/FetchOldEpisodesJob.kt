@@ -176,7 +176,7 @@ class FetchOldEpisodesJob : AbstractJob {
         return dates.flatMap { date ->
             val zonedDateTime = date.atStartOfDay(Constant.utcZoneId)
             try {
-                AnimationDigitalNetworkCachedWrapper.getLatestVideos(zonedDateTime.toLocalDate()).flatMap { video ->
+                AnimationDigitalNetworkCachedWrapper.getLatestVideos(countryCode, zonedDateTime.toLocalDate()).flatMap { video ->
                     try {
                         animationDigitalNetworkPlatform.convertEpisode(
                             countryCode, video, zonedDateTime, false

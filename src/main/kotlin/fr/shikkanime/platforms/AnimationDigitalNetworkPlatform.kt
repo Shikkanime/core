@@ -43,7 +43,7 @@ class AnimationDigitalNetworkPlatform :
     }
 
     override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Video> {
-        val latestVideos = AnimationDigitalNetworkWrapper.getLatestVideos(zonedDateTime.toLocalDate()).toMutableList()
+        val latestVideos = AnimationDigitalNetworkWrapper.getLatestVideos(key, zonedDateTime.toLocalDate()).toMutableList()
 
         latestVideos.addAll(
             configuration?.simulcasts
@@ -53,7 +53,7 @@ class AnimationDigitalNetworkPlatform :
                         animePlatformCacheService.findAllIdByAnimeAndPlatform(anime.uuid!!, getPlatform())
                             .flatMap { platformId ->
                                 platformId.toIntOrNull()?.let { id ->
-                                    AnimationDigitalNetworkWrapper.getShowVideos(id)
+                                    AnimationDigitalNetworkWrapper.getShowVideos(key, id)
                                         .filter { it.releaseDate != null && it.releaseDate!!.toLocalTime() >= zonedDateTime.toLocalTime() }
                                         .onEach { it.releaseDate = zonedDateTime }
                                         .toList()
