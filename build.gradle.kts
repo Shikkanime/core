@@ -18,7 +18,7 @@ val jacksonVersion = "2.20.1"
 val valkeyVersion = "2.0.1"
 val apachePoiVersion = "5.4.1"
 
-val jdaVersion = "6.1.0"
+val jdaVersion = "6.1.1"
 
 val junitVersion = "6.0.1"
 val h2Version = "2.4.240"
