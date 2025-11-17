@@ -40,7 +40,7 @@ class MemberController : HasPageableRoute() {
     @Get
     @AdminSessionAuthenticated
     private fun getMember(@PathParam memberUuid: UUID) =
-        memberService.findDetailedMember(memberUuid)?.let { Response.ok(it) } ?: Response.notFound()
+        memberService.findDetailedMember(memberUuid)?.let(Response::ok) ?: Response.notFound()
 
     @Path("/{memberUuid}/login-activities")
     @Get

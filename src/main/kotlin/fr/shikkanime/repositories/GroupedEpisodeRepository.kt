@@ -88,7 +88,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
                 return@use Pageable(emptySet(), page, limit, 0)
             }
 
-            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { it.first.value.map { it.uuid } }.toSet(), sort)
+            val variantsInGroups = findVariantsInGroups(entityManager, cb, pagedGroupIdentifiers.data.flatMap { record -> record.first.value.map { it.uuid } }.toSet(), sort)
             val groupedEpisodes = groupVariants(variantsInGroups, pagedGroupIdentifiers.data, sort)
 
             Pageable(

@@ -93,7 +93,7 @@ class AdminPlatformController {
             ?: return Response.redirect(Link.PLATFORMS.href)
         val platformConfiguration = abstractPlatform.configuration!!
 
-        val uuid = parameters["uuid"]?.let { UUID.fromString(it) }
+        val uuid = parameters["uuid"]?.let(UUID::fromString)
         val simulcast =
             platformConfiguration.simulcasts.find { it.uuid == uuid } ?: platformConfiguration.newPlatformSimulcast()
         simulcast.of(parameters)

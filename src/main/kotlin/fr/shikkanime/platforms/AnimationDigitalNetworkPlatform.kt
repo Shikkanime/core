@@ -170,13 +170,13 @@ class AnimationDigitalNetworkPlatform :
     private fun getNumberAndEpisodeType(rawEpisodeString: String?, showType: String?): Pair<Int, EpisodeType> {
         val initialNumber = parseInitialNumber(rawEpisodeString)
 
-        val movieMatch = rawEpisodeString?.let { MOVIE_REGEX.find(it) }
+        val movieMatch = rawEpisodeString?.let(MOVIE_REGEX::find)
         if (movieMatch != null || showType == SHOW_TYPE_MOVIE) {
             val filmNumber = movieMatch?.groupValues?.getOrNull(1)?.toIntOrNull()
             return (filmNumber ?: initialNumber) to EpisodeType.FILM
         }
 
-        val specialEpisodeMatch = rawEpisodeString?.let { SPECIAL_EPISODE_REGEX.find(it) }
+        val specialEpisodeMatch = rawEpisodeString?.let(SPECIAL_EPISODE_REGEX::find)
         if (specialEpisodeMatch != null || showType == SHOW_TYPE_OAV || rawEpisodeString?.contains(".") == true) {
             val specialNumber = specialEpisodeMatch?.groupValues?.getOrNull(1)?.toIntOrNull()
             return (specialNumber ?: initialNumber) to EpisodeType.SPECIAL

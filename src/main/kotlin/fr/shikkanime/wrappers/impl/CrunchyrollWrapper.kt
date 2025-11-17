@@ -110,19 +110,18 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         id: String,
         original: Boolean?
     ): Array<BrowseObject> {
-        val browseObjects = mutableListOf<BrowseObject>()
+        val allEpisodes = getSeasonsBySeriesId(locale, id)
+            .flatMap { season -> getEpisodesBySeasonId(locale, season.id).toList() }
 
-        val variantObjects = getSeasonsBySeriesId(locale, id)
-            .flatMap { season ->
-                getEpisodesBySeasonId(locale, season.id)
-                    .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
-                    .flatMap { it.getVariants(original) }
-            }
-            .subtract(browseObjects.map { it.id })
+        val mainBrowseObjects = allEpisodes.map { it.convertToBrowseObject() }
+
+        val variantBrowseObjects = allEpisodes
+            .flatMap { it.getVariants(original) }
+            .subtract(mainBrowseObjects.map { it.id }.toSet())
             .chunked(CRUNCHYROLL_CHUNK)
             .flatMap { chunk -> getObjects(locale, *chunk.toTypedArray()) }
 
-        return (browseObjects + variantObjects).toTypedArray()
+        return (mainBrowseObjects + variantBrowseObjects).toTypedArray()
     }
 
     override suspend fun getSimulcasts(locale: String): Array<Simulcast> {

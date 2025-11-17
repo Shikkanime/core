@@ -317,7 +317,7 @@ class MemberRepository : AbstractRepository<Member>() {
             } else null
         ).apply {
             val creationDate = ZonedDateTime.parse(creationDateTime).toLocalDate()
-            val lastUpdateDate = lastUpdateDateTime?.let { ZonedDateTime.parse(it).toLocalDate() }
+            val lastUpdateDate = lastUpdateDateTime?.let(ZonedDateTime::parse)?.toLocalDate()
 
             isActive = email != null ||
                     hasProfilePicture ||

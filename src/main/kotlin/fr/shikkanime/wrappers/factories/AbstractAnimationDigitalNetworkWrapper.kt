@@ -66,6 +66,8 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
     protected val baseUrl = "https://gw.api.animationdigitalnetwork.com/"
     protected val httpRequest = HttpRequest()
 
+    protected suspend fun HttpRequest.getWithHeaders(countryCode: CountryCode, url: String) = get(url, headers = mapOf("X-Source" to "Web", "X-Target-Distribution" to countryCode.name.lowercase()))
+
     abstract suspend fun getLatestVideos(countryCode: CountryCode, date: LocalDate): Array<Video>
     abstract suspend fun getShow(countryCode: CountryCode, id: Int): Show
     abstract suspend fun getShowVideos(countryCode: CountryCode, id: Int): Array<Video>

@@ -10,7 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.content.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.delay
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
@@ -93,7 +93,7 @@ class HttpRequest(
                     .setPermissions(listOf("geolocation"))
                     .setLocale(countryCode.locale)
                     .setTimezoneId(countryCode.timezone)
-                    .apply { this@HttpRequest.userAgent?.let { setUserAgent(it) } }
+                    .apply { this@HttpRequest.userAgent?.let(::setUserAgent) }
             ) else browser?.newContext()
 
         page = context?.newPage()
@@ -146,19 +146,19 @@ class HttpRequest(
     }
 
     companion object {
-        fun <T> retry(times: Int, delay: Long = 500, operation: suspend () -> T): T {
+        suspend fun <T> retry(times: Int, delay: Long = 500, operation: suspend () -> T): T {
             var lastException: Exception? = null
 
             repeat(times) { attempt ->
                 try {
-                    return runBlocking { operation() }
+                    return operation()
                 } catch (e: Exception) {
                     lastException = e
                     logger.warning("Attempt $attempt failed: ${e.message}")
 
                     if (attempt < times - 1) {
                         logger.warning("Retrying in $delay ms...")
-                        Thread.sleep(delay)
+                        delay(delay)
                     }
                 }
             }

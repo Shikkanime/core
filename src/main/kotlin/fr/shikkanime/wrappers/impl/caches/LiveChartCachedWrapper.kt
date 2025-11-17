@@ -6,19 +6,18 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.wrappers.factories.AbstractLiveChartWrapper
 import fr.shikkanime.wrappers.impl.LiveChartWrapper
-import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 
 object LiveChartCachedWrapper : AbstractLiveChartWrapper() {
-    override suspend fun getAnimeIdsFromDate(date: LocalDate) = MapCache.getOrCompute(
+    override suspend fun getAnimeIdsFromDate(date: LocalDate) = MapCache.getOrComputeAsync(
         "LiveChartCachedWrapper.getAnimeIdsFromDate",
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
         key = date
-    ) { runBlocking { LiveChartWrapper.getAnimeIdsFromDate(it) } }
+    ) { LiveChartWrapper.getAnimeIdsFromDate(it) }
 
-    override suspend fun getStreamsByAnimeId(animeId: String) = MapCache.getOrCompute(
+    override suspend fun getStreamsByAnimeId(animeId: String) = MapCache.getOrComputeAsync(
         "LiveChartCachedWrapper.getStreamsByAnimeId",
         typeToken = object : TypeToken<MapCacheValue<HashMap<Platform, Set<String>>>>() {},
         key = animeId
-    ) { runBlocking { LiveChartWrapper.getStreamsByAnimeId(it) } }
+    ) { LiveChartWrapper.getStreamsByAnimeId(it) }
 }

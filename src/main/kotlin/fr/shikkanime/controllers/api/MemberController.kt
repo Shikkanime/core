@@ -51,7 +51,7 @@ class MemberController : HasPageableRoute() {
         @HttpHeader("X-Device") device: String?,
         @HttpHeader("X-Locale") locale: String?,
         @BodyParam identifier: String
-    ) = memberService.login(identifier, appVersion, device, locale)?.let { Response.ok(it) } ?: runBlocking {
+    ) = memberService.login(identifier, appVersion, device, locale)?.let(Response::ok) ?: runBlocking {
         delay(1000)
         Response.notFound(MessageDto.error("Member not found"))
     }

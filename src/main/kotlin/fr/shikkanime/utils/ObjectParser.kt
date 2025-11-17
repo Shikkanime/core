@@ -17,7 +17,7 @@ private class ZonedDateTimeAdapterDeserializer : JsonDeserializer<ZonedDateTime>
 
 private class ZonedDateTimeAdapterSerializer : JsonSerializer<ZonedDateTime> {
     override fun serialize(src: ZonedDateTime?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement? {
-        return src?.let { context?.serialize(it.withUTCString()) }
+        return src?.withUTCString()?.let { context?.serialize(it) }
     }
 }
 

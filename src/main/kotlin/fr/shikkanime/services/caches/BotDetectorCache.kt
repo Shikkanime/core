@@ -119,7 +119,7 @@ class BotDetectorCache : ICacheService {
 
         if (userAgent != null) {
             val regexes = getGoodBotsRegex().apply {
-                configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.let { add(it) }
+                configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.let(::add)
             }
 
             if (regexes.any { it.toRegex() in userAgent }) {

@@ -33,7 +33,7 @@ class RuleFactory : IGenericFactory<Rule, RuleDto> {
         entity.seasonId = dto.seasonId
         entity.action = dto.action
         entity.actionValue = dto.actionValue
-        entity.lastUsageDateTime = dto.lastUsageDateTime?.let { ZonedDateTime.parse(it) }
+        entity.lastUsageDateTime = dto.lastUsageDateTime?.let(ZonedDateTime::parse)
         return entity
     }
 }
