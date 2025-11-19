@@ -188,6 +188,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Demon Slave" })
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Overlord" })
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Eyeshield 21" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Les Héros de la Galaxie : Die Neue These" })
     }
 
     @AfterEach
