@@ -5,19 +5,18 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
-import kotlinx.coroutines.runBlocking
 
 object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     private val objectCache = MapCache<Pair<String, String>, BrowseObject>(
         "CrunchyrollCachedWrapper.objectCache",
         typeToken = object : TypeToken<MapCacheValue<BrowseObject>>() {}
-    ) { runBlocking { CrunchyrollWrapper.getObjects(it.first, it.second).first() } }
+    ) { CrunchyrollWrapper.getObjects(it.first, it.second).first() }
 
     private val seriesCache = MapCache<Pair<String, String>, Series>(
         "CrunchyrollCachedWrapper.seriesCache",
         typeToken = object : TypeToken<MapCacheValue<Series>>() {}
     ) {
-        runBlocking { CrunchyrollWrapper.getSeries(it.first, it.second) }
+        CrunchyrollWrapper.getSeries(it.first, it.second)
             .also { series -> objectCache.putIfNotExists(it.first to it.second, series.convertToBrowseObject()) }
     }
 
@@ -25,7 +24,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         "CrunchyrollCachedWrapper.episodeCache",
         typeToken = object : TypeToken<MapCacheValue<Episode>>() {}
     ) {
-        runBlocking { CrunchyrollWrapper.getEpisode(it.first, it.second) }
+        CrunchyrollWrapper.getEpisode(it.first, it.second)
             .also { episode -> objectCache.putIfNotExists(it.first to it.second, episode.convertToBrowseObject()) }
     }
 
@@ -46,30 +45,30 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
     override suspend fun getSeason(
         locale: String,
         id: String
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getSeason",
         typeToken = object : TypeToken<MapCacheValue<Season>>() {},
         key = locale to id
-    ) { runBlocking { CrunchyrollWrapper.getSeason(it.first, it.second) } }
+    ) { CrunchyrollWrapper.getSeason(it.first, it.second) }
 
     override suspend fun getSeasonsBySeriesId(
         locale: String,
         id: String
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getSeasonsBySeriesId",
         typeToken = object : TypeToken<MapCacheValue<Array<Season>>>() {},
         key = locale to id
-    ) { runBlocking { CrunchyrollWrapper.getSeasonsBySeriesId(it.first, it.second) } }
+    ) { CrunchyrollWrapper.getSeasonsBySeriesId(it.first, it.second) }
 
     override suspend fun getEpisodesBySeasonId(
         locale: String,
         id: String
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getEpisodesBySeasonId",
         typeToken = object : TypeToken<MapCacheValue<Array<Episode>>>() {},
         key = locale to id
     ) {
-        runBlocking { CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second) }
+        CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second)
             .also { episodes -> episodes.forEach { episode ->
                 episodeCache.putIfNotExists(it.first to episode.id, episode)
                 objectCache.putIfNotExists(it.first to episode.id, episode.convertToBrowseObject())
@@ -85,12 +84,12 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         type: String,
         id: String
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getEpisodeByType",
         typeToken = object : TypeToken<MapCacheValue<BrowseObject>>() {},
         key = Triple(locale, type, id)
     ) {
-        runBlocking { CrunchyrollWrapper.getEpisodeDiscoverByType(it.first, it.second, it.third) }
+        CrunchyrollWrapper.getEpisodeDiscoverByType(it.first, it.second, it.third)
             .also { episode -> objectCache.putIfNotExists(it.first to episode.id, episode) }
     }
 
@@ -122,31 +121,28 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String,
         original: Boolean?
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getEpisodesBySeriesId",
         typeToken = object : TypeToken<MapCacheValue<Array<BrowseObject>>>() {},
         key = Triple(locale, id, original)
-    ) { triple ->
-        runBlocking {
-            val browseObjects = mutableListOf<BrowseObject>()
+    ) { (locale, id, original) ->
+        val allEpisodes = getSeasonsBySeriesId(locale, id)
+            .flatMap { season -> getEpisodesBySeasonId(locale, season.id).toList() }
 
-            val variantObjects = getSeasonsBySeriesId(triple.first, triple.second)
-                .flatMap { season ->
-                    getEpisodesBySeasonId(triple.first, season.id)
-                        .onEach { episode -> browseObjects.add(episode.convertToBrowseObject()) }
-                        .flatMap { it.getVariants(triple.third) }
-                }
-                .subtract(browseObjects.map { it.id })
-                .chunked(CRUNCHYROLL_CHUNK)
-                .flatMap { chunk -> getObjects(triple.first, *chunk.toTypedArray()) }
+        val mainBrowseObjects = allEpisodes.map { it.convertToBrowseObject() }
 
-            (browseObjects + variantObjects).toTypedArray()
-        }
+        val variantBrowseObjects = allEpisodes
+            .flatMap { it.getVariants(original) }
+            .subtract(mainBrowseObjects.map { it.id }.toSet())
+            .chunked(CRUNCHYROLL_CHUNK)
+            .flatMap { chunk -> getObjects(locale, *chunk.toTypedArray()) }
+
+        (mainBrowseObjects + variantBrowseObjects).toTypedArray()
     }
 
-    override suspend fun getSimulcasts(locale: String) = MapCache.getOrCompute(
+    override suspend fun getSimulcasts(locale: String) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getSimulcasts",
         typeToken = object : TypeToken<MapCacheValue<Array<Simulcast>>>() {},
         key = locale
-    ) { locale -> runBlocking { CrunchyrollWrapper.getSimulcasts(locale) } }
+    ) { locale -> CrunchyrollWrapper.getSimulcasts(locale) }
 }

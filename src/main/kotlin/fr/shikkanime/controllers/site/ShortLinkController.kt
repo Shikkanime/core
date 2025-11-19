@@ -25,7 +25,7 @@ class ShortLinkController {
     @Path("r/{episodeVariantUuid}")
     @Get
     private fun redirectToRealLink(@PathParam episodeVariantUuid: UUID) =
-        Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let { getUrl(it) } ?: "/404")
+        Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let(::getUrl) ?: "/404")
 
     @Path("v/{webToken}")
     @Get

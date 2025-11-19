@@ -134,9 +134,7 @@ class FetchOldEpisodesJob : AbstractJob {
                     val columns = rows[i]
                     for (j in columns.indices) {
                         val cell = row.createCell(j)
-                        val value = columns[j]
-
-                        when (value) {
+                        when (val value = columns[j]) {
                             is ZonedDateTime -> {
                                 cell.setCellValue(value.withUTC().toLocalDateTime())
                                 val cellStyle = workbook.createCellStyle()

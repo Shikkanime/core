@@ -196,7 +196,7 @@ class EpisodeMappingAdminService {
             .mapNotNull { episodeMappingService.find(it) }
             .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
 
-        var currentDate = updateDto.startDate?.let { LocalDate.parse(it) }
+        var currentDate = updateDto.startDate?.let(LocalDate::parse)
         val counter = mutableMapOf<Pair<Int, EpisodeType>, Int>()
         val forcedUpdate = updateDto.forceUpdate == true
         val bindNumbers = updateDto.bindNumber == true

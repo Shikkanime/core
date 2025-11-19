@@ -204,7 +204,7 @@ private suspend fun handleRequest(
             call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
         }
 
-        response.session?.let { call.sessions.set(it) }
+        response.session?.let(call.sessions::set)
 
         when (response.type) {
             ResponseType.MULTIPART -> handleMultipartResponse(call, response)
@@ -259,7 +259,7 @@ private suspend fun callMethodWithParameters(method: KFunction<*>, controller: A
     val methodParams = method.parameters.associateWith { kParameter ->
         when {
             kParameter.name.isNullOrBlank() -> controller
-            kParameter.hasAnnotation<JWTUser>() -> call.principal<JWTPrincipal>()?.payload?.getClaim("uuid")?.asString()?.let { UUID.fromString(it) }
+            kParameter.hasAnnotation<JWTUser>() -> call.principal<JWTPrincipal>()?.payload?.getClaim("uuid")?.asString()?.let(UUID::fromString)
             kParameter.hasAnnotation<AdminSessionUser>() -> call.principal<TokenDto>()
             kParameter.hasAnnotation<HttpHeader>() -> handleHttpHeader(kParameter, call)
             kParameter.hasAnnotation<PathParam>() -> handlePathParam(kParameter, parameters)

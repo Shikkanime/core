@@ -60,5 +60,5 @@ class EpisodeVariantCacheService : ICacheService {
         classes = listOf(EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<EpisodeVariantDto>>() {},
         key = uuid,
-    ) { episodeVariantService.find(it)?.let { episodeVariantFactory.toDto(it) } }
+    ) { episodeVariantService.find(it)?.let(episodeVariantFactory::toDto) }
 }

@@ -132,10 +132,10 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     private fun getConfigurationFile() =
         File(Constant.configFolder, "${getPlatform().platformName.lowercase().replace(StringUtils.SPACE_STRING, StringUtils.DASH_STRING)}.json")
 
-    fun containsAnimeSimulcastConfiguration(name: String) = configuration!!.simulcasts.any { it.name.lowercase() == name.lowercase() }
+    fun containsAnimeSimulcastConfiguration(name: String) = configuration?.simulcasts?.any { it.name.equals(name, ignoreCase = true) } ?: false
 
     fun updateAnimeSimulcastConfiguration(name: String) {
-        configuration!!.simulcasts.find { it.name.lowercase() == name.lowercase() }?.let {
+        configuration?.simulcasts?.find { it.name.equals(name, ignoreCase = true) }?.let {
             it.lastUsageDateTime = ZonedDateTime.now().withUTCString()
             saveConfiguration()
         }

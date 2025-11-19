@@ -42,7 +42,7 @@ class EpisodeMappingCacheService : ICacheService {
         PageableDto.fromPageable(
             episodeMappingService.findAllBy(
                 it.countryCode,
-                it.uuid?.let { uuid -> animeCacheService.find(uuid) },
+                it.uuid?.let(animeCacheService::find),
                 it.season,
                 it.sort,
                 it.page,
@@ -77,9 +77,9 @@ class EpisodeMappingCacheService : ICacheService {
         HashMap(
             result.mapIndexed { index, current ->
                 SeasonEpisodeTypeNumberKeyCache(current.season!!, current.episodeType!!, current.number!!) to Triple(
-                    result.getOrNull(index - 1)?.let { episodeMappingFactory.toDto(it) },
+                    result.getOrNull(index - 1)?.let(episodeMappingFactory::toDto),
                     episodeMappingFactory.toDto(current),
-                    result.getOrNull(index + 1)?.let { episodeMappingFactory.toDto(it) }
+                    result.getOrNull(index + 1)?.let(episodeMappingFactory::toDto)
                 )
             }.toMap()
         )

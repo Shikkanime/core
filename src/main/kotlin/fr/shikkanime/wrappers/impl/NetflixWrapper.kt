@@ -112,7 +112,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             metadata?.carousel ?: showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text")?.normalize(),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
-            showJson.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) },
+            showJson.getAsString("availabilityStartTime")?.let(ZonedDateTime::parse),
             showJson.getAsBoolean("isAvailable") ?: false,
             showJson.getAsBoolean("isPlayable") ?: false,
             showJson.getAsInt("runtimeSec")?.toLong(),
@@ -262,7 +262,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val episode = episodeJson.getAsJsonObject("node")
         val episodeId = episode.getAsInt("videoId")!!
         val episodeNumber = episode.getAsInt("number")!!
-        val releaseDateTime = episode.getAsString("availabilityStartTime")?.let { ZonedDateTime.parse(it) }
+        val releaseDateTime = episode.getAsString("availabilityStartTime")?.let(ZonedDateTime::parse)
         val isAvailable = episode.getAsBoolean("isAvailable") ?: false
         val isPlayable = episode.getAsBoolean("isPlayable") ?: false
 
