@@ -67,7 +67,7 @@ class MapCache<K : Any, V : Serializable>(
             block: (K) -> V?
         ): V? {
             @Suppress("UNCHECKED_CAST")
-            val mapCache = getByNameAndType(name, MapCache::class) as? MapCache<K, V> ?: MapCache(name, duration, classes, typeToken, serializationType) { block(it) }
+            val mapCache = getByNameAndType(name, MapCache::class) as? MapCache<K, V> ?: MapCache(name, duration, classes, typeToken, serializationType, block)
             return runBlocking { mapCache[key] }
         }
 
