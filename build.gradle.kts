@@ -1,4 +1,4 @@
-val ktorVersion = "3.3.1"
+val ktorVersion = "3.3.2"
 val hibernateCoreVersion = "7.1.8.Final"
 val ehcacheVersion = "3.11.1"
 val hibernateSearchVersion = "8.1.2.Final"
@@ -31,7 +31,7 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     kotlin("kapt") version kotlinVersion
 
-    id("io.ktor.plugin") version "3.3.1"
+    id("io.ktor.plugin") version "3.3.2"
     id("org.sonarqube") version "7.0.1.6134"
     id("com.google.osdetector") version "1.7.3"
 
