@@ -21,7 +21,6 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
-import fr.shikkanime.utils.routes.param.QueryParam
 import java.util.*
 
 @Controller("$ADMIN/api/animes")
@@ -78,15 +77,5 @@ class AnimeController : HasPageableRoute() {
         episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
         return Response.noContent()
-    }
-
-    @Path("/alerts")
-    @Get
-    private fun getAlerts(
-        @QueryParam("page", "1") pageParam: Int,
-        @QueryParam("limit", "9") limitParam: Int
-    ): Response {
-        val (page, limit, _) = pageableRoute(pageParam, limitParam, null, null)
-        return Response.ok(animeAdminService.getAlerts(page, limit))
     }
 }
