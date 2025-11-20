@@ -14,13 +14,13 @@ import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
 
 @Controller("$ADMIN/api/episode-variants")
+@AdminSessionAuthenticated
 class EpisodeVariantController : HasPageableRoute() {
     @Inject
     private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path("/{uuid}/separate")
     @Post
-    @AdminSessionAuthenticated
     private fun separateVariant(
         @PathParam uuid: UUID,
         @BodyParam separateVariantDto: SeparateVariantDto

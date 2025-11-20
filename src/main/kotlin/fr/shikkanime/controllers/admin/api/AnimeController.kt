@@ -25,6 +25,7 @@ import fr.shikkanime.utils.routes.param.QueryParam
 import java.util.*
 
 @Controller("$ADMIN/api/animes")
+@AdminSessionAuthenticated
 class AnimeController : HasPageableRoute() {
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var animeAdminService: AnimeAdminService
@@ -34,7 +35,6 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/force-update-all")
     @Get
-    @AdminSessionAuthenticated
     private fun forceUpdateAllAnimes(): Response {
         animeAdminService.forceUpdateAll()
         InvalidationService.invalidate(Anime::class.java)
@@ -43,7 +43,6 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}/force-update")
     @Get
-    @AdminSessionAuthenticated
     private fun forceUpdateAnime(@PathParam uuid: UUID): Response {
         animeAdminService.forceUpdate(uuid) ?: return Response.notFound()
         InvalidationService.invalidate(Anime::class.java)
@@ -52,7 +51,6 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Get
-    @AdminSessionAuthenticated
     private fun animeDetails(@PathParam uuid: UUID): Response {
         return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound()).apply {
             thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
@@ -63,7 +61,6 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Put
-    @AdminSessionAuthenticated
     private fun updateAnime(
         @PathParam uuid: UUID,
         @BodyParam animeDto: AnimeDto
@@ -76,7 +73,6 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Delete
-    @AdminSessionAuthenticated
     private fun deleteAnime(@PathParam uuid: UUID): Response {
         animeAdminService.delete(animeService.find(uuid) ?: return Response.notFound())
         episodeVariantService.preIndex()
@@ -86,7 +82,6 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/alerts")
     @Get
-    @AdminSessionAuthenticated
     private fun getAlerts(
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int

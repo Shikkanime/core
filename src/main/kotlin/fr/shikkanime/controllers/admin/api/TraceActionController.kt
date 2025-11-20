@@ -10,13 +10,13 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
 
 @Controller("$ADMIN/api/trace-actions")
+@AdminSessionAuthenticated
 class TraceActionController : HasPageableRoute() {
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var traceActionFactory: TraceActionFactory
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun getTraceAction(
         @QueryParam("entityType") entityTypeParam: String?,
         @QueryParam("action") actionParam: String?,

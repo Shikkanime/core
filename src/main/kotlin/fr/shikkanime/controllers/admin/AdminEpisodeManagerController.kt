@@ -31,13 +31,13 @@ import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 
 @Controller("$ADMIN/episode-manager")
+@AdminSessionAuthenticated
 class AdminEpisodeManagerController {
     private val logger = LoggerFactory.getLogger(javaClass)
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun getEpisodeManager(): Response {
         val files = Constant.exportsFolder.listFiles()
             .filter { it.extension == "xlsx" }
@@ -53,7 +53,6 @@ class AdminEpisodeManagerController {
 
     @Path("/download")
     @Get
-    @AdminSessionAuthenticated
     private fun getDownload(@QueryParam file: String): Response {
         val requestedFile = File(Constant.exportsFolder, file)
 
@@ -67,7 +66,6 @@ class AdminEpisodeManagerController {
 
     @Path("/delete")
     @Get
-    @AdminSessionAuthenticated
     private fun getDelete(@QueryParam file: String): Response {
         val requestedFile = File(Constant.exportsFolder, file)
 
@@ -79,7 +77,6 @@ class AdminEpisodeManagerController {
 
     @Path("/import")
     @Post
-    @AdminSessionAuthenticated
     private fun postImport(@BodyParam multiPartData: MultiPartData): Response {
         var bytes: ByteArray? = null
 
