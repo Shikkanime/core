@@ -20,18 +20,17 @@ import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
 
 @Controller("$ADMIN/api/rules")
+@AdminSessionAuthenticated
 class RuleController {
     @Inject private lateinit var ruleService: RuleService
     @Inject private lateinit var ruleFactory: RuleFactory
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun getRules() = Response.ok(ruleService.findAll().map { ruleFactory.toDto(it) })
 
     @Path
     @Post
-    @AdminSessionAuthenticated
     private fun createRule(@BodyParam ruleDto: RuleDto): Response {
         if (ruleDto.uuid != null)
             Response.badRequest(MessageDto.error("UUID must be null"))
@@ -43,7 +42,6 @@ class RuleController {
 
     @Path("/{uuid}")
     @Delete
-    @AdminSessionAuthenticated
     private fun deleteRule(@PathParam uuid: UUID): Response {
         val rule = ruleService.find(uuid) ?: return Response.notFound()
         ruleService.delete(rule)

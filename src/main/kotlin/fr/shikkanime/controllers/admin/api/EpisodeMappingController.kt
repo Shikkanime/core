@@ -28,6 +28,7 @@ import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
 
 @Controller("$ADMIN/api/episode-mappings")
+@AdminSessionAuthenticated
 class EpisodeMappingController {
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
@@ -37,7 +38,6 @@ class EpisodeMappingController {
 
     @Path("/update-all")
     @Put
-    @AdminSessionAuthenticated
     private fun updateAllEpisode(@BodyParam updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto): Response {
         if (updateAllEpisodeMappingDto.uuids.isEmpty())
             return Response.badRequest(MessageDto.error("uuids must not be empty"))
@@ -60,7 +60,6 @@ class EpisodeMappingController {
 
     @Path("/{uuid}")
     @Get
-    @AdminSessionAuthenticated
     private fun read(@PathParam uuid: UUID): Response {
         val episodeMapping = episodeMappingService.find(uuid) ?: return Response.notFound()
         return Response.ok(episodeMappingFactory.toDto(episodeMapping).apply { image = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url })
@@ -68,20 +67,18 @@ class EpisodeMappingController {
 
     @Path("/{uuid}")
     @Put
-    @AdminSessionAuthenticated
     private fun updateEpisode(
         @PathParam uuid: UUID,
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
-        val updated = episodeMappingAdminService.update(uuid, episodeMappingDto)
+        val updated = episodeMappingAdminService.update(uuid, episodeMappingDto) ?: return Response.noContent()
         episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)
-        return Response.ok(episodeMappingFactory.toDto(updated ?: return Response.noContent()))
+        return Response.ok(episodeMappingFactory.toDto(updated))
     }
 
     @Path("/{uuid}")
     @Delete
-    @AdminSessionAuthenticated
     private fun deleteEpisode(@PathParam uuid: UUID): Response {
         episodeMappingService.delete(episodeMappingService.find(uuid) ?: return Response.notFound())
         episodeVariantService.preIndex()

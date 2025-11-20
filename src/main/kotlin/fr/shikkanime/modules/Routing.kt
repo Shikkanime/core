@@ -158,7 +158,7 @@ fun Routing.createControllerRoutes(controller: Any) {
                         build = routeHandler
                     )
                 }
-                method.hasAnnotation<AdminSessionAuthenticated>() -> authenticate(
+                method.hasAnnotation<AdminSessionAuthenticated>() || controller::class.hasAnnotation<AdminSessionAuthenticated>() -> authenticate(
                     "auth-admin-session",
                     build = routeHandler
                 )

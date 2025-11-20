@@ -17,12 +17,12 @@ import java.util.*
 import java.util.logging.Level
 
 @Controller("$ADMIN/platforms")
+@AdminSessionAuthenticated
 class AdminPlatformController {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun getPlatforms() = Response.template(
         Link.PLATFORMS,
         mutableMapOf(
@@ -31,7 +31,6 @@ class AdminPlatformController {
 
     @Path
     @Post
-    @AdminSessionAuthenticated
     private fun postPlatform(@BodyParam parameters: Parameters): Response {
         val redirectResponse = Response.redirect(Link.PLATFORMS.href)
 
@@ -47,7 +46,6 @@ class AdminPlatformController {
 
     @Path("/{platform}/simulcasts")
     @Get
-    @AdminSessionAuthenticated
     private fun getPlatformSimulcast(@PathParam platform: Platform): Response {
         val find = Constant.abstractPlatforms.find { it.getPlatform().name == platform.name }
             ?: return Response.redirect(Link.PLATFORMS.href)
@@ -64,7 +62,6 @@ class AdminPlatformController {
 
     @Path("/{platform}/simulcasts/{uuid}")
     @Get
-    @AdminSessionAuthenticated
     private fun getPlatformSimulcasts(
         @PathParam platform: Platform,
         @PathParam uuid: UUID
@@ -84,7 +81,6 @@ class AdminPlatformController {
 
     @Path("/{platform}/simulcasts")
     @Post
-    @AdminSessionAuthenticated
     private fun addPlatformSimulcast(
         @PathParam platform: Platform,
         @BodyParam parameters: Parameters
@@ -114,7 +110,6 @@ class AdminPlatformController {
 
     @Path("/{platform}/simulcasts/{uuid}/delete")
     @Get
-    @AdminSessionAuthenticated
     private fun deletePlatformSimulcast(
         @PathParam platform: Platform,
         @PathParam uuid: UUID

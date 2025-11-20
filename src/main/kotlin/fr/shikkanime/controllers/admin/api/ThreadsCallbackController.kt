@@ -21,13 +21,13 @@ import fr.shikkanime.wrappers.ThreadsWrapper
 import kotlinx.coroutines.runBlocking
 
 @Controller("$ADMIN/api/threads")
+@AdminSessionAuthenticated
 class ThreadsCallbackController {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var configService: ConfigService
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun callback(@QueryParam code: String): Response {
         val appId = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
         val appSecret = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_SECRET))

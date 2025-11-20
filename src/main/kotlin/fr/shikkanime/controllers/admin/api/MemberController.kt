@@ -17,6 +17,7 @@ import java.time.LocalDate
 import java.util.*
 
 @Controller("$ADMIN/api/members")
+@AdminSessionAuthenticated
 class MemberController : HasPageableRoute() {
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var memberFollowAnimeController: MemberFollowAnimeService
@@ -27,7 +28,6 @@ class MemberController : HasPageableRoute() {
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun getMembers(
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int
@@ -38,13 +38,11 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}")
     @Get
-    @AdminSessionAuthenticated
     private fun getMember(@PathParam memberUuid: UUID) =
         memberService.findDetailedMember(memberUuid)?.let(Response::ok) ?: Response.notFound()
 
     @Path("/{memberUuid}/login-activities")
     @Get
-    @AdminSessionAuthenticated
     private fun getMemberLoginActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
@@ -59,7 +57,6 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/follow-anime-activities")
     @Get
-    @AdminSessionAuthenticated
     private fun getMemberFollowAnimeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
@@ -78,7 +75,6 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/follow-episode-activities")
     @Get
-    @AdminSessionAuthenticated
     private fun getMemberFollowEpisodeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val after = now.minusMonths(1)
@@ -97,7 +93,6 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/animes")
     @Get
-    @AdminSessionAuthenticated
     private fun getMemberAnimes(
         @PathParam memberUuid: UUID,
         @QueryParam("page", "1") pageParam: Int,
@@ -119,7 +114,6 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/episode-mappings")
     @Get
-    @AdminSessionAuthenticated
     private fun getMemberEpisodeMappings(
         @PathParam memberUuid: UUID,
         @QueryParam("page", "1") pageParam: Int,

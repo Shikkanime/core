@@ -20,13 +20,13 @@ import fr.shikkanime.utils.routes.param.QueryParam
 import java.util.*
 
 @Controller("$ADMIN/api/configs")
+@AdminSessionAuthenticated
 class ConfigController {
     @Inject private lateinit var configService: ConfigService
     @Inject private lateinit var configFactory: ConfigFactory
 
     @Path
     @Get
-    @AdminSessionAuthenticated
     private fun getConfigs(@QueryParam name: String?) = Response.ok(
         if (name != null) {
             configService.findAllByName(name)
@@ -37,7 +37,6 @@ class ConfigController {
 
     @Path("/{uuid}")
     @Put
-    @AdminSessionAuthenticated
     private fun updateConfig(
         @PathParam uuid: UUID,
         @BodyParam configDto: ConfigDto
