@@ -1,22 +1,12 @@
 package fr.shikkanime.services.admin
 
 import com.google.inject.Inject
-import fr.shikkanime.dtos.PageableDto
-import fr.shikkanime.dtos.animes.AnimeAlertDto
 import fr.shikkanime.dtos.animes.AnimeDto
-import fr.shikkanime.dtos.animes.AnimeError
-import fr.shikkanime.dtos.animes.ErrorType
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
-import fr.shikkanime.entities.enums.LangType
-import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.withUTCString
-import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeAdminService : IAdminService {
@@ -24,7 +14,6 @@ class AnimeAdminService : IAdminService {
     @Inject private lateinit var attachmentService: AttachmentService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var animePlatformService: AnimePlatformService
@@ -133,78 +122,5 @@ class AnimeAdminService : IAdminService {
         val animes = animeService.findAll()
         animes.forEach { it.lastUpdateDateTime = Constant.oldLastUpdateDateTime }
         animeService.updateAll(animes)
-    }
-
-    fun getAlerts(page: Int, limit: Int): PageableDto<AnimeAlertDto> {
-        val invalidAnimes = mutableMapOf<Anime, Pair<ZonedDateTime, MutableSet<AnimeError>>>()
-
-        animeService.findAll().forEach { anime ->
-            val seasons = animeService.findAllSeasons(anime.uuid!!)
-
-            seasons.map { it.key }.toSortedSet().zipWithNext().forEach { (current, next) ->
-                if (current + 1 != next) {
-                    invalidAnimes.getOrPut(anime) { (seasons[current] ?: ZonedDateTime.now()) to mutableSetOf() }.second
-                        .add(AnimeError(ErrorType.INVALID_CHAIN_SEASON, "$current -> $next"))
-                }
-            }
-        }
-
-        episodeMappingService.findAll()
-            .asSequence()
-            .sortedWith(
-                compareBy(
-                    { it.releaseDateTime },
-                    { it.season },
-                    { it.episodeType },
-                    { it.number }
-                )
-            ).groupBy { "${it.anime!!.uuid!!}${it.season}${it.episodeType}" }
-            .values.forEach { episodes ->
-                val anime = episodes.first().anime!!
-                val audioLocales = animeService.findAllAudioLocales(anime.uuid!!)
-
-                if (episodes.first().episodeType == EpisodeType.EPISODE) {
-                    episodes.groupBy { it.releaseDateTime.toLocalDate() }
-                        .values.forEach {
-                            if (it.size > 3 && !(audioLocales.size == 1 && LangType.fromAudioLocale(anime.countryCode!!, audioLocales.first()) == LangType.VOICE)) {
-                                it.forEach { episodeMapping ->
-                                    invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
-                                        .add(AnimeError(ErrorType.INVALID_RELEASE_DATE, "S${episodeMapping.season} ${episodeMapping.releaseDateTime.toLocalDate()}[${it.size}]"))
-                                    return@forEach
-                                }
-                            }
-                        }
-                }
-
-                episodes.filter { it.number!! < 0 }
-                    .forEach { episodeMapping ->
-                        invalidAnimes.getOrPut(episodeMapping.anime!!) { episodeMapping.releaseDateTime to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_EPISODE_NUMBER, StringUtils.toEpisodeMappingString(episodeMapping)))
-                    }
-
-                episodes.zipWithNext().forEach { (current, next) ->
-                    if (current.number!! + 1 != next.number!!) {
-                        invalidAnimes.getOrPut(current.anime!!) { current.releaseDateTime to mutableSetOf() }.second
-                            .add(AnimeError(ErrorType.INVALID_CHAIN_EPISODE_NUMBER, "${StringUtils.toEpisodeMappingString(current)} -> ${StringUtils.toEpisodeMappingString(next)}"))
-                    }
-                }
-            }
-
-        return PageableDto(
-            data = invalidAnimes.asSequence()
-                .map { (anime, pair) ->
-                    AnimeAlertDto(
-                        animeFactory.toDto(anime),
-                        pair.first.withUTCString(),
-                        pair.second
-                    )
-                }.sortedByDescending { ZonedDateTime.parse(it.zonedDateTime) }
-                .drop((page - 1) * limit)
-                .take(limit)
-                .toSet(),
-            page = page,
-            limit = limit,
-            total = invalidAnimes.size.toLong()
-        )
     }
 } 

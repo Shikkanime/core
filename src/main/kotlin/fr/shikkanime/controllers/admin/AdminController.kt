@@ -126,11 +126,6 @@ class AdminController {
     @AdminSessionAuthenticated
     private fun getTraceActions() = Response.template(Link.TRACE_ACTIONS)
 
-    @Path("/anime-alerts")
-    @Get
-    @AdminSessionAuthenticated
-    private fun getAnimeAlerts() = Response.template(Link.ANIME_ALERTS)
-
     @Path("/members")
     @Get
     @AdminSessionAuthenticated
