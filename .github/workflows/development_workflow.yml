@@ -11,7 +11,7 @@ jobs:
     name: Test and analyze (with Valkey)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
@@ -44,7 +44,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
@@ -61,7 +61,7 @@ jobs:
       matrix:
         platform: [linux/amd64, linux/arm64]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup

@@ -22,7 +22,7 @@ jobs:
     name: Test release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ test ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Pull latest commits
         run: git pull
@@ -96,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ docker ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -130,7 +130,7 @@ jobs:
     needs: [ push-commit ]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Pull latest commits
         run: git pull
