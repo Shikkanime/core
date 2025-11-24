@@ -12,7 +12,7 @@ object LocaleUtils {
         }
     }.toSet()
 
-    fun getAllowedLocales(countryCode: CountryCode, locales: Collection<String?>) = buildSet<String> {
+    fun getAllowedLocales(countryCode: CountryCode, locales: Collection<String?>): Set<String> {
         val availableLocales = getConvertedLocales(locales)
 
         val matches = countryCode.allowedAudioLocales.intersect(availableLocales)
