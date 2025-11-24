@@ -8,7 +8,7 @@ object LocaleUtils {
             "日本語", "ja-jpn", "ja" -> "ja-JP"
             "English", "en-eng" -> "en-US"
             "Français", "Français (France)", "Français [CC]", "fr-fra" -> "fr-FR"
-            else -> null
+            else -> it
         }
     }.toSet()
 
