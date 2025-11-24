@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.impl
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.utils.LocaleUtils
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
@@ -58,7 +59,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode> {
+    override suspend fun getEpisodesByShowId(countryCode: CountryCode, showId: String, checkAudioLocales: Boolean): Array<Episode> {
         val show = getShow(showId)
         val episodes = mutableListOf<Episode>()
 
@@ -89,7 +90,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
                         val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
                         val resourceId = actionJsonObject.getAsString("resourceId")!!
-                        val audioLocales = if (checkAudioLocales) getAudioLocales(resourceId) else arrayOf("ja-JP")
+                        val audioLocales = if (checkAudioLocales) getAudioLocales(countryCode, resourceId) else arrayOf("ja-JP")
 
                         episodes.add(
                             Episode(
@@ -101,7 +102,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                                 visualsObject.getAsInt("episodeNumber") ?: -1,
                                 visualsObject.getAsString("episodeTitle")?.normalize(),
                                 visualsObject.getAsJsonObject("description")?.getAsString("medium")?.normalize(),
-                                "https://www.disneyplus.com/${locale.lowercase()}/play/$id",
+                                "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id",
                                 getImageUrl(visualsObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!.getAsJsonObject("thumbnail")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
                                 duration,
                                 resourceId,
@@ -117,7 +118,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         return episodes.toTypedArray()
     }
 
-    override suspend fun getAudioLocales(resourceId: String): Array<String> {
+    override suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String): Array<String> {
         val headers = mapOf(
             "x-application-version" to "1.1.2",
             "x-bamsdk-client-id" to "disney-svod-3d9324fc",
@@ -171,10 +172,6 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
         if (subtitleLocales.none { it in supportedLanguages }) return emptyArray()
 
-        return audioLocales
-            .map { if (it == "ja") "ja-JP" else it }
-            .filter { it == "ja-JP" || it in supportedLanguages }
-            .toSet()
-            .toTypedArray()
+        return LocaleUtils.getAllowedLocales(countryCode, audioLocales).toTypedArray()
     }
 }

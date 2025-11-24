@@ -1,13 +1,14 @@
 package fr.shikkanime.entities.enums
 
 enum class CountryCode(
+    val allowedAudioLocales: Set<String>,
+    val optionalAudioLocales: Set<String>,
     val locale: String,
     val timezone: String,
     val latitude: Double,
-    val longitude: Double,
-    val excludedLocales: Set<String>
+    val longitude: Double
 ) {
-    FR("fr-FR", "Europe/Paris", 48.866667, 2.333333, setOf("en-US", "de-DE", "pt-BR", "es-419", "es-ES", "it-IT", "ru-RU")),
+    FR(setOf("ja-JP", "zh-CN", "ko-KR"), setOf("en-US"), "fr-FR", "Europe/Paris", 48.866667, 2.333333),
     ;
 
     companion object {

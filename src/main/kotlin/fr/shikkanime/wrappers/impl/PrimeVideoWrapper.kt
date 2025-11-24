@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.EncryptionManager
+import fr.shikkanime.utils.LocaleUtils
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
@@ -55,8 +56,8 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                     "$baseUrl$id?autoplay=1&t=0",
                     showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
                     showJson.getAsLong("duration", -1),
-                    getAudioLocales(audioTracks),
-                    getSubtitleLocales(subtitles),
+                    LocaleUtils.getAllowedLocales(countryCode, audioTracks),
+                    LocaleUtils.getConvertedLocales(subtitles),
                 )
             )
         }
@@ -83,7 +84,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                     episodesJson.entrySet()
                         .filter { (_, element) -> element.asJsonObject.getAsString("titleType") == "episode" }
                         .map { (key, element) ->
-                            createEpisode(key, element.asJsonObject, season, show, btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")!!, btfState)
+                            createEpisode(countryCode, key, element.asJsonObject, season, show, btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")!!, btfState)
                         }
                 )
             } ?: throw Exception("Failed to get episodes")
@@ -109,6 +110,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
                             .map {
                                 val detailObject = it.asJsonObject!!.getAsJsonObject("detail")!!
                                 createEpisode(
+                                    countryCode,
                                     detailObject.getAsString("catalogId")!!,
                                     detailObject,
                                     season,
@@ -126,6 +128,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     }
     
     private fun createEpisode(
+        countryCode: CountryCode,
         key: String,
         episodeJson: JsonObject,
         season: Season,
@@ -152,19 +155,9 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             "$baseUrl$link?autoplay=1&t=0",
             episodeJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             episodeJson.getAsLong("duration", -1),
-            getAudioLocales(audioTracks),
-            getSubtitleLocales(subtitles),
+            LocaleUtils.getAllowedLocales(countryCode, audioTracks),
+            LocaleUtils.getConvertedLocales(subtitles),
         )
-    }
-
-    private fun getAudioLocales(audioTracks: HashSet<String>): Set<String> = buildSet {
-        if ("日本語" in audioTracks) add("ja-JP")
-        if ("日本語" !in audioTracks && "English" in audioTracks) add("en-US")
-        if ("Français" in audioTracks) add("fr-FR")
-    }
-
-    private fun getSubtitleLocales(subtitles: HashSet<String>): Set<String> = buildSet {
-        if ("Français (France)" in subtitles || "Français" in subtitles || "Français [CC]" in subtitles) add("fr-FR")
     }
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {

@@ -2,7 +2,6 @@ package fr.shikkanime.utils.indexers
 
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.utils.indexers.GroupedIndexer.Data
 import java.time.ZonedDateTime
@@ -41,16 +40,6 @@ object GroupedIndexer {
         audioLocale: String
     ) {
         val existingData = index.getOrPut(key) { TreeMap() }
-
-        val mappingDatas = existingData.values.flatten().filter { it.uuid != variantUuid && it.mappingUuid == mappingUuid }
-        val langType = LangType.fromAudioLocale(key.countryCode, audioLocale)
-        if (mappingDatas.isNotEmpty()
-            && langType == LangType.SUBTITLES
-            && mappingDatas.any { it.uuid != variantUuid && LangType.fromAudioLocale(key.countryCode, it.audioLocale) == LangType.SUBTITLES }
-            && audioLocale in key.countryCode.excludedLocales) {
-            return
-        }
-
         val matchingMin = releaseDateTime.minusHours(2)
         val matchingMax = releaseDateTime.plusHours(2)
         val indexedData: IndexedDataEntry? = existingData.subMap(matchingMin, true, matchingMax, true).firstEntry()

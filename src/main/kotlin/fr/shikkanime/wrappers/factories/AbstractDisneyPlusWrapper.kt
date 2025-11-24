@@ -3,6 +3,7 @@ package fr.shikkanime.wrappers.factories
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -120,8 +121,8 @@ abstract class AbstractDisneyPlusWrapper {
     protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}").plus(headers), body = body)
 
     abstract suspend fun getShow(id: String): Show
-    abstract suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode>
-    abstract suspend fun getAudioLocales(resourceId: String): Array<String>
+    abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, showId: String, checkAudioLocales: Boolean): Array<Episode>
+    abstract suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String): Array<String>
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
 }
