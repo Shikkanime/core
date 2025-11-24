@@ -198,11 +198,11 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (!isDubbed && (subtitles.isEmpty() || countryCode.locale !in subtitles))
             throw EpisodeNoSubtitlesOrVoiceException("Episode is not available in ${countryCode.name} with subtitles or voice")
 
-        val allAudioLocales = browseObject.episodeMetadata.versions?.map { it.audioLocale }?.toSet() ?: setOf(browseObject.episodeMetadata.audioLocale)
+        val allAudioLocales = (browseObject.episodeMetadata.versions?.map { it.audioLocale }?.toSet() ?: emptySet()) + setOf(browseObject.episodeMetadata.audioLocale)
         val allowedAudioLocales = LocaleUtils.getAllowedLocales(countryCode, allAudioLocales)
 
         if (browseObject.episodeMetadata.audioLocale !in allowedAudioLocales)
-            throw EpisodeException("Episode audio locale is not available in ${countryCode.name}")
+            throw EpisodeException("Episode audio locale (${browseObject.episodeMetadata.audioLocale}) is not available in ${countryCode.name}")
 
         val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getObjects(countryCode.locale, browseObject.episodeMetadata.seriesId).first() }
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
