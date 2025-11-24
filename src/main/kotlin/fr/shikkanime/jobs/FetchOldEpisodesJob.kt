@@ -206,7 +206,7 @@ class FetchOldEpisodesJob : AbstractJob {
                                 runCatching { crunchyrollPlatform.convertEpisode(countryCode, episode, false) }.getOrNull()
                             }
                         Platform.DISN -> DisneyPlusCachedWrapper.getEpisodesByShowId(
-                            countryCode.locale, id,
+                            countryCode, id,
                             configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
                         ).flatMap { episode ->
                             runCatching {
@@ -215,7 +215,7 @@ class FetchOldEpisodesJob : AbstractJob {
                                 )
                             }.getOrElse { emptyList() }
                         }
-                        Platform.NETF -> NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, id.toInt())
+                        Platform.NETF -> NetflixCachedWrapper.getEpisodesByShowId(countryCode, id.toInt())
                             .flatMap { episode ->
                                 val audioLocales = episode.audioLocales.ifEmpty { setOf("ja-JP") }
                                 audioLocales.mapNotNull { audioLocale ->

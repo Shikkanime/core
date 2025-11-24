@@ -48,7 +48,9 @@ abstract class AbstractCrunchyrollWrapper {
 
     data class Version(
         val guid: String,
-        val original: Boolean,
+        @SerializedName("audio_locale")
+        val audioLocale: String,
+        val original: Boolean
     ) : Serializable
 
     data class Series(

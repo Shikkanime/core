@@ -18,7 +18,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
     override suspend fun fetchApiContent(
         key: CountryCodeNetflixSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.netflixSimulcast.name.toInt())
+    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode, key.netflixSimulcast.name.toInt())
         .flatMap { video ->
             val audioLocales = video.audioLocales.ifEmpty { key.netflixSimulcast.audioLocales }
             audioLocales.map { audioLocale ->

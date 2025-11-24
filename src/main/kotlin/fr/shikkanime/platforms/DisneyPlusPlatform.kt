@@ -22,7 +22,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
         val episodes = DisneyPlusWrapper.getEpisodesByShowId(
-            key.countryCode.locale,
+            key.countryCode,
             key.releaseDayPlatformSimulcast.name,
             configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
         )

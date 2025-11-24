@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
@@ -77,8 +78,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getShow(locale: String, id: Int): Show {
-        val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
+    override suspend fun getShow(countryCode: CountryCode, id: Int): Show {
+        val response = httpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
             "operationName" to "DetailModal",
             "variables" to mapOf(
                 "opaqueImageFormat" to "PNG",
@@ -121,20 +122,20 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, id: Int): Array<Episode> {
-        val show = getShow(locale, id)
-        val seasonsResponse = fetchSeasonsData(locale, id, show.seasonCount ?: 1)
+    override suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode> {
+        val show = getShow(countryCode, id)
+        val seasonsResponse = fetchSeasonsData(countryCode, id, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
 
         return when (firstVideoObject?.getAsString("__typename")) {
-            "Season" -> getEpisodesByShowId(locale, show.json!!.getAsJsonObject("parentShow").getAsInt("videoId")!!).toList()
-            "Movie" -> createMovieEpisode(show, id)
-            else -> createSeriesEpisodes(locale, show, firstVideoObject)
+            "Season" -> getEpisodesByShowId(countryCode, show.json!!.getAsJsonObject("parentShow").getAsInt("videoId")!!).toList()
+            "Movie" -> createMovieEpisode(countryCode, show, id)
+            else -> createSeriesEpisodes(countryCode, show, firstVideoObject)
         }.toTypedArray()
     }
 
-    private suspend fun fetchSeasonsData(locale: String, id: Int, seasonCount: Int): HttpResponse {
-        val seasonsResponse = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
+    private suspend fun fetchSeasonsData(countryCode: CountryCode, id: Int, seasonCount: Int): HttpResponse {
+        val seasonsResponse = httpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelector",
             "variables" to mapOf(
                 "showId" to id,
@@ -160,7 +161,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.firstOrNull()?.asJsonObject
     }
 
-    private suspend fun createMovieEpisode(show: Show, id: Int): List<Episode> {
+    private suspend fun createMovieEpisode(countryCode: CountryCode, show: Show, id: Int): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
         val isAvailable = show.isAvailable
         val isPlayable = show.isPlayable
@@ -183,7 +184,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 "$baseUrl/watch/${show.id}",
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
-                runCatching { getEpisodeAudioTrackList(show.id) }
+                runCatching { getEpisodeAudioTrackList(countryCode, show.id) }
                     .map { it[show.id] ?: emptySet() }
                     .onFailure { logger.warning("Failed to get audio tracks for movie $id: ${it.message}") }
                     .getOrNull() ?: emptySet()
@@ -191,14 +192,14 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    private suspend fun createSeriesEpisodes(locale: String, show: Show, firstVideoObject: JsonObject?): List<Episode> {
+    private suspend fun createSeriesEpisodes(countryCode: CountryCode, show: Show, firstVideoObject: JsonObject?): List<Episode> {
         val seasonsJson = firstVideoObject?.getAsJsonObject("seasons")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get seasons")
         
         val seasons = parseSeasons(seasonsJson)
         
         return seasons.flatMapIndexed { index, season ->
-            fetchAndCreateEpisodesForSeason(locale, show, season, index + 1)
+            fetchAndCreateEpisodesForSeason(countryCode, show, season, index + 1)
         }
     }
 
@@ -213,8 +214,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private suspend fun fetchAndCreateEpisodesForSeason(locale: String, show: Show, season: Season, seasonNumber: Int): List<Episode> {
-        val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
+    private suspend fun fetchAndCreateEpisodesForSeason(countryCode: CountryCode, show: Show, season: Season, seasonNumber: Int): List<Episode> {
+        val response = httpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
             "variables" to mapOf(
                 "seasonId" to season.id,
@@ -243,7 +244,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val episodeIds = episodesJson.mapNotNull { it.asJsonObject.getAsJsonObject("node")?.getAsInt("videoId") }.toIntArray()
 
         val audioTracksMap = if (episodeIds.isNotEmpty())
-            runCatching { getEpisodeAudioTrackList(*episodeIds) }
+            runCatching { getEpisodeAudioTrackList(countryCode, *episodeIds) }
                 .onFailure { logger.warning("Failed to get audio tracks for season ${season.id}: ${it.message}") }
                 .getOrNull() ?: emptyMap()
         else emptyMap()
@@ -288,7 +289,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    suspend fun getEpisodeAudioTrackList(vararg ids: Int): Map<Int, Set<String>> {
+    suspend fun getEpisodeAudioTrackList(countryCode: CountryCode, vararg ids: Int): Map<Int, Set<String>> {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
         val response = httpRequest.post(
             "$baseUrl/nq/website/memberapi/release/pathEvaluator?method=call&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
@@ -312,11 +313,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                     ?.getAsJsonArray("value")
                     ?.map { it.asJsonObject.getAsString("isoCode") }
                     ?: throw Exception("Failed to get metadata")
-                buildSet {
-                    if ("ja-jpn" in audioTracks) add("ja-JP")
-                    if ("ja-jpn" !in audioTracks && "en-eng" in audioTracks) add("en-US")
-                    if ("fr-fra" in audioTracks) add("fr-FR")
-                }
+                LocaleUtils.getAllowedLocales(countryCode, audioTracks)
             }.getOrNull() ?: emptySet()
         }.filterValues { it.isNotEmpty() }
     }

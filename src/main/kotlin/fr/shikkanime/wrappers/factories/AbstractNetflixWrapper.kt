@@ -2,6 +2,7 @@ package fr.shikkanime.wrappers.factories
 
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
@@ -99,7 +100,7 @@ abstract class AbstractNetflixWrapper {
     protected fun getCookieValue(netflixId: String, netflixSecureId: String): String =
         "NetflixId=$netflixId; SecureNetflixId=$netflixSecureId"
 
-    protected suspend fun HttpRequest.postGraphQL(locale: String, body: String): HttpResponse {
+    protected suspend fun HttpRequest.postGraphQL(countryCode: CountryCode, body: String): HttpResponse {
         val (id, secureId) = getNetflixAuthentification()
 
         return post(
@@ -107,12 +108,12 @@ abstract class AbstractNetflixWrapper {
             headers = mapOf(
                 HttpHeaders.ContentType to ContentType.Application.Json.toString(),
                 HttpHeaders.Cookie to getCookieValue(id, secureId),
-                "x-netflix.context.locales" to locale,
+                "x-netflix.context.locales" to countryCode.locale,
             ),
             body = body
         )
     }
 
-    abstract suspend fun getShow(locale: String, id: Int): Show
-    abstract suspend fun getEpisodesByShowId(locale: String, id: Int): Array<Episode>
+    abstract suspend fun getShow(countryCode: CountryCode, id: Int): Show
+    abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
 }
