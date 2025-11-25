@@ -3,18 +3,17 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <property global="false" name="id" value="1764000467569"/>
+    <property global="false" name="id" value="1764094587231"/>
     <property global="false" name="author" value="Ziedelth"/>
 
     <changeSet id="${id}-1" author="${author}">
         <sql>
             DELETE FROM episode_variant
-            WHERE audio_locale NOT IN ('ja-JP', 'ko-KR', 'zh-CN', 'en-US', 'fr-FR') OR
-                (audio_locale = 'en-US' AND mapping_uuid NOT IN (
-                    SELECT mapping_uuid
-                    FROM episode_variant
-                    WHERE audio_locale IN ('ja-JP', 'ko-KR', 'zh-CN')
-                ));
+            WHERE audio_locale = 'en-US' AND mapping_uuid IN (
+                SELECT mapping_uuid
+                FROM episode_variant
+                WHERE audio_locale IN ('ja-JP', 'ko-KR', 'zh-CN', 'fr-FR')
+            );
 
             DELETE FROM episode_mapping
             WHERE NOT EXISTS (

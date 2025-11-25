@@ -358,4 +358,21 @@ class CrunchyrollPlatformTest : AbstractTest() {
             assertNull(result)
         }
     }
+
+    @Test
+    fun `should not find en-US locale`() {
+        val testDate = "2025-11-25T18:00:00Z"
+        val zonedDateTime = ZonedDateTime.parse(testDate)
+        val formattedDate = testDate.replace(':', '-')
+
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        )
+
+        assertTrue(episodes.none { it.audioLocale == "en-US" })
+    }
 }
