@@ -3,7 +3,6 @@ package fr.shikkanime.factories.impl
 import com.google.inject.Inject
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.factories.IEpisodeMappingFactory
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.toTreeSet
@@ -34,8 +33,6 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
             title = entity.title,
             description = entity.description,
             variants = variants.toSet(),
-            platforms = variants.map { it.platform }.toTreeSet(),
-            langTypes = variants.map { LangType.fromAudioLocale(countryCode, it.audioLocale) }.toTreeSet(),
             sources = variants.map { episodeSourceFactory.toDto(countryCode, it) }.toTreeSet(),
         )
     }

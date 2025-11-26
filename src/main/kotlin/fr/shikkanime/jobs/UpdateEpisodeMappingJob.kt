@@ -10,7 +10,6 @@ import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
@@ -26,7 +25,6 @@ class UpdateEpisodeMappingJob : AbstractJob {
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
     @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
     @Inject private lateinit var disneyPlusPlatform: DisneyPlusPlatform
@@ -57,7 +55,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val needRecalculate = AtomicBoolean(false)
         val needRefreshCache = AtomicBoolean(false)
-        val identifiers = episodeVariantCacheService.findAllIdentifiers()
+        val identifiers = episodeVariantService.findAllIdentifiers()
         val allPreviousAndNext = mutableListOf<Episode>()
 
         needUpdateEpisodes.forEach { mapping ->
