@@ -7,7 +7,7 @@
     <a href="#-getting-started">Getting Started</a>
     <br>
     <img src="https://img.shields.io/github/v/tag/Shikkanime/core" alt="Version">
-    <img src="https://sonarqube.shikkanime.fr/api/project_badges/measure?project=shikkanime-core&metric=coverage&token=sqb_601fdbdd39aef87208ae670546a54b1324a93e91" alt="Code Coverage">
+    <img src="https://sonarqube.zdh.fr/api/project_badges/measure?project=shikkanime-core&metric=coverage&token=sqb_675719f3d9208b269342760c6a3ab2158a5719c3" alt="Code Coverage">
     <img src="https://img.shields.io/github/license/Shikkanime/core" alt="License">
 </p>
 

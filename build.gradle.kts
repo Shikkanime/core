@@ -113,7 +113,7 @@ dependencies {
 sonar {
     properties {
         property("sonar.projectKey", "shikkanime-core")
-        property("sonar.projectName", "shikkanime-core")
+        property("sonar.projectName", "Shikkanime Core")
     }
 }
 
