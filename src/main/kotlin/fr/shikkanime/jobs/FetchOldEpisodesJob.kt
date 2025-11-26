@@ -11,9 +11,9 @@ import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.ConfigService
+import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
 import kotlinx.coroutines.runBlocking
@@ -33,7 +33,7 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject private lateinit var disneyPlusPlatform: DisneyPlusPlatform
     @Inject private lateinit var netflixPlatform: NetflixPlatform
     @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
-    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var configService: ConfigService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var traceActionService: TraceActionService
@@ -68,7 +68,7 @@ class FetchOldEpisodesJob : AbstractJob {
             episodes.addAll(CountryCode.entries.flatMap { fetchLiveChart(it, dates) })
         }
 
-        val identifiers = episodeVariantCacheService.findAllIdentifiers()
+        val identifiers = episodeVariantService.findAllIdentifiers()
         episodes.removeIf { it.releaseDateTime.toLocalDate() < dates.min() || it.getIdentifier() in identifiers }
 
         if (episodes.isNotEmpty()) {

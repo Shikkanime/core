@@ -11,7 +11,6 @@ import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.persistence.Tuple
 import java.io.ByteArrayOutputStream
@@ -32,7 +31,6 @@ class FetchEpisodesJob : AbstractJob {
     private val typeIdentifiers = mutableSetOf<String>()
 
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
 
@@ -76,7 +74,7 @@ class FetchEpisodesJob : AbstractJob {
             return
         }
 
-        val identifiers = episodeVariantCacheService.findAllIdentifiers()
+        val identifiers = episodeVariantService.findAllIdentifiers()
 
         val savedEpisodes = episodes.asSequence()
             .sortedWith(
