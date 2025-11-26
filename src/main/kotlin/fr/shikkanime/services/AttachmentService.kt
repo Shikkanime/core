@@ -186,21 +186,27 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     }
 
     private fun taskEncode(attachment: Attachment, url: String?, bytes: ByteArray?) {
-        val attachmentBytes = if (!url.isNullOrBlank() && bytes.isNullOrEmpty()) {
-            val (httpResponse, urlBytes) = runBlocking {
-                val response = httpRequest.get(url)
-                response to response.readRawBytes()
-            }
+        val attachmentBytes = try {
+            if (!url.isNullOrBlank() && bytes.isNullOrEmpty()) {
+                val (httpResponse, urlBytes) = runBlocking {
+                    val response = HttpRequest.retryOnTimeout(3) { httpRequest.get(url) }
+                    response to response.readRawBytes()
+                }
 
-            if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty() || httpResponse.contentType()?.withoutParameters() !in contentTypes) {
-                logger.warning(FAILED_TO_ENCODE_MESSAGE)
-                removeFile(attachment)
-                return
-            }
+                if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty() || httpResponse.contentType()?.withoutParameters() !in contentTypes) {
+                    logger.warning(FAILED_TO_ENCODE_MESSAGE)
+                    removeFile(attachment)
+                    return
+                }
 
-            urlBytes
-        } else {
-            bytes ?: return
+                urlBytes
+            } else {
+                bytes ?: return
+            }
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, FAILED_TO_ENCODE_MESSAGE, e)
+            removeFile(attachment)
+            return
         }
 
         encodeImage(attachment, attachmentBytes)

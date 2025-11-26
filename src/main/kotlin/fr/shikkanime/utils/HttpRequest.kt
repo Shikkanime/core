@@ -10,6 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.content.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.delay
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -146,15 +147,26 @@ class HttpRequest(
     }
 
     companion object {
-        suspend fun <T> retry(times: Int, delay: Long = 500, operation: suspend () -> T): T {
+        suspend fun <T> retry(
+            times: Int,
+            delay: Long = 500,
+            shouldRetry: (Exception) -> Boolean = { true },
+            operation: suspend () -> T
+        ): T {
             var lastException: Exception? = null
 
             repeat(times) { attempt ->
                 try {
                     return operation()
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+
+                    if (!shouldRetry(e)) throw e
+
                     lastException = e
-                    logger.warning("Attempt $attempt failed: ${e.message}")
+                    val attemptNum = attempt + 1
+
+                    logger.warning("Attempt $attemptNum failed: ${e.message}")
 
                     if (attempt < times - 1) {
                         logger.warning("Retrying in $delay ms...")
@@ -163,7 +175,18 @@ class HttpRequest(
                 }
             }
 
-            throw (lastException ?: Exception("Failed after $times attempts"))
+            throw lastException ?: Exception("Failed after $times attempts")
         }
+
+        suspend fun <T> retryOnTimeout(
+            times: Int,
+            delay: Long = 500,
+            operation: suspend () -> T
+        ) = retry(
+            times = times,
+            delay = delay,
+            shouldRetry = { it is HttpRequestTimeoutException },
+            operation = operation
+        )
     }
 }
