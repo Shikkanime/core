@@ -1,4 +1,4 @@
-val ktorVersion = "3.3.2"
+val ktorVersion = "3.3.3"
 val hibernateCoreVersion = "7.1.10.Final"
 val ehcacheVersion = "3.11.1"
 val hibernateSearchVersion = "8.1.2.Final"
