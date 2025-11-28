@@ -240,7 +240,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             duration = browseObject.episodeMetadata.durationMs / 1000,
             title = browseObject.title.normalize(),
             description = browseObject.description.normalize(),
-            image = browseObject.images?.fullHDThumbnail ?: Constant.DEFAULT_IMAGE_PREVIEW,
+            image = browseObject.images?.fullHDThumbnail?.takeIf { it !in configCacheService.getValueAsStringList(ConfigPropertyKey.CRUNCHYROLL_DEFAULT_IMAGES) } ?: Constant.DEFAULT_IMAGE_PREVIEW,
             platform = getPlatform(),
             audioLocale = browseObject.episodeMetadata.audioLocale,
             id = browseObject.id,
