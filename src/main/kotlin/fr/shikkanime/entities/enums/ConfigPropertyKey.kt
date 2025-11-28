@@ -61,4 +61,5 @@ enum class ConfigPropertyKey(val key: String) {
     UPDATE_ANIME_DELAY_CURRENT_SEASON("update_anime_delay_current_season"),
     UPDATE_ANIME_DELAY_LAST_SEASON("update_anime_delay_last_season"),
     UPDATE_ANIME_DELAY_OTHERS("update_anime_delay_others"),
+    CRUNCHYROLL_DEFAULT_IMAGES("crunchyroll_default_images")
 }
