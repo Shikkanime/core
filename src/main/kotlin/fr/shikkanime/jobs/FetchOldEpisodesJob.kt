@@ -226,15 +226,17 @@ class FetchOldEpisodesJob : AbstractJob {
                                     }.getOrNull()
                                 }
                             }
-                        Platform.PRIM -> PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode, id)
-                            .flatMap { episode ->
-                                runCatching {
-                                    primeVideoPlatform.convertEpisode(
-                                        countryCode, StringUtils.EMPTY_STRING, episode,
-                                        minimalDate.atStartOfDay(ZoneId.of(countryCode.timezone))
-                                    )
-                                }.getOrElse { emptyList() }
-                            }
+                        Platform.PRIM -> HttpRequest.retry(3) {
+                            PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode, id)
+                                .flatMap { episode ->
+                                    runCatching {
+                                        primeVideoPlatform.convertEpisode(
+                                            countryCode, StringUtils.EMPTY_STRING, episode,
+                                            minimalDate.atStartOfDay(ZoneId.of(countryCode.timezone))
+                                        )
+                                    }.getOrElse { emptyList() }
+                                }
+                        }
                         else -> emptyList()
                     }
                 }
