@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
+import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import java.io.File
@@ -23,7 +24,7 @@ class PrimeVideoPlatform :
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
-        val episodes = PrimeVideoWrapper.getEpisodesByShowId(key.countryCode, key.primeVideoSimulcast.name)
+        val episodes = HttpRequest.retry(3) { PrimeVideoWrapper.getEpisodesByShowId(key.countryCode, key.primeVideoSimulcast.name) }
 
         return episodes.flatMap {
             try {
