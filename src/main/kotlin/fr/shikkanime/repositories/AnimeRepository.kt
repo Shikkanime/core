@@ -144,8 +144,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
             val entityRoot = entityQuery.from(getEntityClass())
             entityQuery.where(entityRoot[Anime_.uuid].`in`(sortedPagedIds))
 
-            val entities = createReadOnlyQuery(entityManager, entityQuery).resultList.toList()
-            val sortedEntities = entities.sortedByDescending { anime -> searchResults[anime.uuid] }
+            val entitiesMap = createReadOnlyQuery(entityManager, entityQuery).resultList.associateBy { it.uuid }
+            val sortedEntities = sortedPagedIds.mapNotNull { entitiesMap[it] }
 
             Pageable(
                 sortedEntities.toSet(),
