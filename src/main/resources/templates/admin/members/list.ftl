@@ -1,4 +1,5 @@
 <#import "../_navigation.ftl" as navigation />
+<#import "../macros/pagination.ftl" as ui>
 
 <@navigation.display>
     <div x-data="{
@@ -6,10 +7,9 @@
         pageable: {},
         page: 1,
         maxPage: 1,
-        pages: [],
+        limit: 15,
         async init() {
             await this.fetchMembers();
-            this.pages = this.generatePageNumbers(this.page, this.maxPage);
         },
         async fetchMembers() {
             if (this.loading) {
@@ -17,7 +17,7 @@
             }
 
             this.loading = true;
-            this.pageable = await getMembers(this.page);
+            this.pageable = await getMembers(this.page, this.limit);
             this.loading = false;
 
             this.maxPage = Math.ceil(this.pageable.total / this.pageable.limit);
@@ -25,36 +25,12 @@
         async setPage(newPage) {
             this.page = newPage;
             await this.fetchMembers();
-            this.pages = this.generatePageNumbers(this.page, this.maxPage);
-        },
-        generatePageNumbers(currentPage, maxPage) {
-            if (currentPage === 0 || maxPage === 0) {
-                return [];
-            }
-
-            const delta = 3;
-            const range = [];
-            for (let i = Math.max(2, currentPage - delta); i <= Math.min(maxPage - 1, currentPage + delta); i++) {
-                range.push(i);
-            }
-
-            if (currentPage - delta > 2) {
-                range.unshift('...');
-            }
-
-            if (currentPage + delta < maxPage - 1) {
-                range.push('..');
-            }
-
-            range.unshift(1);
-
-            if (maxPage !== 1) {
-                range.push(maxPage);
-            }
-
-            return range;
         }
     }" x-init="init">
+        <div class="row g-3 align-items-center mb-3">
+            <@ui.pageSizeSelector />
+            <@ui.alpinePagination />
+        </div>
         <table class="table table-striped table-bordered">
             <thead>
             <tr>
@@ -93,31 +69,13 @@
             </template>
             </tbody>
         </table>
-
-        <div class="mt-3">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item" :class="{ disabled: page === 1 }">
-                        <a class="page-link" @click="setPage(1)">&laquo;</a>
-                    </li>
-                    <template x-for="i in pages">
-                        <li class="page-item" :class="{ active: page === i }">
-                            <a class="page-link" @click="setPage(i)" x-text="i"></a>
-                        </li>
-                    </template>
-                    <li class="page-item" :class="{ disabled: page === maxPage || maxPage === 0 }">
-                        <a class="page-link" @click="setPage(maxPage)">&raquo;</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
     </div>
 
     <script>
-        async function getMembers(page) {
+        async function getMembers(page, limit) {
             let params = new URLSearchParams({
                 page: page || 1,
-                limit: 14
+                limit: limit
             });
 
             try {
