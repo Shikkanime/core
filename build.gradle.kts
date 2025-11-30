@@ -50,6 +50,8 @@ application {
         "-Dio.ktor.development=$isDevelopment",
         "--add-modules",
         "jdk.incubator.vector",
+        "-XX:+HeapDumpOnOutOfMemoryError",
+        "-XX:HeapDumpPath=./dumps/java_pid.hprof"
     )
 }
 
