@@ -38,6 +38,7 @@ services:
       VALKEY_HOST: "shikkanime-valkey"
     volumes:
       - ./data:/app/data/
+      - ./dumps:/app/dumps/
     healthcheck:
       test: curl --fail http://localhost:37100/ || exit 1
       interval: 30s

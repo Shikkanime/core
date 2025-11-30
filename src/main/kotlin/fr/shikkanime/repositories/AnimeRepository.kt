@@ -105,34 +105,53 @@ class AnimeRepository : AbstractRepository<Anime>() {
         limit: Int,
         searchTypes: Array<LangType>?
     ): Pageable<Anime> {
-        return database.entityManager.use {
-            val ids = (Search.session(it).search(getEntityClass())
-                // Select id and score
+        return database.entityManager.use { entityManager ->
+            val searchResults = (Search.session(entityManager).search(getEntityClass())
                 .select { s -> s.composite(s.id(), s.score()) }
                 .where { w -> w.bool().must(w.match().field(Anime_.NAME).matching(name)) }
                 .fetchAll().hits().filterIsInstance<List<Any>>())
-                .map { array -> Pair(array[0] as UUID, array[1] as Float) }
+                .associate { array -> (array[0] as UUID) to (array[1] as Float) }
 
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
-            val predicates = mutableListOf<Predicate>(root[Anime_.uuid].`in`(ids.map { pair -> pair.first }))
-            val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
+            if (searchResults.isEmpty()) {
+                return@use Pageable(emptySet(), page, limit, 0)
+            }
 
-            query.where(
-                *predicates.toTypedArray(),
-                if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
-            )
+            val cb = entityManager.criteriaBuilder
+            val countQuery = cb.createQuery(UUID::class.java)
+            val root = countQuery.from(getEntityClass())
 
-            val list = createReadOnlyQuery(it, query)
-                .resultList
-                .sortedByDescending { anime -> ids.first { pair -> pair.first == anime.uuid }.second }
+            val queryPredicates = mutableListOf<Predicate>(root[Anime_.uuid].`in`(searchResults.keys))
+            val orPredicate = predicates(countryCode, queryPredicates, cb, root, searchTypes)
+
+            countQuery.distinct(true)
+                .select(root[Anime_.uuid]).where(
+                    *queryPredicates.toTypedArray(),
+                    if (orPredicate.isNotEmpty()) cb.or(*orPredicate.toTypedArray()) else cb.conjunction()
+                )
+
+            val filteredIds = entityManager.createQuery(countQuery).resultList.toList()
+
+            val sortedPagedIds = filteredIds
+                .sortedByDescending { uuid -> searchResults[uuid] }
+                .drop((page - 1) * limit)
+                .take(limit)
+
+            if (sortedPagedIds.isEmpty()) {
+                return@use Pageable(emptySet(), page, limit, filteredIds.size.toLong())
+            }
+
+            val entityQuery = cb.createQuery(getEntityClass())
+            val entityRoot = entityQuery.from(getEntityClass())
+            entityQuery.where(entityRoot[Anime_.uuid].`in`(sortedPagedIds))
+
+            val entities = createReadOnlyQuery(entityManager, entityQuery).resultList.toList()
+            val sortedEntities = entities.sortedByDescending { anime -> searchResults[anime.uuid] }
 
             Pageable(
-                list.asSequence().drop((page - 1) * limit).take(limit).toSet(),
+                sortedEntities.toSet(),
                 page,
                 limit,
-                list.size.toLong()
+                filteredIds.size.toLong()
             )
         }
     }
