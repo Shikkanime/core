@@ -1,4 +1,5 @@
 <#import "../_navigation.ftl" as navigation />
+<#import "../macros/pagination.ftl" as ui>
 
 <@navigation.display>
     <style>
@@ -231,14 +232,7 @@
                     <i class="bi bi-search search-icon"></i>
                 </div>
             </div>
-            <div class="col-auto">
-                <select class="form-select" x-model="limit" @change="setPage(1); applyFilters()">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
-                    <option value="15">15</option>
-                    <option value="30">30</option>
-                </select>
-            </div>
+            <@ui.pageSizeSelector />
             <div class="col-auto" x-show="updateAll.uuids.length > 0">
                 <div class="position-relative">
                     <div class="input-group z-0">
@@ -254,20 +248,7 @@
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger z-1" x-text="updateAll.uuids.length"></span>
                 </div>
             </div>
-            <div class="col-auto ms-auto text-muted d-flex align-items-center">
-                <div>
-                    <span x-text="((page - 1) * limit) + 1"></span>-<span x-text="Math.min(page * limit, pageable.total)"></span> of <span x-text="pageable.total"></span>
-                </div>
-
-                <div class="ms-2">
-                    <a class="text-muted text-decoration-none btn btn-light" @click="setPage(Math.max(1, page - 1))" :class="{disabled: page === 1}">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                    <a class="text-muted text-decoration-none btn btn-light" @click="setPage(Math.min(maxPage, page + 1))" :class="{disabled: page === maxPage}">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </div>
-            </div>
+            <@ui.alpinePagination />
         </div>
 
         <table class="table table-striped table-bordered">
