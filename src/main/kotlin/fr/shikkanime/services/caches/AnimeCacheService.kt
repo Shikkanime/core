@@ -6,6 +6,7 @@ import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
 import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.*
@@ -13,19 +14,20 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
+import fr.shikkanime.factories.impl.SeasonFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.SerializationUtils
 import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
-import java.time.ZonedDateTime
 import java.util.*
 
 class AnimeCacheService : ICacheService {
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var seasonFactory: SeasonFactory
 
     fun findAll() = MapCache.getOrCompute(
         "AnimeCacheService.findAll",
@@ -93,21 +95,29 @@ class AnimeCacheService : ICacheService {
             .toTypedArray()
     }
 
+    fun getAudioLocales(animeUuid: UUID) = MapCache.getOrCompute(
+        "AnimeCacheService.getAudioLocales",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
+        serializationType = SerializationUtils.SerializationType.JSON,
+        key = animeUuid,
+    ) { uuid -> animeService.findAllAudioLocales(uuid).distinct().toTypedArray() }
+
     fun getLangTypes(anime: Anime) = MapCache.getOrCompute(
         "AnimeCacheService.getLangTypes",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<LangType>>>() {},
         serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.countryCode!! to anime.uuid!!,
-    ) { (countryCode, uuid) -> animeService.findAllAudioLocales(uuid).map { LangType.fromAudioLocale(countryCode, it) }.sorted().toTypedArray() }
+    ) { (countryCode, uuid) -> getAudioLocales(uuid).map { LangType.fromAudioLocale(countryCode, it) }.sorted().toTypedArray() }
 
-    fun getSeasons(anime: Anime) = MapCache.getOrCompute(
-        "AnimeCacheService.getSeasons",
+    fun findAllSeasons(anime: Anime) = MapCache.getOrCompute(
+        "AnimeCacheService.findAllSeasons",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-        typeToken = object : TypeToken<MapCacheValue<HashMap<Int, ZonedDateTime>>>() {},
+        typeToken = object : TypeToken<MapCacheValue<Array<SeasonDto>>>() {},
         serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.uuid!!,
-    ) { uuid -> HashMap(animeService.findAllSeasons(uuid)) }
+    ) { uuid -> animeService.findAllSeasons(uuid).map(seasonFactory::toDto).toTypedArray() }
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "AnimeCacheService.find",

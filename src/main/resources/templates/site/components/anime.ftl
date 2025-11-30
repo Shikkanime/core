@@ -1,4 +1,5 @@
 <#import "langType.ftl" as langTypeComponent />
+<#import "../seo/json-ld.ftl" as jsonLd />
 
 <#macro display anime>
     <#assign animeSanitized = anime.shortName?html />
@@ -14,11 +15,13 @@
                         <div class="platforms">
                             <#assign platforms = []>
 
-                            <#list anime.platformIds as platform>
-                                <#if platforms?filter(p -> p.id == platform.platform.id)?size == 0>
-                                    <#assign platforms = platforms + [platform.platform]>
-                                </#if>
-                            </#list>
+                            <#if anime.platformIds??>
+                                <#list anime.platformIds as platform>
+                                    <#if platforms?filter(p -> p.id == platform.platform.id)?size == 0>
+                                        <#assign platforms = platforms + [platform.platform]>
+                                    </#if>
+                                </#list>
+                            </#if>
 
                             <#list platforms as platform>
                                 <img loading="lazy" src="${baseUrl}/assets/img/platforms/${platform.image}"
@@ -50,6 +53,8 @@
                     </#if>
                 </div>
             </a>
+
+            <@jsonLd.anime anime=anime />
         </article>
     </div>
 </#macro>

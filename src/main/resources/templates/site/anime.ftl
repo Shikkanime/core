@@ -1,6 +1,7 @@
 <#import "_navigation.ftl" as navigation />
 <#import "components/episode-mapping.ftl" as episodeMappingComponent />
 <#import "components/langType.ftl" as langTypeComponent />
+<#import "./seo/json-ld.ftl" as jsonLd />
 
 <#assign canonicalUrl = baseUrl + "/animes/" + anime.slug>
 
@@ -163,4 +164,6 @@
             </#if>
         </div>
     </#if>
+
+    <@jsonLd.anime anime=anime />
 </@navigation.display>
