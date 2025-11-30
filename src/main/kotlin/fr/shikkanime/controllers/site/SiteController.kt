@@ -143,7 +143,7 @@ class SiteController {
     @Get
     private fun animeDetailBySeason(
         @PathParam slug: String,
-        @PathParam season: Int,
+        @PathParam season: Int?,
         @QueryParam page: Int?,
         @QueryParam sort: String?,
     ) = getAnimeDetail(slug, season, page, sort)

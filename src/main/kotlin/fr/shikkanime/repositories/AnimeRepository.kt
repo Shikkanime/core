@@ -4,6 +4,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
+import fr.shikkanime.entities.miscellaneous.Season
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.JoinType
@@ -275,17 +276,20 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllSeasons(uuid: UUID): Map<Int, ZonedDateTime> {
+    fun findAllSeasons(uuid: UUID): List<Season> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createTupleQuery()
+            val query = cb.createQuery(Season::class.java)
             val root = query.from(getEntityClass())
             val mappingJoin = root.join(Anime_.mappings)
 
             query.select(
-                cb.tuple(
+                cb.construct(
+                    Season::class.java,
                     mappingJoin[EpisodeMapping_.season],
-                    cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime])
+                    cb.least(mappingJoin[EpisodeMapping_.releaseDateTime]),
+                    cb.greatest(mappingJoin[EpisodeMapping_.lastReleaseDateTime]),
+                    cb.count(mappingJoin[EpisodeMapping_.uuid])
                 )
             ).where(cb.equal(mappingJoin[EpisodeMapping_.anime][Anime_.uuid], uuid))
                 .groupBy(mappingJoin[EpisodeMapping_.season])
@@ -293,7 +297,6 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
-                .associate { tuple -> tuple[0, Int::class.java] to tuple[1, ZonedDateTime::class.java] }
         }
     }
 
