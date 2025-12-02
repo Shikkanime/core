@@ -6,7 +6,6 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformConfiguration
 import fr.shikkanime.utils.*
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -56,7 +55,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     abstract fun getPlatform(): Platform
     abstract fun getConfigurationClass(): Class<C>
     abstract suspend fun fetchApiContent(key: K, zonedDateTime: ZonedDateTime): V
-    abstract fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File? = null): List<Episode>
+    abstract suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File? = null): List<Episode>
 
     fun reset() {
         apiCache.clear()
@@ -73,9 +72,9 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         return currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0
     }
 
-    fun getApiContent(key: K, currentTime: ZonedDateTime): V {
+    suspend fun getApiContent(key: K, currentTime: ZonedDateTime): V {
         if (shouldFetchContent(key, currentTime)) {
-            val result = runCatching { runBlocking { fetchApiContent(key, currentTime) } }
+            val result = runCatching { fetchApiContent(key, currentTime) }
                 .fold(
                     onSuccess = { fetchResult ->
                         // Succès : on met en cache avec hasError = false

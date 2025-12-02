@@ -7,7 +7,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.platforms.configuration.ReleaseDayPlatformSimulcast
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.spyk
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -38,7 +38,7 @@ class DisneyPlusPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun `fetchEpisodes should continue processing other shows when one show throws exception`() {
+    suspend fun `fetchEpisodes should continue processing other shows when one show throws exception`() {
         // Arrange: Set up two simulcasts (shows)
         val simulcast1 = ReleaseDayPlatformSimulcast(0, "show-id-1")
         val simulcast2 = ReleaseDayPlatformSimulcast(0, "show-id-2")
@@ -53,7 +53,7 @@ class DisneyPlusPlatformTest : AbstractTest() {
         val key2 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast2)
 
         // First show throws an exception
-        every { platformSpy.getApiContent(key1, zonedDateTime) } throws RuntimeException("Test exception for show 1")
+        coEvery { platformSpy.getApiContent(key1, zonedDateTime) } throws RuntimeException("Test exception for show 1")
 
         // Second show returns valid episodes
         val validEpisode = AbstractPlatform.Episode(
@@ -83,7 +83,7 @@ class DisneyPlusPlatformTest : AbstractTest() {
             original = true
         )
 
-        every { platformSpy.getApiContent(key2, zonedDateTime) } returns listOf(validEpisode)
+        coEvery { platformSpy.getApiContent(key2, zonedDateTime) } returns listOf(validEpisode)
 
         // Act: Call fetchEpisodes
         val result = platformSpy.fetchEpisodes(zonedDateTime, null)
@@ -97,7 +97,7 @@ class DisneyPlusPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun `fetchEpisodes should return empty list when all shows throw exceptions`() {
+    suspend fun `fetchEpisodes should return empty list when all shows throw exceptions`() {
         // Arrange: Set up two simulcasts that both fail
         val simulcast1 = ReleaseDayPlatformSimulcast(0, "show-id-1")
         val simulcast2 = ReleaseDayPlatformSimulcast(0, "show-id-2")
@@ -111,8 +111,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
         val key2 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast2)
 
         // Both shows throw exceptions
-        every { platformSpy.getApiContent(key1, zonedDateTime) } throws RuntimeException("Test exception for show 1")
-        every { platformSpy.getApiContent(key2, zonedDateTime) } throws NullPointerException("Test exception for show 2")
+        coEvery { platformSpy.getApiContent(key1, zonedDateTime) } throws RuntimeException("Test exception for show 1")
+        coEvery { platformSpy.getApiContent(key2, zonedDateTime) } throws NullPointerException("Test exception for show 2")
 
         // Act: Call fetchEpisodes
         val result = platformSpy.fetchEpisodes(zonedDateTime, null)
@@ -123,7 +123,7 @@ class DisneyPlusPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun `fetchEpisodes should process all shows successfully when no exceptions occur`() {
+    suspend fun `fetchEpisodes should process all shows successfully when no exceptions occur`() {
         // Arrange: Set up two simulcasts that both succeed
         val simulcast1 = ReleaseDayPlatformSimulcast(0, "show-id-1")
         val simulcast2 = ReleaseDayPlatformSimulcast(0, "show-id-2")
@@ -190,8 +190,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
             original = true
         )
 
-        every { platformSpy.getApiContent(key1, zonedDateTime) } returns listOf(episode1)
-        every { platformSpy.getApiContent(key2, zonedDateTime) } returns listOf(episode2)
+        coEvery { platformSpy.getApiContent(key1, zonedDateTime) } returns listOf(episode1)
+        coEvery { platformSpy.getApiContent(key2, zonedDateTime) } returns listOf(episode2)
 
         // Act: Call fetchEpisodes
         val result = platformSpy.fetchEpisodes(zonedDateTime, null)

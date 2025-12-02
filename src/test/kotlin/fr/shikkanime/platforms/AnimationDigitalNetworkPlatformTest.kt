@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration.AnimationDigitalNetworkSimulcast
 import fr.shikkanime.utils.InvalidationService
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -222,16 +223,13 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
 
         val zonedDateTime = ZonedDateTime.parse(testCase.date)
 
-        val episodes = if (testCase.useApiFile) {
-            val s = testCase.date
+        val episodes = runBlocking {
             platform.fetchEpisodes(
                 zonedDateTime,
-                ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${s.replace(':', '-')}.json")?.file
-                    ?.let { File(it) },
+                (ClassLoader.getSystemClassLoader()
+                    .getResource("animation_digital_network/api-${testCase.date.replace(':', '-')}.json")?.file
+                    ?.let { File(it) }).takeIf { testCase.useApiFile },
             )
-        } else {
-            platform.fetchEpisodes(zonedDateTime)
         }
 
         testCase.assertions(episodes)

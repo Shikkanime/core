@@ -165,7 +165,7 @@ class AdminController {
 
         // Launch the job in a new thread
         Thread {
-            job.run()
+            runBlocking { job.run() }
         }.start()
 
         return Response.redirect(Link.JOBS.href)

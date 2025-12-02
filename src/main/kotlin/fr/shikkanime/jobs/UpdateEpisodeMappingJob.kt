@@ -15,7 +15,6 @@ import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.*
-import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -36,7 +35,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    override fun run() {
+    override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
         val lastImageUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2).toLong())
@@ -82,7 +81,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
     }
 
-    private fun updateEpisodeMapping(
+    private suspend fun updateEpisodeMapping(
         mapping: EpisodeMapping,
         identifiers: HashSet<String>,
         allPreviousAndNext: MutableList<Episode>,
@@ -97,7 +96,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
         val tmpIdentifiers = identifiers.toHashSet()
 
-        val episodes = variants.flatMap { variant -> runBlocking { retrievePlatformEpisode(mapping, variant, lastImageUpdateDateTime, identifiers) } }
+        val episodes = variants.flatMap { variant -> retrievePlatformEpisode(mapping, variant, lastImageUpdateDateTime, identifiers) }
             .sortedBy { it.platform.sortIndex }
 
         if (tmpIdentifiers != identifiers) {
@@ -222,7 +221,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         }
     }
 
-    private fun checkPreviousAndNextEpisodes(
+    private suspend fun checkPreviousAndNextEpisodes(
         anime: Anime,
         variants: List<EpisodeVariant>,
     ): List<Episode> {
@@ -242,24 +241,20 @@ class UpdateEpisodeMappingJob : AbstractJob {
             var nextId: String? = identifier
 
             repeat(depth) {
-                runBlocking {
-                    previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
-                    nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
+                previousId = previousId?.let { retrievePreviousEpisodes(countryCode, variant.platform!!, it) }
+                nextId = nextId?.let { retrieveNextEpisodes(countryCode, variant.platform!!, it) }
 
-                    previousId?.let { platformIds[it] = variant.platform!! }
-                    nextId?.let { platformIds[it] = variant.platform!! }
-                }
+                previousId?.let { platformIds[it] = variant.platform!! }
+                nextId?.let { platformIds[it] = variant.platform!! }
             }
         }
 
         return platformIds.flatMap { (id, platform) ->
             runCatching {
-                runBlocking {
-                    when (platform) {
-                        Platform.ANIM -> animationDigitalNetworkPlatform.convertEpisode(countryCode, AnimationDigitalNetworkCachedWrapper.getVideo(countryCode, id.toInt()), ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)
-                        Platform.CRUN -> listOf(crunchyrollPlatform.convertEpisode(countryCode, CrunchyrollCachedWrapper.getObjects(countryCode.locale, id).first(), needSimulcast = false))
-                        else -> emptyList()
-                    }
+                when (platform) {
+                    Platform.ANIM -> animationDigitalNetworkPlatform.convertEpisode(countryCode, AnimationDigitalNetworkCachedWrapper.getVideo(countryCode, id.toInt()), ZonedDateTime.now(), needSimulcast = false, checkAnimation = false)
+                    Platform.CRUN -> listOf(crunchyrollPlatform.convertEpisode(countryCode, CrunchyrollCachedWrapper.getObjects(countryCode.locale, id).first(), needSimulcast = false))
+                    else -> emptyList()
                 }
             }.onFailure { logger.warning("Error while getting previous and next episodes for $id: ${it.message}") }
                 .getOrDefault(emptyList())

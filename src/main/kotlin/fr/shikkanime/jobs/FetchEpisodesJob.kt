@@ -13,6 +13,9 @@ import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import jakarta.persistence.Tuple
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -34,7 +37,7 @@ class FetchEpisodesJob : AbstractJob {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
 
-    override fun run() {
+    override suspend fun run() {
         if (isRunning) {
             if (++lock > maxLock) {
                 logger.warning("Job is locked, unlocking...")
@@ -130,7 +133,7 @@ class FetchEpisodesJob : AbstractJob {
         return "${countryCode}_${episodeVariant.mapping!!.anime!!.uuid!!}_${episodeVariant.mapping!!.season!!}_${episodeVariant.mapping!!.episodeType!!}_${episodeVariant.mapping!!.number!!}_$langType"
     }
 
-    private fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
+    private suspend fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
         savedEpisodes
             .groupBy { it.mapping?.anime?.uuid }
             .values
@@ -143,7 +146,7 @@ class FetchEpisodesJob : AbstractJob {
             }
     }
 
-    private fun sendToSocialNetworks(episodes: List<EpisodeVariant>) {
+    private suspend fun sendToSocialNetworks(episodes: List<EpisodeVariant>) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
             ImageIO.write(MediaImage.toMediaImage(*episodes.toTypedArray()), "jpg", byteArrayOutputStream)
@@ -153,28 +156,32 @@ class FetchEpisodesJob : AbstractJob {
             null
         }
 
-        Constant.abstractSocialNetworks.parallelStream().forEach { socialNetwork ->
-            try {
-                socialNetwork.sendEpisodeRelease(episodes, mediaImage)
-            } catch (e: Exception) {
-                val title = "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork",
-                    StringUtils.EMPTY_STRING)}"
-                logger.log(Level.SEVERE, title, e)
-                val stringWriter = StringWriter()
-                e.printStackTrace(PrintWriter(stringWriter))
+        coroutineScope {
+            Constant.abstractSocialNetworks.map { socialNetwork ->
+                async {
+                    try {
+                        socialNetwork.sendEpisodeRelease(episodes, mediaImage)
+                    } catch (e: Exception) {
+                        val title = "Error while sending episode release for ${socialNetwork.javaClass.simpleName.replace("SocialNetwork",
+                            StringUtils.EMPTY_STRING)}"
+                        logger.log(Level.SEVERE, title, e)
+                        val stringWriter = StringWriter()
+                        e.printStackTrace(PrintWriter(stringWriter))
 
-                try {
-                    mailService.save(
-                        Mail(
-                            recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
-                            title = title,
-                            body = stringWriter.toString().replace("\n", "<br>")
-                        )
-                    )
-                } catch (e: Exception) {
-                    logger.warning("Error while sending mail for $title: ${e.message}")
+                        try {
+                            mailService.save(
+                                Mail(
+                                    recipient = configCacheService.getValueAsString(ConfigPropertyKey.ADMIN_EMAIL),
+                                    title = title,
+                                    body = stringWriter.toString().replace("\n", "<br>")
+                                )
+                            )
+                        } catch (e: Exception) {
+                            logger.warning("Error while sending mail for $title: ${e.message}")
+                        }
+                    }
                 }
-            }
+            }.awaitAll()
         }
     }
 }

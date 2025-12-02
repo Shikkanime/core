@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.StringUtils
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
@@ -200,7 +201,7 @@ class UpdateAnimeJobTest : AbstractTest() {
         }
 
         // Exécution du job
-        updateAnimeJob.run()
+        runBlocking { updateAnimeJob.run() }
 
         // Vérifications
         val animes = animeService.findAll()
@@ -228,7 +229,7 @@ class UpdateAnimeJobTest : AbstractTest() {
     }
 
     @Test
-    fun `should handle Prime Video anime Ninja Kamui`() {
+    suspend fun `should handle Prime Video anime Ninja Kamui`() {
         val releaseDateTime = ZonedDateTime.parse("2024-02-11T15:00:00Z")
 
         val anime = animeService.save(

@@ -9,7 +9,7 @@ class DailyJob : AbstractJob {
     @Inject private lateinit var metricService: MetricService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    override fun run() {
+    override suspend fun run() {
         metricService.deleteAllBefore(ZonedDateTime.now().minusWeeks(1))
         attachmentService.cleanUnusedAttachments()
     }

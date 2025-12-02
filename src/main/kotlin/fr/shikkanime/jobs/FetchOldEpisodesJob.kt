@@ -16,7 +16,6 @@ import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
-import kotlinx.coroutines.runBlocking
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileOutputStream
@@ -38,7 +37,7 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var traceActionService: TraceActionService
 
-    override fun run() {
+    override suspend fun run() {
         val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
             logger.warning("Config ${ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key} not found")
             return
@@ -63,10 +62,8 @@ class FetchOldEpisodesJob : AbstractJob {
 
         logger.info("Fetching old episodes... (From ${dates.first()} to ${dates.last()})")
 
-        runBlocking {
-            episodes.addAll(CountryCode.entries.flatMap { fetchAnimationDigitalNetwork(it, dates) })
-            episodes.addAll(CountryCode.entries.flatMap { fetchLiveChart(it, dates) })
-        }
+        episodes.addAll(CountryCode.entries.flatMap { fetchAnimationDigitalNetwork(it, dates) })
+        episodes.addAll(CountryCode.entries.flatMap { fetchLiveChart(it, dates) })
 
         val identifiers = episodeVariantService.findAllIdentifiers()
         episodes.removeIf { it.releaseDateTime.toLocalDate() < dates.min() || it.getIdentifier() in identifiers }

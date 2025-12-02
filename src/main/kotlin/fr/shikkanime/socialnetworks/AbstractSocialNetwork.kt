@@ -71,5 +71,5 @@ abstract class AbstractSocialNetwork {
     protected fun getInternalUrl(variants: List<EpisodeVariant>) =
         "${Constant.baseUrl}/r/${variants.first().uuid}"
 
-    abstract fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?)
+    abstract suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?)
 }

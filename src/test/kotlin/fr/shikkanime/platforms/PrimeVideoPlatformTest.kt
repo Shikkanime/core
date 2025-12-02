@@ -153,7 +153,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun `should use cache within API check delay period`() {
+    suspend fun `should use cache within API check delay period`() {
         // Setup test configuration
         val testCase = primeVideoTestCases().findFirst().get()
         val zonedDateTime = ZonedDateTime.parse(testCase.testDate)

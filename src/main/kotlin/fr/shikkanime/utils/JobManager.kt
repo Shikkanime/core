@@ -5,6 +5,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.caches.ConfigCacheService
+import kotlinx.coroutines.runBlocking
 import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
 import java.time.ZonedDateTime
@@ -61,7 +62,7 @@ object JobManager {
             val now = ZonedDateTime.now()
 
             try {
-                job.run()
+                runBlocking { job.run() }
 
                 if (jobErrors.containsKey(jobClassName)) {
                     val errors = jobErrors[jobClassName] ?: return

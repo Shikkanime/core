@@ -8,6 +8,7 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.utils.InvalidationService
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
@@ -406,7 +407,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
         InvalidationService.invalidateAll()
 
         // Run the job
-        updateEpisodeMappingJob.run()
+        runBlocking { updateEpisodeMappingJob.run() }
 
         // Verify results
         val animes = animeService.findAll()

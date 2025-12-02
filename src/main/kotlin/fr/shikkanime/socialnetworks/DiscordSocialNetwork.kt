@@ -94,7 +94,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
         require(variants.isNotEmpty()) { "Variants must not be empty" }
         require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
 

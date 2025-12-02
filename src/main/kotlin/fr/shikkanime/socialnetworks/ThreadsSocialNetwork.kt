@@ -7,7 +7,6 @@ import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.ThreadsWrapper
-import kotlinx.coroutines.runBlocking
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.logging.Level
@@ -47,7 +46,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
         require(variants.isNotEmpty()) { "Variants must not be empty" }
         require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
 
@@ -59,26 +58,24 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
                 configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
             )
 
-        runBlocking {
-            val firstPost = ThreadsWrapper.post(
-                    token!!,
-                    ThreadsWrapper.PostType.IMAGE,
-                    message,
-                    imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=${URLEncoder.encode(EncryptionManager.toGzip(variants.joinToString(StringUtils.COMMA_STRING) { it.uuid.toString() }),
-                        StandardCharsets.UTF_8)}",
-                    altText = "Image de l'épisode ${variants.first().mapping!!.number} de ${StringUtils.getShortName(variants.first().mapping!!.anime!!.name!!)}"
-                )
+        val firstPost = ThreadsWrapper.post(
+            token!!,
+            ThreadsWrapper.PostType.IMAGE,
+            message,
+            imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=${URLEncoder.encode(EncryptionManager.toGzip(variants.joinToString(StringUtils.COMMA_STRING) { it.uuid.toString() }),
+                StandardCharsets.UTF_8)}",
+            altText = "Image de l'épisode ${variants.first().mapping!!.number} de ${StringUtils.getShortName(variants.first().mapping!!.anime!!.name!!)}"
+        )
 
-                val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)
+        val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)
 
-                if (!secondMessage.isNullOrBlank()) {
-                    ThreadsWrapper.post(
-                        token!!,
-                        ThreadsWrapper.PostType.TEXT,
-                        getEpisodeMessage(variants, secondMessage),
-                        replyToId = firstPost
-                    )
-                }
+        if (!secondMessage.isNullOrBlank()) {
+            ThreadsWrapper.post(
+                token!!,
+                ThreadsWrapper.PostType.TEXT,
+                getEpisodeMessage(variants, secondMessage),
+                replyToId = firstPost
+            )
         }
     }
 }

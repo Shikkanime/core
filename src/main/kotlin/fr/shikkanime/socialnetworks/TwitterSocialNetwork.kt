@@ -5,7 +5,6 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.TwitterWrapper
-import kotlinx.coroutines.runBlocking
 import java.util.*
 import java.util.logging.Level
 
@@ -56,41 +55,39 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
         if (authParams == null) return
 
-        runBlocking {
-            val firstMessage = getEpisodeMessage(
-                variants,
-                configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
-            )
+        val firstMessage = getEpisodeMessage(
+            variants,
+            configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
+        )
 
-            val mediaIds = runCatching {
-                mediaImage?.let {
-                    listOf(
-                        TwitterWrapper.uploadMediaChunked(
-                            authParams!!,
-                            TwitterWrapper.MediaCategory.TWEET_IMAGE,
-                            TwitterWrapper.MediaType.IMAGE_JPEG,
-                            UUID.randomUUID().toString(),
-                            it
-                        )
+        val mediaIds = runCatching {
+            mediaImage?.let {
+                listOf(
+                    TwitterWrapper.uploadMediaChunked(
+                        authParams!!,
+                        TwitterWrapper.MediaCategory.TWEET_IMAGE,
+                        TwitterWrapper.MediaType.IMAGE_JPEG,
+                        UUID.randomUUID().toString(),
+                        it
                     )
-                }
-            }.getOrNull()?.takeIf { it.isNotEmpty() }
-
-            val firstTweetId = TwitterWrapper.createTweet(authParams!!, mediaIds = mediaIds, text = firstMessage)
-            val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)
-
-            if (!secondMessage.isNullOrBlank()) {
-                TwitterWrapper.createTweet(
-                    authParams!!,
-                    inReplyToTweetId = firstTweetId,
-                    text = getEpisodeMessage(variants, secondMessage)
                 )
             }
+        }.getOrNull()?.takeIf { it.isNotEmpty() }
+
+        val firstTweetId = TwitterWrapper.createTweet(authParams!!, mediaIds = mediaIds, text = firstMessage)
+        val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)
+
+        if (!secondMessage.isNullOrBlank()) {
+            TwitterWrapper.createTweet(
+                authParams!!,
+                inReplyToTweetId = firstTweetId,
+                text = getEpisodeMessage(variants, secondMessage)
+            )
         }
     }
 }

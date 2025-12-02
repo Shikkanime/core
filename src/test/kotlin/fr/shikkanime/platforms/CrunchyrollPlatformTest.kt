@@ -141,13 +141,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val formattedDate = testCase.testDate.replace(':', '-')
         
         // Load episodes from test JSON file
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
-                    ?: throw Exception("File not found")
-            )
-        ).filterNot { it.anime != testCase.expectedAnimeName }
+        val episodes = runBlocking {
+            platform.fetchEpisodes(
+                zonedDateTime,
+                File(
+                    ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
+                        ?: throw Exception("File not found")
+                )
+            ).filterNot { it.anime != testCase.expectedAnimeName }
+        }
         
         // Verify common expectations
         assertEquals(testCase.expectedEpisodes, episodes.isNotEmpty())
@@ -213,13 +215,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val zonedDateTime = ZonedDateTime.parse(testDate)
         val formattedDate = testDate.replace(':', '-')
         
-        val episodes = platform.fetchEpisodes(
-            zonedDateTime,
-            File(
-                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
-                    ?: throw Exception("File not found")
+        val episodes = runBlocking {
+            platform.fetchEpisodes(
+                zonedDateTime,
+                File(
+                    ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
+                        ?: throw Exception("File not found")
+                )
             )
-        )
+        }
         
         // Verify specific exclusions for March 28, 2025
         assertTrue(episodes.none { it.anime == "Teogonia" })
@@ -360,7 +364,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun `should not find en-US locale`() {
+    suspend fun `should not find en-US locale`() {
         val testDate = "2025-11-25T18:00:00Z"
         val zonedDateTime = ZonedDateTime.parse(testDate)
         val formattedDate = testDate.replace(':', '-')

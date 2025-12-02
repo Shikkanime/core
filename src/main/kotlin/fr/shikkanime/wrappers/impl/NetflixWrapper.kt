@@ -16,14 +16,13 @@ import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.ZonedDateTime
 
 object NetflixWrapper : AbstractNetflixWrapper() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private fun getNetflixAuthentificationFromConfig() = MapCache.getOrCompute(
+    private suspend fun getNetflixAuthentificationFromConfig() = MapCache.getOrComputeAsync(
         "NetflixWrapper.getNetflixAuthentificationFromConfig",
         typeToken = object : TypeToken<MapCacheValue<NetflixAuthentification>>() {},
         duration = Duration.ofHours(1),
@@ -34,7 +33,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
         val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
         require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true) { "NetflixId and NetflixSecureId must be set in the configuration" }
-        val authUrl = runBlocking { extractAuthUrl(httpRequest.get(baseUrl, mapOf(HttpHeaders.Cookie to getCookieValue(netflixId, netflixSecureId))).bodyAsText()) }
+        val authUrl = extractAuthUrl(httpRequest.get(baseUrl, mapOf(HttpHeaders.Cookie to getCookieValue(netflixId, netflixSecureId))).bodyAsText())
         NetflixAuthentification(netflixId, netflixSecureId, authUrl)
     }
 

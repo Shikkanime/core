@@ -16,7 +16,7 @@ class UpdateAttachmentJob : AbstractJob {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    override fun run() {
+    override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ATTACHMENT_DELAY, 30).toLong())
         val attachments = attachmentService.findAllNeededUpdate(lastUpdateDateTime).shuffled().toList()
