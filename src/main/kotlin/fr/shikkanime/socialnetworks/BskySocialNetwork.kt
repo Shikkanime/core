@@ -65,7 +65,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
 
@@ -75,37 +75,33 @@ class BskySocialNetwork : AbstractSocialNetwork() {
                 configCacheService.getValueAsString(ConfigPropertyKey.BSKY_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
             )
 
-        val firstRecord = runBlocking {
-            BskyWrapper.createRecord(
-                accessJwt!!,
-                did!!,
-                firstMessage,
-                mediaImage?.let {
-                    listOf(
-                        BskyWrapper.Image(
-                            BskyWrapper.uploadBlob(
-                                accessJwt!!,
-                                ContentType.Image.JPEG,
-                                it
-                            )
+        val firstRecord = BskyWrapper.createRecord(
+            accessJwt!!,
+            did!!,
+            firstMessage,
+            mediaImage?.let {
+                listOf(
+                    BskyWrapper.Image(
+                        BskyWrapper.uploadBlob(
+                            accessJwt!!,
+                            ContentType.Image.JPEG,
+                            it
                         )
                     )
-                } ?: emptyList()
-            )
-        }
+                )
+            } ?: emptyList()
+        )
 
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.BSKY_SECOND_MESSAGE)
 
         if (!secondMessage.isNullOrBlank()) {
-            runBlocking {
-                BskyWrapper.createRecord(
-                    accessJwt!!,
-                    did!!,
-                    getEpisodeMessage(variants, secondMessage.replace("{EMBED}", StringUtils.EMPTY_STRING)).trim(),
-                    replyTo = firstRecord,
-                    embed = getInternalUrl(variants).takeIf { "{EMBED}" in secondMessage }
-                )
-            }
+            BskyWrapper.createRecord(
+                accessJwt!!,
+                did!!,
+                getEpisodeMessage(variants, secondMessage.replace("{EMBED}", StringUtils.EMPTY_STRING)).trim(),
+                replyTo = firstRecord,
+                embed = getInternalUrl(variants).takeIf { "{EMBED}" in secondMessage }
+            )
         }
     }
 }

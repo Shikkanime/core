@@ -35,7 +35,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetfli
             }
         }
 
-    override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
+    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
         configuration!!.simulcasts
             .filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
             .flatMap { simulcast ->

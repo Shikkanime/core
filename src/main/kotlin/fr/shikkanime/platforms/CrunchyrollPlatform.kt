@@ -11,7 +11,6 @@ import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.CrunchyrollCachedWrapper
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
@@ -35,7 +34,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
     }
 
-    override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
+    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
@@ -48,23 +47,21 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
             // Preload all series
             runCatching {
-                runBlocking {
-                    CrunchyrollCachedWrapper.getObjects(
-                        countryCode.locale,
-                        *api.mapNotNull { it.episodeMetadata?.seriesId }.distinct().toTypedArray()
-                    )
-                }
+                CrunchyrollCachedWrapper.getObjects(
+                    countryCode.locale,
+                    *api.mapNotNull { it.episodeMetadata?.seriesId }.distinct().toTypedArray()
+                )
             }
 
             api.forEach { addToList(list, countryCode, it) }
 
-            runBlocking { list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, bypassFileContent?.exists() != true, list)) }
+            list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, bypassFileContent?.exists() != true || configCacheService.getValueAsBoolean(ConfigPropertyKey.CRUNCHYROLL_CHECK_SERIES_SIMULCAST, true), list))
         }
 
         return list
     }
 
-    private fun addToList(
+    private suspend fun addToList(
         list: MutableList<Episode>,
         countryCode: CountryCode,
         browseObject: AbstractCrunchyrollWrapper.BrowseObject
@@ -169,7 +166,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 ?.convertToBrowseObject()
     }
 
-    fun convertEpisode(
+    suspend fun convertEpisode(
         countryCode: CountryCode,
         browseObject: AbstractCrunchyrollWrapper.BrowseObject,
         needSimulcast: Boolean = true
@@ -204,9 +201,9 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         if (browseObject.episodeMetadata.audioLocale !in allowedAudioLocales)
             throw EpisodeException("Episode audio locale (${browseObject.episodeMetadata.audioLocale}) is not available in ${countryCode.name}")
 
-        val crunchyrollAnimeContent = runBlocking { CrunchyrollCachedWrapper.getObjects(countryCode.locale, browseObject.episodeMetadata.seriesId).first() }
+        val crunchyrollAnimeContent = CrunchyrollCachedWrapper.getObjects(countryCode.locale, browseObject.episodeMetadata.seriesId).first()
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
-        val season = runBlocking { CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId) }
+        val season = CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId)
 
         val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
 

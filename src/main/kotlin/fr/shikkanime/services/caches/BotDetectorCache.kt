@@ -9,7 +9,6 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.io.StringReader
 import java.net.InetAddress
 import java.util.concurrent.CopyOnWriteArraySet
@@ -48,85 +47,78 @@ class BotDetectorCache : ICacheService {
         } else clientIp == botIp
     }
 
-    private fun getGoodBotsIPs() = MapCache.getOrCompute(
+    private suspend fun getGoodBotsIPs() = MapCache.getOrComputeAsync(
         "BotDetectorCache.getGoodBotsIPs",
         typeToken = object : TypeToken<MapCacheValue<CopyOnWriteArraySet<String>>>() {},
         serializationType = SerializationUtils.SerializationType.OBJECT,
         key = StringUtils.EMPTY_STRING
     ) {
-        runBlocking {
-            val response =
-                httpRequest.get("https://raw.githubusercontent.com/AnTheMaker/GoodBots/refs/heads/main/all.ips")
+        val response =
+            httpRequest.get("https://raw.githubusercontent.com/AnTheMaker/GoodBots/refs/heads/main/all.ips")
 
-            if (response.status != HttpStatusCode.OK) {
-                logger.severe("Failed to fetch good bots IPs: ${response.status}")
-                return@runBlocking CopyOnWriteArraySet()
-            }
-
-            CopyOnWriteArraySet(response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) })
+        if (response.status != HttpStatusCode.OK) {
+            logger.severe("Failed to fetch good bots IPs: ${response.status}")
+            return@getOrComputeAsync CopyOnWriteArraySet()
         }
+
+        CopyOnWriteArraySet(response.bodyAsText().split("\n").filter { it.isNotBlank() && ipv4Regex.matches(it) })
     }
 
-    private fun getGoodBotsRegex() = MapCache.getOrCompute(
+    private suspend fun getGoodBotsRegex() = MapCache.getOrComputeAsync(
         "BotDetectorCache.getGoodBotsRegex",
         typeToken = object : TypeToken<MapCacheValue<CopyOnWriteArraySet<String>>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
-        runBlocking {
-            val response = httpRequest.get("https://raw.githubusercontent.com/matomo-org/device-detector/refs/heads/master/regexes/bots.yml")
+        val response = httpRequest.get("https://raw.githubusercontent.com/matomo-org/device-detector/refs/heads/master/regexes/bots.yml")
 
-            if (response.status != HttpStatusCode.OK) {
-                logger.severe("Failed to fetch good bots regex: ${response.status}")
-                return@runBlocking CopyOnWriteArraySet()
-            }
-
-            val bodyAsText = response.bodyAsText()
-            val mapper = ObjectMapper(YAMLFactory())
-            val yaml = mapper.readTree(StringReader(bodyAsText))
-
-            CopyOnWriteArraySet(yaml.map { it["regex"].asText() })
+        if (response.status != HttpStatusCode.OK) {
+            logger.severe("Failed to fetch good bots regex: ${response.status}")
+            return@getOrComputeAsync CopyOnWriteArraySet()
         }
+
+        val bodyAsText = response.bodyAsText()
+        val mapper = ObjectMapper(YAMLFactory())
+        val yaml = mapper.readTree(StringReader(bodyAsText))
+
+        CopyOnWriteArraySet(yaml.map { it["regex"].asText() })
     }
 
-    private fun getAbuseIPs() = MapCache.getOrCompute(
+    private suspend fun getAbuseIPs() = MapCache.getOrComputeAsync(
         "BotDetectorCache.getAbuseIPs",
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
         serializationType = SerializationUtils.SerializationType.OBJECT,
         key = StringUtils.EMPTY_STRING
     ) {
-        runBlocking {
-            val response =
-                httpRequest.get("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4")
+        val response =
+            httpRequest.get("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4")
 
-            if (response.status != HttpStatusCode.OK) {
-                logger.severe("Failed to fetch abuse IPs: ${response.status}")
-                return@runBlocking arrayOf()
-            }
-
-            ipv4Regex.findAll(response.bodyAsText()).map { it.value }.filter { it.isNotBlank() }.toSet().toTypedArray()
+        if (response.status != HttpStatusCode.OK) {
+            logger.severe("Failed to fetch abuse IPs: ${response.status}")
+            return@getOrComputeAsync arrayOf()
         }
+
+        ipv4Regex.findAll(response.bodyAsText()).map { it.value }.filter { it.isNotBlank() }.toSet().toTypedArray()
     }
 
-    fun isBot(clientIp: String? = null, userAgent: String? = null) = MapCache.getOrCompute(
+    private suspend fun isKnownBotByIp(clientIp: String): Boolean {
+        return clientIp in getAbuseIPs() || getGoodBotsIPs().any { isIpInRange(clientIp, it) }
+    }
+
+    private suspend fun isKnownBotByUserAgent(userAgent: String): Boolean {
+        val regexes = getGoodBotsRegex().apply { configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.let(::add) }
+        return regexes.any { it.toRegex() in userAgent }
+    }
+
+    suspend fun isBot(clientIp: String? = null, userAgent: String? = null) = MapCache.getOrComputeAsync(
         "BotDetectorCache.isBot",
         classes = listOf(Config::class.java),
         typeToken = object : TypeToken<MapCacheValue<Boolean>>() {},
         key = clientIp to userAgent
     ) { (clientIp, userAgent) ->
-        if (clientIp != null && (clientIp in getAbuseIPs() || getGoodBotsIPs().any { isIpInRange(clientIp, it) })) {
-            return@getOrCompute true
+        when {
+            clientIp != null && isKnownBotByIp(clientIp) -> true
+            userAgent != null && isKnownBotByUserAgent(userAgent) -> true
+            else -> false
         }
-
-        if (userAgent != null) {
-            val regexes = getGoodBotsRegex().apply {
-                configCacheService.getValueAsString(ConfigPropertyKey.BOT_ADDITIONAL_REGEX)?.let(::add)
-            }
-
-            if (regexes.any { it.toRegex() in userAgent }) {
-                return@getOrCompute true
-            }
-        }
-
-        false
     }
 }

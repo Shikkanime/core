@@ -10,7 +10,7 @@ import javax.management.ObjectName
 class MetricJob : AbstractJob {
     @Inject private lateinit var metricService: MetricService
 
-    override fun run() {
+    override suspend fun run() {
         metricService.save(
             Metric(
                 cpuLoad = getProcessCPULoad(),

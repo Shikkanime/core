@@ -15,7 +15,6 @@ import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
-import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 
 class UpdateAnimeJob : AbstractJob {
@@ -37,7 +36,7 @@ class UpdateAnimeJob : AbstractJob {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    override fun run() {
+    override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val animes = animeService.findAllNeedUpdate()
         logger.info("Found ${animes.size} animes to update")
@@ -56,7 +55,7 @@ class UpdateAnimeJob : AbstractJob {
             val shortName = StringUtils.getShortName(anime.name!!)
             logger.info("Updating anime $shortName...")
             // Compare platform sort index and anime release date descending
-            val updatedAnimes = runCatching { runBlocking { fetchAnime(anime, deprecatedAnimePlatformDateTime) } }
+            val updatedAnimes = runCatching { fetchAnime(anime, deprecatedAnimePlatformDateTime) }
                 .getOrNull()
                 ?.groupBy { it.platform }
                 ?.toList()

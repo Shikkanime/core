@@ -17,7 +17,7 @@ class SendMailJob : AbstractJob {
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var configCacheService: ConfigCacheService
 
-    override fun run() {
+    override suspend fun run() {
         val mails = mailService.findAllNotSent()
 
         if (mails.isEmpty())

@@ -66,18 +66,16 @@ class AnimationDigitalNetworkPlatform :
         return latestVideos.toTypedArray()
     }
 
-    override fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
+    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            val api = if (bypassFileContent != null && bypassFileContent.exists()) {
+            val api = bypassFileContent?.takeIf { it.exists() }?.let {
                 ObjectParser.fromJson(
                     ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("videos"),
                     Array<AbstractAnimationDigitalNetworkWrapper.Video>::class.java
                 )
-            } else {
-                getApiContent(countryCode, zonedDateTime)
-            }
+            } ?: getApiContent(countryCode, zonedDateTime)
 
             api.forEach {
                 try {
