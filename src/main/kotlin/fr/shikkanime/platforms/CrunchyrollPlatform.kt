@@ -55,7 +55,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
             api.forEach { addToList(list, countryCode, it) }
 
-            list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, bypassFileContent?.exists() != true || configCacheService.getValueAsBoolean(ConfigPropertyKey.CRUNCHYROLL_CHECK_SERIES_SIMULCAST, true), list))
+            list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, bypassFileContent?.exists() != true && configCacheService.getValueAsBoolean(ConfigPropertyKey.CRUNCHYROLL_CHECK_SERIES_SIMULCAST, true), list))
         }
 
         return list
