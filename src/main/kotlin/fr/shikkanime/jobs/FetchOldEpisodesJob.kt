@@ -213,16 +213,13 @@ class FetchOldEpisodesJob : AbstractJob {
                             }.getOrElse { emptyList() }
                         }
                         Platform.NETF -> NetflixCachedWrapper.getEpisodesByShowId(countryCode, id.toInt())
-                            .flatMap { episode ->
-                                val audioLocales = episode.audioLocales.ifEmpty { setOf("ja-JP") }
-                                audioLocales.mapNotNull { audioLocale ->
-                                    runCatching {
-                                        netflixPlatform.convertEpisode(
-                                            countryCode, StringUtils.EMPTY_STRING, episode, audioLocale
-                                        )
-                                    }.getOrNull()
-                                }
-                            }
+                            .mapNotNull { episode ->
+                                runCatching {
+                                    netflixPlatform.convertEpisode(
+                                        countryCode, episode
+                                    )
+                                }.getOrNull()
+                            }.flatten()
                         Platform.PRIM -> HttpRequest.retry(3) {
                             PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode, id)
                                 .flatMap { episode ->

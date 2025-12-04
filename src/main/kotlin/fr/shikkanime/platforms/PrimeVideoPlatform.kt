@@ -10,7 +10,6 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import fr.shikkanime.wrappers.impl.PrimeVideoWrapper
 import java.io.File
-import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
@@ -41,20 +40,9 @@ class PrimeVideoPlatform :
         }
     }
 
-    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
-        val list = mutableListOf<Episode>()
-
-        configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter {
-                (it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value) &&
-                        (it.releaseTime.isBlank() || zonedDateTime.toLocalTime() >= LocalTime.parse(it.releaseTime))
-            }
-                .forEach { simulcast ->
-                    list.addAll(getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime))
-                }
-        }
-
-        return list
+    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
+        configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }
+            .flatMap { simulcast -> getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime) }
     }
 
     fun convertEpisode(

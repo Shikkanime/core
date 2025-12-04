@@ -203,9 +203,8 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
         val crunchyrollAnimeContent = CrunchyrollCachedWrapper.getObjects(countryCode.locale, browseObject.episodeMetadata.seriesId).first()
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
-        val season = CrunchyrollCachedWrapper.getSeason(countryCode.locale, browseObject.episodeMetadata.seasonId)
 
-        val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata, season)
+        val (number, episodeType) = getNumberAndEpisodeType(browseObject.episodeMetadata)
 
         val isSimulcasted = crunchyrollAnimeContent.seriesMetadata!!.isSimulcast || isDubbed || episodeType == EpisodeType.FILM
 
@@ -247,16 +246,14 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         )
     }
 
-    private fun getNumberAndEpisodeType(
-        episode: AbstractCrunchyrollWrapper.Episode,
-        season: AbstractCrunchyrollWrapper.Season
-    ): Pair<Int, EpisodeType> {
+    private fun getNumberAndEpisodeType(episode: AbstractCrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
         var number = episode.number ?: -1
         val specialEpisodeRegex = "SP(\\d*)".toRegex()
 
         var episodeType = when {
             episode.seasonSlugTitle?.contains("movie", true) == true ||
-                    season.keywords.any { it.contains("movie", true) } -> EpisodeType.FILM
+                    episode.seriesSlugTitle?.contains("movie", true) == true ||
+                    (episode.number == null && episode.durationMs > 60_000) -> EpisodeType.FILM
             number == -1 -> EpisodeType.SPECIAL
             else -> EpisodeType.EPISODE
         }

@@ -249,6 +249,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
+            StringUtils.EMPTY_STRING,
             emptyList(),
             ZonedDateTime.now(),
             StringUtils.EMPTY_STRING,
@@ -274,7 +275,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
             coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
             coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
-            val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
+            val result = platform.getNextEpisode(CountryCode.FR, "someId")
             assertEquals(expectedEpisode, result)
         }
     }
@@ -285,6 +286,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
             "",
+            StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
@@ -319,7 +321,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns arrayOf(nextEpisode)
             coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
 
-            val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
+            val result = platform.getNextEpisode(countryCode, crunchyrollId)
             assertEquals(expectedEpisode, result)
         }
     }
@@ -330,6 +332,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
             "",
+            StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
             StringUtils.EMPTY_STRING,
@@ -358,7 +361,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
             coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
             coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns arrayOf()
 
-            val result = runBlocking { platform.getNextEpisode(countryCode, crunchyrollId) }
+            val result = platform.getNextEpisode(countryCode, crunchyrollId)
             assertNull(result)
         }
     }

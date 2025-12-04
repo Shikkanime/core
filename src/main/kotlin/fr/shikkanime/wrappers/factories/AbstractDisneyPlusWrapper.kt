@@ -125,4 +125,18 @@ abstract class AbstractDisneyPlusWrapper {
     abstract suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String): Array<String>
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
+
+     suspend fun getPreviousEpisode(countryCode: CountryCode, showId: String, episodeId: String, checkAudioLocales: Boolean): Episode? {
+        val episodes = getEpisodesByShowId(countryCode, showId, checkAudioLocales)
+        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
+        require(episodeIndex != -1) { "Episode not found" }
+        return if (episodeIndex == 0) null else episodes[episodeIndex - 1]
+    }
+
+    suspend fun getNextEpisode(countryCode: CountryCode, showId: String, episodeId: String, checkAudioLocales: Boolean): Episode? {
+        val episodes = getEpisodesByShowId(countryCode, showId, checkAudioLocales)
+        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
+        require(episodeIndex != -1) { "Episode not found" }
+        return if (episodeIndex == episodes.size - 1) null else episodes[episodeIndex + 1]
+    }
 }

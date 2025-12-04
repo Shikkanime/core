@@ -1,6 +1,6 @@
 package fr.shikkanime.platforms
 
-import fr.shikkanime.caches.CountryCodeNetflixSimulcastKeyCache
+import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
@@ -10,69 +10,52 @@ import fr.shikkanime.wrappers.impl.NetflixWrapper
 import java.io.File
 import java.time.ZonedDateTime
 
-class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeNetflixSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
+class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
 
     override suspend fun fetchApiContent(
-        key: CountryCodeNetflixSimulcastKeyCache,
+        key: CountryCodeReleaseDayPlatformSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
-    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode, key.netflixSimulcast.name.toInt())
-        .flatMap { video ->
-            val audioLocales = video.audioLocales.ifEmpty { key.netflixSimulcast.audioLocales }
-            audioLocales.map { audioLocale ->
-                convertEpisode(
-                    key.countryCode,
-                    key.netflixSimulcast.image,
-                    video,
-                    audioLocale
-                ).apply {
-                    if (key.netflixSimulcast.audioLocaleHasDelay.contains(audioLocale)) {
-                        releaseDateTime = zonedDateTime
-                    }
-                }
-            }
-        }
+    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode, key.releaseDayPlatformSimulcast.name.toInt())
+        .flatMap { video -> convertEpisode(key.countryCode, video) }
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
-        configuration!!.simulcasts
-            .filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
-            .flatMap { simulcast ->
-                getApiContent(CountryCodeNetflixSimulcastKeyCache(countryCode, simulcast), zonedDateTime)
-            }
+        configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }
+            .flatMap { simulcast -> getApiContent(CountryCodeReleaseDayPlatformSimulcastKeyCache(countryCode, simulcast), zonedDateTime) }
     }
 
 
     fun convertEpisode(
         countryCode: CountryCode,
-        showImage: String,
         episode: AbstractNetflixWrapper.Episode,
-        audioLocale: String,
-    ) = Episode(
-        countryCode = countryCode,
-        animeId = episode.show.id.toString(),
-        anime = episode.show.name,
-        animeAttachments = mapOf(
-            ImageType.THUMBNAIL to (episode.show.thumbnail ?: showImage),
-            ImageType.BANNER to episode.show.banner,
-            ImageType.CAROUSEL to episode.show.carousel
-        ),
-        animeDescription = episode.show.description,
-        releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
-        episodeType = episode.episodeType,
-        seasonId = episode.season.toString(),
-        season = episode.season,
-        number = episode.number,
-        duration = episode.duration,
-        title = episode.title,
-        description = episode.description,
-        image = episode.image,
-        platform = getPlatform(),
-        audioLocale = audioLocale,
-        id = episode.id.toString(),
-        url = episode.url,
-        uncensored = false,
-        original = true,
-    )
+    ): List<Episode> = episode.audioLocales.map {
+        Episode(
+            countryCode = countryCode,
+            animeId = episode.show.id.toString(),
+            anime = episode.show.name,
+            animeAttachments = buildMap {
+                episode.show.thumbnail?.let { image -> put(ImageType.THUMBNAIL, image) }
+                put(ImageType.BANNER, episode.show.banner)
+                put(ImageType.CAROUSEL, episode.show.carousel)
+            },
+            animeDescription = episode.show.description,
+            releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
+            episodeType = episode.episodeType,
+            seasonId = episode.season.toString(),
+            season = episode.season,
+            number = episode.number,
+            duration = episode.duration,
+            title = episode.title,
+            description = episode.description,
+            image = episode.image,
+            platform = getPlatform(),
+            audioLocale = it,
+            id = episode.id.toString(),
+            url = episode.url,
+            uncensored = false,
+            original = true,
+        )
+    }
 }

@@ -184,9 +184,9 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
                 runCatching { getEpisodeAudioTrackList(countryCode, show.id) }
-                    .map { it[show.id] ?: emptySet() }
+                    .map { it[show.id] ?: setOf("ja-JP") }
                     .onFailure { logger.warning("Failed to get audio tracks for movie $id: ${it.message}") }
-                    .getOrNull() ?: emptySet()
+                    .getOrNull() ?: setOf("ja-JP")
             )
         )
     }
@@ -284,7 +284,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             show.metadata?.episodes?.find { it.id == episodeId }?.image
                 ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
             episode.getAsInt("runtimeSec")!!.toLong(),
-            audioTracksMap[episodeId] ?: emptySet()
+            audioTracksMap[episodeId] ?: setOf("ja-JP")
         )
     }
 

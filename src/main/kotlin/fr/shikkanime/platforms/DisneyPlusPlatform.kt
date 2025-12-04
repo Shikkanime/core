@@ -40,7 +40,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            configuration!!.simulcasts.filter { it.releaseDay == 0 || it.releaseDay == zonedDateTime.dayOfWeek.value }
+            configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }
                 .forEach { simulcast ->
                     runCatching {
                         list.addAll(
