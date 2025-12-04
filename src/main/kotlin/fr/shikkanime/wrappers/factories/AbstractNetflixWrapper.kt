@@ -35,7 +35,7 @@ abstract class AbstractNetflixWrapper {
     data class Show(
         val id: Int,
         val name: String,
-        val thumbnail: String?,
+        val thumbnail: String,
         val banner: String,
         val carousel: String,
         val description: String?,

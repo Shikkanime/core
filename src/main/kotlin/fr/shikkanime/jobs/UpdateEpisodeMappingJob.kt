@@ -473,12 +473,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
             updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
             updateUrl(episodeVariant, episode.url)
 
-            episodes.add(
+            episodes.addAll(
                 netflixPlatform.convertEpisode(
                     countryCode,
-                    StringUtils.EMPTY_STRING,
                     episode,
-                    episodeVariant.audioLocale!!
                 )
             )
         }
