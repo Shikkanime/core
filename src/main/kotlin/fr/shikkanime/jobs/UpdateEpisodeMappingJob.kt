@@ -473,12 +473,10 @@ class UpdateEpisodeMappingJob : AbstractJob {
             updateIdentifier(episodeVariant, id, episode.id.toString(), identifiers)
             updateUrl(episodeVariant, episode.url)
 
-            episodes.add(
+            episodes.addAll(
                 netflixPlatform.convertEpisode(
                     countryCode,
-                    StringUtils.EMPTY_STRING,
                     episode,
-                    episodeVariant.audioLocale!!
                 )
             )
         }
@@ -577,7 +575,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
                 // Fetch episodes by series and find the previous episode
                 logger.warning("Previous episode not found in season, searching by series...")
-                return runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
+                runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
                     ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
                     ?.lastOrNull { it.episodeMetadata!!.index() < episode.index() }
                     ?.id
@@ -626,7 +624,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
                 // Fetch episodes by series and find the next episode
                 logger.warning("Next episode not found in season, searching by series...")
-                return runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
+                runCatching { CrunchyrollCachedWrapper.getEpisodesBySeriesId(countryCode.locale, episode.seriesId) }.getOrNull()
                     ?.sortedWith(compareBy({ it.episodeMetadata!!.seasonSequenceNumber }, { it.episodeMetadata!!.sequenceNumber }))
                     ?.firstOrNull { it.episodeMetadata!!.index() > episode.index() }
                     ?.id

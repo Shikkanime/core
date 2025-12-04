@@ -10,7 +10,8 @@ import fr.shikkanime.platforms.configuration.ReleaseDayPlatformSimulcast
 import io.mockk.coEvery
 import io.mockk.spyk
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -40,8 +41,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
     @Test
     suspend fun `fetchEpisodes should continue processing other shows when one show throws exception`() {
         // Arrange: Set up two simulcasts (shows)
-        val simulcast1 = ReleaseDayPlatformSimulcast(0, "show-id-1")
-        val simulcast2 = ReleaseDayPlatformSimulcast(0, "show-id-2")
+        val simulcast1 = ReleaseDayPlatformSimulcast(0)
+        val simulcast2 = ReleaseDayPlatformSimulcast(0)
         platform.configuration!!.simulcasts.add(simulcast1)
         platform.configuration!!.simulcasts.add(simulcast2)
 
@@ -99,8 +100,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
     @Test
     suspend fun `fetchEpisodes should return empty list when all shows throw exceptions`() {
         // Arrange: Set up two simulcasts that both fail
-        val simulcast1 = ReleaseDayPlatformSimulcast(0, "show-id-1")
-        val simulcast2 = ReleaseDayPlatformSimulcast(0, "show-id-2")
+        val simulcast1 = ReleaseDayPlatformSimulcast(0)
+        val simulcast2 = ReleaseDayPlatformSimulcast(0)
         platform.configuration!!.simulcasts.add(simulcast1)
         platform.configuration!!.simulcasts.add(simulcast2)
 
@@ -125,8 +126,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
     @Test
     suspend fun `fetchEpisodes should process all shows successfully when no exceptions occur`() {
         // Arrange: Set up two simulcasts that both succeed
-        val simulcast1 = ReleaseDayPlatformSimulcast(0, "show-id-1")
-        val simulcast2 = ReleaseDayPlatformSimulcast(0, "show-id-2")
+        val simulcast1 = ReleaseDayPlatformSimulcast(0)
+        val simulcast2 = ReleaseDayPlatformSimulcast(0)
         platform.configuration!!.simulcasts.add(simulcast1)
         platform.configuration!!.simulcasts.add(simulcast2)
 
