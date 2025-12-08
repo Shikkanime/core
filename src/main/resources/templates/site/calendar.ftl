@@ -19,11 +19,7 @@
             <#if previousWeek??>
                 <a href="${baseUrl}/calendar?date=${previousWeek}<#if searchTypes?? && searchTypes?has_content>&searchTypes=<#list searchTypes?split(',') as searchType>${searchType}<#if searchType_has_next>,</#if></#list></#if>"
                    class="btn btn-dark ms-0 me-3 d-flex align-items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                         class="bi bi-chevron-left me-1" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd"
-                              d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
                     Semaine précédente
                 </a>
             </#if>
@@ -48,11 +44,7 @@
                 <a href="${baseUrl}/calendar?date=${nextWeek}<#if searchTypes?? && searchTypes?has_content>&searchTypes=<#list searchTypes?split(',') as searchType>${searchType}<#if searchType_has_next>,</#if></#list></#if>"
                    class="btn btn-dark ms-auto me-0 d-flex align-items-center">
                     Semaine suivante
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                         class="bi bi-chevron-right ms-1" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd"
-                              d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
                 </a>
             </#if>
         </div>

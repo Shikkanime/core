@@ -1,7 +1,7 @@
 <#import "episode-duration.ftl" as durationComponent />
 <#import "langType.ftl" as langTypeComponent />
 
-<#macro display groupedEpisode desktopColSize mobileColSize cover>
+<#macro display groupedEpisode desktopColSize mobileColSize>
     <#assign animeSanitized = groupedEpisode.anime.shortName?html />
 
     <div class="${desktopColSize} ${mobileColSize}" x-data="{ hover: false }" @mouseenter="hover = true"
@@ -12,7 +12,7 @@
                     <div class="position-relative">
                         <img loading="lazy" src="${apiUrl}/v1/attachments?uuid=${groupedEpisode.mappings?first}&type=BANNER"
                              alt="${animeSanitized} episode preview"
-                             class="shikk-element-content-img <#if cover>responsive</#if>"
+                             class="shikk-element-content-img"
                              width="640" height="360">
 
                         <div class="platforms">

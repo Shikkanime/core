@@ -35,7 +35,7 @@
             <input type="text" id="search" class="form-control-lg w-100 bg-dark text-white"
                    placeholder="Rechercher" x-model="searchParameters.query" autofocus>
 
-            <div class="mt-3 p-2 shikk-element" x-data="{open: false}">
+            <div class="mt-3 p-3 shikk-element" x-data="{open: false}">
                 <div class="d-flex align-items-center justify-content-center" @click="open = !open">
                     <h4 class="h4 mb-0 ms-0 me-auto">Recherche avancée</h4>
 

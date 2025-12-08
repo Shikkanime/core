@@ -1,13 +1,15 @@
 <#import "episode-duration.ftl" as durationComponent />
 <#import "langType.ftl" as langTypeComponent />
 
-<#macro display episodeMapping label>
+<#macro display episodeMapping>
     <#assign animeSanitized = episodeMapping.anime.shortName?html />
 
     <article class="shikk-element">
         <a href="/animes/${episodeMapping.anime.slug}/season-${episodeMapping.season?c}/${episodeMapping.episodeType.slug}-${episodeMapping.number?c}">
             <div class="shikk-element-content">
-                <p class="mb-1 text-uppercase fw-bold">${label}</p>
+                <p class="mb-1 text-uppercase fw-bold d-flex align-items-center">
+                    <#nested 0>
+                </p>
 
                 <div class="row">
                     <div class="col-6">

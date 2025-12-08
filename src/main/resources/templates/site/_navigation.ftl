@@ -34,25 +34,6 @@
         </header>
 
         <main style="padding-top: 50px;">
-            <div class="callout">
-                <div class="me-2">
-                    <p class="mb-1 mb-md-0"><b>NOUVEAU</b> : découvrez l'application <b>Shikkanime</b> !</p>
-                    <span class="text-muted">Votre gestionnaire de watchlist d'animés, pour ne rien manquer !</span>
-                </div>
-                <div class="ms-auto me-0 d-md-flex align-items-center justify-content-center">
-                    <a href="https://play.google.com/store/apps/details?id=fr.shikkanime.application"
-                       class="text-decoration-none" target="_blank">
-                        <img src="/assets/img/google_play.png" width="160" alt="Google Play"
-                             class="me-md-2 mb-2 mb-md-0">
-                    </a>
-                    <a href="https://apps.apple.com/fr/app/shikkanime/id6708237178"
-                       class="text-decoration-none" target="_blank">
-                        <img src="/assets/img/app_store.svg" width="160" alt="App Store">
-                    </a>
-                </div>
-            </div>
-
-
             <div class="text-white container-fluid px-md-5">
                 <#nested 1>
             </div>
