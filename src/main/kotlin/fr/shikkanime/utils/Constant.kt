@@ -12,6 +12,8 @@ import java.time.ZonedDateTime
 import kotlin.io.path.createTempDirectory
 
 object Constant {
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     const val NAME = "Shikkanime"
     const val PORT = 37100
 
@@ -26,25 +28,25 @@ object Constant {
     val dataFolder: File
         get() {
             val folder = if (isTest) tmpDirectory else File("data")
-            if (!folder.exists()) folder.mkdirs()
+            if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
     val configFolder: File
         get() {
             val folder = File(dataFolder, "config")
-            if (!folder.exists()) folder.mkdirs()
+            if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
     val imagesFolder: File
         get() {
             val folder = File(dataFolder, "images")
-            if (!folder.exists()) folder.mkdirs()
+            if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
     val exportsFolder: File
         get() {
             val folder = File(dataFolder, "exports")
-            if (!folder.exists()) folder.mkdirs()
+            if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
 
