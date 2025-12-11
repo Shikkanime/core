@@ -12,7 +12,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         private val licenceSizeRegex = "\\d+x\\d+".toRegex()
         private val epsRegex = "/eps$".toRegex()
         private val afficheRegex = "/affiche$".toRegex()
-        private val licenseRegex = "/license$".toRegex()
+        private val licenseRegex = "/license(\\..*)?$".toRegex()
     }
 
     data class Microdata(
