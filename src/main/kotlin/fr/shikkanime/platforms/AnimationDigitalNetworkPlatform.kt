@@ -9,6 +9,7 @@ import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguratio
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.AnimePlatformCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.normalize
@@ -143,7 +144,7 @@ class AnimationDigitalNetworkPlatform :
                 duration = video.duration,
                 title = video.name.normalize(),
                 description = video.summary.normalize(),
-                image = video.fullHDImage,
+                image = video.fullHDImage.takeIf { image -> image.substringBeforeLast('.') != video.show.fullHDBanner.substringBeforeLast('.') } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 platform = getPlatform(),
                 audioLocale = getAudioLocale(it),
                 id = video.id.toString(),

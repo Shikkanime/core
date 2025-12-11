@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1765477519761"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <sql>
+            UPDATE attachment a
+            SET url = 'https://www.shikkanime.fr/assets/img/episode_no_image_preview.jpg'
+            WHERE a.uuid IN (
+                SELECT DISTINCT at_em.uuid
+                FROM episode_variant ev
+                         JOIN episode_mapping em ON em.uuid = ev.mapping_uuid
+                         JOIN attachment at_em ON at_em.entity_uuid = em.uuid AND at_em.active = true
+                         JOIN attachment at_a ON at_a.entity_uuid = em.anime_uuid AND at_a.active = true
+                WHERE ev.platform = 'ANIM' AND regexp_replace(at_em.url, '\.[^.]*$', '') = regexp_replace(at_a.url, '\.[^.]*$', '')
+            );
+        </sql>
+    </changeSet>
+</databaseChangeLog>
