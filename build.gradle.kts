@@ -22,7 +22,7 @@ val jdaVersion = "6.1.2"
 
 val junitVersion = "6.0.1"
 val h2Version = "2.4.240"
-val mockkVersion = "1.14.6"
+val mockkVersion = "1.14.7"
 
 plugins {
     val kotlinVersion = "2.2.21"
