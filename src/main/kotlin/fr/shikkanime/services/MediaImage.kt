@@ -20,7 +20,7 @@ import javax.imageio.ImageIO
 object MediaImage {
     private const val BLUR_SIZE = 25
     private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
-    private val httpRequest = HttpRequest()
+    private val httpRequest = HttpRequest(timeout = 5_000L)
 
     fun toMediaImage(vararg variants: EpisodeVariant): BufferedImage {
         require(variants.isNotEmpty()) { "The variants list is empty" }
@@ -99,7 +99,7 @@ object MediaImage {
     }
 
     fun getLongTimeoutImage(url: String): BufferedImage =
-        ByteArrayInputStream(runBlocking { httpRequest.get(url).readRawBytes() }).use { ImageIO.read(it) }
+        ByteArrayInputStream(runBlocking { HttpRequest.retryOnTimeout(3) { httpRequest.get(url).readRawBytes() } }).use { ImageIO.read(it) }
 
     private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
         val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)

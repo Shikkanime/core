@@ -16,13 +16,13 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import kotlin.system.measureTimeMillis
 
-private const val TIMEOUT = 60_000L
 private const val BROWSER_TIMEOUT = 15_000L
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
 class HttpRequest(
     val countryCode: CountryCode? = null,
-    private val userAgent: String? = null
+    private val userAgent: String? = null,
+    private val timeout: Long = 60_000L
 ) : AutoCloseable {
     private var isBrowserInitialized = false
     private var playwright: Playwright? = null
@@ -32,9 +32,9 @@ class HttpRequest(
 
     private fun httpClient() = HttpClient(OkHttp) {
         install(HttpTimeout) {
-            requestTimeoutMillis = TIMEOUT
-            connectTimeoutMillis = TIMEOUT
-            socketTimeoutMillis = TIMEOUT
+            requestTimeoutMillis = timeout
+            connectTimeoutMillis = timeout
+            socketTimeoutMillis = timeout
         }
         engine {
             config {
