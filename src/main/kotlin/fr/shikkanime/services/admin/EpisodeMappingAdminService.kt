@@ -37,19 +37,9 @@ class EpisodeMappingAdminService {
         sourceEpisode: EpisodeMapping,
         targetEpisode: EpisodeMapping
     ): EpisodeMapping? {
-        // Get all variants of the target episode
-        val targetVariants = episodeVariantService.findAllByMapping(targetEpisode)
-
-        // Transfer variants from source episode to target episode, without duplication
         episodeVariantService.findAllByMapping(sourceEpisode).forEach { sourceVariant ->
-            // Check if a similar variant already exists (same URL)
-            val similarVariantExists = targetVariants.any { it.url == sourceVariant.url }
-
-            if (!similarVariantExists) {
-                // Transfer this variant
-                sourceVariant.mapping = targetEpisode
-                episodeVariantService.update(sourceVariant)
-            }
+            sourceVariant.mapping = targetEpisode
+            episodeVariantService.update(sourceVariant)
         }
 
         // Remove references to the source episode
@@ -386,7 +376,7 @@ class EpisodeMappingAdminService {
                 variant.releaseDateTime = ZonedDateTime.parse(variantDto.releaseDateTime)
             }
 
-            if (variantDto.url.isNotBlank() && variantDto.url != variant.url.toString()) {
+            if (variantDto.url.isNotBlank() && variantDto.url != variant.url) {
                 variant.url = variantDto.url
             }
 
@@ -455,23 +445,12 @@ class EpisodeMappingAdminService {
         )?.takeIf { it.uuid != episode.uuid }
 
         if (existingEpisode != null) {
-            // Keep the variants of the target episode
-            val existingVariants = episodeVariantService.findAllByMapping(existingEpisode)
-
             // Transfer variants from source episode to target episode
             val sourceVariants = episodeVariantService.findAllByMapping(episode)
-            val transferredVariants = mutableListOf<EpisodeVariant>()
 
             sourceVariants.forEach { sourceVariant ->
-                // Check if a similar variant already exists (same URL)
-                val similarVariantExists = existingVariants.any { it.url == sourceVariant.url }
-
-                if (!similarVariantExists) {
-                    // Transfer this variant
-                    sourceVariant.mapping = existingEpisode
-                    episodeVariantService.update(sourceVariant)
-                    transferredVariants.add(sourceVariant)
-                }
+                sourceVariant.mapping = existingEpisode
+                episodeVariantService.update(sourceVariant)
             }
 
             // Remove references to the source episode
