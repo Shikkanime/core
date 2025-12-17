@@ -77,11 +77,17 @@ jobs:
       - name: Build
         run: gradle clean installDist -x test
 
-      - name: Start valkey
-        run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
-
       - name: Start services
         run: docker compose up -d --build --wait
 
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "=== CONTAINER STATUS ==="
+          docker compose ps -a
+          echo "=== CONTAINER LOGS ==="
+          docker compose logs
+
       - name: Stop services
+        if: always()
         run: docker compose down
