@@ -138,7 +138,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 val anime = variants.first().mapping!!.anime!!
                 val mappings = variants.takeIf { it.isNotEmpty() && isReleaseInCurrentWeek }
                     ?.map { it.mapping!! }
-                    ?.distinctBy { it.uuid } ?: emptyList()
+                    ?.distinctBy { it.uuid }
+                    ?.sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number })) ?: emptyList()
                 val mappingCount = mappings.takeIf { it.isNotEmpty() }?.size ?: variants.map { it.mapping!!.uuid }.distinct().count()
 
 
