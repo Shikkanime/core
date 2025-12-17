@@ -4,6 +4,7 @@ import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.impl.AnimePlatformFactory
 import fr.shikkanime.services.AnimePlatformService
@@ -18,7 +19,7 @@ class AnimePlatformCacheService : ICacheService {
 
     fun findAllByAnime(anime: Anime) = MapCache.getOrCompute(
         "AnimePlatformCacheService.findAllByAnime",
-        classes = listOf(Anime::class.java),
+        classes = listOf(Anime::class.java, AnimePlatform::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
         serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.uuid!!,
@@ -26,7 +27,7 @@ class AnimePlatformCacheService : ICacheService {
 
     fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) = MapCache.getOrCompute(
         "AnimePlatformCacheService.findAllIdByAnimeAndPlatform",
-        classes = listOf(UUID::class.java, Platform::class.java),
+        classes = listOf(Anime::class.java, AnimePlatform::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
         key = animeUuid to platform,
     ) { (animeUuid, platform) -> animePlatformService.findAllIdByAnimeAndPlatform(animeUuid, platform).toTypedArray() }
