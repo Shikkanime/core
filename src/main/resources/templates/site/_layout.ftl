@@ -12,8 +12,8 @@
 
             <#if title?? && title?length != 0>
                 <title>${title}</title>
-                <meta property="og:title" content="${title}">
-                <meta property="twitter:title" content="${title}">
+                <meta property="og:title" content="${title?html}">
+                <meta property="twitter:title" content="${title?html}">
             <#else>
                 <title>Shikkanime</title>
                 <meta property="og:title" content="Shikkanime">
@@ -21,13 +21,13 @@
             </#if>
 
             <#if description?? && description?length != 0>
-                <meta name="description" content="${description}">
-                <meta property="og:description" content="${description}">
-                <meta property="twitter:description" content="${description}">
+                <meta name="description" content="${description?html}">
+                <meta property="og:description" content="${description?html}">
+                <meta property="twitter:description" content="${description?html}">
             <#elseif seoDescription?? && seoDescription?length != 0>
-                <meta name="description" content="${seoDescription}">
-                <meta property="og:description" content="${seoDescription}">
-                <meta property="twitter:description" content="${seoDescription}">
+                <meta name="description" content="${seoDescription?html}">
+                <meta property="og:description" content="${seoDescription?html}">
+                <meta property="twitter:description" content="${seoDescription?html}">
             </#if>
 
             <meta property="og:type" content="website">
