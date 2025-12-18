@@ -83,14 +83,14 @@ class MemberController : HasPageableRoute() {
         if (memberCacheService.find(memberUuid)!!.email == email)
             Response.badRequest(MessageDto.error("Email already associated to your account"))
 
-        val findByEmail = memberService.findByEmail(email)
+        val member = memberService.findByEmail(email)
 
-        if (findByEmail == null) {
+        if (member == null) {
             runBlocking { delay(1000) }
             return Response.badRequest(MessageDto.error("Email not associated to any account"))
         }
 
-        return Response.created(GenericDto(memberService.forgotIdentifier(findByEmail)))
+        return Response.created(GenericDto(memberService.forgotIdentifier(member)))
     }
 
     @Path("/animes")

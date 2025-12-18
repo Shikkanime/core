@@ -19,6 +19,9 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     private var accessJwt: String? = null
     private var did: String? = null
 
+    override val priority: Int
+        get() = 3
+
     override fun login() {
         if (isInitialized) return
 

@@ -39,3 +39,6 @@ fun <T> Iterable<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>
 fun ByteArray?.isNullOrEmpty(): Boolean = this == null || this.isEmpty()
 
 fun Boolean.onTrue(action: () -> Unit) = if (this) action() else Unit
+
+fun <C> C.takeIfNotEmpty(): C? where C : Collection<*> = ifEmpty { null }
+fun ByteArray.takeIfNotEmpty() = this.takeIf { it.isNotEmpty() }

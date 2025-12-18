@@ -29,7 +29,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
     fun findAllBy(
         countryCode: CountryCode?,
-        simulcast: Simulcast?,
+        simulcastUuid: UUID?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
@@ -42,7 +42,12 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.distinct(true).select(root)
 
             val predicates = mutableListOf<Predicate>()
-            simulcast?.let { predicates.add(cb.equal(root.join(Anime_.simulcasts), it)) }
+
+            simulcastUuid?.let {
+                val simulcastJoin = root.join(Anime_.simulcasts)
+                predicates.add(cb.equal(simulcastJoin[Simulcast_.uuid], it))
+            }
+
             val orPredicate = predicates(countryCode, predicates, cb, root, searchTypes)
 
             query.where(

@@ -18,7 +18,6 @@ import fr.shikkanime.utils.MapCacheValue
 import java.util.*
 
 class MemberFollowAnimeCacheService : ICacheService {
-    @Inject private lateinit var memberCacheService: MemberCacheService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var missedAnimeFactory: MissedAnimeFactory
@@ -31,7 +30,7 @@ class MemberFollowAnimeCacheService : ICacheService {
     ) {
         PageableDto.fromPageable(
             memberFollowAnimeService.findAllMissedAnimes(
-                memberCacheService.find(it.uuid) ?: return@getOrCompute PageableDto.empty(),
+                it.uuid,
                 it.page,
                 it.limit
             ),
@@ -47,7 +46,7 @@ class MemberFollowAnimeCacheService : ICacheService {
     ) {
         PageableDto.fromPageable(
             memberFollowAnimeService.findAllFollowedAnimes(
-                memberCacheService.find(it.uuid) ?: return@getOrCompute PageableDto.empty(),
+                it.uuid,
                 it.page,
                 it.limit
             ),

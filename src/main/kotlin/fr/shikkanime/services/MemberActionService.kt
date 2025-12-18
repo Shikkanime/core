@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Mail
-import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberAction
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
@@ -47,12 +46,12 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         doValidateAction(memberAction)
     }
 
-    fun save(action: Action, member: Member, email: String): UUID {
+    fun save(action: Action, memberUuid: UUID, email: String): UUID {
         val code = StringUtils.generateRandomString(8).uppercase()
 
         val savedAction = save(
             MemberAction(
-                member = member,
+                member = memberService.getReference(memberUuid),
                 email = email,
                 action = action,
                 code = code

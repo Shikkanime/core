@@ -13,6 +13,7 @@ abstract class AbstractSocialNetwork {
     @Inject
     protected lateinit var configCacheService: ConfigCacheService
 
+    abstract val priority: Int
     abstract fun login()
     abstract fun logout()
 

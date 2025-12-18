@@ -43,12 +43,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllBy(
         countryCode: CountryCode?,
-        simulcast: Simulcast?,
+        simulcastUuid: UUID?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
         searchTypes: Array<LangType>?,
-    ) = animeRepository.findAllBy(countryCode, simulcast, sort, page, limit, searchTypes)
+    ) = animeRepository.findAllBy(countryCode, simulcastUuid, sort, page, limit, searchTypes)
 
     fun findAllByName(
         countryCode: CountryCode?,
@@ -140,7 +140,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     ?.map { it.mapping!! }
                     ?.distinctBy { it.uuid }
                     ?.sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number })) ?: emptyList()
-                val mappingCount = mappings.takeIf { it.isNotEmpty() }?.size ?: variants.map { it.mapping!!.uuid }.distinct().count()
+                val mappingCount = mappings.takeIfNotEmpty()?.size ?: variants.map { it.mapping!!.uuid }.distinct().count()
 
 
                 if (!isReleaseInCurrentWeek && (treeMap.lastEntry().key in currentWeekRange || mappingCount > 5 || compositeIndex.episodeType == EpisodeType.FILM)) {

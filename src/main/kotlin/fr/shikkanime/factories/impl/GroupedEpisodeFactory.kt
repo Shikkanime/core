@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.takeIfNotEmpty
 import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
 
@@ -15,7 +16,7 @@ class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto>
     override fun toDto(entity: GroupedEpisode): GroupedEpisodeDto {
         val season = if (entity.minSeason == entity.maxSeason) entity.minSeason.toString() else "${entity.minSeason} - ${entity.maxSeason}"
         val number = if (entity.minNumber == entity.maxNumber) entity.minNumber.toString() else "${entity.minNumber} - ${entity.maxNumber}"
-        val internalUrl = entity.mappings.takeIf { it.isNotEmpty() }?.let {
+        val internalUrl = entity.mappings.takeIfNotEmpty()?.let {
             buildString {
                 append(Constant.baseUrl)
                 append("/animes/${entity.anime.slug!!}")

@@ -31,6 +31,9 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
     private var isInitialized = false
     private var jda: JDA? = null
 
+    override val priority: Int
+        get() = 1
+
     override fun login() {
         if (isInitialized) return
 
