@@ -1,0 +1,102 @@
+{
+  "videos": [
+    {
+      "id": 30016,
+      "title": "Dusk Beyond the End of the World - Épisode 12",
+      "name": "",
+      "number": "Épisode 12",
+      "shortNumber": "12",
+      "season": "1",
+      "reference": "duskbeyond_tv_0012",
+      "type": "EPS",
+      "order": 13,
+      "image": "https://media.animationdigitalnetwork.com/images/show/9f6d30e6-790e-415f-8b84-02756b979187/license.width=320,height=180",
+      "image2x": "https://media.animationdigitalnetwork.com/images/show/9f6d30e6-790e-415f-8b84-02756b979187/license.width=320,height=180",
+      "summary": "",
+      "releaseDate": "2025-12-18T15:56:00Z",
+      "duration": 1440,
+      "url": "https://animationdigitalnetwork.com/video/1334-dusk-beyond-the-end-of-the-world/30016-episode-12",
+      "urlPath": "/video/1334-dusk-beyond-the-end-of-the-world/30016-episode-12",
+      "embeddedUrl": "https://animationdigitalnetwork.com/embedded/1334-dusk-beyond-the-end-of-the-world/30016",
+      "languages": [
+        "vostf"
+      ],
+      "qualities": [
+        "fhd",
+        "hd",
+        "sd",
+        "mobile"
+      ],
+      "rating": 5,
+      "ratingsCount": 1,
+      "commentsCount": 1,
+      "available": true,
+      "download": false,
+      "free": false,
+      "freeWithAds": true,
+      "show": {
+        "id": 1334,
+        "title": "Dusk Beyond the End of the World",
+        "type": "EPS",
+        "originalTitle": "Towa no Yūgure",
+        "shortTitle": null,
+        "reference": "duskbeyond_tv",
+        "age": "16+",
+        "languages": [
+          "vostf"
+        ],
+        "summary": "Émergeant d’un profond sommeil cryogénique de près de deux cents ans, Akira Himegami découvre avec effroi un monde dans lequel l’intelligence artificielle régit désormais chaque aspect de la vie quotidienne. Sous l’égide de l’organisation OWEL, la guerre a remodelé la société et a instauré un nouvel ordre mondial.\nDans ce décor méconnaissable, Akira rencontre Yûgure, un androïde ressemblant trait pour trait à Towasa, sa bien-aimée. Bien que troublé par son apparence, le jeune homme entreprend, à ses côtés, un périple incertain, déterminé à retrouver sa promise et à élucider les secrets de cette civilisation mystérieuse.",
+        "image": "https://image.animationdigitalnetwork.com/license/duskbeyond/tv/web/affiche_175x250.jpg",
+        "image2x": "https://image.animationdigitalnetwork.com/license/duskbeyond/tv/web/affiche_350x500.jpg",
+        "imageHorizontal": "https://image.animationdigitalnetwork.com/license/duskbeyond/tv/web/license_320x180.jpg",
+        "imageHorizontal2x": "https://image.animationdigitalnetwork.com/license/duskbeyond/tv/web/license_640x360.jpg",
+        "url": "https://animationdigitalnetwork.com/video/1334-dusk-beyond-the-end-of-the-world",
+        "urlPath": "/video/1334-dusk-beyond-the-end-of-the-world",
+        "episodeCount": 0,
+        "genres": [
+          "Animation japonaise",
+          "Romance",
+          "Science-Fiction"
+        ],
+        "copyright": "©Project FT/Dusk Beyond the End of the World・MBS",
+        "rating": 3,
+        "ratingsCount": 10,
+        "commentsCount": 6,
+        "qualities": [
+          "sd"
+        ],
+        "distributions": "fr,de",
+        "simulcast": false,
+        "free": false,
+        "available": true,
+        "download": false,
+        "nextVideoReleaseDate": null,
+        "basedOn": "Oeuvre Originale",
+        "tagline": "",
+        "firstReleaseYear": "2025",
+        "productionStudio": "P.A. Works",
+        "countryOfOrigin": "Japon",
+        "productionTeam": [
+          {
+            "role": "Réalisateur",
+            "name": "Naokatsu Tsuda"
+          },
+          {
+            "role": "Scénariste",
+            "name": "Naokatsu Tsuda"
+          },
+          {
+            "role": "Character designer original",
+            "name": "Midori Tayama"
+          },
+          {
+            "role": "Compositeur",
+            "name": "Masahiro Tokuda"
+          }
+        ],
+        "indexable": true
+      },
+      "indexable": true
+    }
+  ]
+}
