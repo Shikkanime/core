@@ -103,7 +103,7 @@ class MemberController : HasPageableRoute() {
         return Response.ok(
             PageableDto.fromPageable(
                 memberFollowAnimeController.findAllFollowedAnimes(
-                    memberService.find(memberUuid) ?: return Response.notFound(),
+                    memberUuid,
                     page,
                     limit,
                 ),
@@ -124,7 +124,7 @@ class MemberController : HasPageableRoute() {
         return Response.ok(
             PageableDto.fromPageable(
                 memberFollowEpisodeService.findAllFollowedEpisodes(
-                    memberService.find(memberUuid) ?: return Response.notFound(),
+                    memberUuid,
                     page,
                     limit,
                 ),

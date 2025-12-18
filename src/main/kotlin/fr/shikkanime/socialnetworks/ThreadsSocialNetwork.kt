@@ -16,6 +16,9 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     private var token: String? = null
     private var isInitialized = false
 
+    override val priority: Int
+        get() = 4
+
     override fun login() {
         if (isInitialized) return
 

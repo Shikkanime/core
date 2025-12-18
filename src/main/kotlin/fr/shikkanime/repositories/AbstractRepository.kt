@@ -6,6 +6,7 @@ import fr.shikkanime.entities.ShikkEntity_
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.utils.Database
 import jakarta.persistence.EntityManager
+import jakarta.persistence.EntityNotFoundException
 import jakarta.persistence.TypedQuery
 import jakarta.persistence.criteria.CriteriaQuery
 import org.hibernate.ScrollMode
@@ -74,6 +75,16 @@ abstract class AbstractRepository<E : ShikkEntity> {
             val root = query.from(getEntityClass())
             query.where(root[ShikkEntity_.uuid].`in`(uuids))
             createReadOnlyQuery(it, query).resultList
+        }
+    }
+
+    fun getReference(uuid: UUID): E? {
+        return try {
+            database.entityManager.use {
+                it.getReference(getEntityClass(), uuid)
+            }
+        } catch (_: EntityNotFoundException) {
+            null
         }
     }
 

@@ -3,6 +3,7 @@ package fr.shikkanime.wrappers
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.takeIfNotEmpty
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -159,7 +160,7 @@ object TwitterWrapper {
         val mediaId = uploadMediaChunkedInit(authParams, mediaCategory, mediaType, bytes.size.toLong())
 
         ByteArrayInputStream(bytes).use { inputStream ->
-            generateSequence { inputStream.readNBytes(CHUNK_SIZE).takeIf { it.isNotEmpty() } }
+            generateSequence { inputStream.readNBytes(CHUNK_SIZE).takeIfNotEmpty() }
                 .forEachIndexed { index, segment -> uploadMediaChunkedAppend(authParams, index.toLong(), mediaId, fileName, segment) }
         }
 

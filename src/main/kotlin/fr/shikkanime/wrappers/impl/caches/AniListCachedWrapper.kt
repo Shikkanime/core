@@ -3,10 +3,7 @@ package fr.shikkanime.wrappers.impl.caches
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.MapCacheValue
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractAniListWrapper
 import fr.shikkanime.wrappers.impl.AniListWrapper
 import java.time.Duration
@@ -158,7 +155,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         }.flatMap { it.split(" / ") }
             .toMutableSet()
             .filterNot { it.isBlank() || it.equals(animeName, true) }
-            .takeIf { it.isNotEmpty() } ?: return
+            .takeIfNotEmpty() ?: return
 
         val results: List<Media> = alternativeTitles.flatMap { findMatchingAnime(animeName, firstReleasedYear, it) }
 

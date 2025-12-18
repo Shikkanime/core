@@ -23,6 +23,9 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
     @Inject
     private lateinit var memberService: MemberService
 
+    override val priority: Int
+        get() = 0
+
     override fun login() {
         if (isInitialized)
             return

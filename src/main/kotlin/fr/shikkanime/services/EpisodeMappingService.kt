@@ -22,12 +22,12 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllBy(
         countryCode: CountryCode?,
-        anime: Anime?,
+        animeUuid: UUID?,
         season: Int?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = episodeMappingRepository.findAllBy(countryCode, anime, season, sort, page, limit)
+    ) = episodeMappingRepository.findAllBy(countryCode, animeUuid, season, sort, page, limit)
 
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
 

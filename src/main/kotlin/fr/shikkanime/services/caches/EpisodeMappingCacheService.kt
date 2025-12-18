@@ -23,7 +23,6 @@ import java.util.*
 
 class EpisodeMappingCacheService : ICacheService {
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
-    @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     fun findAllBy(
@@ -42,7 +41,7 @@ class EpisodeMappingCacheService : ICacheService {
         PageableDto.fromPageable(
             episodeMappingService.findAllBy(
                 it.countryCode,
-                it.uuid?.let(animeCacheService::find),
+                it.uuid,
                 it.season,
                 it.sort,
                 it.page,

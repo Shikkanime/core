@@ -48,7 +48,10 @@ object Constant {
             return folder
         }
 
-    val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java).map { injector.getInstance(it) }
+    val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java)
+        .map { injector.getInstance(it) }
+        .sortedBy { it.priority }
+
     val utcZoneId: ZoneId = ZoneId.of("UTC")
     val jwtAudience: String = System.getenv("JWT_AUDIENCE") ?: "jwt-audience"
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"

@@ -17,7 +17,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
     fun findAllBy(
         countryCode: CountryCode?,
-        anime: Anime?,
+        animeUuid: UUID?,
         season: Int?,
         sort: List<SortParameter>,
         page: Int,
@@ -30,7 +30,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
             // Build predicates
             val predicates = listOfNotNull(
-                anime?.let { cb.equal(root[EpisodeMapping_.anime], it) },
+                animeUuid?.let { cb.equal(root[EpisodeMapping_.anime][Anime_.uuid], it) },
                 season?.let { cb.equal(root[EpisodeMapping_.season], it) },
                 countryCode?.let { cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it) }
             )

@@ -53,7 +53,7 @@ class AnimeCacheService : ICacheService {
         PageableDto.fromPageable(
             animeService.findAllBy(
                 it.countryCode,
-                it.uuid?.let(simulcastCacheService::find),
+                it.uuid,
                 it.sort,
                 it.page,
                 it.limit,
@@ -118,14 +118,6 @@ class AnimeCacheService : ICacheService {
         serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.uuid!!,
     ) { uuid -> animeService.findAllSeasons(uuid).map(seasonFactory::toDto).toTypedArray() }
-
-    fun find(uuid: UUID) = MapCache.getOrComputeNullable(
-        "AnimeCacheService.find",
-        classes = listOf(Anime::class.java),
-        typeToken = object : TypeToken<MapCacheValue<Anime>>() {},
-        serializationType = SerializationUtils.SerializationType.OBJECT,
-        key = uuid,
-    ) { animeService.find(it) }
 
     fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrComputeNullable(
         "AnimeCacheService.findBySlug",

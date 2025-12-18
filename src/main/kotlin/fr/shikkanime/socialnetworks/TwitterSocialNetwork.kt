@@ -4,6 +4,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.takeIfNotEmpty
 import fr.shikkanime.wrappers.TwitterWrapper
 import java.util.*
 import java.util.logging.Level
@@ -12,6 +13,9 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(TwitterSocialNetwork::class.java)
     private var isInitialized = false
     private var authParams: TwitterWrapper.AuthParams? = null
+
+    override val priority: Int
+        get() = 2
 
     override fun login() {
         if (isInitialized) return
@@ -77,7 +81,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
                     )
                 )
             }
-        }.getOrNull()?.takeIf { it.isNotEmpty() }
+        }.getOrNull()?.takeIfNotEmpty()
 
         val firstTweetId = TwitterWrapper.createTweet(authParams!!, mediaIds = mediaIds, text = firstMessage)
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)

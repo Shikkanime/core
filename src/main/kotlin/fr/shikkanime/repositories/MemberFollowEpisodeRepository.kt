@@ -9,7 +9,7 @@ import java.util.*
 class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() {
     override fun getEntityClass() = MemberFollowEpisode::class.java
 
-    fun findAllFollowedEpisodes(member: Member, page: Int, limit: Int): Pageable<EpisodeMapping> {
+    fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int): Pageable<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(EpisodeMapping::class.java)
@@ -17,7 +17,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             query.select(root[MemberFollowEpisode_.episode])
 
             query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member)
+                cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid)
             )
 
             query.orderBy(
@@ -63,7 +63,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun existsByMemberAndEpisode(member: Member, episode: EpisodeMapping): Boolean {
+    fun existsByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): Boolean {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
@@ -71,8 +71,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             query.select(cb.literal(1))
 
             query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member),
-                cb.equal(root[MemberFollowEpisode_.episode], episode)
+                cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid),
+                cb.equal(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid], episodeUuid)
             )
 
             createReadOnlyQuery(it.createQuery(query).setMaxResults(1))
@@ -81,32 +81,39 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun findAllFollowedEpisodesByMemberAndEpisodes(member: Member, episodes: List<EpisodeMapping>): List<UUID> {
+    fun findAllNonFollowedEpisodesByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID?): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
-            query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid])
+            val query = cb.createQuery(EpisodeMapping::class.java)
+            val root = query.from(EpisodeMapping::class.java)
 
-            query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member),
-                root[MemberFollowEpisode_.episode].`in`(episodes)
+            val subquery = query.subquery(Int::class.java)
+            val subroot = subquery.from(MemberFollowEpisode::class.java)
+            subquery.select(cb.literal(1))
+            subquery.where(
+                cb.equal(subroot[MemberFollowEpisode_.member][Member_.uuid], memberUuid),
+                cb.equal(subroot[MemberFollowEpisode_.episode], root)
             )
 
-            createReadOnlyQuery(it, query)
-                .resultList
+            query.where(
+                cb.equal(root[EpisodeMapping_.anime][Anime_.uuid], animeUuid),
+                cb.notEqual(root[EpisodeMapping_.episodeType], EpisodeType.SUMMARY),
+                cb.not(cb.exists(subquery))
+            )
+
+            createReadOnlyQuery(it, query).resultList
         }
     }
 
-    fun findByMemberAndEpisode(member: Member, episode: EpisodeMapping): MemberFollowEpisode? {
+    fun findByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): MemberFollowEpisode? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
 
             query.where(
-                cb.equal(root[MemberFollowEpisode_.member], member),
-                cb.equal(root[MemberFollowEpisode_.episode], episode)
+                cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid),
+                cb.equal(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid], episodeUuid)
             )
 
             createReadOnlyQuery(it, query)

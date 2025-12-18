@@ -99,16 +99,12 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         return memberFactory.toDto(member)
     }
 
-    fun associateEmail(memberUuid: UUID, email: String): UUID {
-        val member = requireNotNull(find(memberUuid))
-        // Creation member action
-        return memberActionService.save(Action.VALIDATE_EMAIL, member, email)
-    }
+    fun associateEmail(memberUuid: UUID, email: String) = memberActionService.save(Action.VALIDATE_EMAIL, memberUuid, email)
 
     fun forgotIdentifier(member: Member): UUID {
         requireNotNull(member.email)
         // Creation member action
-        return memberActionService.save(Action.FORGOT_IDENTIFIER, member, member.email!!)
+        return memberActionService.save(Action.FORGOT_IDENTIFIER, member.uuid!!, member.email!!)
     }
 
     suspend fun changeProfileImage(member: Member, multiPartData: MultiPartData) {

@@ -5,7 +5,6 @@ import jakarta.persistence.EntityManager
 import liquibase.command.CommandScope
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
-import org.hibernate.internal.SessionFactoryImpl
 import java.io.File
 import java.util.logging.Level
 import kotlin.system.exitProcess
@@ -88,8 +87,6 @@ class Database {
         get() = sessionFactory.createEntityManager()
 
     fun <T> inTransaction(block: (EntityManager) -> T): T = sessionFactory.callInTransaction(block)
-
-    fun dialect(): String = (sessionFactory as SessionFactoryImpl).jdbcServices.dialect.toString()
 
     fun truncate() = sessionFactory.schemaManager.truncate()
 

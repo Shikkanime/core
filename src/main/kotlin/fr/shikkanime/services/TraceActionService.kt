@@ -69,13 +69,28 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
         return AnalyticsReport(versionCounts, localeCounts, deviceCounts, dailyUserVersionCounts)
     }
 
-    fun createTraceAction(shikkEntity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
+    fun createTraceAction(entity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
         TraceAction(
             actionDateTime = ZonedDateTime.now(),
-            entityType = shikkEntity::class.java.simpleName,
-            entityUuid = shikkEntity.uuid,
+            entityType = entity::class.java.simpleName,
+            entityUuid = entity.uuid,
             action = action,
             additionalData = additionalData
         )
     )
+
+    fun createTraceActions(entities: List<ShikkEntity>, action: TraceAction.Action) {
+        val now = ZonedDateTime.now()
+
+        saveAll(
+            entities.map {
+                TraceAction(
+                    actionDateTime = now,
+                    entityType = it::class.java.simpleName,
+                    entityUuid = it.uuid,
+                    action = action,
+                )
+            }
+        )
+    }
 }
