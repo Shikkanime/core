@@ -144,7 +144,7 @@ class AnimationDigitalNetworkPlatform :
                 duration = video.duration,
                 title = video.name.normalize(),
                 description = video.summary.normalize(),
-                image = video.fullHDImage.takeIf { image -> image.substringBeforeLast('.') != video.show.fullHDBanner.substringBeforeLast('.') } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+                image = video.fullHDImage.takeIf { image -> image.contains("/video/") } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 platform = getPlatform(),
                 audioLocale = getAudioLocale(it),
                 id = video.id.toString(),

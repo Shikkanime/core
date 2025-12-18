@@ -7,16 +7,19 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration.AnimationDigitalNetworkSimulcast
+import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.stream.Stream
+import kotlin.test.assertEquals
 
 class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     @Inject lateinit var platform: AnimationDigitalNetworkPlatform
@@ -171,6 +174,16 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
                     val animeEpisodes = episodes.filter { it.anime == "Eyeshield 21" }
                     assertEquals(290, animeEpisodes.size)
                 }
+            ),
+            EpisodeTestCase(
+                date = "2025-12-18T16:30:00Z",
+                assertions = { episodes ->
+                    assertTrue(episodes.isNotEmpty())
+                    assertTrue(episodes.any { it.anime == "Dusk Beyond the End of the World" })
+                    assertEquals(1, episodes.size)
+                    val episode = episodes.first()
+                    assertEquals(episode.image, Constant.DEFAULT_IMAGE_PREVIEW)
+                }
             )
         )
     }
@@ -190,6 +203,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Overlord" })
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Eyeshield 21" })
         platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Les Héros de la Galaxie : Die Neue These" })
+        platform.configuration!!.simulcasts.add(AnimationDigitalNetworkSimulcast().apply { name = "Dusk Beyond the End of the World" })
     }
 
     @AfterEach
