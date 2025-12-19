@@ -62,6 +62,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
 
         login()
         if (!isInitialized) return
+        logger.info("Sending notification...")
 
         val anime = variants.first().mapping!!.anime!!
 
@@ -81,6 +82,11 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
 
         val androidConfig = AndroidConfig.builder()
             .setPriority(AndroidConfig.Priority.HIGH)
+            .setNotification(
+                AndroidNotification.builder()
+                    .setChannelId("high_importance_channel")
+                    .build()
+            )
             .build()
 
         val apnsConfig = ApnsConfig.builder()
@@ -89,10 +95,13 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
             .putAllHeaders(mapOf("apns-priority" to "10"))
             .build()
 
+        logger.info("Collecting topics...")
         val topics = mutableSetOf("global")
         memberService.findAllByAnimeUUID(anime.uuid!!).forEach { topics.add(it.uuid!!.toString()) }
+        logger.info("Collected ${topics.size} topics for notification.")
         // Chunked topics to avoid the 500 topics limit (due to the limit of the Firebase API)
         val chunkedTopics = topics.chunked(500)
+        logger.info("Sending notification to ${chunkedTopics.size} chunks...")
 
         chunkedTopics.forEach {
             FirebaseMessaging.getInstance()
@@ -107,5 +116,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
                     }
                 )
         }
+
+        logger.info("All notification chunks have been dispatched.")
     }
 }
