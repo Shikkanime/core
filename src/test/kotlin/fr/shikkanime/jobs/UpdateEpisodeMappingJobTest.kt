@@ -17,7 +17,7 @@ import java.time.ZonedDateTime
 import java.util.stream.Stream
 
 class UpdateEpisodeMappingJobTest : AbstractTest() {
-    @Inject private lateinit var updateEpisodeMappingJob: UpdateEpisodeMappingJob
+    @Inject private lateinit var updateEpisodeMappingJob: OptimizeUpdateEpisodeJob
 
     @BeforeEach
     override fun setUp() {

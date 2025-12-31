@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -226,6 +227,11 @@ abstract class AbstractCrunchyrollWrapper {
     abstract suspend fun getSimulcasts(locale: String): Array<Simulcast>
 
     suspend fun retrievePreviousEpisode(locale: String, id: String): BrowseObject? {
+        // Attempt to fetch the previous episode directly
+        runCatching { getEpisodeDiscoverByType(locale, "previous_episode", id) }
+            .getOrNull()
+            ?.let { return it }
+
         val episode = runCatching { getEpisode(locale, id) }.getOrNull() ?: return null
 
         // Fetch episodes by season and find the previous episode
@@ -246,6 +252,11 @@ abstract class AbstractCrunchyrollWrapper {
     }
 
     suspend fun retrieveNextEpisode(locale: String, id: String): BrowseObject? {
+        // Attempt to fetch the next episode directly
+        runCatching { getEpisodeDiscoverByType(locale, "up_next", id) }
+            .getOrNull()
+            ?.let { return it }
+
         // Fetch the current episode and check for nextEpisodeId
         val episode = runCatching { getEpisode(locale, id) }.getOrNull() ?: return null
         episode.nextEpisodeId?.let { return getObjects(locale, it).firstOrNull() }

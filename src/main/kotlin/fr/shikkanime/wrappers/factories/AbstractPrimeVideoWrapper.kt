@@ -46,4 +46,18 @@ abstract class AbstractPrimeVideoWrapper {
 
     abstract suspend fun getShow(locale: String, id: String): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: String): Array<Episode>
+
+    suspend fun getPreviousEpisode(countryCode: CountryCode, showId: String, episodeId: String): Episode? {
+        val episodes = getEpisodesByShowId(countryCode, showId)
+        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
+        require(episodeIndex != -1) { "Episode not found" }
+        return if (episodeIndex == 0) null else episodes[episodeIndex - 1]
+    }
+
+    suspend fun getNextEpisode(countryCode: CountryCode, showId: String, episodeId: String): Episode? {
+        val episodes = getEpisodesByShowId(countryCode, showId)
+        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
+        require(episodeIndex != -1) { "Episode not found" }
+        return if (episodeIndex == episodes.size - 1) null else episodes[episodeIndex + 1]
+    }
 }

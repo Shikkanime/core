@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
         // Every 10 minutes
         JobManager.scheduleJob(
             "0 */10 * * * ?",
-            UpdateEpisodeMappingJob::class.java, UpdateAttachmentJob::class.java, AniListMatchingJob::class.java
+            OptimizeUpdateEpisodeJob::class.java, UpdateAttachmentJob::class.java, AniListMatchingJob::class.java
         )
         // Every hour
         JobManager.scheduleJob("0 0 * * * ?", UpdateAnimeJob::class.java)
