@@ -510,6 +510,12 @@ class AniListCachedWrapper : AbstractTest() {
                 platforms = listOf(AnimePlatform(platform = Platform.CRUN, platformId = "G3KHEVD0D"), AnimePlatform(platform = Platform.ANIM, platformId = "1225")),
                 firstReleasedYear = 2016,
                 exceptedMediaId = 181970
+            ),
+            MediaTestCase(
+                name = "Jack-of-All-Trades, Party of None",
+                platforms = listOf(AnimePlatform(platform = Platform.CRUN, platformId = "GT00366764")),
+                firstReleasedYear = 2025,
+                exceptedMediaId = 187264
             )
         )
     }

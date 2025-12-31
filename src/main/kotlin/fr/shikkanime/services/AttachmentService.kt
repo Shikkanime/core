@@ -189,9 +189,16 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         val attachmentBytes = try {
             if (!url.isNullOrBlank() && bytes.isNullOrEmpty()) {
                 val (httpResponse, urlBytes) = runBlocking {
-                    val response = HttpRequest.retryOnTimeout(3) { httpRequest.get(url) }
+                    val response = HttpRequest.retryOnTimeout(3) {
+                        httpRequest.get(
+                            url,
+                            headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36")
+                        )
+                    }
                     response to response.readRawBytes()
                 }
+
+                logger.config("HTTP Response code: ${httpResponse.status.value}")
 
                 if (httpResponse.status != HttpStatusCode.OK || urlBytes.isEmpty() || httpResponse.contentType()?.withoutParameters() !in contentTypes) {
                     logger.warning(FAILED_TO_ENCODE_MESSAGE)

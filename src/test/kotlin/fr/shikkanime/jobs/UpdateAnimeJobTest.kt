@@ -146,9 +146,9 @@ class UpdateAnimeJobTest : AbstractTest() {
                 platforms = listOf(
                     PlatformData(Platform.CRUN, "GRDV0019R")
                 ),
-                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/e4e80c83c792d81c138e320874dbdffc.jpg",
-                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8b7f5847f9b97f921e41d4ef59fd2d79.jpg",
-                expectedDescription = "Plongez dans une série sombre, palpitante et surnaturelle… Suivez le jeune Yuji Itadori dans son initiation aux dangereux arts de l’exorcisme et au monde des fléaux ! Pour sauver son camarade de classe, Yuji Itadori a mangé… un doigt de démon maudit. Il partage désormais son corps avec Ryomen Sukuna, un démon maléfique connu sous le nom de Roi des Fléaux. Les fléaux sont des forces surnaturelles créées à partir des émotions négatives des humains. Cette énergie occulte est la source de la puissance des exorcistes, aussi bien que des fléaux. Yuji rejoint alors l’école d’exorcisme de Tokyo, qui lutte contre les fléaux. Guidé par son professeur, Satoru Gojo, il se lie d’amitié avec Megumi Fushiguro et Nobara Kugisaki, tous deux élèves de première année."
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/cd71baf98cf38b4ca3066e6d42e53bca.png",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fac3a4c08ae9db6a5cf8791af900a4b7.png",
+                expectedDescription = "La vie au quotidien de trois charmantes jeunes filles qui vont au lycée : Momoko, belle et tête en l'air ; Shibumi, décontractée et sérieuse ; Mayumi, douce et innocente."
             )
         )
     }
