@@ -55,7 +55,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         logger.config("Searching for '$searchQuery'...")
         val response = search(
             query = searchQuery,
-            status = listOf(Status.RELEASING, Status.FINISHED),
+            status = listOf(Status.NOT_YET_RELEASED, Status.RELEASING, Status.FINISHED),
             limit = 20
         )
 
