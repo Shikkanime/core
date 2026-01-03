@@ -109,7 +109,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         val objects = alreadyCached.mapNotNull { objectCache[locale to it] }.toMutableList()
 
         if (notCached.isNotEmpty()) {
-            val newObjects = CrunchyrollWrapper.getObjects(locale, *notCached.toTypedArray())
+            val newObjects = CrunchyrollWrapper.getChunkedObjects(locale, *notCached.toTypedArray())
             newObjects.forEach { objectCache.putIfNotExists(locale to it.id, it) }
             objects.addAll(newObjects)
         }
@@ -131,11 +131,9 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
 
         val mainBrowseObjects = allEpisodes.map { it.convertToBrowseObject() }
 
-        val variantBrowseObjects = allEpisodes
+        val variantBrowseObjects = getChunkedObjects(locale, *allEpisodes
             .flatMap { it.getVariants(original) }
-            .subtract(mainBrowseObjects.map { it.id }.toSet())
-            .chunked(CRUNCHYROLL_CHUNK)
-            .flatMap { chunk -> getObjects(locale, *chunk.toTypedArray()) }
+            .subtract(mainBrowseObjects.map { it.id }.toSet()).toTypedArray())
 
         (mainBrowseObjects + variantBrowseObjects).toTypedArray()
     }

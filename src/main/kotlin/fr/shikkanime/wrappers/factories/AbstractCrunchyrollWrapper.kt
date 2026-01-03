@@ -217,6 +217,7 @@ abstract class AbstractCrunchyrollWrapper {
     abstract suspend fun getEpisode(locale: String, id: String): Episode
     abstract suspend fun getEpisodeDiscoverByType(locale: String, type: String, id: String): BrowseObject
     abstract suspend fun getObjects(locale: String, vararg ids: String): List<BrowseObject>
+    suspend fun getChunkedObjects(locale: String, vararg ids: String): List<BrowseObject> = ids.toSet().chunked(CRUNCHYROLL_CHUNK).flatMap { getObjects(locale, *it.toTypedArray()) }
     abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): Array<BrowseObject>
     abstract suspend fun getSimulcasts(locale: String): Array<Simulcast>
 

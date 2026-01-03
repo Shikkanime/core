@@ -38,16 +38,18 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         val list = mutableListOf<Episode>()
 
         configuration!!.availableCountries.forEach { countryCode ->
-            val api = bypassFileContent?.takeIf { it.exists() }?.let {
+            val api = (bypassFileContent?.takeIf { it.exists() }?.let {
                 ObjectParser.fromJson(
                     ObjectParser.fromJson(it.readText()).getAsJsonArray("data"),
                     Array<AbstractCrunchyrollWrapper.BrowseObject>::class.java
                 ).toList()
-            } ?: getApiContent(countryCode, zonedDateTime).toMutableList()
+            } ?: getApiContent(countryCode, zonedDateTime)).toMutableList()
+
+            retrieveAdditionalAudioVariants(countryCode, api)
 
             // Preload all series
             runCatching {
-                CrunchyrollCachedWrapper.getObjects(
+                CrunchyrollCachedWrapper.getChunkedObjects(
                     countryCode.locale,
                     *api.mapNotNull { it.episodeMetadata?.seriesId }.distinct().toTypedArray()
                 )
@@ -59,6 +61,28 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         }
 
         return list
+    }
+
+    private suspend fun retrieveAdditionalAudioVariants(
+        countryCode: CountryCode,
+        api: MutableList<AbstractCrunchyrollWrapper.BrowseObject>,
+    ) {
+        val currentIds = api.map { it.id }.toSet()
+
+        val variantIds = api.flatMap { browseObject ->
+            val metadata = browseObject.episodeMetadata ?: return@flatMap emptyList()
+            val versions = metadata.versions ?: emptyList()
+
+            val allAudioLocales = versions.map { it.audioLocale }.toSet() + setOfNotNull(metadata.audioLocale)
+            val allowedAudioLocales = LocaleUtils.getAllowedLocales(countryCode, allAudioLocales)
+
+            versions.filter { it.audioLocale in allowedAudioLocales && it.guid !in currentIds }.map { it.guid }
+        }.distinct()
+
+        if (variantIds.isNotEmpty()) {
+            val additionalObjects = runCatching { CrunchyrollWrapper.getChunkedObjects(countryCode.locale, *variantIds.toTypedArray()) }.getOrNull() ?: emptyList()
+            api.addAll(additionalObjects)
+        }
     }
 
     private suspend fun addToList(
