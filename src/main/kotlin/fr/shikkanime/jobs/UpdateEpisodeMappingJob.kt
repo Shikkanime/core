@@ -11,7 +11,6 @@ import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
-import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper.BrowseObject
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.caches.*
@@ -519,8 +518,7 @@ class UpdateEpisodeMappingJob : AbstractJob {
         val mainObject = episodeSource.also { browseObjects.add(it.convertToBrowseObject()) }
         
         val variantIds = mainObject.getVariants().subtract(browseObjects.map { it.id }.toSet())
-        val variantObjects = variantIds.chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
-            .flatMap { chunk -> CrunchyrollCachedWrapper.getObjects(countryCode.locale, *chunk.toTypedArray()) }
+        val variantObjects = CrunchyrollCachedWrapper.getChunkedObjects(countryCode.locale, *variantIds.toTypedArray())
 
         return (browseObjects + variantObjects).mapNotNull { browseObject ->
             try {

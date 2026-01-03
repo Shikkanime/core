@@ -115,11 +115,9 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
 
         val mainBrowseObjects = allEpisodes.map { it.convertToBrowseObject() }
 
-        val variantBrowseObjects = allEpisodes
+        val variantBrowseObjects = getChunkedObjects(locale, *allEpisodes
             .flatMap { it.getVariants(original) }
-            .subtract(mainBrowseObjects.map { it.id }.toSet())
-            .chunked(CRUNCHYROLL_CHUNK)
-            .flatMap { chunk -> getObjects(locale, *chunk.toTypedArray()) }
+            .subtract(mainBrowseObjects.map { it.id }.toSet()).toTypedArray())
 
         return (mainBrowseObjects + variantBrowseObjects).toTypedArray()
     }

@@ -115,7 +115,14 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 simulcastNames = listOf(),
                 expectedAnimeName = "Jujutsu Kaisen",
                 expectedEpisodes = false
-            )
+            ),
+            EpisodeTestCase(
+                testDate = "2026-01-03T13:30:00Z",
+                simulcastNames = listOf("Sentenced to Be a Hero"),
+                expectedAnimeName = "Sentenced to Be a Hero",
+                expectedEpisodeCount = 2,
+                episodeType = EpisodeType.EPISODE
+            ),
         )
         
         @JvmStatic
