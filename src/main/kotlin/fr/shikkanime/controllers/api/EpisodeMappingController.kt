@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
+import fr.shikkanime.services.MediaVideo
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
 import fr.shikkanime.utils.EncryptionManager
@@ -68,5 +69,22 @@ class EpisodeMappingController : HasPageableRoute() {
         val baos = ByteArrayOutputStream()
         ImageIO.write(image, "jpg", baos)
         return Response.multipart(baos.toByteArray(), ContentType.Image.JPEG)
+    }
+
+    @Path("/media-video")
+    @Get
+    private fun getMediaVideo(@QueryParam("uuids") uuidsGzip: String?): Response {
+        if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
+
+        val fromGzip = runCatching { EncryptionManager.fromGzip(uuidsGzip) }.getOrNull() ?: return Response.badRequest()
+        val uuids = fromGzip.split(StringUtils.COMMA_STRING).mapNotNull(UUID::fromString).distinct()
+        val variants = episodeVariantService.findAllByUuids(uuids)
+        if (variants.isEmpty()) return Response.notFound()
+
+        val distinctAnimeUuids = variants.map { it.mapping!!.anime!!.uuid }.distinct()
+        if (distinctAnimeUuids.size != 1) return Response.badRequest()
+
+        val video = MediaVideo.toMediaVideo(*variants.toTypedArray())
+        return Response.multipart(video.readBytes(), ContentType.Video.MP4)
     }
 }

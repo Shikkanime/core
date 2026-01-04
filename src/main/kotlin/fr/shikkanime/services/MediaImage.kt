@@ -22,6 +22,11 @@ object MediaImage {
     private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
     private val httpRequest = HttpRequest(timeout = 5_000L)
 
+    data class VideoAssets(
+        val poster: BufferedImage, // L'image de l'anime (arrondie)
+        val logoPlatform: BufferedImage? // Le logo (ADN, Crunchyroll, etc) tiré de la bannière
+    )
+
     fun toMediaImage(vararg variants: EpisodeVariant): BufferedImage {
         require(variants.isNotEmpty()) { "The variants list is empty" }
         require(variants.map { it.mapping!!.anime!! }.distinctBy { it.uuid!! }.size == 1) { "The variants list must be from the same anime" }
@@ -46,6 +51,46 @@ object MediaImage {
 
         graphics.dispose()
         return mediaImage
+    }
+
+    // --- NOUVELLE FONCTION POUR LA VIDÉO ---
+    fun getVideoAssets(vararg variants: EpisodeVariant): VideoAssets {
+        val anime = variants.first().mapping!!.anime!!
+
+        // 1. Préparer l'image principale (Poster)
+        val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
+        val thumbnailAttachment = attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, ImageType.THUMBNAIL)
+        checkNotNull(thumbnailAttachment) { "The anime does not have a thumbnail" }
+
+        val rawImage = getLongTimeoutImage(thumbnailAttachment.url!!).resize(1560, 2340) // Haute qualité
+
+        // Redimensionnement pour rentrer dans un carré vidéo de 768px (avec marge)
+        // On vise une hauteur d'environ 500px pour laisser place au texte
+        val targetHeight = 500
+        val ratio = targetHeight.toDouble() / rawImage.height
+        val targetWidth = (rawImage.width * ratio).toInt()
+
+        val resizedImage = rawImage.resize(targetWidth, targetHeight)
+
+        // Création de l'image finale avec bordure blanche et coins arrondis
+        val finalPoster = BufferedImage(targetWidth + 20, targetHeight + 20, BufferedImage.TYPE_INT_ARGB)
+        val gPoster = finalPoster.createGraphics()
+        gPoster.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+        // Ombre portée simple (optionnel, ici juste un contour blanc épais style "Sticker")
+        gPoster.color = Color.WHITE
+        gPoster.fillRoundRect(0, 0, finalPoster.width, finalPoster.height, 20, 20)
+
+        // Dessin de l'image par dessus avec padding
+        gPoster.drawImage(resizedImage.makeRoundedCorner(16), 10, 10, null)
+        gPoster.dispose()
+
+        // 2. Préparer le Logo (ADN, etc.) depuis la banner
+        // On charge la bannière "logo" (banner.png ou depuis l'anime banner)
+        // Dans votre code original, vous chargiez "banner.png" qui semblait être le logo de la plateforme/shikkanime
+        val bannerImage = loadAndResizeBannerImage()
+
+        return VideoAssets(finalPoster, bannerImage)
     }
 
     private fun BufferedImage.makeRoundedCorner(cornerRadius: Int): BufferedImage =
@@ -77,7 +122,7 @@ object MediaImage {
         }
     }
 
-    private fun loadCustomFont(): Font {
+    fun loadCustomFont(): Font {
         return FileManager.getInputStreamFromResource("assets/fonts/Satoshi-Regular.ttf").use { inputStream ->
             Font.createFont(Font.TRUETYPE_FONT, inputStream)
         }

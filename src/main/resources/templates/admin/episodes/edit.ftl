@@ -192,7 +192,13 @@
                                       rows="6" x-model="episode.description"></textarea>
                         </div>
                         <div class="col-md-6">
-                            <label for="image" class="form-label">Image</label>
+                            <label for="image" class="form-label">
+                                Image
+
+                                <a style="cursor: pointer" @click="goToMediaImage(episode.variants.map(variant => variant.uuid))">
+                                    <i class="ms-2 bi bi-image"></i>
+                                </a>
+                            </label>
 
                             <div class="input-group mb-2">
                                 <input type="text" class="form-control" id="image" name="image"
@@ -231,10 +237,6 @@
                                     <tr>
                                         <th scope="row">
                                             <span x-text="variant.identifier"></span>
-
-                                            <a style="cursor: pointer" @click="goToMediaImage(variant.uuid)">
-                                                <i class="ms-2 bi bi-image"></i>
-                                            </a>
                                         </th>
                                         <td>
                                             <input type="datetime-local" class="form-control"
@@ -365,9 +367,9 @@
             return new Response(cs.readable).blob().then(blobToBase64);
         };
 
-        function goToMediaImage(uuid) {
-            compress(uuid).then(base64 => {
-                const url = '/api/v1/episode-mappings/media-image?uuids=' + base64;
+        function goToMediaImage(uuids) {
+            compress(uuids.join(',')).then(base64 => {
+                const url = '/api/v1/episode-mappings/media-image?uuids=' + encodeURIComponent(base64);
                 window.open(url, '_blank');
             });
         }
