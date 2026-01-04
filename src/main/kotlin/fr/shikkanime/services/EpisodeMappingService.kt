@@ -4,12 +4,14 @@ import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.TraceAction
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
-import java.time.ZonedDateTime
+import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.SimulcastCacheService
 import java.util.*
 
 class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepository>() {
@@ -17,6 +19,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
     @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var simulcastCacheService: SimulcastCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
 
     override fun getRepository() = episodeMappingRepository
 
@@ -33,8 +37,23 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
 
-    fun findAllNeedUpdate(lastUpdateDateTime: ZonedDateTime, lastImageUpdateDateTime: ZonedDateTime) =
-        episodeMappingRepository.findAllNeedUpdate(lastUpdateDateTime, lastImageUpdateDateTime)
+    fun findAllNeedUpdate(): List<EpisodeMapping> {
+        val simulcasts = simulcastCacheService.findAll()
+
+        val currentSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_CURRENT_SEASON, 7).toLong()
+        val lastSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_LAST_SEASON, 30).toLong()
+        val othersDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_OTHERS, 90).toLong()
+        val lastImageUpdateDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2).toLong()
+
+        return episodeMappingRepository.findAllNeedUpdate(
+            currentSimulcastUuid = simulcasts.getOrNull(0)?.uuid,
+            lastSimulcastUuid = simulcasts.getOrNull(1)?.uuid,
+            currentSeasonDelay = currentSeasonDelay,
+            lastSeasonDelay = lastSeasonDelay,
+            othersDelay = othersDelay,
+            lastImageUpdateDelay = lastImageUpdateDelay
+        )
+    }
 
     fun findAllSeo() = episodeMappingRepository.findAllSeo()
 

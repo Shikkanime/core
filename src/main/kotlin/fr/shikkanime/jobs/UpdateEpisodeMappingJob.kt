@@ -36,10 +36,8 @@ class UpdateEpisodeMappingJob : AbstractJob {
 
     override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY, 30).toLong())
         val lastImageUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2).toLong())
-
-        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdate(lastUpdateDateTime, lastImageUpdateDateTime)
+        val allPlatformEpisodes = episodeMappingService.findAllNeedUpdate()
         logger.info("Found ${allPlatformEpisodes.size} episodes to update")
 
         val needUpdateEpisodes = allPlatformEpisodes
