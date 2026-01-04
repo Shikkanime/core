@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
+import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -74,11 +75,48 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllNeedUpdate(lastUpdateDateTime: ZonedDateTime, lastImageUpdateDateTime: ZonedDateTime): List<EpisodeMapping> {
+    fun findAllNeedUpdate(
+        currentSimulcastUuid: UUID?,
+        lastSimulcastUuid: UUID?,
+        currentSeasonDelay: Long,
+        lastSeasonDelay: Long,
+        othersDelay: Long,
+        lastImageUpdateDelay: Long,
+    ): List<EpisodeMapping> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
+            val animeJoin = root.join(EpisodeMapping_.anime)
+            val simulcastJoin = animeJoin.join(Anime_.simulcasts, JoinType.LEFT)
+            val now = ZonedDateTime.now()
+
+            val predicates = buildSet {
+                currentSimulcastUuid?.let { uuid ->
+                    add(cb.and(
+                        cb.equal(simulcastJoin[Simulcast_.uuid], uuid),
+                        cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], now.minusDays(currentSeasonDelay))
+                    ))
+                }
+                lastSimulcastUuid?.let { uuid ->
+                    add(cb.and(
+                        cb.equal(simulcastJoin[Simulcast_.uuid], uuid),
+                        cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], now.minusDays(lastSeasonDelay))
+                    ))
+                }
+                add(cb.and(
+                    cb.not(cb.exists(query.subquery(Int::class.java).apply {
+                        val subRoot = from(Anime::class.java)
+                        select(cb.literal(1))
+                        where(
+                            cb.equal(subRoot[Anime_.uuid], animeJoin[Anime_.uuid]),
+                            subRoot.join(Anime_.simulcasts)[Simulcast_.uuid]
+                                .`in`(listOfNotNull(currentSimulcastUuid, lastSimulcastUuid))
+                        )
+                    })),
+                    cb.lessThanOrEqualTo(root[EpisodeMapping_.lastUpdateDateTime], now.minusDays(othersDelay))
+                ))
+            }
 
             val attachmentSubquery = query.subquery(Long::class.java)
             val attachmentRoot = attachmentSubquery.from(Attachment::class.java)
@@ -94,13 +132,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             query.distinct(true)
                 .where(
                     cb.or(
-                        cb.lessThanOrEqualTo(
-                            root[EpisodeMapping_.lastUpdateDateTime],
-                            lastUpdateDateTime
-                        ),
+                        *predicates.toTypedArray(),
                         cb.and(
                             cb.equal(attachmentSubquery, 1L),
-                            cb.greaterThanOrEqualTo(root[EpisodeMapping_.releaseDateTime], lastImageUpdateDateTime),
+                            cb.greaterThanOrEqualTo(root[EpisodeMapping_.releaseDateTime], now.minusDays(lastImageUpdateDelay)),
                         ),
                     ),
                 )

@@ -362,7 +362,7 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
 
         InvalidationService.invalidate(Config::class.java)
 
-        val zonedDateTime = ZonedDateTime.now().minusMonths(2)
+        val zonedDateTime = ZonedDateTime.now().minusMonths(6)
         
         // Create anime
         val anime = animeService.save(

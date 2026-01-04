@@ -42,7 +42,6 @@ enum class ConfigPropertyKey(val key: String) {
     TWITTER_FIRST_MESSAGE("twitter_first_message"),
     TWITTER_SECOND_MESSAGE("twitter_second_message"),
     UPDATE_ANIME_SIZE("update_anime_size"),
-    UPDATE_EPISODE_DELAY("update_episode_delay"),
     UPDATE_EPISODE_SIZE("update_episode_size"),
     USE_SECURITY_HEADERS("use_security_headers"),
     UPDATE_ATTACHMENT_DELAY("update_image_delay"),
@@ -65,4 +64,7 @@ enum class ConfigPropertyKey(val key: String) {
     CRUNCHYROLL_CHECK_SERIES_SIMULCAST("crunchyroll_check_series_simulcast"),
     MATCHING_ANILIST_ANIME_SIZE("matching_anilist_anime_size"),
     MATCHING_ANILIST_DELAY("matching_anilist_delay"),
+    UPDATE_EPISODE_DELAY_CURRENT_SEASON("update_episode_delay_current_season"),
+    UPDATE_EPISODE_DELAY_LAST_SEASON("update_episode_delay_last_season"),
+    UPDATE_EPISODE_DELAY_OTHERS("update_episode_delay_others"),
 }
