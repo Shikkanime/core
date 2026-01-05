@@ -1,7 +1,6 @@
 <#import "_navigation.ftl" as navigation />
 <#import "components/episode-duration.ftl" as durationComponent />
 <#import "components/langType.ftl" as langTypeComponent />
-<#import "./seo/json-ld.ftl" as jsonLd />
 
 <@navigation.display canonicalUrl="${baseUrl}/calendar">
     <div x-data="{
@@ -186,7 +185,9 @@
                                     </div>
                                 </a>
 
-                                <#if !isReleased><@jsonLd.anime anime=release.anime /></#if>
+                                <#if !isReleased && release.anime.jsonLd??>
+                                    <script type="application/ld+json">${release.anime.jsonLd}</script>
+                                </#if>
                             </article>
                         </#list>
                     </td>

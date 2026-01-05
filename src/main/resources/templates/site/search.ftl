@@ -141,6 +141,10 @@
                                 <div class="text-truncate-6" x-text="anime.description"></div>
                             </div>
                         </a>
+
+                        <template x-if="anime.jsonLd">
+                            <script type="application/ld+json" x-text="anime.jsonLd"></script>
+                        </template>
                     </article>
                 </div>
             </template>
