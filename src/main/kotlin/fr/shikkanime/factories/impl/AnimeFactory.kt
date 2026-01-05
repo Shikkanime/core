@@ -7,6 +7,7 @@ import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.AnimePlatformCacheService
+import fr.shikkanime.services.seo.JsonLdBuilder
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
@@ -16,14 +17,19 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
     @Inject private lateinit var animeCacheService: AnimeCacheService
     @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
     @Inject private lateinit var simulcastFactory: SimulcastFactory
+    @Inject
+    private lateinit var jsonLdBuilder: JsonLdBuilder
 
     override fun toDto(entity: Anime) = toDto(entity, false)
 
     fun toDto(entity: Anime, showAllPlatforms: Boolean): AnimeDto {
         val audioLocales = animeCacheService.getAudioLocales(entity.uuid!!)
         val langTypes = animeCacheService.getLangTypes(entity).toSet()
-        val seasons = animeCacheService.findAllSeasons(entity)
+        val seasons = animeCacheService.findAllSeasons(entity).toSet()
+
         val platforms = animePlatformCacheService.findAllByAnime(entity)
+            .filter { showAllPlatforms || it.platform.isStreaming }
+            .toSet()
 
         return AnimeDto(
             uuid = entity.uuid,
@@ -38,8 +44,8 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             simulcasts = if (Hibernate.isInitialized(entity.simulcasts)) entity.simulcasts.sortBySeasonAndYear().map(simulcastFactory::toDto).toSet() else null,
             audioLocales = audioLocales.toTreeSet(),
             langTypes = langTypes,
-            seasons = seasons.toSet(),
-            platformIds = platforms.filter { showAllPlatforms || it.platform.isStreaming }.toTreeSet()
-        )
+            seasons = seasons,
+            platformIds = platforms.toTreeSet(),
+        ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto, seasons, platforms) }
     }
 }

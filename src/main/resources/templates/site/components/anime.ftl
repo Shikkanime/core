@@ -1,5 +1,4 @@
 <#import "langType.ftl" as langTypeComponent />
-<#import "../seo/json-ld.ftl" as jsonLd />
 
 <#macro display anime>
     <#assign animeSanitized = anime.shortName?html />
@@ -54,7 +53,9 @@
                 </div>
             </a>
 
-            <@jsonLd.anime anime=anime />
+            <#if anime.jsonLd??>
+                <script type="application/ld+json">${anime.jsonLd}</script>
+            </#if>
         </article>
     </div>
 </#macro>
