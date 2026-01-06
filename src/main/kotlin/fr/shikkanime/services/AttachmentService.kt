@@ -54,7 +54,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = attachmentRepository.findAllActiveWithUrlAndNotIn(uuids)
 
-    fun findAllActive() = attachmentRepository.findAllActive()
+    fun getAttachmentCountsByDate() = attachmentRepository.getCumulativeAttachmentCounts()
 
     private fun scheduleInvalidation() {
         synchronized(this) {

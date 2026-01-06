@@ -27,23 +27,13 @@ const createLineChart = (element, label, unit) => new Chart(element, {
     }
 });
 
-const createBarChart = (element, label) => new Chart(element, {
-    type: 'bar',
-    data: { labels: [], datasets: [{ label, data: [], backgroundColor: 'rgba(33,37,41,0.6)' }] },
-    options: {
-        maintainAspectRatio: false,
-        scales: { x: { type: 'time', time: { unit: 'day' } }, y: { beginAtZero: true } },
-        animation: { duration: 0 },
-        plugins: { legend: { display: false } }
-    }
-});
-
 const createPieChart = (element, label) => new Chart(element, {
     type: 'doughnut',
     data: { labels: [], datasets: [{ label, data: [], backgroundColor: colorPalette }] },
     options: {
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } }
+        plugins: {legend: {position: 'bottom'}},
+        animation: {duration: 0}
     }
 });
 
@@ -60,7 +50,8 @@ const simulcastsBarChart = simulcastsBarChartElement ? new Chart(simulcastsBarCh
     options: {
         maintainAspectRatio: false,
         scales: { y: { beginAtZero: true } },
-        plugins: { legend: { display: false } }
+        plugins: {legend: {display: false}},
+        animation: {duration: 0}
     }
 }) : null;
 
@@ -77,104 +68,102 @@ const usersByVersionChart = new Chart(usersByVersionChartElement, {
     }
 });
 
-const hexToRgba = (hex, alpha=0.3) => {
-    const h = hex.replace('#','');
-    const bigint = parseInt(h, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    return `rgba(${r},${g},${b},${alpha})`;
-};
+const getMetrics = async  () => await fetch('/admin/api/analytics/metrics?hours=' + datemenuElement.value).then(r => r.json())
+const getSimulcasts = async () => await fetch('/api/v1/simulcasts').then(r => r.json());
+const getAttachmentsCounts = async () => await fetch('/admin/api/analytics/attachments').then(r => r.json());
+const getUserAnalytics = async () => await fetch('/admin/api/analytics/users?activeDays=' + activedaysmenuElement.value + '&days=' + daysmenuElement.value).then(r => r.json());
 
-const getAnalytics = async () => (await fetch('/admin/api/analytics?hours=' + datemenuElement.value + '&activeDays=' + activedaysmenuElement.value + '&days=' + daysmenuElement.value)).json();
+function updateMetricsChart() {
+    getMetrics().then(data => {
+        const timeUnit = parseInt(datemenuElement.value, 10) > 24 ? 'day' : 'hour';
+        const labels = data.map(m => m.date);
+        const toNumberArray = (arr, key) => arr.map(m => parseFloat(m[key]));
 
-const setChartData = async () => {
-    const data = await getAnalytics();
+        [cpuChart, memoryChart].forEach(c => c.options.scales.x.time.unit = timeUnit);
 
-    // Metrics charts (CPU/Memory)
-    const metricsData = data.metrics || [];
-    const timeUnit = parseInt(datemenuElement.value, 10) > 24 ? 'day' : 'hour';
-    const labels = metricsData.map(m => m.date);
+        cpuChart.data.labels = labels;
+        cpuChart.data.datasets[0].data = toNumberArray(data, 'avgCpuLoad');
+        cpuChart.update();
 
-    const toNumberArray = (arr, key) => arr.map(m => parseFloat(m[key]));
-
-    [cpuChart, memoryChart].forEach(c => c.options.scales.x.time.unit = timeUnit);
-
-    cpuChart.data.labels = labels;
-    cpuChart.data.datasets[0].data = toNumberArray(metricsData, 'avgCpuLoad');
-    cpuChart.update();
-
-    memoryChart.data.labels = labels;
-    memoryChart.data.datasets[0].data = toNumberArray(metricsData, 'avgMemoryUsage');
-    memoryChart.update();
-
-    // Attachments chart (line) - cumulative
-    const atts = (data.attachments || []).sort((a,b) => a.date.localeCompare(b.date));
-    attachmentsChart.data.labels = atts.map(a => a.date);
-    const cumulative = atts.reduce((acc, cur, idx) => {
-        const val = Number(cur.count) || 0;
-        acc.push((idx > 0 ? acc[idx - 1] : 0) + val);
-        return acc;
-    }, []);
-    attachmentsChart.data.datasets[0].data = cumulative;
-    attachmentsChart.update();
-
-    // Pie charts from analytics key-counts
-    const applyPie = (chart, arr) => {
-        const labels = arr.map(x => x.key);
-        const values = arr.map(x => x.count);
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = values;
-        chart.update();
-    };
-
-    const analytics = data.analytics || {};
-    applyPie(versionsPie, analytics.versionCounts || []);
-    applyPie(localesPie, analytics.localeCounts || []);
-    applyPie(devicesPie, analytics.deviceCounts || []);
-
-    // Stacked area: dailyUserVersionCounts
-    const duvc = analytics.dailyUserVersionCounts || [];
-    const uniqueDates = Array.from(new Set(duvc.map(x => x.date))).sort((a,b) => a.localeCompare(b));
-    const versions = Array.from(new Set(duvc.map(x => x.version))).sort((a,b) => a.localeCompare(b));
-
-    const seriesMap = new Map();
-    versions.forEach((v, idx) => {
-        seriesMap.set(v, {
-            label: v,
-            data: new Array(uniqueDates.length).fill(0),
-            borderColor: colorPalette[idx % colorPalette.length],
-            fill: false,
-            tension: 0.1
-        });
+        memoryChart.data.labels = labels;
+        memoryChart.data.datasets[0].data = toNumberArray(data, 'avgMemoryUsage');
+        memoryChart.update();
     });
+}
 
-    duvc.forEach(row => {
-        const dateIndex = uniqueDates.indexOf(row.date);
-        const dataset = seriesMap.get(row.version);
-        if (dataset && dateIndex >= 0) dataset.data[dateIndex] = row.count;
-    });
-
-
-    usersByVersionChart.options.scales.x.time.unit = 'day';
-    usersByVersionChart.data.labels = uniqueDates;
-    usersByVersionChart.data.datasets = Array.from(seriesMap.values());
-    usersByVersionChart.update();
-
-    if (simulcastsBarChart) {
-        const simulcasts = await fetch('/api/v1/simulcasts').then(r => r.json());
-        const seasonOrder = { WINTER: 0, SPRING: 1, SUMMER: 2, AUTUMN: 3 };
-        const sorted = simulcasts.slice().sort((a, b) => {
+function updateSimulcastsChart() {
+    getSimulcasts().then(data => {
+        const seasonOrder = {WINTER: 0, SPRING: 1, SUMMER: 2, AUTUMN: 3};
+        const sorted = data.slice().sort((a, b) => {
             if (a.year === b.year) return seasonOrder[a.season] - seasonOrder[b.season];
             return a.year - b.year;
         });
         simulcastsBarChart.data.labels = sorted.map(s => s.season + ' ' + s.year);
         simulcastsBarChart.data.datasets[0].data = sorted.map(s => s.animesCount || 0);
         simulcastsBarChart.update();
-    }
+    });
+}
+
+function updateAttachmentsChart() {
+    getAttachmentsCounts().then(data => {
+        attachmentsChart.data.labels = data.map(a => a.key);
+        attachmentsChart.data.datasets[0].data = data.map(a => a.count);
+        attachmentsChart.update();
+    });
+}
+
+function updateUserMetricsChart() {
+    getUserAnalytics().then(data => {
+        // Pie charts from analytics key-counts
+        const applyPie = (chart, arr) => {
+            const labels = arr.map(x => x.key);
+            const values = arr.map(x => x.count);
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = values;
+            chart.update();
+        };
+
+        applyPie(versionsPie, data.versionCounts || []);
+        applyPie(localesPie, data.localeCounts || []);
+        applyPie(devicesPie, data.deviceCounts || []);
+
+        // Stacked area: dailyUserVersionCounts
+        const duvc = data.dailyUserVersionCounts || [];
+        const uniqueDates = Array.from(new Set(duvc.map(x => x.date))).sort((a, b) => a.localeCompare(b));
+        const versions = Array.from(new Set(duvc.map(x => x.version))).sort((a, b) => a.localeCompare(b));
+
+        const seriesMap = new Map();
+        versions.forEach((v, idx) => {
+            seriesMap.set(v, {
+                label: v,
+                data: new Array(uniqueDates.length).fill(0),
+                borderColor: colorPalette[idx % colorPalette.length],
+                fill: false,
+                tension: 0.1
+            });
+        });
+
+        duvc.forEach(row => {
+            const dateIndex = uniqueDates.indexOf(row.date);
+            const dataset = seriesMap.get(row.version);
+            if (dataset && dateIndex >= 0) dataset.data[dateIndex] = row.count;
+        });
+
+        usersByVersionChart.options.scales.x.time.unit = 'day';
+        usersByVersionChart.data.labels = uniqueDates;
+        usersByVersionChart.data.datasets = Array.from(seriesMap.values());
+        usersByVersionChart.update();
+    });
+}
+
+const setChartData = () => {
+    updateMetricsChart();
+    updateSimulcastsChart();
+    updateAttachmentsChart();
+    updateUserMetricsChart();
 };
 
-document.addEventListener('DOMContentLoaded', () => setChartData());
-datemenuElement.addEventListener('change', () => setChartData());
-activedaysmenuElement.addEventListener('change', () => setChartData());
-daysmenuElement.addEventListener('change', () => setChartData());
+document.addEventListener('DOMContentLoaded', setChartData);
+datemenuElement.addEventListener('change', updateMetricsChart);
+activedaysmenuElement.addEventListener('change', updateUserMetricsChart);
+daysmenuElement.addEventListener('change', updateUserMetricsChart);
