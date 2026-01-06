@@ -24,20 +24,22 @@ object StringUtils {
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
     private val regex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([$ROMAN_NUMBERS_CHECK]+$)".toRegex()
     private val separators = listOf(":", COMMA_STRING, "!", "–", " so ", " - ")
-    private val encasedRegex = "<.*> ?.*".toRegex()
+    private val encasedRegex = "(<.*>|«.*») ?.*".toRegex()
+    private val specialCharRegex: Regex = "[<«»]".toRegex()
     private val duplicateSpaceRegex = " +".toRegex()
     private val wordSeparatorRegex = "[ \\-']".toRegex()
+
+    fun removeSpecialCharacters(name: String): String =
+        if (encasedRegex in name) name.replace(specialCharRegex, EMPTY_STRING).replace(">", ": ").trim() else name
 
     fun removeAnimeNamePart(name: String) = name.replace(ANIME_STRING, EMPTY_STRING).trim()
 
     private fun isAllPartsHaveSameAmountOfWords(parts: List<String>) = parts.map { it.trim().split(wordSeparatorRegex).size }.distinct().size == 1
 
     fun getShortName(fullName: String): String {
-        var normalizedName = when {
-            encasedRegex in fullName -> fullName.replace("<", EMPTY_STRING).replace(">", ": ").trim()
-            ANIME_STRING in fullName -> removeAnimeNamePart(fullName)
-            else -> regex.replace(fullName, SPACE_STRING).trim()
-        }
+        var normalizedName = removeSpecialCharacters(fullName)
+        if (ANIME_STRING in fullName) normalizedName = removeAnimeNamePart(normalizedName)
+        normalizedName = regex.replace(normalizedName, SPACE_STRING).trim()
 
         separators.filter { it in normalizedName }
             .forEach { separator ->

@@ -91,7 +91,8 @@ class StringUtilsTest {
             "SI-VIS: The Sound of Heroes" to "SI-VIS",
             "The Fated Magical Princess: Who Made Me a Princess" to "The Fated Magical Princess",
             "Yano-kun's Ordinary Days" to "Yano-kun's Ordinary Days",
-            "With you, Our Love will Make it Through" to "With you, Our Love will Make it Through"
+            "With you, Our Love will Make it Through" to "With you, Our Love will Make it Through",
+            "Anime « Monster Strike: Deadverse Reloaded »" to "Monster Strike: Deadverse Reloaded",
         )
 
         list.forEach { (input, expected) ->
