@@ -100,6 +100,14 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 testDate = "2025-10-11T00:00:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1864/151837l.jpg",
                 expectedAudioLocales = setOf("ja-JP", "fr-FR")
+            ),
+            SimulcastTestCase(
+                "0QTHN6BJ67YJNWF5JMME3RK5D7",
+                "Monster Strike: Deadverse Reloaded",
+                releaseDay = 0,
+                testDate = "2026-06-01T21:00:00Z",
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b196230-Ldqd9onRZhix.png",
+                expectedAudioLocales = setOf("ja-JP")
             )
         )
     }
@@ -139,12 +147,12 @@ class PrimeVideoPlatformTest : AbstractTest() {
         assertTrue(duplicates.isEmpty(), "Duplicate episodes found: $duplicates")
 
         // Common assertions for all episodes
-        episodes.forEach {
-            assertEquals(testCase.expectedAnimeName, it.anime)
-            assertTrue(it.animeDescription?.isNotBlank() == true)
-            assertTrue(it.image.startsWith("https://m.media-amazon.com"))
-            assertTrue(it.url.isNotBlank())
-            assertTrue("https://" !in it.getIdentifier())
+        episodes.associateWith { episodeVariantService.save(it) }.forEach { (episode, variant) ->
+            assertEquals(testCase.expectedAnimeName, variant.mapping!!.anime!!.name)
+            assertTrue(episode.animeDescription?.isNotBlank() == true)
+            assertTrue(episode.image.startsWith("https://m.media-amazon.com"))
+            assertTrue(episode.url.isNotBlank())
+            assertTrue("https://" !in episode.getIdentifier())
         }
 
         // Check if the audio locales match the expected values

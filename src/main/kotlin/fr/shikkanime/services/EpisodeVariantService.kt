@@ -155,7 +155,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         }
 
         // Generate a slug for the anime based on its name
-        val animeName = StringUtils.removeAnimeNamePart(episode.anime)
+        val animeName = StringUtils.removeAnimeNamePart(StringUtils.removeSpecialCharacters(episode.anime))
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
         // Find or create the anime entity
