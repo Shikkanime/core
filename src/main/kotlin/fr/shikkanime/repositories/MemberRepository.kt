@@ -1,12 +1,12 @@
 package fr.shikkanime.repositories
 
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.analytics.KeyCountDto
 import fr.shikkanime.dtos.member.AdditionalDataDto
 import fr.shikkanime.dtos.member.DetailedMemberDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
-import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.withUTCString
 import jakarta.persistence.Tuple
@@ -116,72 +116,71 @@ class MemberRepository : AbstractRepository<Member>() {
 
     fun findByEmail(email: String) = findBy(Member_.email to email)
 
-    fun findMemberLoginActivities(memberUUID: UUID, after: LocalDate): List<TraceAction> {
+    fun getMemberLoginCounts(memberUuid: UUID): List<KeyCountDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(TraceAction::class.java)
+            val query = cb.createTupleQuery()
             val root = query.from(TraceAction::class.java)
+            val formattedActionDate = cb.function("date", LocalDate::class.java, root[TraceAction_.actionDateTime])
 
-            query.where(
-                cb.equal(root[TraceAction_.entityUuid], memberUUID),
-                cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
-                cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], after.atStartOfDay(Constant.utcZoneId))
-            )
+            query.select(cb.tuple(formattedActionDate, cb.count(root[TraceAction_.uuid])))
+                .where(
+                    cb.and(
+                        cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
+                        cb.equal(root[TraceAction_.entityType], getEntityClass().simpleName),
+                        cb.equal(root[TraceAction_.entityUuid], memberUuid)
+                    )
+                )
+                .groupBy(formattedActionDate)
+                .orderBy(cb.asc(formattedActionDate))
 
             createReadOnlyQuery(it, query)
                 .resultList
+                .map { KeyCountDto(it[0, LocalDate::class.java].toString(), it[1, Long::class.java]) }
         }
     }
 
-    fun findMemberFollowAnimeActivities(memberUUID: UUID, after: LocalDate): List<TraceAction> {
+    fun getCumulativeMemberFollowAnimeCounts(memberUuid: UUID): List<KeyCountDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(TraceAction::class.java)
-            val root = query.from(TraceAction::class.java)
+            val query = cb.createTupleQuery()
+            val root = query.from(MemberFollowAnime::class.java)
+            val formattedFollowedDate = cb.function("date", LocalDate::class.java, root[MemberFollowAnime_.followDateTime])
 
-            val memberFollowAnimeSubquery = query.subquery(UUID::class.java)
-            val memberFollowAnimeRoot = memberFollowAnimeSubquery.from(MemberFollowAnime::class.java)
+            query.select(cb.tuple(formattedFollowedDate, cb.count(root[MemberFollowAnime_.uuid])))
+                .where(cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid))
+                .groupBy(formattedFollowedDate)
+                .orderBy(cb.asc(formattedFollowedDate))
 
-            memberFollowAnimeSubquery.select(memberFollowAnimeRoot[MemberFollowAnime_.uuid])
-                .where(
-                    cb.equal(memberFollowAnimeRoot[MemberFollowAnime_.member][Member_.uuid], memberUUID)
-                )
-
-            query.where(
-                root[TraceAction_.entityUuid].`in`(memberFollowAnimeSubquery),
-                cb.equal(root[TraceAction_.action], TraceAction.Action.CREATE),
-                cb.equal(root[TraceAction_.entityType], MemberFollowAnime::class.java.simpleName),
-                cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], after.atStartOfDay(Constant.utcZoneId))
-            )
-
+            var sum = 0L
             createReadOnlyQuery(it, query)
                 .resultList
+                .map {
+                    sum += it[1, Long::class.java]
+                    KeyCountDto(it[0, LocalDate::class.java].toString(), sum)
+                }
         }
     }
 
-    fun findMemberFollowEpisodeActivities(memberUUID: UUID, after: LocalDate): List<TraceAction> {
+    fun getCumulativeMemberFollowEpisodeCounts(memberUuid: UUID): List<KeyCountDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(TraceAction::class.java)
-            val root = query.from(TraceAction::class.java)
+            val query = cb.createTupleQuery()
+            val root = query.from(MemberFollowEpisode::class.java)
+            val formattedFollowedDate = cb.function("date", LocalDate::class.java, root[MemberFollowEpisode_.followDateTime])
 
-            val memberFollowEpisodeSubquery = query.subquery(UUID::class.java)
-            val memberFollowEpisodeRoot = memberFollowEpisodeSubquery.from(MemberFollowEpisode::class.java)
+            query.select(cb.tuple(formattedFollowedDate, cb.count(root[MemberFollowEpisode_.uuid])))
+                .where(cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid))
+                .groupBy(formattedFollowedDate)
+                .orderBy(cb.asc(formattedFollowedDate))
 
-            memberFollowEpisodeSubquery.select(memberFollowEpisodeRoot[MemberFollowEpisode_.uuid])
-                .where(
-                    cb.equal(memberFollowEpisodeRoot[MemberFollowEpisode_.member][Member_.uuid], memberUUID)
-                )
-
-            query.where(
-                root[TraceAction_.entityUuid].`in`(memberFollowEpisodeSubquery),
-                cb.equal(root[TraceAction_.action], TraceAction.Action.CREATE),
-                cb.equal(root[TraceAction_.entityType], MemberFollowEpisode::class.java.simpleName),
-                cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], after.atStartOfDay(Constant.utcZoneId))
-            )
-
+            var sum = 0L
             createReadOnlyQuery(it, query)
                 .resultList
+                .map {
+                    sum += it[1, Long::class.java]
+                    KeyCountDto(it[0, LocalDate::class.java].toString(), sum)
+                }
         }
     }
 

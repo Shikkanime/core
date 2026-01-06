@@ -1,8 +1,10 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.analytics.KeyCountDto
 import fr.shikkanime.entities.Attachment
 import fr.shikkanime.entities.Attachment_
 import fr.shikkanime.entities.enums.ImageType
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -64,16 +66,25 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun findAllActive(): List<Attachment> {
+    fun getCumulativeAttachmentCounts(): List<KeyCountDto> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
+            val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
+            val formattedCreationDate = cb.function("date", LocalDate::class.java, root[Attachment_.creationDateTime])
 
-            query.where(cb.isTrue(root[Attachment_.active]))
+            query.select(cb.tuple(formattedCreationDate, cb.count(root)))
+                .where(cb.isTrue(root[Attachment_.active]))
+                .groupBy(formattedCreationDate)
+                .orderBy(cb.asc(formattedCreationDate))
 
+            var sum = 0L
             createReadOnlyQuery(it, query)
                 .resultList
+                .map {
+                    sum += it[1, Long::class.java]
+                    KeyCountDto(it[0, LocalDate::class.java].toString(), sum)
+                }
         }
     }
 

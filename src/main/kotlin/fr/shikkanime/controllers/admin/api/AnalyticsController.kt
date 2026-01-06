@@ -18,18 +18,19 @@ class AnalyticsController {
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    @Path
+
+    @Path("/metrics")
     @Get
-    private fun getMetrics(
-        @QueryParam(defaultValue = "1") hours: Long,
+    private fun getMetrics(@QueryParam(defaultValue = "1") hours: Long) = Response.ok(metricService.findAllAfterGrouped(hours))
+
+    @Path("/attachments")
+    @Get
+    private fun getAttachments() = Response.ok(attachmentService.getAttachmentCountsByDate())
+
+    @Path("/users")
+    @Get
+    private fun getUsers(
         @QueryParam(defaultValue = "2") activeDays: Int,
         @QueryParam(defaultValue = "30") days: Long,
-    ) = Response.ok(mapOf(
-        "metrics" to metricService.findAllAfterGrouped(hours),
-        "analytics" to traceActionService.getAnalyticsTraceActions(LocalDate.now().minusDays(days), activeDays),
-        "attachments" to attachmentService.findAllActive()
-            .groupBy { it.creationDateTime.toLocalDate().toString() }
-            .mapValues { it.value.size }
-            .map { mapOf("date" to it.key, "count" to it.value) }
-    ))
+    ) = Response.ok(traceActionService.getUserAnalytics(LocalDate.now().minusDays(days), activeDays))
 }

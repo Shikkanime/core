@@ -3,9 +3,9 @@ package fr.shikkanime.controllers.admin.api
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.PageableDto
+import fr.shikkanime.dtos.analytics.KeyCountDto
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
-import fr.shikkanime.factories.impl.TraceActionFactory
 import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
@@ -15,15 +15,16 @@ import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import java.time.LocalDate
 import java.util.*
+import java.util.stream.Stream
 
 @Controller("$ADMIN/api/members")
 @AdminSessionAuthenticated
 class MemberController : HasPageableRoute() {
     @Inject private lateinit var memberService: MemberService
-    @Inject private lateinit var memberFollowAnimeController: MemberFollowAnimeService
+    @Inject
+    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
     @Inject private lateinit var animeFactory: AnimeFactory
-    @Inject private lateinit var traceActionFactory: TraceActionFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
     @Path
@@ -45,50 +46,48 @@ class MemberController : HasPageableRoute() {
     @Get
     private fun getMemberLoginActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
-        val after = now.minusMonths(1)
-        val actions = memberService.findMemberLoginActivities(memberUuid, after)
-
-        return Response.ok(
-            after.datesUntil(now.plusDays(1))
-                .toList()
-                .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate().isEqual(date) }.map { traceActionFactory.toDto(it) } }
-        )
+        val dateRange = now.minusMonths(1).datesUntil(now.plusDays(1))
+        val actions = memberService.getMemberLoginCounts(memberUuid).associateBy { it.key }
+        return Response.ok(dateRange.toList().map { date -> actions[date.toString()] ?: KeyCountDto(date.toString(), 0) })
     }
 
     @Path("/{memberUuid}/follow-anime-activities")
     @Get
     private fun getMemberFollowAnimeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
-        val after = now.minusMonths(1)
-        val actions = memberService.findMemberFollowAnimeActivities(memberUuid, after)
-        val total = memberFollowAnimeController.findAllFollowedAnimesUUID(memberUuid)
+        val dateRange = now.minusMonths(1).datesUntil(now.plusDays(1))
+        val actions = memberService.getCumulativeMemberFollowAnimeCounts(memberUuid)
+        return Response.ok(aggregateKeyCounts(actions, dateRange))
+    }
 
-        return Response.ok(
-            mapOf(
-                "total" to total.size,
-                "activities" to after.datesUntil(now.plusDays(1))
-                    .toList()
-                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate().isEqual(date) }.map { traceActionFactory.toDto(it) } }
-            )
-        )
+    private fun aggregateKeyCounts(
+        actions: List<KeyCountDto>,
+        dateRange: Stream<LocalDate>
+    ): MutableList<KeyCountDto> {
+        val result = mutableListOf<KeyCountDto>()
+        var lastCount = 0L
+        var actionIndex = 0
+        // Pre-parse dates to avoid parsing in the loop
+        val parsedActions = actions.map { it to LocalDate.parse(it.key) }
+
+        for (date in dateRange) {
+            while (actionIndex < parsedActions.size && parsedActions[actionIndex].second <= date) {
+                lastCount = parsedActions[actionIndex].first.count
+                actionIndex++
+            }
+            result.add(KeyCountDto(date.toString(), lastCount))
+        }
+
+        return result
     }
 
     @Path("/{memberUuid}/follow-episode-activities")
     @Get
     private fun getMemberFollowEpisodeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
-        val after = now.minusMonths(1)
-        val actions = memberService.findMemberFollowEpisodeActivities(memberUuid, after)
-        val total = memberFollowEpisodeService.findAllFollowedEpisodesUUID(memberUuid)
-
-        return Response.ok(
-            mapOf(
-                "total" to total.size,
-                "activities" to after.datesUntil(now.plusDays(1))
-                    .toList()
-                    .associateWith { date -> actions.filter { traceAction -> traceAction.actionDateTime!!.toLocalDate().isEqual(date) }.map { traceActionFactory.toDto(it) } }
-            )
-        )
+        val dateRange = now.minusMonths(1).datesUntil(now.plusDays(1))
+        val actions = memberService.getCumulativeMemberFollowEpisodeCounts(memberUuid)
+        return Response.ok(aggregateKeyCounts(actions, dateRange))
     }
 
     @Path("/{memberUuid}/animes")
@@ -102,7 +101,7 @@ class MemberController : HasPageableRoute() {
 
         return Response.ok(
             PageableDto.fromPageable(
-                memberFollowAnimeController.findAllFollowedAnimes(
+                memberFollowAnimeService.findAllFollowedAnimes(
                     memberUuid,
                     page,
                     limit,

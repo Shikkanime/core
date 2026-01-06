@@ -17,7 +17,6 @@ import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import kotlinx.io.readByteArray
 import java.io.ByteArrayInputStream
-import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
@@ -49,11 +48,11 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     fun findByEmail(email: String) = memberRepository.findByEmail(email)
 
-    fun findMemberLoginActivities(memberUUID: UUID, after: LocalDate) = memberRepository.findMemberLoginActivities(memberUUID, after)
+    fun getMemberLoginCounts(memberUuid: UUID) = memberRepository.getMemberLoginCounts(memberUuid)
 
-    fun findMemberFollowAnimeActivities(memberUUID: UUID, after: LocalDate) = memberRepository.findMemberFollowAnimeActivities(memberUUID, after)
+    fun getCumulativeMemberFollowAnimeCounts(memberUuid: UUID) = memberRepository.getCumulativeMemberFollowAnimeCounts(memberUuid)
 
-    fun findMemberFollowEpisodeActivities(memberUUID: UUID, after: LocalDate) = memberRepository.findMemberFollowEpisodeActivities(memberUUID, after)
+    fun getCumulativeMemberFollowEpisodeCounts(memberUuid: UUID) = memberRepository.getCumulativeMemberFollowEpisodeCounts(memberUuid)
 
     fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRoles(listOf(Role.ADMIN))
