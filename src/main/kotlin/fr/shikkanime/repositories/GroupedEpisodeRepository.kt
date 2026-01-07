@@ -1,10 +1,12 @@
 package fr.shikkanime.repositories
 
+import com.google.inject.Inject
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.utils.indexers.GroupedIndexer
 import fr.shikkanime.utils.indexers.ReverseIndexedRecord
 import jakarta.persistence.EntityManager
@@ -13,6 +15,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
+    @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
+
     override fun getEntityClass() = EpisodeMapping::class.java
 
     /**
@@ -176,7 +180,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         sort: List<SortParameter>
     ): Set<GroupedEpisode> {
         return variants.groupBy { variant -> groupIdentifiers.find { it.first.value.any { data -> data.uuid == variant.uuid } }!! }.values
-            .map(::toGroupedEpisode)
+            .map(groupedEpisodeFactory::toEntity)
             .toSortedSet(getGroupedEpisodeComparator(sort))
     }
 
@@ -205,40 +209,5 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
             }
             0
         }
-    }
-
-    /**
-     * Converts a list of [EpisodeVariant] belonging to the same group into a single [GroupedEpisode].
-     *
-     * @param variants The list of variants in the group.
-     * @return A [GroupedEpisode] object.
-     */
-    private fun toGroupedEpisode(variants: List<EpisodeVariant>): GroupedEpisode {
-        val firstVariant = variants.first()
-        val firstMapping = firstVariant.mapping!!
-
-        val mappingUuids = variants.asSequence()
-            .map { it.mapping!! }
-            .sortedWith(compareBy({ it.season }, { it.episodeType!! }, { it.number }))
-            .map { it.uuid!! }
-            .toSet()
-
-        val isSingleMapping = mappingUuids.size == 1
-
-        return GroupedEpisode(
-            anime = firstMapping.anime!!,
-            releaseDateTime = variants.minOf { it.releaseDateTime },
-            lastUpdateDateTime = variants.maxOf { it.mapping!!.lastUpdateDateTime },
-            minSeason = variants.minOf { it.mapping!!.season!! },
-            maxSeason = variants.maxOf { it.mapping!!.season!! },
-            episodeType = firstMapping.episodeType!!,
-            minNumber = variants.minOf { it.mapping!!.number!! },
-            maxNumber = variants.maxOf { it.mapping!!.number!! },
-            mappings = mappingUuids,
-            variants = variants,
-            title = if (isSingleMapping) firstMapping.title else null,
-            description = if (isSingleMapping) firstMapping.description else null,
-            duration = if (isSingleMapping) firstMapping.duration else null
-        )
     }
 }

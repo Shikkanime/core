@@ -12,6 +12,7 @@ enum class ConfigPropertyKey(val key: String) {
     BSKY_FIRST_MESSAGE("bsky_first_message"),
     BSKY_IDENTIFIER("bsky_identifier"),
     BSKY_PASSWORD("bsky_password"),
+    BSKY_MULTIPLE_MESSAGE("bsky_multiple_message"),
     BSKY_SECOND_MESSAGE("bsky_second_message"),
     BSKY_SESSION_TIMEOUT("bsky_session_timeout"),
     CHECK_PREVIOUS_AND_NEXT_EPISODES("check_previous_and_next_episodes"),
@@ -34,12 +35,14 @@ enum class ConfigPropertyKey(val key: String) {
     THREADS_APP_ID("threads_app_id"),
     THREADS_APP_SECRET("threads_app_secret"),
     THREADS_FIRST_MESSAGE("threads_first_message"),
+    THREADS_MULTIPLE_MESSAGE("threads_multiple_message"),
     THREADS_SECOND_MESSAGE("threads_second_message"),
     TWITTER_ACCESS_TOKEN("twitter_access_token"),
     TWITTER_ACCESS_TOKEN_SECRET("twitter_access_token_secret"),
     TWITTER_CONSUMER_KEY("twitter_consumer_key"),
     TWITTER_CONSUMER_SECRET("twitter_consumer_secret"),
     TWITTER_FIRST_MESSAGE("twitter_first_message"),
+    TWITTER_MULTIPLE_MESSAGE("twitter_multiple_message"),
     TWITTER_SECOND_MESSAGE("twitter_second_message"),
     UPDATE_ANIME_SIZE("update_anime_size"),
     UPDATE_EPISODE_SIZE("update_episode_size"),
@@ -67,4 +70,5 @@ enum class ConfigPropertyKey(val key: String) {
     UPDATE_EPISODE_DELAY_CURRENT_SEASON("update_episode_delay_current_season"),
     UPDATE_EPISODE_DELAY_LAST_SEASON("update_episode_delay_last_season"),
     UPDATE_EPISODE_DELAY_OTHERS("update_episode_delay_others"),
+    DELAY_BEFORE_SENDING_EPISODES_TO_NETWORKS("delay_before_sending_episodes_to_networks")
 }

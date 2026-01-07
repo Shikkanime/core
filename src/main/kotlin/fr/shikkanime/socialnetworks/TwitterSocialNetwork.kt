@@ -1,7 +1,7 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.takeIfNotEmpty
@@ -59,14 +59,17 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+    override suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
         if (authParams == null) return
 
         val firstMessage = getEpisodeMessage(
-            variants,
-            configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
+            groupedEpisodes,
+            configCacheService.getValueAsString(
+                if (groupedEpisodes.size == 1) ConfigPropertyKey.TWITTER_FIRST_MESSAGE
+                else ConfigPropertyKey.TWITTER_MULTIPLE_MESSAGE
+            ) ?: StringUtils.EMPTY_STRING
         )
 
         val mediaIds = runCatching {
@@ -86,11 +89,11 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
         val firstTweetId = TwitterWrapper.createTweet(authParams!!, mediaIds = mediaIds, text = firstMessage)
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.TWITTER_SECOND_MESSAGE)
 
-        if (!secondMessage.isNullOrBlank()) {
+        if (groupedEpisodes.size == 1 && !secondMessage.isNullOrBlank()) {
             TwitterWrapper.createTweet(
                 authParams!!,
                 inReplyToTweetId = firstTweetId,
-                text = getEpisodeMessage(variants, secondMessage)
+                text = getEpisodeMessage(groupedEpisodes, secondMessage)
             )
         }
     }

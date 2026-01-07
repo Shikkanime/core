@@ -1,40 +1,36 @@
 package fr.shikkanime.socialnetworks
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 
 abstract class AbstractSocialNetwork {
-    @Inject
-    protected lateinit var configCacheService: ConfigCacheService
+    @Inject protected lateinit var configCacheService: ConfigCacheService
 
     abstract val priority: Int
     abstract fun login()
     abstract fun logout()
 
-    private fun information(mappings: List<EpisodeMapping>): String {
-        require(mappings.isNotEmpty()) { "Mappings must not be empty" }
-        require(mappings.map { it.episodeType!! }.distinct().size == 1) { "All mappings must have the same episode type" }
+    private fun information(groupedEpisode: GroupedEpisode): String {
+        val episodeType = groupedEpisode.episodeType
+        val minNumber = groupedEpisode.minNumber
+        val maxNumber = groupedEpisode.maxNumber
+        val mappingsSize = groupedEpisode.mappings.size
 
-        val episodeType = mappings.first().episodeType
-        val episodeNumber = mappings.first().number
-
-        if (mappings.size == 1) {
+        if (mappingsSize == 1) {
             return when (episodeType) {
                 EpisodeType.SPECIAL -> "L'épisode spécial"
                 EpisodeType.FILM -> "Le film"
                 EpisodeType.SUMMARY -> "L'épisode récapitulatif"
                 EpisodeType.SPIN_OFF -> "Le spin-off"
-                else -> "L'épisode $episodeNumber"
+                else -> "L'épisode $minNumber"
             }
         }
 
-        val (minNumber, maxNumber) = mappings.map { it.number!! }.let { it.minOrNull()!! to it.maxOrNull()!! }
         val numberLabel = if (minNumber == maxNumber) minNumber.toString() else "$minNumber à $maxNumber"
 
         return when (episodeType) {
@@ -46,31 +42,69 @@ abstract class AbstractSocialNetwork {
         }
     }
 
-    fun getEpisodeMessage(variants: List<EpisodeVariant>, baseMessage: String): String {
-        require(variants.isNotEmpty()) { "Variants must not be empty" }
-        require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
-        val mappings = variants.map { it.mapping!! }.distinctBy { it.uuid!! }
-        require(mappings.map { it.episodeType!! }.distinct().size == 1) { "All mappings must have the same episode type" }
-        val anime = mappings.first().anime!!
-
+    private fun replaceEpisodePlaceholders(template: String, groupedEpisode: GroupedEpisode): String {
+        val anime = groupedEpisode.anime
+        val variants = groupedEpisode.variants
+        val mappingsSize = groupedEpisode.mappings.size
         val shortName = StringUtils.getShortName(anime.name!!)
-        val isVoice = " en ${variants.map { it.audioLocale!! }.distinct().sortedBy { LangType.fromAudioLocale(anime.countryCode!!, it) }.joinToString(" & ") { StringUtils.toLangTypeString(anime.countryCode!!, it) }} "
 
-        return baseMessage
-            .replace("{SHIKKANIME_URL}", getInternalUrl(variants))
+        val langs = variants.map { it.audioLocale!! }.distinct()
+            .sortedBy { LangType.fromAudioLocale(anime.countryCode!!, it) }
+            .joinToString(" & ") { StringUtils.toLangTypeString(anime.countryCode!!, it) }
+
+        return template
+            .replace("{SHIKKANIME_URL}", getInternalUrl(groupedEpisode))
             .replace("{URL}", variants.first().url!!)
             .replace("{ANIME_HASHTAG}", "#${StringUtils.getHashtag(shortName)}")
             .replace("{ANIME_TITLE}", shortName)
-            .replace("{EPISODE_INFORMATION}", information(variants.map { it.mapping!! }.distinctBy { it.uuid!! }))
-            .replace("{VOICE}", isVoice)
-            .replace("{BE}", if (mappings.size <= 1) "est" else "sont")
-            .replace("{AVAILABLE}", if (mappings.size <= 1) "disponible" else "disponibles")
-            .replace("\\n", "\n")
-            .trim()
+            .replace("{ANIME_DESCRIPTION}", anime.description ?: "")
+            .replace("{EPISODE_INFORMATION}", information(groupedEpisode))
+            .replace("{EPISODE_TITLE}", groupedEpisode.title ?: "")
+            .replace("{EPISODE_NUMBER}", groupedEpisode.minNumber.toString())
+            .replace("{SEASON_NUMBER}", groupedEpisode.minSeason.toString())
+            .replace("{VOICE}", "en $langs")
+            .replace("{LANG}", langs)
+            .replace("{BE}", if (mappingsSize <= 1) "est" else "sont")
+            .replace("{AVAILABLE}", if (mappingsSize <= 1) "disponible" else "disponibles")
     }
 
-    protected fun getInternalUrl(variants: List<EpisodeVariant>) =
-        "${Constant.baseUrl}/r/${variants.first().uuid}"
+    fun getEpisodeMessage(groupedEpisodes: List<GroupedEpisode>, baseMessage: String): String {
+        if (baseMessage.isBlank()) return ""
 
-    abstract suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?)
+        var message = baseMessage
+
+        if (groupedEpisodes.size == 1) {
+            message = replaceEpisodePlaceholders(message, groupedEpisodes.first())
+        } else {
+            message = "\\{EPISODES_LIST\\[(.*?)]}".toRegex().replace(message) { matchResult ->
+                val itemTemplate = matchResult.groupValues[1]
+                groupedEpisodes.joinToString("\n") { replaceEpisodePlaceholders(itemTemplate, it) }
+            }
+
+            if ("{EPISODES_LIST}" in message) {
+                val defaultTemplate = "• {ANIME_TITLE} : {EPISODE_INFORMATION} ({LANG})"
+                val episodesList = groupedEpisodes.joinToString("\n") { replaceEpisodePlaceholders(defaultTemplate, it) }
+                message = message.replace("{EPISODES_LIST}", episodesList)
+            }
+
+            val animeTitles = groupedEpisodes.map { StringUtils.getShortName(it.anime.name!!) }
+            val animeTitlesString = if (animeTitles.size > 1) {
+                "${animeTitles.dropLast(1).joinToString(", ")} & ${animeTitles.last()}"
+            } else {
+                animeTitles.first()
+            }
+
+            message = message
+                .replace("{SHIKKANIME_URL}", Constant.baseUrl)
+                .replace("{ANIME_TITLES}", animeTitlesString)
+                .replace("{COUNT}", groupedEpisodes.size.toString())
+        }
+
+        return message.replace("\\n", "\n").trim()
+    }
+
+    protected fun getInternalUrl(groupedEpisode: GroupedEpisode) =
+        "${Constant.baseUrl}/r/${groupedEpisode.variants.first().uuid}"
+
+    abstract suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?)
 }
