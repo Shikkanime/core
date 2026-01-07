@@ -65,7 +65,8 @@ class PrimeVideoPlatform :
                 animeAttachments = mapOf(
                     ImageType.THUMBNAIL to showImage,
                     ImageType.BANNER to episode.show.banner,
-                    ImageType.CAROUSEL to episode.show.carousel
+                    ImageType.CAROUSEL to episode.show.carousel,
+                    ImageType.TITLE to episode.show.title,
                 ),
                 animeDescription = episode.show.description,
                 releaseDateTime = zonedDateTime,

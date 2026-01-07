@@ -51,6 +51,10 @@ class AnimeAdminService : IAdminService {
             attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.CAROUSEL, url = animeDto.carousel!!)
         }
 
+        if (animeDto.title.isNullOrBlank().not()) {
+            attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.TITLE, url = animeDto.title!!)
+        }
+
         val update = animeService.update(anime)
         traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
         return update

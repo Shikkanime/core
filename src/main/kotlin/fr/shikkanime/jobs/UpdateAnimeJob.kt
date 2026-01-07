@@ -160,7 +160,8 @@ class UpdateAnimeJob : AbstractJob {
             attachments = mapOf(
                 ImageType.THUMBNAIL to show.fullHDImage,
                 ImageType.BANNER to show.fullHDBanner,
-                ImageType.CAROUSEL to show.fullHDCarousel
+                ImageType.CAROUSEL to show.fullHDCarousel,
+                ImageType.TITLE to show.fullHDTitle
             ),
             description = show.summary,
             episodeSize = showVideos.size
@@ -194,7 +195,8 @@ class UpdateAnimeJob : AbstractJob {
             attachments = mapOf(
                 ImageType.THUMBNAIL to series.images!!.fullHDImage!!,
                 ImageType.BANNER to series.images.fullHDBanner!!,
-                ImageType.CAROUSEL to series.fullHDCarousel
+                ImageType.CAROUSEL to series.fullHDCarousel,
+                ImageType.TITLE to series.fullHDTitle
             ),
             description = series.getNormalizedDescription(),
             episodeSize = objects.size
@@ -215,7 +217,8 @@ class UpdateAnimeJob : AbstractJob {
             attachments = mapOf(
                 ImageType.THUMBNAIL to show.image,
                 ImageType.BANNER to show.banner,
-                ImageType.CAROUSEL to show.carousel
+                ImageType.CAROUSEL to show.carousel,
+                ImageType.TITLE to show.title,
             ),
             description = show.description,
             episodeSize = episodes.size
@@ -242,6 +245,7 @@ class UpdateAnimeJob : AbstractJob {
                 show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
                 put(ImageType.BANNER, show.banner)
                 put(ImageType.CAROUSEL, show.carousel)
+                put(ImageType.TITLE, show.title)
             },
             description = show.description,
             episodeSize = episodes.size
@@ -268,7 +272,8 @@ class UpdateAnimeJob : AbstractJob {
             lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
             attachments = mapOf(
                 ImageType.BANNER to show.banner,
-                ImageType.CAROUSEL to show.carousel
+                ImageType.CAROUSEL to show.carousel,
+                ImageType.TITLE to show.title,
             ),
             description = show.description,
             episodeSize = episodes.size

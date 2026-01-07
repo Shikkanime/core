@@ -250,6 +250,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 ImageType.THUMBNAIL to crunchyrollAnimeContent.images!!.fullHDImage!!,
                 ImageType.BANNER to crunchyrollAnimeContent.images.fullHDBanner!!,
                 ImageType.CAROUSEL to crunchyrollAnimeContent.fullHDCarousel,
+                ImageType.TITLE to crunchyrollAnimeContent.fullHDTitle,
             ),
             animeDescription = crunchyrollAnimeContent.getNormalizedDescription().normalize(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
