@@ -100,7 +100,8 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
             ).where(
                 cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
                 cb.greaterThan(root[TraceAction_.actionDateTime], since),
-                root[TraceAction_.entityUuid].`in`(returningUuids)
+                root[TraceAction_.entityUuid].`in`(returningUuids),
+                cb.isNotNull(root[TraceAction_.additionalData])
             ).groupBy(actionDate, appVersion)
                 .orderBy(cb.asc(actionDate), cb.asc(appVersion))
 
@@ -133,7 +134,8 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
             ).where(
                 cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
                 cb.greaterThan(root[TraceAction_.actionDateTime], since),
-                root[TraceAction_.uuid].`in`(traceActionUuids)
+                root[TraceAction_.uuid].`in`(traceActionUuids),
+                cb.isNotNull(root[TraceAction_.additionalData])
             ).groupBy(keyExpr)
                 .orderBy(cb.asc(keyExpr))
 
