@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
@@ -21,6 +22,7 @@ class EpisodeMappingController : HasPageableRoute() {
     @Inject private lateinit var episodeMappingCacheService: EpisodeMappingCacheService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
+    @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
 
     @Path
     @Get
@@ -61,10 +63,11 @@ class EpisodeMappingController : HasPageableRoute() {
         val variants = episodeVariantService.findAllByUuids(uuids)
         if (variants.isEmpty()) return Response.notFound()
 
-        val distinctAnimeUuids = variants.map { it.mapping!!.anime!!.uuid }.distinct()
-        if (distinctAnimeUuids.size != 1) return Response.badRequest()
+        val groupedEpisodes = variants.groupBy { it.mapping?.anime to it.mapping?.episodeType }
+            .values
+            .map(groupedEpisodeFactory::toEntity)
 
-        val image = MediaImage.toMediaImage(*variants.toTypedArray())
+        val image = MediaImage.toMediaImage(groupedEpisodes)
         val baos = ByteArrayOutputStream()
         ImageIO.write(image, "jpg", baos)
         return Response.multipart(baos.toByteArray(), ContentType.Image.JPEG)

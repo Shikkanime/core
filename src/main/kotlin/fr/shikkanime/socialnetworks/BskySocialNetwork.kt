@@ -1,7 +1,7 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.StringUtils
@@ -68,14 +68,17 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
+    override suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
 
         val firstMessage =
             getEpisodeMessage(
-                variants,
-                configCacheService.getValueAsString(ConfigPropertyKey.BSKY_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
+                groupedEpisodes,
+                configCacheService.getValueAsString(
+                    if (groupedEpisodes.size == 1) ConfigPropertyKey.BSKY_FIRST_MESSAGE
+                    else ConfigPropertyKey.BSKY_MULTIPLE_MESSAGE
+                ) ?: StringUtils.EMPTY_STRING
             )
 
         val firstRecord = BskyWrapper.createRecord(
@@ -97,13 +100,15 @@ class BskySocialNetwork : AbstractSocialNetwork() {
 
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.BSKY_SECOND_MESSAGE)
 
-        if (!secondMessage.isNullOrBlank()) {
+        if (groupedEpisodes.size == 1 && !secondMessage.isNullOrBlank()) {
+            val groupedEpisode = groupedEpisodes.first()
+
             BskyWrapper.createRecord(
                 accessJwt!!,
                 did!!,
-                getEpisodeMessage(variants, secondMessage.replace("{EMBED}", StringUtils.EMPTY_STRING)).trim(),
+                getEpisodeMessage(groupedEpisodes, secondMessage.replace("{EMBED}", StringUtils.EMPTY_STRING)).trim(),
                 replyTo = firstRecord,
-                embed = getInternalUrl(variants).takeIf { "{EMBED}" in secondMessage }
+                embed = getInternalUrl(groupedEpisode).takeIf { "{EMBED}" in secondMessage }
             )
         }
     }

@@ -9,6 +9,8 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
+import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
@@ -18,12 +20,16 @@ import fr.shikkanime.utils.*
 import jakarta.persistence.Tuple
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.ZonedDateTime
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
@@ -36,11 +42,16 @@ class FetchEpisodesJob(
     private var lock = 0
     private val maxLock = 15
 
-    private val typeIdentifiers = mutableSetOf<String>()
+    private val typeIdentifiers = Collections.synchronizedSet(mutableSetOf<String>())
+
+    private val scheduler = Executors.newSingleThreadScheduledExecutor()
+    private val pendingEpisodes = Collections.synchronizedList(mutableListOf<EpisodeVariant>())
+    @Volatile private var pendingSend: ScheduledFuture<*>? = null
 
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
 
     override suspend fun run() {
         if (isRunning) {
@@ -123,7 +134,34 @@ class FetchEpisodesJob(
             Simulcast::class.java
         )
 
-        sendToNetworks(savedEpisodes)
+        pendingEpisodes.addAll(savedEpisodes)
+        scheduleSocialNetworkSend()
+    }
+
+    private fun scheduleSocialNetworkSend() {
+        synchronized(this) {
+            try {
+                pendingSend?.cancel(false)
+            } catch (e: Exception) {
+                logger.log(Level.FINE, "No pending send to cancel", e)
+            }
+
+            pendingSend = scheduler.schedule({
+                val episodes = synchronized(pendingEpisodes) {
+                    val list = pendingEpisodes.toList()
+                    pendingEpisodes.clear()
+                    list
+                }
+
+                if (episodes.isNotEmpty()) {
+                    logger.info("Sending ${episodes.size} episodes to social networks...")
+
+                    runBlocking {
+                        sendToNetworks(episodes)
+                    }
+                }
+            }, configCacheService.getValueAsLong(ConfigPropertyKey.DELAY_BEFORE_SENDING_EPISODES_TO_NETWORKS, 60), TimeUnit.SECONDS)
+        }
     }
 
     private fun getTypeIdentifier(tuple: Tuple): String {
@@ -139,24 +177,27 @@ class FetchEpisodesJob(
     }
 
     private suspend fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
-        savedEpisodes
+        val groupedEpisodes = savedEpisodes
             .groupBy { it.mapping?.anime?.uuid }
             .values
-            .forEach { episodes ->
+            .flatMap { episodes ->
                 episodes.filter { typeIdentifiers.add(getTypeIdentifier(it)) }
-                    .groupBy { it.mapping!!.episodeType!! }
-                    .forEach { (_, variants) ->
-                        sendToSocialNetworks(variants)
+                    .groupBy { it.mapping?.episodeType }
+                    .map { (_, variants) ->
+                        groupedEpisodeFactory.toEntity(variants)
                     }
             }
+
+        logger.info("Sending ${groupedEpisodes.size} grouped episodes to social networks...")
+        sendToSocialNetworks(groupedEpisodes)
     }
 
-    private suspend fun sendToSocialNetworks(episodes: List<EpisodeVariant>) {
+    private suspend fun sendToSocialNetworks(episodes: List<GroupedEpisode>) {
         val mediaImage = try {
             val byteArrayOutputStream = ByteArrayOutputStream()
 
             withContext(coroutineDispatcher) {
-                ImageIO.write(MediaImage.toMediaImage(*episodes.toTypedArray()), "jpg", byteArrayOutputStream)
+                ImageIO.write(MediaImage.toMediaImage(episodes), "jpg", byteArrayOutputStream)
             }
 
             byteArrayOutputStream.toByteArray()

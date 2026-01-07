@@ -1,7 +1,7 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.EncryptionManager
 import fr.shikkanime.utils.LoggerFactory
@@ -49,34 +49,45 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         login()
     }
 
-    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
-        require(variants.isNotEmpty()) { "Variants must not be empty" }
-        require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
-
+    override suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?) {
         checkSession()
         if (!isInitialized) return
+
         val message =
             getEpisodeMessage(
-                variants,
-                configCacheService.getValueAsString(ConfigPropertyKey.THREADS_FIRST_MESSAGE) ?: StringUtils.EMPTY_STRING
+                groupedEpisodes,
+                configCacheService.getValueAsString(
+                    if (groupedEpisodes.size == 1) ConfigPropertyKey.THREADS_FIRST_MESSAGE
+                    else ConfigPropertyKey.THREADS_MULTIPLE_MESSAGE
+                ) ?: StringUtils.EMPTY_STRING
             )
+
+        val allVariants = groupedEpisodes.flatMap { it.variants }
+        val uuids = allVariants.joinToString(StringUtils.COMMA_STRING) { it.uuid.toString() }
+        val encryptedUuids = URLEncoder.encode(EncryptionManager.toGzip(uuids), StandardCharsets.UTF_8)
+
+        val altText = if (groupedEpisodes.size == 1) {
+            val firstGe = groupedEpisodes.first()
+            "Image de l'épisode ${firstGe.minNumber} de ${StringUtils.getShortName(firstGe.anime.name!!)}"
+        } else {
+            "Image des nouveaux épisodes"
+        }
 
         val firstPost = ThreadsWrapper.post(
             token!!,
             ThreadsWrapper.PostType.IMAGE,
             message,
-            imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=${URLEncoder.encode(EncryptionManager.toGzip(variants.joinToString(StringUtils.COMMA_STRING) { it.uuid.toString() }),
-                StandardCharsets.UTF_8)}",
-            altText = "Image de l'épisode ${variants.first().mapping!!.number} de ${StringUtils.getShortName(variants.first().mapping!!.anime!!.name!!)}"
+            imageUrl = "${Constant.apiUrl}/v1/episode-mappings/media-image?uuids=$encryptedUuids",
+            altText = altText
         )
 
         val secondMessage = configCacheService.getValueAsString(ConfigPropertyKey.THREADS_SECOND_MESSAGE)
 
-        if (!secondMessage.isNullOrBlank()) {
+        if (groupedEpisodes.size == 1 && !secondMessage.isNullOrBlank()) {
             ThreadsWrapper.post(
                 token!!,
                 ThreadsWrapper.PostType.TEXT,
-                getEpisodeMessage(variants, secondMessage),
+                getEpisodeMessage(groupedEpisodes, secondMessage),
                 replyToId = firstPost
             )
         }

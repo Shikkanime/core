@@ -32,6 +32,12 @@ class ConfigCacheService : ICacheService {
 
     fun getValueAsInt(configPropertyKey: ConfigPropertyKey) = getValueAsInt(configPropertyKey, -1)
 
+    fun getValueAsLongNullable(configPropertyKey: ConfigPropertyKey) =
+        findByName(configPropertyKey.key)?.propertyValue?.toLongOrNull()
+
+    fun getValueAsLong(configPropertyKey: ConfigPropertyKey, defaultValue: Long) =
+        getValueAsLongNullable(configPropertyKey) ?: defaultValue
+
     fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.toBoolean() == true
 

@@ -1,7 +1,7 @@
 package fr.shikkanime.socialnetworks
 
-import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.socialnetworks.listeners.SlashCommandInteractionListener
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
@@ -97,27 +97,30 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
         }
     }
 
-    override suspend fun sendEpisodeRelease(variants: List<EpisodeVariant>, mediaImage: ByteArray?) {
-        require(variants.isNotEmpty()) { "Variants must not be empty" }
-        require(variants.map { it.mapping!!.anime!!.uuid }.distinct().size == 1) { "All variants must be from the same anime" }
-
+    override suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?) {
         login()
         if (!isInitialized) return
 
-        val anime = variants.first().mapping!!.anime!!
-        val shortName = StringUtils.getShortName(anime.name!!)
-
         val embedMessage = EmbedBuilder()
-        embedMessage.setTitle(shortName, getInternalUrl(variants))
+
+        if (groupedEpisodes.size == 1) {
+            val groupedEpisode = groupedEpisodes.first()
+            embedMessage.setTitle(StringUtils.getShortName(groupedEpisode.anime.name!!), getInternalUrl(groupedEpisode))
+        } else {
+            embedMessage.setTitle("Nouveaux épisodes", Constant.baseUrl)
+        }
+
         embedMessage.setImage("attachment://media-image.jpg")
         embedMessage.setFooter(Constant.NAME, "${Constant.baseUrl}/assets/img/favicons/favicon-64x64.png")
-        embedMessage.setTimestamp(variants.minOf { it.releaseDateTime }.toInstant())
+        embedMessage.setTimestamp(groupedEpisodes.minOf { it.releaseDateTime })
         val embed = embedMessage.build()
         val channels = getChannels(getFile())
         val fileUpload = FileUpload.fromData(mediaImage ?: byteArrayOf(), "media-image.jpg")
 
         channels.forEach { channel ->
-            if (channel.releaseType == "ALL" || shortName in channel.animes) {
+            val anyAnimeMatch = groupedEpisodes.any { StringUtils.getShortName(it.anime.name!!) in channel.animes }
+
+            if (channel.releaseType == "ALL" || anyAnimeMatch) {
                 jda?.getTextChannelById(channel.id)
                     ?.sendFiles(fileUpload)
                     ?.setEmbeds(embed)
