@@ -38,6 +38,7 @@ abstract class AbstractNetflixWrapper {
         val thumbnail: String?,
         val banner: String,
         val carousel: String,
+        val title: String,
         val description: String?,
         val seasonCount: Int?,
         val availabilityStartTime: ZonedDateTime?,

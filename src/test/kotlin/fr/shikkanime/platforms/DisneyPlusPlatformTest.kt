@@ -65,7 +65,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
             animeAttachments = mapOf(
                 ImageType.THUMBNAIL to "https://example.com/thumbnail.jpg",
                 ImageType.BANNER to "https://example.com/banner.jpg",
-                ImageType.CAROUSEL to "https://example.com/carousel.jpg"
+                ImageType.CAROUSEL to "https://example.com/carousel.jpg",
+                ImageType.TITLE to "https://example.com/title.jpg",
             ),
             animeDescription = "Test description",
             releaseDateTime = zonedDateTime,
@@ -145,7 +146,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
             animeAttachments = mapOf(
                 ImageType.THUMBNAIL to "https://example.com/thumbnail1.jpg",
                 ImageType.BANNER to "https://example.com/banner1.jpg",
-                ImageType.CAROUSEL to "https://example.com/carousel1.jpg"
+                ImageType.CAROUSEL to "https://example.com/carousel1.jpg",
+                ImageType.TITLE to "https://example.com/title1.jpg",
             ),
             animeDescription = "Test description 1",
             releaseDateTime = zonedDateTime,
@@ -172,7 +174,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
             animeAttachments = mapOf(
                 ImageType.THUMBNAIL to "https://example.com/thumbnail2.jpg",
                 ImageType.BANNER to "https://example.com/banner2.jpg",
-                ImageType.CAROUSEL to "https://example.com/carousel2.jpg"
+                ImageType.CAROUSEL to "https://example.com/carousel2.jpg",
+                ImageType.TITLE to "https://example.com/title2.jpg",
             ),
             animeDescription = "Test description 2",
             releaseDateTime = zonedDateTime,

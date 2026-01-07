@@ -133,7 +133,8 @@ class AnimationDigitalNetworkPlatform :
                 animeAttachments = mapOf(
                     ImageType.THUMBNAIL to video.show.fullHDImage,
                     ImageType.BANNER to video.show.fullHDBanner,
-                    ImageType.CAROUSEL to video.show.fullHDCarousel
+                    ImageType.CAROUSEL to video.show.fullHDCarousel,
+                    ImageType.TITLE to video.show.fullHDTitle,
                 ),
                 animeDescription = video.show.summary.normalize(),
                 releaseDateTime = requireNotNull(video.releaseDate) { "Release date is null" },

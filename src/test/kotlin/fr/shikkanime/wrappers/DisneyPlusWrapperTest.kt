@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers
 
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -74,24 +75,28 @@ class DisneyPlusWrapperTest {
             requireNotNull(title) { "Show title is required but was null" }
             
             val tile = standardArtworkTile?.getAsJsonObject("tile")
+            val titleTreatment = standardArtworkTile?.getAsJsonObject("title_treatment")
             val background = standardArtworkTile?.getAsJsonObject("background")
             
             val imageId071 = tile?.getAsJsonObject("0.71")?.getAsString("imageId")
             // Try 1.33 first, fallback to 1.78 from tile if 1.33 is not available
             val imageId133 = tile?.getAsJsonObject("1.33")?.getAsString("imageId")
                 ?: tile?.getAsJsonObject("1.78")?.getAsString("imageId")
+            val imageId332 = titleTreatment?.getAsJsonObject("3.32")?.getAsString("imageId")
             val imageId178 = background?.getAsJsonObject("1.78")?.getAsString("imageId")
             
             requireNotNull(imageId071) { "Show image (0.71) is required but was null" }
             requireNotNull(imageId133) { "Show banner (1.33 or 1.78 from tile) is required but was null" }
+            requireNotNull(imageId332) { "Title (3.32) is required but was null" }
             requireNotNull(imageId178) { "Show carousel (1.78) is required but was null" }
 
-            fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper.Show(
+            AbstractDisneyPlusWrapper.Show(
                 id = showId,
                 name = title,
                 image = DisneyPlusWrapper.getImageUrl(imageId071),
                 banner = DisneyPlusWrapper.getImageUrl(imageId133),
                 carousel = DisneyPlusWrapper.getImageUrl(imageId178),
+                title = DisneyPlusWrapper.getImageUrl(imageId332),
                 description = showObject.getAsJsonObject("description")?.getAsString("full"),
                 seasons = seasons
             )
@@ -123,6 +128,11 @@ class DisneyPlusWrapperTest {
                                 "background": {
                                     "1.78": {
                                         "imageId": "image-178-id"
+                                    }
+                                },
+                                "title_treatment": {
+                                    "3.32": {
+                                        "imageId": "image-332-id"
                                     }
                                 }
                             }
@@ -156,6 +166,7 @@ class DisneyPlusWrapperTest {
         assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-071-id/compose", result.image)
         assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-133-id/compose", result.banner)
         assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-178-id/compose", result.carousel)
+        assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-332-id/compose", result.title)
         assertEquals("A test anime description", result.description)
         assertEquals(2, result.seasons.size)
         assertTrue(result.seasons.contains("season-1-id"))
@@ -260,6 +271,11 @@ class DisneyPlusWrapperTest {
                                     "1.78": {
                                         "imageId": "image-178-bg-id"
                                     }
+                                },
+                                "title_treatment": {
+                                    "3.32": {
+                                        "imageId": "image-332-title-id"
+                                    }
                                 }
                             }
                         }
@@ -281,6 +297,7 @@ class DisneyPlusWrapperTest {
         assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-178-tile-id/compose", result.banner)
         // Carousel should use the 1.78 from background
         assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-178-bg-id/compose", result.carousel)
+        assertEquals("https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/image-332-title-id/compose", result.title)
     }
 
     @Test
@@ -302,6 +319,11 @@ class DisneyPlusWrapperTest {
                                 "background": {
                                     "1.78": {
                                         "imageId": "image-178-id"
+                                    }
+                                },
+                                "title_treatment": {
+                                    "3.32": {
+                                        "imageId": "image-332-title-id"
                                     }
                                 }
                             }
@@ -390,6 +412,11 @@ class DisneyPlusWrapperTest {
                                     "1.78": {
                                         "imageId": "image-178-id"
                                     }
+                                },
+                                "title_treatment": {
+                                    "3.32": {
+                                        "imageId": "image-332-title-id"
+                                    }
                                 }
                             }
                         }
@@ -431,6 +458,11 @@ class DisneyPlusWrapperTest {
                                 "background": {
                                     "1.78": {
                                         "imageId": "image-178-id"
+                                    }
+                                },
+                                "title_treatment": {
+                                    "3.32": {
+                                        "imageId": "image-332-title-id"
                                     }
                                 }
                             }

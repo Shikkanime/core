@@ -161,6 +161,9 @@ abstract class AbstractCrunchyrollWrapper {
     ) : Serializable {
         val fullHDCarousel: String
             get() = "https://imgsrv.crunchyroll.com/cdn-cgi/image/format=png,quality=100,width=1920/keyart/$id-backdrop_wide"
+        val fullHDTitle: String
+            get() = "https://imgsrv.crunchyroll.com/cdn-cgi/image/format=png,quality=100,width=1920/keyart/$id-title_logo-en-us"
+
         fun getNormalizedDescription(): String? {
             return description?.split("\r\n\r\n")?.let { lines ->
                 when {

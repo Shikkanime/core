@@ -73,6 +73,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
                 ImageType.THUMBNAIL to episode.show.image,
                 ImageType.BANNER to episode.show.banner,
                 ImageType.CAROUSEL to episode.show.carousel,
+                ImageType.TITLE to episode.show.title,
             ),
             animeDescription = episode.show.description,
             releaseDateTime = zonedDateTime,

@@ -106,6 +106,7 @@ class AdminEpisodeManagerController {
                                 ImageType.THUMBNAIL to (row.getCell(cell++)?.stringCellValue ?: return@mapNotNull null),
                                 ImageType.BANNER to (row.getCell(cell++)?.stringCellValue ?: return@mapNotNull null),
                                 ImageType.CAROUSEL to (row.getCell(cell++)?.stringCellValue ?: return@mapNotNull null),
+                                ImageType.TITLE to (row.getCell(cell++)?.stringCellValue ?: return@mapNotNull null),
                             ),
                             row.getCell(cell++)?.stringCellValue,
                             ZonedDateTime.ofInstant(row.getCell(cell++)?.dateCellValue?.toInstant() ?: return@mapNotNull null, Constant.utcZoneId),

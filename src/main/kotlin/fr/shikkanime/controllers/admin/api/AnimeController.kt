@@ -55,6 +55,7 @@ class AnimeController : HasPageableRoute() {
             thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
             banner = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
             carousel = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.CAROUSEL)?.url
+            title = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.TITLE)?.url
         })
     }
 

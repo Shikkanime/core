@@ -14,6 +14,7 @@ abstract class AbstractPrimeVideoWrapper {
         val name: String,
         val banner: String,
         val carousel: String,
+        val title: String,
         val description: String?,
     ) : Serializable
 

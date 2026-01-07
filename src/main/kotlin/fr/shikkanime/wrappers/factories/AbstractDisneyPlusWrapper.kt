@@ -20,6 +20,7 @@ abstract class AbstractDisneyPlusWrapper {
         val image: String,
         val banner: String,
         val carousel: String,
+        val title: String,
         val description: String?,
         val seasons: Set<String>
     ) : Serializable

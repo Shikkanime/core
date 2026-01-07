@@ -35,6 +35,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             showJson.getAsString("parentTitle") ?: showJson.getAsString("title")!!,
             showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
             showJson.getAsJsonObject("images")!!.getAsString("heroshot")!!,
+            showJson.getAsJsonObject("images")!!.getAsString("titleLogo")!!,
             showJson.getAsString("synopsis")
         )
     }

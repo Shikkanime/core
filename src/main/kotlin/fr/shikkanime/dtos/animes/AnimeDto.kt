@@ -26,5 +26,6 @@ data class AnimeDto(
     var thumbnail: String? = null,
     var banner: String? = null,
     var carousel: String? = null,
+    var title: String? = null,
     var jsonLd: String? = null,
 ) : Serializable
