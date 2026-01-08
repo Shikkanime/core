@@ -6,14 +6,15 @@ enum class Platform(
     var image: String,
     val sortIndex: Short,
     val isStreamingPlatform: Boolean,
+    val seriesUrl: String
 ) {
-    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 0, true),
-    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 1, true),
-    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", 2, true),
-    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", 3, true),
-    PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg", 4, true),
+    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 0, true, "https://animationdigitalnetwork.com/video/{ID}"),
+    CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 1, true, "https://www.crunchyroll.com/series/{ID}"),
+    DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", 2, true, "https://www.disneyplus.com/browse/entity-{ID}"),
+    NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", 3, true, "https://www.netflix.com/title/{ID}"),
+    PRIM("Prime Video", "https://www.primevideo.com/", "prime_video.jpg", 4, true, "https://www.primevideo.com/detail/{ID}"),
     // Non-streaming platforms
-    ANIL("AniList", "https://anilist.co/", "anilist.jpg", -1, false),
+    ANIL("AniList", "https://anilist.co/", "anilist.jpg", -1, false, "https://anilist.co/anime/{ID}"),
     ;
 
     companion object {

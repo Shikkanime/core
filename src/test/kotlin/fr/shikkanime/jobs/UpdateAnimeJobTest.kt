@@ -146,8 +146,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                 platforms = listOf(
                     PlatformData(Platform.CRUN, "GRDV0019R")
                 ),
-                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/cd71baf98cf38b4ca3066e6d42e53bca.png",
-                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/fac3a4c08ae9db6a5cf8791af900a4b7.png",
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/d128baf30c0638fafce3fd4e7c9ff37c.png",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/ede36e8f3e37587c90dbd8f1216d3022.png",
                 expectedDescription = "La vie au quotidien de trois charmantes jeunes filles qui vont au lycée : Momoko, belle et tête en l'air ; Shibumi, décontractée et sérieuse ; Mayumi, douce et innocente."
             )
         )

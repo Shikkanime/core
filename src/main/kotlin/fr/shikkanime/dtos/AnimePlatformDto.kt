@@ -9,6 +9,7 @@ data class AnimePlatformDto(
     val platform: PlatformDto,
     val platformId: String,
     val lastValidateDateTime: String?,
+    val url: String?,
 ) : Serializable, Comparable<AnimePlatformDto> {
     override fun compareTo(other: AnimePlatformDto): Int {
         return compareValuesBy(
