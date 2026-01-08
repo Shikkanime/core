@@ -282,7 +282,7 @@
                                 <template x-for="animePlatform in anime.platformIds">
                                     <tr>
                                         <td x-text="animePlatform.platform.name"></td>
-                                        <td x-text="animePlatform.platformId"></td>
+                                        <td><a :href="animePlatform.url" x-text="animePlatform.platformId" target="_blank"></a></td>
                                         <td x-text="animePlatform.lastValidateDateTime ? new Date(animePlatform.lastValidateDateTime).toLocaleString() : 'N/A'"></td>
                                     </tr>
                                 </template>

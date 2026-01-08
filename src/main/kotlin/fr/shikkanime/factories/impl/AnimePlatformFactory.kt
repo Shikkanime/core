@@ -15,5 +15,6 @@ class AnimePlatformFactory : IGenericFactory<AnimePlatform, AnimePlatformDto> {
         platform = platformFactory.toDto(entity.platform!!),
         platformId = entity.platformId!!,
         lastValidateDateTime = entity.lastValidateDateTime?.withUTCString(),
+        url = entity.platform.seriesUrl.replace("{ID}", entity.platformId!!)
     )
 }
