@@ -1,6 +1,7 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
@@ -15,6 +16,7 @@ import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.AniListCachedWrapper
 import java.time.ZonedDateTime
+import java.util.UUID
 import java.util.logging.Logger
 
 class AniListMatchingJob : AbstractJob {
@@ -37,16 +39,26 @@ class AniListMatchingJob : AbstractJob {
         stringBuilder.appendLine(message)
     }
 
+    private fun getSimulcastUuids(): List<UUID>? {
+        val allUuids = simulcastCacheService.findAll().mapNotNull(SimulcastDto::uuid)
+        val matchingSize = configCacheService.getValueAsInt(ConfigPropertyKey.ANILIST_SIMULCAST_MATCHING_SIZE, 1)
+
+        return allUuids
+            .let { if (matchingSize > 0) it.take(matchingSize) else it }
+            .takeIfNotEmpty()
+    }
+
     override suspend fun run() {
         val stringBuilder = StringBuilder()
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
+        val simulcastUuids = getSimulcastUuids() ?: return
 
-        val animes = CountryCode.entries.flatMap {
+        val animes = CountryCode.entries.flatMap { countryCode ->
             animeService.findAllSimulcastedWithAnimePlatformInvalid(
-                simulcastCacheService.currentSimulcast?.uuid ?: return,
+                simulcastUuids,
                 Platform.ANIL,
                 zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.MATCHING_ANILIST_DELAY, 30).toLong()),
-                it.locale
+                countryCode.locale
             )
         }.distinctBy { it.uuid }
 

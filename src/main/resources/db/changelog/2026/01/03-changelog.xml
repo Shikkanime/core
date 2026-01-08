@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-5.0.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1767910496549"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions>
+            <not>
+                <tableExists tableName="genre"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="genre">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_genre"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_genre_name" tableName="genre" unique="true">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}">
+        <preConditions>
+            <not>
+                <tableExists tableName="tag"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="tag">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_tag"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_tag_name" tableName="tag" unique="true">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}">
+        <preConditions>
+            <not>
+                <tableExists tableName="anime_genre"/>
+            </not>
+            <tableExists tableName="genre"/>
+            <tableExists tableName="anime"/>
+        </preConditions>
+
+        <createTable tableName="anime_genre">
+            <column name="anime_uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_anime_genre"/>
+            </column>
+            <column name="genre_uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_anime_genre"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="anime_uuid" baseTableName="anime_genre"
+                                 constraintName="fk_anigen_on_anime" referencedColumnNames="uuid"
+                                 referencedTableName="anime"/>
+
+        <addForeignKeyConstraint baseColumnNames="genre_uuid" baseTableName="anime_genre"
+                                 constraintName="fk_anigen_on_genre" referencedColumnNames="uuid"
+                                 referencedTableName="genre"/>
+    </changeSet>
+
+    <changeSet id="${id}-4" author="${author}">
+        <preConditions>
+            <not>
+                <tableExists tableName="anime_tag"/>
+            </not>
+            <tableExists tableName="tag"/>
+            <tableExists tableName="anime"/>
+        </preConditions>
+
+        <createTable tableName="anime_tag">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_anime_tag"/>
+            </column>
+            <column name="anime_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_adult" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_spoiler" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_anime_tag_anime_uuid_tag_uuid" tableName="anime_tag">
+            <column name="anime_uuid"/>
+            <column name="tag_uuid"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="anime_uuid" baseTableName="anime_tag"
+                                 constraintName="FK_ANIME_TAG_ON_ANIME_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="anime"/>
+
+        <addForeignKeyConstraint baseColumnNames="tag_uuid" baseTableName="anime_tag"
+                                 constraintName="FK_ANIME_TAG_ON_TAG_UUID" referencedColumnNames="uuid"
+                                 referencedTableName="tag"/>
+    </changeSet>
+
+    <changeSet id="${id}-5" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'anilist_simulcast_matching_size'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="anilist_simulcast_matching_size"/>
+            <column name="property_value" value="1"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

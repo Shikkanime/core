@@ -123,4 +123,5 @@
     <!-- January 2026 -->
     <include file="/db/changelog/2026/01/01-changelog.xml"/>
     <include file="/db/changelog/2026/01/02-changelog.xml"/>
+    <include file="/db/changelog/2026/01/03-changelog.xml"/>
 </databaseChangeLog>

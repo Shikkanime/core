@@ -306,7 +306,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
-    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuid: UUID, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String): List<Anime> {
+    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids: Collection<UUID>, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String): List<Anime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
@@ -321,7 +321,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
             query.distinct(true)
                 .select(root)
                 .where(cb.and(
-                    cb.equal(simulcastJoin[Simulcast_.uuid], simulcastUuid),
+                    simulcastJoin[Simulcast_.uuid].`in`(simulcastUuids),
                     cb.or(
                         cb.isNull(animePlatformJoin),
                         cb.lessThanOrEqualTo(animePlatformJoin[AnimePlatform_.lastValidateDateTime], lastValidateDateTime)

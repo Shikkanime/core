@@ -56,4 +56,15 @@ class Anime(
     @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     var followings: MutableSet<MemberFollowAnime> = mutableSetOf(),
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "anime_genre",
+        joinColumns = [JoinColumn(name = "anime_uuid")],
+        inverseJoinColumns = [JoinColumn(name = "genre_uuid")]
+    )
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var genres: MutableSet<Genre> = mutableSetOf(),
+    @OneToMany(mappedBy = "anime", fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var tags: MutableSet<AnimeTag> = mutableSetOf(),
 ) : ShikkEntity(uuid)

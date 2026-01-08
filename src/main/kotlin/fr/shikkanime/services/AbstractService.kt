@@ -19,11 +19,13 @@ abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
 
     open fun save(entity: E) = getRepository().save(entity)
 
-    fun saveAll(entities: List<E>) = getRepository().saveAll(entities)
+    open fun saveAll(entities: List<E>) = getRepository().saveAll(entities)
 
     open fun update(entity: E) = getRepository().update(entity)
 
     fun updateAll(entities: List<E>) = getRepository().updateAll(entities)
 
     open fun delete(entity: E) = getRepository().delete(entity)
+
+    open fun deleteAll(entities: List<E>) = getRepository().deleteAll(entities)
 }
