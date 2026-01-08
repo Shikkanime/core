@@ -18,6 +18,11 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
     private const val LOW_SIMILARITY_THRESHOLD = 0.2
     private val TITLE_CLEANUP_REGEX = " \\(\\d{4}\\)$| \\(TV\\)$".toRegex()
 
+    private val mediaCache = MapCache<Int, Media>(
+        "AniListCachedWrapper.mediaCache",
+        typeToken = object : TypeToken<MapCacheValue<Media>>() {}
+    ) { AniListWrapper.getMediaById(it) }
+
     override suspend fun search(
         query: String,
         page: Int,
@@ -28,7 +33,12 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         typeToken = object : TypeToken<MapCacheValue<Array<Media>>>() {},
         duration = defaultCacheDuration,
         key = AniListCacheKey(query, page, limit, status)
-    ) { (query, page, limit, status) -> AniListWrapper.search(query, page, limit, status) }
+    ) { (query, page, limit, status) ->
+        AniListWrapper.search(query, page, limit, status)
+            .apply { this.forEach { mediaCache.putIfNotExists(it.id, it) } }
+    }
+
+    override suspend fun getMediaById(id: Int) = mediaCache[id] ?: throw Exception("Media not found")
 
     private suspend fun getLocalizedAnimeTitle(locale: String, animePlatform: AnimePlatform): String? {
         val platformId = animePlatform.platformId!!

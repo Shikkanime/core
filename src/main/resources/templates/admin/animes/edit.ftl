@@ -183,124 +183,133 @@
                     </div>
                 </div>
                 <div x-show="tab === 1" class="card-body">
-                    <div class="row mb-2">
-                        <div :class="'col-md-' + titleSize">
-                            <label for="image" class="form-label">Image</label>
-                        </div>
-                        <div :class="'col-md-' + (12 - titleSize)">
-                            <div class="input-group mb-2">
-                                <input type="text" class="form-control" id="image" name="image"
-                                       x-model="anime.thumbnail" aria-label="Image"
-                                       aria-describedby="basic-addon">
-
-                                <a class="input-group-text" id="basic-addon"
-                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.thumbnail">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="image" class="form-label fw-bold">Image (Thumbnail)</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="image" x-model="anime.thumbnail" placeholder="URL">
+                                <a class="input-group-text" :href="anime.thumbnail" target="_blank" x-show="anime.thumbnail">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>
-
-                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=THUMBNAIL'" class="w-25" alt="Anime thumbnail">
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div :class="'col-md-' + titleSize">
-                            <label for="banner" class="form-label">Banner</label>
+                            <div class="border rounded p-2 text-center bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=THUMBNAIL'" class="img-fluid rounded shadow-sm" style="max-height: 100%;" alt="Thumbnail">
+                            </div>
                         </div>
 
-                        <div :class="'col-md-' + (12 - titleSize)">
-                            <div class="input-group mb-2">
-                                <input type="text" class="form-control" id="banner" name="banner"
-                                       x-model="anime.banner" aria-label="Banner"
-                                       aria-describedby="basic-addon">
-
-                                <a class="input-group-text" id="basic-addon"
-                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.banner">
+                        <div class="col-md-6">
+                            <label for="banner" class="form-label fw-bold">Banner</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="banner" x-model="anime.banner" placeholder="URL">
+                                <a class="input-group-text" :href="anime.banner" target="_blank" x-show="anime.banner">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>
-
-                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=BANNER'" class="w-25" alt="Anime banner">
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div :class="'col-md-' + titleSize">
-                            <label for="carousel" class="form-label">Carousel</label>
+                            <div class="border rounded p-2 text-center bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=BANNER'" class="img-fluid rounded shadow-sm" style="max-height: 100%;" alt="Banner">
+                            </div>
                         </div>
 
-                        <div :class="'col-md-' + (12 - titleSize)">
-                            <div class="input-group mb-2">
-                                <input type="text" class="form-control" id="carousel" name="carousel"
-                                       x-model="anime.carousel" aria-label="Carousel"
-                                       aria-describedby="basic-addon">
-
-                                <a class="input-group-text" id="basic-addon"
-                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.carousel">
+                        <div class="col-md-6">
+                            <label for="carousel" class="form-label fw-bold">Carousel</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="carousel" x-model="anime.carousel" placeholder="URL">
+                                <a class="input-group-text" :href="anime.carousel" target="_blank" x-show="anime.carousel">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>
-
-                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=CAROUSEL'" class="w-25" alt="Anime carousel">
-                        </div>
-                    </div>
-                    <div class="row mb-2">
-                        <div :class="'col-md-' + titleSize">
-                            <label for="title" class="form-label">Title</label>
+                            <div class="border rounded p-2 text-center bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=CAROUSEL'" class="img-fluid rounded shadow-sm" style="max-height: 100%;" alt="Carousel">
+                            </div>
                         </div>
 
-                        <div :class="'col-md-' + (12 - titleSize)">
-                            <div class="input-group mb-2">
-                                <input type="text" class="form-control" id="title" name="title"
-                                       x-model="anime.title" aria-label="Title"
-                                       aria-describedby="basic-addon">
-
-                                <a class="input-group-text" id="basic-addon"
-                                   @click="" style="cursor: pointer" target="_blank" x-bind:href="anime.title">
+                        <div class="col-md-6">
+                            <label for="title" class="form-label fw-bold">Title</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="title" x-model="anime.title" placeholder="URL">
+                                <a class="input-group-text" :href="anime.title" target="_blank" x-show="anime.title">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                 </a>
                             </div>
-
-                            <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=TITLE'" class="w-25 bg-black" alt="Anime title">
+                            <div class="border rounded p-2 text-center bg-black d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <img :src="'${apiUrl}/v1/attachments?uuid=' + anime.uuid + '&type=TITLE'" class="img-fluid" style="max-height: 100%;" alt="Title">
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div x-show="tab === 2" class="card-body">
-                    <div class="row mb-2">
-                        <div :class="'col-md-' + titleSize">
-                            <label class="form-label">Platform IDs</label>
-                        </div>
-
-                        <div :class="'col-md-' + (12 - titleSize)">
-                            <table class="table table-striped table-bordered">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Platform</th>
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Last validation</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <template x-for="animePlatform in anime.platformIds">
-                                    <tr>
-                                        <td x-text="animePlatform.platform.name"></td>
-                                        <td><a :href="animePlatform.url" x-text="animePlatform.platformId" target="_blank"></a></td>
-                                        <td x-text="animePlatform.lastValidateDateTime ? new Date(animePlatform.lastValidateDateTime).toLocaleString() : 'N/A'"></td>
-                                    </tr>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label d-block fw-bold mb-2">Genres</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <template x-for="genre in anime.genres">
+                                    <span class="badge rounded-pill text-bg-info" x-text="genre.name"></span>
                                 </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div :class="'col-md-' + titleSize">
-                            <p class="form-label my-0">Simulcasts</p>
+                                <template x-if="!anime.genres || anime.genres.length === 0">
+                                    <span class="text-muted small">No genres</span>
+                                </template>
+                            </div>
                         </div>
 
-                        <div :class="'col-md-' + (12 - titleSize)">
-                            <ul class="list-group">
+                        <div class="col-md-6">
+                            <label class="form-label d-block fw-bold mb-2">Tags</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <template x-for="animeTag in anime.tags">
+                                    <div class="badge rounded-pill text-bg-secondary d-flex align-items-center gap-1">
+                                        <span x-text="animeTag.tag.name"></span>
+                                        <template x-if="animeTag.isAdult">
+                                            <i class="bi bi-exclamation-triangle-fill text-danger" title="Adult"></i>
+                                        </template>
+                                        <template x-if="animeTag.isSpoiler">
+                                            <i class="bi bi-eye-slash-fill text-warning" title="Spoiler"></i>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template x-if="!anime.tags || anime.tags.length === 0">
+                                    <span class="text-muted small">No tags</span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-block fw-bold mb-2">Simulcasts</label>
+                            <div class="d-flex flex-wrap gap-2">
                                 <template x-for="simulcast in anime.simulcasts">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center" x-text="simulcast.season + ' ' + simulcast.year"></li>
+                                    <span class="badge rounded-pill text-bg-primary" x-text="simulcast.label"></span>
                                 </template>
-                            </ul>
+                                <template x-if="!anime.simulcasts || anime.simulcasts.length === 0">
+                                    <span class="text-muted small">No simulcasts</span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold mb-2">Platform IDs</label>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm align-middle border">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Platform</th>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Last validation</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <template x-for="animePlatform in anime.platformIds">
+                                        <tr>
+                                            <td class="fw-semibold" x-text="animePlatform.platform.name"></td>
+                                            <td>
+                                                <a :href="animePlatform.url" class="text-decoration-none d-flex align-items-center gap-1" target="_blank">
+                                                    <span x-text="animePlatform.platformId"></span>
+                                                    <i class="bi bi-box-arrow-up-right small"></i>
+                                                </a>
+                                            </td>
+                                            <td class="text-muted small" x-text="animePlatform.lastValidateDateTime ? new Date(animePlatform.lastValidateDateTime).toLocaleString() : 'N/A'"></td>
+                                        </tr>
+                                    </template>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -70,5 +70,6 @@ enum class ConfigPropertyKey(val key: String) {
     UPDATE_EPISODE_DELAY_CURRENT_SEASON("update_episode_delay_current_season"),
     UPDATE_EPISODE_DELAY_LAST_SEASON("update_episode_delay_last_season"),
     UPDATE_EPISODE_DELAY_OTHERS("update_episode_delay_others"),
-    DELAY_BEFORE_SENDING_EPISODES_TO_NETWORKS("delay_before_sending_episodes_to_networks")
+    DELAY_BEFORE_SENDING_EPISODES_TO_NETWORKS("delay_before_sending_episodes_to_networks"),
+    ANILIST_SIMULCAST_MATCHING_SIZE("anilist_simulcast_matching_size")
 }

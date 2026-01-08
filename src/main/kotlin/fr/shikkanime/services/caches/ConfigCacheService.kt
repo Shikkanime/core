@@ -16,7 +16,7 @@ class ConfigCacheService : ICacheService {
     @Inject private lateinit var configFactory: ConfigFactory
 
     fun findByName(name: String) = MapCache.getOrComputeNullable(
-        "ConfigCacheService.findAll",
+        "ConfigCacheService.findByName",
         classes = listOf(Config::class.java),
         typeToken = object : TypeToken<MapCacheValue<ConfigDto>>() {},
         key = name,

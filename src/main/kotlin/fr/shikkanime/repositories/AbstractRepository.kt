@@ -125,4 +125,10 @@ abstract class AbstractRepository<E : ShikkEntity> {
             it.remove(entity)
         }
     }
+
+    fun deleteAll(entities: List<E>) {
+        database.inTransaction { entityManager ->
+            entities.forEach { entityManager.remove(it) }
+        }
+    }
 }

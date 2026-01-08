@@ -1,6 +1,7 @@
 package fr.shikkanime.dtos.animes
 
 import fr.shikkanime.dtos.AnimePlatformDto
+import fr.shikkanime.dtos.GenreDto
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.entities.enums.CountryCode
@@ -20,6 +21,8 @@ data class AnimeDto(
     val description: String?,
     val simulcasts: Set<SimulcastDto>?,
     val audioLocales: Set<String>?,
+    var genres: Set<GenreDto>? = null,
+    var tags: Set<AnimeTagDto>? = null,
     var langTypes: Set<LangType>? = null,
     var seasons: Set<SeasonDto>? = null,
     var platformIds: Set<AnimePlatformDto>? = null,

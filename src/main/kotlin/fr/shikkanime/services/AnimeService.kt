@@ -86,7 +86,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllSeasons(uuid: UUID) = animeRepository.findAllSeasons(uuid)
 
-    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuid: UUID, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String) = animeRepository.findAllSimulcastedWithAnimePlatformInvalid(simulcastUuid, platform, lastValidateDateTime, ignoreAudioLocale)
+    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids: Collection<UUID>, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String) = animeRepository.findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids, platform, lastValidateDateTime, ignoreAudioLocale)
 
     fun preIndex() = animeRepository.preIndex()
 
