@@ -130,7 +130,15 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
 
     private fun isParentTvRelation(edge: RelationEdge): Boolean = edge.relationType == "PARENT" && edge.node.format == "TV"
 
-    private fun isValidMatch(media: Media): Boolean = hasHighSimilarity(media) || (!media.hasParentRelation && media.isFirstReleasedYearRange)
+    private fun isSingleValidMatch(
+        animeSearchResults: List<Media>,
+        firstReleasedYear: Int?
+    ): Boolean {
+        val validMatches = animeSearchResults.filter { hasHighSimilarity(it) || (!it.hasParentRelation && it.isFirstReleasedYearRange) }
+        val singleMatch = validMatches.singleOrNull()
+
+        return singleMatch != null && (firstReleasedYear == null || singleMatch.startDate.year == firstReleasedYear)
+    }
 
     private suspend fun updateAnimeSearchResults(
         animeSearchResults: MutableList<Media>,
@@ -144,7 +152,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         val hasSingleLowSimilarityParentRelation = first != null && !hasHighSimilarity(first) && first.format == "OVA" && hasParentTvRelation
 
         val hasUniqueHighSimilarityMatch = animeSearchResults.count(::hasHighSimilarity) == 1
-        val hasUniqueValidMatch = animeSearchResults.count(::isValidMatch) == 1
+        val hasUniqueValidMatch = isSingleValidMatch(animeSearchResults, firstReleasedYear)
 
         val isAlternativeTitleSearchNeeded = !platforms.isNullOrEmpty() && ((animeSearchResults.size <= 2 && !hasUniqueHighSimilarityMatch) || !hasUniqueValidMatch)
 
@@ -208,9 +216,9 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
                 media.format == "MOVIE" &&
                 node.format in listOf("MOVIE", "ONA")
 
-        // Règle 3 : Spinoff basé sur un personnage (sauf si le média courant est TV/Film)
+        // Règle 3 : Spinoff basé sur un personnage (sauf si le média courant est TV/TV Short/Film)
         val isCharacterSideStory = type == "CHARACTER" &&
-                media.format !in listOf("TV", "MOVIE") &&
+                media.format !in listOf("TV", "TV_SHORT", "MOVIE") &&
                 node.format == "TV"
 
         // Règle 4 : Histoires alternatives

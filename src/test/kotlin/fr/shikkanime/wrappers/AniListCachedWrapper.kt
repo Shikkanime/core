@@ -516,6 +516,15 @@ class AniListCachedWrapper : AbstractTest() {
                 platforms = listOf(AnimePlatform(platform = Platform.CRUN, platformId = "GT00366764")),
                 firstReleasedYear = 2025,
                 exceptedMediaId = 187264
+            ),
+            MediaTestCase(
+                name = "ISEKAI QUARTET",
+                platforms = listOf(
+                    AnimePlatform(platform = Platform.CRUN, platformId = "GMTE00258378"),
+                    AnimePlatform(platform = Platform.CRUN, platformId = "GR8DN7N7R")
+                ),
+                firstReleasedYear = 2019,
+                exceptedMediaId = 104454
             )
         )
     }
