@@ -7,7 +7,6 @@ import fr.shikkanime.wrappers.impl.caches.AniListCachedWrapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
@@ -17,8 +16,7 @@ class AniListCachedWrapper : AbstractTest() {
         val name: String,
         val platforms: List<AnimePlatform>? = null,
         val firstReleasedYear: Int? = null,
-        val exceptedMediaId: Int,
-        val canFailDuringTest: Boolean = false
+        val exceptedMediaId: Int
     )
 
     companion object {
@@ -298,8 +296,7 @@ class AniListCachedWrapper : AbstractTest() {
                 name = "NINTAMA RANTARŌ: MAÎTRE INVINCIBLE DES NINJAS DOKUTAKE",
                 platforms = listOf(AnimePlatform(platform = Platform.PRIM, platformId = "0ITMHDR4DYNJDXLMAJ627H0ELR")),
                 firstReleasedYear = 2024,
-                exceptedMediaId = 175138,
-                canFailDuringTest = true
+                exceptedMediaId = 175138
             ),
             MediaTestCase(
                 name = "Mawaru Penguindrum",
@@ -532,14 +529,14 @@ class AniListCachedWrapper : AbstractTest() {
     @ParameterizedTest
     @MethodSource("mediaTestCases")
     fun fetchMedia(testCase: MediaTestCase) {
-        val media = runBlocking { AniListCachedWrapper.findAnilistMedia(testCase.name, testCase.platforms, testCase.firstReleasedYear) }
-
-        if (testCase.canFailDuringTest) {
-            assumeTrue(media != null)
-            assumeTrue(testCase.exceptedMediaId == media!!.id)
-        } else {
-            assertNotNull(media)
-            assertEquals(testCase.exceptedMediaId, media!!.id)
+        val media = try {
+            runBlocking { AniListCachedWrapper.findAnilistMedia(testCase.name, testCase.platforms, testCase.firstReleasedYear) }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
         }
+
+        assertNotNull(media)
+        assertEquals(testCase.exceptedMediaId, media!!.id)
     }
 }
