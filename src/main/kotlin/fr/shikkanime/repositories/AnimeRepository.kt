@@ -7,6 +7,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.Season
 import fr.shikkanime.entities.miscellaneous.SortParameter
+import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.JoinType
 import jakarta.persistence.criteria.Predicate
@@ -330,6 +331,35 @@ class AnimeRepository : AbstractRepository<Anime>() {
                 ))
 
             createReadOnlyQuery(it, query).resultList
+        }
+    }
+
+    fun findAllWithGenresAndTags(): List<Tuple> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            val genresJoin = root.join(Anime_.genres, JoinType.LEFT)
+            val animeTagsJoin = root.join(Anime_.tags, JoinType.LEFT)
+            val tagsJoin = animeTagsJoin.join(AnimeTag_.tag, JoinType.LEFT)
+
+            query.select(
+                cb.tuple(
+                    root[Anime_.uuid],
+                    root[Anime_.name],
+                    cb.function("array_agg", Array<String?>::class.java, genresJoin[Genre_.name]),
+                    cb.function("array_agg", Array<String?>::class.java, tagsJoin[Tag_.name]),
+                )
+            ).where(
+                cb.or(
+                    cb.isNotNull(genresJoin),
+                    cb.isNotNull(tagsJoin),
+                )
+            ).orderBy(cb.asc(cb.lower(root[Anime_.name])))
+                .groupBy(root[Anime_.uuid], root[Anime_.name])
+
+            createReadOnlyQuery(it, query)
+                .resultList
         }
     }
 

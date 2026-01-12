@@ -4,6 +4,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.miscellaneous.MissedAnime
 import fr.shikkanime.entities.miscellaneous.Pageable
+import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.util.*
 
@@ -40,6 +41,50 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
+        }
+    }
+
+    fun findAllFollowedWithGenresAndTags(memberUuid: UUID): List<Tuple> {
+        return database.entityManager.use { em ->
+            val cb = em.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+
+            // Joins
+            val anime = root.join(MemberFollowAnime_.anime)
+            val episodes = anime.join(Anime_.mappings, JoinType.LEFT)
+            val followedEpisodes = episodes.join(EpisodeMapping_.memberFollowEpisodes, JoinType.LEFT).apply {
+                on(cb.equal(this[MemberFollowEpisode_.member][Member_.uuid], memberUuid))
+            }
+            val genres = anime.join(Anime_.genres, JoinType.LEFT)
+            val animeTags = anime.join(Anime_.tags, JoinType.LEFT)
+            val tags = animeTags.join(AnimeTag_.tag, JoinType.LEFT)
+
+            // Aggregations & Expressions
+            val genresAgg = cb.function("array_agg", Array<String?>::class.java, genres[Genre_.name])
+            val tagsAgg = cb.function("array_agg", Array<String?>::class.java, tags[Tag_.name])
+            val followRatio = cb.quot(
+                cb.prod(cb.countDistinct(followedEpisodes[MemberFollowEpisode_.episode]), 1f),
+                cb.countDistinct(episodes[EpisodeMapping_.uuid])
+            ).`as`(Float::class.java)
+
+            query.select(
+                cb.tuple(
+                    anime[Anime_.uuid],
+                    anime[Anime_.name],
+                    genresAgg,
+                    tagsAgg,
+                    followRatio
+                )
+            ).where(
+                cb.and(
+                    cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid),
+                    cb.or(cb.isNotNull(genres), cb.isNotNull(tags))
+                )
+            ).orderBy(cb.asc(cb.lower(anime[Anime_.name])))
+                .groupBy(anime[Anime_.uuid], anime[Anime_.name])
+
+            createReadOnlyQuery(em, query).resultList
         }
     }
 

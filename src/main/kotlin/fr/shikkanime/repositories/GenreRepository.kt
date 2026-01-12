@@ -2,12 +2,25 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Anime_
-import fr.shikkanime.entities.Genre_
 import fr.shikkanime.entities.Genre
-import java.util.UUID
+import fr.shikkanime.entities.Genre_
+import java.util.*
 
 class GenreRepository : AbstractRepository<Genre>() {
     override fun getEntityClass() = Genre::class.java
+
+    override fun findAll(): List<Genre> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.orderBy(cb.asc(cb.lower(root[Genre_.name])))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
 
     fun findAllByAnime(animeUuid: UUID): List<Genre> {
         return database.entityManager.use {
