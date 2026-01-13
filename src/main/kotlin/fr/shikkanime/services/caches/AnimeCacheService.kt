@@ -3,7 +3,6 @@ package fr.shikkanime.services.caches
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
-import fr.shikkanime.caches.CountryCodeNamePaginationKeyCache
 import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.SeasonDto
@@ -39,42 +38,31 @@ class AnimeCacheService : ICacheService {
 
     fun findAllBy(
         countryCode: CountryCode?,
-        uuid: UUID?,
+        simulcastUuid: UUID?,
+        name: String?,
+        searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        searchTypes: Array<LangType>? = null,
     ) = MapCache.getOrCompute(
         "AnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<AnimeDto>>>() {},
-        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, uuid, sort, page, limit, searchTypes),
+        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, simulcastUuid, name, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             animeService.findAllBy(
                 it.countryCode,
-                it.uuid,
+                it.simulcastUuid,
+                it.name,
+                it.searchTypes,
                 it.sort,
                 it.page,
                 it.limit,
-                it.searchTypes,
             ),
             animeFactory
         )
     }
-
-    fun findAllByName(countryCode: CountryCode?, name: String, page: Int, limit: Int, searchTypes: Array<LangType>?) =
-        MapCache.getOrCompute(
-            "AnimeCacheService.findAllByName",
-            classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
-            typeToken = object : TypeToken<MapCacheValue<PageableDto<AnimeDto>>>() {},
-            key = CountryCodeNamePaginationKeyCache(countryCode, name, page, limit, searchTypes),
-        ) {
-            PageableDto.fromPageable(
-                animeService.findAllByName(it.countryCode, it.name, it.page, it.limit, it.searchTypes),
-                animeFactory
-            )
-        }
 
     private fun findAllBySimulcast(simulcastUuid: UUID) = MapCache.getOrCompute(
         "AnimeCacheService.findAllBySimulcast",

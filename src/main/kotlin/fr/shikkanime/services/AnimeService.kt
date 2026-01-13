@@ -8,7 +8,6 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.*
-import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
@@ -44,25 +43,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun findAllBy(
         countryCode: CountryCode?,
         simulcastUuid: UUID?,
+        name: String?,
+        searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-        searchTypes: Array<LangType>?,
-    ) = animeRepository.findAllBy(countryCode, simulcastUuid, sort, page, limit, searchTypes)
-
-    fun findAllByName(
-        countryCode: CountryCode?,
-        name: String,
-        page: Int,
-        limit: Int,
-        searchTypes: Array<LangType>?
-    ): Pageable<Anime> {
-        return if (name.length == 1) {
-            animeRepository.findAllByFirstLetterCategory(countryCode, name, page, limit, searchTypes)
-        } else {
-            animeRepository.findAllByName(countryCode, name, page, limit, searchTypes)
-        }
-    }
+    ) = animeRepository.findAllBy(countryCode, simulcastUuid, name, searchTypes, sort, page, limit)
 
     fun findAllBySimulcast(simulcastUuid: UUID) = animeRepository.findAllBySimulcast(simulcastUuid)
 

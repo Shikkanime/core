@@ -2,11 +2,13 @@ package fr.shikkanime.services.seo
 
 import com.google.gson.annotations.SerializedName
 import fr.shikkanime.dtos.AnimePlatformDto
+import fr.shikkanime.dtos.GenreDto
 import fr.shikkanime.dtos.PlatformDto
-import fr.shikkanime.dtos.SeasonDto
+import fr.shikkanime.dtos.SimulcastDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.takeIfNotEmpty
 
 class JsonLdBuilder {
     private data class TvSeriesJsonLd(
@@ -25,7 +27,8 @@ class JsonLdBuilder {
         val numberOfEpisodes: Long,
         val numberOfSeasons: Int,
         val containsSeason: Collection<SeasonJsonLd>?,
-        val keywords: String?,
+        val genre: List<String>?,
+        val keywords: List<String>?,
     )
 
     private data class ProviderJsonLd(
@@ -44,8 +47,8 @@ class JsonLdBuilder {
         val numberOfEpisodes: Long,
     )
 
-    fun build(anime: AnimeDto, seasons: Set<SeasonDto>, platforms: Set<AnimePlatformDto>): String {
-        val sortedSeasons = seasons.sortedBy { it.number }
+    fun build(anime: AnimeDto): String {
+        val sortedSeasons = anime.seasons!!.sortedBy { it.number }
         val containsSeason = sortedSeasons.map { season ->
             SeasonJsonLd(
                 name = "Saison ${season.number}",
@@ -58,7 +61,7 @@ class JsonLdBuilder {
 
         val totalEpisodes = sortedSeasons.sumOf { it.episodes }
 
-        val uniqueProviders = platforms
+        val uniqueProviders = anime.platformIds!!
             .map(AnimePlatformDto::platform)
             .distinctBy(PlatformDto::id)
             .map { platform ->
@@ -79,11 +82,15 @@ class JsonLdBuilder {
             startDate = anime.releaseDateTime,
             dateModified = anime.lastUpdateDateTime,
             inLanguage = anime.audioLocales,
-            provider = uniqueProviders.takeIf { it.isNotEmpty() },
+            provider = uniqueProviders.takeIfNotEmpty(),
             numberOfEpisodes = totalEpisodes,
             numberOfSeasons = sortedSeasons.size,
-            containsSeason = containsSeason.takeIf { it.isNotEmpty() },
-            keywords = anime.simulcasts?.joinToString(", ") { it.label }
+            containsSeason = containsSeason.takeIfNotEmpty(),
+            genre = anime.genres?.map(GenreDto::name)?.takeIfNotEmpty(),
+            keywords = buildList {
+                anime.simulcasts?.map(SimulcastDto::label)?.let(::addAll)
+                anime.tags?.map { it.tag.name }?.let(::addAll)
+            }.takeIfNotEmpty()
         )
 
         return ObjectParser.toJson(jsonLd)
