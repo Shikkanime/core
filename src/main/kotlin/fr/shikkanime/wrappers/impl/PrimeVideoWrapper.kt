@@ -87,15 +87,30 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
             // Use existing JSON for main page or fetch season-specific data
             val json = if (season.id != pageTitleId) fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale) else show.globalJson
             val btfState = json.getAsJsonObject("btf").getAsJsonObject("state")
+            val metadata = btfState.getAsJsonObject("metadata") ?: throw Exception("Failed to get metadata")
             val episodes = mutableSetOf<Episode>()
 
             // Extract episodes from the current JSON
             btfState.getAsJsonObject("detail").getAsJsonObject("detail")?.let { episodesJson ->
                 episodes.addAll(
                     episodesJson.entrySet()
-                        .filter { (_, element) -> element.asJsonObject.getAsString("titleType") == "episode" }
+                        .filter { (id, element) ->
+                            val episodeMetadata = metadata.getAsJsonObject(id) ?: return@filter false
+
+                            element.asJsonObject.getAsString("titleType") == "episode" &&
+                                    (episodeMetadata.getAsJsonArray("traits")?.isEmpty == true ||
+                                            episodeMetadata.getAsString("upcomingSynopsis").isNullOrBlank())
+                        }
                         .map { (key, element) ->
-                            createEpisode(countryCode, key, element.asJsonObject, season, show, btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")!!, btfState)
+                            createEpisode(
+                                countryCode,
+                                key,
+                                element.asJsonObject,
+                                season,
+                                show,
+                                btfState.getAsJsonObject("self").getAsJsonObject(key).getAsString("link")!!,
+                                btfState
+                            )
                         }
                 )
             } ?: throw Exception("Failed to get episodes")
