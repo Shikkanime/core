@@ -31,6 +31,8 @@ class SiteController {
         val animes = animeCacheService.findAllBy(
             CountryCode.FR,
             simulcastCacheService.currentSimulcast?.uuid,
+            null,
+            null,
             listOf(SortParameter("name", SortParameter.Order.ASC)),
             1,
             animeSimulcastLimit
@@ -42,6 +44,8 @@ class SiteController {
             val previousSimulcastAnimes = animeCacheService.findAllBy(
                 CountryCode.FR,
                 simulcasts[1].uuid,
+                null,
+                null,
                 listOf(SortParameter("name", SortParameter.Order.ASC)),
                 1,
                 animeSimulcastLimit - animes.size
@@ -93,6 +97,8 @@ class SiteController {
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
                     selectedSimulcast.uuid,
+                    null,
+                    null,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     102,

@@ -34,8 +34,6 @@ class AnimeController : HasPageableRoute() {
         val desc = parameters["desc"]
         val searchTypes = parameters["searchTypes"]?.split(StringUtils.COMMA_STRING)?.map(LangType::valueOf)?.toTypedArray()
 
-        if (simulcastUuid != null && name != null)
-            return Response.conflict(MessageDto.error("You can't use simulcast and name at the same time"))
         if (name != null && (sort != null || desc != null))
             return Response.conflict(MessageDto.error("You can't use sort and desc with name"))
 
@@ -50,11 +48,15 @@ class AnimeController : HasPageableRoute() {
             if (memberUuid != null) {
                 memberFollowAnimeCacheService.findAllBy(memberUuid, page, limit)
             } else {
-                if (!name.isNullOrBlank()) {
-                    animeCacheService.findAllByName(countryCode, name, page, limit, searchTypes)
-                } else {
-                    animeCacheService.findAllBy(countryCode, simulcastUuid, sortParams, page, limit, searchTypes)
-                }
+                animeCacheService.findAllBy(
+                    countryCode,
+                    simulcastUuid,
+                    name,
+                    searchTypes,
+                    sortParams,
+                    page,
+                    limit
+                )
             }
         )
     }

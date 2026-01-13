@@ -54,6 +54,6 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             langTypes = langTypes,
             seasons = seasons,
             platformIds = platforms.toTreeSet(),
-        ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto, seasons, platforms) }
+        ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto) }
     }
 }
