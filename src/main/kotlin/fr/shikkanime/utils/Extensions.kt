@@ -20,6 +20,8 @@ fun LocalDate.atEndOfWeek(): LocalDate = this.with(DayOfWeek.SUNDAY)
 
 fun LocalDate.atEndOfTheDay(zoneId: ZoneId): ZonedDateTime = this.atTime(LocalTime.MAX).atZone(zoneId)
 
+fun LocalTime.isAfterOrEqual(other: LocalTime) = this >= other
+
 fun BufferedImage.resize(width: Int, height: Int): BufferedImage {
     val newHeight = if (height <= 0) (this.height * (width.toDouble() / this.width)).toInt() else height
     return ResampleOp(width, newHeight).filter(this, null)

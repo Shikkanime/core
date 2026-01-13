@@ -1,6 +1,7 @@
 package fr.shikkanime.platforms.configuration
 
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.isAfterOrEqual
 import io.ktor.http.*
 import java.time.LocalTime
 import java.time.ZoneId
@@ -56,14 +57,17 @@ class PrimeVideoConfiguration : PlatformConfiguration<PrimeVideoConfiguration.Pr
         }
 
         override fun canBeFetch(zonedDateTime: ZonedDateTime): Boolean {
-            if (!super.canBeFetch(zonedDateTime)) return false
-            if (this.releaseTime.isBlank()) return true
+            if (this.releaseTime.isBlank()) return super.canBeFetch(zonedDateTime)
 
             val releaseLocalTime = LocalTime.parse(this.releaseTime)
-            val isAfterInOriginalZone = zonedDateTime.toLocalTime() >= releaseLocalTime
-            val isAfterInSystemZone = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalTime() >= releaseLocalTime
+            val zonedDateTimeSystem = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault())
 
-            return isAfterInOriginalZone || isAfterInSystemZone
+            val isOriginalZoneMatch =
+                (releaseDay == 0 || zonedDateTime.dayOfWeek.value == releaseDay) && zonedDateTime.toLocalTime().isAfterOrEqual(releaseLocalTime)
+            val isSystemZoneMatch =
+                (releaseDay == 0 || zonedDateTimeSystem.dayOfWeek.value == releaseDay) && zonedDateTimeSystem.toLocalTime().isAfterOrEqual(releaseLocalTime)
+
+            return isOriginalZoneMatch || isSystemZoneMatch
         }
     }
 
