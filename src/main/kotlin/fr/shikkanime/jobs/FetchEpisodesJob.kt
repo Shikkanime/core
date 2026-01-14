@@ -189,6 +189,9 @@ class FetchEpisodesJob(
             }
 
         logger.info("Sending ${groupedEpisodes.size} grouped episodes to social networks...")
+
+        if (groupedEpisodes.isEmpty()) return
+
         sendToSocialNetworks(groupedEpisodes)
     }
 
