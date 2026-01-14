@@ -10,8 +10,6 @@ import org.jsoup.Jsoup
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.regex.MatchResult
-import java.util.regex.Pattern
 
 private const val TYPE = $$"$type"
 
@@ -174,48 +172,36 @@ object BskyWrapper {
         return ObjectParser.fromJson(response.bodyAsText(), Record::class.java)
     }
 
-    private fun countEmoji(text: String): List<MatchResult> = Pattern.compile("\\p{So}+")
-        .matcher(text)
-        .results()
-        .toList()
+    fun getFacets(text: String): Pair<String, List<Facet>> {
+        val regex = "(https?://[^\\s\\n]+|#[\\wÀ-ÖØ-öø-ÿ]+)".toRegex()
+        val facets = mutableListOf<Facet>()
+        var finalText = text
+        var charOffset = 0
 
-    private fun countAccent(text: String): List<MatchResult> = Pattern.compile("[À-ÖØ-öø-ÿ]+")
-        .matcher(text)
-        .results()
-        .toList()
+        regex.findAll(text).forEach { match ->
+            val value = match.value
+            val start = match.range.first
+            val currentStart = start + charOffset
 
-    private fun getFacets(text: String): Pair<String, List<Facet>> {
-        var tmpText = text
-
-        val facets = text.split(StringUtils.SPACE_STRING, "\n")
-            .mapNotNull { word ->
-                val link = word.trim()
-                when {
-                    link.startsWith("http") -> {
-                        val beautifulLink = link.replace("https?://www\\.|\\?.*".toRegex(), StringUtils.EMPTY_STRING).trim()
-                        tmpText = tmpText.replace(link, beautifulLink)
-                        val substringEmojiCount = countEmoji(tmpText.substringBeforeLast(link)).sumOf { it.group().length }
-                        val substringAccentCount = countAccent(tmpText.substringBefore(link)).sumOf { it.group().length }
-
-                        val start = tmpText.indexOf(beautifulLink) + substringEmojiCount + substringAccentCount
-                        val end = start + beautifulLink.length
-                        Facet(start, end, link, FacetType.LINK)
-                    }
-
-                    link.startsWith("#") -> {
-                        val substringEmojiCount = countEmoji(tmpText.substringBeforeLast(link)).sumOf { it.group().length }
-                        val substringAccentCount = countAccent(tmpText.substringBefore(link)).sumOf { it.group().length }
-
-                        val accentCount = countAccent(link).sumOf { it.group().length }
-                        val start = tmpText.indexOf(link) + substringEmojiCount + substringAccentCount
-                        val end = start + link.length + accentCount
-                        Facet(start, end, link.substring(1), FacetType.HASHTAG)
-                    }
-
-                    else -> null
-                }
+            if (value.startsWith("http")) {
+                val beautifulLink = value.replace("https?://www\\.|\\?.*".toRegex(), StringUtils.EMPTY_STRING).trim()
+                val prefix = finalText.substring(0, currentStart)
+                val suffix = finalText.substring(currentStart + value.length)
+                
+                val byteStart = prefix.toByteArray(Charsets.UTF_8).size
+                val byteEnd = byteStart + beautifulLink.toByteArray(Charsets.UTF_8).size
+                facets.add(Facet(byteStart, byteEnd, value, FacetType.LINK))
+                
+                finalText = prefix + beautifulLink + suffix
+                charOffset += beautifulLink.length - value.length
+            } else if (value.startsWith("#")) {
+                val prefix = finalText.substring(0, currentStart)
+                val byteStart = prefix.toByteArray(Charsets.UTF_8).size
+                val byteEnd = byteStart + value.toByteArray(Charsets.UTF_8).size
+                facets.add(Facet(byteStart, byteEnd, value.substring(1), FacetType.HASHTAG))
             }
+        }
 
-        return tmpText to facets
+        return finalText to facets
     }
 }
