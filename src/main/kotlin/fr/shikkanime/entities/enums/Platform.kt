@@ -8,7 +8,7 @@ enum class Platform(
     val isStreamingPlatform: Boolean,
     val seriesUrl: String
 ) {
-    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpg", 0, true, "https://animationdigitalnetwork.com/video/{ID}"),
+    ANIM("Animation Digital Network", "https://animationdigitalnetwork.fr/", "animation_digital_network.jpeg", 0, true, "https://animationdigitalnetwork.com/video/{ID}"),
     CRUN("Crunchyroll", "https://www.crunchyroll.com/", "crunchyroll.jpg", 1, true, "https://www.crunchyroll.com/series/{ID}"),
     DISN("Disney+", "https://www.disneyplus.com/", "disneyplus.jpg", 2, true, "https://www.disneyplus.com/browse/entity-{ID}"),
     NETF("Netflix", "https://www.netflix.com/", "netflix.jpg", 3, true, "https://www.netflix.com/title/{ID}"),
