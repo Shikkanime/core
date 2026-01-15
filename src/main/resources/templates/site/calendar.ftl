@@ -200,7 +200,12 @@
     <script>
         document.querySelectorAll('[data-release-date-time]').forEach(element => {
             const releaseDateTime = new Date(element.getAttribute('data-release-date-time'));
-            element.textContent = releaseDateTime.toLocaleTimeString().split(':').slice(0, 2).join(':');
+
+            element.textContent = releaseDateTime.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
         });
     </script>
 </@navigation.display>
