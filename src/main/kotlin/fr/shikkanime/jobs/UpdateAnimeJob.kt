@@ -258,6 +258,7 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchCrunchyrollAnime(animePlatform: AnimePlatform): UpdatableAnime {
         val countryCode = animePlatform.anime!!.countryCode!!
         val series = CrunchyrollCachedWrapper.getObjects(countryCode.locale, animePlatform.platformId!!).first()
+        val seasons = CrunchyrollCachedWrapper.getSeasonsBySeriesId(countryCode.locale, animePlatform.platformId!!)
 
         val objects = CrunchyrollCachedWrapper.getEpisodesBySeriesId(
             countryCode.locale,
@@ -285,7 +286,8 @@ class UpdateAnimeJob : AbstractJob {
                 ImageType.CAROUSEL to series.fullHDCarousel,
                 ImageType.TITLE to series.fullHDTitle
             ),
-            description = series.getNormalizedDescription(),
+            description = seasons.firstOrNull()?.description?.takeIf { it.isNotBlank() }
+                ?: series.getNormalizedDescription(),
             episodeSize = objects.size
         )
     }

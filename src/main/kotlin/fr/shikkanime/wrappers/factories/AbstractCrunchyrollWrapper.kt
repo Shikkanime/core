@@ -76,6 +76,7 @@ abstract class AbstractCrunchyrollWrapper {
 
     data class Season(
         val id: String,
+        val description: String?,
         @SerializedName("subtitle_locales")
         val subtitleLocales: Set<String>,
         val keywords: Set<String>

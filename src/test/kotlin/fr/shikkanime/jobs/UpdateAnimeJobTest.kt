@@ -128,7 +128,7 @@ class UpdateAnimeJobTest : AbstractTest() {
                 ),
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/3455ff9a3021e04fefd4fa2a417637b5.jpg",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/c2257c075677c3bfe0d66b46411529fb.jpg",
-                expectedDescription = "L’histoire gravite autour de Kafka Hibino, 32 ans. Il rêve de rejoindre les Forces de Défense pour honorer une promesse faite à son amie d’enfance, Mina Ashiro. Il se lie d’amitié avec son nouveau collègue, Reno Ichikawa, avec qui il nettoie des carcasses de kaiju. La détermination de son ami lui donne le courage de se présenter au concours des Forces afin de protéger l’humanité aux côtés de Mina. Son destin bascule néanmoins lorsqu’il est parasité par un petit kaiju qui lui confère des pouvoirs surhumains. Désormais capable d’affronter ses ennemis d’égal à égal, Kafka se démène pour gagner la confiance de ses équipiers, terrasser des kaijus de plus en plus puissants et assurer la sécurité de la planète."
+                expectedDescription = "Dans un monde en proie à des d’effroyables monstres géants connus sous le nom de kaiju, Kafka Hibino aspire à rejoindre un jour les Forces de Défense pour combattre ces terribles créatures. C’était un rêve qu’il avait avec son amie d’enfance, Mina Ashiro, mais leurs chemins ont pris des directions différentes. Aujourd’hui, Kafka nettoie les rues de leurs encombrants cadavres quand il croise la route de Reno Ichikawa. La détermination de Reno à rejoindre les Forces de Défense pousse Kafka à rejoindre Mina afin de protéger l’humanité."
             ),
             TestCase(
                 name = "One Piece",
@@ -138,7 +138,7 @@ class UpdateAnimeJobTest : AbstractTest() {
                 ),
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg",
-                expectedDescription = "Monkey D. Luffy refuse de laisser qui que ce soit ou quoi que ce soit se mettre en travers de sa quête pour devenir le Roi des pirates. Grâce à son pouvoir d'élasticité conféré par un Fruit du Démon, le jeune pirate fougueux cherche le trésor légendaire connu sous le nom de One Piece. Il mettra le cap sur les eaux périlleuses de Grand Line et recrutera l'équipage du Chapeau de paille. Ce capitaine ne jettera jamais l'ancre tant que ses amis et lui n'auront pas réalisé leurs rêves!"
+                expectedDescription = "Oyez ! Oyez ! Pirates de tous bords ! Gold Roger, le légendaire Roi des pirates, mort sur l’échafaud, a laissé derrière lui un trésor inestimable : le « One Piece ». Monkey D. Luffy, un garçon naïf et impulsif, rêve de mettre la main sur ce fameux butin et de devenir le nouveau Roi des Pirates. Transformé en homme-élastique après avoir avalé un des fruits du démon, Luffy part en quête d’un équipage digne de son ambition ! A l’abordage !"
             ),
             TestCase(
                 name = "Jujutsu Kaisen",
@@ -148,7 +148,7 @@ class UpdateAnimeJobTest : AbstractTest() {
                 ),
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/d128baf30c0638fafce3fd4e7c9ff37c.png",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/ede36e8f3e37587c90dbd8f1216d3022.png",
-                expectedDescription = "La vie au quotidien de trois charmantes jeunes filles qui vont au lycée : Momoko, belle et tête en l'air ; Shibumi, décontractée et sérieuse ; Mayumi, douce et innocente."
+                expectedDescription = "Souffrance, regrets, humiliations... les sentiments négatifs que ressentent les humains se transforment peu à peu en fléaux se cachant dans notre existence. Sévissant dans le monde entier, ils sont capables d'entraîner les gens dans de terribles malheurs et, parfois même, jusqu'à la mort. De plus, ces créatures ne peuvent être exorcisées que par un autre fléau. Lycéen ordinaire, Yuji Itadori..."
             )
         )
     }
