@@ -15,6 +15,10 @@ private fun <T> List<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else
 private fun <T> Array<T>.randomIfNotEmpty(): T? = if (isNotEmpty()) random() else null
 private fun <T> Array<T>.randomIfNotEmpty(predicate: (T) -> Boolean): T? = filter(predicate).randomIfNotEmpty()
 
+private val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+private val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
+private val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
+
 fun setGlobalAttributes(
     isBot: Boolean,
     modelMap: MutableMap<Any?, Any?>,
@@ -26,12 +30,8 @@ fun setGlobalAttributes(
         return
     }
 
-    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
-    val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
-    val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
-
     modelMap["su"] = StringUtils
-    modelMap["links"] = getLinks(controller, replacedPath, simulcastCacheService)
+    modelMap["links"] = getLinks(controller, replacedPath)
     modelMap["footerLinks"] = getFooterLinks(controller)
     modelMap["title"] = getTitle(title)
     modelMap["seoDescription"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
@@ -63,7 +63,7 @@ fun setGlobalAttributes(
     modelMap["randomAnimeSlug"] = randomAnimeSlug
 }
 
-private fun getLinks(controller: Any, replacedPath: String, simulcastCacheService: SimulcastCacheService) =
+private fun getLinks(controller: Any, replacedPath: String) =
     LinkObject.list()
         .filter { it.href.startsWith(ADMIN) == controller.javaClass.simpleName.startsWith("Admin") && !it.footer }
         .map { link ->

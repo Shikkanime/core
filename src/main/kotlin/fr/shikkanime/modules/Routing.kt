@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
@@ -59,6 +60,9 @@ private val fromStringConverters = mapOf<KClass<*>, (String?) -> Any?>(
 private val jvmErasureCache = ConcurrentHashMap<KParameter, KClass<*>>()
 private val mapKClass = Map::class
 private val arrayLangTypeKClass = Array<LangType>::class
+private val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
+private val database = Constant.injector.getInstance(Database::class.java)
+private val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
 
 private const val STRICT_TRANSPORT_SECURITY_VALUE = "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
 private const val CONTENT_SECURITY_POLICY_HEADER = "Content-Security-Policy"
@@ -74,13 +78,11 @@ private const val X_XSS_PROTECTION_HEADER = "X-XSS-Protection"
 private const val X_XSS_PROTECTION_VALUE = "1; mode=block"
 
 fun Application.configureRouting() {
-    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
-
     monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
         if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
-        setSecurityHeaders(call, configCacheService)
+        setSecurityHeaders(call)
     }
 
     monitor.subscribe(RoutingRoot.RoutingCallFinished) { call ->
@@ -97,7 +99,7 @@ fun Application.configureRouting() {
     }
 }
 
-private fun setSecurityHeaders(call: ApplicationCall, configCacheService: ConfigCacheService) {
+private fun setSecurityHeaders(call: ApplicationCall) {
     val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS).joinToString(StringUtils.SPACE_STRING).trim()
 
     call.response.headers.apply {
@@ -196,25 +198,27 @@ private suspend fun handleRequest(
     val parameters = call.parameters.toMap()
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
-    try {
-        val response = callMethodWithParameters(method, controller, call, parameters)
+    database.withAsyncContext {
+        try {
+            val response = callMethodWithParameters(method, controller, call, parameters)
 
-        if (method.hasAnnotation<Cached>()) {
-            val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
-            call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
+            if (method.hasAnnotation<Cached>()) {
+                val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
+                call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
+            }
+
+            response.session?.let(call.sessions::set)
+
+            when (response.type) {
+                ResponseType.MULTIPART -> handleMultipartResponse(call, response)
+                ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
+                ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
+                else -> call.respond(response.status, response.data ?: StringUtils.EMPTY_STRING)
+            }
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Error while calling method $method", e)
+            call.respond(HttpStatusCode.InternalServerError)
         }
-
-        response.session?.let(call.sessions::set)
-
-        when (response.type) {
-            ResponseType.MULTIPART -> handleMultipartResponse(call, response)
-            ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
-            ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
-            else -> call.respond(response.status, response.data ?: StringUtils.EMPTY_STRING)
-        }
-    } catch (e: Exception) {
-        logger.log(Level.SEVERE, "Error while calling method $method", e)
-        call.respond(HttpStatusCode.InternalServerError)
     }
 }
 
@@ -238,8 +242,6 @@ suspend fun handleTemplateResponse(
     val mutableMap = model.toMutableMap()
 
     var isBot = false
-    val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
-    val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
 
     if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.DISABLE_BOT_DETECTION) && botDetectorCache.isBot(clientIp = ipAddress, userAgent = userAgent)) {
         isBot = true
