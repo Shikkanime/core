@@ -65,7 +65,7 @@ class MemberController : HasPageableRoute() {
         dateRange: Stream<LocalDate>
     ): MutableList<KeyCountDto> {
         val result = mutableListOf<KeyCountDto>()
-        var lastCount = 0L
+        var lastCount: Number = 0L
         var actionIndex = 0
         // Pre-parse dates to avoid parsing in the loop
         val parsedActions = actions.map { it to LocalDate.parse(it.key) }

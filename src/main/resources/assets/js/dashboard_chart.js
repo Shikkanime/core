@@ -149,9 +149,21 @@ function updateUserMetricsChart() {
             if (dataset && dateIndex >= 0) dataset.data[dateIndex] = row.count;
         });
 
+        const datasets = Array.from(seriesMap.values());
+        const wmaMap = new Map((data.dailyWmaCounts || []).map(item => [item.key, item.count]));
+
+        datasets.push({
+            label: 'Weighted average',
+            data: uniqueDates.map(d => wmaMap.get(d)),
+            borderColor: '#000000',
+            borderDash: [5, 5],
+            fill: false,
+            tension: 0.4
+        });
+
         usersByVersionChart.options.scales.x.time.unit = 'day';
         usersByVersionChart.data.labels = uniqueDates;
-        usersByVersionChart.data.datasets = Array.from(seriesMap.values());
+        usersByVersionChart.data.datasets = datasets;
         usersByVersionChart.update();
     });
 }

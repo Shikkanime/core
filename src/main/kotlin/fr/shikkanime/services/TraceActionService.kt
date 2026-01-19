@@ -20,7 +20,8 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
         val versionCounts: List<KeyCountDto>,
         val localeCounts: List<KeyCountDto>,
         val deviceCounts: List<KeyCountDto>,
-        val dailyUserVersionCounts: List<DateVersionCountDto>
+        val dailyUserVersionCounts: List<DateVersionCountDto>,
+        val dailyWmaCounts: List<KeyCountDto>
     )
 
     @Inject private lateinit var traceActionRepository: TraceActionRepository
@@ -37,7 +38,8 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
         val localeCounts = traceActionRepository.getLocaleCount(since, lastLoginUuids)
         val deviceCounts = traceActionRepository.getDeviceCount(since, lastLoginUuids)
         val dailyUserVersionCounts = traceActionRepository.getDailyReturningUserCount(since, uuids)
-        return AnalyticsReport(versionCounts, localeCounts, deviceCounts, dailyUserVersionCounts)
+        val dailyWmaCounts = traceActionRepository.getDailyWmaCount(since, uuids)
+        return AnalyticsReport(versionCounts, localeCounts, deviceCounts, dailyUserVersionCounts, dailyWmaCounts)
     }
 
     fun createTraceAction(entity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
