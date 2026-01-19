@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.CriteriaBuilder
 import jakarta.persistence.criteria.Expression
 import java.time.LocalDate
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 
 class TraceActionRepository : AbstractRepository<TraceAction>() {
     override fun getEntityClass() = TraceAction::class.java
@@ -107,6 +107,44 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
 
             em.createQuery(query).resultList
         }
+    }
+
+    fun getDailyWmaCount(since: ZonedDateTime, returningUuids: List<UUID>): List<KeyCountDto> {
+        if (returningUuids.isEmpty()) return emptyList()
+
+        val wmaPeriod = 7
+        val wmaSumOfWeights = (1..wmaPeriod).sum().toDouble()
+
+        val dailyCounts = database.entityManager.use { em ->
+            val cb = em.criteriaBuilder
+            val query = cb.createTupleQuery()
+            val root = query.from(getEntityClass())
+            val actionDate = cb.function("date", LocalDate::class.java, root[TraceAction_.actionDateTime])
+
+            query.select(cb.tuple(actionDate, cb.countDistinct(root[TraceAction_.entityUuid])))
+                .where(
+                    cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
+                    cb.greaterThanOrEqualTo(root[TraceAction_.actionDateTime], since.minusDays(wmaPeriod - 1L)),
+                    root[TraceAction_.entityUuid].`in`(returningUuids)
+                )
+                .groupBy(actionDate)
+
+            em.createQuery(query).resultList.associate { tuple ->
+                tuple[0, LocalDate::class.java] to tuple[1, Long::class.java]
+            }
+        }
+
+        val startDate = since.toLocalDate()
+        val lastDate = dailyCounts.keys.maxOrNull() ?: startDate
+
+        return startDate.datesUntil(lastDate.plusDays(1)).map { date ->
+            val sum = (0..<wmaPeriod).sumOf { i ->
+                val d = date.minusDays(i.toLong())
+                (dailyCounts[d] ?: 0L) * (wmaPeriod - i)
+            }
+
+            KeyCountDto(date.toString(), sum / wmaSumOfWeights)
+        }.toList()
     }
 
     private fun getCountPerJsonKey(
