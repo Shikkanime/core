@@ -76,7 +76,10 @@ class SiteController {
 
     @Path("catalog/{slug}")
     @Get
-    private fun catalogSimulcast(@PathParam slug: String): Response {
+    private fun catalogSimulcast(
+        @PathParam slug: String,
+        @QueryParam searchTypes: Array<LangType>?,
+    ): Response {
         val findAll = simulcastCacheService.findAll()
         val selectedSimulcast = findAll.firstOrNull { it.slug == slug } ?: return Response.notFound()
 
@@ -86,12 +89,14 @@ class SiteController {
             mutableMapOf(
                 "simulcasts" to findAll,
                 "selectedSimulcast" to selectedSimulcast,
+                "searchTypes" to searchTypes.orEmpty().joinToString(StringUtils.COMMA_STRING),
                 "animes" to animeCacheService.findAllBy(
                     CountryCode.FR,
                     selectedSimulcast.uuid,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
-                    102
+                    102,
+                    searchTypes
                 ).data,
             )
         )
