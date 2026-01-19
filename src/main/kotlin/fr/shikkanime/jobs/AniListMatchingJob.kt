@@ -2,21 +2,18 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.dtos.SimulcastDto
-import fr.shikkanime.entities.AnimePlatform
-import fr.shikkanime.entities.TraceAction
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.AnimePlatformService
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.MailService
-import fr.shikkanime.services.TraceActionService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.*
+import fr.shikkanime.wrappers.factories.AbstractAniListWrapper
 import fr.shikkanime.wrappers.impl.caches.AniListCachedWrapper
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 import java.util.logging.Logger
 
 class AniListMatchingJob : AbstractJob {
@@ -28,6 +25,9 @@ class AniListMatchingJob : AbstractJob {
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var genreService: GenreService
+    @Inject private lateinit var animeTagService: AnimeTagService
+    @Inject private lateinit var tagService: TagService
 
     private fun Logger.info(stringBuilder: StringBuilder, message: String) {
         this.info(message)
@@ -86,6 +86,12 @@ class AniListMatchingJob : AbstractJob {
             if (media == null) {
                 logger.warning(stringBuilder, "No AniList media found for $shortName")
                 deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, deprecatedAnimePlatformDateTime).onTrue { hasChange = true }
+
+                if (updateAnimeGenreAndTags(stringBuilder, anime, shortName, null)) {
+                    hasChange = true
+                    animeService.update(anime)
+                }
+
                 return@forEach
             }
 
@@ -112,17 +118,22 @@ class AniListMatchingJob : AbstractJob {
             }
 
             deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, deprecatedAnimePlatformDateTime).onTrue { hasChange = true }
+
+            if (updateAnimeGenreAndTags(stringBuilder, anime, shortName, media)) {
+                hasChange = true
+                animeService.update(anime)
+            }
         }
 
         logger.info(stringBuilder, "Matching job finished")
 
         if (hasChange) {
             mailService.saveAdminMail(
-                title = "AniListMatchingJob - ${animes.size} animes matched",
+                title = "AniListMatchingJob - ${needMatchingAnimes.size} animes matched",
                 body = stringBuilder.toString().replace("\n", "<br>")
             )
 
-            InvalidationService.invalidate(AnimePlatform::class.java)
+            InvalidationService.invalidate(AnimePlatform::class.java, Anime::class.java, Genre::class.java, AnimeTag::class.java, Tag::class.java)
         }
     }
 
@@ -143,5 +154,87 @@ class AniListMatchingJob : AbstractJob {
             }
 
         return hasDeleted
+    }
+
+    private fun updateAnimeGenreAndTags(stringBuilder: StringBuilder, anime: Anime, shortName: String, media: AbstractAniListWrapper.Media?): Boolean {
+        val currentGenres = genreService.findAllByAnime(anime.uuid!!)
+        val currentAnimeTags = animeTagService.findAllByAnime(anime.uuid)
+
+        if (media == null) {
+            if (currentGenres.isNotEmpty() || currentAnimeTags.isNotEmpty()) {
+                logger.warning(stringBuilder, "Anime $shortName has no AniList entry, but has genres or tags, removing them...")
+                anime.genres = mutableSetOf()
+                animeTagService.deleteAll(currentAnimeTags)
+                return true
+            }
+
+            return false
+        }
+
+        val genresChanged = updateGenres(stringBuilder, anime, media.genres.orEmpty(), currentGenres, shortName)
+        val tagsChanged = updateTags(stringBuilder, anime, media.tags.orEmpty(), currentAnimeTags, shortName)
+
+        return genresChanged || tagsChanged
+    }
+
+    private fun updateGenres(stringBuilder: StringBuilder, anime: Anime, mediaGenres: List<String>, currentGenres: List<Genre>, shortName: String): Boolean {
+        val sortedMediaGenres = mediaGenres.sortedBy { it.lowercase() }
+        val sortedCurrentGenres = currentGenres.mapNotNull { it.name }.sortedBy { it.lowercase() }
+
+        if (sortedMediaGenres == sortedCurrentGenres) return false
+
+        anime.genres = sortedMediaGenres.map(genreService::findOrSave).toMutableSet()
+        logger.info(stringBuilder, "Genres updated for anime $shortName to ${sortedMediaGenres.joinToString()}")
+        return true
+    }
+
+    private fun updateTags(stringBuilder: StringBuilder, anime: Anime, mediaTags: List<AbstractAniListWrapper.Tag>, currentAnimeTags: List<AnimeTag>, shortName: String): Boolean {
+        val filteredMediaTags = mediaTags.filter { it.rank >= 75 }.sortedBy { it.name.lowercase() }
+        val sortedMediaTagNames = filteredMediaTags.map { it.name.lowercase() }
+        val sortedCurrentTagNames = currentAnimeTags.mapNotNull { it.tag?.name?.lowercase() }.sortedBy { it }
+
+        if (sortedMediaTagNames == sortedCurrentTagNames) {
+            return updateExistingTagsMetadata(filteredMediaTags, currentAnimeTags)
+        }
+
+        val targetTags = filteredMediaTags.map { tagService.findOrSave(it.name) }
+        val targetTagUuids = targetTags.mapNotNull { it.uuid }.toSet()
+
+        // Remove tags not in AniList anymore
+        val tagsToDelete = currentAnimeTags.filter { it.tag?.uuid !in targetTagUuids }
+        animeTagService.deleteAll(tagsToDelete)
+
+        // Add or Update remaining tags
+        filteredMediaTags.forEach { mediaTag ->
+            val tag = targetTags.find { it.name == mediaTag.name } ?: return@forEach
+            val existingAnimeTag = currentAnimeTags.find { it.tag?.uuid == tag.uuid }
+            val isSpoiler = mediaTag.isMediaSpoiler || mediaTag.isGeneralSpoiler
+
+            if (existingAnimeTag == null) {
+                animeTagService.saveAll(listOf(AnimeTag(anime = anime, tag = tag, isAdult = mediaTag.isAdult, isSpoiler = isSpoiler)))
+            } else if (existingAnimeTag.isAdult != mediaTag.isAdult || existingAnimeTag.isSpoiler != isSpoiler) {
+                existingAnimeTag.isAdult = mediaTag.isAdult
+                existingAnimeTag.isSpoiler = isSpoiler
+                animeTagService.update(existingAnimeTag)
+            }
+        }
+
+        logger.info(stringBuilder, "Tags updated for anime $shortName to ${filteredMediaTags.joinToString { it.name }}")
+        return true
+    }
+
+    private fun updateExistingTagsMetadata(mediaTags: List<AbstractAniListWrapper.Tag>, currentAnimeTags: List<AnimeTag>): Boolean {
+        var hasChanged = false
+        currentAnimeTags.forEach { animeTag ->
+            val mediaTag = mediaTags.find { it.name == animeTag.tag?.name } ?: return@forEach
+            val isSpoiler = mediaTag.isMediaSpoiler || mediaTag.isGeneralSpoiler
+            if (animeTag.isAdult != mediaTag.isAdult || animeTag.isSpoiler != isSpoiler) {
+                animeTag.isAdult = mediaTag.isAdult
+                animeTag.isSpoiler = isSpoiler
+                animeTagService.update(animeTag)
+                hasChanged = true
+            }
+        }
+        return hasChanged
     }
 }

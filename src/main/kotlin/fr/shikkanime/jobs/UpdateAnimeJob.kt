@@ -1,15 +1,19 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.*
+import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.AnimePlatform
+import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AnimePlatformService
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.AttachmentService
+import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
-import fr.shikkanime.wrappers.factories.AbstractAniListWrapper
 import fr.shikkanime.wrappers.impl.caches.*
 import java.time.ZonedDateTime
 
@@ -31,9 +35,6 @@ class UpdateAnimeJob : AbstractJob {
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var attachmentService: AttachmentService
-    @Inject private lateinit var genreService: GenreService
-    @Inject private lateinit var animeTagService: AnimeTagService
-    @Inject private lateinit var tagService: TagService
 
     override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
@@ -98,8 +99,6 @@ class UpdateAnimeJob : AbstractJob {
                 hasChanged = true
             }
 
-            hasChanged = updateAnimeGenreAndTags(anime, shortName) || hasChanged
-
             anime.lastUpdateDateTime = zonedDateTime
             animeService.update(anime)
 
@@ -110,93 +109,7 @@ class UpdateAnimeJob : AbstractJob {
             logger.info("Anime $shortName updated")
         }
 
-        InvalidationService.invalidate(Anime::class.java, Genre::class.java, AnimeTag::class.java, Tag::class.java)
-    }
-
-    private suspend fun updateAnimeGenreAndTags(anime: Anime, shortName: String): Boolean {
-        val anilistId = animePlatformService.findAllIdByAnimeAndPlatform(anime, Platform.ANIL)
-            .singleOrNull()?.toIntOrNull() ?: return false
-        val media = runCatching { AniListCachedWrapper.getMediaById(anilistId) }.getOrNull()
-
-        val currentGenres = genreService.findAllByAnime(anime.uuid!!)
-        val currentAnimeTags = animeTagService.findAllByAnime(anime.uuid)
-
-        if (media == null) {
-            if (currentGenres.isNotEmpty() || currentAnimeTags.isNotEmpty()) {
-                logger.warning("Anime $shortName has no AniList entry, but has genres or tags, removing them...")
-                anime.genres = mutableSetOf()
-                animeTagService.deleteAll(currentAnimeTags)
-                return true
-            }
-
-            return false
-        }
-
-        val genresChanged = updateGenres(anime, media.genres.orEmpty(), currentGenres, shortName)
-        val tagsChanged = updateTags(anime, media.tags.orEmpty(), currentAnimeTags, shortName)
-
-        return genresChanged || tagsChanged
-    }
-
-    private fun updateGenres(anime: Anime, mediaGenres: List<String>, currentGenres: List<Genre>, shortName: String): Boolean {
-        val sortedMediaGenres = mediaGenres.sortedBy { it.lowercase() }
-        val sortedCurrentGenres = currentGenres.mapNotNull { it.name }.sortedBy { it.lowercase() }
-
-        if (sortedMediaGenres == sortedCurrentGenres) return false
-
-        anime.genres = sortedMediaGenres.map(genreService::findOrSave).toMutableSet()
-        logger.info("Genres updated for anime $shortName to ${sortedMediaGenres.joinToString()}")
-        return true
-    }
-
-    private fun updateTags(anime: Anime, mediaTags: List<AbstractAniListWrapper.Tag>, currentAnimeTags: List<AnimeTag>, shortName: String): Boolean {
-        val filteredMediaTags = mediaTags.filter { it.rank >= 75 }.sortedBy { it.name.lowercase() }
-        val sortedMediaTagNames = filteredMediaTags.map { it.name.lowercase() }
-        val sortedCurrentTagNames = currentAnimeTags.mapNotNull { it.tag?.name?.lowercase() }.sortedBy { it }
-
-        if (sortedMediaTagNames == sortedCurrentTagNames) {
-            return updateExistingTagsMetadata(filteredMediaTags, currentAnimeTags)
-        }
-
-        val targetTags = filteredMediaTags.map { tagService.findOrSave(it.name) }
-        val targetTagUuids = targetTags.mapNotNull { it.uuid }.toSet()
-
-        // Remove tags not in AniList anymore
-        val tagsToDelete = currentAnimeTags.filter { it.tag?.uuid !in targetTagUuids }
-        animeTagService.deleteAll(tagsToDelete)
-
-        // Add or Update remaining tags
-        filteredMediaTags.forEach { mediaTag ->
-            val tag = targetTags.find { it.name == mediaTag.name } ?: return@forEach
-            val existingAnimeTag = currentAnimeTags.find { it.tag?.uuid == tag.uuid }
-            val isSpoiler = mediaTag.isMediaSpoiler || mediaTag.isGeneralSpoiler
-
-            if (existingAnimeTag == null) {
-                animeTagService.saveAll(listOf(AnimeTag(anime = anime, tag = tag, isAdult = mediaTag.isAdult, isSpoiler = isSpoiler)))
-            } else if (existingAnimeTag.isAdult != mediaTag.isAdult || existingAnimeTag.isSpoiler != isSpoiler) {
-                existingAnimeTag.isAdult = mediaTag.isAdult
-                existingAnimeTag.isSpoiler = isSpoiler
-                animeTagService.update(existingAnimeTag)
-            }
-        }
-
-        logger.info("Tags updated for anime $shortName to ${filteredMediaTags.joinToString { it.name }}")
-        return true
-    }
-
-    private fun updateExistingTagsMetadata(mediaTags: List<AbstractAniListWrapper.Tag>, currentAnimeTags: List<AnimeTag>): Boolean {
-        var hasChanged = false
-        currentAnimeTags.forEach { animeTag ->
-            val mediaTag = mediaTags.find { it.name == animeTag.tag?.name } ?: return@forEach
-            val isSpoiler = mediaTag.isMediaSpoiler || mediaTag.isGeneralSpoiler
-            if (animeTag.isAdult != mediaTag.isAdult || animeTag.isSpoiler != isSpoiler) {
-                animeTag.isAdult = mediaTag.isAdult
-                animeTag.isSpoiler = isSpoiler
-                animeTagService.update(animeTag)
-                hasChanged = true
-            }
-        }
-        return hasChanged
+        InvalidationService.invalidate(Anime::class.java)
     }
 
     private suspend fun fetchAnime(anime: Anime, zonedDateTime: ZonedDateTime): List<UpdatableAnime> {
