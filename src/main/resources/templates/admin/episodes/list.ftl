@@ -36,6 +36,26 @@
         updateAll: {
             uuids: []
         },
+        aggregation: {
+            loading: false,
+            results: []
+        },
+        getUniqueSources() {
+            const sources = [];
+            const seen = new Set();
+            this.aggregation.results.forEach(result => {
+                result.aggregations.forEach(agg => {
+                    agg.sources.forEach(source => {
+                        const key = source.platform + (source.url || '');
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            sources.push(source);
+                        }
+                    });
+                });
+            });
+            return sources;
+        },
         async init() {
             const urlParams = new URLSearchParams(window.location.search);
             const animeUuidFromUrl = urlParams.get('anime');
@@ -202,6 +222,99 @@
             </div>
         </div>
 
+        <div class="modal fade" id="aggregationModal" tabindex="-1" aria-labelledby="aggregationModalLabel"
+             aria-hidden="true" x-data="{ aggregationSaving: false }">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="aggregationModalLabel">Episode Aggregation</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div x-show="aggregation.loading" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Aggregating data from multiple sources...</p>
+                        </div>
+
+                        <div x-show="!aggregation.loading">
+                            <div class="mb-3">
+                                <template x-for="source in getUniqueSources()">
+                                    <span>
+                                        <a :href="source.url" target="_blank" x-show="source.url"
+                                           class="badge bg-info text-dark me-2 text-decoration-none"
+                                           x-text="source.platform"></a>
+                                        <span class="badge bg-info text-dark me-2"
+                                              x-show="!source.url" x-text="source.platform"></span>
+                                    </span>
+                                </template>
+                            </div>
+
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                <tr>
+                                    <th>Episode</th>
+                                    <th>Current Date</th>
+                                    <th>New Date</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <template x-for="result in aggregation.results" :key="result.episodeUuid">
+                                    <tr x-data="{ episodeReleaseDate: result.releaseDate }">
+                                        <td>
+                                            <strong x-text="result.animeName"></strong><br>
+                                            <small x-text="result.episodeName"></small>
+                                        </td>
+                                        <td>
+                                            <input type="date" class="form-control form-control-sm disabled"
+                                                   :value="episodeReleaseDate" readonly disabled>
+                                        </td>
+                                        <td>
+                                            <div class="input-group input-group-sm">
+                                                <input type="date" class="form-control form-control-sm"
+                                                       x-model="result.releaseDate">
+
+                                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                                        x-show="result.aggregations.length > 0">
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <template x-for="agg in result.aggregations">
+                                                        <template x-for="airing in agg.airings">
+                                                            <li>
+                                                                <a class="dropdown-item position-relative" href="#" @click.prevent="result.releaseDate = airing.date">
+                                                                    <input type="date" class="form-control form-control-sm"
+                                                                           :value="airing.date" readonly disabled>
+
+                                                                    <span class="badge bg-secondary position-absolute top-0 end-0 translate-middle-x"
+                                                                          x-text="airing.occurrenceCount"></span>
+                                                                </a>
+                                                            </li>
+                                                        </template>
+                                                    </template>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button class="btn btn-success" x-bind:disabled="aggregationSaving || aggregation.loading"
+                                @click="aggregationSaving = true; await updateAggregated(aggregation.results); location.reload();">
+                            <span x-show="aggregationSaving" class="spinner-border spinner-border-sm me-1"
+                                  role="status"></span>
+                            Confirm & Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-3 align-items-center mb-3">
             <div class="col-auto">
                 <div class="search-container position-relative">
@@ -236,8 +349,15 @@
             <div class="col-auto" x-show="updateAll.uuids.length > 0">
                 <div class="position-relative">
                     <div class="input-group z-0">
-                        <button class="btn btn-warning" type="button" data-bs-toggle="modal" data-bs-target="#updateAllModal">
+                        <button class="btn btn-warning" type="button" data-bs-toggle="modal"
+                                data-bs-target="#updateAllModal">
                             <i class="bi bi-pencil-square"></i>
+                        </button>
+
+                        <button class="btn btn-primary" type="button" data-bs-toggle="modal"
+                                data-bs-target="#aggregationModal"
+                                @click="aggregation.loading = true; aggregation.results = await aggregateSelected(updateAll.uuids); aggregation.loading = false;">
+                            <i class="bi bi-recycle"></i>
                         </button>
 
                         <button class="btn btn-outline-warning" @click="updateAll.uuids = [];">
@@ -245,7 +365,8 @@
                         </button>
                     </div>
 
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger z-1" x-text="updateAll.uuids.length"></span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger z-1"
+                          x-text="updateAll.uuids.length"></span>
                 </div>
             </div>
             <@ui.alpinePagination />
@@ -353,6 +474,37 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(updateAll)
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function aggregateSelected(uuids) {
+            try {
+                const response = await fetch('/admin/api/episode-mappings/aggregate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({uuids: uuids})
+                });
+
+                return await response.json();
+            } catch (e) {
+                console.error(e);
+                return [];
+            }
+        }
+
+        async function updateAggregated(results) {
+            try {
+                await fetch('/admin/api/episode-mappings/update-aggregated', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(results)
                 });
             } catch (e) {
                 console.error(e);

@@ -3,6 +3,8 @@ package fr.shikkanime.controllers.admin.api
 import com.google.inject.Inject
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.MessageDto
+import fr.shikkanime.dtos.mappings.EpisodeAggregationDto
+import fr.shikkanime.dtos.mappings.EpisodeAggregationResultDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
@@ -22,6 +24,7 @@ import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
+import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.method.Put
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.PathParam
@@ -53,6 +56,27 @@ class EpisodeMappingController {
             return Response.badRequest(MessageDto.error("At least one field must be set"))
 
         episodeMappingAdminService.updateAll(updateAllEpisodeMappingDto)
+        episodeVariantService.preIndex()
+        InvalidationService.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
+        return Response.ok()
+    }
+
+    @Path("/aggregate")
+    @Post
+    private fun aggregate(@BodyParam episodeAggregationDto: EpisodeAggregationDto): Response {
+        if (episodeAggregationDto.uuids.isEmpty())
+            return Response.badRequest(MessageDto.error("uuids must not be empty"))
+
+        return Response.ok(episodeMappingAdminService.aggregate(episodeAggregationDto))
+    }
+
+    @Path("/update-aggregated")
+    @Put
+    private fun updateAggregated(@BodyParam results: Array<EpisodeAggregationResultDto>): Response {
+        if (results.isEmpty())
+            return Response.badRequest(MessageDto.error("results must not be empty"))
+
+        episodeMappingAdminService.updateAggregated(results)
         episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, Simulcast::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java)
         return Response.ok()

@@ -49,6 +49,7 @@ abstract class AbstractAniListWrapper {
         val idMal: Int?,
         val startDate: FuzzyDate,
         val title: Title,
+        val synonyms: List<String>?,
         val format: String?,
         val genres: List<String>?,
         val tags: List<Tag>?,
@@ -56,6 +57,7 @@ abstract class AbstractAniListWrapper {
         val status: Status?,
         val externalLinks: List<ExternalLink>?,
         val relations: Relations?,
+        val type: String?,
         // Calculated
         @Transient
         var hasParentRelation: Boolean = false,
