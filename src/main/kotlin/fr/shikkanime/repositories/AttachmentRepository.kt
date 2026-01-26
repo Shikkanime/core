@@ -29,19 +29,17 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
 
     fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime): List<Attachment> {
         return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = it.createQuery("""
+                SELECT att
+                FROM Attachment att
+                WHERE (att.lastUpdateDateTime <= :lastUpdateDateTime AND att.url IS NOT NULL AND att.active) OR
+                (att.type IN (:types) AND att.url IS NOT NULL AND att.active = false AND NOT EXISTS (SELECT 1 FROM Attachment att2 WHERE att2.entityUuid = att.entityUuid AND att2.type = att.type AND att2.active = true) AND att.creationDateTime = (SELECT MAX(att3.creationDateTime) FROM Attachment att3 WHERE att3.entityUuid = att.entityUuid AND att3.type = att.type))
+            """.trimIndent(), getEntityClass())
 
-            query.where(
-                cb.and(
-                    cb.lessThanOrEqualTo(root[Attachment_.lastUpdateDateTime], lastUpdateDateTime),
-                    cb.isNotNull(root[Attachment_.url]),
-                    cb.isTrue(root[Attachment_.active])
-                )
-            )
+            query.setParameter("lastUpdateDateTime", lastUpdateDateTime)
+            query.setParameter("types", listOf(ImageType.THUMBNAIL, ImageType.BANNER))
 
-            createReadOnlyQuery(it, query)
+            createReadOnlyQuery(query)
                 .resultList
         }
     }
