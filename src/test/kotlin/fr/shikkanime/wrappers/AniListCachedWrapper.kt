@@ -522,6 +522,14 @@ class AniListCachedWrapper : AbstractTest() {
                 ),
                 firstReleasedYear = 2019,
                 exceptedMediaId = 104454
+            ),
+            MediaTestCase(
+                name = "Major",
+                platforms = listOf(
+                    AnimePlatform(platform = Platform.ANIM, platformId = "1353")
+                ),
+                firstReleasedYear = 2004,
+                exceptedMediaId = 627
             )
         )
     }

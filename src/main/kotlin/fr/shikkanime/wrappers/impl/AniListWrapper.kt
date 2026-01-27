@@ -17,6 +17,7 @@ private const val MEDIA_DEFINITION = """id
                             english
                             native
                           }
+                          synonyms
                           format
                           genres
                           tags {
@@ -46,11 +47,14 @@ private const val MEDIA_DEFINITION = """id
                                   native
                                   romaji
                                 }
+                                synonyms
                                 type
                                 format
+                                status
                               }
                             }
-                          }"""
+                          }
+                          type"""
 
 object AniListWrapper : AbstractAniListWrapper() {
     private const val RATE_LIMIT = 25 // 30 requests max per minute, we use 25 to be safe

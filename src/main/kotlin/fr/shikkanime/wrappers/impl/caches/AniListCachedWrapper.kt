@@ -205,13 +205,19 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         val mediaIds = medias.map { it.id }.toSet()
 
         medias.forEach { media ->
-            media.hasParentRelation = media.relations?.edges?.any { relation ->
-                isParentRelation(media, relation, mediaIds)
-            } == true
+            val sortedIds = sortChainedDeepRelation(media, medias)
+            val isNodePreviouslyIndexed = sortedIds.indexOf(media.id) > 0
+
+            media.hasParentRelation = media.relations?.edges?.any { relation -> isParentRelation(media, relation, mediaIds) } == true ||
+                    isNodePreviouslyIndexed
         }
     }
 
-    private fun isParentRelation(media: Media, relation: RelationEdge, existingMediaIds: Set<Int>): Boolean {
+    private fun isParentRelation(
+        media: Media,
+        relation: RelationEdge,
+        existingMediaIds: Set<Int>
+    ): Boolean {
         val node = relation.node
         val type = relation.relationType
 
@@ -237,5 +243,37 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
                 node.format == "TV"
 
         return isSequentialPrequel || isMoviePrequel || isCharacterSideStory || isAlternativeContext
+    }
+
+    private fun chainedDeepRelation(
+        media: Media,
+        medias: List<Media>,
+        chain: MutableSet<Media> = mutableSetOf()
+    ): Set<Media> {
+        if (chain.any { it.id == media.id }) return chain
+        chain.add(media)
+        val chronologicTypes = listOf("PREQUEL", "SEQUEL")
+
+        media.relations?.edges
+            ?.filter { edge -> edge.relationType in chronologicTypes && medias.any { it.id == edge.node.id } && chain.none { it.id == edge.node.id } }
+            ?.forEach { edge -> chainedDeepRelation(medias.find { it.id == edge.node.id }!!, medias, chain) }
+
+        return chain
+    }
+
+    private fun sortChainedDeepRelation(media: Media, medias: List<Media>): List<Int> {
+        val chain = chainedDeepRelation(media, medias)
+        val first = chain.find { it.relations?.edges.orEmpty().none { edge -> edge.relationType == "PREQUEL" } }
+
+        return generateSequence(first) { current ->
+            chain.find {
+                it.relations?.edges.orEmpty()
+                    .any { edge -> edge.relationType == "PREQUEL" && edge.node.id == current.id }
+            }
+        }
+            .take(chain.size)
+            .map(Media::id)
+            .distinct()
+            .toList()
     }
 }

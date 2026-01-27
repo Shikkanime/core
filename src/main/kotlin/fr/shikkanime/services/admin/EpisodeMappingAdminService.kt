@@ -1,6 +1,8 @@
 package fr.shikkanime.services.admin
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.mappings.EpisodeAggregationDto
+import fr.shikkanime.dtos.mappings.EpisodeAggregationResultDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
@@ -13,6 +15,9 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.takeIfNotEmpty
+import fr.shikkanime.wrappers.EpisodeConnectorWrapper
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
@@ -27,6 +32,60 @@ class EpisodeMappingAdminService {
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var animePlatformService: AnimePlatformService
+
+    fun aggregate(dto: EpisodeAggregationDto): List<EpisodeAggregationResultDto> {
+        val episodeMappings = dto.uuids.mapNotNull(episodeMappingService::find)
+            .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
+
+        val animeAggregationResults = episodeMappings.mapNotNull { it.anime }
+            .distinctBy { it.uuid }
+            .associateWith { anime ->
+                val animePlatforms = animePlatformService.findAllByAnime(anime)
+                runBlocking { EpisodeConnectorWrapper().fetchAndAggregate(anime.name!!, animePlatforms) }
+            }
+
+        return episodeMappings.map { episodeMapping ->
+            val anime = episodeMapping.anime!!
+            val aggregatedEpisodes = animeAggregationResults[anime] ?: emptyList()
+            val matchingAggregated = aggregatedEpisodes.filter { it.externalIds.contains(episodeMapping.number.toString()) && episodeMapping.episodeType == EpisodeType.EPISODE }
+
+            EpisodeAggregationResultDto(
+                episodeUuid = episodeMapping.uuid!!,
+                animeName = anime.name!!,
+                episodeName = StringUtils.toEpisodeMappingString(episodeMapping),
+                releaseDate = episodeMapping.releaseDateTime.toLocalDate().toString(),
+                aggregations = matchingAggregated.map { agg ->
+                    EpisodeAggregationResultDto.Aggregation(
+                        titles = agg.titles,
+                        airings = agg.airings.map {
+                            EpisodeAggregationResultDto.AiringDate(
+                                it.date.toString(),
+                                it.occurrenceCount
+                            )
+                        }.sortedByDescending { it.occurrenceCount },
+                        sources = agg.sources.map {
+                            EpisodeAggregationResultDto.Source(
+                                it.platform,
+                                it.url
+                            )
+                        }
+                    )
+                }
+            )
+        }
+    }
+
+    fun updateAggregated(results: Array<EpisodeAggregationResultDto>) {
+        results.forEach { result ->
+            val variants = episodeVariantService.findAllByMapping(result.episodeUuid).takeIfNotEmpty() ?: return@forEach
+            val newReleaseDateTime = LocalDate.parse(result.releaseDate).atTime(8, 0, 0, 0).atZone(Constant.utcZoneId)
+            variants.forEach { variant -> variant.releaseDateTime = newReleaseDateTime }
+            episodeVariantService.updateAll(variants)
+        }
+
+        animeService.recalculateSimulcasts()
+    }
 
     /**
      * Merges an episode with an existing one and returns the updated existing episode.

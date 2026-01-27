@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.lang.reflect.Type
+import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -21,11 +22,25 @@ private class ZonedDateTimeAdapterSerializer : JsonSerializer<ZonedDateTime> {
     }
 }
 
+private class LocalDateAdapterDeserializer : JsonDeserializer<LocalDate> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): LocalDate {
+        return LocalDate.parse(json.asJsonPrimitive.asString)
+    }
+}
+
+private class LocalDateAdapterSerializer : JsonSerializer<LocalDate> {
+    override fun serialize(src: LocalDate?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement? {
+        return src?.toString()?.let { context?.serialize(it) }
+    }
+}
+
 object ObjectParser {
     private val gson = GsonBuilder()
         .disableHtmlEscaping()
         .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapterDeserializer())
         .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapterSerializer())
+        .registerTypeAdapter(LocalDate::class.java, LocalDateAdapterDeserializer())
+        .registerTypeAdapter(LocalDate::class.java, LocalDateAdapterSerializer())
         .create()
 
     fun fromJson(json: String): JsonObject {

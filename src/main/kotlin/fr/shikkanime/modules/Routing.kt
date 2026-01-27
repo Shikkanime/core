@@ -1,6 +1,7 @@
 package fr.shikkanime.modules
 
 import fr.shikkanime.controllers.admin.ADMIN
+import fr.shikkanime.dtos.mappings.EpisodeAggregationResultDto
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -60,6 +61,7 @@ private val fromStringConverters = mapOf<KClass<*>, (String?) -> Any?>(
 private val jvmErasureCache = ConcurrentHashMap<KParameter, KClass<*>>()
 private val mapKClass = Map::class
 private val arrayLangTypeKClass = Array<LangType>::class
+private val arrayEpisodeAggreationResultDtoKClass = Array<EpisodeAggregationResultDto>::class
 private val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 private val database = Constant.injector.getInstance(Database::class.java)
 private val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
@@ -324,6 +326,14 @@ private suspend fun handleBodyParam(kParameter: KParameter, call: ApplicationCal
 
     return if (type.isSubtypeOf(MultiPartData::class.starProjectedType))
         call.receiveMultipart()
-    else
-        call.receive(type.jvmErasure)
+    else {
+        val jvmErasure = type.jvmErasure
+
+        if (jvmErasure == arrayEpisodeAggreationResultDtoKClass) {
+            call.receive<List<EpisodeAggregationResultDto>>()
+                .toTypedArray()
+        } else {
+            call.receive(jvmErasure)
+        }
+    }
 }
