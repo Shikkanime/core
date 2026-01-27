@@ -98,11 +98,10 @@ class SiteController {
                     CountryCode.FR,
                     selectedSimulcast.uuid,
                     null,
-                    null,
+                    searchTypes,
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     102,
-                    searchTypes
                 ).data,
             )
         )
