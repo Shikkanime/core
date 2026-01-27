@@ -29,6 +29,7 @@ class UpdateAttachmentJob : AbstractJob {
 
         attachments.take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ATTACHMENT_SIZE, 100))
             .forEach { attachment ->
+                attachment.active = true
                 attachment.lastUpdateDateTime = zonedDateTime
                 attachmentService.update(attachment)
                 attachmentService.encodeAttachment(attachment, attachment.url, null)
