@@ -52,7 +52,6 @@ object JobManager {
         private val logger = LoggerFactory.getLogger(javaClass)
 
         override fun execute(context: JobExecutionContext?) {
-            val database = Constant.injector.getInstance(Database::class.java)
             val jobName = context?.jobDetail?.key?.name ?: return
             val `class` = Class.forName(jobName) ?: return
             val job = Constant.injector.getInstance(`class`) as? AbstractJob ?: return
@@ -60,47 +59,45 @@ object JobManager {
             val now = ZonedDateTime.now()
 
             runBlocking {
-                database.withAsyncContext {
-                    try {
-                        job.run()
+                try {
+                    job.run()
 
-                        if (jobErrors.containsKey(jobClassName)) {
-                            val errors = jobErrors[jobClassName] ?: return@withAsyncContext
-                            errors.forEach { it.end = now }
-                            jobErrors.remove(jobClassName)
-                            val mailService = Constant.injector.getInstance(MailService::class.java)
+                    if (jobErrors.containsKey(jobClassName)) {
+                        val errors = jobErrors[jobClassName] ?: return@runBlocking
+                        errors.forEach { it.end = now }
+                        jobErrors.remove(jobClassName)
+                        val mailService = Constant.injector.getInstance(MailService::class.java)
 
-                            mailService.saveAdminMail(
-                                title = "$jobClassName is now working",
-                                body = """
+                        mailService.saveAdminMail(
+                            title = "$jobClassName is now working",
+                            body = """
                         The job was previously failing with the following errors:
                         ${errors.joinToString("\n") { it.toString() }}
                         """.trimIndent()
-                            )
+                        )
 
-                            logger.info("$jobClassName is now working")
-                            logger.info("The job was previously failing with the following errors:")
-                            errors.forEach { logger.info(it.toString()) }
-                        }
-                    } catch (e: Exception) {
-                        logger.log(Level.SEVERE, "Error while executing job $jobClassName", e)
+                        logger.info("$jobClassName is now working")
+                        logger.info("The job was previously failing with the following errors:")
+                        errors.forEach { logger.info(it.toString()) }
+                    }
+                } catch (e: Exception) {
+                    logger.log(Level.SEVERE, "Error while executing job $jobClassName", e)
 
-                        val stackTraceToString = e.stackTraceToString()
-                        val errors = jobErrors.getOrDefault(jobClassName, emptyList()).toMutableList()
+                    val stackTraceToString = e.stackTraceToString()
+                    val errors = jobErrors.getOrDefault(jobClassName, emptyList()).toMutableList()
 
-                        if (errors.none { it.stackTrace == stackTraceToString }) {
-                            errors.add(JobError(now, null, stackTraceToString))
-                            jobErrors[jobClassName] = errors
-                            val mailService = Constant.injector.getInstance(MailService::class.java)
+                    if (errors.none { it.stackTrace == stackTraceToString }) {
+                        errors.add(JobError(now, null, stackTraceToString))
+                        jobErrors[jobClassName] = errors
+                        val mailService = Constant.injector.getInstance(MailService::class.java)
 
-                            mailService.saveAdminMail(
-                                "$jobClassName failed",
-                                body = """
+                        mailService.saveAdminMail(
+                            "$jobClassName failed",
+                            body = """
                         $jobClassName failed with the following error:
                         $stackTraceToString
                         """.trimIndent()
-                            )
-                        }
+                        )
                     }
                 }
             }

@@ -11,8 +11,8 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         private val sizeRegex = "\\d+x\\d+".toRegex()
         private val licenceSizeRegex = "\\d+x\\d+".toRegex()
         private val epsRegex = "/eps$".toRegex()
-        private val afficheRegex = "/affiche$".toRegex()
-        private val licenseRegex = "/license(\\..*)?$".toRegex()
+        private val afficheRegex = "/portrait-with-logo$".toRegex()
+        private val licenseRegex = "/landscape-with-logo(\\..*)?$".toRegex()
     }
 
     data class Microdata(
@@ -34,18 +34,18 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
     ) : Serializable {
         val fullHDImage: String
             get() = image2x.replace(sizeRegex, "1560x2340")
-                .replace(afficheRegex, "/affiche.width=1560,height=2340,quality=100")
+                .replace(afficheRegex, "/portrait-with-logo.width=1560,height=2340,quality=100")
         val fullHDBanner: String
             get() = imageHorizontal2x.replace(sizeRegex, "1920x1080")
-                .replace(licenseRegex, "/license.width=1920,height=1080,quality=100")
+                .replace(licenseRegex, "/landscape-with-logo.width=1920,height=1080,quality=100")
         val fullHDCarousel: String
             get() = imageHorizontal2x.replace("license_", "carousel169_")
                 .replace(licenceSizeRegex, "1920x1080")
-                .replace(licenseRegex, "/carousel169.width=1920,height=1080,quality=100")
+                .replace(licenseRegex, "/landscape.width=1920,height=1080,quality=100")
         val fullHDTitle: String
             get() = imageHorizontal2x.replace("license_", "title_")
                 .replace(licenceSizeRegex, "1920x1080")
-                .replace(licenseRegex, "/title.width=1920,quality=100")
+                .replace(licenseRegex, "/logo.width=1920,quality=100")
     }
 
     data class Video(

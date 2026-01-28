@@ -12,7 +12,6 @@ import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
@@ -36,7 +35,6 @@ class AdminController {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject private lateinit var database: Database
 
     @Path
     @Get
@@ -168,9 +166,7 @@ class AdminController {
         // Launch the job in a new thread
         Thread {
             runBlocking {
-                database.withAsyncContext {
-                    job.run()
-                }
+                job.run()
             }
         }.start()
 

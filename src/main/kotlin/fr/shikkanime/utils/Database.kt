@@ -2,8 +2,6 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.entities.ShikkEntity
 import jakarta.persistence.EntityManager
-import kotlinx.coroutines.asContextElement
-import kotlinx.coroutines.withContext
 import liquibase.command.CommandScope
 import org.hibernate.SessionFactory
 import org.hibernate.cfg.Configuration
@@ -14,7 +12,6 @@ import kotlin.system.exitProcess
 class Database {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val sessionFactory: SessionFactory
-    private val threadLocalManager = ThreadLocal<EntityManager>()
 
     constructor(file: File) {
         if (!file.exists()) {
@@ -86,61 +83,12 @@ class Database {
         )
     )
 
-    suspend fun <T> withAsyncContext(block: suspend () -> T): T {
-        val entityManager = entityManager
-
-        return entityManager.use {
-            withContext(threadLocalManager.asContextElement(entityManager)) {
-                block()
-            }
-        }
-    }
-
     val entityManager: EntityManager
-        get() {
-            val entityManager = threadLocalManager.get()
+        get() = sessionFactory.createEntityManager()
 
-            if (entityManager != null && entityManager.isOpen) {
-                if (entityManager is UnclosedEntityManagerWrapper)
-                    return entityManager
-
-                return UnclosedEntityManagerWrapper(entityManager)
-            }
-
-            logger.config("Creating new EntityManager for thread ${Thread.currentThread().name}")
-            return sessionFactory.createEntityManager()
-        }
-
-    fun <T> inTransaction(block: (EntityManager) -> T): T {
-        val em = entityManager
-        val transaction = em.transaction
-        val transactionStarted = !transaction.isActive
-
-        if (transactionStarted) {
-            transaction.begin()
-        }
-
-        try {
-            val result = block(em)
-            if (transactionStarted) {
-                transaction.commit()
-            }
-            return result
-        } catch (e: Exception) {
-            if (transactionStarted && transaction.isActive) {
-                transaction.rollback()
-            }
-            throw e
-        }
-    }
+    fun <T> inTransaction(block: (EntityManager) -> T): T = sessionFactory.callInTransaction(block)
 
     fun truncate() = sessionFactory.schemaManager.truncate()
 
     fun clearCache() = sessionFactory.cache.evictAllRegions()
-}
-
-class UnclosedEntityManagerWrapper(private val delegate: EntityManager) : EntityManager by delegate {
-    override fun close() {
-        // Do nothing
-    }
 }

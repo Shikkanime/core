@@ -9,7 +9,6 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.routes.*
@@ -61,7 +60,6 @@ private val jvmErasureCache = ConcurrentHashMap<KParameter, KClass<*>>()
 private val mapKClass = Map::class
 private val arrayLangTypeKClass = Array<LangType>::class
 private val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
-private val database = Constant.injector.getInstance(Database::class.java)
 private val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
 
 private const val STRICT_TRANSPORT_SECURITY_VALUE = "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
@@ -198,27 +196,25 @@ private suspend fun handleRequest(
     val parameters = call.parameters.toMap()
     val replacedPath = replacePathWithParameters("$prefix$path", parameters)
 
-    database.withAsyncContext {
-        try {
-            val response = callMethodWithParameters(method, controller, call, parameters)
+    try {
+        val response = callMethodWithParameters(method, controller, call, parameters)
 
-            if (method.hasAnnotation<Cached>()) {
-                val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
-                call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
-            }
-
-            response.session?.let(call.sessions::set)
-
-            when (response.type) {
-                ResponseType.MULTIPART -> handleMultipartResponse(call, response)
-                ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
-                ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
-                else -> call.respond(response.status, response.data ?: StringUtils.EMPTY_STRING)
-            }
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while calling method $method", e)
-            call.respond(HttpStatusCode.InternalServerError)
+        if (method.hasAnnotation<Cached>()) {
+            val cached = method.findAnnotation<Cached>()!!.maxAgeSeconds
+            call.caching = CachingOptions(CacheControl.MaxAge(maxAgeSeconds = cached))
         }
+
+        response.session?.let(call.sessions::set)
+
+        when (response.type) {
+            ResponseType.MULTIPART -> handleMultipartResponse(call, response)
+            ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
+            ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
+            else -> call.respond(response.status, response.data ?: StringUtils.EMPTY_STRING)
+        }
+    } catch (e: Exception) {
+        logger.log(Level.SEVERE, "Error while calling method $method", e)
+        call.respond(HttpStatusCode.InternalServerError)
     }
 }
 
