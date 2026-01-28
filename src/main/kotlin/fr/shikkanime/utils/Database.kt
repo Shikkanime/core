@@ -111,7 +111,28 @@ class Database {
             return sessionFactory.createEntityManager()
         }
 
-    fun <T> inTransaction(block: (EntityManager) -> T): T = sessionFactory.callInTransaction(block)
+    fun <T> inTransaction(block: (EntityManager) -> T): T {
+        val em = entityManager
+        val transaction = em.transaction
+        val transactionStarted = !transaction.isActive
+
+        if (transactionStarted) {
+            transaction.begin()
+        }
+
+        try {
+            val result = block(em)
+            if (transactionStarted) {
+                transaction.commit()
+            }
+            return result
+        } catch (e: Exception) {
+            if (transactionStarted && transaction.isActive) {
+                transaction.rollback()
+            }
+            throw e
+        }
+    }
 
     fun truncate() = sessionFactory.schemaManager.truncate()
 
