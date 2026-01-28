@@ -31,7 +31,7 @@ class PrimeVideoPlatform :
                     key.countryCode,
                     key.primeVideoSimulcast.image,
                     it,
-                    zonedDateTime.minusMinutes(1)
+                    zonedDateTime
                 )
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Error on converting episode", e)
