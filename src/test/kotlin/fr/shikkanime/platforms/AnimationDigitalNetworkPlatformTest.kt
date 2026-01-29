@@ -11,6 +11,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -19,7 +20,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.time.ZonedDateTime
 import java.util.stream.Stream
-import kotlin.test.assertEquals
 
 class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     @Inject lateinit var platform: AnimationDigitalNetworkPlatform

@@ -12,9 +12,9 @@ import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
-import kotlin.test.assertTrue
 
 class AnimeServiceTest : AbstractTest() {
     @Test
