@@ -180,4 +180,18 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 .map { tuple -> tuple[0, String::class.java] to tuple[1, ZonedDateTime::class.java] }
         }
     }
+
+    fun findByIdentifier(identifier: String): EpisodeVariant? {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+                .firstOrNull()
+        }
+    }
 }
