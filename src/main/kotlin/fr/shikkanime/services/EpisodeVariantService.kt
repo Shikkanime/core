@@ -268,7 +268,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         async: Boolean = true
     ): EpisodeMapping {
         // Try to find an existing mapping or create a new one
-        var mapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
+        var mapping = episode.variantOf?.let { episodeVariantRepository.findByIdentifier(it)?.mapping }
+            ?: episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             anime.uuid!!,
             episode.season,
             episode.episodeType,
@@ -306,7 +307,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
             // Check if a mapping with the new number already exists
             val existingMapping = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
-                anime.uuid,
+                anime.uuid!!,
                 episode.season,
                 episode.episodeType,
                 newNumber

@@ -45,3 +45,4 @@ fun Boolean.ifFalse(block: () -> Unit) = if (!this) block() else Unit
 
 fun <C> C.takeIfNotEmpty(): C? where C : Collection<*> = ifEmpty { null }
 fun ByteArray.takeIfNotEmpty() = this.takeIf { it.isNotEmpty() }
+fun Boolean.takeIfFalse() = if (!this) true else null

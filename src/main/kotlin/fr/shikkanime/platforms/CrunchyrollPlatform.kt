@@ -267,7 +267,20 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             id = browseObject.id,
             url = CrunchyrollWrapper.buildUrl(countryCode, browseObject.id, browseObject.slugTitle),
             uncensored = browseObject.episodeMetadata.matureBlocked,
-            original = original
+            original = original,
+            variantOf = original.takeIfFalse()?.let {
+                browseObject.episodeMetadata.versions
+                    ?.singleOrNull { it.guid != browseObject.id && it.original }
+                    ?.let {
+                        StringUtils.getIdentifier(
+                            countryCode,
+                            getPlatform(),
+                            it.guid,
+                            it.audioLocale,
+                            browseObject.episodeMetadata.matureBlocked
+                        )
+                    }
+            }
         )
     }
 
