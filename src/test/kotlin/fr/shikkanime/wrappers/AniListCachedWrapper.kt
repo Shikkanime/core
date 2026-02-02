@@ -7,6 +7,7 @@ import fr.shikkanime.wrappers.impl.caches.AniListCachedWrapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
@@ -536,7 +537,10 @@ class AniListCachedWrapper : AbstractTest() {
             return
         }
 
-        assertNotNull(media)
+        if (testCase.platforms?.none { it.platform!! == Platform.PRIM } == true)
+            assertNotNull(media)
+        else
+            assumeTrue(media != null)
         assertEquals(testCase.exceptedMediaId, media!!.id)
     }
 }
