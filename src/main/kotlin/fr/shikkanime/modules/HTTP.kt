@@ -6,6 +6,7 @@ import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.Response
 import freemarker.cache.ClassTemplateLoader
+import freemarker.cache.MruCacheStorage
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
@@ -68,6 +69,8 @@ fun Application.configureHTTP() {
     install(FreeMarker) {
         templateLoader = ClassTemplateLoader(this::class.java.classLoader, "templates")
         whitespaceStripping = true
+        cacheStorage = MruCacheStorage(100, 250)
+        templateUpdateDelayMilliseconds = Long.MAX_VALUE
     }
     install(CachingHeaders) {
     }

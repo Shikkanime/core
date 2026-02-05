@@ -28,13 +28,12 @@ class AnimeCacheService : ICacheService {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var seasonFactory: SeasonFactory
 
-    fun findAll() = MapCache.getOrCompute(
-        "AnimeCacheService.findAll",
+    fun findAllSlugs() = MapCache.getOrCompute(
+        "AnimeCacheService.findAllSlugs",
         classes = listOf(Anime::class.java),
-        typeToken = object : TypeToken<MapCacheValue<Array<Anime>>>() {},
-        serializationType = SerializationUtils.SerializationType.OBJECT,
+        typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
         key = StringUtils.EMPTY_STRING,
-    ) { animeService.findAll().toTypedArray() }
+    ) { animeService.findAllSlugs().toTypedArray() }
 
     fun findAllBy(
         countryCode: CountryCode?,
