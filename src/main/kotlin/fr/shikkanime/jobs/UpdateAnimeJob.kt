@@ -8,10 +8,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.CrunchyrollPlatform
-import fr.shikkanime.services.AnimePlatformService
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.AttachmentService
-import fr.shikkanime.services.TraceActionService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
@@ -55,7 +52,7 @@ class UpdateAnimeJob : AbstractJob {
             val shortName = StringUtils.getShortName(anime.name!!)
             logger.info("Updating anime $shortName...")
             // Compare platform sort index and anime release date descending
-            val updatedAnimes = runCatching { fetchAnime(anime, deprecatedAnimePlatformDateTime) }
+            val updatedAnimes = runCatching { fetchAnime(anime, shortName, deprecatedAnimePlatformDateTime) }
                 .getOrNull()
                 ?.groupBy { it.platform }
                 ?.toList()
@@ -99,6 +96,22 @@ class UpdateAnimeJob : AbstractJob {
                 hasChanged = true
             }
 
+            val aniListMediaId = animePlatformService.findAllByAnime(anime)
+                .filterNot { it.platform!!.isStreamingPlatform }
+                .sortedByDescending { it.lastValidateDateTime }
+                .singleOrNull { it.platform == Platform.ANIL }
+                ?.platformId
+                ?.toIntOrNull()
+
+            if (aniListMediaId != null) {
+                val aniListMedia = AniListCachedWrapper.getMediaById(aniListMediaId)
+
+                if (AniListMatchingService.updateAnimeGenreAndTags(anime, shortName, aniListMedia)) {
+                    hasChanged = true
+                    logger.info("Genres or tags updated for anime $shortName")
+                }
+            }
+
             anime.lastUpdateDateTime = zonedDateTime
             animeService.update(anime)
 
@@ -112,14 +125,18 @@ class UpdateAnimeJob : AbstractJob {
         InvalidationService.invalidate(Anime::class.java)
     }
 
-    private suspend fun fetchAnime(anime: Anime, zonedDateTime: ZonedDateTime): List<UpdatableAnime> {
+    private suspend fun fetchAnime(
+        anime: Anime,
+        shortName: String,
+        zonedDateTime: ZonedDateTime
+    ): List<UpdatableAnime> {
         val list = mutableListOf<UpdatableAnime>()
 
         animePlatformService.findAllByAnime(anime)
             .filter { it.platform!!.isStreamingPlatform }
             .forEach {
                 if (it.lastValidateDateTime != null && it.lastValidateDateTime!!.isBeforeOrEqual(zonedDateTime)) {
-                    logger.warning("Deleting old anime platform ${it.platform} for anime ${anime.name} with id ${it.platformId}")
+                    logger.warning("Deleting old anime platform ${it.platform} for anime $shortName with id ${it.platformId}")
                     animePlatformService.delete(it)
                     traceActionService.createTraceAction(it, TraceAction.Action.DELETE)
                     return@forEach
@@ -138,7 +155,7 @@ class UpdateAnimeJob : AbstractJob {
                     updatableAnime.isValidated = it.lastValidateDateTime != null && it.lastValidateDateTime!!.isAfterOrEqual(zonedDateTime)
                     list.add(updatableAnime)
                 }.onFailure { e ->
-                    logger.warning("Error while fetching anime ${anime.name} on platform ${it.platform}: ${e.message}")
+                    logger.warning("Error while fetching anime $shortName on platform ${it.platform}: ${e.message}")
                 }
             }
 
