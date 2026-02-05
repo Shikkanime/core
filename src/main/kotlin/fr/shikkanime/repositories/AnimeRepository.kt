@@ -351,6 +351,19 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
     }
 
+    fun findAllSlugs(): List<String> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(String::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(root[Anime_.slug])
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     override fun find(uuid: UUID): Anime? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

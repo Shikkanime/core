@@ -74,6 +74,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
     fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids: Collection<UUID>, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String) = animeRepository.findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids, platform, lastValidateDateTime, ignoreAudioLocale)
 
+    fun findAllSlugs() = animeRepository.findAllSlugs()
+
     fun preIndex() = animeRepository.preIndex()
 
     fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
