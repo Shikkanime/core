@@ -63,9 +63,7 @@ class EpisodeMappingController : HasPageableRoute() {
         val variants = episodeVariantService.findAllByUuids(uuids)
         if (variants.isEmpty()) return Response.notFound()
 
-        val groupedEpisodes = variants.groupBy { it.mapping?.anime to it.mapping?.episodeType }
-            .values
-            .map(groupedEpisodeFactory::toEntity)
+        val groupedEpisodes = groupedEpisodeFactory.toEntities(variants)
 
         val image = MediaImage.toMediaImage(groupedEpisodes)
         val baos = ByteArrayOutputStream()

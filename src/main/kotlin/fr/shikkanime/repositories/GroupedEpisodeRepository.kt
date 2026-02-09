@@ -7,7 +7,7 @@ import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
-import fr.shikkanime.utils.indexers.GroupedIndexer
+import fr.shikkanime.utils.indexers.DeprecatedGroupedIndexer
 import fr.shikkanime.utils.indexers.ReverseIndexedRecord
 import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.*
@@ -109,7 +109,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int
-    ): Pageable<ReverseIndexedRecord> = GroupedIndexer.pageableRecords(
+    ): Pageable<ReverseIndexedRecord> = DeprecatedGroupedIndexer.pageableRecords(
         filter = { (_, compositeIndex) -> countryCode == null || compositeIndex.countryCode == countryCode },
         comparator = Comparator { a, b ->
             for (param in sort) {

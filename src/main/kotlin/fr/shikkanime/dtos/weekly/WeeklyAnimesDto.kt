@@ -4,5 +4,5 @@ import java.io.Serializable
 
 data class WeeklyAnimesDto(
     val dayOfWeek: String,
-    val releases: Set<WeeklyAnimeDto>
+    val releases: Collection<WeeklyAnimeDto>
 ) : Serializable

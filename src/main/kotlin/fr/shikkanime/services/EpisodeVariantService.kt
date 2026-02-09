@@ -10,7 +10,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.RuleCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.indexers.GroupedIndexer
+import fr.shikkanime.utils.indexers.DeprecatedGroupedIndexer
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -226,8 +226,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
 
         // Add the episode variant to the GroupedIndexer
-        GroupedIndexer.add(
-            GroupedIndexer.CompositeIndex(
+        DeprecatedGroupedIndexer.add(
+            DeprecatedGroupedIndexer.CompositeIndex(
                 savedEntity.mapping!!.anime!!.countryCode!!,
                 savedEntity.mapping!!.anime!!.uuid!!,
                 savedEntity.mapping!!.anime!!.slug!!,

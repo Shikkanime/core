@@ -7,6 +7,7 @@ import fr.shikkanime.entities.EpisodeVariant_
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.indexers.DeprecatedGroupedIndexer
 import fr.shikkanime.utils.indexers.GroupedIndexer
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
@@ -33,36 +34,53 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                         animeRoot[Anime_.uuid],
                         animeRoot[Anime_.slug],
                         episodeMappingRoot[EpisodeMapping_.uuid],
+                        episodeMappingRoot[EpisodeMapping_.season],
                         episodeMappingRoot[EpisodeMapping_.episodeType],
-                        root[EpisodeVariant_.releaseDateTime],
+                        episodeMappingRoot[EpisodeMapping_.number],
                         root[EpisodeVariant_.uuid],
+                        root[EpisodeVariant_.releaseDateTime],
                         root[EpisodeVariant_.audioLocale]
                     )
                 )
 
                 orderBy(
                     cb.asc(animeRoot[Anime_.countryCode]),
-                    cb.asc(animeRoot[Anime_.slug]),
-                    cb.asc(episodeMappingRoot[EpisodeMapping_.episodeType]),
                     cb.asc(root[EpisodeVariant_.releaseDateTime]),
+                    cb.asc(animeRoot[Anime_.slug]),
+                    cb.asc(episodeMappingRoot[EpisodeMapping_.season]),
+                    cb.asc(episodeMappingRoot[EpisodeMapping_.episodeType]),
+                    cb.asc(episodeMappingRoot[EpisodeMapping_.number]),
                     cb.desc(root[EpisodeVariant_.audioLocale])
                 )
             }
 
-            GroupedIndexer.clear()
+            DeprecatedGroupedIndexer.clear()
 
             createReadOnlyQuery(it, query).resultStream.forEach { tuple ->
-                GroupedIndexer.add(
-                    GroupedIndexer.CompositeIndex(
+                DeprecatedGroupedIndexer.add(
+                    DeprecatedGroupedIndexer.CompositeIndex(
                         tuple[0, CountryCode::class.java],
                         tuple[1, UUID::class.java],
                         tuple[2, String::class.java],
-                        tuple[4, EpisodeType::class.java],
+                        tuple[5, EpisodeType::class.java],
                     ),
-                    tuple[6, UUID::class.java],
+                    tuple[7, UUID::class.java],
                     tuple[3, UUID::class.java],
-                    tuple[5, ZonedDateTime::class.java],
-                    tuple[7, String::class.java]
+                    tuple[8, ZonedDateTime::class.java],
+                    tuple[9, String::class.java]
+                )
+
+                GroupedIndexer.add(
+                    tuple[0, CountryCode::class.java],
+                    tuple[8, ZonedDateTime::class.java],
+                    tuple[1, UUID::class.java],
+                    tuple[2, String::class.java],
+                    tuple[3, UUID::class.java],
+                    tuple[4, Int::class.java],
+                    tuple[5, EpisodeType::class.java],
+                    tuple[6, Int::class.java],
+                    tuple[7, UUID::class.java],
+                    tuple[9, String::class.java]
                 )
             }
         }

@@ -177,21 +177,11 @@ class FetchEpisodesJob(
     }
 
     private suspend fun sendToNetworks(savedEpisodes: List<EpisodeVariant>) {
-        val groupedEpisodes = savedEpisodes
-            .groupBy { it.mapping?.anime?.uuid }
-            .values
-            .flatMap { episodes ->
-                episodes.filter { typeIdentifiers.add(getTypeIdentifier(it)) }
-                    .groupBy { it.mapping?.episodeType }
-                    .map { (_, variants) ->
-                        groupedEpisodeFactory.toEntity(variants)
-                    }
-            }
-
+        val filteredEpisodes = savedEpisodes.filter { typeIdentifiers.add(getTypeIdentifier(it)) }
+        if (filteredEpisodes.isEmpty()) return
+        val groupedEpisodes = groupedEpisodeFactory.toEntities(filteredEpisodes)
         logger.info("Sending ${groupedEpisodes.size} grouped episodes to social networks...")
-
         if (groupedEpisodes.isEmpty()) return
-
         sendToSocialNetworks(groupedEpisodes)
     }
 
