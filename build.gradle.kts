@@ -32,8 +32,6 @@ plugins {
 
     id("io.ktor.plugin") version "3.4.0"
     id("com.google.osdetector") version "1.7.3"
-
-    jacoco
 }
 
 group = "fr.shikkanime"
@@ -109,4 +107,8 @@ dependencies {
     testImplementation("io.mockk:mockk:$mockkVersion")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
