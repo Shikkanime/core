@@ -20,7 +20,7 @@ val apachePoiVersion = "5.5.1"
 
 val jdaVersion = "6.3.0"
 
-val junitVersion = "6.0.2"
+val junitVersion = "6.0.3"
 val h2Version = "2.4.240"
 val mockkVersion = "1.14.9"
 
