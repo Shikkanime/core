@@ -30,12 +30,12 @@ jobs:
         run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
 
       - name: Build and test
-        run: ./gradlew clean test --info
+        run: ./gradlew clean test koverXmlReport --info
 
       - name: Create coverage report
         run: |
           mkdir -p ./.qodana/code-coverage
-          cp -R ./build/kover/bin-reports/* ./.qodana/code-coverage/
+          cp ./build/reports/kover/*.xml ./.qodana/code-coverage/
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v6
@@ -48,7 +48,7 @@ jobs:
         with:
           pr-mode: false
           upload-result: true
-          args: "-i,./,--baseline,qodana.sarif.json,--fail-threshold,200"
+          args: "-i,./,--baseline,qodana.sarif.json,--fail-threshold,200,--coverage-dir,./.qodana/code-coverage"
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
