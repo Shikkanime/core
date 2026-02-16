@@ -35,7 +35,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 releaseDay = 1,
                 testDate = "2024-04-22T18:15:00Z",
                 imageUrl = "https://cdn.myanimelist.net/images/anime/1142/141351.jpg",
-                expectedAudioLocales = setOf("en-US")
+                expectedAudioLocales = setOf("ja-JP")
             ),
             SimulcastTestCase(
                 simulcastName = "0TRGLGKLJS99OYM9647IM6Y1N0",

@@ -126,9 +126,9 @@ class UpdateAnimeJobTest : AbstractTest() {
                 platforms = listOf(
                     PlatformData(Platform.CRUN, "GG5H5XQ7D")
                 ),
-                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/3455ff9a3021e04fefd4fa2a417637b5.jpg",
-                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/c2257c075677c3bfe0d66b46411529fb.jpg",
-                expectedDescription = "Dans un monde en proie à des d’effroyables monstres géants connus sous le nom de kaiju, Kafka Hibino aspire à rejoindre un jour les Forces de Défense pour combattre ces terribles créatures. C’était un rêve qu’il avait avec son amie d’enfance, Mina Ashiro, mais leurs chemins ont pris des directions différentes. Aujourd’hui, Kafka nettoie les rues de leurs encombrants cadavres quand il croise la route de Reno Ichikawa. La détermination de Reno à rejoindre les Forces de Défense pousse Kafka à rejoindre Mina afin de protéger l’humanité."
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/2c1650b6f77003bdd385c6ad66baa7a6.png",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/b52045ba842791852bcbca1099385c6e.png",
+                expectedDescription = "Dans un monde en proie à des d’effroyables monstres géants connus sous le nom de kaiju, Kafka Hibino aspire à rejoindre un jour les Forces de Défense pour combattre ces terribles créatures. C’était un rêve qu’il avait avec son amie d’enfance, Mina Ashiro, mais leurs chemins ont pris des directions différentes. Aujourd’hui, Kafka nettoie les rues de leurs encombrants cadavres quand il croise la..."
             ),
             TestCase(
                 name = "One Piece",

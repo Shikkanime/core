@@ -6,20 +6,18 @@ import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
 import fr.shikkanime.services.*
 import fr.shikkanime.services.admin.AnimeAdminService
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.JobManager
+import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import java.util.logging.Level
-import kotlin.system.exitProcess
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
 fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
-
-    logger.info("Testing Playwright installation...")
-    checkPlaywrightInstallation()
 
     logger.info("Loading attachments cache...")
     val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
@@ -68,18 +66,6 @@ fun main(args: Array<String>) {
         host = "0.0.0.0",
         module = Application::module
     ).start(wait = true)
-}
-
-private fun checkPlaywrightInstallation() {
-    try {
-        HttpRequest().use {
-            it.getWithBrowser("https://playwright.dev")
-            logger.info("Playwright is installed correctly.")
-        }
-    } catch (e: Exception) {
-        logger.log(Level.SEVERE, "Playwright installation failed", e)
-        exitProcess(1)
-    }
 }
 
 private fun updateAndDeleteData() {
