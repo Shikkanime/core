@@ -2,33 +2,27 @@
 
 <#macro display>
     <@layout.main>
-        <div class="d-flex flex-column flex-shrink-0 p-3 bg-light shadow">
+        <div class="d-flex flex-column flex-shrink-0 bg-black">
             <a href="/admin/dashboard"
-               class="d-flex align-items-center mb-md-0 me-md-auto link-dark text-decoration-none">
-                <img src="/assets/img/dark_banner.webp" width="200" height="44" crossorigin="anonymous"
-                     class="img-fluid d-none d-md-inline-block" alt="Shikkanime dark banner">
-
-                <img src="/assets/img/dark_icon.webp" width="44" height="44" crossorigin="anonymous"
-                     class="img-fluid d-block d-md-none" alt="Shikkanime dark logo">
+               class="d-block p-3 link-body-emphasis text-decoration-none">
+                <img src="/assets/img/light_icon.webp" width="32" height="32" crossorigin="anonymous"
+                     class="img-fluid" alt="Shikkanime logo">
             </a>
-            <hr>
-            <ul class="nav nav-pills flex-column mb-auto">
+            <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
                 <#list links as link>
                     <li class="nav-item">
-                        <a href="${link.href}" class="nav-link ${link.active?then('bg-dark text-white', 'link-dark')}"
-                           aria-current="${link.active?then('page', '')}">
+                        <a href="${link.href}" class="nav-link border-bottom rounded-0 ${link.active?then('bg-light text-dark', 'link-light')}"
+                           aria-current="${link.active?then('page', '')}" title="${link.name?html}">
                             <i class="${link.icon}"></i>
-                            <span class="d-none d-md-inline-block ms-2">${link.name}</span>
                         </a>
                     </li>
                 </#list>
             </ul>
 
-            <ul class="nav nav-pills flex-column mb-0 mt-auto">
+            <ul class="nav nav-pills nav-flush flex-column mb-0 mt-auto text-center">
                 <li class="nav-item">
-                    <a href="/admin/logout" class="nav-link link-dark">
+                    <a href="/admin/logout" class="nav-link border-bottom rounded-0 link-light" title="Log out">
                         <i class="bi bi-outlet"></i>
-                        <span class="d-none d-md-inline-block ms-2">Log out</span>
                     </a>
                 </li>
             </ul>

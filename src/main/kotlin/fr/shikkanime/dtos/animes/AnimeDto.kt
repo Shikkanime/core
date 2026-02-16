@@ -28,6 +28,7 @@ data class AnimeDto(
     var platformIds: Set<AnimePlatformDto>? = null,
     var thumbnail: String? = null,
     var banner: String? = null,
+    val hasCarousel: Boolean = false,
     var carousel: String? = null,
     var title: String? = null,
     var jsonLd: String? = null,

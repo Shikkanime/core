@@ -3,7 +3,9 @@ package fr.shikkanime.factories.impl
 import com.google.inject.Inject
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
+import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.factories.IGenericFactory
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.SimulcastService.Companion.sortBySeasonAndYear
 import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.services.caches.AnimePlatformCacheService
@@ -22,6 +24,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
     @Inject private lateinit var genreCacheService: GenreCacheService
     @Inject private lateinit var animeTagCacheService: AnimeTagCacheService
     @Inject private lateinit var jsonLdBuilder: JsonLdBuilder
+    @Inject private lateinit var attachmentService: AttachmentService
 
     override fun toDto(entity: Anime) = toDto(entity, false)
 
@@ -32,6 +35,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
         val seasons = animeCacheService.findAllSeasons(entity).toSet()
         val genres = genreCacheService.findAllByAnime(entityUuid)
         val tags = animeTagCacheService.findAllByAnime(entityUuid)
+        val carouselAttachment = attachmentService.findByEntityUuidTypeAndActive(entityUuid, ImageType.CAROUSEL)?.url
 
         val platforms = animePlatformCacheService.findAllByAnime(entity)
             .filter { showAllPlatforms || it.platform.isStreaming }
@@ -54,6 +58,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             langTypes = langTypes,
             seasons = seasons,
             platformIds = platforms.toTreeSet(),
+            hasCarousel = !carouselAttachment.isNullOrBlank(),
         ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto) }
     }
 }
