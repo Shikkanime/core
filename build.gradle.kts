@@ -32,6 +32,7 @@ plugins {
 
     id("io.ktor.plugin") version "3.4.0"
     id("com.google.osdetector") version "1.7.3"
+    id("org.jetbrains.kotlinx.kover") version "0.9.7"
 }
 
 group = "fr.shikkanime"
@@ -111,4 +112,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.koverVerify)
 }
+

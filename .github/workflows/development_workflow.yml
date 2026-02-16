@@ -32,12 +32,23 @@ jobs:
       - name: Build and test
         run: ./gradlew clean test --info
 
+      - name: Create coverage report
+        run: |
+          mkdir -p ./.qodana/code-coverage
+          cp -R ./build/kover/bin-reports/* ./.qodana/code-coverage/
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v6
+        with:
+          name: code-coverage-report.zip
+          path: ./.qodana/code-coverage
+
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2025.3
         with:
           pr-mode: false
           upload-result: true
-          args: --fail-threshold,3
+          args: "--fail-threshold,3,-i,./"
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
