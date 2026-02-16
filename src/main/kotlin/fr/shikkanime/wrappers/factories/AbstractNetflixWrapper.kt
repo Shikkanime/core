@@ -82,19 +82,17 @@ abstract class AbstractNetflixWrapper {
 
     protected fun extractAuthUrl(html: String): String = decodeUtf8(html.substringAfter("authURL\":\"").substringBefore("\""))
 
-    @Synchronized
-    private fun getNetflixAuthentification() = MapCache.getOrCompute(
+    private suspend fun getNetflixAuthentification() = MapCache.getOrComputeAsync(
         "AbstractNetflixWrapper.getNetflixAuthentification",
         typeToken = object : TypeToken<MapCacheValue<NetflixAuthentification>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
-        val documentAndCookies = HttpRequest().use { it.getCookiesWithBrowser(baseUrl) }
-        val cookies = documentAndCookies.second.associateBy { cookie -> cookie.name!! }
+        val (document, cookies) = httpRequest.getCookies(baseUrl)
 
-        return@getOrCompute NetflixAuthentification(
-            requireNotNull(cookies["NetflixId"]?.value),
-            requireNotNull(cookies["SecureNetflixId"]?.value),
-            extractAuthUrl(documentAndCookies.first.html())
+        return@getOrComputeAsync NetflixAuthentification(
+            requireNotNull(cookies["NetflixId"]),
+            requireNotNull(cookies["SecureNetflixId"]),
+            extractAuthUrl(document.html())
         )
     }
 
