@@ -10,8 +10,15 @@ jobs:
   test_with_valkey:
     name: Test and analyze (with Valkey)
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
@@ -22,23 +29,18 @@ jobs:
       - name: Start valkey
         run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
 
-      - name: Analyze push
-        if: github.event_name == 'push'
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./gradlew sonar --info
-
-      - name: Analyse pull request
-        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: ./gradlew sonar --info -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }} -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }} -Dsonar.qualitygate.wait=true
-
       - name: Build and test
-        if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
         run: ./gradlew clean test --info
+
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2025.3
+        with:
+          pr-mode: false
+          upload-result: true
+          args: --fail-threshold,3
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+          QODANA_ENDPOINT: 'https://qodana.cloud'
 
   test:
     name: Test

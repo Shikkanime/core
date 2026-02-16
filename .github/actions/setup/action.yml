@@ -1,5 +1,5 @@
 name: 'Setup Dependencies'
-description: 'Install Java, WebP and Playwright dependencies'
+description: 'Install Java and WebP'
 
 runs:
   using: 'composite'
@@ -11,18 +11,8 @@ runs:
         distribution: 'corretto'
         cache: gradle
 
-    - name: Cache Playwright browsers
-      id: cache-playwright
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-v1
-
     - name: Install dependencies
       shell: bash
       run: |
-        if [ "${{ steps.cache-playwright.outputs.cache-hit }}" != 'true' ]; then
-          npx -y playwright install --with-deps
-        fi
         sudo apt-get update
         sudo apt-get install -y webp

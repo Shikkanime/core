@@ -31,7 +31,6 @@ plugins {
     kotlin("kapt") version kotlinVersion
 
     id("io.ktor.plugin") version "3.4.0"
-    id("org.sonarqube") version "7.2.2.6593"
     id("com.google.osdetector") version "1.7.3"
 
     jacoco
@@ -110,29 +109,4 @@ dependencies {
     testImplementation("io.mockk:mockk:$mockkVersion")
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-sonar {
-    properties {
-        property("sonar.projectKey", "shikkanime-core")
-        property("sonar.projectName", "Shikkanime Core")
-    }
-}
-
-tasks.test {
-    useJUnitPlatform()
-    finalizedBy("jacocoTestReport")
-}
-
-tasks.jacocoTestReport {
-    dependsOn("test")
-
-    reports {
-        xml.required = true
-        html.required = false
-    }
-}
-
-tasks.sonar {
-    dependsOn("jacocoTestReport")
 }
