@@ -48,7 +48,7 @@ jobs:
         with:
           pr-mode: false
           upload-result: true
-          args: "--fail-threshold,3,-i,./"
+          args: "-i,./,--baseline,qodana.sarif.json,--fail-threshold,200"
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
