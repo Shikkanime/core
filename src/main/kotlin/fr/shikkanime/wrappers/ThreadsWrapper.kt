@@ -12,8 +12,7 @@ import java.nio.charset.StandardCharsets
 object ThreadsWrapper {
     enum class PostType {
         TEXT,
-        IMAGE,
-        VIDEO,
+        IMAGE
     }
 
     private const val AUTHORIZATION_URL = "https://www.threads.net"

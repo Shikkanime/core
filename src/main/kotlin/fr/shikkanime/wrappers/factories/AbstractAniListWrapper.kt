@@ -66,9 +66,7 @@ abstract class AbstractAniListWrapper {
     enum class Status : Serializable {
         RELEASING,
         FINISHED,
-        NOT_YET_RELEASED,
-        CANCELLED,
-        HIATUS
+        NOT_YET_RELEASED
     }
 
     protected val baseUrl = "https://graphql.anilist.co"

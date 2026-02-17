@@ -6,9 +6,6 @@ data class MessageDto(
     val data: Any? = null,
 ) {
     enum class Type {
-        INFO,
-        SUCCESS,
-        WARNING,
         ERROR
     }
 

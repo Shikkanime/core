@@ -4,11 +4,9 @@ enum class CountryCode(
     val allowedAudioLocales: Set<String>,
     val optionalAudioLocales: Set<String>,
     val locale: String,
-    val timezone: String,
-    val latitude: Double,
-    val longitude: Double
+    val timezone: String
 ) {
-    FR(setOf("ja-JP", "zh-CN", "ko-KR"), setOf("en-US"), "fr-FR", "Europe/Paris", 48.866667, 2.333333),
+    FR(setOf("ja-JP", "zh-CN", "ko-KR"), setOf("en-US"), "fr-FR", "Europe/Paris"),
     ;
 
     companion object {

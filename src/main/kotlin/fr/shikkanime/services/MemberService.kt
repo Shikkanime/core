@@ -15,6 +15,8 @@ import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.RandomManager
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
 import java.io.ByteArrayInputStream
 import java.time.ZonedDateTime
@@ -118,7 +120,9 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         }
 
         requireNotNull(bytes) { "No file provided" }
-        val imageInputStream = ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
+        val imageInputStream = withContext(Dispatchers.IO) {
+            ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
+        }
         val imageReaders = ImageIO.getImageReaders(imageInputStream)
         require(imageReaders.hasNext()) { "Invalid file format" }
         val imageReader = imageReaders.next()

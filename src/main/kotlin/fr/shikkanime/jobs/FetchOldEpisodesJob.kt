@@ -16,6 +16,8 @@ import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.io.FileOutputStream
@@ -147,12 +149,14 @@ class FetchOldEpisodesJob : AbstractJob {
                 }
             }
 
-            val outputStream = FileOutputStream(
-                File(
-                    Constant.exportsFolder,
-                    "old_episodes_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.xlsx"
+            val outputStream = withContext(Dispatchers.IO) {
+                FileOutputStream(
+                    File(
+                        Constant.exportsFolder,
+                        "old_episodes_${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))}.xlsx"
+                    )
                 )
-            )
+            }
             workbook.write(outputStream)
             workbook.close()
         }
