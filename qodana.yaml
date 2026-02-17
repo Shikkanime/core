@@ -6,5 +6,14 @@ profile:
   name: qodana.starter
 include:
   - name: UnusedSymbol
+bootstrap: copy ./build/reports/kover/*.xml ./.qodana/code-coverage/
 coverage:
-  report: .qodana/code-coverage
+  reportProblems: true
+failureConditions:
+  severityThresholds:
+    critical: 0
+    high: 2
+    any: 100
+  testCoverageThresholds:
+    total: 80
+    fresh: 80
