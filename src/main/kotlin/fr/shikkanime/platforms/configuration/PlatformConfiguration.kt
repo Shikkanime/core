@@ -72,6 +72,7 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
         }
     }
 
+    @Suppress("unused")
     open fun toConfigurationFields() = mutableSetOf(
         ConfigurationField(
             "Available countries",

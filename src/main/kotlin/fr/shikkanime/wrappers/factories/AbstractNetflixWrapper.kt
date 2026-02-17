@@ -117,18 +117,4 @@ abstract class AbstractNetflixWrapper {
 
     abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
-
-    suspend fun getPreviousEpisode(countryCode: CountryCode, showId: Int, episodeId: Int): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == 0) null else episodes[episodeIndex - 1]
-    }
-
-    suspend fun getNextEpisode(countryCode: CountryCode, showId: Int, episodeId: Int): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == episodes.size - 1) null else episodes[episodeIndex + 1]
-    }
 }

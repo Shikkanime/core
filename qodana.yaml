@@ -4,8 +4,11 @@
 version: "1.0"
 profile:
   name: qodana.starter
-include:
+exclude:
   - name: UnusedSymbol
+    paths:
+      - fr/shikkanime/controllers
+      - fr/shikkanime/socialnetworks
 bootstrap: mkdir -p ./.qodana/code-coverage/ && cp ./build/reports/kover/*.xml ./.qodana/code-coverage/
 coverage:
   reportProblems: true

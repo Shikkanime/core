@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 import kotlin.streams.asSequence
 
+@Suppress("unused")
 class FetchOldEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 

@@ -77,6 +77,7 @@ class Database {
         }
     }
 
+    @Suppress("unused")
     constructor() : this(
         File(
             ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"

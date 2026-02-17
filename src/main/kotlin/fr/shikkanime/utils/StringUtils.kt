@@ -120,7 +120,10 @@ object StringUtils {
     }
 
     fun toEpisodeMappingString(episode: EpisodeMappingDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime!!.countryCode, episode.season.toString(), showSeason, separator, episode.episodeType, episode.number.toString())
+
+    @Suppress("unused")
     fun toEpisodeGroupedString(episode: GroupedEpisodeDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
+
     fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), showSeason = true, showSeparator = true, episode.episodeType!!, episode.number!!.toString())
 
     fun toVariantsString(vararg variant: EpisodeVariant): String {
