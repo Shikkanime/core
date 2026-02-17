@@ -6,7 +6,7 @@ profile:
   name: qodana.starter
 include:
   - name: UnusedSymbol
-bootstrap: copy ./build/reports/kover/*.xml ./.qodana/code-coverage/
+bootstrap: mkdir -p ./.qodana/code-coverage/ && cp ./build/reports/kover/*.xml ./.qodana/code-coverage/
 coverage:
   reportProblems: true
 failureConditions:
