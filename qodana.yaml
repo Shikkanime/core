@@ -7,7 +7,12 @@ profile:
 exclude:
   - name: UnusedSymbol
     paths:
-      - fr/shikkanime/controllers/*
+      - fr/shikkanime/controllers
+      - fr/shikkanime/controllers/admin
+      - fr/shikkanime/controllers/admin/api
+      - fr/shikkanime/controllers/api
+      - fr/shikkanime/controllers/api/v2
+      - fr/shikkanime/controllers/site
       - fr/shikkanime/socialnetworks
 bootstrap: mkdir -p ./.qodana/code-coverage/ && cp ./build/reports/kover/*.xml ./.qodana/code-coverage/
 coverage:
