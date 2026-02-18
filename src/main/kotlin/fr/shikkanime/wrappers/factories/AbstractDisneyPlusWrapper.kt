@@ -44,21 +44,19 @@ abstract class AbstractDisneyPlusWrapper {
             if (this === other) return true
             if (other !is Episode) return false
 
-            if (season != other.season) return false
-            if (number != other.number) return false
-            if (duration != other.duration) return false
-            if (show != other.show) return false
-            if (id != other.id) return false
-            if (oldId != other.oldId) return false
-            if (seasonId != other.seasonId) return false
-            if (title != other.title) return false
-            if (description != other.description) return false
-            if (url != other.url) return false
-            if (image != other.image) return false
-            if (resourceId != other.resourceId) return false
-            if (!audioLocales.contentEquals(other.audioLocales)) return false
-
-            return true
+            return season == other.season &&
+                    number == other.number &&
+                    duration == other.duration &&
+                    show == other.show &&
+                    id == other.id &&
+                    oldId == other.oldId &&
+                    seasonId == other.seasonId &&
+                    title == other.title &&
+                    description == other.description &&
+                    url == other.url &&
+                    image == other.image &&
+                    resourceId == other.resourceId &&
+                    audioLocales.contentEquals(other.audioLocales)
         }
 
         override fun hashCode(): Int {

@@ -213,6 +213,26 @@ abstract class AbstractCrunchyrollWrapper {
 
     protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAnonymousAccessToken()}"))
 
+    protected suspend fun getEpisodesBySeriesIdBase(
+        locale: String,
+        id: String,
+        original: Boolean? = null
+    ): Array<BrowseObject> {
+        val allEpisodes = getSeasonsBySeriesId(locale, id)
+            .flatMap { season -> getEpisodesBySeasonId(locale, season.id).toList() }
+
+        val mainBrowseObjects = allEpisodes.map { it.convertToBrowseObject() }
+        val mainIds = mainBrowseObjects.map { it.id }.toSet()
+
+        val variantIds = allEpisodes
+            .flatMap { it.getVariants(original) }
+            .filter { it !in mainIds }
+
+        val variantBrowseObjects = getChunkedObjects(locale, *variantIds.toTypedArray())
+
+        return (mainBrowseObjects + variantBrowseObjects).toTypedArray()
+    }
+
     abstract suspend fun getBrowse(locale: String, sortBy: SortType = SortType.NEWLY_ADDED, type: MediaType = MediaType.EPISODE, size: Int = 25, start: Int = 0, simulcast: String? = null): List<BrowseObject>
     abstract suspend fun getSeries(locale: String, id: String): Series
     abstract suspend fun getSeasonsBySeriesId(locale: String, id: String): Array<Season>

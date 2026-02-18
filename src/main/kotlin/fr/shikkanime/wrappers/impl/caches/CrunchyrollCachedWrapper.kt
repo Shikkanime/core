@@ -125,18 +125,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         "CrunchyrollCachedWrapper.getEpisodesBySeriesId",
         typeToken = object : TypeToken<MapCacheValue<Array<BrowseObject>>>() {},
         key = Triple(locale, id, original)
-    ) { (locale, id, original) ->
-        val allEpisodes = getSeasonsBySeriesId(locale, id)
-            .flatMap { season -> getEpisodesBySeasonId(locale, season.id).toList() }
-
-        val mainBrowseObjects = allEpisodes.map { it.convertToBrowseObject() }
-
-        val variantBrowseObjects = getChunkedObjects(locale, *allEpisodes
-            .flatMap { it.getVariants(original) }
-            .subtract(mainBrowseObjects.map { it.id }.toSet()).toTypedArray())
-
-        (mainBrowseObjects + variantBrowseObjects).toTypedArray()
-    }
+    ) { (locale, id, original) -> getEpisodesBySeriesIdBase(locale, id, original) }
 
     override suspend fun getSimulcasts(locale: String) = MapCache.getOrComputeAsync(
         "CrunchyrollCachedWrapper.getSimulcasts",

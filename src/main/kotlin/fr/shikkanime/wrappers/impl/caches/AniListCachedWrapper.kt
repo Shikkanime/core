@@ -105,14 +105,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         processMediaRelations(animeSearchResults)
 
         logger.config("AniList API results (${animeSearchResults.size}):")
-        animeSearchResults.forEach {
-            logger.config("  - ID: ${it.id}, Format: ${it.format}")
-            logger.config("      Title: ${it.title.romaji}, English: ${it.title.english}, Native: ${it.title.native}")
-            logger.config("      Search similarity: romaji: ${it.title.romajiSearchSimilarity}, english: ${it.title.englishSearchSimilarity}, native: ${it.title.nativeSearchSimilarity}")
-            logger.config("      Is within release year range: ${it.isFirstReleasedYearRange}")
-            it.relations?.edges?.forEach { edge -> logger.config("        - Relation: ${edge.relationType} (${edge.node.format}) -> ${edge.node.id}") }
-            logger.config("      Has parent relation in result list: ${it.hasParentRelation}")
-        }
+        logAnimeSearchResults(animeSearchResults)
 
         // Find by the highest similarity
         val containsTvFormat = animeSearchResults.any { it.format == "TV" }
@@ -122,18 +115,24 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         logger.config("-".repeat(100))
         animeSearchResults = animeSearchResults.filter { !it.hasParentRelation }.toMutableList()
         logger.config("AniList API results without parent relation (${animeSearchResults.size}):")
-        animeSearchResults.forEach {
-            logger.config("  - ID: ${it.id}, Format: ${it.format}")
-            logger.config("      Title: ${it.title.romaji}, English: ${it.title.english}, Native: ${it.title.native}")
-            logger.config("      Search similarity: romaji: ${it.title.romajiSearchSimilarity}, english: ${it.title.englishSearchSimilarity}, native: ${it.title.nativeSearchSimilarity}")
-            logger.config("      Is within release year range: ${it.isFirstReleasedYearRange}")
-        }
+        logAnimeSearchResults(animeSearchResults)
 
         animeSearchResults.singleOrNull()?.let { return it }
         animeSearchResults.singleOrNull { it.isFirstReleasedYearRange }?.let { return it }
         animeSearchResults.maxByOrNull { it.title.maxSimilarity() }?.let { return it }
 
         return null
+    }
+
+    private fun logAnimeSearchResults(animeSearchResults: MutableList<Media>) {
+        animeSearchResults.forEach {
+            logger.config("  - ID: ${it.id}, Format: ${it.format}")
+            logger.config("      Title: ${it.title.romaji}, English: ${it.title.english}, Native: ${it.title.native}")
+            logger.config("      Search similarity: romaji: ${it.title.romajiSearchSimilarity}, english: ${it.title.englishSearchSimilarity}, native: ${it.title.nativeSearchSimilarity}")
+            logger.config("      Is within release year range: ${it.isFirstReleasedYearRange}")
+            it.relations?.edges?.forEach { edge -> logger.config("        - Relation: ${edge.relationType} (${edge.node.format}) -> ${edge.node.id}") }
+            logger.config("      Has parent relation in result list: ${it.hasParentRelation}")
+        }
     }
 
     private fun hasHighSimilarity(media: Media): Boolean = media.title.maxSimilarity() >= HIGH_SIMILARITY_THRESHOLD

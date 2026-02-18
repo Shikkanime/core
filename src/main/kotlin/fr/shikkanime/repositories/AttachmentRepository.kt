@@ -79,9 +79,9 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
             var sum = 0L
             createReadOnlyQuery(it, query)
                 .resultList
-                .map {
-                    sum += it[1, Long::class.java]
-                    KeyCountDto(it[0, LocalDate::class.java].toString(), sum)
+                .map { tuple ->
+                    sum += tuple[1, Long::class.java]
+                    KeyCountDto(tuple[0, LocalDate::class.java].toString(), sum)
                 }
         }
     }

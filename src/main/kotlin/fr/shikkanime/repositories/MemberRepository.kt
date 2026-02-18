@@ -136,7 +136,7 @@ class MemberRepository : AbstractRepository<Member>() {
 
             createReadOnlyQuery(it, query)
                 .resultList
-                .map { KeyCountDto(it[0, LocalDate::class.java].toString(), it[1, Long::class.java]) }
+                .map { tuple -> KeyCountDto(tuple[0, LocalDate::class.java].toString(), tuple[1, Long::class.java]) }
         }
     }
 
@@ -155,9 +155,9 @@ class MemberRepository : AbstractRepository<Member>() {
             var sum = 0L
             createReadOnlyQuery(it, query)
                 .resultList
-                .map {
-                    sum += it[1, Long::class.java]
-                    KeyCountDto(it[0, LocalDate::class.java].toString(), sum)
+                .map { tuple ->
+                    sum += tuple[1, Long::class.java]
+                    KeyCountDto(tuple[0, LocalDate::class.java].toString(), sum)
                 }
         }
     }
@@ -177,9 +177,9 @@ class MemberRepository : AbstractRepository<Member>() {
             var sum = 0L
             createReadOnlyQuery(it, query)
                 .resultList
-                .map {
-                    sum += it[1, Long::class.java]
-                    KeyCountDto(it[0, LocalDate::class.java].toString(), sum)
+                .map { tuple ->
+                    sum += tuple[1, Long::class.java]
+                    KeyCountDto(tuple[0, LocalDate::class.java].toString(), sum)
                 }
         }
     }
