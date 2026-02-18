@@ -1,9 +1,7 @@
 ARG JAVA_VERSION=25
 
 FROM amazoncorretto:${JAVA_VERSION} AS java
-
-FROM ubuntu:noble
-
+FROM debian:bookworm-slim
 ARG JAVA_VERSION
 COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto/lib/security/cacerts /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto/lib/security/cacerts
@@ -15,7 +13,7 @@ ENV LANG=C.UTF-8 \
 
 # Install necessary packages and set timezone
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl fonts-dejavu tzdata webp gosu && \
+    apt-get install -y --no-install-recommends ca-certificates curl fonts-dejavu fontconfig libfreetype6 tzdata webp gosu && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* && \
     ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && \
     echo "$TZ" > /etc/timezone && \
