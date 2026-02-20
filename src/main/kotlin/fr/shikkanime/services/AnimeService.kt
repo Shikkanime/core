@@ -201,29 +201,22 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val simulcastRangeDelay = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 3)
         val simulcasts = simulcastService.findAll().toMutableList()
 
-        val groupedAnimes = findAll()
-            .onEach { it.simulcasts = mutableSetOf() }
-            .groupBy { it.countryCode!! }
+        val groupedAnimes = findAll().groupBy { it.countryCode!! }
 
         groupedAnimes.forEach { (countryCode, animes) ->
-            val groupedMappings = episodeMappingService.findAllSimulcasted(ignoreEpisodeTypes, countryCode.locale)
-                .groupBy { it.anime!!.uuid!! }
+            val groupedMappings = episodeMappingService.findAllSimulcasted(countryCode.locale, ignoreEpisodeTypes)
+                .groupBy { it.animeUuid }
 
             animes.forEach { anime ->
+                anime.simulcasts = mutableSetOf()
                 val episodeMappings = groupedMappings[anime.uuid] ?: return@forEach
 
                 episodeMappings.forEach { episodeMapping ->
-                    val previousReleaseDateTime = episodeMappings.filter {
-                        it.releaseDateTime < episodeMapping.releaseDateTime &&
-                                it.episodeType == episodeMapping.episodeType
-                    }.maxOfOrNull { it.releaseDateTime }
-
                     val simulcast = episodeVariantService.getSimulcast(
                         simulcastRange,
                         simulcastRangeDelay,
                         anime,
                         episodeMapping,
-                        previousReleaseDateTime,
                         sqlCheck = false,
                         simulcasts = simulcasts
                     )
