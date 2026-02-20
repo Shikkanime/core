@@ -97,7 +97,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
                 useApiFile = false,
                 assertions = { episodes ->
                     assertTrue(episodes.isNotEmpty())
-                    assertEquals(4, episodes.size)
+                    assertEquals(5, episodes.size)
                     assertTrue(episodes.any { it.anime == "Demon Slave" })
                     assertTrue(episodes.any { it.anime == "My Instant Death Ability Is So Overpowered, No One in This Other World Stands a Chance Against Me!" })
                     assertTrue(episodes.any { it.anime == "Urusei Yatsura" })

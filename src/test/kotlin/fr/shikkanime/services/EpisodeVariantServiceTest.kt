@@ -1,6 +1,7 @@
 package fr.shikkanime.services
 
 import fr.shikkanime.AbstractTest
+import fr.shikkanime.dtos.EpisodeCalculateDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.AbstractPlatform
@@ -31,7 +32,15 @@ class EpisodeVariantServiceTest : AbstractTest() {
         every { episode.number } returns 1
 
         animeService.save(anime)
-        val simulcast = episodeVariantService.getSimulcast(anime = anime, entity = episode)
+        val simulcast = episodeVariantService.getSimulcast(
+            anime = anime,
+            dto = EpisodeCalculateDto(
+                animeUuid = anime.uuid!!,
+                releaseDateTime = episode.releaseDateTime,
+                episodeType = episode.episodeType!!,
+                number = episode.number!!
+            )
+        )
 
         assertEquals(Season.WINTER, simulcast.season)
         assertEquals(2024, simulcast.year)
@@ -47,7 +56,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
         anime.simulcasts.add(Simulcast(season = Season.AUTUMN, year = 2023))
         animeService.save(anime)
 
-        (1..<12).map { i ->
+        (1..<12).forEach { i ->
             episodeMappingService.save(
                 EpisodeMapping(
                     anime = anime,
@@ -73,7 +82,15 @@ class EpisodeVariantServiceTest : AbstractTest() {
         every { episode.episodeType } returns EpisodeType.EPISODE
         every { episode.number } returns 12
 
-        val simulcast = episodeVariantService.getSimulcast(anime = anime, entity = episode)
+        val simulcast = episodeVariantService.getSimulcast(
+            anime = anime,
+            dto = EpisodeCalculateDto(
+                animeUuid = anime.uuid!!,
+                releaseDateTime = episode.releaseDateTime,
+                episodeType = episode.episodeType!!,
+                number = episode.number!!
+            )
+        )
 
         assertEquals(Season.AUTUMN, simulcast.season)
         assertEquals(2023, simulcast.year)
