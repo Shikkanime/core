@@ -1,5 +1,6 @@
 package fr.shikkanime.repositories
 
+import fr.shikkanime.dtos.EpisodeCalculateDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
@@ -168,24 +169,28 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllSimulcasted(ignoreEpisodeTypes: Set<EpisodeType>, ignoreAudioLocale: String): List<EpisodeMapping> {
+    fun findAllSimulcasted(ignoreAudioLocale: String, ignoreEpisodeTypes: Set<EpisodeType>): List<EpisodeCalculateDto> {
         return database.entityManager.use {
-            val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(EpisodeVariant::class.java)
-            query.select(root[EpisodeVariant_.mapping])
+            val query = it.createQuery("""
+                    SELECT new fr.shikkanime.dtos.EpisodeCalculateDto(
+                        em.anime.uuid, 
+                        em.releaseDateTime, 
+                        em.episodeType, 
+                        em.number,
+                        LAG(em.releaseDateTime) OVER (
+                            PARTITION BY em.anime.uuid, em.episodeType 
+                            ORDER BY em.releaseDateTime ASC
+                        )
+                    )
+                    FROM EpisodeVariant ev
+                    JOIN ev.mapping em
+                    WHERE ev.audioLocale != :ignoreAudioLocale AND em.episodeType NOT IN (:ignoreEpisodeTypes)
+            """.trimIndent(), EpisodeCalculateDto::class.java)
 
-            query.where(
-                cb.not(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType].`in`(ignoreEpisodeTypes)),
-                cb.notEqual(root[EpisodeVariant_.audioLocale], ignoreAudioLocale)
-            ).orderBy(
-                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.releaseDateTime]),
-                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.season]),
-                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.episodeType]),
-                cb.asc(root[EpisodeVariant_.mapping][EpisodeMapping_.number])
-            ).groupBy(root[EpisodeVariant_.mapping])
+            query.setParameter("ignoreAudioLocale", ignoreAudioLocale)
+            query.setParameter("ignoreEpisodeTypes", ignoreEpisodeTypes)
 
-            createReadOnlyQuery(it, query)
+            createReadOnlyQuery(query)
                 .resultList
         }
     }
@@ -251,7 +256,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
 
     fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(
         anime: Anime,
-        episodeMapping: EpisodeMapping
+        episodeMapping: EpisodeCalculateDto
     ): ZonedDateTime? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
