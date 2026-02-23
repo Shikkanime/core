@@ -32,7 +32,8 @@ jobs:
       - name: Build and test
         run: ./gradlew clean test koverXmlReport --info
 
-      - name: 'Qodana Scan'
+      - if: (github.event_name == 'pull_request' || github.event_name == 'push') && github.actor != 'dependabot[bot]'
+        name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2025.3
         with:
           pr-mode: false
