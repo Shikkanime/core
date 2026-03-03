@@ -189,6 +189,10 @@
                                     </div>
                                 </a>
 
+                                <#if isReleased && release.jsonLd??>
+                                    <script type="application/ld+json">${release.jsonLd}</script>
+                                </#if>
+
                                 <#if !isReleased && release.anime.jsonLd??>
                                     <script type="application/ld+json">${release.anime.jsonLd}</script>
                                 </#if>

@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.factories.IGenericFactory
+import fr.shikkanime.services.seo.JsonLdBuilder
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.takeIfNotEmpty
 import fr.shikkanime.utils.toTreeSet
@@ -13,6 +14,7 @@ import fr.shikkanime.utils.withUTCString
 class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto> {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var episodeSourceFactory: EpisodeSourceFactory
+    @Inject private lateinit var jsonLdBuilder: JsonLdBuilder
 
     override fun toDto(entity: GroupedEpisode): GroupedEpisodeDto {
         val season = if (entity.minSeason == entity.maxSeason) entity.minSeason.toString() else "${entity.minSeason} - ${entity.maxSeason}"
@@ -43,7 +45,7 @@ class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto>
             internalUrl = internalUrl,
             mappings = entity.mappings.toSet(),
             sources = entity.variants.map(episodeSourceFactory::toDto).toTreeSet()
-        )
+        ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto) }
     }
 
     /**

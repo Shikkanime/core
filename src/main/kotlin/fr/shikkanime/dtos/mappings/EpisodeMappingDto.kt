@@ -22,4 +22,5 @@ data class EpisodeMappingDto(
     val variants: Set<EpisodeVariantDto>? = null,
     var image: String? = null,
     val sources: Set<EpisodeSourceDto>,
+    var jsonLd: String? = null,
 ) : Serializable

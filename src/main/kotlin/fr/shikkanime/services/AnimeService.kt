@@ -15,6 +15,7 @@ import fr.shikkanime.factories.impl.PlatformFactory
 import fr.shikkanime.repositories.AnimeRepository
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
+import fr.shikkanime.services.seo.JsonLdBuilder
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
 import fr.shikkanime.utils.indexers.GroupedIndexer
@@ -37,6 +38,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var jsonLdBuilder: JsonLdBuilder
 
     override fun getRepository() = animeRepository
 
@@ -159,7 +161,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     mappings.maxOfOrNull { it.number!! },
                     mappings.firstOrNull()?.number,
                     mappings.map { episodeMappingFactory.toDto(it, false) }.toSet()
-                )
+                ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto) }
             }
         }
 

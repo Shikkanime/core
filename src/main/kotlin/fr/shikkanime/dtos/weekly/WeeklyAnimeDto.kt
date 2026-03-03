@@ -18,5 +18,6 @@ data class WeeklyAnimeDto(
     val minNumber: Int? = null,
     val maxNumber: Int? = null,
     val number: Int? = null,
-    val mappings: Set<EpisodeMappingDto>? = null
+    val mappings: Set<EpisodeMappingDto>? = null,
+    var jsonLd: String? = null,
 ) : Serializable
