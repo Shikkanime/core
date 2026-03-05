@@ -1,5 +1,7 @@
 package fr.shikkanime.services
 
+import com.google.inject.Inject
+import fr.shikkanime.entities.RouteMetric
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import jdk.jfr.Configuration
@@ -7,12 +9,16 @@ import jdk.jfr.Recording
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.logging.Level
 
 class ProfilingService {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var globalRecording: Recording? = null
     private val profilesFolder = File(Constant.dataFolder, "profiles")
+    private val metricBuffer = ConcurrentLinkedQueue<RouteMetric>()
+
+    @Inject private lateinit var routeMetricService: RouteMetricService
 
     init {
         if (!profilesFolder.exists()) {
@@ -53,6 +59,26 @@ class ProfilingService {
         } finally {
             globalRecording = null
             startGlobalRecording()
+        }
+    }
+
+    fun addRouteMetric(method: String, path: String, duration: Long) {
+        metricBuffer.add(RouteMetric(method = method, path = path, duration = duration))
+    }
+
+    fun flushMetrics() {
+        val metrics = mutableListOf<RouteMetric>()
+        while (true) {
+            val metric = metricBuffer.poll() ?: break
+            metrics.add(metric)
+        }
+
+        if (metrics.isNotEmpty()) {
+            try {
+                routeMetricService.saveAll(metrics)
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Failed to flush route metrics", e)
+            }
         }
     }
 

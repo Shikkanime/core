@@ -6,6 +6,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.services.ProfilingService
 import fr.shikkanime.services.caches.BotDetectorCache
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
@@ -61,6 +62,7 @@ private val mapKClass = Map::class
 private val arrayLangTypeKClass = Array<LangType>::class
 private val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 private val botDetectorCache = Constant.injector.getInstance(BotDetectorCache::class.java)
+private val profilingService = Constant.injector.getInstance(ProfilingService::class.java)
 
 private const val STRICT_TRANSPORT_SECURITY_VALUE = "max-age=${Constant.DEFAULT_CACHE_DURATION}; includeSubDomains; preload"
 private const val CONTENT_SECURITY_POLICY_HEADER = "Content-Security-Policy"
@@ -128,6 +130,10 @@ fun logCallDetails(call: ApplicationCall, statusCode: HttpStatusCode? = null) {
     val status = statusCode?.value ?: call.response.status()?.value ?: 0
     val httpMethod = request.httpMethod.value
     val uri = request.uri
+
+    if (duration != -1L) {
+        profilingService.addRouteMetric(httpMethod, uri, duration)
+    }
 
     logger.info("[$ipAddress - $userAgent${if (isBot) " (BOT)" else StringUtils.EMPTY_STRING}] ($status - $duration ms) $httpMethod $uri")
 }

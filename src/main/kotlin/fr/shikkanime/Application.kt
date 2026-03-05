@@ -48,6 +48,8 @@ fun main(args: Array<String>) {
         JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)
         // Every 20 seconds
         JobManager.scheduleJob("*/20 * * * * ?", FetchEpisodesJob::class.java, SendMailJob::class.java)
+        // Every minute
+        JobManager.scheduleJob("0 * * * * ?", PerformanceJob::class.java)
         // Every 10 minutes
         JobManager.scheduleJob(
             "0 */10 * * * ?",
