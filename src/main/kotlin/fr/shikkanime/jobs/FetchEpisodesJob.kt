@@ -1,10 +1,7 @@
 package fr.shikkanime.jobs
 
 import com.google.inject.Inject
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.Simulcast
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
@@ -131,7 +128,9 @@ class FetchEpisodesJob(
             Anime::class.java,
             EpisodeMapping::class.java,
             EpisodeVariant::class.java,
-            Simulcast::class.java
+            Simulcast::class.java,
+            MemberFollowAnime::class.java,
+            MemberFollowEpisode::class.java
         )
 
         pendingEpisodes.addAll(savedEpisodes)

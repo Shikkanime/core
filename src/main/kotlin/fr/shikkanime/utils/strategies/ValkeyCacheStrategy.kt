@@ -3,6 +3,7 @@ package fr.shikkanime.utils.strategies
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.utils.AsynchronizedGlideClient
 import fr.shikkanime.utils.SerializationUtils
+import java.lang.ref.SoftReference
 
 class ValkeyCacheStrategy<K, V>(
     val name: String,
@@ -14,8 +15,8 @@ class ValkeyCacheStrategy<K, V>(
         const val DEFAULT_LOCAL_CACHE_SIZE = 100
     }
 
-    private val localCache: MutableMap<K, V> = object : LinkedHashMap<K, V>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>): Boolean {
+    private val localCache: MutableMap<K, SoftReference<V>> = object : LinkedHashMap<K, SoftReference<V>>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, SoftReference<V>>): Boolean {
             return size > localCacheMaxSize
         }
     }
@@ -36,7 +37,7 @@ class ValkeyCacheStrategy<K, V>(
 
     override fun containsKey(key: K): Boolean {
         synchronized(localCache) {
-            if (localCache.containsKey(key)) return true
+            if (localCache[key]?.get() != null) return true
         }
 
         return getCachedValue(buildMapKey(key)) != null
@@ -44,21 +45,21 @@ class ValkeyCacheStrategy<K, V>(
 
     override fun get(key: K): V? {
         synchronized(localCache) {
-            localCache[key]?.let { return it }
+            localCache[key]?.get()?.let { return it }
         }
 
         return getCachedValue(buildMapKey(key))?.let {
             val deserialized = SerializationUtils.deserialize(serializationType, it, typeToken)
 
             if (deserialized != null)
-                synchronized(localCache) { localCache[key] = deserialized }
+                synchronized(localCache) { localCache[key] = SoftReference(deserialized) }
 
             deserialized
         }
     }
 
     override fun put(key: K, value: V) {
-        synchronized(localCache) { localCache[key] = value }
+        synchronized(localCache) { localCache[key] = SoftReference(value) }
         AsynchronizedGlideClient[buildMapKey(key)] = SerializationUtils.serialize(serializationType, value)
     }
 
