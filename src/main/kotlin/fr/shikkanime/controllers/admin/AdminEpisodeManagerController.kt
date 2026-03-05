@@ -40,8 +40,8 @@ class AdminEpisodeManagerController {
     @Get
     private fun getEpisodeManager(): Response {
         val files = Constant.exportsFolder.listFiles()
-            .filter { it.extension == "xlsx" }
-            .sortedByDescending { it.lastModified() }
+            ?.filter { it.extension == "xlsx" }
+            ?.sortedByDescending { it.lastModified() } ?: emptyList()
 
         return Response.template(
             Link.EPISODE_MANAGER,

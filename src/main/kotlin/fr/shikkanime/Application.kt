@@ -19,6 +19,9 @@ private val logger = LoggerFactory.getLogger(Constant.NAME)
 fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
 
+    val profilingService = Constant.injector.getInstance(ProfilingService::class.java)
+    profilingService.startGlobalRecording()
+
     logger.info("Loading attachments cache...")
     val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
     attachmentService.encodeAllActiveWithUrlAndWithoutFile()

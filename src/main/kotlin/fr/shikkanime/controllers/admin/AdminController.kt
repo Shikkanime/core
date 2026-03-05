@@ -10,6 +10,7 @@ import fr.shikkanime.services.AnimeService
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MemberService
+import fr.shikkanime.services.ProfilingService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
@@ -20,6 +21,7 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.param.BodyParam
+import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import fr.shikkanime.wrappers.ThreadsWrapper
 import io.ktor.http.*
@@ -35,6 +37,7 @@ class AdminController {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var profilingService: ProfilingService
 
     @Path
     @Get
@@ -242,6 +245,24 @@ class AdminController {
         }
 
         return Response.redirect(Link.THREADS.href)
+    }
+
+    @Path("/profiling")
+    @Get
+    @AdminSessionAuthenticated
+    private fun getProfiling() = Response.template(
+        Link.PROFILING,
+        mapOf(
+            "jfrFiles" to profilingService.getJfrFiles()
+        )
+    )
+
+    @Path("/profiling/download/{name}")
+    @Get
+    @AdminSessionAuthenticated
+    private fun downloadProfiling(@PathParam name: String): Response {
+        val file = profilingService.getJfrFile(name) ?: return Response.notFound()
+        return Response.multipart(file.readBytes(), ContentType.Application.OctetStream)
     }
 
     @Path("/config")
