@@ -5,6 +5,7 @@ import fr.shikkanime.jobs.AbstractJob
 import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.repositories.AbstractRepository
 import fr.shikkanime.services.AbstractService
+import fr.shikkanime.services.ProfilingService
 import fr.shikkanime.services.admin.IAdminService
 import fr.shikkanime.services.caches.ICacheService
 import fr.shikkanime.socialnetworks.AbstractSocialNetwork
@@ -16,6 +17,7 @@ import org.reflections.Reflections
 class DefaultModule : AbstractModule() {
     override fun configure() {
         bind(Database::class.java).asEagerSingleton()
+        bind(ProfilingService::class.java).asEagerSingleton()
 
         setOf(
             Constant.reflections.getSubTypesOf(AbstractRepository::class.java),

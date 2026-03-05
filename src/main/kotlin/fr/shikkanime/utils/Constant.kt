@@ -17,38 +17,50 @@ object Constant {
     const val NAME = "Shikkanime"
     const val PORT = 37100
 
-    val reflections = Reflections("fr.shikkanime")
-    val injector: Injector = Guice.createInjector(DefaultModule())
-    val abstractPlatforms = reflections.getSubTypesOf(AbstractPlatform::class.java).map { injector.getInstance(it) }
-
     val isTest: Boolean
         get() = (System.getenv("IS_TEST")?.toBoolean() ?: System.getProperty("isTest")?.toBoolean()) == true
 
-    private val tmpDirectory: File = createTempDirectory("shikkanime").toFile()
+    private val tmpDirectory: File by lazy { createTempDirectory("shikkanime").toFile() }
+
     val dataFolder: File
         get() {
             val folder = if (isTest) tmpDirectory else File("data")
             if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
+
     val configFolder: File
         get() {
             val folder = File(dataFolder, "config")
             if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
+
     val imagesFolder: File
         get() {
             val folder = File(dataFolder, "images")
             if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
+
     val exportsFolder: File
         get() {
             val folder = File(dataFolder, "exports")
             if (!folder.exists()) folder.mkdirs().ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
             return folder
         }
+
+    val profilesFolder: File
+        get() {
+            val folder = File(dataFolder, "profiles")
+            if (!folder.exists()) folder.mkdirs()
+                .ifFalse { logger.warning("Failed to created folder '${folder.name}'") }
+            return folder
+        }
+
+    val reflections = Reflections("fr.shikkanime")
+    val injector: Injector = Guice.createInjector(DefaultModule())
+    val abstractPlatforms = reflections.getSubTypesOf(AbstractPlatform::class.java).map { injector.getInstance(it) }
 
     val abstractSocialNetworks = reflections.getSubTypesOf(AbstractSocialNetwork::class.java)
         .map { injector.getInstance(it) }
