@@ -3,6 +3,7 @@ package fr.shikkanime.wrappers.impl
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
+import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 
@@ -17,8 +18,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     ): List<BrowseObject> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else StringUtils.EMPTY_STRING}")
         require(response.status == HttpStatusCode.OK) { "Failed to get media list (${response.status.value})" }
-        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get media list")
-        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java).toList()
+        return response.body<CrunchyrollResponse<BrowseObject>>().data
     }
 
     override suspend fun getSeries(
@@ -98,8 +98,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     ): List<BrowseObject> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/objects/${ids.joinToString(StringUtils.COMMA_STRING)}?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get objects (${response.status.value})" }
-        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get objects")
-        return ObjectParser.fromJson(asJsonArray, Array<BrowseObject>::class.java).toList()
+        return response.body<CrunchyrollResponse<BrowseObject>>().data
     }
 
     @JvmStatic

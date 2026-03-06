@@ -283,7 +283,10 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
             val creationDateTime = runCatching { Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).creationTime().toMillis() }.getOrNull()
 
             // Delete the file if it is not in progress, not active, creation date time is not hourly old, and deletion fails
-            if (uuid != null && uuid !in inProgressAttachments && attachments[uuid]?.active != true && creationDateTime != null && creationDateTime < now - 3600000 && !file.delete())
+            if (uuid != null && uuid !in inProgressAttachments && attachments[uuid]?.active != true && creationDateTime != null && creationDateTime < now - TimeUnit.HOURS.toMillis(
+                    1
+                ) && !file.delete()
+            )
                 logger.warning("Failed to delete file $file") // Log a warning if the file deletion fails
         }
     }

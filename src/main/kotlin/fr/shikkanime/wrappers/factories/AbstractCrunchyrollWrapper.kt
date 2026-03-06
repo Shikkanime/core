@@ -5,15 +5,22 @@ import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.serializers.ZonedDateTimeSerializer
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.SerialName
 import java.io.Serializable
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
 
 abstract class AbstractCrunchyrollWrapper {
+    @kotlinx.serialization.Serializable
+    data class CrunchyrollResponse<T>(
+        val data: List<T>
+    )
+
     enum class SortType {
         NEWLY_ADDED,
         POPULARITY,
@@ -24,6 +31,7 @@ abstract class AbstractCrunchyrollWrapper {
         SERIES,
     }
 
+    @kotlinx.serialization.Serializable
     data class MediaImage(
         val source: String,
         val type: String,
@@ -31,11 +39,14 @@ abstract class AbstractCrunchyrollWrapper {
         val height: Int,
     ) : Serializable
 
+    @kotlinx.serialization.Serializable
     data class Image(
         val thumbnail: List<List<MediaImage>> = emptyList(),
         @SerializedName("poster_tall")
+        @SerialName("poster_tall")
         val posterTall: List<List<MediaImage>> = emptyList(),
         @SerializedName("poster_wide")
+        @SerialName("poster_wide")
         val posterWide: List<List<MediaImage>> = emptyList(),
     ) : Serializable {
         val fullHDThumbnail: String?
@@ -46,25 +57,30 @@ abstract class AbstractCrunchyrollWrapper {
             get() = posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
     }
 
+    @kotlinx.serialization.Serializable
     data class Version(
         val guid: String,
         @SerializedName("audio_locale")
+        @SerialName("audio_locale")
         val audioLocale: String,
         val original: Boolean
     ) : Serializable
 
+    @kotlinx.serialization.Serializable
     data class Series(
-        val id: String,
-        val images: Image,
-        val title: String,
+        val id: String? = null,
+        val images: Image? = null,
+        val title: String? = null,
         @SerializedName("slug_title")
-        val slugTitle: String,
-        val description: String?,
+        @SerialName("slug_title")
+        val slugTitle: String? = null,
+        val description: String? = null,
         @SerializedName("is_simulcast")
+        @SerialName("is_simulcast")
         val isSimulcast: Boolean,
     ) : Serializable {
         fun convertToBrowseObject() = BrowseObject(
-            id = id,
+            id = requireNotNull(id) { "Series ID cannot be null to convert to BrowseObject" },
             images = images,
             description = description,
             title = title,
@@ -82,53 +98,73 @@ abstract class AbstractCrunchyrollWrapper {
         val keywords: Set<String>
     ) : Serializable
 
+    @kotlinx.serialization.Serializable
     data class Episode(
-        val id: String,
+        val id: String? = null,
         @SerializedName("series_id")
+        @SerialName("series_id")
         val seriesId: String,
         @SerializedName("series_title")
+        @SerialName("series_title")
         val seriesTitle: String,
         @SerializedName("series_slug_title")
+        @SerialName("series_slug_title")
         val seriesSlugTitle: String?,
         @SerializedName("audio_locale")
+        @SerialName("audio_locale")
         val audioLocale: String,
         @SerializedName("subtitle_locales")
+        @SerialName("subtitle_locales")
         val subtitleLocales: List<String>,
+        @kotlinx.serialization.Serializable(with = ZonedDateTimeSerializer::class)
         @SerializedName("premium_available_date")
+        @SerialName("premium_available_date")
         val premiumAvailableDate: ZonedDateTime,
         @SerializedName("season_id")
+        @SerialName("season_id")
         val seasonId: String,
         @SerializedName("season_number")
+        @SerialName("season_number")
         val seasonNumber: Int?,
         @SerializedName("season_slug_title")
+        @SerialName("season_slug_title")
         val seasonSlugTitle: String?,
         @SerializedName("episode")
+        @SerialName("episode")
         val numberString: String,
         @SerializedName("episode_number")
+        @SerialName("episode_number")
         val number: Int?,
-        val title: String?,
+        val title: String? = null,
         @SerializedName("slug_title")
-        val slugTitle: String?,
-        val images: Image?,
+        @SerialName("slug_title")
+        val slugTitle: String? = null,
+        val images: Image? = null,
         @SerializedName("duration_ms")
+        @SerialName("duration_ms")
         val durationMs: Long,
-        val description: String?,
+        val description: String? = null,
         @SerializedName("mature_blocked")
+        @SerialName("mature_blocked")
         val matureBlocked: Boolean,
         val versions: List<Version>?,
         @SerializedName("next_episode_id")
-        val nextEpisodeId: String?,
+        @SerialName("next_episode_id")
+        val nextEpisodeId: String? = null,
         @SerializedName("season_sequence_number")
+        @SerialName("season_sequence_number")
         val seasonSequenceNumber: Int,
         @SerializedName("sequence_number")
+        @SerialName("sequence_number")
         val sequenceNumber: Double,
         @SerializedName("identifier")
+        @SerialName("identifier")
         val identifier: String?,
     ) : Serializable {
         fun index() = ((seasonSequenceNumber - 1) * 100) + sequenceNumber
 
         fun convertToBrowseObject() = BrowseObject(
-            id = id,
+            id = requireNotNull(id) { "Episode ID cannot be null to convert to BrowseObject" },
             images = images,
             description = description,
             title = title,
@@ -139,7 +175,7 @@ abstract class AbstractCrunchyrollWrapper {
 
         fun getVariants(original: Boolean? = null): List<String> {
             if (versions.isNullOrEmpty())
-                return listOf(id)
+                return listOfNotNull(id)
 
             if (original == null)
                 return versions.map { it.guid }
@@ -148,16 +184,20 @@ abstract class AbstractCrunchyrollWrapper {
         }
     }
 
+    @kotlinx.serialization.Serializable
     data class BrowseObject(
         val id: String,
         val images: Image?,
         val description: String?,
         val title: String?,
         @SerializedName("series_metadata")
-        val seriesMetadata: Series?,
+        @SerialName("series_metadata")
+        val seriesMetadata: Series? = null,
         @SerializedName("episode_metadata")
-        val episodeMetadata: Episode?,
+        @SerialName("episode_metadata")
+        val episodeMetadata: Episode? = null,
         @SerializedName("slug_title")
+        @SerialName("slug_title")
         val slugTitle: String?,
     ) : Serializable {
         val fullHDCarousel: String
@@ -200,8 +240,8 @@ abstract class AbstractCrunchyrollWrapper {
             val response = httpRequest.post(
                 "${baseUrl}auth/v1/token",
                 headers = mapOf(
-                    HttpHeaders.ContentType to "application/x-www-form-urlencoded",
-                    HttpHeaders.Authorization to "Basic bjBxMm54bDM3emlnMGRxbjBhaW86UDBqM2hlNE44VUc4VzJ3MC1QdkRhZGpHdXY2MmZOMmQ=",
+                    HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),
+                    HttpHeaders.Authorization to "Basic aG85ZGNjdjI5NGRueHV4YzFnaXI6OC11MDdwOGVpYmh1bU1pNEhabTV1ano0YWY5S3VseTU=",
                     "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
                 ),
                 body = "grant_type=client_id&client_id=offline_access"

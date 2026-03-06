@@ -67,12 +67,16 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         "CrunchyrollCachedWrapper.getEpisodesBySeasonId",
         typeToken = object : TypeToken<MapCacheValue<Array<Episode>>>() {},
         key = locale to id
-    ) {
-        CrunchyrollWrapper.getEpisodesBySeasonId(it.first, it.second)
-            .also { episodes -> episodes.forEach { episode ->
-                episodeCache.putIfNotExists(it.first to episode.id, episode)
-                objectCache.putIfNotExists(it.first to episode.id, episode.convertToBrowseObject())
-            } }
+    ) { (locale, seasonId) ->
+        CrunchyrollWrapper.getEpisodesBySeasonId(locale, seasonId).also { episodes ->
+            for (episode in episodes) {
+                val episodeId = episode.id ?: continue
+                val cacheKey = locale to episodeId
+
+                episodeCache.putIfNotExists(cacheKey, episode)
+                objectCache.putIfNotExists(cacheKey, episode.convertToBrowseObject())
+            }
+        }
     }
 
     override suspend fun getEpisode(
