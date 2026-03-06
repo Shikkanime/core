@@ -2,6 +2,7 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
+import fr.shikkanime.dtos.weekly.WeeklyAnimeDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
@@ -123,6 +124,12 @@ object StringUtils {
 
     @Suppress("unused")
     fun toEpisodeGroupedString(episode: GroupedEpisodeDto, showSeason: Boolean = true, separator: Boolean = true) = toEpisodeString(episode.anime.countryCode, episode.season, showSeason, separator, episode.episodeType, episode.number)
+
+    fun toWeeklyEpisodeString(episode: WeeklyAnimeDto, showSeason: Boolean = true, separator: Boolean = true): String {
+        val season = episode.mappings?.firstOrNull()?.season?.toString() ?: ""
+        val number = if (episode.minNumber != null && episode.maxNumber != null && episode.minNumber != episode.maxNumber) "${episode.minNumber} - ${episode.maxNumber}" else episode.number?.toString() ?: ""
+        return toEpisodeString(episode.anime.countryCode, season, showSeason, separator, episode.episodeType ?: EpisodeType.EPISODE, number)
+    }
 
     fun toEpisodeMappingString(episode: EpisodeMapping) = toEpisodeString(episode.anime!!.countryCode!!, episode.season!!.toString(), showSeason = true, showSeparator = true, episode.episodeType!!, episode.number!!.toString())
 

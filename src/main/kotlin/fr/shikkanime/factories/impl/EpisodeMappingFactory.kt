@@ -5,6 +5,7 @@ import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.factories.IEpisodeMappingFactory
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
+import fr.shikkanime.services.seo.JsonLdBuilder
 import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
 
@@ -12,6 +13,7 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var episodeSourceFactory: EpisodeSourceFactory
+    @Inject private lateinit var jsonLdBuilder: JsonLdBuilder
 
     override fun toDto(
         entity: EpisodeMapping,
@@ -34,6 +36,6 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
             description = entity.description,
             variants = variants.toSet(),
             sources = variants.map { episodeSourceFactory.toDto(countryCode, it) }.toTreeSet(),
-        )
+        ).also { dto -> dto.jsonLd = jsonLdBuilder.build(dto) }
     }
 }

@@ -18,5 +18,6 @@ data class GroupedEpisodeDto(
     val duration: Long?,
     val internalUrl: String?,
     val mappings: Set<UUID>,
-    val sources: Set<EpisodeSourceDto>
+    val sources: Set<EpisodeSourceDto>,
+    var jsonLd: String? = null,
 ) : Serializable

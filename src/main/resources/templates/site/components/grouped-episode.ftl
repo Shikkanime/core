@@ -78,6 +78,10 @@
                     </div>
                 </div>
             </a>
+
+            <#if groupedEpisode.jsonLd??>
+                <script type="application/ld+json">${groupedEpisode.jsonLd}</script>
+            </#if>
         </article>
     </div>
 </#macro>

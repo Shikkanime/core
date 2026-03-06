@@ -95,4 +95,8 @@
             </div>
         </#list>
     </div>
+
+    <#if episodeMapping.jsonLd??>
+        <script type="application/ld+json">${episodeMapping.jsonLd}</script>
+    </#if>
 </@navigation.display>

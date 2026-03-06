@@ -58,5 +58,9 @@
                 </div>
             </div>
         </a>
+
+        <#if episodeMapping.jsonLd??>
+            <script type="application/ld+json">${episodeMapping.jsonLd}</script>
+        </#if>
     </article>
 </#macro>
