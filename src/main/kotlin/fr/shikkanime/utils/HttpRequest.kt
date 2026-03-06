@@ -3,12 +3,15 @@ package fr.shikkanime.utils
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.util.concurrent.CancellationException
@@ -21,6 +24,11 @@ class HttpRequest(private val timeout: Long = 60_000) {
             requestTimeoutMillis = timeout
             connectTimeoutMillis = timeout
             socketTimeoutMillis = timeout
+        }
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+            })
         }
         engine {
             config {

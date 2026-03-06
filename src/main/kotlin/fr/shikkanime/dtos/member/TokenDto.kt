@@ -6,6 +6,7 @@ import fr.shikkanime.entities.Member
 import fr.shikkanime.utils.Constant
 import kotlinx.serialization.Serializable
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Serializable
 data class TokenDto(
@@ -23,7 +24,7 @@ data class TokenDto(
                 .withClaim("username", member.username)
                 .withClaim("creationDateTime", member.creationDateTime.toString())
                 .withClaim("roles", member.roles.map { it.name })
-                .withExpiresAt(Date(System.currentTimeMillis() + (1 * 60 * 60 * 1000)))
+                .withExpiresAt(Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
                 .sign(Algorithm.HMAC256(Constant.jwtSecret))
         )
     }

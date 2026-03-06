@@ -7,11 +7,16 @@ import jdk.jfr.Recording
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
 class ProfilingService {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var globalRecording: Recording? = null
+
+    companion object {
+        private const val MAX_SIZE = 250L * 1024 * 1024 // 250 MB
+    }
 
     fun startGlobalRecording() {
         if (globalRecording != null) return
@@ -21,7 +26,7 @@ class ProfilingService {
             globalRecording = Recording(config).apply {
                 name = "ContinuousRecording"
                 isToDisk = true
-                maxSize = 250L * 1024 * 1024 // 250 MB
+                maxSize = MAX_SIZE
                 start()
             }
             logger.info("JFR Global Recording started.")
@@ -55,13 +60,16 @@ class ProfilingService {
     }
 
     fun getJfrFile(name: String): File? {
-        val file = File(Constant.profilesFolder, name)
-        return if (file.exists() && file.parentFile == Constant.profilesFolder) file else null
+        return getJfrFiles().find { it.name == name }
     }
 
     fun cleanOldReports(days: Int = 7) {
-        val limit = System.currentTimeMillis() - (days * 24 * 60 * 60 * 1000L)
+        val limit = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days.toLong())
         Constant.profilesFolder.listFiles()?.filter { it.extension == "jfr" && it.lastModified() < limit }
-            ?.forEach { it.delete() }
+            ?.forEach {
+                if (!it.delete()) {
+                    logger.warning("Failed to delete JFR report: ${it.absolutePath}")
+                }
+            }
     }
 }

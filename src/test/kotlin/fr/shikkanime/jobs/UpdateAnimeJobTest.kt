@@ -136,9 +136,9 @@ class UpdateAnimeJobTest : AbstractTest() {
                 platforms = listOf(
                     PlatformData(Platform.CRUN, "GRMG8ZQZR")
                 ),
-                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/757bae5a21039bac6ebace5de9affcd8.jpg",
-                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/a249096c7812deb8c3c2c907173f3774.jpg",
-                expectedDescription = "Oyez ! Oyez ! Pirates de tous bords ! Gold Roger, le légendaire Roi des pirates, mort sur l’échafaud, a laissé derrière lui un trésor inestimable : le « One Piece ». Monkey D. Luffy, un garçon naïf et impulsif, rêve de mettre la main sur ce fameux butin et de devenir le nouveau Roi des Pirates. Transformé en homme-élastique après avoir avalé un des fruits du démon, Luffy part en quête d’un équipage digne de son ambition ! A l’abordage !"
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/a402a3cc46041fcb917d952312119aa8.png",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/01184a0e8912da9e3115536752cfa1db.png",
+                expectedDescription = "Oyez ! Oyez ! Pirates de tous bords ! Gold Roger, le légendaire Roi des pirates, mort sur l’échafaud, a laissé derrière lui un trésor inestimable : le « One Piece ». Monkey D. Luffy, un garçon naïf et impulsif, rêve de mettre la main sur ce fameux butin et de devenir le nouveau Roi des Pirates. Transformé en homme-élastique après avoir avalé un des fruits du démon, Luffy part en quête d’un..."
             ),
             TestCase(
                 name = "Jujutsu Kaisen",
