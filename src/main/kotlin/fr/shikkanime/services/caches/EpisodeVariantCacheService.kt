@@ -4,6 +4,7 @@ import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodePlatformWeekKeyCache
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
+import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
@@ -13,6 +14,7 @@ import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.SerializationUtils
+import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -46,6 +48,13 @@ class EpisodeVariantCacheService : ICacheService {
             it.endZonedDateTime
         ).toTypedArray()
     }
+
+    fun findAllIdentifiers() = MapCache.getOrCompute(
+        "EpisodeVariantCacheService.findAllIdentifiers",
+        classes = listOf(EpisodeVariant::class.java, EpisodeMapping::class.java, Anime::class.java),
+        typeToken = object : TypeToken<MapCacheValue<HashSet<String>>>() {},
+        key = StringUtils.EMPTY_STRING,
+    ) { episodeVariantService.findAllIdentifiers() }
 
     fun find(uuid: UUID) = MapCache.getOrComputeNullable(
         "EpisodeVariantCacheService.find",

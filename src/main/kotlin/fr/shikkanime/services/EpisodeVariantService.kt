@@ -12,6 +12,7 @@ import fr.shikkanime.services.caches.RuleCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.indexers.GroupedIndexer
+import fr.shikkanime.utils.normalize
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
@@ -155,7 +156,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         }
 
         // Generate a slug for the anime based on its name
-        val animeName = StringUtils.removeAnimeNamePart(StringUtils.removeSpecialCharacters(episode.anime))
+        val animeName =
+            StringUtils.removeAnimeNamePart(StringUtils.removeSpecialCharacters(episode.anime.normalize()!!))
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
         // Find or create the anime entity
@@ -166,7 +168,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     name = animeName,
                     releaseDateTime = episode.releaseDateTime,
                     lastReleaseDateTime = episode.releaseDateTime,
-                    description = episode.animeDescription,
+                    description = episode.animeDescription.normalize(),
                     slug = slug
                 )
             ).apply {
@@ -284,8 +286,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 season = episode.season,
                 number = episode.number,
                 duration = episode.duration,
-                title = episode.title,
-                description = episode.description?.take(Constant.MAX_DESCRIPTION_LENGTH)
+                title = episode.title?.normalize(),
+                description = episode.description?.normalize()?.take(Constant.MAX_DESCRIPTION_LENGTH)
             )
         ).apply {
             // Create or activate a banner attachment for the episode if not in test mode
