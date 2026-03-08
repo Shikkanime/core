@@ -12,7 +12,6 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractAnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.impl.AnimationDigitalNetworkWrapper
 import java.io.File
@@ -112,7 +111,10 @@ class AnimationDigitalNetworkPlatform :
         if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !isConfigurationSimulcasted && checkAnimation)
             throw Exception("Anime is not an animation")
 
-        val isSimulcasted = video.show.simulcast || video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX)?.let { Regex(it).containsMatchIn((video.show.summary.normalize() ?: StringUtils.EMPTY_STRING).lowercase()) } == true
+        val isSimulcasted =
+            video.show.simulcast || video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(
+                ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX
+            )?.let { Regex(it).containsMatchIn((video.show.summary ?: StringUtils.EMPTY_STRING).lowercase()) } == true
 
         if (needSimulcast && !(isConfigurationSimulcasted || isSimulcasted))
             throw AnimeNotSimulcastedException("Anime is not simulcasted")
@@ -136,15 +138,15 @@ class AnimationDigitalNetworkPlatform :
                     ImageType.CAROUSEL to video.show.fullHDCarousel,
                     ImageType.TITLE to video.show.fullHDTitle,
                 ),
-                animeDescription = video.show.summary.normalize(),
+                animeDescription = video.show.summary,
                 releaseDateTime = requireNotNull(video.releaseDate) { "Release date is null" },
                 episodeType = episodeType,
                 seasonId = video.season ?: "1",
                 season = season,
                 number = number,
                 duration = video.duration,
-                title = video.name.normalize(),
-                description = video.summary.normalize(),
+                title = video.name,
+                description = video.summary,
                 image = video.fullHDImage.takeIf { image -> image.contains("/video/") } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 platform = getPlatform(),
                 audioLocale = getAudioLocale(it),

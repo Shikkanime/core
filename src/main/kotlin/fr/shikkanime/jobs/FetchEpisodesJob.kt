@@ -8,11 +8,11 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
-import fr.shikkanime.platforms.AbstractPlatform
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MailService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.persistence.Tuple
 import kotlinx.coroutines.CoroutineDispatcher
@@ -46,6 +46,8 @@ class FetchEpisodesJob(
     @Volatile private var pendingSend: ScheduledFuture<*>? = null
 
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject
+    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
@@ -72,25 +74,25 @@ class FetchEpisodesJob(
         }
 
         val zonedDateTime = ZonedDateTime.now().withNano(0).withUTC()
-        val episodes = mutableListOf<AbstractPlatform.Episode>()
 
-        Constant.abstractPlatforms.sortedBy { it.getPlatform().sortIndex }
-            .forEach { abstractPlatform ->
+        val episodes = Constant.abstractPlatforms.sortedBy { it.getPlatform().sortIndex }
+            .flatMap { abstractPlatform ->
                 logger.info("Fetching episodes for ${abstractPlatform.getPlatform().name}...")
 
                 try {
-                    episodes.addAll(abstractPlatform.fetchEpisodes(zonedDateTime))
+                    abstractPlatform.fetchEpisodes(zonedDateTime)
                 } catch (e: Exception) {
                     logger.log(Level.SEVERE, "Error while fetching episodes for ${abstractPlatform.getPlatform().name}", e)
+                    emptyList()
                 }
-            }
+            }.filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) }
 
         if (episodes.isEmpty()) {
             isRunning = false
             return
         }
 
-        val identifiers = episodeVariantService.findAllIdentifiers()
+        val identifiers = episodeVariantCacheService.findAllIdentifiers()
 
         val savedEpisodes = episodes.asSequence()
             .sortedWith(
@@ -104,7 +106,7 @@ class FetchEpisodesJob(
                     { it.platform.sortIndex }
                 )
             )
-            .filter { zonedDateTime.isAfterOrEqual(it.releaseDateTime) && it.getIdentifier() !in identifiers }
+            .filter { it.getIdentifier() !in identifiers }
             .mapNotNull {
                 try {
                     val savedEpisode = episodeVariantService.save(

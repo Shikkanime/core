@@ -15,6 +15,11 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
+private val SEASON_REGEX = " Saison (\\d)".toRegex()
+private val TEASER_REGEX = "(teaser|pv|trailer)(?:-\\d)?".toRegex()
+private val SPECIAL_EPISODE_REGEX = "SP(\\d*)".toRegex()
+private val IDENTIFIER_REGEX = "(.+)\\|(.+)\\|(.+)".toRegex()
+
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<AbstractCrunchyrollWrapper.BrowseObject>>() {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
@@ -195,19 +200,18 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         browseObject: AbstractCrunchyrollWrapper.BrowseObject,
         needSimulcast: Boolean = true
     ): Episode {
-        val seasonRegex = " Saison (\\d)".toRegex()
         var animeName = browseObject.episodeMetadata!!.seriesTitle
         var forcedSeason: Int? = null
 
-        if (seasonRegex in animeName) {
-            forcedSeason = seasonRegex.find(animeName)!!.groupValues[1].toIntOrNull()
-            animeName = animeName.replace(seasonRegex, StringUtils.EMPTY_STRING)
+        if (SEASON_REGEX in animeName) {
+            forcedSeason = SEASON_REGEX.find(animeName)!!.groupValues[1].toIntOrNull()
+            animeName = animeName.replace(SEASON_REGEX, StringUtils.EMPTY_STRING)
         }
 
         if (isBlacklisted(animeName))
             throw AnimeException("\"$animeName\" is blacklisted")
 
-        val isTeaser = browseObject.slugTitle?.contains("(teaser|pv|trailer)(?:-\\d)?".toRegex()) == true ||
+        val isTeaser = browseObject.slugTitle?.contains(TEASER_REGEX) == true ||
                 browseObject.episodeMetadata.premiumAvailableDate.withUTCString() == "1970-01-01T00:00:00Z"
 
         if (isTeaser)
@@ -252,15 +256,15 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
                 ImageType.CAROUSEL to crunchyrollAnimeContent.fullHDCarousel,
                 ImageType.TITLE to crunchyrollAnimeContent.fullHDTitle,
             ),
-            animeDescription = crunchyrollAnimeContent.getNormalizedDescription().normalize(),
+            animeDescription = crunchyrollAnimeContent.getNormalizedDescription(),
             releaseDateTime = browseObject.episodeMetadata.premiumAvailableDate,
             episodeType = episodeType,
             seasonId = browseObject.episodeMetadata.seasonId,
             season = forcedSeason ?: (browseObject.episodeMetadata.seasonNumber ?: 1),
             number = number,
             duration = browseObject.episodeMetadata.durationMs / 1000,
-            title = browseObject.title.normalize(),
-            description = browseObject.description.normalize(),
+            title = browseObject.title,
+            description = browseObject.description,
             image = browseObject.images?.fullHDThumbnail?.takeIf { it !in configCacheService.getValueAsStringList(ConfigPropertyKey.CRUNCHYROLL_DEFAULT_IMAGES) } ?: Constant.DEFAULT_IMAGE_PREVIEW,
             platform = getPlatform(),
             audioLocale = browseObject.episodeMetadata.audioLocale,
@@ -286,7 +290,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
 
     private fun getNumberAndEpisodeType(episode: AbstractCrunchyrollWrapper.Episode): Pair<Int, EpisodeType> {
         var number = episode.number ?: -1
-        val specialEpisodeRegex = "SP(\\d*)".toRegex()
 
         var episodeType = when {
             episode.seasonSlugTitle?.contains("movie", true) == true ||
@@ -296,13 +299,13 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
             else -> EpisodeType.EPISODE
         }
 
-        specialEpisodeRegex.find(episode.numberString)?.groupValues?.get(1)?.toIntOrNull()?.let {
+        SPECIAL_EPISODE_REGEX.find(episode.numberString)?.groupValues?.get(1)?.toIntOrNull()?.let {
             episodeType = EpisodeType.SPECIAL
             number = it
         }
 
         episode.identifier?.let { identifier ->
-            "(.+)\\|(.+)\\|(.+)".toRegex().find(identifier)?.groupValues?.get(2)?.let {
+            IDENTIFIER_REGEX.find(identifier)?.groupValues?.get(2)?.let {
                 if (it == "OAD") episodeType = EpisodeType.SPECIAL
             }
         }

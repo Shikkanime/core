@@ -7,7 +7,6 @@ import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.normalize
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -103,8 +102,8 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                                 seasonId,
                                 visualsObject.getAsInt("seasonNumber")!!,
                                 visualsObject.getAsInt("episodeNumber") ?: -1,
-                                visualsObject.getAsString("episodeTitle")?.normalize(),
-                                visualsObject.getAsJsonObject("description")?.getAsString("medium")?.normalize(),
+                                visualsObject.getAsString("episodeTitle"),
+                                visualsObject.getAsJsonObject("description")?.getAsString("medium"),
                                 "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id",
                                 getImageUrl(visualsObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!.getAsJsonObject("thumbnail")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
                                 duration,
