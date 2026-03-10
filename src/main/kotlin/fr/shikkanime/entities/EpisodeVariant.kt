@@ -45,4 +45,6 @@ class EpisodeVariant(
     var url: String? = null,
     @Column(nullable = false)
     var uncensored: Boolean = false,
+    @Column(nullable = false)
+    var available: Boolean = true,
 ) : ShikkEntity(uuid)

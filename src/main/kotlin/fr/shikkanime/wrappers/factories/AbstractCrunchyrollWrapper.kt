@@ -290,6 +290,66 @@ abstract class AbstractCrunchyrollWrapper {
     abstract suspend fun getEpisodesBySeriesId(locale: String, id: String, original: Boolean? = null): Array<BrowseObject>
     abstract suspend fun getSimulcasts(locale: String): Array<Simulcast>
 
+    suspend fun retrievePreviousEpisode(locale: String, id: String): BrowseObject? {
+        // Attempt to fetch the previous episode directly
+        runCatching { getEpisodeDiscoverByType(locale, "previous_episode", id) }
+            .getOrNull()
+            ?.let { return it }
+
+        val episode = runCatching { getEpisode(locale, id) }.getOrNull() ?: return null
+
+        // Fetch episodes by season and find the previous episode
+        runCatching { getEpisodesBySeasonId(locale, episode.seasonId) }
+            .getOrNull()
+            ?.sortedBy { it.sequenceNumber }
+            ?.firstOrNull { it.sequenceNumber < episode.sequenceNumber }
+            ?.let { return it.convertToBrowseObject() }
+
+        // Fetch episodes by series and find the previous episode
+        runCatching { getEpisodesBySeriesId(locale, episode.seriesId) }
+            .getOrNull()
+            ?.sortedWith(
+                compareBy(
+                    { it.episodeMetadata!!.seasonSequenceNumber },
+                    { it.episodeMetadata!!.sequenceNumber })
+            )
+            ?.lastOrNull { it.episodeMetadata!!.index() < episode.index() }
+            ?.let { return it }
+
+        return null
+    }
+
+    suspend fun retrieveNextEpisode(locale: String, id: String): BrowseObject? {
+        // Attempt to fetch the next episode directly
+        runCatching { getEpisodeDiscoverByType(locale, "up_next", id) }
+            .getOrNull()
+            ?.let { return it }
+
+        // Fetch the current episode and check for nextEpisodeId
+        val episode = runCatching { getEpisode(locale, id) }.getOrNull() ?: return null
+        episode.nextEpisodeId?.let { return getObjects(locale, it).firstOrNull() }
+
+        // Fetch episodes by season and find the next episode
+        runCatching { getEpisodesBySeasonId(locale, episode.seasonId) }
+            .getOrNull()
+            ?.sortedBy { it.sequenceNumber }
+            ?.firstOrNull { it.sequenceNumber > episode.sequenceNumber }
+            ?.let { return it.convertToBrowseObject() }
+
+        // Fetch episodes by series and find the next episode
+        runCatching { getEpisodesBySeriesId(locale, episode.seriesId) }
+            .getOrNull()
+            ?.sortedWith(
+                compareBy(
+                    { it.episodeMetadata!!.seasonSequenceNumber },
+                    { it.episodeMetadata!!.sequenceNumber })
+            )
+            ?.firstOrNull { it.episodeMetadata!!.index() > episode.index() }
+            ?.let { return it }
+
+        return null
+    }
+
     fun buildUrl(countryCode: CountryCode, id: String, slugTitle: String?) =
         "${baseUrl}${countryCode.name.lowercase()}/watch/$id/${slugTitle ?: StringUtils.EMPTY_STRING}"
 
