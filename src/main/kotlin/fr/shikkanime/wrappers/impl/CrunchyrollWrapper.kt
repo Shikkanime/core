@@ -58,8 +58,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     ): Array<Episode> {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/seasons/$id/episodes?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get episodes by season id (${response.status.value})" }
-        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get episodes by season id")
-        return ObjectParser.fromJson(asJsonArray, Array<Episode>::class.java)
+        return response.body<CrunchyrollResponse<Episode>>().data.toTypedArray()
     }
 
     @JvmStatic
@@ -85,8 +84,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     ): BrowseObject {
         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/$type/$id?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get $type episode (${response.status.value})" }
-        val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get $type episode")
-        return ObjectParser.fromJson(asJsonArray.first().asJsonObject["panel"].asJsonObject, BrowseObject::class.java)
+        return response.body<CrunchyrollResponse<Playhead>>().data.first().panel
     }
 
     @JvmStatic

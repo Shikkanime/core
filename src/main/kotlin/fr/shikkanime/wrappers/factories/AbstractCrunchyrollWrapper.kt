@@ -21,6 +21,11 @@ abstract class AbstractCrunchyrollWrapper {
         val data: List<T>
     )
 
+    @kotlinx.serialization.Serializable
+    data class Playhead(
+        val panel: BrowseObject
+    )
+
     enum class SortType {
         NEWLY_ADDED,
         POPULARITY,
