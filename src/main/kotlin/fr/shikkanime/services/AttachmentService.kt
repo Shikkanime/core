@@ -9,8 +9,6 @@ import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
@@ -20,7 +18,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
-import javax.imageio.ImageIO
 import kotlin.system.measureTimeMillis
 
 private const val FAILED_TO_ENCODE_MESSAGE = "Failed to encode image to WebP"
@@ -228,8 +225,11 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
                     return@measureTimeMillis
                 }
 
-                val resized = ImageIO.read(ByteArrayInputStream(bytes)).resize(attachment.type!!.width, attachment.type!!.height)
-                val webp = FileManager.convertToWebP(ByteArrayOutputStream().apply { ImageIO.write(resized, "png", this) }.toByteArray())
+                val webp = FileManager.convertToWebP(
+                    bytes,
+                    attachment.type!!.width,
+                    attachment.type!!.height
+                )
 
                 if (webp.isEmpty()) {
                     logger.warning(FAILED_TO_ENCODE_MESSAGE)

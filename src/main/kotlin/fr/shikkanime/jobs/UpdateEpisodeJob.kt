@@ -46,10 +46,8 @@ class UpdateEpisodeJob : AbstractJob {
     private lateinit var traceActionService: TraceActionService
     @Inject
     private lateinit var animePlatformService: AnimePlatformService
-
     @Inject
     private lateinit var mailService: MailService
-
     @Inject
     private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
     @Inject
@@ -58,7 +56,6 @@ class UpdateEpisodeJob : AbstractJob {
     private lateinit var disneyPlusPlatform: DisneyPlusPlatform
     @Inject
     private lateinit var netflixPlatform: NetflixPlatform
-
     @Inject
     private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
@@ -66,14 +63,14 @@ class UpdateEpisodeJob : AbstractJob {
         identifier: String,
         fieldName: String,
         candidate: T?,
-        current: T?,
-        isValid: (T?) -> Boolean,
+        current: T,
+        isValid: (T) -> Boolean,
         apply: (T) -> Unit
     ) {
-        if (!(isValid(candidate) && candidate != current))
+        if (candidate == null || !(isValid(candidate) && candidate != current))
             return
 
-        apply(candidate as T)
+        apply(candidate)
         logger.info("Updating $fieldName for $identifier to $candidate")
     }
 
@@ -177,7 +174,7 @@ class UpdateEpisodeJob : AbstractJob {
                     fieldName = "available",
                     candidate = true,
                     current = episodeVariant.available,
-                    isValid = { it != null },
+                    isValid = { true },
                     apply = { episodeVariant.available = it; hasChanged = true; needInvalidation = true }
                 )
 
@@ -235,7 +232,7 @@ class UpdateEpisodeJob : AbstractJob {
                 fieldName = "duration",
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull(AbstractPlatform.Episode::duration),
                 current = episodeMapping.duration,
-                isValid = { it != null && it > 0 },
+                isValid = { it > 0 },
                 apply = { episodeMapping.duration = it; hasChanged = true; needInvalidation = true }
             )
 

@@ -1,10 +1,11 @@
 package fr.shikkanime.utils
 
 import java.io.BufferedInputStream
-import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.concurrent.thread
+import kotlin.math.max
 
 object FileManager {
     private const val WEBP_QUALITY = 75
@@ -27,55 +28,45 @@ object FileManager {
         }
     }
 
-    fun convertToWebP(image: ByteArray): ByteArray {
-        if (!isWebPAvailable()) {
-            throw Exception("cwebp command not found or not available")
-        }
+    fun convertToWebP(image: ByteArray, width: Int, height: Int): ByteArray {
+        require(isWebPAvailable()) { "cwebp command not found or not available" }
 
-        // Create a temporary file for the input image
-        val tempInputFile = File.createTempFile("input_", ".png")
-        val tempOutputFile = File.createTempFile("output_", ".webp")
-        
         try {
-            // Write input image to temporary file
-            tempInputFile.writeBytes(image)
-            
-            // Build the command to convert image using cwebp
+            val safeHeight = max(0, height)
+
             val processBuilder = ProcessBuilder(
                 "cwebp",
                 "-q", "$WEBP_QUALITY",
-                tempInputFile.absolutePath,
-                "-o", tempOutputFile.absolutePath
+                "-resize", width.toString(), safeHeight.toString(),
+                "-o", "-",
+                "--",
+                "-"
             )
-            
-            // Start the process
+
             val process = processBuilder.start()
-            
-            // Wait for the process to complete with a timeout
+
+            thread {
+                runCatching { process.outputStream.use { it.write(image) } }
+            }
+
+            val webpBytes = process.inputStream.readAllBytes()
+            val error = process.errorStream.bufferedReader().readText()
+
             val completed = process.waitFor(MAX_PROCESS_TIME, TimeUnit.SECONDS)
-            
+
             if (!completed) {
                 process.destroyForcibly()
                 throw Exception("Image conversion timed out")
             }
-            
+
             if (process.exitValue() != 0) {
-                val error = process.errorStream.bufferedReader().readText()
                 throw Exception("Image conversion failed: $error")
             }
-            
-            // Read the converted image
-            return tempOutputFile.readBytes()
+
+            return webpBytes
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Failed to convert image to WebP", e)
             throw e
-        } finally {
-            // Clean up temporary files
-            if (!tempInputFile.delete())
-                logger.warning("Failed to delete temporary input file: ${tempInputFile.absolutePath}")
-
-            if(!tempOutputFile.delete())
-                logger.warning("Failed to delete temporary output file: ${tempOutputFile.absolutePath}")
         }
     }
 

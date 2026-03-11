@@ -58,7 +58,7 @@ class AttachmentServiceTest : AbstractTest() {
             client.get("/api/v1/attachments?uuid=${uuid}&type=${ImageType.BANNER}").apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val byteArrayOutputStream = ByteArrayOutputStream()
-                runBlocking { bodyAsChannel().copyTo(byteArrayOutputStream) }
+                bodyAsChannel().copyTo(byteArrayOutputStream)
                 val image = byteArrayOutputStream.toByteArray()
                 assertTrue(image.isNotEmpty())
             }
