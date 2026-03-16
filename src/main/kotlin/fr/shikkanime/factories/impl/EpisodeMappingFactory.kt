@@ -1,10 +1,13 @@
 package fr.shikkanime.factories.impl
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
+import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.factories.IEpisodeMappingFactory
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
+import fr.shikkanime.utils.onTrue
 import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
 
@@ -13,16 +16,16 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var episodeSourceFactory: EpisodeSourceFactory
 
-    override fun toDto(
+    fun toDto(
         entity: EpisodeMapping,
-        useAnime: Boolean
+        animeDto: AnimeDto?,
+        variants: List<EpisodeVariantDto>
     ): EpisodeMappingDto {
-        val variants = episodeVariantCacheService.findAllByMapping(entity)
         val countryCode = entity.anime!!.countryCode!!
 
         return EpisodeMappingDto(
             uuid = entity.uuid!!,
-            anime = animeFactory.takeIf { useAnime }?.toDto(entity.anime!!),
+            anime = animeDto,
             releaseDateTime = entity.releaseDateTime.withUTCString(),
             lastReleaseDateTime = entity.lastReleaseDateTime.withUTCString(),
             lastUpdateDateTime = entity.lastUpdateDateTime.withUTCString(),
@@ -36,4 +39,13 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
             sources = variants.map { episodeSourceFactory.toDto(countryCode, it) }.toTreeSet(),
         )
     }
+
+    override fun toDto(
+        entity: EpisodeMapping,
+        useAnime: Boolean
+    ) = toDto(
+        entity,
+        useAnime.onTrue { animeFactory.toDto(entity.anime!!) },
+        episodeVariantCacheService.findAllByMapping(entity).toList()
+    )
 }

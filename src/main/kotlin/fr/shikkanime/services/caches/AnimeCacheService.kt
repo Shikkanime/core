@@ -17,7 +17,6 @@ import fr.shikkanime.factories.impl.SeasonFactory
 import fr.shikkanime.services.AnimeService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
-import fr.shikkanime.utils.SerializationUtils
 import fr.shikkanime.utils.StringUtils
 import java.time.LocalDate
 import java.util.*
@@ -86,7 +85,6 @@ class AnimeCacheService : ICacheService {
         "AnimeCacheService.getAudioLocales",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
-        serializationType = SerializationUtils.SerializationType.JSON,
         key = animeUuid,
     ) { uuid -> animeService.findAllAudioLocales(uuid).distinct().toTypedArray() }
 
@@ -94,7 +92,6 @@ class AnimeCacheService : ICacheService {
         "AnimeCacheService.getLangTypes",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<LangType>>>() {},
-        serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.countryCode!! to anime.uuid!!,
     ) { (countryCode, uuid) -> getAudioLocales(uuid).map { LangType.fromAudioLocale(countryCode, it) }.sorted().toTypedArray() }
 
@@ -102,7 +99,6 @@ class AnimeCacheService : ICacheService {
         "AnimeCacheService.findAllSeasons",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<SeasonDto>>>() {},
-        serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.uuid!!,
     ) { uuid -> animeService.findAllSeasons(uuid).map(seasonFactory::toDto).toTypedArray() }
 
@@ -125,7 +121,6 @@ class AnimeCacheService : ICacheService {
             "AnimeCacheService.getWeeklyAnimes",
             classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, MemberFollowAnime::class.java),
             typeToken = object : TypeToken<MapCacheValue<Array<WeeklyAnimesDto>>>() {},
-            serializationType = SerializationUtils.SerializationType.JSON,
             key = CountryCodeLocalDateKeyCache(countryCode, memberUuid, startOfWeekDay, searchTypes),
         ) {
             animeService.getWeeklyAnimes(

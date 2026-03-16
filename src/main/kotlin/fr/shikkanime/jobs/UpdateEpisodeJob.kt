@@ -387,13 +387,14 @@ class UpdateEpisodeJob : AbstractJob {
         episode.episodeMetadata.versions
             ?.filter { it.guid != episode.id && it.audioLocale in allowedAudioLocales }
             ?.distinct()
-            ?.chunked(AbstractCrunchyrollWrapper.CRUNCHYROLL_CHUNK)
-            ?.flatMap { chunk ->
-                CrunchyrollCachedWrapper.getObjects(
-                    context.countryCode.locale,
-                    *chunk.map(AbstractCrunchyrollWrapper.Version::guid).toTypedArray()
+            ?.let {
+                variantObjects.addAll(
+                    CrunchyrollCachedWrapper.getObjects(
+                        context.countryCode.locale,
+                        *it.map(AbstractCrunchyrollWrapper.Version::guid).toTypedArray()
+                    )
                 )
-            }?.let(variantObjects::addAll)
+            }
 
         context.platformEpisodes.addAll(
             variantObjects.mapNotNull {
