@@ -173,7 +173,8 @@ class SiteController {
         val episodeNumber = match.groupValues[2].toInt()
 
         val (previousDto, currentDto, nextDto) = episodeMappingCacheService.findPreviousAndNextBy(
-            dto.uuid!!,
+            dto.countryCode,
+            dto.slug,
             season,
             episodeType,
             episodeNumber

@@ -24,6 +24,8 @@ import java.util.*
 class EpisodeMappingCacheService : ICacheService {
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
+    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -60,7 +62,8 @@ class EpisodeMappingCacheService : ICacheService {
     ) { episodeMappingService.findAllSeo().toTypedArray() }
 
     fun findPreviousAndNextBy(
-        animeUuid: UUID,
+        countryCode: CountryCode,
+        animeSlug: String,
         season: Int,
         episodeType: EpisodeType,
         number: Int
@@ -69,16 +72,18 @@ class EpisodeMappingCacheService : ICacheService {
         classes = listOf(EpisodeMapping::class.java),
         typeToken = object : TypeToken<MapCacheValue<HashMap<SeasonEpisodeTypeNumberKeyCache, Triple<EpisodeMappingDto?, EpisodeMappingDto, EpisodeMappingDto?>>>>() {},
         serializationType = SerializationUtils.SerializationType.OBJECT,
-        key = animeUuid,
-    ) {
-        val result = episodeMappingService.findAllByAnime(it)
+        key = countryCode to animeSlug,
+    ) { (countryCode, animeSlug) ->
+        val animeDto = animeCacheService.findBySlug(countryCode, animeSlug) ?: return@getOrCompute HashMap()
+        val episodeMappings = episodeMappingService.findAllByAnime(animeDto.uuid!!)
+        val episodeVariants = episodeVariantCacheService.findAllByAnime(animeDto.uuid)
 
         HashMap(
-            result.mapIndexed { index, current ->
+            episodeMappings.mapIndexed { index, current ->
                 SeasonEpisodeTypeNumberKeyCache(current.season!!, current.episodeType!!, current.number!!) to Triple(
-                    result.getOrNull(index - 1)?.let(episodeMappingFactory::toDto),
-                    episodeMappingFactory.toDto(current),
-                    result.getOrNull(index + 1)?.let(episodeMappingFactory::toDto)
+                    episodeMappings.getOrNull(index - 1)?.let { episodeMappingFactory.toDto(it, animeDto, episodeVariants[it.uuid!!] ?: emptyList()) },
+                    episodeMappingFactory.toDto(current, animeDto, episodeVariants[current.uuid!!] ?: emptyList()),
+                    episodeMappings.getOrNull(index + 1)?.let { episodeMappingFactory.toDto(it, animeDto, episodeVariants[it.uuid!!] ?: emptyList()) },
                 )
             }.toMap()
         )

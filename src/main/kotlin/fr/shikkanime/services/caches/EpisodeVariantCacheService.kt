@@ -13,7 +13,6 @@ import fr.shikkanime.factories.impl.EpisodeVariantFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
-import fr.shikkanime.utils.SerializationUtils
 import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.util.*
@@ -22,11 +21,23 @@ class EpisodeVariantCacheService : ICacheService {
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var episodeVariantFactory: EpisodeVariantFactory
 
+    fun findAllByAnime(animeUuid: UUID) = MapCache.getOrCompute(
+        "EpisodeVariantCacheService.findAllByAnime",
+        classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
+        typeToken = object : TypeToken<MapCacheValue<HashMap<UUID, List<EpisodeVariantDto>>>>() {},
+        key = animeUuid,
+    ) { uuid ->
+        HashMap(
+            episodeVariantService.findAllByAnime(uuid)
+                .groupBy { it.mapping!!.uuid!! }
+                .mapValues { (_, variants) -> variants.map { episodeVariantFactory.toDto(it, false) } }
+        )
+    }
+
     fun findAllByMapping(episodeMapping: EpisodeMapping) = MapCache.getOrCompute(
         "EpisodeVariantCacheService.findAllByMapping",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<EpisodeVariantDto>>>() {},
-        serializationType = SerializationUtils.SerializationType.JSON,
         key = episodeMapping.uuid!!,
     ) { uuid -> episodeVariantService.findAllByMapping(uuid).map { episodeVariantFactory.toDto(it, false) }.toTypedArray() }
 
