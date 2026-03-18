@@ -119,6 +119,7 @@ abstract class AbstractDisneyPlusWrapper {
     protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}"))
     protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}").plus(headers), body = body)
 
+    abstract suspend fun getLatestShowIds(): Array<String>
     abstract suspend fun getShow(id: String): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, showId: String, checkAudioLocales: Boolean): Array<Episode>
     abstract suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String): Array<String>

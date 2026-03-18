@@ -23,7 +23,12 @@ class PrimeVideoPlatform :
         key: CountryCodePrimeVideoSimulcastKeyCache,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
-        val episodes = HttpRequest.retry(3) { PrimeVideoWrapper.getEpisodesByShowId(key.countryCode, key.primeVideoSimulcast.name) }
+        val episodes = HttpRequest.retryOnTimeout(3) {
+            PrimeVideoWrapper.getEpisodesByShowId(
+                key.countryCode,
+                key.primeVideoSimulcast.name
+            )
+        }
 
         return episodes.flatMap {
             try {

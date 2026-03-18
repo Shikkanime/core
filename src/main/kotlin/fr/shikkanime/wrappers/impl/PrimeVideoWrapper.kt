@@ -19,7 +19,11 @@ import java.nio.charset.StandardCharsets
 object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
     override suspend fun getShow(locale: String, id: String): Show {
         // Make API request
-        val globalJson = fetchPrimeVideoData("$baseUrl/-/${locale.lowercase().substringAfterLast("-")}/detail/$id/ref=atv_sr_fle_c_sre999aa_1_1_1", locale)
+        val globalJson = fetchPrimeVideoData(
+            "$baseUrl/-/${
+                locale.lowercase().substringAfterLast("-")
+            }/detail/$id/ref=atv_sr_fle_c_Tn74RA_1_1_1", locale
+        )
 
         // Extract show data
         val atfState = globalJson.getAsJsonObject("atf").getAsJsonObject("state")
@@ -188,11 +192,11 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = httpRequest.get(
-            "$url?dvWebSPAClientVersion=1.0.111788.0",
+            "$url?dvWebAppClientVersion=1.0.120753.0",
             headers = mapOf(
                 "Accept" to ContentType.Application.Json.toString(),
                 HttpHeaders.Cookie to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
-                "x-requested-with" to "WebSPA"
+                "x-requested-with" to "WebAppSPA"
             )
         )
         
@@ -201,9 +205,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         }
         
         return ObjectParser.fromJson(response.bodyAsText())
-            .getAsJsonArray("page")[0].asJsonObject
-            .getAsJsonObject("assembly").getAsJsonArray("body")[0].asJsonObject
-            .getAsJsonObject("props") ?: throw Exception("Failed to parse response")
+            .getAsJsonObject("body") ?: throw Exception("Failed to parse response")
     }
 
     private suspend fun loadMoreData(id: String, token: String): JsonObject {
