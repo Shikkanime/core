@@ -7,8 +7,6 @@ import fr.shikkanime.exceptions.AnimeNotSimulcastedException
 import fr.shikkanime.exceptions.NotSimulcastedMediaException
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration
 import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.AnimePlatformCacheService
-import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
@@ -27,9 +25,7 @@ private const val SHOW_TYPE_OAV = "OAV"
 
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
-    @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var animeCacheService: AnimeCacheService
-    @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
 
     override fun getPlatform(): Platform = Platform.ANIM
 

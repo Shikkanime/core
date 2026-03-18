@@ -5,7 +5,6 @@ import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.*
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
 import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
@@ -21,7 +20,6 @@ private val SPECIAL_EPISODE_REGEX = "SP(\\d*)".toRegex()
 private val IDENTIFIER_REGEX = "(.+)\\|(.+)\\|(.+)".toRegex()
 
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<AbstractCrunchyrollWrapper.BrowseObject>>() {
-    @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var animeCacheService: AnimeCacheService
 

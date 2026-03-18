@@ -1,10 +1,13 @@
 package fr.shikkanime.platforms
 
+import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformConfiguration
+import fr.shikkanime.services.caches.AnimePlatformCacheService
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import java.io.File
 import java.time.ZonedDateTime
@@ -43,9 +46,17 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val hasError: Boolean
     )
 
+    @Inject
+    protected lateinit var configCacheService: ConfigCacheService
+    @Inject
+    protected lateinit var animePlatformCacheService: AnimePlatformCacheService
+
     val logger = LoggerFactory.getLogger(javaClass)
     var configuration: C? = null
     val apiCache = mutableMapOf<K, CacheEntry<V>>()
+
+    private var lastLatestShowsFetch: ZonedDateTime? = null
+    private var hasLatestShowsFetchError = false
 
     protected fun isBlacklisted(name: String): Boolean {
         val shortName = StringUtils.getShortName(name)
@@ -67,6 +78,16 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val delayMinutes = configuration!!.apiCheckDelayInMinutes
 
         if (cacheEntry.hasError || cacheEntry.cachedValue == null || delayMinutes <= 0) {
+            return true
+        }
+
+        return currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0
+    }
+
+    private fun shouldFetchLatestShows(currentTime: ZonedDateTime): Boolean {
+        val delayMinutes = configuration!!.apiCheckDelayInMinutes
+
+        if (lastLatestShowsFetch == null || hasLatestShowsFetchError || delayMinutes <= 0) {
             return true
         }
 
@@ -101,6 +122,23 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
 
         // On retourne la valeur en cache
         return apiCache[key]?.cachedValue ?: throw IllegalStateException("Cache entry for key $key should not be null here")
+    }
+
+    suspend fun getLatestShows(currentTime: ZonedDateTime, block: suspend () -> Unit) {
+        if (shouldFetchLatestShows(currentTime)) {
+            runCatching { block() }
+                .fold(
+                    onSuccess = { fetchResult ->
+                        lastLatestShowsFetch = currentTime
+                        hasLatestShowsFetchError = false
+                        fetchResult
+                    },
+                    onFailure = { exception ->
+                        hasLatestShowsFetchError = true
+                        logger.warning("Error fetching latest shows for ${getPlatform().name}: ${exception.message}")
+                    }
+                )
+        }
     }
 
     fun loadConfiguration(): C {

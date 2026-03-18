@@ -77,6 +77,40 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
+    override suspend fun getLatestShows(listIds: List<String>): Array<LatestShow> {
+        val netflixAuthentification = getNetflixAuthentificationFromConfig()
+        val response = httpRequest.post(
+            "$baseUrl/nq/website/memberapi/release/pathEvaluator?original_path=%2Fshakti%2Fmre%2FpathEvaluator",
+            mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
+            FormDataContent(
+                parametersOf(
+                    "path" to listIds.map { "[\"lists\",\"$it\",{\"from\":0,\"to\":7},[\"itemSummary\"]]" },
+                    "authURL" to listOf(netflixAuthentification.authUrl),
+                )
+            )
+        )
+        require(response.status == HttpStatusCode.OK) { "Failed to get latest shows (${response.status.value} - ${response.bodyAsText()})" }
+        val listObjects = ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonObject("jsonGraph")
+            .getAsJsonObject("lists")
+
+        return listIds.flatMap { listId ->
+            listObjects.getAsJsonObject(listId)
+                .entrySet()
+                .mapNotNull { (_, jsonElement) ->
+                    val valueObject = jsonElement.asJsonObject
+                        .getAsJsonObject("itemSummary")
+                        .getAsJsonObject("value")
+
+                    LatestShow(
+                        id = requireNotNull(valueObject.getAsInt("id")) { "Missing id for latest show in list $listId" },
+                        title = requireNotNull(valueObject.getAsString("title")) { "Missing title for latest show in list $listId" },
+                        isPlayable = valueObject.getAsJsonObject("availability").getAsBoolean("isPlayable") ?: false,
+                    )
+                }
+        }.toTypedArray()
+    }
+
     override suspend fun getShow(locale: String, id: Int): Show {
         val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "DetailModal",
@@ -102,7 +136,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )))
         require(response.status == HttpStatusCode.OK) { "Failed to get show (${response.status.value} - ${response.bodyAsText()})" }
         val showJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("data")?.getAsJsonArray("unifiedEntities")?.get(0)?.asJsonObject ?: throw Exception("Failed to get show")
-        val metadata = runCatching { getMetadata(id) }.getOrNull()
+        val isAvailable = showJson.getAsBoolean("isAvailable") ?: false
+        val metadata = if (isAvailable) runCatching { getMetadata(id) }.getOrNull() else null
 
         return Show(
             id,
@@ -114,8 +149,10 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text"),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
             showJson.getAsString("availabilityStartTime")?.let(ZonedDateTime::parse),
-            showJson.getAsBoolean("isAvailable") ?: false,
+            isAvailable,
             showJson.getAsBoolean("isPlayable") ?: false,
+            showJson.getAsJsonObject("genreTags").getAsJsonArray("edges")
+                .mapNotNull { it.asJsonObject.getAsJsonObject("node").getAsString("name") },
             showJson.getAsInt("runtimeSec")?.toLong(),
             metadata,
             showJson

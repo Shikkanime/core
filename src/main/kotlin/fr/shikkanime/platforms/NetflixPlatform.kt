@@ -1,14 +1,19 @@
 package fr.shikkanime.platforms
 
 import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.dtos.AnimePlatformDto
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.NetflixConfiguration
+import fr.shikkanime.platforms.configuration.ReleaseDayPlatformSimulcast
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
+import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import java.io.File
 import java.time.ZonedDateTime
+import java.util.*
 
 class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.NETF
@@ -21,9 +26,64 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleas
     ) = NetflixWrapper.getEpisodesByShowId(key.countryCode, key.releaseDayPlatformSimulcast.name.toInt())
         .flatMap { video -> convertEpisode(key.countryCode, video) }
 
-    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
-        configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }
-            .flatMap { simulcast -> getApiContent(CountryCodeReleaseDayPlatformSimulcastKeyCache(countryCode, simulcast), zonedDateTime) }
+    override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
+        val list = mutableListOf<Episode>()
+
+        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.NETFLIX_FETCH_LATEST_SHOWS)) {
+            val listIds = configCacheService.getValueAsStringList(ConfigPropertyKey.NETFLIX_LATEST_SHOWS_LIST_IDS)
+
+            if (listIds.isNotEmpty()) {
+                getLatestShows(zonedDateTime) {
+                    val configurationShowIds = configuration!!.simulcasts.map(ReleaseDayPlatformSimulcast::name)
+                    val databaseShowIds =
+                        animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
+                    val showIds = (configurationShowIds + databaseShowIds).distinct()
+
+                    NetflixWrapper.getLatestShows(listIds)
+                        .filter { show -> !showIds.contains(show.id.toString()) }
+                        .flatMap { show ->
+                            configuration!!.availableCountries.map { countryCode ->
+                                NetflixCachedWrapper.getShow(
+                                    countryCode.locale,
+                                    show.id
+                                )
+                            }
+                        }
+                        .filter {
+                            it.availabilityStartTime != null && it.genres.contains("Japonais")
+                                    && it.genres.any { genre -> genre.contains("Anime") }
+                        }
+                        .forEach { show ->
+                            val newSimulcast = configuration!!.newPlatformSimulcast()
+                            newSimulcast.uuid = UUID.randomUUID()
+                            newSimulcast.name = show.id.toString()
+                            newSimulcast.releaseDay = show.availabilityStartTime!!.dayOfWeek.value
+
+                            if (configuration!!.addPlatformSimulcast(newSimulcast)) {
+                                saveConfiguration()
+                                reset()
+                                logger.info("Added new simulcast for show $show")
+                            }
+                        }
+                }
+            }
+        }
+
+        configuration!!.availableCountries.forEach { countryCode ->
+            configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }
+                .forEach { simulcast ->
+                    list.addAll(
+                        getApiContent(
+                            CountryCodeReleaseDayPlatformSimulcastKeyCache(
+                                countryCode,
+                                simulcast
+                            ), zonedDateTime
+                        )
+                    )
+                }
+        }
+
+        return list
     }
 
 
