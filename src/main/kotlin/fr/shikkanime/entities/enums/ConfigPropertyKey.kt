@@ -72,5 +72,6 @@ enum class ConfigPropertyKey(val key: String) {
     UPDATE_EPISODE_DELAY_OTHERS("update_episode_delay_others"),
     DELAY_BEFORE_SENDING_EPISODES_TO_NETWORKS("delay_before_sending_episodes_to_networks"),
     ANILIST_SIMULCAST_MATCHING_SIZE("anilist_simulcast_matching_size"),
-    PREDICT_FUTURE_EPISODES_WEEKS("predict_future_episodes_weeks")
+    PREDICT_FUTURE_EPISODES_WEEKS("predict_future_episodes_weeks"),
+    DISNEY_PLUS_FETCH_LATEST_SHOWS("disney_plus_fetch_latest_shows"),
 }

@@ -2,16 +2,21 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
+import fr.shikkanime.platforms.configuration.ReleaseDayPlatformSimulcast
+import fr.shikkanime.services.caches.AnimePlatformCacheService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
 import java.io.File
 import java.time.ZonedDateTime
+import java.util.UUID
 
 class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
 
     override fun getPlatform(): Platform = Platform.DISN
 
@@ -38,6 +43,26 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
+
+        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.DISNEY_PLUS_FETCH_LATEST_SHOWS)) {
+            val configurationShowIds = configuration!!.simulcasts.map(ReleaseDayPlatformSimulcast::name)
+            val databaseShowIds = animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
+            val showIds = (configurationShowIds + databaseShowIds).distinct()
+
+            DisneyPlusWrapper.getLatestShowIds().filter { showId -> !showIds.contains(showId) }
+                .forEach { showId ->
+                    val newSimulcast = configuration!!.newPlatformSimulcast()
+                    newSimulcast.uuid = UUID.randomUUID()
+                    newSimulcast.name = showId
+                    newSimulcast.releaseDay = zonedDateTime.dayOfWeek.value
+
+                    if (configuration!!.addPlatformSimulcast(newSimulcast)) {
+                        saveConfiguration()
+                        reset()
+                        logger.info("Added new simulcast for show $showId")
+                    }
+                }
+        }
 
         configuration!!.availableCountries.forEach { countryCode ->
             configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }

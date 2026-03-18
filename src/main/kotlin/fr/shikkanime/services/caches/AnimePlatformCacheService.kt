@@ -10,7 +10,6 @@ import fr.shikkanime.factories.impl.AnimePlatformFactory
 import fr.shikkanime.services.AnimePlatformService
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
-import fr.shikkanime.utils.SerializationUtils
 import java.util.*
 
 class AnimePlatformCacheService : ICacheService {
@@ -21,9 +20,15 @@ class AnimePlatformCacheService : ICacheService {
         "AnimePlatformCacheService.findAllByAnime",
         classes = listOf(Anime::class.java, AnimePlatform::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
-        serializationType = SerializationUtils.SerializationType.JSON,
         key = anime.uuid!!,
     ) { uuid -> animePlatformService.findAllByAnime(uuid).map(animePlatformFactory::toDto).toTypedArray() }
+
+    fun findAllByPlatform(platform: Platform) = MapCache.getOrCompute(
+        "AnimePlatformCacheService.findAllByPlatform",
+        classes = listOf(AnimePlatform::class.java),
+        typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
+        key = platform,
+    ) { platform -> animePlatformService.findAllByPlatform(platform).map(animePlatformFactory::toDto).toTypedArray() }
 
     fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) = MapCache.getOrCompute(
         "AnimePlatformCacheService.findAllIdByAnimeAndPlatform",

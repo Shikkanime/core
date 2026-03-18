@@ -13,8 +13,26 @@ import io.ktor.http.*
 import java.util.*
 
 object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
+    private const val API_VERSION = "v1.15"
+
+    override suspend fun getLatestShowIds(): Array<String> {
+        val response = httpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/set/c6cc13eb-14ad-42fd-82b4-6d959032996c?limit=5&offset=0&pageId=00ef9b51-0ed0-4883-b1e4-fd5a075c7f54")
+        require(response.status == HttpStatusCode.OK) { "Failed to fetch latest show ids (${response.status.value})" }
+        return ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonObject("data")
+            .getAsJsonObject("set")
+            .getAsJsonArray("items")
+            .asSequence()
+            .map { it.asJsonObject }
+            .filter { it.getAsString("type") == "view" }
+            .map { it.getAsString("id")!! }
+            .distinct()
+            .toList()
+            .toTypedArray()
+    }
+
     override suspend fun getShow(id: String): Show {
-        val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.10/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
+        val response = httpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
         require(response.status == HttpStatusCode.OK) { "Failed to fetch show (${response.status.value})" }
         val jsonObject = ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("data")
@@ -70,7 +88,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             var hasMore: Boolean
 
             do {
-                val response = httpRequest.getWithAccessToken("${baseUrl}explore/v1.10/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}")
+                val response = httpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}")
                 require(response.status == HttpStatusCode.OK) { "Failed to fetch episodes (${response.status.value})" }
 
                 val jsonObject = ObjectParser.fromJson(response.bodyAsText())

@@ -23,6 +23,19 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         }
     }
 
+    fun findAllByPlatform(platform: Platform): List<AnimePlatform> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(cb.equal(root[AnimePlatform_.platform], platform))
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform): List<String> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

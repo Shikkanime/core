@@ -4,10 +4,17 @@ import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
 
 object DisneyPlusCachedWrapper : AbstractDisneyPlusWrapper() {
+    override suspend fun getLatestShowIds() = MapCache.getOrComputeAsync(
+        "DisneyPlusCachedWrapper.getLatestShowIds",
+        typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
+        key = StringUtils.EMPTY_STRING
+    ) { DisneyPlusWrapper.getLatestShowIds() }
+
     override suspend fun getShow(id: String) = MapCache.getOrComputeAsync(
         "DisneyPlusCachedWrapper.getShow",
         typeToken = object : TypeToken<MapCacheValue<Show>>() {},
