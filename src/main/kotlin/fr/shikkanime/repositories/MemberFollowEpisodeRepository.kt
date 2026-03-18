@@ -135,7 +135,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
             val seenDuration = cb.sum(
                 cb.selectCase<Number?>()
                     .`when`(cb.isNotNull(memberFollowEpisode[MemberFollowEpisode_.episode]), episodeMapping[EpisodeMapping_.duration])
-                    .otherwise(0)
+                    .otherwise(cb.literal(0L))
             )
 
             val unseenDuration = cb.sum(
@@ -147,13 +147,13 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
                         ),
                         episodeMapping[EpisodeMapping_.duration]
                     )
-                    .otherwise(0)
+                    .otherwise(cb.literal(0L))
             )
 
             query.select(
                 cb.tuple(
-                    cb.coalesce(seenDuration, 0L),
-                    cb.coalesce(unseenDuration, 0L)
+                    cb.coalesce(seenDuration, cb.literal(0L)),
+                    cb.coalesce(unseenDuration, cb.literal(0L))
                 )
             )
 
@@ -161,7 +161,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
 
             createReadOnlyQuery(it, query)
                 .singleResult
-                .let { pair -> pair[0] as Long to pair[1] as Long }
+                .let { pair -> pair[0, Long::class.java] to pair[1, Long::class.java] }
         }
     }
 }

@@ -14,7 +14,7 @@ val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.8.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.21.1"
-val valkeyVersion = "2.0.1"
+val valkeyVersion = "2.2.7"
 val apachePoiVersion = "5.5.1"
 
 val jdaVersion = "6.3.2"
