@@ -12,11 +12,24 @@ import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
 import java.io.File
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 
 class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var animePlatformCacheService: AnimePlatformCacheService
+
+    private var lastLatestShowsFetch: ZonedDateTime? = null
+    private var hasLatestShowsFetchError = false
+
+    private fun shouldFetchLatestShows(currentTime: ZonedDateTime): Boolean {
+        val delayMinutes = configuration!!.apiCheckDelayInMinutes
+
+        if (lastLatestShowsFetch == null || hasLatestShowsFetchError || delayMinutes <= 0) {
+            return true
+        }
+
+        return currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0
+    }
 
     override fun getPlatform(): Platform = Platform.DISN
 
@@ -44,24 +57,36 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
 
-        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.DISNEY_PLUS_FETCH_LATEST_SHOWS)) {
-            val configurationShowIds = configuration!!.simulcasts.map(ReleaseDayPlatformSimulcast::name)
-            val databaseShowIds = animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
-            val showIds = (configurationShowIds + databaseShowIds).distinct()
+        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.DISNEY_PLUS_FETCH_LATEST_SHOWS) && shouldFetchLatestShows(
+                zonedDateTime
+            )
+        ) {
+            try {
+                val configurationShowIds = configuration!!.simulcasts.map(ReleaseDayPlatformSimulcast::name)
+                val databaseShowIds =
+                    animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
+                val showIds = (configurationShowIds + databaseShowIds).distinct()
 
-            DisneyPlusWrapper.getLatestShowIds().filter { showId -> !showIds.contains(showId) }
-                .forEach { showId ->
-                    val newSimulcast = configuration!!.newPlatformSimulcast()
-                    newSimulcast.uuid = UUID.randomUUID()
-                    newSimulcast.name = showId
-                    newSimulcast.releaseDay = zonedDateTime.dayOfWeek.value
+                DisneyPlusWrapper.getLatestShowIds().filter { showId -> !showIds.contains(showId) }
+                    .forEach { showId ->
+                        val newSimulcast = configuration!!.newPlatformSimulcast()
+                        newSimulcast.uuid = UUID.randomUUID()
+                        newSimulcast.name = showId
+                        newSimulcast.releaseDay = zonedDateTime.dayOfWeek.value
 
-                    if (configuration!!.addPlatformSimulcast(newSimulcast)) {
-                        saveConfiguration()
-                        reset()
-                        logger.info("Added new simulcast for show $showId")
+                        if (configuration!!.addPlatformSimulcast(newSimulcast)) {
+                            saveConfiguration()
+                            reset()
+                            logger.info("Added new simulcast for show $showId")
+                        }
                     }
-                }
+
+                lastLatestShowsFetch = zonedDateTime
+                hasLatestShowsFetchError = false
+            } catch (e: Exception) {
+                logger.warning("Error fetching latest shows for Disney+: ${e.message}")
+                hasLatestShowsFetchError = true
+            }
         }
 
         configuration!!.availableCountries.forEach { countryCode ->
