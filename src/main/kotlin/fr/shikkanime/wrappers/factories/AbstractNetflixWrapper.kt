@@ -20,6 +20,12 @@ abstract class AbstractNetflixWrapper {
         val authUrl: String
     ) : Serializable
 
+    data class LatestShow(
+        val id: Int,
+        val title: String,
+        val isPlayable: Boolean
+    ) : Serializable
+
     data class EpisodeMetadata(
         val id: Int,
         val image: String?
@@ -44,6 +50,7 @@ abstract class AbstractNetflixWrapper {
         val availabilityStartTime: ZonedDateTime?,
         val isAvailable: Boolean,
         val isPlayable: Boolean,
+        val genres: List<String>,
         val runtimeSec: Long? = null,
         val metadata: ShowMetadata? = null,
         val json: JsonObject? = null,
@@ -115,6 +122,7 @@ abstract class AbstractNetflixWrapper {
         )
     }
 
+    abstract suspend fun getLatestShows(listIds: List<String>): Array<LatestShow>
     abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
 
