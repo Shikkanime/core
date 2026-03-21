@@ -41,6 +41,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
+    fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform) =
+        episodeVariantRepository.findAllIdentifiersByMappingsAndPlatform(mappingUuids, platform)
+
     fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
 
     fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(

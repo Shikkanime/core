@@ -131,6 +131,26 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
+    fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform): List<String> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(String::class.java)
+            val root = query.from(getEntityClass())
+
+            query.select(root[EpisodeVariant_.identifier])
+
+            query.where(
+                cb.and(
+                    root[EpisodeVariant_.mapping][EpisodeMapping_.uuid].`in`(mappingUuids),
+                    cb.equal(root[EpisodeVariant_.platform], platform)
+                )
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllIdentifiers(): HashSet<String> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

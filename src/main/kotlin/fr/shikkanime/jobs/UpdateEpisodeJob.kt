@@ -15,6 +15,7 @@ import fr.shikkanime.wrappers.impl.*
 import fr.shikkanime.wrappers.impl.caches.*
 import io.ktor.client.plugins.*
 import java.time.ZonedDateTime
+import java.util.logging.Level
 
 class UpdateEpisodeJob : AbstractJob {
     data class Context(
@@ -82,9 +83,8 @@ class UpdateEpisodeJob : AbstractJob {
         val episodesNeedingUpdate = episodeMappingService.findAllNeedUpdate()
         logger.info("Found ${episodesNeedingUpdate.size} episodes to update")
 
-        val needUpdateEpisodes = episodesNeedingUpdate
-            .shuffled()
-            .take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_SIZE, 15))
+        val needUpdateEpisodes =
+            episodesNeedingUpdate.take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_SIZE, 15))
 
         if (needUpdateEpisodes.isEmpty()) {
             logger.info("No episode to update")
@@ -93,6 +93,8 @@ class UpdateEpisodeJob : AbstractJob {
 
         var needInvalidation = false
         val notKnownEpisodes = mutableListOf<Pair<AbstractPlatform.Episode, EpisodeMapping?>>()
+
+        fetchCrunchyrollContent(needUpdateEpisodes)
 
         // Can it be parallel?
         needUpdateEpisodes.forEach { episodeMapping ->
@@ -273,6 +275,33 @@ class UpdateEpisodeJob : AbstractJob {
         }
 
         logger.info("All episodes processed")
+    }
+
+    private suspend fun fetchCrunchyrollContent(needUpdateEpisodes: List<EpisodeMapping>) {
+        val countryCodes = needUpdateEpisodes.mapNotNull { it.anime?.countryCode }.toSet()
+        val episodeUuids = needUpdateEpisodes.mapNotNull { it.uuid }
+
+        val identifiers = episodeVariantService
+            .findAllIdentifiersByMappingsAndPlatform(episodeUuids, Platform.CRUN)
+            .mapNotNull { StringUtils.getVideoOldIdOrId(it) }
+            .toTypedArray()
+
+        if (identifiers.isEmpty())
+            return
+
+        countryCodes.forEach { countryCode ->
+            runCatching {
+                HttpRequest.retryOnTimeout(3) {
+                    CrunchyrollCachedWrapper.getObjects(countryCode.locale, *identifiers)
+                }
+            }.onFailure { exception ->
+                logger.log(
+                    Level.WARNING,
+                    "Error while fetching Crunchyroll content for ${identifiers.contentToString()}",
+                    exception
+                )
+            }
+        }
     }
 
     private suspend fun <T> fetchOrSkip(
