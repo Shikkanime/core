@@ -6,11 +6,7 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.Link
 import fr.shikkanime.jobs.AbstractJob
-import fr.shikkanime.services.AnimeService
-import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.services.MailService
-import fr.shikkanime.services.MemberService
-import fr.shikkanime.services.ProfilingService
+import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
@@ -253,7 +249,7 @@ class AdminController {
     private fun getProfiling() = Response.template(
         Link.PROFILING,
         mapOf(
-            "jfrFiles" to profilingService.getJfrFiles()
+            "dumpFiles" to profilingService.getDumpFiles()
         )
     )
 
@@ -261,8 +257,9 @@ class AdminController {
     @Get
     @AdminSessionAuthenticated
     private fun downloadProfiling(@PathParam name: String): Response {
-        val file = profilingService.getJfrFile(name) ?: return Response.notFound()
-        return Response.multipart(file.readBytes(), ContentType.Application.OctetStream)
+        val file = profilingService.getDumpFile(name) ?: return Response.notFound()
+
+        return Response.file(file)
     }
 
     @Path("/config")

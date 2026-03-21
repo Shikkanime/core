@@ -17,7 +17,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <#list jfrFiles as file>
+                        <#list dumpFiles as file>
                             <tr>
                                 <td>${file.name}</td>
                                 <td>${(file.length() / 1024 / 1024)?string("0.##")} MB</td>
@@ -30,7 +30,7 @@
                             </tr>
                         <#else>
                             <tr>
-                                <td colspan="4" class="text-center">No JFR reports found yet.</td>
+                                <td colspan="4" class="text-center">No dump reports found yet.</td>
                             </tr>
                         </#list>
                         </tbody>

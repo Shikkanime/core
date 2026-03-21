@@ -3,12 +3,14 @@ package fr.shikkanime.utils.routes
 import fr.shikkanime.dtos.member.TokenDto
 import fr.shikkanime.entities.enums.Link
 import io.ktor.http.*
+import java.io.File
 
 enum class ResponseType {
     JSON,
     MULTIPART,
     TEMPLATE,
     REDIRECT,
+    FILE,
 }
 
 open class Response(
@@ -37,6 +39,18 @@ open class Response(
                 HttpStatusCode.OK,
                 type = ResponseType.MULTIPART,
                 data = mapOf("image" to image, "contentType" to contentType),
+                session = session
+            )
+
+        fun file(
+            file: File,
+            contentType: ContentType = ContentType.Application.OctetStream,
+            session: TokenDto? = null
+        ): Response =
+            Response(
+                HttpStatusCode.OK,
+                type = ResponseType.FILE,
+                data = mapOf("file" to file, "contentType" to contentType),
                 session = session
             )
 

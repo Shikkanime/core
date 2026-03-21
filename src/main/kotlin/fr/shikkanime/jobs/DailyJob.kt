@@ -15,6 +15,7 @@ class DailyJob : AbstractJob {
         metricService.deleteAllBefore(ZonedDateTime.now().minusWeeks(1))
         attachmentService.cleanUnusedAttachments()
         profilingService.dumpAndRestart()
+        profilingService.dumpHeap()
         profilingService.cleanOldReports()
     }
 }

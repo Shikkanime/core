@@ -19,7 +19,6 @@ import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
-import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.runBlocking
@@ -61,7 +60,7 @@ class AdminEpisodeManagerController {
             return Response.redirect("${Link.EPISODE_MANAGER.href}?error=$errorMessage")
         }
 
-        return Response.multipart(requestedFile.readBytes(), ContentType.Application.OctetStream)
+        return Response.file(requestedFile)
     }
 
     @Path("/delete")

@@ -1,10 +1,12 @@
 package fr.shikkanime.services
 
+import com.sun.management.HotSpotDiagnosticMXBean
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import jdk.jfr.Configuration
 import jdk.jfr.Recording
 import java.io.File
+import java.lang.management.ManagementFactory
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -35,6 +37,26 @@ class ProfilingService {
         }
     }
 
+    fun dumpHeap(live: Boolean = true) {
+        val timestamp = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+        val dumpFile = File(Constant.profilesFolder, "heapdump-$timestamp.hprof")
+
+        try {
+            val server = ManagementFactory.getPlatformMBeanServer()
+            val mxBean = ManagementFactory.newPlatformMXBeanProxy(
+                server,
+                "com.sun.management:type=HotSpotDiagnostic",
+                HotSpotDiagnosticMXBean::class.java
+            )
+
+            logger.info("Starting heap dump to ${dumpFile.absolutePath}...")
+            mxBean.dumpHeap(dumpFile.absolutePath, live)
+            logger.info("Heap dump completed successfully.")
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Failed to dump heap", e)
+        }
+    }
+
     fun dumpAndRestart() {
         val timestamp = ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val dumpFile = File(Constant.profilesFolder, "profile-$timestamp.jfr")
@@ -54,21 +76,22 @@ class ProfilingService {
         }
     }
 
-    fun getJfrFiles(): List<File> {
-        return Constant.profilesFolder.listFiles()?.filter { it.extension == "jfr" }
+    fun getDumpFiles(): List<File> {
+        return Constant.profilesFolder.listFiles()?.filter { it.extension in listOf("jfr", "hprof") }
             ?.sortedByDescending { it.lastModified() } ?: emptyList()
     }
 
-    fun getJfrFile(name: String): File? {
-        return getJfrFiles().find { it.name == name }
+    fun getDumpFile(name: String): File? {
+        return getDumpFiles().find { it.name == name }
     }
 
     fun cleanOldReports(days: Int = 7) {
         val limit = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days.toLong())
-        Constant.profilesFolder.listFiles()?.filter { it.extension == "jfr" && it.lastModified() < limit }
+        Constant.profilesFolder.listFiles()
+            ?.filter { it.extension in listOf("jfr", "hprof") && it.lastModified() < limit }
             ?.forEach {
                 if (!it.delete()) {
-                    logger.warning("Failed to delete JFR report: ${it.absolutePath}")
+                    logger.warning("Failed to delete dump report: ${it.absolutePath}")
                 }
             }
     }
