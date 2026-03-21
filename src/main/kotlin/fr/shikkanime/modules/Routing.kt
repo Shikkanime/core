@@ -34,6 +34,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.util.*
+import java.io.File
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -208,6 +209,7 @@ private suspend fun handleRequest(
 
         when (response.type) {
             ResponseType.MULTIPART -> handleMultipartResponse(call, response)
+            ResponseType.FILE -> handleFileResponse(call, response)
             ResponseType.TEMPLATE -> handleTemplateResponse(call, controller, replacedPath, response)
             ResponseType.REDIRECT -> call.respondRedirect(response.data as String, !replacedPath.startsWith(ADMIN))
             else -> call.respond(response.status, response.data ?: StringUtils.EMPTY_STRING)
@@ -222,6 +224,19 @@ private suspend fun handleMultipartResponse(call: ApplicationCall, response: Res
     require(response.data is Map<*, *>) { "Data must be a map" }
     val map = response.data.toMap()
     call.respondBytes(map["image"] as ByteArray, map["contentType"] as ContentType)
+}
+
+private suspend fun handleFileResponse(call: ApplicationCall, response: Response) {
+    require(response.data is Map<*, *>) { "Data must be a map" }
+    val map = response.data.toMap()
+    val file = map["file"] as File
+    val contentType = map["contentType"] as ContentType
+
+    call.response.headers.append(
+        HttpHeaders.ContentDisposition,
+        ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, file.name).toString()
+    )
+    call.respond(LocalFileContent(file, contentType))
 }
 
 suspend fun handleTemplateResponse(

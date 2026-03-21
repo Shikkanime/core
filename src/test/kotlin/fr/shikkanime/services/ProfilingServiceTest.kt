@@ -13,7 +13,9 @@ class ProfilingServiceTest : AbstractTest() {
     fun testJfrRecording() {
         profilingService.startGlobalRecording()
         profilingService.dumpAndRestart()
-        val files = profilingService.getJfrFiles()
+        profilingService.dumpHeap()
+        val files = profilingService.getDumpFiles()
         assertTrue(files.any { it.name.startsWith("profile-") && it.name.endsWith(".jfr") })
+        assertTrue(files.any { it.name.startsWith("heapdump-") && it.name.endsWith(".hprof") })
     }
 }
