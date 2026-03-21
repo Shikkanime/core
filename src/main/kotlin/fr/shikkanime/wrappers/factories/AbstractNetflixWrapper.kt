@@ -11,9 +11,16 @@ import fr.shikkanime.utils.StringUtils
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.io.Serializable
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 
 abstract class AbstractNetflixWrapper {
+    enum class Category(val id: Int) {
+        THIS_WEEK(5),
+        NEXT_WEEK(3),
+    }
+
     data class NetflixAuthentification(
         val id: String,
         val secureId: String,
@@ -104,7 +111,12 @@ abstract class AbstractNetflixWrapper {
     }
 
     protected fun getCookieValue(netflixId: String, netflixSecureId: String): String =
-        "NetflixId=$netflixId; SecureNetflixId=$netflixSecureId"
+        "NetflixId=${URLDecoder.decode(netflixId, StandardCharsets.UTF_8)}; SecureNetflixId=${
+            URLDecoder.decode(
+                netflixSecureId,
+                StandardCharsets.UTF_8
+            )
+        }"
 
     protected suspend fun HttpRequest.postGraphQL(countryCode: CountryCode, body: String) = postGraphQL(countryCode.locale, body)
 
@@ -122,10 +134,14 @@ abstract class AbstractNetflixWrapper {
         )
     }
 
-    abstract suspend fun getLatestShows(listIds: List<String>): Array<LatestShow>
+    abstract suspend fun getShowsByCategories(
+        categories: List<Category> = listOf(
+            Category.THIS_WEEK,
+            Category.NEXT_WEEK
+        )
+    ): Array<LatestShow>
     abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
-
 
     suspend fun getPreviousEpisode(countryCode: CountryCode, showId: Int, episodeId: Int): Episode? {
         val episodes = getEpisodesByShowId(countryCode, showId)

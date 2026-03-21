@@ -8,11 +8,14 @@ import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 
 object NetflixCachedWrapper : AbstractNetflixWrapper() {
-    override suspend fun getLatestShows(listIds: List<String>) = MapCache.getOrComputeAsync(
-        "NetflixCachedWrapper.getLatestShows",
+    override suspend fun getShowsByCategories(categories: List<Category>) = MapCache.getOrComputeAsync(
+        "NetflixCachedWrapper.getShowsByCategories",
         typeToken = object : TypeToken<MapCacheValue<Array<LatestShow>>>() {},
-        key = listIds.joinToString(",")
-    ) { listIdsString -> NetflixWrapper.getLatestShows(listIdsString.split(",")) }
+        key = categories.joinToString(",") { it.name }
+    ) { categoriesString ->
+        NetflixWrapper.getShowsByCategories(
+            categoriesString.split(",").map { Category.valueOf(it) })
+    }
 
     override suspend fun getShow(
         locale: String,

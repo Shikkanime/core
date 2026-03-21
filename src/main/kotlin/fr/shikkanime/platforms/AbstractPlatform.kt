@@ -135,7 +135,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
                     },
                     onFailure = { exception ->
                         hasLatestShowsFetchError = true
-                        logger.warning("Error fetching latest shows for ${getPlatform().name}: ${exception.message}")
+                        logger.log(Level.WARNING, "Error fetching latest shows for ${getPlatform().name}", exception)
                     }
                 )
         }

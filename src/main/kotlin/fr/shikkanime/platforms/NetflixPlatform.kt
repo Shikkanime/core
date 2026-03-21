@@ -30,42 +30,38 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleas
         val list = mutableListOf<Episode>()
 
         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.NETFLIX_FETCH_LATEST_SHOWS)) {
-            val listIds = configCacheService.getValueAsStringList(ConfigPropertyKey.NETFLIX_LATEST_SHOWS_LIST_IDS)
+            getLatestShows(zonedDateTime) {
+                val configurationShowIds = configuration!!.simulcasts.map(ReleaseDayPlatformSimulcast::name)
+                val databaseShowIds =
+                    animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
+                val showIds = (configurationShowIds + databaseShowIds).distinct()
 
-            if (listIds.isNotEmpty()) {
-                getLatestShows(zonedDateTime) {
-                    val configurationShowIds = configuration!!.simulcasts.map(ReleaseDayPlatformSimulcast::name)
-                    val databaseShowIds =
-                        animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
-                    val showIds = (configurationShowIds + databaseShowIds).distinct()
+                NetflixWrapper.getShowsByCategories()
+                    .filter { show -> !showIds.contains(show.id.toString()) }
+                    .flatMap { show ->
+                        configuration!!.availableCountries.map { countryCode ->
+                            NetflixCachedWrapper.getShow(
+                                countryCode.locale,
+                                show.id
+                            )
+                        }
+                    }
+                    .filter {
+                        it.availabilityStartTime != null && it.genres.contains("Japonais")
+                                && it.genres.any { genre -> genre.contains("Anime") }
+                    }
+                    .forEach { show ->
+                        val newSimulcast = configuration!!.newPlatformSimulcast()
+                        newSimulcast.uuid = UUID.randomUUID()
+                        newSimulcast.name = show.id.toString()
+                        newSimulcast.releaseDay = show.availabilityStartTime!!.dayOfWeek.value
 
-                    NetflixWrapper.getLatestShows(listIds)
-                        .filter { show -> !showIds.contains(show.id.toString()) }
-                        .flatMap { show ->
-                            configuration!!.availableCountries.map { countryCode ->
-                                NetflixCachedWrapper.getShow(
-                                    countryCode.locale,
-                                    show.id
-                                )
-                            }
+                        if (configuration!!.addPlatformSimulcast(newSimulcast)) {
+                            saveConfiguration()
+                            reset()
+                            logger.info("Added new simulcast for show $show")
                         }
-                        .filter {
-                            it.availabilityStartTime != null && it.genres.contains("Japonais")
-                                    && it.genres.any { genre -> genre.contains("Anime") }
-                        }
-                        .forEach { show ->
-                            val newSimulcast = configuration!!.newPlatformSimulcast()
-                            newSimulcast.uuid = UUID.randomUUID()
-                            newSimulcast.name = show.id.toString()
-                            newSimulcast.releaseDay = show.availabilityStartTime!!.dayOfWeek.value
-
-                            if (configuration!!.addPlatformSimulcast(newSimulcast)) {
-                                saveConfiguration()
-                                reset()
-                                logger.info("Added new simulcast for show $show")
-                            }
-                        }
-                }
+                    }
             }
         }
 

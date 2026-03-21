@@ -77,14 +77,14 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getLatestShows(listIds: List<String>): Array<LatestShow> {
+    override suspend fun getShowsByCategories(categories: List<Category>): Array<LatestShow> {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
         val response = httpRequest.post(
-            "$baseUrl/nq/website/memberapi/release/pathEvaluator?original_path=%2Fshakti%2Fmre%2FpathEvaluator",
+            "$baseUrl/nq/website/memberapi/release/pathEvaluator?isTop10Supported=true&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
             mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
             FormDataContent(
                 parametersOf(
-                    "path" to listIds.map { "[\"lists\",\"$it\",{\"from\":0,\"to\":7},[\"itemSummary\"]]" },
+                    "path" to listOf("[\"lolomoByCategory\",\"comingSoon\",[${categories.joinToString(",") { it.id.toString() }}],{\"from\":0,\"to\":10},\"itemSummary\"]"),
                     "authURL" to listOf(netflixAuthentification.authUrl),
                 )
             )
@@ -93,21 +93,21 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val listObjects = ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("jsonGraph")
             .getAsJsonObject("lists")
+            .entrySet()
+            .flatMap { (_, listElement) ->
+                listElement.asJsonObject
+                    .entrySet()
+                    .map { (_, itemElement) ->
+                        itemElement.asJsonObject.getAsJsonObject("itemSummary").getAsJsonObject("value")
+                    }
+            }
 
-        return listIds.flatMap { listId ->
-            listObjects.getAsJsonObject(listId)
-                .entrySet()
-                .mapNotNull { (_, jsonElement) ->
-                    val valueObject = jsonElement.asJsonObject
-                        .getAsJsonObject("itemSummary")
-                        .getAsJsonObject("value")
-
-                    LatestShow(
-                        id = requireNotNull(valueObject.getAsInt("id")) { "Missing id for latest show in list $listId" },
-                        title = requireNotNull(valueObject.getAsString("title")) { "Missing title for latest show in list $listId" },
-                        isPlayable = valueObject.getAsJsonObject("availability").getAsBoolean("isPlayable") ?: false,
-                    )
-                }
+        return listObjects.map { valueObject ->
+            LatestShow(
+                id = requireNotNull(valueObject.getAsInt("id")) { "Missing id for latest show in list" },
+                title = requireNotNull(valueObject.getAsString("title")) { "Missing title for latest show in list" },
+                isPlayable = valueObject.getAsJsonObject("availability").getAsBoolean("isPlayable") ?: false,
+            )
         }.toTypedArray()
     }
 

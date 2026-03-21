@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1774116291511"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-4" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'netflix_latest_shows_list_ids'</sqlCheck>
+        </preConditions>
+
+        <delete tableName="config">
+            <where>property_key = 'netflix_latest_shows_list_ids'</where>
+        </delete>
+    </changeSet>
+</databaseChangeLog>
