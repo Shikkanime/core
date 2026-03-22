@@ -223,7 +223,9 @@ class UpdateEpisodeJob : AbstractJob {
             updateIfChanged(
                 mappingIdentifier,
                 fieldName = "description",
-                candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull { it.description.normalize() },
+                candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull {
+                    it.description.normalize()?.take(Constant.MAX_DESCRIPTION_LENGTH)
+                },
                 current = episodeMapping.description.normalize(),
                 isValid = { !it.isNullOrBlank() },
                 apply = { episodeMapping.description = it; hasChanged = true; needInvalidation = true }
