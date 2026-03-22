@@ -35,7 +35,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         key = AniListCacheKey(query, page, limit, status)
     ) { (query, page, limit, status) ->
         AniListWrapper.search(query, page, limit, status)
-            .apply { this.forEach { mediaCache.putIfNotExists(it.id, it) } }
+            .apply { this.forEach { mediaCache[it.id] = it } }
     }
 
     override suspend fun getMediaById(id: Int) = mediaCache[id] ?: throw Exception("Media not found")

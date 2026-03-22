@@ -35,14 +35,6 @@ class ValkeyCacheStrategy<K, V>(
 
     private fun getCachedValue(key: String): String? = AsynchronizedGlideClient[key]
 
-    override fun containsKey(key: K): Boolean {
-        synchronized(localCache) {
-            if (localCache[key]?.get() != null) return true
-        }
-
-        return getCachedValue(buildMapKey(key)) != null
-    }
-
     override fun get(key: K): V? {
         synchronized(localCache) {
             localCache[key]?.get()?.let { return it }
@@ -61,11 +53,6 @@ class ValkeyCacheStrategy<K, V>(
     override fun put(key: K, value: V) {
         synchronized(localCache) { localCache[key] = SoftReference(value) }
         AsynchronizedGlideClient[buildMapKey(key)] = SerializationUtils.serialize(serializationType, value)
-    }
-
-    override fun putIfNotExists(key: K, value: V) {
-        if (!containsKey(key))
-            put(key, value)
     }
 
     override fun remove(key: K) {

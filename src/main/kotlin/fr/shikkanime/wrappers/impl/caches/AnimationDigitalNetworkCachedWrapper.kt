@@ -20,7 +20,7 @@ object AnimationDigitalNetworkCachedWrapper : AbstractAnimationDigitalNetworkWra
         key = countryCode to date
     ) { (countryCode, date) ->
         AnimationDigitalNetworkWrapper.getLatestVideos(countryCode, date)
-            .apply { forEach { video -> videoCache.putIfNotExists(countryCode to video.id, video) } }
+            .apply { forEach { video -> videoCache[countryCode to video.id] = video } }
     }
 
     override suspend fun getShow(country: String, id: Int) = MapCache.getOrComputeAsync(

@@ -17,7 +17,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         typeToken = object : TypeToken<MapCacheValue<Series>>() {}
     ) {
         CrunchyrollWrapper.getSeries(it.first, it.second)
-            .also { series -> objectCache.putIfNotExists(it.first to it.second, series.convertToBrowseObject()) }
+            .also { series -> objectCache[it.first to it.second] = series.convertToBrowseObject() }
     }
 
     private val episodeCache = MapCache<Pair<String, String>, Episode>(
@@ -25,7 +25,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         typeToken = object : TypeToken<MapCacheValue<Episode>>() {}
     ) {
         CrunchyrollWrapper.getEpisode(it.first, it.second)
-            .also { episode -> objectCache.putIfNotExists(it.first to it.second, episode.convertToBrowseObject()) }
+            .also { episode -> objectCache[it.first to it.second] = episode.convertToBrowseObject() }
     }
 
     override suspend fun getBrowse(
@@ -73,8 +73,8 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
                 val episodeId = episode.id ?: continue
                 val cacheKey = locale to episodeId
 
-                episodeCache.putIfNotExists(cacheKey, episode)
-                objectCache.putIfNotExists(cacheKey, episode.convertToBrowseObject())
+                episodeCache[cacheKey] = episode
+                objectCache[cacheKey] = episode.convertToBrowseObject()
             }
         }
     }
@@ -94,7 +94,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
         key = Triple(locale, type, id)
     ) {
         CrunchyrollWrapper.getEpisodeDiscoverByType(it.first, it.second, it.third)
-            .also { episode -> objectCache.putIfNotExists(it.first to episode.id, episode) }
+            .also { episode -> objectCache[it.first to episode.id] = episode }
     }
 
     @JvmStatic
@@ -114,7 +114,7 @@ object CrunchyrollCachedWrapper : AbstractCrunchyrollWrapper() {
 
         if (notCached.isNotEmpty()) {
             val newObjects = CrunchyrollWrapper.getChunkedObjects(locale, *notCached.toTypedArray())
-            newObjects.forEach { objectCache.putIfNotExists(locale to it.id, it) }
+            newObjects.forEach { objectCache[locale to it.id] = it }
             objects.addAll(newObjects)
         }
 

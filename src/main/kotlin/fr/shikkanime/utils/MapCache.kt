@@ -51,8 +51,8 @@ class MapCache<K : Any, V : Serializable>(
         return cachedValue?.value
     }
 
-    fun putIfNotExists(key: K, value: V) {
-        cacheStrategy.putIfNotExists(key, MapCacheValue(System.currentTimeMillis(), value))
+    operator fun set(key: K, value: V) {
+        cacheStrategy.put(key, MapCacheValue(System.currentTimeMillis(), value))
     }
 
     override fun invalidate() {
