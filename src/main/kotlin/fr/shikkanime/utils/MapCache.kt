@@ -29,12 +29,15 @@ class MapCache<K : Any, V : Serializable>(
         register(name, this)
     }
 
-    fun containsKey(key: K) = cacheStrategy.containsKey(key)
+    private fun isExpired(cachedValue: MapCacheValue<V>?) =
+        cachedValue == null || System.currentTimeMillis() - cachedValue.timestamp > duration.toMillis()
+
+    fun containsKey(key: K) = cacheStrategy[key]?.takeIf { !isExpired(it) } != null
 
     suspend operator fun get(key: K): V? {
         val cachedValue = cacheStrategy[key]
 
-        if (cachedValue == null || System.currentTimeMillis() - cachedValue.timestamp > duration.toMillis()) {
+        if (isExpired(cachedValue)) {
             val newValue = block(key)
 
             if (newValue != null)
@@ -45,7 +48,7 @@ class MapCache<K : Any, V : Serializable>(
             return newValue
         }
 
-        return cachedValue.value
+        return cachedValue?.value
     }
 
     fun putIfNotExists(key: K, value: V) {

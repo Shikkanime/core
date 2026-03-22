@@ -238,11 +238,11 @@ class UpdateEpisodeJob : AbstractJob {
                 apply = { episodeMapping.duration = it; hasChanged = true; needInvalidation = true }
             )
 
-            if (hasChanged) {
-                episodeMapping.lastUpdateDateTime = zonedDateTime
-                episodeMappingService.update(episodeMapping)
+            episodeMapping.lastUpdateDateTime = zonedDateTime
+            episodeMappingService.update(episodeMapping)
+
+            if (hasChanged)
                 traceActionService.createTraceAction(episodeMapping, TraceAction.Action.UPDATE)
-            }
 
             notKnownEpisodes.addAll(platformEpisodes.filter { it.getIdentifier() !in variantIdentifiers }
                 .map { it to episodeMapping })
