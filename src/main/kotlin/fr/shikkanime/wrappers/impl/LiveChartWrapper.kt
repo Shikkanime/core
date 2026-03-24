@@ -15,7 +15,13 @@ object LiveChartWrapper : AbstractLiveChartWrapper() {
     private val platformIdRegex = "https://(?:www\\.)?(?:animationdigitalnetwork|crunchyroll|disneyplus|netflix|primevideo)\\.com/[a-z-]+/(?:entity-)?([^/]+)".toRegex()
 
     override suspend fun getAnimeIdsFromDate(date: LocalDate): Array<String> {
-        val response = httpRequest.get("$baseUrl/schedule?date=${date.atStartOfWeek()}&layout=full&sort=release_date&start=monday")
+        val response = httpRequest.get(
+            "$baseUrl/schedule?date=${date.atStartOfWeek()}&layout=full&sort=release_date&start=monday",
+            mapOf(
+                HttpHeaders.Accept to ContentType.Text.Html.toString(),
+                HttpHeaders.ContentType to ContentType.Text.Html.toString()
+            )
+        )
         require(response.status == HttpStatusCode.OK) { "Failed to fetch schedule: ${response.status.value}" }
         val document = Jsoup.parse(response.bodyAsText())
 

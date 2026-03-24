@@ -16,11 +16,6 @@ import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 
 abstract class AbstractNetflixWrapper {
-    enum class Category(val id: Int) {
-        THIS_WEEK(5),
-        NEXT_WEEK(3),
-    }
-
     data class NetflixAuthentification(
         val id: String,
         val secureId: String,
@@ -134,12 +129,7 @@ abstract class AbstractNetflixWrapper {
         )
     }
 
-    abstract suspend fun getShowsByCategories(
-        categories: List<Category> = listOf(
-            Category.THIS_WEEK,
-            Category.NEXT_WEEK
-        )
-    ): Array<LatestShow>
+    abstract suspend fun getLatestShows(): Array<LatestShow>
     abstract suspend fun getShow(locale: String, id: Int): Show
     abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
 

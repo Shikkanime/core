@@ -77,14 +77,14 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getShowsByCategories(categories: List<Category>): Array<LatestShow> {
+    override suspend fun getLatestShows(): Array<LatestShow> {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
         val response = httpRequest.post(
             "$baseUrl/nq/website/memberapi/release/pathEvaluator?isTop10Supported=true&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
             mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
             FormDataContent(
                 parametersOf(
-                    "path" to listOf("[\"lolomoByCategory\",\"comingSoon\",[${categories.joinToString(",") { it.id.toString() }}],{\"from\":0,\"to\":10},\"itemSummary\"]"),
+                    "path" to listOf("[\"lolomoByCategory\",\"comingSoon\",[0,1,2,3,4,5],{\"from\":0,\"to\":10},\"itemSummary\"]"),
                     "authURL" to listOf(netflixAuthentification.authUrl),
                 )
             )
@@ -97,7 +97,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             .flatMap { (_, listElement) ->
                 listElement.asJsonObject
                     .entrySet()
-                    .map { (_, itemElement) ->
+                    .mapNotNull { (_, itemElement) ->
                         itemElement.asJsonObject.getAsJsonObject("itemSummary").getAsJsonObject("value")
                     }
             }
@@ -106,7 +106,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             LatestShow(
                 id = requireNotNull(valueObject.getAsInt("id")) { "Missing id for latest show in list" },
                 title = requireNotNull(valueObject.getAsString("title")) { "Missing title for latest show in list" },
-                isPlayable = valueObject.getAsJsonObject("availability").getAsBoolean("isPlayable") ?: false,
+                isPlayable = valueObject.getAsJsonObject("availability")?.getAsBoolean("isPlayable") ?: false,
             )
         }.toTypedArray()
     }

@@ -4,18 +4,16 @@ import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
+import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
 
 object NetflixCachedWrapper : AbstractNetflixWrapper() {
-    override suspend fun getShowsByCategories(categories: List<Category>) = MapCache.getOrComputeAsync(
-        "NetflixCachedWrapper.getShowsByCategories",
+    override suspend fun getLatestShows() = MapCache.getOrComputeAsync(
+        "NetflixCachedWrapper.getLatestShows",
         typeToken = object : TypeToken<MapCacheValue<Array<LatestShow>>>() {},
-        key = categories.joinToString(",") { it.name }
-    ) { categoriesString ->
-        NetflixWrapper.getShowsByCategories(
-            categoriesString.split(",").map { Category.valueOf(it) })
-    }
+        key = StringUtils.EMPTY_STRING
+    ) { NetflixWrapper.getLatestShows() }
 
     override suspend fun getShow(
         locale: String,

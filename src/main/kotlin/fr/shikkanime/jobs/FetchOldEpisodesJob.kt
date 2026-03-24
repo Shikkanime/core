@@ -37,8 +37,7 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject private lateinit var netflixPlatform: NetflixPlatform
     @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var configService: ConfigService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var traceActionService: TraceActionService

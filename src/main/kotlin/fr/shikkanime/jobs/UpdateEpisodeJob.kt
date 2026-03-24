@@ -9,6 +9,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.*
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.*
 import fr.shikkanime.wrappers.impl.*
@@ -33,32 +34,20 @@ class UpdateEpisodeJob : AbstractJob {
 
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
-    @Inject
-    private lateinit var animeService: AnimeService
-    @Inject
-    private lateinit var episodeMappingService: EpisodeMappingService
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject
-    private lateinit var attachmentService: AttachmentService
-    @Inject
-    private lateinit var traceActionService: TraceActionService
-    @Inject
-    private lateinit var animePlatformService: AnimePlatformService
-    @Inject
-    private lateinit var mailService: MailService
-    @Inject
-    private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
-    @Inject
-    private lateinit var crunchyrollPlatform: CrunchyrollPlatform
-    @Inject
-    private lateinit var disneyPlusPlatform: DisneyPlusPlatform
-    @Inject
-    private lateinit var netflixPlatform: NetflixPlatform
-    @Inject
-    private lateinit var primeVideoPlatform: PrimeVideoPlatform
+    @Inject private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var animeService: AnimeService
+    @Inject private lateinit var episodeMappingService: EpisodeMappingService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var traceActionService: TraceActionService
+    @Inject private lateinit var animePlatformService: AnimePlatformService
+    @Inject private lateinit var mailService: MailService
+    @Inject private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
+    @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
+    @Inject private lateinit var disneyPlusPlatform: DisneyPlusPlatform
+    @Inject private lateinit var netflixPlatform: NetflixPlatform
+    @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
     private fun <T> updateIfChanged(
         identifier: String,
@@ -251,7 +240,7 @@ class UpdateEpisodeJob : AbstractJob {
             logger.info("Episode $mappingIdentifier updated")
         }
 
-        val allIdentifiers = episodeVariantService.findAllIdentifiers()
+        val allIdentifiers = episodeVariantCacheService.findAllIdentifiers()
         val notKnownAllEpisodes = notKnownEpisodes.filter { it.first.getIdentifier() !in allIdentifiers }
             .distinctBy { it.first.getIdentifier() }
         logger.info("Found ${notKnownAllEpisodes.size} not known episodes: ${notKnownAllEpisodes.joinToString { it.first.getIdentifier() }}")

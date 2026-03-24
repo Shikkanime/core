@@ -36,7 +36,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleas
                     animePlatformCacheService.findAllByPlatform(getPlatform()).map(AnimePlatformDto::platformId)
                 val showIds = (configurationShowIds + databaseShowIds).distinct()
 
-                NetflixWrapper.getShowsByCategories()
+                NetflixWrapper.getLatestShows()
                     .filter { show -> !showIds.contains(show.id.toString()) }
                     .flatMap { show ->
                         configuration!!.availableCountries.map { countryCode ->
