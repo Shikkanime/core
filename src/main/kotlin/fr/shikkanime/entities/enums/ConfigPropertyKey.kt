@@ -17,6 +17,7 @@ enum class ConfigPropertyKey(val key: String) {
     BSKY_SESSION_TIMEOUT("bsky_session_timeout"),
     CHECK_PREVIOUS_AND_NEXT_EPISODES("check_previous_and_next_episodes"),
     CHECK_SIMULCAST("check_simulcast"),
+    CRUNCHYROLL_BASIC_AUTH_TOKEN("crunchyroll_basic_auth_token"),
     CRUNCHYROLL_FETCH_API_SIZE("crunchyroll_fetch_api_size"),
     DISABLE_BOT_DETECTION("disable_bot_detection"),
     DISCORD_TOKEN("discord_token"),
