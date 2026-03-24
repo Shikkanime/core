@@ -2,6 +2,7 @@ package fr.shikkanime.wrappers.factories
 
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -241,6 +242,7 @@ abstract class AbstractCrunchyrollWrapper {
     private fun getAnonymousAccessToken() = MapCache.getOrCompute(
         "AbstractCrunchyrollWrapper.getAnonymousAccessToken",
         duration = Duration.ofMinutes(30),
+        classes = listOf(Config::class.java),
         typeToken = object : TypeToken<MapCacheValue<String>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
