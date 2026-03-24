@@ -2,7 +2,9 @@ package fr.shikkanime.wrappers.factories
 
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.serializers.ZonedDateTimeSerializer
@@ -233,6 +235,7 @@ abstract class AbstractCrunchyrollWrapper {
 
     protected val baseUrl = "https://www.crunchyroll.com/"
     protected val httpRequest = HttpRequest()
+    private val configCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
 
     @Synchronized
     private fun getAnonymousAccessToken() = MapCache.getOrCompute(
@@ -246,7 +249,7 @@ abstract class AbstractCrunchyrollWrapper {
                 "${baseUrl}auth/v1/token",
                 headers = mapOf(
                     HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),
-                    HttpHeaders.Authorization to "Basic aG85ZGNjdjI5NGRueHV4YzFnaXI6OC11MDdwOGVpYmh1bU1pNEhabTV1ano0YWY5S3VseTU=",
+                    HttpHeaders.Authorization to "Basic ${configCacheService.getValueAsString(ConfigPropertyKey.CRUNCHYROLL_BASIC_AUTH_TOKEN, CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT)}",
                     "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
                 ),
                 body = "grant_type=client_id&client_id=offline_access"
@@ -355,5 +358,8 @@ abstract class AbstractCrunchyrollWrapper {
 
     companion object {
         const val CRUNCHYROLL_CHUNK = 100
+        // Updated automatically by the update-credentials GitHub Actions workflow - do not edit manually
+        const val CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT = "aG85ZGNjdjI5NGRueHV4YzFnaXI6OC11MDdwOGVpYmh1bU1pNEhabTV1ano0YWY5S3VseTU="
+        const val CRUNCHYROLL_APK_VERSION = "0.0.0_0"
     }
 }
