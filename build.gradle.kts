@@ -32,7 +32,7 @@ plugins {
 
     id("io.ktor.plugin") version "3.4.1"
     id("com.google.osdetector") version "1.7.3"
-    id("org.jetbrains.kotlinx.kover") version "0.9.7"
+    id("org.jetbrains.kotlinx.kover") version "0.9.8"
 }
 
 group = "fr.shikkanime"
