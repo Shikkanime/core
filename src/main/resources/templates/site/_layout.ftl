@@ -1,7 +1,3 @@
-<#macro compress_single_line>
-    <#local captured><#nested></#local>
-    ${ captured?replace("^\\s+|\\s+$|\\n|\\r", "", "rm") }
-</#macro>
 <#macro main canonicalUrl="" openGraphImage="">
     <@compress_single_line>
         <!DOCTYPE html>

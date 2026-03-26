@@ -30,13 +30,20 @@ fun setGlobalAttributes(
         return
     }
 
+    val isAdminController = controller.javaClass.simpleName.startsWith("Admin")
+    val currentSimulcast = simulcastCacheService.currentSimulcast
+
     modelMap["su"] = StringUtils
-    modelMap["links"] = getLinks(controller, replacedPath)
-    modelMap["footerLinks"] = getFooterLinks(controller)
+    modelMap["links"] =  (if (isAdminController) LinkObject.adminList else LinkObject.siteList)
+        .onEach { link ->
+            link.href = link.href.replace("{currentSimulcast}", currentSimulcast?.slug ?: StringUtils.EMPTY_STRING)
+            link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
+        }
+    modelMap["footerLinks"] = if (isAdminController) LinkObject.adminFooterList else LinkObject.siteFooterList
     modelMap["title"] = getTitle(title)
     modelMap["seoDescription"] = configCacheService.getValueAsString(ConfigPropertyKey.SEO_DESCRIPTION)
     modelMap["googleSiteVerification"] = configCacheService.getValueAsString(ConfigPropertyKey.GOOGLE_SITE_VERIFICATION_ID)
-    modelMap["currentSimulcast"] = simulcastCacheService.currentSimulcast
+    modelMap["currentSimulcast"] = currentSimulcast
     modelMap["baseUrl"] = Constant.baseUrl
     modelMap["apiUrl"] = Constant.apiUrl
 
@@ -62,18 +69,6 @@ fun setGlobalAttributes(
 
     modelMap["randomAnimeSlug"] = randomAnimeSlug
 }
-
-private fun getLinks(controller: Any, replacedPath: String) =
-    LinkObject.list()
-        .filter { it.href.startsWith(ADMIN) == controller.javaClass.simpleName.startsWith("Admin") && !it.footer }
-        .map { link ->
-            link.href = link.href.replace("{currentSimulcast}", simulcastCacheService.currentSimulcast?.slug ?: StringUtils.EMPTY_STRING)
-            link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
-            link
-        }
-
-private fun getFooterLinks(controller: Any) = LinkObject.list()
-    .filter { it.href.startsWith(ADMIN) == controller.javaClass.simpleName.startsWith("Admin") && it.footer }
 
 private fun getTitle(title: String?): String {
     return when {
