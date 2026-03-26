@@ -4,6 +4,7 @@ import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.controllers.site.SiteController
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.SingleLineDirective
 import fr.shikkanime.utils.routes.Response
 import freemarker.cache.ClassTemplateLoader
 import freemarker.cache.MruCacheStorage
@@ -71,6 +72,7 @@ fun Application.configureHTTP() {
         whitespaceStripping = true
         cacheStorage = MruCacheStorage(100, 250)
         templateUpdateDelayMilliseconds = Long.MAX_VALUE
+        setSharedVariable("compress_single_line", SingleLineDirective())
     }
     install(CachingHeaders) {
     }
