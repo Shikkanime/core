@@ -95,11 +95,13 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     }
 
     private fun doValidateAction(memberAction: MemberAction) {
+        val member = memberService.find(memberAction.member!!.uuid!!)!!
+
         when (memberAction.action) {
             Action.VALIDATE_EMAIL -> {
-                memberAction.member!!.email = memberAction.email
-                memberService.update(memberAction.member!!)
-                traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
+                member.email = memberAction.email
+                memberService.update(member)
+                traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
 
                 mailService.save(
                     Mail(
@@ -117,9 +119,9 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
                     identifier = StringUtils.generateRandomString(12)
                 } while (memberService.findByIdentifier(identifier) != null)
 
-                memberAction.member!!.username = EncryptionManager.toSHA512(identifier)
-                memberService.update(memberAction.member!!)
-                traceActionService.createTraceAction(memberAction.member!!, TraceAction.Action.UPDATE)
+                member.username = EncryptionManager.toSHA512(identifier)
+                memberService.update(member)
+                traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
 
                 mailService.save(
                     Mail(
