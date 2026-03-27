@@ -40,9 +40,9 @@ object EncryptionManager {
         return hash.fold(StringUtils.EMPTY_STRING) { str, it -> str + "%02x".format(it) }
     }
 
-    fun toBase64(source: ByteArray) = Base64.encode(source)
+    fun toBase64(source: ByteArray) = Base64.UrlSafe.encode(source)
 
-    fun fromBase64(source: String) = Base64.decode(source)
+    fun fromBase64(source: String) = Base64.UrlSafe.decode(source)
 
     fun toGzip(source: String): String {
         val bytes = source.toByteArray(StandardCharsets.UTF_8)

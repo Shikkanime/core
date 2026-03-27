@@ -114,6 +114,51 @@ class MemberControllerTest : AbstractControllerTest() {
     }
 
     @Test
+    fun associateEmailAndLoginWebToken() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (identifier, token) = registerAndLogin()
+            val findPrivateMember = memberService.findByIdentifier(identifier)
+            var memberAction: MemberAction?
+
+            client.post("/api/v1/members/associate-email") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody("contact2@shikkanime.fr")
+            }.apply {
+                assertEquals(HttpStatusCode.Created, status)
+                val dto = ObjectParser.fromJson(bodyAsText(), GenericDto::class.java)
+                memberAction = memberActionService.find(dto.uuid)
+                assertNotNull(memberAction)
+            }
+
+            val webToken = memberActionService::class.java.getDeclaredMethod("toWebToken", MemberAction::class.java).apply { isAccessible = true }.invoke(memberActionService, memberAction) as String
+
+            val database = fr.shikkanime.utils.Constant.injector.getInstance(fr.shikkanime.utils.Database::class.java)
+            database.entityManager.entityManagerFactory.cache.evict(Member::class.java)
+
+            client.get("/v/$webToken") {
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                assertTrue(bodyAsText().contains("Adresse email associée"))
+            }
+
+            // Check what happened to Member in DB
+            val memberInDb = memberService.find(findPrivateMember!!.uuid!!)
+            assertEquals("contact2@shikkanime.fr", memberInDb?.email)
+
+            client.post("/api/v1/members/login") {
+                setBody(identifier)
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status, "Login failed with 404 after webToken validation")
+            }
+        }
+    }
+
+    @Test
     fun associateEmailAndLogin() {
         testApplication {
             application {

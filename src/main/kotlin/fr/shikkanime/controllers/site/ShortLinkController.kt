@@ -34,8 +34,8 @@ class ShortLinkController {
             memberActionService.validateWebAction(webToken)
             InvalidationService.invalidate(Member::class.java)
             return Response.template("/site/validateAction.ftl")
-        } catch (_: Exception) {
-            return Response.redirect("/")
+        } catch (e: Exception) {
+            throw e
         }
     }
 }
