@@ -18,6 +18,14 @@ abstract class AbstractTest {
     @Inject protected lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject protected lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
     @Inject protected lateinit var animePlatformService: AnimePlatformService
+    @Inject
+    protected lateinit var simulcastService: SimulcastService
+    @Inject
+    protected lateinit var genreService: GenreService
+    @Inject
+    protected lateinit var tagService: TagService
+    @Inject
+    protected lateinit var animeTagService: AnimeTagService
     @Inject protected lateinit var configService: ConfigService
     @Inject protected lateinit var traceActionService: TraceActionService
     @Inject protected lateinit var ruleService: RuleService

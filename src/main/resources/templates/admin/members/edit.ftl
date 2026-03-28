@@ -5,7 +5,16 @@
         member: {},
         animes: {},
         episodes: {},
-        titleSize: 2
+        titleSize: 2,
+        async disassociateEmail() {
+            if (!confirm('Are you sure you want to disassociate this email?')) return;
+            
+            await fetch('/admin/api/members/' + getUuid() + '/email', {
+                method: 'DELETE'
+            });
+
+            this.member.email = null;
+        }
     }" x-init="member = await loadMember(); animes = await getAnimes(); episodes = await getEpisodes()" class="d-flex flex-column dashboard-wrapper pb-3">
 
         <!-- Header: Profile Info -->
@@ -34,6 +43,12 @@
                     <div class="flex-grow-1 overflow-hidden">
                         <div class="d-flex align-items-baseline gap-3 mb-1">
                             <h4 class="mb-0 text-truncate" x-text="member.email || 'N/A'"></h4>
+                            <template x-if="member.email">
+                                <button class="btn btn-outline-danger btn-sm px-2 py-0" title="Disassociate Email"
+                                        @click="disassociateEmail()">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </template>
                         </div>
                         <div class="d-flex flex-wrap gap-3 text-muted small">
                             <span title="Member Since"><i class="bi bi-calendar3 me-1"></i> <span
