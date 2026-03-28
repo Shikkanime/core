@@ -9,10 +9,7 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.factories.impl.MemberFactory
 import fr.shikkanime.repositories.MemberRepository
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.LoggerFactory
-import fr.shikkanime.utils.ObjectParser
-import fr.shikkanime.utils.RandomManager
+import fr.shikkanime.utils.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
@@ -101,6 +98,15 @@ class MemberService : AbstractService<Member, MemberRepository>() {
     }
 
     fun associateEmail(memberUuid: UUID, email: String) = memberActionService.save(Action.VALIDATE_EMAIL, memberUuid, email)
+
+    fun disassociateEmail(memberUuid: UUID) {
+        val member = find(memberUuid) ?: return
+        member.email = null
+        member.lastUpdateDateTime = ZonedDateTime.now()
+        update(member)
+        traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
+        InvalidationService.invalidate(Member::class.java)
+    }
 
     fun forgotIdentifier(member: Member): UUID {
         requireNotNull(member.email)

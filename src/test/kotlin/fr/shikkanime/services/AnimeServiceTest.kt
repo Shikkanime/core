@@ -1,18 +1,16 @@
 package fr.shikkanime.services
 
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.utils.atStartOfWeek
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
@@ -224,4 +222,72 @@ class AnimeServiceTest : AbstractTest() {
             releaseDateTime = releaseDateTime
         )
     )
+
+    @Test
+    fun deleteAnimeWithDependencies() {
+        val anime = Anime(
+            countryCode = CountryCode.FR,
+            name = "Test Anime",
+            slug = "test-anime"
+        )
+        animeService.save(anime)
+
+        val simulcast = Simulcast(season = Season.SPRING, year = 2024)
+        simulcastService.save(simulcast)
+        anime.simulcasts.add(simulcast)
+
+        val genre = Genre(name = "Action")
+        genreService.save(genre)
+        anime.genres.add(genre)
+
+        val tag = Tag(name = "Shonen")
+        tagService.save(tag)
+        animeService.update(anime)
+
+        val animeTag = AnimeTag(anime = anime, tag = tag)
+        animeTagService.save(animeTag)
+
+        val episodeMapping = EpisodeMapping(
+            anime = anime,
+            episodeType = EpisodeType.EPISODE,
+            season = 1,
+            number = 1
+        )
+        episodeMappingService.save(episodeMapping)
+
+        val episodeVariant = EpisodeVariant(
+            mapping = episodeMapping,
+            platform = Platform.CRUN,
+            audioLocale = "fr-FR",
+            identifier = "test-id",
+            url = "https://example.com"
+        )
+        episodeVariantService.save(episodeVariant)
+
+        // Let's add AnimePlatform
+        val animePlatform = AnimePlatform(
+            anime = anime,
+            platform = Platform.CRUN,
+            platformId = "test-platform-id"
+        )
+        animePlatformService.save(animePlatform)
+
+        val member = Member(username = "testuser", encryptedPassword = byteArrayOf())
+        memberService.save(member)
+        val memberFollowAnime = MemberFollowAnime(member = member, anime = anime)
+        memberFollowAnimeService.save(memberFollowAnime)
+
+        assertNotNull(animeService.find(anime.uuid!!))
+
+        // This is where it's supposed to fail according to user report
+        animeService.delete(anime)
+
+        assertNull(animeService.find(anime.uuid))
+        // Check if tag exists
+        assertNotNull(tagService.find(tag.uuid))
+        // Check if simulcast exists
+        assertNotNull(simulcastService.find(simulcast.uuid))
+        // Check if genre exists
+        assertNotNull(genreService.find(genre.uuid))
+    }
 }

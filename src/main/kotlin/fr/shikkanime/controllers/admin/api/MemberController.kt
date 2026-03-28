@@ -10,6 +10,7 @@ import fr.shikkanime.services.MemberFollowAnimeService
 import fr.shikkanime.services.MemberFollowEpisodeService
 import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.routes.*
+import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
@@ -41,6 +42,13 @@ class MemberController : HasPageableRoute() {
     @Get
     private fun getMember(@PathParam memberUuid: UUID) =
         memberService.findDetailedMember(memberUuid)?.let(Response::ok) ?: Response.notFound()
+
+    @Path("/{memberUuid}/email")
+    @Delete
+    private fun disassociateEmail(@PathParam memberUuid: UUID): Response {
+        memberService.disassociateEmail(memberUuid)
+        return Response.noContent()
+    }
 
     @Path("/{memberUuid}/login-activities")
     @Get

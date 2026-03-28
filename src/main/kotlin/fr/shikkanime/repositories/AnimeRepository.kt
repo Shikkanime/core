@@ -440,4 +440,14 @@ class AnimeRepository : AbstractRepository<Anime>() {
             it.createQuery(update).executeUpdate()
         }
     }
+
+    fun deleteAllWithoutEpisodes() {
+        database.inTransaction {
+            val cb = it.criteriaBuilder
+            val delete = cb.createCriteriaDelete(getEntityClass())
+            val root = delete.from(getEntityClass())
+            delete.where(cb.isEmpty(root[Anime_.mappings]))
+            it.createQuery(delete).executeUpdate()
+        }
+    }
 }

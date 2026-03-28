@@ -34,6 +34,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animePlatformService: AnimePlatformService
+    @Inject
+    private lateinit var animeTagService: AnimeTagService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
@@ -194,6 +196,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun recalculateSimulcasts() {
         val ignoreEpisodeTypes = setOf(EpisodeType.SUMMARY)
 
+        animeRepository.deleteAllWithoutEpisodes()
         episodeMappingService.updateAllReleaseDate()
         animeRepository.updateAllReleaseDate()
 
@@ -247,6 +250,10 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeMappingService.findAllByAnime(entity).forEach { episodeMappingService.delete(it) }
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         animePlatformService.findAllByAnime(entity).forEach { animePlatformService.delete(it) }
+        animeTagService.deleteAll(animeTagService.findAllByAnime(entity.uuid!!))
+        entity.simulcasts = mutableSetOf()
+        entity.genres = mutableSetOf()
+        super.update(entity)
         super.delete(entity)
         traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
