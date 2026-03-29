@@ -34,7 +34,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
     ) : Serializable {
         val fullHDImage: String
             get() = image2x.replace(sizeRegex, "1560x2340")
-                .replace(afficheRegex, "/portrait-with-logo.width=1560,height=2340,quality=100")
+                .replace(afficheRegex, "/portrait-with-logo.width=1080,height=1920,quality=100")
         val fullHDBanner: String
             get() = imageHorizontal2x.replace(sizeRegex, "1920x1080")
                 .replace(licenseRegex, "/landscape-with-logo.width=1920,height=1080,quality=100")
