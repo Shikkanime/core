@@ -48,6 +48,10 @@ object ObjectParser {
         return gson.toJson(obj)
     }
 
+    fun JsonObject.getAsJsonObjectNullable(key: String): JsonObject? {
+        return if (this[key] != null && !this[key].isJsonNull) this[key]?.asJsonObject else null
+    }
+
     fun JsonObject.getAsString(key: String): String? {
         return if (this[key] != null && !this[key].isJsonNull) this[key]?.asString else null
     }

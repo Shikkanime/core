@@ -11,6 +11,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
 import fr.shikkanime.utils.ObjectParser.getAsInt
+import fr.shikkanime.utils.ObjectParser.getAsJsonObjectNullable
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import io.ktor.client.request.forms.*
@@ -108,7 +109,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 title = requireNotNull(valueObject.getAsString("title")) { "Missing title for latest show in list" },
                 isPlayable = valueObject.getAsJsonObject("availability")?.getAsBoolean("isPlayable") ?: false,
             )
-        }.toTypedArray()
+        }.distinctBy { it.id }.toTypedArray()
     }
 
     override suspend fun getShow(locale: String, id: Int): Show {
@@ -145,7 +146,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             metadata?.thumbnail,
             metadata?.banner ?: showJson.getAsJsonObject("boxartHighRes")!!.getAsString("url")!!.substringBefore("?"),
             metadata?.carousel ?: showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
-            showJson.getAsJsonObject("logoArtwork")?.getAsString("url")?.substringBefore("?"),
+            showJson.getAsJsonObjectNullable("logoArtwork")?.getAsString("url")?.substringBefore("?"),
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text"),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
             showJson.getAsString("availabilityStartTime")?.let(ZonedDateTime::parse),
