@@ -5,7 +5,6 @@ import fr.shikkanime.AbstractTest
 import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
@@ -108,13 +107,21 @@ class PrimeVideoPlatformTest : AbstractTest() {
                 testDate = "2026-06-01T21:00:00Z",
                 imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/b196230-Ldqd9onRZhix.png",
                 expectedAudioLocales = setOf("ja-JP")
+            ),
+            SimulcastTestCase(
+                "0LW570H4NYAE6XSCD8I7KZMVNH",
+                "Les Nations du Soleil sanglant\n",
+                releaseDay = 0,
+                testDate = "2026-03-29T08:30:00Z",
+                imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx206914-45avCPrNz1co.jpg",
+                expectedAudioLocales = setOf("ja-JP")
             )
         )
     }
 
     @ParameterizedTest
     @MethodSource("primeVideoTestCases")
-    fun `should fetch episodes from Prime Video`(testCase: SimulcastTestCase) {
+    suspend fun `should fetch episodes from Prime Video`(testCase: SimulcastTestCase) {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse(testCase.testDate)
         val key = CountryCodePrimeVideoSimulcastKeyCache(
@@ -126,8 +133,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
             }
         )
 
-        val episodes = runCatching { runBlocking { primeVideoPlatform.fetchApiContent(key, zonedDateTime) } }
-            .getOrNull() ?: emptyList()
+        val episodes = primeVideoPlatform.fetchApiContent(key, zonedDateTime)
 
         assertNotNull(episodes)
         // Skip the test if no episodes are found

@@ -3,26 +3,25 @@ package fr.shikkanime.wrappers.impl
 import com.google.gson.JsonObject
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.LocaleUtils
-import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsLong
 import fr.shikkanime.utils.ObjectParser.getAsString
-import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractPrimeVideoWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
+object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     override suspend fun getShow(locale: String, id: String): Show {
         // Make API request
         val globalJson = fetchPrimeVideoData(
             "$baseUrl/-/${
                 locale.lowercase().substringAfterLast("-")
-            }/detail/$id/ref=atv_sr_fle_c_Tn74RA_1_1_1", locale
+            }/detail/$id", locale
         )
 
         // Extract show data
@@ -192,18 +191,17 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = httpRequest.get(
-            "$url?dvWebAppClientVersion=1.0.121090.0",
+            "$url?dvWebAppClientVersion=1.0.121090.",
             headers = mapOf(
                 HttpHeaders.Accept to ContentType.Application.Json.toString(),
-                HttpHeaders.Cookie to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
-                "x-requested-with" to "WebSPA"
+                HttpHeaders.AcceptLanguage to locale.split(StringUtils.DASH_STRING).first().lowercase(),
+                "x-requested-with" to "WebAppSPA"
             )
         )
-        
-        require(response.status == HttpStatusCode.OK) { 
-            "Failed to fetch data (${response.status.value} - ${response.bodyAsText()})" 
-        }
-        
+
+        require(response.status == HttpStatusCode.OK) { "Failed to fetch data (${response.status.value} - ${response.bodyAsText()})" }
+        logger.fine("Fetched data from Prime Video: ${response.bodyAsText()}")
+
         return ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("body") ?: throw Exception("Failed to parse response")
     }
