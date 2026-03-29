@@ -264,7 +264,7 @@ class UpdateAnimeJob : AbstractJob {
                 show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
                 put(ImageType.BANNER, show.banner)
                 put(ImageType.CAROUSEL, show.carousel)
-                put(ImageType.TITLE, show.title)
+                show.title?.let { put(ImageType.TITLE, it) }
             },
             description = show.description,
             episodeSize = episodes.size
