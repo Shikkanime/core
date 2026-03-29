@@ -192,9 +192,9 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = httpRequest.get(
-            "$url?dvWebSPAClientVersion=1.0.120974.0",
+            "$url?dvWebAppClientVersion=1.0.121090.0",
             headers = mapOf(
-                "Accept" to ContentType.Application.Json.toString(),
+                HttpHeaders.Accept to ContentType.Application.Json.toString(),
                 HttpHeaders.Cookie to "lc-main-av=${locale.replace(StringUtils.DASH_STRING, "_")}",
                 "x-requested-with" to "WebSPA"
             )
@@ -205,14 +205,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper(){
         }
         
         return ObjectParser.fromJson(response.bodyAsText())
-            .getAsJsonArray("page")
-            ?.firstOrNull()
-            ?.asJsonObject
-            ?.getAsJsonObject("assembly")
-            ?.getAsJsonArray("body")
-            ?.firstOrNull()
-            ?.asJsonObject
-            ?.getAsJsonObject("props") ?: throw Exception("Failed to parse response")
+            .getAsJsonObject("body") ?: throw Exception("Failed to parse response")
     }
 
     private suspend fun loadMoreData(id: String, token: String): JsonObject {

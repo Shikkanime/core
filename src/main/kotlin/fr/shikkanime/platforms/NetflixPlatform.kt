@@ -95,7 +95,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleas
                 episode.show.thumbnail?.let { image -> put(ImageType.THUMBNAIL, image) }
                 put(ImageType.BANNER, episode.show.banner)
                 put(ImageType.CAROUSEL, episode.show.carousel)
-                put(ImageType.TITLE, episode.show.title)
+                episode.show.title?.let { title -> put(ImageType.TITLE, title) }
             },
             animeDescription = episode.show.description,
             releaseDateTime = requireNotNull(episode.releaseDateTime) { "Release date is null" },
