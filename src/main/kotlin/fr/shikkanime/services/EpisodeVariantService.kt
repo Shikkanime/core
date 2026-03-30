@@ -28,6 +28,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject private lateinit var ruleCacheService: RuleCacheService
     @Inject private lateinit var ruleService: RuleService
     @Inject private lateinit var attachmentService: AttachmentService
+    @Inject private lateinit var mailService: MailService
 
     override fun getRepository() = episodeVariantRepository
 
@@ -213,6 +214,19 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         // Update the anime entity with the episode's data
         updateAnime(anime, episode, mapping)
+
+        if (episodeVariantRepository.findAllByMappingAndPlatformAndAudioLocaleAndUncensored(
+            mapping.uuid!!,
+            episode.platform,
+            episode.audioLocale,
+            episode.uncensored
+        ).isNotEmpty()) {
+            // Send admin email to avoid duplicates
+            mailService.saveAdminMail(
+                "Duplicate episode variant detected",
+                "A duplicate episode variant was detected for anime '${anime.name}' (UUID: ${anime.uuid}), season '${mapping.season}', episode type '${mapping.episodeType}', number '${mapping.number}', platform '${episode.platform}', audio locale '${episode.audioLocale}', uncensored '${episode.uncensored}'. Please investigate."
+            )
+        }
 
         // Save the `EpisodeVariant` entity
         val savedEntity = super.save(

@@ -98,7 +98,7 @@ class SiteController {
                     CountryCode.FR,
                     selectedSimulcast.uuid,
                     null,
-                    searchTypes,
+                    searchTypes?.ifEmpty { null },
                     listOf(SortParameter("name", SortParameter.Order.ASC)),
                     1,
                     102,
@@ -230,7 +230,7 @@ class SiteController {
         return Response.template(
             Link.CALENDAR,
             mutableMapOf(
-                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay, searchTypes),
+                "weeklyAnimes" to animeCacheService.getWeeklyAnimes(CountryCode.FR, null, startOfWeekDay, searchTypes?.ifEmpty { null }),
                 "previousWeek" to startOfWeekDay.minusDays(7).takeIf { it >= minimalReleaseDate },
                 "searchTypes" to searchTypes.orEmpty().joinToString(StringUtils.COMMA_STRING),
                 "currentWeek" to startOfWeekDay,

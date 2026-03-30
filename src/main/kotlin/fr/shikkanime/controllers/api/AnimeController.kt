@@ -32,7 +32,7 @@ class AnimeController : HasPageableRoute() {
         val name = parameters["name"]
         val sort = parameters["sort"]
         val desc = parameters["desc"]
-        val searchTypes = parameters["searchTypes"]?.split(StringUtils.COMMA_STRING)?.map(LangType::valueOf)?.toTypedArray()
+        val searchTypes = parameters["searchTypes"]?.split(StringUtils.COMMA_STRING)?.mapNotNull(LangType::valueOfNullable)?.toTypedArray()
 
         if (name != null && (sort != null || desc != null))
             return Response.conflict(MessageDto.error("You can't use sort and desc with name"))
@@ -52,7 +52,7 @@ class AnimeController : HasPageableRoute() {
                     countryCode,
                     simulcastUuid,
                     name,
-                    searchTypes,
+                    searchTypes?.ifEmpty { null },
                     sortParams,
                     page,
                     limit
@@ -76,7 +76,7 @@ class AnimeController : HasPageableRoute() {
             return Response.badRequest(MessageDto.error("Invalid week format"))
         }.atStartOfWeek()
 
-        return Response.ok(animeCacheService.getWeeklyAnimes(country, memberUuid, startOfWeekDay, searchTypes))
+        return Response.ok(animeCacheService.getWeeklyAnimes(country, memberUuid, startOfWeekDay, searchTypes?.ifEmpty { null }))
     }
 
     @Path("/missed")

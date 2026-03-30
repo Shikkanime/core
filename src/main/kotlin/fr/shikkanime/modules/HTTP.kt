@@ -3,7 +3,6 @@ package fr.shikkanime.modules
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.controllers.site.SiteController
 import fr.shikkanime.utils.Constant
-import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.SingleLineDirective
 import fr.shikkanime.utils.routes.Response
 import freemarker.cache.ClassTemplateLoader
@@ -18,11 +17,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.util.*
-import java.util.logging.Level
-
-private val logger = LoggerFactory.getLogger("HTTP")
 
 fun Application.configureHTTP() {
     install(Compression) {
@@ -42,10 +37,6 @@ fun Application.configureHTTP() {
         allowCredentials = true
     }
     install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            logger.log(Level.SEVERE, "Internal server error", cause)
-            call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
-        }
         status(HttpStatusCode.NotFound) { call, _ ->
             val path = call.request.path()
             if (!isSitePath(path)) return@status
