@@ -7,7 +7,7 @@
         page: <#if page?? && page?has_content>${page}<#else>1</#if>,
         searchParameters: {
             searchTypes: <#if searchTypes?? && searchTypes?has_content>[<#list searchTypes?split(',') as searchType>'${searchType}'<#if searchType_has_next>,</#if></#list>]<#else>['SUBTITLES', 'VOICE']</#if>,
-            query: <#if query?? && query?has_content>'${query}'<#else>''</#if>
+            query: <#if query?? && query?has_content>'${query?js_string}'<#else>''</#if>
         },
     }" x-init="
         const pageable = await search(searchParameters.query, searchParameters.searchTypes, page);

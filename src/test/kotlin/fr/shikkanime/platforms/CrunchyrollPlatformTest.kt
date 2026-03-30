@@ -123,6 +123,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 expectedEpisodeCount = 2,
                 episodeType = EpisodeType.EPISODE
             ),
+            EpisodeTestCase(
+                testDate = "2026-03-30T12:00:00Z",
+                simulcastNames = listOf("Cheat Skill Level Up"),
+                expectedAnimeName = "Cheat Skill Level Up",
+                expectedEpisodeCount = 1,
+                expectedSeason = 1,
+                episodeType = EpisodeType.SPECIAL,
+                expectedNumber = 1
+            ),
         )
         
         @JvmStatic

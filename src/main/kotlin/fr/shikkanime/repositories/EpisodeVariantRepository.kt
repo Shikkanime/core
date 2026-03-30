@@ -201,6 +201,26 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
+    fun findAllByMappingAndPlatformAndAudioLocaleAndUncensored(episodeMappingUuid: UUID, platform: Platform, audioLocale: String, uncensored: Boolean): List<EpisodeVariant> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.and(
+                    cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.uuid], episodeMappingUuid),
+                    cb.equal(root[EpisodeVariant_.platform], platform),
+                    cb.equal(root[EpisodeVariant_.audioLocale], audioLocale),
+                    cb.equal(root[EpisodeVariant_.uncensored], uncensored)
+                )
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findByIdentifier(identifier: String): EpisodeVariant? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

@@ -23,7 +23,6 @@ private class ZonedDateTimeAdapterSerializer : JsonSerializer<ZonedDateTime> {
 
 object ObjectParser {
     private val gson = GsonBuilder()
-        .disableHtmlEscaping()
         .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapterDeserializer())
         .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapterSerializer())
         .create()
