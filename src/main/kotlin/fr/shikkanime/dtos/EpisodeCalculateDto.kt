@@ -2,7 +2,7 @@ package fr.shikkanime.dtos
 
 import fr.shikkanime.entities.enums.EpisodeType
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 
 data class EpisodeCalculateDto(
     val animeUuid: UUID,

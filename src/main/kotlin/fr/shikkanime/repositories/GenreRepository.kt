@@ -2,9 +2,9 @@ package fr.shikkanime.repositories
 
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.Anime_
-import fr.shikkanime.entities.Genre_
 import fr.shikkanime.entities.Genre
-import java.util.UUID
+import fr.shikkanime.entities.Genre_
+import java.util.*
 
 class GenreRepository : AbstractRepository<Genre>() {
     override fun getEntityClass() = Genre::class.java

@@ -2,7 +2,6 @@ package fr.shikkanime.dtos
 
 import java.io.Serializable
 import java.util.*
-import kotlin.comparisons.compareValuesBy
 
 data class AnimePlatformDto(
     val uuid: UUID?,

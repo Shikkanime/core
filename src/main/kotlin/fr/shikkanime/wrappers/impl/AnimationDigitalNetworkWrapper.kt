@@ -3,8 +3,8 @@ package fr.shikkanime.wrappers.impl
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.wrappers.factories.AbstractAnimationDigitalNetworkWrapper
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import java.time.LocalDate
 
 object AnimationDigitalNetworkWrapper : AbstractAnimationDigitalNetworkWrapper() {

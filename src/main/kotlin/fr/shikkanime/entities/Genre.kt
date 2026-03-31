@@ -1,10 +1,6 @@
 package fr.shikkanime.entities
 
-import jakarta.persistence.Cacheable
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Index
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.util.*
