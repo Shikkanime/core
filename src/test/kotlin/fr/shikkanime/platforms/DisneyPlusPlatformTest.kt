@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
-import java.util.UUID
+import java.util.*
 
 /**
  * Unit tests for DisneyPlusPlatform.

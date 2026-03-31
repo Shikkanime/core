@@ -19,7 +19,7 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class UpdateEpisodeJob : AbstractJob {
-    data class Context(
+    private data class Context(
         val zonedDateTime: ZonedDateTime,
         val countryCode: CountryCode,
         val anime: Anime,
@@ -190,7 +190,7 @@ class UpdateEpisodeJob : AbstractJob {
                 fieldName = "image",
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull(AbstractPlatform.Episode::image),
                 current = attachmentService.findByEntityUuidTypeAndActive(episodeMapping.uuid, ImageType.BANNER)?.url,
-                isValid = { it != null },
+                isValid = { !it.isNullOrBlank() },
                 apply = {
                     attachmentService.createAttachmentOrMarkAsActive(
                         episodeMapping.uuid,

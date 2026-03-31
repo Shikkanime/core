@@ -5,297 +5,328 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.platforms.CrunchyrollPlatform
 import fr.shikkanime.services.*
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
+import io.ktor.client.plugins.*
 import java.time.ZonedDateTime
 
 class UpdateAnimeJob : AbstractJob {
-    data class UpdatableAnime(
+    private data class AnimeData(
         val platform: Platform,
-        val lastReleaseDateTime: ZonedDateTime,
+        val name: String,
         val attachments: Map<ImageType, String>,
         val description: String?,
-        val episodeSize: Int,
-        var isValidated: Boolean? = null
+    )
+
+    private data class Context(
+        val countryCode: CountryCode,
+        val animePlatform: AnimePlatform,
+        val animeInTimeout: MutableList<String>,
+        val animeDatas: MutableList<AnimeData>
     )
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject private lateinit var animeService: AnimeService
+    @Inject
+    private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var animePlatformService: AnimePlatformService
-    @Inject private lateinit var crunchyrollPlatform: CrunchyrollPlatform
     @Inject private lateinit var traceActionService: TraceActionService
-    @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var attachmentService: AttachmentService
+
+    private fun <T> updateIfChanged(
+        identifier: String,
+        fieldName: String,
+        candidate: T?,
+        current: T,
+        isValid: (T) -> Boolean,
+        apply: (T) -> Unit
+    ) {
+        if (candidate == null || !(isValid(candidate) && candidate != current))
+            return
+
+        apply(candidate)
+        logger.info("Updating $fieldName for $identifier to $candidate")
+    }
 
     override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val animes = animeService.findAllNeedUpdate()
-        logger.info("Found ${animes.size} animes to update")
+        val animesNeedingUpdate = animeService.findAllNeedUpdate()
+        logger.info("Found ${animesNeedingUpdate.size} animes to update")
 
-        val needUpdateAnimes = animes.shuffled()
-            .take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_SIZE, 15))
+        val needUpdateAnimes =
+            animesNeedingUpdate.take(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_SIZE, 15))
 
         if (needUpdateAnimes.isEmpty()) {
             logger.info("No anime to update")
             return
         }
 
-        val deprecatedAnimePlatformDateTime = zonedDateTime.minusMonths(configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION, 3).toLong())
+        var needInvalidation = false
 
         needUpdateAnimes.forEach { anime ->
-            val shortName = StringUtils.getShortName(anime.name!!)
-            logger.info("Updating anime $shortName...")
-            // Compare platform sort index and anime release date descending
-            val updatedAnimes = runCatching { fetchAnime(anime, shortName, deprecatedAnimePlatformDateTime) }
-                .getOrNull()
-                ?.groupBy { it.platform }
-                ?.toList()
-                ?.sortedWith(
-                    compareBy<Pair<Platform, List<UpdatableAnime>>> { it.second.size }
-                        .thenBy { it.first.sortIndex }
-                )
-                ?.flatMap { pair ->
-                    pair.second.sortedWith(
-                        compareByDescending<UpdatableAnime> { it.isValidated }
-                            .thenByDescending { it.lastReleaseDateTime }
-                            .thenBy { it.episodeSize }
-                    )
-                } ?: emptyList()
+            logger.info("Updating anime ${anime.name}...")
 
-            if (updatedAnimes.isEmpty()) {
-                logger.warning("No platform found for anime $shortName")
-                anime.lastUpdateDateTime = zonedDateTime
-                animeService.update(anime)
+            val animePlatforms = animePlatformService.findAllByAnime(anime)
+            val animeDatas = mutableListOf<AnimeData>()
+            val animePlatformInTimeout = mutableListOf<String>()
+
+            animePlatforms.filter { it.platform!!.isStreamingPlatform }
+                .forEach { animePlatform ->
+                    if (animePlatform.lastValidateDateTime != null && animePlatform.lastValidateDateTime!!.isBeforeOrEqual(
+                            zonedDateTime
+                        )
+                    ) {
+                        logger.warning("Deleting old anime platform ${animePlatform.platform} for anime ${anime.name} with id ${animePlatform.platformId}")
+                        animePlatformService.delete(animePlatform)
+                        traceActionService.createTraceAction(animePlatform, TraceAction.Action.DELETE)
+                        return@forEach
+                    }
+
+                    val context = Context(
+                        anime.countryCode!!,
+                        animePlatform,
+                        animePlatformInTimeout,
+                        animeDatas
+                    )
+
+                    when (animePlatform.platform!!) {
+                        Platform.ANIM -> fetchADN(context)
+                        Platform.CRUN -> fetchCrunchyroll(context)
+                        Platform.DISN -> fetchDisneyPlus(context)
+                        Platform.NETF -> fetchNetflix(context)
+                        Platform.PRIM -> fetchPrimeVideo(context)
+                        else -> logger.warning("Unknown platform ${animePlatform.platform.platformName}")
+                    }
+
+                    if (animePlatformInTimeout.contains(animePlatform.platformId)) {
+                        logger.warning("${animePlatform.platformId} failed to fetch on timeout, retry update later")
+                        return@forEach
+                    }
+                }
+
+            if (animePlatformInTimeout.isNotEmpty()) {
+                logger.warning("${animePlatformInTimeout.size} platform(s) failed to fetch on timeout, retry update later")
                 return@forEach
             }
 
+            // Check if a platform is present multiple times
+            val platformCounts = animeDatas.groupingBy { it.platform }
+                .eachCount()
+                .filter { it.value > 1 }
+
+            if (platformCounts.isNotEmpty()) {
+                logger.warning("Found multiple platforms for anime ${anime.name}: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
+
+                platformCounts.forEach { (platform, _) ->
+                    animeDatas.filter { it.platform == platform && it.name != anime.name }
+                        .forEach {
+                            logger.warning("Removing ${it.name} from matching list because it doesn't match the anime name")
+                            animeDatas.remove(it)
+                        }
+                }
+            }
+
+            require(animeDatas.isNotEmpty()) { "No data found for anime ${anime.name}" }
+            val matchedAnimes = animeDatas.sortedBy { it.platform.sortIndex }
             var hasChanged = false
 
-            val updateAttachments = updatedAnimes.flatMap { it.attachments.entries }
-                .groupBy { it.key }
-                .mapValues { it.value.first().value }
-
-            updateAttachments.forEach { (type, url) ->
-                if (attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, type)?.url != url && url.isNotBlank()) {
-                    attachmentService.createAttachmentOrMarkAsActive(anime.uuid, type, url = url)
-                    logger.info("Attachment $type updated for anime $shortName to $url")
-                }
+            ImageType.entries.forEach { imageType ->
+                updateIfChanged(
+                    anime.name!!,
+                    fieldName = imageType.name.lowercase(),
+                    candidate = matchedAnimes.firstNotNullOfOrNull { it.attachments[imageType] },
+                    current = attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, imageType)?.url,
+                    isValid = { !it.isNullOrBlank() },
+                    apply = {
+                        attachmentService.createAttachmentOrMarkAsActive(
+                            anime.uuid,
+                            imageType,
+                            it
+                        ); hasChanged = true; needInvalidation = true
+                    }
+                )
             }
 
-            val updatableDescription = updatedAnimes.firstOrNull { !it.description.isNullOrBlank() }?.description?.normalize()
+            updateIfChanged(
+                anime.name!!,
+                fieldName = "description",
+                candidate = matchedAnimes.firstNotNullOfOrNull {
+                    it.description.normalize()?.take(Constant.MAX_DESCRIPTION_LENGTH)
+                },
+                current = anime.description,
+                isValid = { !it.isNullOrBlank() },
+                apply = { anime.description = it; hasChanged = true; needInvalidation = true }
+            )
 
-            if (updatableDescription != anime.description && !updatableDescription.isNullOrBlank()) {
-                anime.description = updatableDescription
-                logger.info("Description updated for anime $shortName to $updatableDescription")
-                hasChanged = true
-            }
-
-            val aniListMediaId = animePlatformService.findAllByAnime(anime)
-                .filterNot { it.platform!!.isStreamingPlatform }
+            animePlatforms.filterNot { it.platform!!.isStreamingPlatform }
                 .sortedByDescending { it.lastValidateDateTime }
                 .singleOrNull { it.platform == Platform.ANIL }
-                ?.platformId
-                ?.toIntOrNull()
-
-            if (aniListMediaId != null) {
-                val aniListMedia = AniListCachedWrapper.getMediaById(aniListMediaId)
-
-                if (AniListMatchingService.updateAnimeGenreAndTags(anime, shortName, aniListMedia)) {
-                    hasChanged = true
-                    logger.info("Genres or tags updated for anime $shortName")
+                ?.platformId?.toIntOrNull()
+                ?.let { aniListMediaId -> runCatching { AniListCachedWrapper.getMediaById(aniListMediaId) } }
+                ?.onSuccess { media ->
+                    if (AniListMatchingService.updateAnimeGenreAndTags(
+                            anime,
+                            StringUtils.getShortName(anime.name!!),
+                            media
+                        )
+                    ) {
+                        hasChanged = true
+                        logger.info("Genres or tags updated for anime ${anime.name}")
+                    }
                 }
-            }
 
             anime.lastUpdateDateTime = zonedDateTime
             animeService.update(anime)
 
-            if (hasChanged) {
+            if (hasChanged)
                 traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
-            }
 
-            logger.info("Anime $shortName updated")
+            logger.info("Anime ${anime.name} updated")
         }
 
-        InvalidationService.invalidate(Anime::class.java)
+        if (needInvalidation)
+            InvalidationService.invalidate(Anime::class.java)
+
+        logger.info("All animes processed")
     }
 
-    private suspend fun fetchAnime(
-        anime: Anime,
-        shortName: String,
-        zonedDateTime: ZonedDateTime
-    ): List<UpdatableAnime> {
-        val list = mutableListOf<UpdatableAnime>()
-
-        animePlatformService.findAllByAnime(anime)
-            .filter { it.platform!!.isStreamingPlatform }
-            .forEach {
-                if (it.lastValidateDateTime != null && it.lastValidateDateTime!!.isBeforeOrEqual(zonedDateTime)) {
-                    logger.warning("Deleting old anime platform ${it.platform} for anime $shortName with id ${it.platformId}")
-                    animePlatformService.delete(it)
-                    traceActionService.createTraceAction(it, TraceAction.Action.DELETE)
-                    return@forEach
-                }
-
-                runCatching {
-                    val updatableAnime = when (it.platform!!) {
-                        Platform.ANIM -> fetchADNAnime(it)
-                        Platform.CRUN -> fetchCrunchyrollAnime(it)
-                        Platform.DISN -> fetchDisneyPlusAnime(it)
-                        Platform.NETF -> fetchNetflixAnime(it)
-                        Platform.PRIM -> fetchPrimeVideoAnime(it)
-                        else -> throw Exception("Invalid platform ${it.platform}")
-                    }
-
-                    updatableAnime.isValidated = it.lastValidateDateTime != null && it.lastValidateDateTime!!.isAfterOrEqual(zonedDateTime)
-                    list.add(updatableAnime)
-                }.onFailure { e ->
-                    logger.warning("Error while fetching anime $shortName on platform ${it.platform}: ${e.message}")
-                }
-            }
-
-        return list
+    private suspend fun <T> fetchOrSkip(
+        animeInTimeout: MutableList<String>,
+        animePlatform: AnimePlatform,
+        fetch: suspend () -> T
+    ): T? = try {
+        HttpRequest.retryOnTimeout(3) { fetch() }
+    } catch (_: HttpRequestTimeoutException) {
+        animeInTimeout.add(animePlatform.platformId!!)
+        null
+    } catch (e: Exception) {
+        logger.warning("Error while fetching ${animePlatform.platform!!.platformName} content for ${animePlatform.platformId}: ${e.message}")
+        null
     }
 
-    private suspend fun fetchADNAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        val countryCode = animePlatform.anime!!.countryCode!!
-        val platformId = animePlatform.platformId!!.toInt()
-        val show = AnimationDigitalNetworkCachedWrapper.getShow(countryCode.name, platformId)
-        val showVideos = AnimationDigitalNetworkCachedWrapper.getShowVideos(countryCode, platformId)
-            .filter { it.releaseDate != null }
-
-        require(showVideos.isNotEmpty()) { "No episode found for ADN anime ${show.title}" }
-
-        return UpdatableAnime(
-            platform = Platform.ANIM,
-            lastReleaseDateTime = showVideos.maxOf { it.releaseDate!! },
-            attachments = mapOf(
-                ImageType.THUMBNAIL to show.fullHDImage,
-                ImageType.BANNER to show.fullHDBanner,
-                ImageType.CAROUSEL to show.fullHDCarousel,
-                ImageType.TITLE to show.fullHDTitle
-            ),
-            description = show.summary,
-            episodeSize = showVideos.size
-        )
-    }
-
-    private suspend fun fetchCrunchyrollAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        val countryCode = animePlatform.anime!!.countryCode!!
-        val series = CrunchyrollCachedWrapper.getObjects(countryCode.locale, animePlatform.platformId!!).first()
-        val seasons = CrunchyrollCachedWrapper.getSeasonsBySeriesId(countryCode.locale, animePlatform.platformId!!)
-
-        val objects = CrunchyrollCachedWrapper.getEpisodesBySeriesId(
-            countryCode.locale,
-            series.id,
-            true
-        ).mapNotNull {
-            runCatching {
-                crunchyrollPlatform.convertEpisode(
-                    countryCode,
-                    it,
-                    false
-                )
-            }.getOrNull()
-        }
-
-        if (objects.isEmpty())
-            throw Exception("No episode found for Crunchyroll anime ${series.title}")
-
-        return UpdatableAnime(
-            platform = Platform.CRUN,
-            lastReleaseDateTime = objects.maxOf { it.releaseDateTime },
-            attachments = mapOf(
-                ImageType.THUMBNAIL to series.images!!.fullHDImage!!,
-                ImageType.BANNER to series.images.fullHDBanner!!,
-                ImageType.CAROUSEL to series.fullHDCarousel,
-                ImageType.TITLE to series.fullHDTitle
-            ),
-            description = seasons.firstOrNull()?.description?.takeIf { it.isNotBlank() }
-                ?: series.getNormalizedDescription(),
-            episodeSize = objects.size
-        )
-    }
-
-    private suspend fun fetchDisneyPlusAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        val show = DisneyPlusCachedWrapper.getShow(animePlatform.platformId!!)
-        val episodes = DisneyPlusCachedWrapper.getEpisodesByShowId(animePlatform.anime!!.countryCode!!, animePlatform.platformId!!, configCacheService.getValueAsBoolean(
-            ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES))
-
-        if (episodes.isEmpty())
-            throw Exception("No episode found for Disney+ anime ${animePlatform.anime!!.name}")
-
-        return UpdatableAnime(
-            platform = Platform.DISN,
-            lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            attachments = mapOf(
-                ImageType.THUMBNAIL to show.image,
-                ImageType.BANNER to show.banner,
-                ImageType.CAROUSEL to show.carousel,
-                ImageType.TITLE to show.title,
-            ),
-            description = show.description,
-            episodeSize = episodes.size
-        )
-    }
-
-    private suspend fun fetchNetflixAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        val episodes = runCatching {
-            NetflixCachedWrapper.getEpisodesByShowId(
-                animePlatform.anime!!.countryCode!!,
-                animePlatform.platformId!!.toInt()
+    private suspend fun fetchADN(context: Context) {
+        val show = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
+            AnimationDigitalNetworkCachedWrapper.getShow(
+                context.countryCode.name,
+                context.animePlatform.platformId!!.toInt()
             )
-        }.getOrNull()
+        } ?: return
 
-        if (episodes.isNullOrEmpty())
-            throw Exception("No episode found for Netflix anime ${animePlatform.anime!!.name}")
-
-        val show = episodes.first().show
-
-        return UpdatableAnime(
-            platform = Platform.NETF,
-            lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            attachments = buildMap {
-                show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
-                put(ImageType.BANNER, show.banner)
-                put(ImageType.CAROUSEL, show.carousel)
-                show.title?.let { put(ImageType.TITLE, it) }
-            },
-            description = show.description,
-            episodeSize = episodes.size
+        context.animeDatas.add(
+            AnimeData(
+                platform = context.animePlatform.platform!!,
+                name = show.shortTitle?.ifBlank { null } ?: show.title,
+                attachments = mapOf(
+                    ImageType.THUMBNAIL to show.fullHDImage,
+                    ImageType.BANNER to show.fullHDBanner,
+                    ImageType.CAROUSEL to show.fullHDCarousel,
+                    ImageType.TITLE to show.fullHDTitle,
+                ),
+                description = show.summary
+            )
         )
     }
 
-    private suspend fun fetchPrimeVideoAnime(animePlatform: AnimePlatform): UpdatableAnime {
-        val episodes = runCatching {
-            HttpRequest.retry(3) {
-                PrimeVideoCachedWrapper.getEpisodesByShowId(
-                    animePlatform.anime!!.countryCode!!,
-                    animePlatform.platformId!!
-                )
-            }
-        }.getOrNull()
+    private suspend fun fetchCrunchyroll(context: Context) {
+        val series = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
+            CrunchyrollCachedWrapper.getObjects(context.countryCode.locale, context.animePlatform.platformId!!).first()
+        } ?: return
+        val seasons = CrunchyrollCachedWrapper.getSeasonsBySeriesId(
+            context.countryCode.locale,
+            context.animePlatform.platformId!!
+        )
 
-        if (episodes.isNullOrEmpty())
-            throw Exception("No episode found for Prime Video anime ${animePlatform.anime!!.name}")
+        context.animeDatas.add(
+            AnimeData(
+                platform = context.animePlatform.platform!!,
+                name = series.title!!,
+                attachments = mapOf(
+                    ImageType.THUMBNAIL to series.images!!.fullHDImage!!,
+                    ImageType.BANNER to series.images.fullHDBanner!!,
+                    ImageType.CAROUSEL to series.fullHDCarousel,
+                    ImageType.TITLE to series.fullHDTitle,
+                ),
+                description = seasons.firstOrNull()?.description?.ifBlank { null } ?: series.getNormalizedDescription()
+            )
+        )
+    }
+
+    private suspend fun fetchDisneyPlus(context: Context) {
+        val show = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
+            DisneyPlusCachedWrapper.getShow(context.animePlatform.platformId!!)
+        } ?: return
+
+        context.animeDatas.add(
+            AnimeData(
+                platform = context.animePlatform.platform!!,
+                name = show.name,
+                attachments = mapOf(
+                    ImageType.THUMBNAIL to show.image,
+                    ImageType.BANNER to show.banner,
+                    ImageType.CAROUSEL to show.carousel,
+                    ImageType.TITLE to show.title,
+                ),
+                description = show.description
+            )
+        )
+    }
+
+    private suspend fun fetchNetflix(context: Context) {
+        val episodes = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
+            NetflixCachedWrapper.getEpisodesByShowId(context.countryCode, context.animePlatform.platformId!!.toInt())
+        } ?: return
+
+        if (episodes.isEmpty()) {
+            logger.warning("No episode found for Netflix anime ${context.animePlatform.anime!!.name}")
+            return
+        }
 
         val show = episodes.first().show
 
-        return UpdatableAnime(
-            platform = Platform.PRIM,
-            lastReleaseDateTime = animePlatform.anime!!.lastReleaseDateTime,
-            attachments = mapOf(
-                ImageType.BANNER to show.banner,
-                ImageType.CAROUSEL to show.carousel,
-                ImageType.TITLE to show.title,
-            ),
-            description = show.description,
-            episodeSize = episodes.size
+        context.animeDatas.add(
+            AnimeData(
+                platform = context.animePlatform.platform!!,
+                name = show.name,
+                attachments = buildMap {
+                    show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
+                    put(ImageType.BANNER, show.banner)
+                    put(ImageType.CAROUSEL, show.carousel)
+                    show.title?.let { put(ImageType.TITLE, it) }
+                },
+                description = show.description
+            )
+        )
+    }
+
+    private suspend fun fetchPrimeVideo(context: Context) {
+        val episodes = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
+            PrimeVideoCachedWrapper.getEpisodesByShowId(context.countryCode, context.animePlatform.platformId!!)
+        } ?: return
+
+        if (episodes.isEmpty()) {
+            logger.warning("No episode found for PrimeVideo anime ${context.animePlatform.anime!!.name}")
+            return
+        }
+
+        val show = episodes.first().show
+
+        context.animeDatas.add(
+            AnimeData(
+                platform = context.animePlatform.platform!!,
+                name = show.name,
+                attachments = mapOf(
+                    ImageType.BANNER to show.banner,
+                    ImageType.CAROUSEL to show.carousel,
+                    ImageType.TITLE to show.title,
+                ),
+                description = show.description
+            )
         )
     }
 }

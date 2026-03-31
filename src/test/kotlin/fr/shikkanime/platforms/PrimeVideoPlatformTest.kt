@@ -134,8 +134,8 @@ class PrimeVideoPlatformTest : AbstractTest() {
         )
 
         val episodes = runCatching { primeVideoPlatform.fetchApiContent(key, zonedDateTime) }.getOrElse {
-            if (it is IllegalArgumentException && it.message?.contains("(404") == true) {
-                assumeTrue(false, "Prime Video content not found (404)")
+            if (it is IllegalArgumentException && (it.message?.contains("(404") == true || it.message?.contains("(503") == true)) {
+                assumeTrue(false, "Prime Video content not found (404 or 503)")
                 return
             }
             throw it
@@ -195,8 +195,11 @@ class PrimeVideoPlatformTest : AbstractTest() {
         // First fetch - should populate cache
         val firstFetchResult = runCatching { primeVideoPlatform.fetchEpisodes(zonedDateTime, null) }
         val exception = firstFetchResult.exceptionOrNull()
-        if (exception is IllegalArgumentException && exception.message?.contains("(404") == true) {
-            assumeTrue(false, "Prime Video content not found (404)")
+        if (exception is IllegalArgumentException && (exception.message?.contains("(404") == true || exception.message?.contains(
+                "(503"
+            ) == true)
+        ) {
+            assumeTrue(false, "Prime Video content not found (404 or 503)")
             return
         }
         primeVideoPlatform.updateAnimeSimulcastConfiguration(simulcast.name)

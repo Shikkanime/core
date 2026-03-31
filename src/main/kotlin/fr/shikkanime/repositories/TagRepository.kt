@@ -1,7 +1,7 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Tag_
 import fr.shikkanime.entities.Tag
+import fr.shikkanime.entities.Tag_
 
 class TagRepository : AbstractRepository<Tag>() {
     override fun getEntityClass() = Tag::class.java

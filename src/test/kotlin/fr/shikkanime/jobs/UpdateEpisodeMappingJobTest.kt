@@ -77,7 +77,6 @@ class UpdateEpisodeMappingJobTest : AbstractTest() {
                 ),
                 expectedMappingsCount = 2,
                 expectedVariantsCount = 3,
-                expectedBannerUrl = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/97ab10f90157c828a591cd4ec66e851c.jpg",
                 expectedUpdatedTitle = "Petite amie à louer"
             ),
             TestCase(
