@@ -6,6 +6,7 @@ import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.indexers.GroupedIndexer
 import fr.shikkanime.utils.takeIfNotEmpty
 import fr.shikkanime.utils.toTreeSet
 import fr.shikkanime.utils.withUTCString
@@ -79,5 +80,19 @@ class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto>
             description = if (isSingleMapping) firstMapping.description else null,
             duration = if (isSingleMapping) firstMapping.duration else null
         )
+    }
+
+    private fun toEntity(record: GroupedIndexer.GroupedRecord): GroupedEpisode {
+        return toEntity(record.variants)
+    }
+
+    /**
+     * Groups a collection of [EpisodeVariant] and converts them into a list of [GroupedEpisode].
+     *
+     * @param variants The collection of variants to group.
+     * @return A list of [GroupedEpisode] objects.
+     */
+    fun toEntities(variants: Collection<EpisodeVariant>): List<GroupedEpisode> {
+        return GroupedIndexer.group(variants).map { toEntity(it) }
     }
 }

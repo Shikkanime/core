@@ -101,28 +101,35 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         val followed = memberUuid?.let(memberFollowAnimeService::findAllFollowedAnimesUUID)
 
-        val indexes = GroupedIndexer.filterAndSortReverseDataIndexRecords(
-            filter = { (data, indexEntry, compositeIndex) -> compositeIndex.countryCode == countryCode
-                    && (indexEntry.key.isAfterOrEqual(startAtPreviousWeek) && indexEntry.key.isBeforeOrEqual(endOfCurrentWeek))
-                    && (searchTypes?.let { LangType.fromAudioLocale(countryCode, data.audioLocale) in it } ?: true)
-                    && (followed?.contains(compositeIndex.animeUuid) ?: true) },
-            comparator = compareBy( { it.second.key }, { it.third.animeSlug }, { it.third.episodeType })
+        val indexes = GroupedIndexer.filterAndSortDataRecords(
+            filter = { (data, record) ->
+                (searchTypes?.let { LangType.fromAudioLocale(countryCode, data.audioLocale) in it } ?: true)
+                        && (followed?.contains(record.key.animeUuid) ?: true)
+            },
+            comparator = compareBy(
+                { it.record.releaseMillis },
+                { it.record.key.animeSlug },
+                { it.record.key.episodeType }),
+            minDateTime = startAtPreviousWeek,
+            maxDateTime = endOfCurrentWeek,
+            countryCode = countryCode
         )
 
-        val variants = episodeVariantService.findAllByUuids(indexes.map { it.first.uuid }.toSet())
+        val variants = episodeVariantService.findAllByUuids(indexes.map { it.data.uuid }.toSet())
             .associateBy { it.uuid }
 
-        val groupedVariants = mutableMapOf<GroupedIndexer.CompositeIndex, TreeMap<ZonedDateTime, MutableSet<EpisodeVariant>>>()
+        val groupedVariants =
+            mutableMapOf<GroupedIndexer.CompositeKey, TreeMap<ZonedDateTime, MutableSet<EpisodeVariant>>>()
 
-        indexes.forEach { (data, indexEntry, compositeIndex) ->
+        indexes.forEach { (data, record) ->
             variants[data.uuid]?.let { variant ->
-                val innerMap = groupedVariants.getOrPut(compositeIndex) { TreeMap() }
-                val variantSet = innerMap.getOrPut(indexEntry.key) { mutableSetOf() }
+                val innerMap = groupedVariants.getOrPut(record.key) { TreeMap() }
+                val variantSet = innerMap.getOrPut(record.releaseDateTime) { mutableSetOf() }
                 variantSet.add(variant)
             }
         }
 
-        val groupedAnimes = groupedVariants.flatMap { (compositeIndex, treeMap) ->
+        val groupedAnimes = groupedVariants.flatMap { (compositeKey, treeMap) ->
             treeMap.mapNotNull { (zonedDateTime, variants) ->
                 val isReleaseInCurrentWeek = zonedDateTime.withZoneSameInstant(zoneId) in currentWeekRange
                 val anime = variants.first().mapping!!.anime!!
@@ -133,7 +140,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                 val mappingCount = mappings.takeIfNotEmpty()?.size ?: variants.map { it.mapping!!.uuid }.distinct().count()
 
 
-                if (!isReleaseInCurrentWeek && (treeMap.lastEntry().key in currentWeekRange || mappingCount > 5 || compositeIndex.episodeType == EpisodeType.FILM)) {
+                if (!isReleaseInCurrentWeek && (treeMap.lastEntry().key in currentWeekRange || mappingCount > 5 || compositeKey.episodeType == EpisodeType.FILM)) {
                     return@mapNotNull null
                 }
 
@@ -156,7 +163,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                         }
                     },
                     variants.map { LangType.fromAudioLocale(countryCode, it.audioLocale!!) }.toTreeSet(),
-                    compositeIndex.episodeType,
+                    compositeKey.episodeType,
                     mappings.minOfOrNull { it.number!! },
                     mappings.maxOfOrNull { it.number!! },
                     mappings.firstOrNull()?.number,

@@ -194,14 +194,14 @@ class UpdateAnimeJobTest : AbstractTest() {
     @ParameterizedTest(name = "Update anime {0}")
     @MethodSource("testCases")
     fun `should update anime data`(testCase: TestCase) {
-        // Préparation des données
+        // Data preparation
         val releaseDate = testCase.releaseDateTime?.let { ZonedDateTime.parse(it) } ?: ZonedDateTime.parse("2025-01-01T00:00:00Z")
         val lastReleaseDate = if (testCase.lastReleaseDateTime.isNotEmpty())
             ZonedDateTime.parse(testCase.lastReleaseDateTime) else releaseDate
         val lastUpdateDate = if (testCase.lastUpdateDateTime.isNotEmpty())
             ZonedDateTime.parse(testCase.lastUpdateDateTime) else releaseDate
 
-        // Création de l'anime
+        // Anime creation
         val anime = animeService.save(
             Anime(
                 countryCode = CountryCode.FR,
@@ -213,7 +213,7 @@ class UpdateAnimeJobTest : AbstractTest() {
             )
         )
 
-        // Ajout des plateformes
+        // Adding platforms
         testCase.platforms.forEach { platformData ->
             animePlatformService.save(
                 AnimePlatform(
@@ -224,7 +224,7 @@ class UpdateAnimeJobTest : AbstractTest() {
             )
         }
 
-        // Exécution du job
+        // Job execution
         runBlocking {
             runCatching { updateAnimeJob.run() }.onFailure {
                 if (it is IllegalArgumentException && (it.message?.contains("(404") == true || it.message?.contains("(503") == true)) {
@@ -235,12 +235,12 @@ class UpdateAnimeJobTest : AbstractTest() {
             }
         }
 
-        // Vérifications
+        // Verifications
         val animes = animeService.findAll()
         assertEquals(1, animes.size)
         val updatedAnime = animes.first()
 
-        // Vérification des données mises à jour
+        // Verify updated data
         testCase.expectedThumbnail?.let {
             assumeTrue(
                 it ==

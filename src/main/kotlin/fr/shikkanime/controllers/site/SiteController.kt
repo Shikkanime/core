@@ -59,12 +59,14 @@ class SiteController {
 
     @Path
     @Get
-    private fun home() = Response.template(
+    private fun home(@QueryParam searchTypes: Array<LangType>?) = Response.template(
         Link.HOME,
         mutableMapOf(
             "animes" to getFullAnimesSimulcast(),
+            "searchTypes" to searchTypes.orEmpty().joinToString(StringUtils.COMMA_STRING),
             "groupedEpisodes" to groupedEpisodeCacheService.findAllBy(
                 CountryCode.FR,
+                searchTypes?.ifEmpty { null },
                 listOf(
                     SortParameter("releaseDateTime", SortParameter.Order.DESC),
                     SortParameter("animeName", SortParameter.Order.DESC),

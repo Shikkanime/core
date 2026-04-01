@@ -114,6 +114,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    maxHeapSize = "2g"
     finalizedBy(tasks.koverVerify)
 }
 

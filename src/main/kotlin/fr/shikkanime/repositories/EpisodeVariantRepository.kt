@@ -53,7 +53,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
 
             createReadOnlyQuery(it, query).resultStream.forEach { tuple ->
                 GroupedIndexer.add(
-                    GroupedIndexer.CompositeIndex(
+                    GroupedIndexer.CompositeKey(
                         tuple[0, CountryCode::class.java],
                         tuple[1, UUID::class.java],
                         tuple[2, String::class.java],

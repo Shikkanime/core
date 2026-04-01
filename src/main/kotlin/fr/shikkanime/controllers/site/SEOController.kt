@@ -98,6 +98,7 @@ class SEOController {
         null,
         mutableMapOf("groupedEpisodes" to groupedEpisodeCacheService.findAllBy(
             CountryCode.FR,
+            null,
             listOf(
                 SortParameter("releaseDateTime", SortParameter.Order.DESC),
                 SortParameter("animeName", SortParameter.Order.DESC),

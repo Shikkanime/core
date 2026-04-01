@@ -214,23 +214,23 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
         val node = relation.node
         val type = relation.relationType
 
-        // Règle 1 : Relation directe (Parent/Prequel) présente dans la liste courante avec un ID inférieur
+        // Rule 1: Direct relation (Parent/Prequel) present in the current list with a lower ID
         val isSequentialPrequel = type in listOf("PARENT", "PREQUEL") &&
                 node.id in existingMediaIds &&
                 node.id < media.id &&
                 !(media.format == "MOVIE" && node.format == "MOVIE")
 
-        // Règle 2 : Prequel spécifique aux films
+        // Rule 2: Movie-specific prequel
         val isMoviePrequel = type == "PREQUEL" &&
                 media.format == "MOVIE" &&
                 node.format in listOf("MOVIE", "ONA")
 
-        // Règle 3 : Spinoff basé sur un personnage (sauf si le média courant est TV/TV Short/Film)
+        // Rule 3: Character-based spinoff (unless the current media is TV/TV Short/Movie)
         val isCharacterSideStory = type == "CHARACTER" &&
                 media.format !in listOf("TV", "TV_SHORT", "MOVIE") &&
                 node.format == "TV"
 
-        // Règle 4 : Histoires alternatives
+        // Rule 4: Alternative stories
         val isAlternativeContext = type in listOf("ALTERNATIVE", "OTHER") &&
                 media.format !in listOf("TV", "ONA") &&
                 node.format == "TV"
