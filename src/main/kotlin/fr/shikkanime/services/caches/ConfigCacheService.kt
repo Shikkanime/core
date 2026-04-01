@@ -25,7 +25,7 @@ class ConfigCacheService : ICacheService {
     fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue
 
     fun getValueAsString(configPropertyKey: ConfigPropertyKey, defaultValue: String) =
-        getValueAsString(configPropertyKey) ?: defaultValue
+        getValueAsString(configPropertyKey)?.ifBlank { null } ?: defaultValue
 
     fun getValueAsIntNullable(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.toIntOrNull()

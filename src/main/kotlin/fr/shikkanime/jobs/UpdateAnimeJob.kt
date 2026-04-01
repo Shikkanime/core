@@ -67,6 +67,12 @@ class UpdateAnimeJob : AbstractJob {
             return
         }
 
+        val deprecatedAnimePlatformDateTime = zonedDateTime.minusMonths(
+            configCacheService.getValueAsInt(
+                ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION,
+                3
+            ).toLong()
+        )
         var needInvalidation = false
 
         needUpdateAnimes.forEach { anime ->
@@ -79,7 +85,7 @@ class UpdateAnimeJob : AbstractJob {
             animePlatforms.filter { it.platform!!.isStreamingPlatform }
                 .forEach { animePlatform ->
                     if (animePlatform.lastValidateDateTime != null && animePlatform.lastValidateDateTime!!.isBeforeOrEqual(
-                            zonedDateTime
+                            deprecatedAnimePlatformDateTime
                         )
                     ) {
                         logger.warning("Deleting old anime platform ${animePlatform.platform} for anime ${anime.name} with id ${animePlatform.platformId}")

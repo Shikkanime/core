@@ -16,6 +16,7 @@ import fr.shikkanime.wrappers.impl.*
 import fr.shikkanime.wrappers.impl.caches.*
 import io.ktor.client.plugins.*
 import java.time.ZonedDateTime
+import java.util.*
 import java.util.logging.Level
 
 class UpdateEpisodeJob : AbstractJob {
@@ -81,6 +82,7 @@ class UpdateEpisodeJob : AbstractJob {
         }
 
         var needInvalidation = false
+        val animePlatforms = mutableMapOf<UUID, MutableSet<Pair<Platform, String>>>()
         val notKnownEpisodes = mutableListOf<Pair<AbstractPlatform.Episode, EpisodeMapping?>>()
 
         fetchCrunchyrollContent(needUpdateEpisodes)
@@ -180,6 +182,8 @@ class UpdateEpisodeJob : AbstractJob {
                 return@forEach
             }
 
+            platformEpisodes.mapTo(animePlatforms.getOrPut(episodeMapping.anime!!.uuid!!) { mutableSetOf() }) { it.platform to it.animeId }
+
             val variantIdentifiers = episodeVariants.map(EpisodeVariant::identifier).toSet()
             val matchedAndKnownEpisodes =
                 platformEpisodes.filter { it.getIdentifier() in variantIdentifiers }.sortedBy { it.platform.sortIndex }
@@ -239,6 +243,26 @@ class UpdateEpisodeJob : AbstractJob {
                 .map { it to episodeMapping })
             logger.info("Episode $mappingIdentifier updated")
         }
+
+        logger.info("Updating ${animePlatforms.size} anime platforms...")
+
+        animePlatformService.updateAll(
+            animePlatforms.flatMap { (animeUuid, platformIds) ->
+                platformIds.map { (platform, animeId) ->
+                    animePlatformService.findByAnimePlatformAndId(animeUuid, platform, animeId)
+                        ?: animePlatformService.save(
+                            AnimePlatform(
+                                anime = animeService.getReference(animeUuid),
+                                platform = platform,
+                                platformId = animeId
+                            )
+                        ).also { traceActionService.createTraceAction(it, TraceAction.Action.CREATE) }
+                }.onEach { animePlatform ->
+                    animePlatform.lastValidateDateTime = zonedDateTime
+                    traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
+                }
+            }
+        )
 
         val allIdentifiers = episodeVariantCacheService.findAllIdentifiers()
         val notKnownAllEpisodes = notKnownEpisodes.filter { it.first.getIdentifier() !in allIdentifiers }

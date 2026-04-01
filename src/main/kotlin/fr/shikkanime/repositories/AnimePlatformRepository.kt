@@ -1,6 +1,5 @@
 package fr.shikkanime.repositories
 
-import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.AnimePlatform_
 import fr.shikkanime.entities.Anime_
@@ -55,7 +54,7 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         }
     }
 
-    fun findByAnimePlatformAndId(anime: Anime, platform: Platform, platformId: String): AnimePlatform? {
+    fun findByAnimePlatformAndId(animeUuid: UUID, platform: Platform, platformId: String): AnimePlatform? {
         return database.entityManager.use {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
@@ -63,7 +62,7 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
 
             query.where(
                 cb.and(
-                    cb.equal(root[AnimePlatform_.anime], anime),
+                    cb.equal(root[AnimePlatform_.anime][Anime_.uuid], animeUuid),
                     cb.equal(root[AnimePlatform_.platform], platform),
                     cb.equal(root[AnimePlatform_.platformId], platformId)
                 )
