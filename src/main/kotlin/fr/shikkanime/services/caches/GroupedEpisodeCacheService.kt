@@ -9,6 +9,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.GroupedEpisodeService
@@ -21,6 +22,7 @@ class GroupedEpisodeCacheService : ICacheService {
 
     fun findAllBy(
         countryCode: CountryCode?,
+        searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
@@ -28,10 +30,10 @@ class GroupedEpisodeCacheService : ICacheService {
         "GroupedEpisodeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<GroupedEpisodeDto>>>() {},
-        key = CountryCodeSortPaginationKeyCache(countryCode, sort,page, limit),
+        key = CountryCodeSortPaginationKeyCache(countryCode, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
-            groupedEpisodeService.findAllBy(it.countryCode, it.sort, it.page, it.limit),
+            groupedEpisodeService.findAllBy(it.countryCode, it.searchTypes, it.sort, it.page, it.limit),
             groupedEpisodeFactory
         )
     }

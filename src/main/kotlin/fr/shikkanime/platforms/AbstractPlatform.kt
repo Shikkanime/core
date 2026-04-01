@@ -99,20 +99,20 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
             val result = runCatching { fetchApiContent(key, currentTime) }
                 .fold(
                     onSuccess = { fetchResult ->
-                        // Succès : on met en cache avec hasError = false
+                        // Success: cached with hasError = false
                         apiCache[key] = CacheEntry(currentTime, fetchResult, false)
                         fetchResult
                     },
                     onFailure = { exception ->
                         logger.warning("Error fetching API content for key $key on ${getPlatform().name}: ${exception.message}")
 
-                        // En cas d'erreur, on marque hasError = true et on garde l'ancienne valeur si elle existe
+                        // In case of error, mark hasError = true and keep the old value if it exists
                         val currentCache = apiCache[key]
                         val existingValue = currentCache?.cachedValue
 
                         apiCache[key] = CacheEntry(currentTime, existingValue, true)
 
-                        // Si on a une valeur en cache, on la retourne, sinon on propage l'erreur
+                        // If we have a cached value, return it, otherwise propagate the error
                         existingValue ?: throw exception
                     }
                 )
@@ -120,7 +120,7 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
             return result
         }
 
-        // On retourne la valeur en cache
+        // Return the cached value
         return apiCache[key]?.cachedValue ?: throw IllegalStateException("Cache entry for key $key should not be null here")
     }
 
