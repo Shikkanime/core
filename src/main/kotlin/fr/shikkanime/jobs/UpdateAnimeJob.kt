@@ -128,9 +128,11 @@ class UpdateAnimeJob : AbstractJob {
 
             if (platformCounts.isNotEmpty()) {
                 logger.warning("Found multiple platforms for anime ${anime.name}: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
+                fun normalize(string: String) = string.replace(":", "")
+                val animeNameNormalized = normalize(anime.name!!)
 
                 platformCounts.forEach { (platform, _) ->
-                    animeDatas.filter { it.platform == platform && it.name != anime.name }
+                    animeDatas.filter { it.platform == platform && normalize(it.name) != animeNameNormalized }
                         .forEach {
                             logger.warning("Removing ${it.name} from matching list because it doesn't match the anime name")
                             animeDatas.remove(it)

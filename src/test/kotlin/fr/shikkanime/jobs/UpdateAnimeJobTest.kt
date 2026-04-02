@@ -174,6 +174,15 @@ class UpdateAnimeJobTest : AbstractTest() {
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/36a685a3419b1a93e11e4d1e69d73f08.png",
                 expectedDescription = "Gen Kinokura just wanted to enjoy his peaceful solo camping trips—no distractions, no problems. Enter Shizuku Kusano, a clueless but enthusiastic newbie who crashes his campsite (literally). Now, this bothered outdoorsman is stuck teaching her the ropes. Laughs, mishaps, and heartwarming moments await this duo-camp adventure under the stars!"
             ),
+            TestCase(
+                name = "Anohana: The Flower We Saw That Day",
+                slug = "anohana",
+                releaseDateTime = "2011-04-15T07:00:00Z",
+                platforms = listOf(
+                    PlatformData(Platform.ANIM, "1298"),
+                    PlatformData(Platform.ANIM, "1299"),
+                )
+            ),
         )
     }
 

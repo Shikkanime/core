@@ -16,7 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.time.ZonedDateTime
 import java.util.stream.Stream
 
-class UpdateEpisodeMappingJobTest : AbstractTest() {
+class UpdateEpisodeJobTest : AbstractTest() {
     @Inject
     private lateinit var updateEpisodeMappingJob: UpdateEpisodeJob
 
