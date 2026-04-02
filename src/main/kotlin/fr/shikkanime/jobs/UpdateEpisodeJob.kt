@@ -493,11 +493,13 @@ class UpdateEpisodeJob : AbstractJob {
             episodes.find { it.id == context.episodePlatformId || it.oldId == context.episodePlatformId } ?: return
 
         context.platformEpisodes.addAll(
-            disneyPlusPlatform.convertEpisode(
-                context.countryCode,
-                episode,
-                context.zonedDateTime
-            )
+            runCatching {
+                disneyPlusPlatform.convertEpisode(
+                    context.countryCode,
+                    episode,
+                    context.zonedDateTime
+                )
+            }.getOrDefault(emptyList())
         )
 
         fetchNeighbors(
@@ -519,11 +521,13 @@ class UpdateEpisodeJob : AbstractJob {
                 )
             },
             convert = {
-                disneyPlusPlatform.convertEpisode(
-                    context.countryCode,
-                    it as AbstractDisneyPlusWrapper.Episode,
-                    context.zonedDateTime
-                )
+                runCatching {
+                    disneyPlusPlatform.convertEpisode(
+                        context.countryCode,
+                        it as AbstractDisneyPlusWrapper.Episode,
+                        context.zonedDateTime
+                    )
+                }.getOrDefault(emptyList())
             }
         )
     }
@@ -546,10 +550,12 @@ class UpdateEpisodeJob : AbstractJob {
                 ?: return
 
         context.platformEpisodes.addAll(
-            netflixPlatform.convertEpisode(
-                context.countryCode,
-                episode
-            )
+            runCatching {
+                netflixPlatform.convertEpisode(
+                    context.countryCode,
+                    episode
+                )
+            }.getOrDefault(emptyList())
         )
 
         fetchNeighbors(
@@ -557,10 +563,12 @@ class UpdateEpisodeJob : AbstractJob {
             getPrevious = { NetflixCachedWrapper.getPreviousEpisode(context.countryCode, episode.show.id, it.toInt()) },
             getNext = { NetflixCachedWrapper.getNextEpisode(context.countryCode, episode.show.id, it.toInt()) },
             convert = {
-                netflixPlatform.convertEpisode(
-                    context.countryCode,
-                    it as AbstractNetflixWrapper.Episode,
-                )
+                runCatching {
+                    netflixPlatform.convertEpisode(
+                        context.countryCode,
+                        it as AbstractNetflixWrapper.Episode,
+                    )
+                }.getOrDefault(emptyList())
             }
         )
     }
@@ -582,12 +590,14 @@ class UpdateEpisodeJob : AbstractJob {
             episodes.find { it.id == context.episodePlatformId || context.episodePlatformId in it.oldIds } ?: return
 
         context.platformEpisodes.addAll(
-            primeVideoPlatform.convertEpisode(
-                context.countryCode,
-                StringUtils.EMPTY_STRING,
-                episode,
-                context.zonedDateTime
-            )
+            runCatching {
+                primeVideoPlatform.convertEpisode(
+                    context.countryCode,
+                    StringUtils.EMPTY_STRING,
+                    episode,
+                    context.zonedDateTime
+                )
+            }.getOrDefault(emptyList())
         )
 
         fetchNeighbors(
@@ -595,12 +605,14 @@ class UpdateEpisodeJob : AbstractJob {
             getPrevious = { PrimeVideoCachedWrapper.getPreviousEpisode(context.countryCode, episode.show.id, it) },
             getNext = { PrimeVideoCachedWrapper.getNextEpisode(context.countryCode, episode.show.id, it) },
             convert = {
-                primeVideoPlatform.convertEpisode(
-                    context.countryCode,
-                    StringUtils.EMPTY_STRING,
-                    it as AbstractPrimeVideoWrapper.Episode,
-                    context.zonedDateTime
-                )
+                runCatching {
+                    primeVideoPlatform.convertEpisode(
+                        context.countryCode,
+                        StringUtils.EMPTY_STRING,
+                        it as AbstractPrimeVideoWrapper.Episode,
+                        context.zonedDateTime
+                    )
+                }.getOrDefault(emptyList())
             }
         )
     }
