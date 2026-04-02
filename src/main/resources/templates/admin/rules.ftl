@@ -4,11 +4,14 @@
     <div x-data="{
         loading: false,
         data: [],
+        platforms: [],
+        sortCol: 'platform_name',
+        sortDesc: false,
         selected: {
             platform: {}
         },
         async init() {
-            await this.fetchRules();
+            await Promise.all([this.fetchRules(), this.fetchPlatforms()]);
         },
         async fetchRules() {
             if (this.loading) {
@@ -18,6 +21,58 @@
             this.loading = true;
             this.data = await getRules();
             this.loading = false;
+        },
+        async fetchPlatforms() {
+            const response = await fetch('/api/v1/platforms');
+            this.platforms = await response.json();
+        },
+        sortBy(col) {
+            if (this.sortCol === col) {
+                this.sortDesc = !this.sortDesc;
+            } else {
+                this.sortCol = col;
+                this.sortDesc = false;
+            }
+        },
+        get sortedData() {
+            return [...this.data].sort((a, b) => {
+                let valA;
+                let valB;
+
+                switch(this.sortCol) {
+                    case 'platform_name':
+                        valA = a.platform?.name || '';
+                        valB = b.platform?.name || '';
+                        break;
+                    case 'seriesId':
+                        valA = a.seriesId || '';
+                        valB = b.seriesId || '';
+                        break;
+                    case 'seasonId':
+                        valA = a.seasonId || '';
+                        valB = b.seasonId || '';
+                        break;
+                    case 'action_name':
+                        valA = a.action || '';
+                        valB = b.action || '';
+                        break;
+                    case 'action_value':
+                        valA = a.actionValue || '';
+                        valB = b.actionValue || '';
+                        break;
+                    case 'lastUsage':
+                        valA = a.lastUsageDateTime || '';
+                        valB = b.lastUsageDateTime || '';
+                        break;
+                    default:
+                        valA = '';
+                        valB = '';
+                }
+
+                if (valA < valB) return this.sortDesc ? 1 : -1;
+                if (valA > valB) return this.sortDesc ? -1 : 1;
+                return 0;
+            });
         }
     }" x-init="init">
         <div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel"
@@ -32,8 +87,11 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="platform" class="form-label">Platform</label>
-                                <input type="text" class="form-control" id="platform" name="platform"
-                                       x-model="selected.platform.name">
+                                <select class="form-select" id="platform" name="platform" x-model="selected.platform.name">
+                                    <template x-for="p in platforms" :key="p.id">
+                                        <option :value="p.name" x-text="p.name"></option>
+                                    </template>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label for="seriesId" class="form-label">Series ID</label>
@@ -111,17 +169,35 @@
         <table class="table table-striped table-bordered">
             <thead>
             <tr>
-                <th scope="col">Platform</th>
-                <th scope="col">Series ID</th>
-                <th scope="col">Season ID</th>
-                <th scope="col">Action name</th>
-                <th scope="col">Action value</th>
-                <th scope="col">Last usage</th>
+                <th scope="col" style="cursor: pointer;" @click="sortBy('platform_name')">
+                    Platform
+                    <i class="bi" :class="sortCol === 'platform_name' ? (sortDesc ? 'bi-caret-down-fill' : 'bi-caret-up-fill') : 'bi-caret-down'"></i>
+                </th>
+                <th scope="col" style="cursor: pointer;" @click="sortBy('seriesId')">
+                    Series ID
+                    <i class="bi" :class="sortCol === 'seriesId' ? (sortDesc ? 'bi-caret-down-fill' : 'bi-caret-up-fill') : 'bi-caret-down'"></i>
+                </th>
+                <th scope="col" style="cursor: pointer;" @click="sortBy('seasonId')">
+                    Season ID
+                    <i class="bi" :class="sortCol === 'seasonId' ? (sortDesc ? 'bi-caret-down-fill' : 'bi-caret-up-fill') : 'bi-caret-down'"></i>
+                </th>
+                <th scope="col" style="cursor: pointer;" @click="sortBy('action_name')">
+                    Action name
+                    <i class="bi" :class="sortCol === 'action_name' ? (sortDesc ? 'bi-caret-down-fill' : 'bi-caret-up-fill') : 'bi-caret-down'"></i>
+                </th>
+                <th scope="col" style="cursor: pointer;" @click="sortBy('action_value')">
+                    Action value
+                    <i class="bi" :class="sortCol === 'action_value' ? (sortDesc ? 'bi-caret-down-fill' : 'bi-caret-up-fill') : 'bi-caret-down'"></i>
+                </th>
+                <th scope="col" style="cursor: pointer;" @click="sortBy('lastUsage')">
+                    Last usage
+                    <i class="bi" :class="sortCol === 'lastUsage' ? (sortDesc ? 'bi-caret-down-fill' : 'bi-caret-up-fill') : 'bi-caret-down'"></i>
+                </th>
                 <th scope="col">Actions</th>
             </tr>
             </thead>
             <tbody class="table-group-divider">
-            <template x-for="rule in data">
+            <template x-for="rule in sortedData">
                 <tr>
                     <td x-text="rule.platform.name"></td>
                     <td x-text="rule.seriesId"></td>
