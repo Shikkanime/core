@@ -581,6 +581,82 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
         assertNull(animeService.find(sourceAnime2.uuid!!))
     }
 
+    @Test
+    fun `should shift variants correctly`() {
+        val anime = createTestAnime(name = "Shift Anime", slug = "shift-anime")
+
+        val ep1 = createEpisodeMapping(anime, EpisodeType.EPISODE, 1, 1)
+        val ep2 = createEpisodeMapping(anime, EpisodeType.EPISODE, 1, 2)
+        val ep3 = createEpisodeMapping(anime, EpisodeType.EPISODE, 1, 3)
+
+        // Crunchyroll on ep 1
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = ep1,
+                releaseDateTime = java.time.ZonedDateTime.now(),
+                platform = Platform.CRUN,
+                audioLocale = "ja-JP",
+                identifier = "CRUN_EP1",
+                url = "http://crun/ep1",
+                uncensored = false
+            )
+        )
+        // Netflix on ep 2 (mistake, should be ep 1)
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = ep2,
+                releaseDateTime = java.time.ZonedDateTime.now(),
+                platform = Platform.NETF,
+                audioLocale = "ja-JP",
+                identifier = "NETF_EP2",
+                url = "http://netf/ep2",
+                uncensored = false
+            )
+        )
+        // Netflix on ep 3 (mistake, should be ep 2)
+        episodeVariantService.save(
+            EpisodeVariant(
+                mapping = ep3,
+                releaseDateTime = java.time.ZonedDateTime.now(),
+                platform = Platform.NETF,
+                audioLocale = "ja-JP",
+                identifier = "NETF_EP3",
+                url = "http://netf/ep3",
+                uncensored = false
+            )
+        )
+
+        // Shift Netflix episodes -1
+        val moved = episodeMappingAdminService.shiftVariants(
+            anime.uuid!!,
+            Platform.NETF,
+            EpisodeType.EPISODE,
+            1,
+            2,
+            3,
+            -1
+        )
+        assertEquals(2, moved)
+
+        // Now Netflix EP2 should be on mapping ep1
+        val finalEp1 = episodeMappingService.findAllByAnime(anime.uuid).find { it.number == 1 }!!
+        val varsEp1 = episodeVariantService.findAllByMapping(finalEp1)
+        assertEquals(2, varsEp1.size)
+        assertTrue(varsEp1.any { it.platform == Platform.CRUN })
+        assertTrue(varsEp1.any { it.platform == Platform.NETF })
+
+        // Netflix EP3 should be on mapping ep2
+        val finalEp2 = episodeMappingService.findAllByAnime(anime.uuid).find { it.number == 2 }!!
+        val varsEp2 = episodeVariantService.findAllByMapping(finalEp2)
+        assertEquals(1, varsEp2.size)
+        assertTrue(varsEp2.any { it.platform == Platform.NETF })
+
+        // Mapping ep3 should be deleted because it's empty
+        val finalMappings = episodeMappingService.findAllByAnime(anime.uuid)
+        assertEquals(2, finalMappings.size)
+        assertFalse(finalMappings.any { it.number == 3 })
+    }
+
     // Helper methods
     private fun createTestAnime(
         name: String = "Test Anime",

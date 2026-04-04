@@ -29,6 +29,78 @@ class EpisodeMappingAdminService {
     @Inject private lateinit var attachmentService: AttachmentService
 
     /**
+     * Shifts variants of a specific platform by a given offset, for a given anime, season, and episode type.
+     */
+    fun shiftVariants(
+        animeUuid: UUID,
+        platform: fr.shikkanime.entities.enums.Platform,
+        episodeType: EpisodeType,
+        season: Int,
+        startNumber: Int,
+        endNumber: Int,
+        shift: Int
+    ): Int {
+        val anime = animeService.find(animeUuid) ?: throw IllegalArgumentException("Anime not found")
+        val mappings = episodeMappingService.findAllByAnime(animeUuid).filter {
+            it.season == season && it.episodeType == episodeType
+        }.toMutableList()
+
+        var variantsMoved = 0
+
+        for (number in startNumber..endNumber) {
+            val sourceMapping = mappings.find { it.number == number } ?: continue
+            val variants = episodeVariantService.findAllByMapping(sourceMapping).filter { it.platform == platform }
+
+            if (variants.isEmpty()) continue
+
+            val targetNumber = number + shift
+            var targetMapping = mappings.find { it.number == targetNumber }
+
+            if (targetMapping == null) {
+                targetMapping = EpisodeMapping(
+                    anime = anime,
+                    releaseDateTime = sourceMapping.releaseDateTime,
+                    lastReleaseDateTime = sourceMapping.lastReleaseDateTime,
+                    lastUpdateDateTime = sourceMapping.lastUpdateDateTime,
+                    episodeType = episodeType,
+                    season = season,
+                    number = targetNumber,
+                    duration = sourceMapping.duration,
+                    title = null,
+                    description = null
+                )
+                targetMapping = episodeMappingService.save(targetMapping)
+                mappings.add(targetMapping)
+            } else {
+                val variantMaxDate = variants.maxOfOrNull { it.releaseDateTime }
+                if (variantMaxDate != null && variantMaxDate.isAfter(targetMapping.lastReleaseDateTime)) {
+                    targetMapping.lastReleaseDateTime = variantMaxDate
+                    targetMapping.lastUpdateDateTime = ZonedDateTime.now()
+                    episodeMappingService.update(targetMapping)
+                }
+            }
+
+            variants.forEach { variant ->
+                variant.mapping = targetMapping
+                episodeVariantService.update(variant)
+                variantsMoved++
+            }
+
+            val remainingVariants =
+                episodeVariantService.findAllByMapping(sourceMapping).filter { it.mapping?.uuid == sourceMapping.uuid }
+            if (remainingVariants.isEmpty()) {
+                memberFollowEpisodeService.findAllByEpisode(sourceMapping).forEach {
+                    memberFollowEpisodeService.delete(it)
+                }
+                episodeMappingService.delete(sourceMapping)
+                mappings.remove(sourceMapping)
+            }
+        }
+
+        return variantsMoved
+    }
+
+    /**
      * Merges an episode with an existing one and returns the updated existing episode.
      * All variants from the source episode are transferred to the target episode,
      * while preserving existing variants.

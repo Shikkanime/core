@@ -18,6 +18,12 @@ enum class Link(
     ANIMES("$ADMIN/animes", "/admin/animes/list.ftl", "bi bi-file-earmark-play", "Animes"),
     EPISODES("$ADMIN/episodes", "/admin/episodes/list.ftl", "bi bi-collection-play", "Episodes"),
     EPISODE_MANAGER("$ADMIN/episode-manager", "/admin/episode-manager.ftl", "bi bi-kanban", "Episode manager"),
+    VARIANT_SHIFTER(
+        "$ADMIN/variant-shifter",
+        "/admin/variant-shifter.ftl",
+        "bi bi-arrow-left-right",
+        "Variant shifter"
+    ),
     TRACE_ACTIONS("$ADMIN/trace-actions", "/admin/trace-actions.ftl", "bi bi-database-exclamation", "Trace actions"),
     MEMBERS("$ADMIN/members", "/admin/members/list.ftl", "bi bi-people", "Members"),
     RULES("$ADMIN/rules", "/admin/rules.ftl", "bi bi-rulers", "Rules"),
