@@ -292,7 +292,7 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         var episodeType = when {
             episode.seasonSlugTitle?.contains("movie", true) == true ||
                     episode.seriesSlugTitle?.contains("movie", true) == true ||
-                    (episode.number == null && episode.durationMs > 60_000) -> EpisodeType.FILM
+                    (episode.number == null && episode.durationMs > 3_600_000) -> EpisodeType.FILM
             number == -1 || episode.seasonSlugTitle?.contains("special", true) == true -> EpisodeType.SPECIAL
             else -> EpisodeType.EPISODE
         }

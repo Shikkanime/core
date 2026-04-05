@@ -132,6 +132,15 @@ class CrunchyrollPlatformTest : AbstractTest() {
                 episodeType = EpisodeType.SPECIAL,
                 expectedNumber = 1
             ),
+            EpisodeTestCase(
+                testDate = "2026-04-05T10:30:00Z",
+                simulcastNames = listOf("Wistoria: Wand and Sword"),
+                expectedAnimeName = "Wistoria: Wand and Sword",
+                expectedEpisodeCount = 1,
+                expectedSeason = 2,
+                episodeType = EpisodeType.SPECIAL,
+                expectedNumber = -1
+            ),
         )
         
         @JvmStatic

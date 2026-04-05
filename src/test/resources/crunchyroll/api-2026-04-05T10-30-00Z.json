@@ -1,0 +1,2014 @@
+{
+  "total": 10000,
+  "data": [
+    {
+      "slug": "",
+      "title": "Voyage scolaire ! (Partie 1)",
+      "description": "Le programme du voyage scolaire est défini, mais il faut maintenant se répartir en différents groupes.",
+      "linked_resource_key": "cms:/episodes/GE00366876PTBR",
+      "id": "GE00366876PTBR",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 357993,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 715986,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1073979,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "pt-BR",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Tabagisme"
+        ],
+        "duration_ms": 1431974,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2026-03-15T00:00:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00365624|S00365625|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "FR",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00365625PTBR",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "You and I Are Polar Opposites",
+        "sequence_number": 10,
+        "series_id": "GT00365624",
+        "series_slug_title": "you-and-i-are-polar-opposites",
+        "series_title": "You and I Are Polar Opposites",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance",
+          "Comedy",
+          "Slice of Life"
+        ],
+        "upload_date": "2026-03-15T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00366876JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00366876JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00365625JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00366876ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ENUSV",
+            "original": false,
+            "roles": [
+              "dub"
+            ],
+            "season_guid": "GS00365625ENUS",
+            "variant": ""
+          },
+          {
+            "audio_locale": "es-419",
+            "guid": "GE00366876ES419",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ES419V",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625ES419",
+            "variant": ""
+          },
+          {
+            "audio_locale": "de-DE",
+            "guid": "GE00366876DEDE",
+            "is_premium_only": true,
+            "media_guid": "GE00366876DEDEV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625DEDE",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "GE00366876FRFR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876FRFRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625FRFR",
+            "variant": ""
+          },
+          {
+            "audio_locale": "pt-BR",
+            "guid": "GE00366876PTBR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876PTBRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625PTBR",
+            "variant": ""
+          }
+        ]
+      },
+      "channel_id": "crunchyroll",
+      "slug_title": "class-trip-part-1",
+      "last_public": "2026-04-05T08:30:00Z",
+      "external_id": "EPI.GE00366876PTBR",
+      "promo_description": "",
+      "promo_title": "",
+      "type": "episode",
+      "new": true
+    },
+    {
+      "id": "GE00366877ENUS",
+      "channel_id": "crunchyroll",
+      "slug": "",
+      "last_public": "2026-04-05T08:30:00Z",
+      "new": true,
+      "type": "episode",
+      "description": "Les lycéens profitent de leur temps libre pour avancer dans leurs relations.",
+      "external_id": "EPI.GE00366877ENUS",
+      "linked_resource_key": "cms:/episodes/GE00366877ENUS",
+      "promo_title": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/e5ffa012fcd6a0457c0495076d77185d.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug_title": "class-trip-part-2",
+      "title": "Voyage scolaire ! (Partie 2)",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 358004,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 716008,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1074012,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "en-US",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Tabagisme"
+        ],
+        "duration_ms": 1432016,
+        "eligible_region": "FR",
+        "episode": "11",
+        "episode_air_date": "2026-03-22T00:00:00Z",
+        "episode_number": 11,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00365624|S00365625|E11",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "2",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00365625ENUS",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "You and I Are Polar Opposites",
+        "sequence_number": 11,
+        "series_id": "GT00365624",
+        "series_slug_title": "you-and-i-are-polar-opposites",
+        "series_title": "You and I Are Polar Opposites",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance",
+          "Comedy",
+          "Slice of Life"
+        ],
+        "upload_date": "2026-03-22T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00366877JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00366877JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00365625JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00366877ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00366877ENUSV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625ENUS",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_description": ""
+    },
+    {
+      "description": "Le programme du voyage scolaire est défini, mais il faut maintenant se répartir en différents groupes.",
+      "channel_id": "crunchyroll",
+      "slug_title": "class-trip-part-1",
+      "linked_resource_key": "cms:/episodes/GE00366876DEDE",
+      "slug": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_title": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 357993,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 715986,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1073979,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "de-DE",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Tabagisme"
+        ],
+        "duration_ms": 1431974,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2026-03-15T00:00:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00365624|S00365625|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "FR",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00365625DEDE",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "You and I Are Polar Opposites",
+        "sequence_number": 10,
+        "series_id": "GT00365624",
+        "series_slug_title": "you-and-i-are-polar-opposites",
+        "series_title": "You and I Are Polar Opposites",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance",
+          "Comedy",
+          "Slice of Life"
+        ],
+        "upload_date": "2026-03-15T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00366876JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00366876JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00365625JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00366876ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ENUSV",
+            "original": false,
+            "roles": [
+              "dub"
+            ],
+            "season_guid": "GS00365625ENUS",
+            "variant": ""
+          },
+          {
+            "audio_locale": "es-419",
+            "guid": "GE00366876ES419",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ES419V",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625ES419",
+            "variant": ""
+          },
+          {
+            "audio_locale": "de-DE",
+            "guid": "GE00366876DEDE",
+            "is_premium_only": true,
+            "media_guid": "GE00366876DEDEV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625DEDE",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "GE00366876FRFR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876FRFRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625FRFR",
+            "variant": ""
+          },
+          {
+            "audio_locale": "pt-BR",
+            "guid": "GE00366876PTBR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876PTBRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625PTBR",
+            "variant": ""
+          }
+        ]
+      },
+      "id": "GE00366876DEDE",
+      "last_public": "2026-04-05T08:30:00Z",
+      "promo_description": "",
+      "external_id": "EPI.GE00366876DEDE",
+      "title": "Voyage scolaire ! (Partie 1)",
+      "type": "episode",
+      "new": true
+    },
+    {
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 357993,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 715986,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1073979,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "es-419",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Tabagisme"
+        ],
+        "duration_ms": 1431974,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2026-03-15T00:00:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00365624|S00365625|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "FR",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00365625ES419",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "You and I Are Polar Opposites",
+        "sequence_number": 10,
+        "series_id": "GT00365624",
+        "series_slug_title": "you-and-i-are-polar-opposites",
+        "series_title": "You and I Are Polar Opposites",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance",
+          "Comedy",
+          "Slice of Life"
+        ],
+        "upload_date": "2026-03-15T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00366876JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00366876JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00365625JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00366876ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ENUSV",
+            "original": false,
+            "roles": [
+              "dub"
+            ],
+            "season_guid": "GS00365625ENUS",
+            "variant": ""
+          },
+          {
+            "audio_locale": "es-419",
+            "guid": "GE00366876ES419",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ES419V",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625ES419",
+            "variant": ""
+          },
+          {
+            "audio_locale": "de-DE",
+            "guid": "GE00366876DEDE",
+            "is_premium_only": true,
+            "media_guid": "GE00366876DEDEV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625DEDE",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "GE00366876FRFR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876FRFRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625FRFR",
+            "variant": ""
+          },
+          {
+            "audio_locale": "pt-BR",
+            "guid": "GE00366876PTBR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876PTBRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625PTBR",
+            "variant": ""
+          }
+        ]
+      },
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "type": "episode",
+      "last_public": "2026-04-05T08:30:00Z",
+      "promo_title": "",
+      "slug_title": "class-trip-part-1",
+      "external_id": "EPI.GE00366876ES419",
+      "slug": "",
+      "channel_id": "crunchyroll",
+      "id": "GE00366876ES419",
+      "linked_resource_key": "cms:/episodes/GE00366876ES419",
+      "description": "Le programme du voyage scolaire est défini, mais il faut maintenant se répartir en différents groupes.",
+      "promo_description": "",
+      "title": "Voyage scolaire ! (Partie 1)",
+      "new": true
+    },
+    {
+      "title": "Voyage scolaire ! (Partie 1)",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8c61f3484e39a92cb3e423d2ce7b596e.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug": "",
+      "channel_id": "crunchyroll",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 357993,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 715986,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1073979,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "fr-FR",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Tabagisme"
+        ],
+        "duration_ms": 1431974,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2026-03-15T00:00:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00365624|S00365625|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "FR",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00365625FRFR",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "You and I Are Polar Opposites",
+        "sequence_number": 10,
+        "series_id": "GT00365624",
+        "series_slug_title": "you-and-i-are-polar-opposites",
+        "series_title": "You and I Are Polar Opposites",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance",
+          "Comedy",
+          "Slice of Life"
+        ],
+        "upload_date": "2026-03-15T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00366876JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00366876JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00365625JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00366876ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ENUSV",
+            "original": false,
+            "roles": [
+              "dub"
+            ],
+            "season_guid": "GS00365625ENUS",
+            "variant": ""
+          },
+          {
+            "audio_locale": "es-419",
+            "guid": "GE00366876ES419",
+            "is_premium_only": true,
+            "media_guid": "GE00366876ES419V",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625ES419",
+            "variant": ""
+          },
+          {
+            "audio_locale": "de-DE",
+            "guid": "GE00366876DEDE",
+            "is_premium_only": true,
+            "media_guid": "GE00366876DEDEV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625DEDE",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "GE00366876FRFR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876FRFRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625FRFR",
+            "variant": ""
+          },
+          {
+            "audio_locale": "pt-BR",
+            "guid": "GE00366876PTBR",
+            "is_premium_only": true,
+            "media_guid": "GE00366876PTBRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00365625PTBR",
+            "variant": ""
+          }
+        ]
+      },
+      "type": "episode",
+      "last_public": "2026-04-05T08:30:00Z",
+      "promo_description": "",
+      "slug_title": "class-trip-part-1",
+      "id": "GE00366876FRFR",
+      "new": true,
+      "description": "Le programme du voyage scolaire est défini, mais il faut maintenant se répartir en différents groupes.",
+      "promo_title": "",
+      "external_id": "EPI.GE00366876FRFR",
+      "linked_resource_key": "cms:/episodes/GE00366876FRFR"
+    },
+    {
+      "id": "GE00376968JAJP",
+      "promo_title": "",
+      "type": "episode",
+      "title": "Épisode spécial",
+      "description": "Résumé des événements de la saison 1.",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 351779,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 703558,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1055337,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ja-JP",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Violence"
+        ],
+        "duration_ms": 1407116,
+        "eligible_region": "FR",
+        "episode": "0",
+        "episode_air_date": "2026-04-05T00:00:00Z",
+        "episode_number": null,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "16",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GW4HM7WK9|S00375172|E1",
+        "is_clip": false,
+        "is_dubbed": false,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "1",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "main"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00375172JAJP",
+        "season_number": 2,
+        "season_sequence_number": 2,
+        "season_slug_title": "season-2",
+        "season_title": "Wistoria: Wand and Sword",
+        "sequence_number": 1,
+        "series_id": "GW4HM7WK9",
+        "series_slug_title": "wistoria-wand-and-sword",
+        "series_title": "Wistoria: Wand and Sword",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Fantasy",
+          "Action",
+          "Adventure"
+        ],
+        "upload_date": "2026-04-05T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00376968JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00376968JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00375172JAJP",
+            "variant": ""
+          }
+        ]
+      },
+      "channel_id": "crunchyroll",
+      "external_id": "EPI.GE00376968JAJP",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/2447ea3dd910b8baf737a5bfe536088f.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug_title": "wistoria-wand-and-sword-special-episode",
+      "last_public": "2026-04-05T08:30:00Z",
+      "promo_description": "",
+      "linked_resource_key": "cms:/episodes/GE00376968JAJP",
+      "slug": "",
+      "new": true
+    },
+    {
+      "description": "Yoi tient la promesse qu'elle a faite à Ôji.",
+      "slug": "",
+      "id": "GE00334069FRFR",
+      "new": true,
+      "external_id": "EPI.GE00334069FRFR",
+      "channel_id": "crunchyroll",
+      "promo_description": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 356502,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 713004,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1069506,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "fr-FR",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1426010,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2026-03-15T00:00:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "14",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00334040|S00334041|E10",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "FR",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:00:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00334041FRFR",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "In the Clear Moonlit Dusk",
+        "sequence_number": 10,
+        "series_id": "GT00334040",
+        "series_slug_title": "in-the-clear-moonlit-dusk",
+        "series_title": "In the Clear Moonlit Dusk",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance"
+        ],
+        "upload_date": "2026-03-15T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00334069JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00334069JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00334041JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00334069ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00334069ENUSV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00334041ENUS",
+            "variant": ""
+          },
+          {
+            "audio_locale": "fr-FR",
+            "guid": "GE00334069FRFR",
+            "is_premium_only": true,
+            "media_guid": "GE00334069FRFRV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00334041FRFR",
+            "variant": ""
+          }
+        ]
+      },
+      "last_public": "2026-04-05T08:00:00Z",
+      "slug_title": "another-prince",
+      "type": "episode",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/0565d0a26e4784b25b4e18657f547560.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "promo_title": "",
+      "title": "L'autre prince",
+      "linked_resource_key": "cms:/episodes/GE00334069FRFR"
+    },
+    {
+      "promo_title": "",
+      "type": "episode",
+      "last_public": "2026-04-05T08:00:00Z",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 356481,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 712962,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1069443,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "en-US",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1425926,
+        "eligible_region": "FR",
+        "episode": "11",
+        "episode_air_date": "2026-03-22T00:00:00Z",
+        "episode_number": 11,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "14",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00334040|S00334041|E11",
+        "is_clip": false,
+        "is_dubbed": true,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "2",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:00:00Z",
+        "premium_date": null,
+        "roles": [
+          "description",
+          "dub"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00334041ENUS",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "In the Clear Moonlit Dusk",
+        "sequence_number": 11,
+        "series_id": "GT00334040",
+        "series_slug_title": "in-the-clear-moonlit-dusk",
+        "series_title": "In the Clear Moonlit Dusk",
+        "subtitle_locales": [
+          "ar-SA",
+          "de-DE",
+          "en-US",
+          "es-419",
+          "es-ES",
+          "fr-FR",
+          "it-IT",
+          "pt-BR",
+          "ru-RU"
+        ],
+        "tenant_categories": [
+          "Romance"
+        ],
+        "upload_date": "2026-03-22T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00334072JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00334072JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00334041JAJP",
+            "variant": ""
+          },
+          {
+            "audio_locale": "en-US",
+            "guid": "GE00334072ENUS",
+            "is_premium_only": true,
+            "media_guid": "GE00334072ENUSV",
+            "original": false,
+            "roles": [
+              "description",
+              "dub"
+            ],
+            "season_guid": "GS00334041ENUS",
+            "variant": ""
+          }
+        ]
+      },
+      "id": "GE00334072ENUS",
+      "slug_title": "the-empty-room",
+      "new": true,
+      "external_id": "EPI.GE00334072ENUS",
+      "linked_resource_key": "cms:/episodes/GE00334072ENUS",
+      "channel_id": "crunchyroll",
+      "description": "Les vacances d'été sont terminées et les cours reprennent.",
+      "title": "Une pièce vide",
+      "slug": "",
+      "promo_description": "",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/90b319294df3b6d497a4cf8f990cfa54.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "external_id": "EPI.GE00364428JAJP",
+      "id": "GE00364428JAJP",
+      "type": "episode",
+      "linked_resource_key": "cms:/episodes/GE00364428JAJP",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/0faa6e602782a56b9c38b7d35e4d5360.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "last_public": "2026-04-05T03:00:00Z",
+      "slug": "",
+      "new": true,
+      "promo_description": "",
+      "title": "La moitié d'un héros",
+      "slug_title": "episode-25",
+      "channel_id": "crunchyroll",
+      "description": "De retour chez eux, Tomoro et compagnie passent leurs vacances à bord d'une croisière de luxe.",
+      "promo_title": "",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 353165,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 706330,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1059495,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ja-JP",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Grossièretés",
+          "Violence"
+        ],
+        "duration_ms": 1412663,
+        "eligible_region": "FR",
+        "episode": "25",
+        "episode_air_date": "2026-04-04T00:00:00Z",
+        "episode_number": 25,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "12",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00364378|S00364379|E25",
+        "is_clip": false,
+        "is_dubbed": false,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "1",
+          "text_notation": "FR"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T08:00:00Z",
+        "premium_date": null,
+        "roles": [
+          "main"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00364379JAJP",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "Saison 1",
+        "sequence_number": 25,
+        "series_id": "GT00364378",
+        "series_slug_title": "digimon-beatbreak",
+        "series_title": "Digimon Beatbreak",
+        "subtitle_locales": [
+          "fr-FR"
+        ],
+        "tenant_categories": [
+          "Adventure",
+          "Comedy",
+          "Fantasy"
+        ],
+        "upload_date": "2026-04-04T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00364428JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00364428JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00364379JAJP",
+            "variant": ""
+          }
+        ]
+      }
+    },
+    {
+      "channel_id": "crunchyroll",
+      "type": "episode",
+      "new": true,
+      "slug_title": "episode-10",
+      "linked_resource_key": "cms:/episodes/GE00369429JAJP",
+      "title": "Episode 10",
+      "id": "GE00369429JAJP",
+      "promo_description": "",
+      "external_id": "EPI.GE00369429JAJP",
+      "images": {
+        "thumbnail": [
+          [
+            {
+              "height": 180,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/320x180/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 320
+            },
+            {
+              "height": 338,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/600x338/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 600
+            },
+            {
+              "height": 360,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/640x360/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 640
+            },
+            {
+              "height": 450,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/800x450/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 800
+            },
+            {
+              "height": 675,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1200x675/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 1200
+            },
+            {
+              "height": 810,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1440x810/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 1440
+            },
+            {
+              "height": 900,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1600x900/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 1600
+            },
+            {
+              "height": 1080,
+              "source": "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/48414112834848fd0cc642c4bc7b4462.png",
+              "type": "thumbnail",
+              "width": 1920
+            }
+          ]
+        ]
+      },
+      "slug": "",
+      "last_public": "2026-04-05T01:30:00Z",
+      "episode_metadata": {
+        "ad_breaks": [
+          {
+            "offset_ms": 0,
+            "type": "preroll"
+          },
+          {
+            "offset_ms": 361945,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 723890,
+            "type": "midroll"
+          },
+          {
+            "offset_ms": 1085835,
+            "type": "midroll"
+          }
+        ],
+        "audio_locale": "ja-JP",
+        "availability_ends": "9998-11-30T17:45:00Z",
+        "availability_notes": "",
+        "availability_starts": "9998-11-30T17:45:00Z",
+        "availability_status": "premium_only",
+        "available_date": null,
+        "available_offline": true,
+        "closed_captions_available": false,
+        "content_descriptors": [
+          "Violence"
+        ],
+        "duration_ms": 1447782,
+        "eligible_region": "FR",
+        "episode": "10",
+        "episode_air_date": "2026-04-04T00:00:00Z",
+        "episode_number": 10,
+        "extended_maturity_rating": {
+          "level": "M2",
+          "rating": "PG",
+          "system": "cr-tv"
+        },
+        "free_available_date": "9998-11-30T17:45:00Z",
+        "identifier": "GT00369409|S00369410|E10",
+        "is_clip": false,
+        "is_dubbed": false,
+        "is_mature": false,
+        "is_premium_only": true,
+        "is_subbed": true,
+        "language_presentation": {
+          "audio_notation": "1",
+          "text_notation": "1"
+        },
+        "mature_blocked": false,
+        "maturity_ratings": [
+          "TV-14"
+        ],
+        "premium_available_date": "2026-04-05T01:30:00Z",
+        "premium_date": null,
+        "roles": [
+          "main"
+        ],
+        "season_display_number": "",
+        "season_id": "GS00369410JAJP",
+        "season_number": 1,
+        "season_sequence_number": 1,
+        "season_slug_title": "season-1",
+        "season_title": "Star Detective Precure!",
+        "sequence_number": 10,
+        "series_id": "GT00369409",
+        "series_slug_title": "star-detective-precure",
+        "series_title": "Star Detective Precure!",
+        "subtitle_locales": [
+          "en-US"
+        ],
+        "upload_date": "2026-04-04T00:00:00Z",
+        "versions": [
+          {
+            "audio_locale": "ja-JP",
+            "guid": "GE00369429JAJP",
+            "is_premium_only": true,
+            "media_guid": "GE00369429JAJPV",
+            "original": true,
+            "roles": [
+              "main"
+            ],
+            "season_guid": "GS00369410JAJP",
+            "variant": ""
+          }
+        ]
+      },
+      "promo_title": "",
+      "description": "Anna time-slips to 1999 and teams up with Mikuru to solve mysteries and help Anna return to her original time!"
+    }
+  ],
+  "meta": {}
+}
