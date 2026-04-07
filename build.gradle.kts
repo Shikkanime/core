@@ -14,7 +14,7 @@ val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.8.0"
 val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.21.2"
-val valkeyVersion = "2.2.7"
+val valkeyVersion = "2.3.1"
 val apachePoiVersion = "5.5.1"
 
 val jdaVersion = "6.4.1"
@@ -95,7 +95,7 @@ dependencies {
     implementation("com.google.firebase:firebase-admin:$firebaseVersion")
     implementation("org.simplejavamail:simple-java-mail:$simpleJavaMailVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    implementation(group = "io.valkey", name = "valkey-glide", version = valkeyVersion, classifier = osdetector.classifier)
+    implementation("io.valkey:valkey-glide:$valkeyVersion:${osdetector.classifier}")
     implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
     implementation("org.apache.poi:poi:$apachePoiVersion")
 

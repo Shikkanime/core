@@ -2,6 +2,7 @@ package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
@@ -36,6 +37,9 @@ class EpisodeMappingController : HasPageableRoute() {
         val season = parameters["season"]?.toIntOrNull()
         val sort = parameters["sort"]
         val desc = parameters["desc"]
+        val searchTypes =
+            parameters["searchTypes"]?.split(StringUtils.COMMA_STRING)?.mapNotNull(LangType::valueOfNullable)
+                ?.toTypedArray()
 
         val (page, limit, sortParameters) = pageableRoute(
             parameters["page"]?.toIntOrNull(),
@@ -48,7 +52,15 @@ class EpisodeMappingController : HasPageableRoute() {
             if (memberUuid != null) {
                 memberFollowEpisodeCacheService.findAllBy(memberUuid, page, limit)
             } else {
-                episodeMappingCacheService.findAllBy(countryCode, animeUuid, season, sortParameters, page, limit)
+                episodeMappingCacheService.findAllBy(
+                    countryCode,
+                    animeUuid,
+                    season,
+                    searchTypes,
+                    sortParameters,
+                    page,
+                    limit
+                )
             }
         )
     }

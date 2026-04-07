@@ -118,6 +118,7 @@ class SiteController {
             CountryCode.FR,
             dto.uuid,
             seasonDto.number,
+            null,
             listOf(
                 SortParameter("releaseDateTime", if (isNewest) SortParameter.Order.DESC else SortParameter.Order.ASC),
                 SortParameter("season", if (isNewest) SortParameter.Order.DESC else SortParameter.Order.ASC),

@@ -3,10 +3,7 @@ package fr.shikkanime.repositories
 import fr.shikkanime.dtos.EpisodeCalculateDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
 import fr.shikkanime.entities.*
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.ImageType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.utils.Constant
@@ -21,6 +18,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         countryCode: CountryCode?,
         animeUuid: UUID?,
         season: Int?,
+        searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
@@ -35,7 +33,27 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
                 animeUuid?.let { cb.equal(root[EpisodeMapping_.anime][Anime_.uuid], it) },
                 season?.let { cb.equal(root[EpisodeMapping_.season], it) },
                 countryCode?.let { cb.equal(root[EpisodeMapping_.anime][Anime_.countryCode], it) }
-            )
+            ).toMutableList()
+
+            if (!searchTypes.isNullOrEmpty() && countryCode != null) {
+                val variantJoin = root.join(EpisodeMapping_.variants, JoinType.LEFT)
+                predicates.add(
+                    cb.or(
+                        *searchTypes.map { langType ->
+                            when (langType) {
+                                LangType.SUBTITLES -> cb.notEqual(
+                                    variantJoin[EpisodeVariant_.audioLocale],
+                                    countryCode.locale
+                                )
+
+                                LangType.VOICE -> cb.equal(variantJoin[EpisodeVariant_.audioLocale], countryCode.locale)
+                            }
+                        }.toTypedArray()
+                    )
+                )
+                query.distinct(true)
+            }
+
             query.where(*predicates.toTypedArray())
 
             // Build orders

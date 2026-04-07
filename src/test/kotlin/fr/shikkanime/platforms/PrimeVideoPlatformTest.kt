@@ -110,7 +110,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
             ),
             SimulcastTestCase(
                 "0LW570H4NYAE6XSCD8I7KZMVNH",
-                "Les Nations du Soleil sanglant\n",
+                "Les Nations du Soleil sanglant",
                 releaseDay = 0,
                 testDate = "2026-03-29T08:30:00Z",
                 imageUrl = "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx206914-45avCPrNz1co.jpg",
