@@ -5,10 +5,7 @@ import fr.shikkanime.dtos.EpisodeCalculateDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.TraceAction
-import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
-import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
 import fr.shikkanime.services.caches.ConfigCacheService
@@ -29,10 +26,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         countryCode: CountryCode?,
         animeUuid: UUID?,
         season: Int?,
+        searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = episodeMappingRepository.findAllBy(countryCode, animeUuid, season, sort, page, limit)
+    ) = episodeMappingRepository.findAllBy(countryCode, animeUuid, season, searchTypes, sort, page, limit)
 
     fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
 

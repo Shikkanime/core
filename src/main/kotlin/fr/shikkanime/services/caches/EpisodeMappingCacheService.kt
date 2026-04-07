@@ -11,6 +11,7 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.EpisodeMappingFactory
 import fr.shikkanime.services.EpisodeMappingService
@@ -31,6 +32,7 @@ class EpisodeMappingCacheService : ICacheService {
         countryCode: CountryCode?,
         anime: UUID?,
         season: Int?,
+        searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
@@ -38,13 +40,14 @@ class EpisodeMappingCacheService : ICacheService {
         "EpisodeMappingCacheService.findAllBy",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<EpisodeMappingDto>>>() {},
-        key = CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, sort, page, limit),
+        key = CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             episodeMappingService.findAllBy(
                 it.countryCode,
                 it.uuid,
                 it.season,
+                it.searchTypes,
                 it.sort,
                 it.page,
                 it.limit,

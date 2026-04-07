@@ -43,6 +43,7 @@ class SEOController {
             CountryCode.FR,
             null,
             null,
+            null,
             listOf(SortParameter("lastReleaseDateTime", SortParameter.Order.DESC)),
             1,
             1
