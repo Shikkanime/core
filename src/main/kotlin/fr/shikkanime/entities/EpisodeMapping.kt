@@ -24,6 +24,10 @@ import java.util.*
             name = "idx_episode_mapping_sort_order",
             columnList = "last_release_date_time DESC, season DESC, episode_type DESC, number DESC"
         ),
+        Index(
+            name = "idx_episode_mapping_simulcast_uuid",
+            columnList = "simulcast_uuid"
+        )
     ]
 )
 @Cacheable
@@ -52,6 +56,9 @@ class EpisodeMapping(
     var title: String? = null,
     @Column(nullable = true, columnDefinition = "VARCHAR(1000)")
     var description: String? = null,
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    var simulcast: Simulcast? = null,
     // -----------------------------------------------------------------
     @OneToMany(mappedBy = "mapping", fetch = FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)

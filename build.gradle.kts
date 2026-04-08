@@ -98,7 +98,6 @@ dependencies {
     implementation("io.valkey:valkey-glide:$valkeyVersion:${osdetector.classifier}")
     implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
     implementation("org.apache.poi:poi:$apachePoiVersion")
-
     implementation("net.dv8tion:JDA:$jdaVersion")
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")

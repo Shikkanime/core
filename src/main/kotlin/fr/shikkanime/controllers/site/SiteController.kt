@@ -242,6 +242,25 @@ class SiteController {
         )
     }
 
+    @Path("analytics")
+    @Get
+    private fun analytics(
+        @QueryParam("startYear") startYearParam: Int?,
+        @QueryParam("endYear") endYearParam: Int?,
+    ): Response {
+        val now = LocalDate.now()
+        val startYear = startYearParam ?: (now.year - 3)
+        val endYear = endYearParam ?: now.year
+        return Response.template(
+            Link.ANALYTICS,
+            mutableMapOf(
+                "years" to simulcastCacheService.findAll().map { it.year }.distinct().sorted(),
+                "startYear" to startYear,
+                "endYear" to endYear,
+            )
+        )
+    }
+
     @Path("presentation")
     @Get
     private fun presentation() = Response.template(Link.PRESENTATION)

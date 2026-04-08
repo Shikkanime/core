@@ -380,6 +380,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                 anime = anime,
                 dto = EpisodeCalculateDto(
                     animeUuid = anime.uuid!!,
+                    mappingUuid = mapping.uuid!!,
                     releaseDateTime = mapping.releaseDateTime,
                     episodeType = mapping.episodeType!!,
                     number = mapping.number!!
@@ -388,6 +389,11 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             // Add the simulcast to the anime and check if it was successfully added
             val added = animeService.addSimulcastToAnime(anime, simulcast)
             needAnimeUpdate = needAnimeUpdate || added
+
+            if (mapping.simulcast == null) {
+                mapping.simulcast = simulcast
+                episodeMappingService.update(mapping)
+            }
         }
 
         // Update the anime entity in the database if any changes were made

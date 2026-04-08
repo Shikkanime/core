@@ -38,6 +38,7 @@ enum class Link(
     CATALOG("/catalog/{currentSimulcast}", "/site/catalog.ftl", StringUtils.EMPTY_STRING, "Catalogue"),
     CALENDAR("/calendar", "/site/calendar.ftl", StringUtils.EMPTY_STRING, "Calendrier"),
     SEARCH("/search", "/site/search.ftl", StringUtils.EMPTY_STRING, "Recherche"),
+    ANALYTICS("/analytics", "/site/analytics.ftl", StringUtils.EMPTY_STRING, "Analytics", footer = true),
     PRESENTATION("/presentation", "/site/presentation.ftl", StringUtils.EMPTY_STRING, "Présentation", footer = true),
     PRIVACY("/privacy", "/site/privacy.ftl", StringUtils.EMPTY_STRING, "Politique de confidentialité", footer = true),
     ;

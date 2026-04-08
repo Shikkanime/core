@@ -6,6 +6,7 @@ import java.util.*
 
 data class EpisodeCalculateDto(
     val animeUuid: UUID,
+    val mappingUuid: UUID,
     val releaseDateTime: ZonedDateTime,
     val episodeType: EpisodeType,
     val number: Int,

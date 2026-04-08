@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
+import java.util.*
 
 class EpisodeVariantServiceTest : AbstractTest() {
     @BeforeEach
@@ -27,6 +28,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
         val episode = mockkClass(EpisodeMapping::class)
 
         anime.releaseDateTime = ZonedDateTime.parse("2023-12-20T16:00:00Z")
+        every { episode.uuid } returns UUID.randomUUID()
         every { episode.releaseDateTime } returns anime.releaseDateTime
         every { episode.episodeType } returns EpisodeType.EPISODE
         every { episode.number } returns 1
@@ -36,6 +38,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
             anime = anime,
             dto = EpisodeCalculateDto(
                 animeUuid = anime.uuid!!,
+                mappingUuid = episode.uuid!!,
                 releaseDateTime = episode.releaseDateTime,
                 episodeType = episode.episodeType!!,
                 number = episode.number!!
@@ -78,6 +81,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
             }
         }
 
+        every { episode.uuid } returns UUID.randomUUID()
         every { episode.releaseDateTime } returns finalRelease
         every { episode.episodeType } returns EpisodeType.EPISODE
         every { episode.number } returns 12
@@ -86,6 +90,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
             anime = anime,
             dto = EpisodeCalculateDto(
                 animeUuid = anime.uuid!!,
+                mappingUuid = episode.uuid!!,
                 releaseDateTime = episode.releaseDateTime,
                 episodeType = episode.episodeType!!,
                 number = episode.number!!

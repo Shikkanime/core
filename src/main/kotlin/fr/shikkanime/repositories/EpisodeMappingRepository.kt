@@ -192,6 +192,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             val query = it.createQuery("""
                     SELECT new fr.shikkanime.dtos.EpisodeCalculateDto(
                         em.anime.uuid, 
+                        em.uuid,
                         em.releaseDateTime, 
                         em.episodeType, 
                         em.number,
@@ -337,6 +338,30 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             update[root[EpisodeMapping_.lastReleaseDateTime]] = subQueryMax
 
             it.createQuery(update).executeUpdate()
+        }
+    }
+
+    fun updateAllSimulcast(map: Map<UUID, UUID>) {
+        if (map.isEmpty()) return
+
+        database.inTransaction {
+            val cb = it.criteriaBuilder
+
+            map.entries.chunked(10_000).forEach { chunk ->
+                val update = cb.createCriteriaUpdate(getEntityClass())
+                val root = update.from(getEntityClass())
+
+                val caseExpression = cb.selectCase<UUID>()
+                chunk.forEach { (episodeMappingUuid, simulcastUuid) ->
+                    caseExpression.`when`(cb.equal(root[EpisodeMapping_.uuid], episodeMappingUuid), simulcastUuid)
+                }
+
+                update[root[EpisodeMapping_.simulcast][Simulcast_.uuid]] =
+                    caseExpression.otherwise(root[EpisodeMapping_.simulcast][Simulcast_.uuid])
+                update.where(root[EpisodeMapping_.uuid].`in`(chunk.map { (k, _) -> k }))
+
+                it.createQuery(update).executeUpdate()
+            }
         }
     }
 }

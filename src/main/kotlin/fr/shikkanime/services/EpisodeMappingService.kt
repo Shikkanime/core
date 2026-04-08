@@ -72,6 +72,8 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
 
+    fun updateAllSimulcast(map: Map<UUID, UUID>) = episodeMappingRepository.updateAllSimulcast(map)
+
     override fun save(entity: EpisodeMapping): EpisodeMapping {
         val save = super.save(entity)
         traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
