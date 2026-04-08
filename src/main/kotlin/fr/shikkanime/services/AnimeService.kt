@@ -139,8 +139,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     ?.sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number })) ?: emptyList()
                 val mappingCount = mappings.takeIfNotEmpty()?.size ?: variants.map { it.mapping!!.uuid }.distinct().count()
 
-
-                if (!isReleaseInCurrentWeek && (treeMap.lastEntry().key in currentWeekRange || mappingCount > 5 || compositeKey.episodeType == EpisodeType.FILM)) {
+                if (!isReleaseInCurrentWeek && (treeMap.lastEntry().key in currentWeekRange || mappingCount > 5 || compositeKey.episodeType in listOf(
+                        EpisodeType.FILM,
+                        EpisodeType.SUMMARY
+                    ))
+                ) {
                     return@mapNotNull null
                 }
 
@@ -212,6 +215,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val simulcasts = simulcastService.findAll().toMutableList()
 
         val groupedAnimes = findAll().groupBy { it.countryCode!! }
+        val episodeSimulcasts = mutableMapOf<UUID, UUID>()
 
         groupedAnimes.forEach { (countryCode, animes) ->
             val groupedMappings = episodeMappingService.findAllSimulcasted(countryCode.locale, ignoreEpisodeTypes)
@@ -235,11 +239,14 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
                     if (simulcasts.none { it.uuid == simulcast.uuid }) {
                         simulcasts.add(simulcast)
                     }
+
+                    simulcast.uuid?.let { episodeSimulcasts[episodeMapping.mappingUuid] = it }
                 }
             }
         }
 
         updateAll(groupedAnimes.values.flatten())
+        episodeMappingService.updateAllSimulcast(episodeSimulcasts)
     }
 
     override fun save(entity: Anime): Anime {

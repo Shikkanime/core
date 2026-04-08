@@ -135,9 +135,8 @@ class UpdateAnimeJobTest : AbstractTest() {
                 platforms = listOf(
                     PlatformData(Platform.CRUN, "GRMG8ZQZR")
                 ),
-                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/a402a3cc46041fcb917d952312119aa8.png",
-                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/01184a0e8912da9e3115536752cfa1db.png",
-                expectedDescription = "Oyez ! Oyez ! Pirates de tous bords ! Gold Roger, le légendaire Roi des pirates, mort sur l’échafaud, a laissé derrière lui un trésor inestimable : le « One Piece ». Monkey D. Luffy, un garçon naïf et impulsif, rêve de mettre la main sur ce fameux butin et de devenir le nouveau Roi des Pirates. Transformé en homme-élastique après avoir avalé un des fruits du démon, Luffy part en quête d’un..."
+                expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/4bdc346bdf8addbeb7477f7ee2a890c2.png",
+                expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/6b3a746a590f83b60dcc6ff981d66286.png",
             ),
             TestCase(
                 name = "Jujutsu Kaisen",
