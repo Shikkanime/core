@@ -13,5 +13,10 @@ class CustomLuceneAnalysisDefinitionProvider : LuceneAnalysisConfigurer {
             .tokenFilter("ngram")
             .param("minGramSize", "2")
             .param("maxGramSize", "6")
+
+        p0.analyzer("shikkanime_exact_analyzer").custom()
+            .tokenizer("standard")
+            .tokenFilter("lowercase")
+            .tokenFilter("asciifolding")
     }
 }

@@ -27,6 +27,7 @@ class Anime(
     val countryCode: CountryCode? = null,
     @Column(nullable = false)
     @FullTextField(analyzer = "shikkanime_analyzer")
+    @FullTextField(name = "name_exact", analyzer = "shikkanime_exact_analyzer")
     var name: String? = null,
     @Column(nullable = false, name = "release_date_time")
     var releaseDateTime: ZonedDateTime = ZonedDateTime.now(),

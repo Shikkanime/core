@@ -151,7 +151,11 @@ class AnimeRepository : AbstractRepository<Anime>() {
         val searchSession = Search.session(entityManager)
         return searchSession.search(getEntityClass())
             .select { s -> s.composite(s.id(), s.score()) }
-            .where { w -> w.bool().must(w.match().field(Anime_.NAME).matching(name)) }
+            .where { w ->
+                w.bool()
+                    .should(w.match().field(Anime_.NAME).matching(name))
+                    .should(w.match().field("name_exact").matching(name).boost(2.0f))
+            }
             .fetchAll().hits()
             .filterIsInstance<List<Any>>()
             .associate { array -> (array[0] as UUID) to (array[1] as Float) }
