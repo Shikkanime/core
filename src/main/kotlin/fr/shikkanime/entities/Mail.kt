@@ -1,18 +1,13 @@
 package fr.shikkanime.entities
 
-import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
 @Table(name = "mail")
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class Mail(
     uuid: UUID? = null,
     @Column(name = "creation_date_time", nullable = false)

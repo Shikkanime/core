@@ -1,8 +1,6 @@
 package fr.shikkanime.entities
 
 import jakarta.persistence.*
-import org.hibernate.annotations.Cache
-import org.hibernate.annotations.CacheConcurrencyStrategy
 import java.time.ZonedDateTime
 import java.util.*
 
@@ -15,8 +13,6 @@ import java.util.*
         Index(name = "trace_action_action_index", columnList = "action")
     ]
 )
-@Cacheable
-@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 class TraceAction(
     uuid: UUID? = null,
     @Column(name = "action_date_time", nullable = false)
