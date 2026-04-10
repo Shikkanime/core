@@ -345,22 +345,19 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         if (map.isEmpty()) return
 
         database.inTransaction {
-            val cb = it.criteriaBuilder
+            val bySimulcast = map.entries.groupBy({ it.value }, { it.key })
 
-            map.entries.chunked(10_000).forEach { chunk ->
-                val update = cb.createCriteriaUpdate(getEntityClass())
-                val root = update.from(getEntityClass())
+            bySimulcast.forEach { (simulcastUuid, episodeMappingUuids) ->
+                episodeMappingUuids.chunked(10_000).forEach { chunk ->
+                    val cb = it.criteriaBuilder
+                    val update = cb.createCriteriaUpdate(getEntityClass())
+                    val root = update.from(getEntityClass())
 
-                val caseExpression = cb.selectCase<UUID>()
-                chunk.forEach { (episodeMappingUuid, simulcastUuid) ->
-                    caseExpression.`when`(cb.equal(root[EpisodeMapping_.uuid], episodeMappingUuid), simulcastUuid)
+                    update[root[EpisodeMapping_.simulcast][Simulcast_.uuid]] = simulcastUuid
+                    update.where(root[EpisodeMapping_.uuid].`in`(chunk))
+
+                    it.createQuery(update).executeUpdate()
                 }
-
-                update[root[EpisodeMapping_.simulcast][Simulcast_.uuid]] =
-                    caseExpression.otherwise(root[EpisodeMapping_.simulcast][Simulcast_.uuid])
-                update.where(root[EpisodeMapping_.uuid].`in`(chunk.map { (k, _) -> k }))
-
-                it.createQuery(update).executeUpdate()
             }
         }
     }
