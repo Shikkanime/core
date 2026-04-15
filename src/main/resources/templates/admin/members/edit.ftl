@@ -14,6 +14,15 @@
             });
 
             this.member.email = null;
+        },
+        async deleteMember() {
+            if (!confirm('Are you sure you want to delete this member and all its data? (GDPR)')) return;
+
+            await fetch('/admin/api/members/' + getUuid(), {
+                method: 'DELETE'
+            });
+
+            window.location.href = '/admin/members';
         }
     }" x-init="member = await loadMember(); animes = await getAnimes(); episodes = await getEpisodes()" class="d-flex flex-column dashboard-wrapper pb-3">
 
@@ -22,8 +31,9 @@
             <div class="card-body py-3 px-4">
                 <div class="d-flex align-items-md-center gap-4 flex-column flex-md-row">
                     <!-- Actions -->
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0 d-flex gap-2">
                         <a class="btn btn-secondary ms-0" @click="window.history.back()">Back</a>
+                        <button class="btn btn-danger" @click="deleteMember()">Delete (GDPR)</button>
                     </div>
 
                     <!-- Avatar -->

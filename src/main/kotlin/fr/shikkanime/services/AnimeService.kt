@@ -25,7 +25,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
-    @Inject private lateinit var animeRepository: AnimeRepository
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var simulcastService: SimulcastService
@@ -40,8 +39,6 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
-    override fun getRepository() = animeRepository
-
     fun findAllBy(
         countryCode: CountryCode?,
         simulcastUuid: UUID?,
@@ -50,9 +47,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = animeRepository.findAllBy(countryCode, simulcastUuid, name, searchTypes, sort, page, limit)
+    ) = repository.findAllBy(countryCode, simulcastUuid, name, searchTypes, sort, page, limit)
 
-    fun findAllBySimulcast(simulcastUuid: UUID) = animeRepository.findAllBySimulcast(simulcastUuid)
+    fun findAllBySimulcast(simulcastUuid: UUID) = repository.findAllBySimulcast(simulcastUuid)
 
     fun findAllNeedUpdate(): List<Anime> {
         val simulcasts = simulcastCacheService.findAll()
@@ -61,7 +58,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val lastSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_LAST_SEASON, 30).toLong()
         val othersDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_OTHERS, 90).toLong()
 
-        return animeRepository.findAllNeedUpdate(
+        return repository.findAllNeedUpdate(
             currentSimulcastUuid = simulcasts.getOrNull(0)?.uuid,
             lastSimulcastUuid = simulcasts.getOrNull(1)?.uuid,
             currentSeasonDelay = currentSeasonDelay,
@@ -70,20 +67,30 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         )
     }
 
-    fun findAllAudioLocales(uuid: UUID) = animeRepository.findAllAudioLocales(uuid)
+    fun findAllAudioLocales(uuid: UUID) = repository.findAllAudioLocales(uuid)
 
-    fun findAllSeasons(uuid: UUID) = animeRepository.findAllSeasons(uuid)
+    fun findAllSeasons(uuid: UUID) = repository.findAllSeasons(uuid)
 
-    fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids: Collection<UUID>, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String) = animeRepository.findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids, platform, lastValidateDateTime, ignoreAudioLocale)
+    fun findAllSimulcastedWithAnimePlatformInvalid(
+        simulcastUuids: Collection<UUID>,
+        platform: Platform,
+        lastValidateDateTime: ZonedDateTime,
+        ignoreAudioLocale: String
+    ) = repository.findAllSimulcastedWithAnimePlatformInvalid(
+        simulcastUuids,
+        platform,
+        lastValidateDateTime,
+        ignoreAudioLocale
+    )
 
-    fun findAllSlugs() = animeRepository.findAllSlugs()
+    fun findAllSlugs() = repository.findAllSlugs()
 
-    fun preIndex() = animeRepository.preIndex()
+    fun preIndex() = repository.preIndex()
 
-    fun findBySlug(countryCode: CountryCode, slug: String) = animeRepository.findBySlug(countryCode, slug)
+    fun findBySlug(countryCode: CountryCode, slug: String) = repository.findBySlug(countryCode, slug)
 
     fun findByName(countryCode: CountryCode, name: String?) =
-        animeRepository.findByName(countryCode, name)
+        repository.findByName(countryCode, name)
 
     fun getWeeklyAnimes(
         countryCode: CountryCode,
@@ -206,9 +213,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     fun recalculateSimulcasts() {
         val ignoreEpisodeTypes = setOf(EpisodeType.SUMMARY)
 
-        animeRepository.deleteAllWithoutEpisodes()
+        repository.deleteAllWithoutEpisodes()
         episodeMappingService.updateAllReleaseDate()
-        animeRepository.updateAllReleaseDate()
+        repository.updateAllReleaseDate()
 
         val simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1)
         val simulcastRangeDelay = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 3)

@@ -13,14 +13,11 @@ import fr.shikkanime.services.caches.SimulcastCacheService
 import java.util.*
 
 class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepository>() {
-    @Inject private lateinit var episodeMappingRepository: EpisodeMappingRepository
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
-
-    override fun getRepository() = episodeMappingRepository
 
     fun findAllBy(
         countryCode: CountryCode?,
@@ -30,11 +27,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = episodeMappingRepository.findAllBy(countryCode, animeUuid, season, searchTypes, sort, page, limit)
+    ) = repository.findAllBy(countryCode, animeUuid, season, searchTypes, sort, page, limit)
 
-    fun findAllByAnime(anime: Anime) = episodeMappingRepository.findAllByAnime(anime.uuid!!)
+    fun findAllByAnime(anime: Anime) = repository.findAllByAnime(anime.uuid!!)
 
-    fun findAllByAnime(animeUuid: UUID) = episodeMappingRepository.findAllByAnime(animeUuid)
+    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
     fun findAllNeedUpdate(): List<EpisodeMapping> {
         val simulcasts = simulcastCacheService.findAll()
@@ -44,7 +41,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         val othersDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_OTHERS, 90).toLong()
         val lastImageUpdateDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2).toLong()
 
-        return episodeMappingRepository.findAllNeedUpdate(
+        return repository.findAllNeedUpdate(
             currentSimulcastUuid = simulcasts.getOrNull(0)?.uuid,
             lastSimulcastUuid = simulcasts.getOrNull(1)?.uuid,
             currentSeasonDelay = currentSeasonDelay,
@@ -54,25 +51,25 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         )
     }
 
-    fun findAllSeo() = episodeMappingRepository.findAllSeo()
+    fun findAllSeo() = repository.findAllSeo()
 
     fun findAllSimulcasted(ignoreAudioLocale: String, ignoreEpisodeTypes: Set<EpisodeType>) =
-        episodeMappingRepository.findAllSimulcasted(ignoreAudioLocale, ignoreEpisodeTypes)
+        repository.findAllSimulcasted(ignoreAudioLocale, ignoreEpisodeTypes)
 
     fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
-        episodeMappingRepository.findLastNumber(anime, episodeType, season, platform, audioLocale)
+        repository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
     fun findByAnimeSeasonEpisodeTypeNumber(animeUuid: UUID, season: Int, episodeType: EpisodeType, number: Int) =
-        episodeMappingRepository.findByAnimeSeasonEpisodeTypeNumber(animeUuid, season, episodeType, number)
+        repository.findByAnimeSeasonEpisodeTypeNumber(animeUuid, season, episodeType, number)
 
     fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeCalculateDto) =
-        episodeMappingRepository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)
+        repository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)
 
-    fun findMinimalReleaseDateTime() = episodeMappingRepository.findMinimalReleaseDateTime()
+    fun findMinimalReleaseDateTime() = repository.findMinimalReleaseDateTime()
 
-    fun updateAllReleaseDate() = episodeMappingRepository.updateAllReleaseDate()
+    fun updateAllReleaseDate() = repository.updateAllReleaseDate()
 
-    fun updateAllSimulcast(map: Map<UUID, UUID>) = episodeMappingRepository.updateAllSimulcast(map)
+    fun updateAllSimulcast(map: Map<UUID, UUID>) = repository.updateAllSimulcast(map)
 
     override fun save(entity: EpisodeMapping): EpisodeMapping {
         val save = super.save(entity)

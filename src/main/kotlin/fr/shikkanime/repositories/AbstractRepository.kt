@@ -12,12 +12,15 @@ import jakarta.persistence.criteria.CriteriaQuery
 import org.hibernate.ScrollMode
 import org.hibernate.jpa.AvailableHints
 import org.hibernate.query.Query
+import java.lang.reflect.ParameterizedType
 import java.util.*
 
 abstract class AbstractRepository<E : ShikkEntity> {
     @Inject protected lateinit var database: Database
 
-    protected abstract fun getEntityClass(): Class<E>
+    @Suppress("UNCHECKED_CAST")
+    protected open fun getEntityClass() =
+        (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<E>
 
     fun <T> createReadOnlyQuery(entityManager: EntityManager, query: CriteriaQuery<T>) = createReadOnlyQuery(entityManager.createQuery(query))
 

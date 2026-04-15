@@ -6,10 +6,7 @@ import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.RuleRepository
 
 class RuleService : AbstractService<Rule, RuleRepository>() {
-    @Inject private lateinit var ruleRepository: RuleRepository
     @Inject private lateinit var traceActionService: TraceActionService
-
-    override fun getRepository() = ruleRepository
 
     override fun save(entity: Rule): Rule {
         val rule = super.save(entity)

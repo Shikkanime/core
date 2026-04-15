@@ -160,4 +160,13 @@ class MemberController : HasPageableRoute() {
         val (_, limit, _) = pageableRoute(null, limitParam, null, null)
         return Response.ok(memberCacheService.getRefreshMember(memberUuid, limit) ?: return Response.notFound())
     }
+
+    @Path
+    @Delete
+    @JWTAuthenticated
+    private fun deleteMember(@JWTUser memberUuid: UUID): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        memberService.delete(member)
+        return Response.noContent()
+    }
 }

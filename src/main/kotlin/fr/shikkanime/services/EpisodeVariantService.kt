@@ -18,7 +18,6 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 
 class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepository>() {
-    @Inject private lateinit var episodeVariantRepository: EpisodeVariantRepository
     @Inject private lateinit var simulcastService: SimulcastService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var animeService: AnimeService
@@ -30,29 +29,27 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject private lateinit var attachmentService: AttachmentService
     @Inject private lateinit var mailService: MailService
 
-    override fun getRepository() = episodeVariantRepository
+    fun preIndex() = repository.preIndex()
 
-    fun preIndex() = episodeVariantRepository.preIndex()
+    fun findAllTypeIdentifier() = repository.findAllTypeIdentifier()
 
-    fun findAllTypeIdentifier() = episodeVariantRepository.findAllTypeIdentifier()
+    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
-    fun findAllByAnime(animeUuid: UUID) = episodeVariantRepository.findAllByAnime(animeUuid)
-
-    fun findAllByMapping(mappingUUID: UUID) = episodeVariantRepository.findAllByMapping(mappingUUID)
+    fun findAllByMapping(mappingUUID: UUID) = repository.findAllByMapping(mappingUUID)
 
     fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
     fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform) =
-        episodeVariantRepository.findAllIdentifiersByMappingsAndPlatform(mappingUuids, platform)
+        repository.findAllIdentifiersByMappingsAndPlatform(mappingUuids, platform)
 
-    fun findAllIdentifiers() = episodeVariantRepository.findAllIdentifiers()
+    fun findAllIdentifiers() = repository.findAllIdentifiers()
 
     fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
         countryCode: CountryCode,
         platform: Platform,
         startZonedDateTime: ZonedDateTime,
         endZonedDateTime: ZonedDateTime
-    ) = episodeVariantRepository.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+    ) = repository.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
         countryCode,
         platform,
         startZonedDateTime,
@@ -215,7 +212,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         // Update the anime entity with the episode's data
         updateAnime(anime, episode, mapping)
 
-        if (episodeVariantRepository.findAllByMappingAndPlatformAndAudioLocaleAndUncensored(
+        if (repository.findAllByMappingAndPlatformAndAudioLocaleAndUncensored(
             mapping.uuid!!,
             episode.platform,
             episode.audioLocale,
@@ -288,7 +285,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         async: Boolean = true
     ): EpisodeMapping {
         // Try to find an existing mapping or create a new one
-        var mapping = episode.variantOf?.let { episodeVariantRepository.findByIdentifier(it)?.mapping }
+        var mapping = episode.variantOf?.let { repository.findByIdentifier(it)?.mapping }
             ?: episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             anime.uuid!!,
             episode.season,

@@ -1,31 +1,33 @@
 package fr.shikkanime.services
 
+import com.google.inject.Inject
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.repositories.AbstractRepository
 import java.util.*
 
 abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
-    protected abstract fun getRepository(): R
+    @Inject
+    protected lateinit var repository: R
 
-    open fun findAll() = getRepository().findAll()
+    open fun findAll() = repository.findAll()
 
-    fun findAllUuids() = getRepository().findAllUuids()
+    fun findAllUuids() = repository.findAllUuids()
 
-    fun findAllByUuids(uuids: Collection<UUID>) = getRepository().findAllByUuids(uuids)
+    fun findAllByUuids(uuids: Collection<UUID>) = repository.findAllByUuids(uuids)
 
-    fun getReference(uuid: UUID) = getRepository().getReference(uuid)
+    fun getReference(uuid: UUID) = repository.getReference(uuid)
 
-    fun find(uuid: UUID?) = if (uuid != null) getRepository().find(uuid) else null
+    fun find(uuid: UUID?) = if (uuid != null) repository.find(uuid) else null
 
-    open fun save(entity: E) = getRepository().save(entity)
+    open fun save(entity: E) = repository.save(entity)
 
-    open fun saveAll(entities: List<E>) = getRepository().saveAll(entities)
+    open fun saveAll(entities: List<E>) = repository.saveAll(entities)
 
-    open fun update(entity: E) = getRepository().update(entity)
+    open fun update(entity: E) = repository.update(entity)
 
-    fun updateAll(entities: List<E>) = getRepository().updateAll(entities)
+    fun updateAll(entities: List<E>) = repository.updateAll(entities)
 
-    open fun delete(entity: E) = getRepository().delete(entity)
+    open fun delete(entity: E) = repository.delete(entity)
 
-    open fun deleteAll(entities: List<E>) = getRepository().deleteAll(entities)
+    open fun deleteAll(entities: List<E>) = repository.deleteAll(entities)
 }

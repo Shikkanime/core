@@ -11,6 +11,21 @@ import java.util.*
 class AttachmentRepository : AbstractRepository<Attachment>() {
     override fun getEntityClass() = Attachment::class.java
 
+    fun findAllByEntityUuid(entityUuid: UUID): List<Attachment> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[Attachment_.entityUuid], entityUuid)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType): List<Attachment> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

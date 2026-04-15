@@ -10,6 +10,21 @@ import java.util.*
 class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     override fun getEntityClass() = MemberFollowAnime::class.java
 
+    fun findAllByMember(memberUuid: UUID): List<MemberFollowAnime> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllFollowedAnimes(memberUuid: UUID, page: Int, limit: Int): Pageable<Anime> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

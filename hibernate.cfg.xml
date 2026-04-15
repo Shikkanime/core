@@ -17,6 +17,7 @@
         <property name="hibernate.cache.use_second_level_cache">true</property>
         <property name="hibernate.cache.region.factory_class">jcache</property>
         <property name="hibernate.cache.use_query_cache">true</property>
+        <property name="hibernate.jcache.cache_manager_uri">classpath:ehcache.xml</property>
         <property name="hibernate.javax.cache.missing_cache_strategy">create</property>
     </session-factory>
 </hibernate-configuration>

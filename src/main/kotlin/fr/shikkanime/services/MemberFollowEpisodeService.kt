@@ -15,26 +15,27 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFollowEpisodeRepository>() {
-    @Inject private lateinit var memberFollowEpisodeRepository: MemberFollowEpisodeRepository
-
     @Inject
     private lateinit var memberService: MemberService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var traceActionService: TraceActionService
 
-    override fun getRepository() = memberFollowEpisodeRepository
+    fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int) =
+        repository.findAllFollowedEpisodes(memberUuid, page, limit)
 
-    fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int) = memberFollowEpisodeRepository.findAllFollowedEpisodes(memberUuid, page, limit)
-
-    fun findAllFollowedEpisodesUUID(memberUuid: UUID) = memberFollowEpisodeRepository.findAllFollowedEpisodesUUID(memberUuid)
+    fun findAllFollowedEpisodesUUID(memberUuid: UUID) = repository.findAllFollowedEpisodesUUID(memberUuid)
 
     fun findAllByEpisode(episodeMapping: EpisodeMapping) =
-        memberFollowEpisodeRepository.findAllByEpisode(episodeMapping)
+        repository.findAllByEpisode(episodeMapping)
 
-    fun getSeenAndUnseenDuration(member: Member) = memberFollowEpisodeRepository.getSeenAndUnseenDuration(member)
+    fun findAllByMember(memberUuid: UUID) = repository.findAllByMember(memberUuid)
+
+    fun getSeenAndUnseenDuration(member: Member) = repository.getSeenAndUnseenDuration(member)
+
+    fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
 
     fun followAll(memberUuid: UUID, anime: GenericDto): Response {
-        val nonFollowedEpisodes = memberFollowEpisodeRepository
+        val nonFollowedEpisodes = repository
             .findAllNonFollowedEpisodesByMemberUuidAndAnimeUuid(memberUuid, anime.uuid)
             .takeIfNotEmpty() ?: return Response.ok(AllFollowedEpisodeDto(emptySet(), 0))
 
@@ -55,7 +56,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     fun follow(memberUuid: UUID, episode: GenericDto): Response {
         val episodeReference = episodeMappingService.getReference(episode.uuid) ?: return Response.notFound()
-        if (memberFollowEpisodeRepository.existsByMemberUuidAndEpisodeUuid(memberUuid, episodeReference.uuid!!))
+        if (repository.existsByMemberUuidAndEpisodeUuid(memberUuid, episodeReference.uuid!!))
             return Response.conflict()
 
         val memberFollowEpisode =
@@ -66,10 +67,10 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
     }
 
     fun unfollow(memberUuid: UUID, episode: GenericDto): Response {
-        val memberFollowEpisode = memberFollowEpisodeRepository.findByMemberUuidAndEpisodeUuid(memberUuid, episode.uuid)
+        val memberFollowEpisode = repository.findByMemberUuidAndEpisodeUuid(memberUuid, episode.uuid)
             ?: return Response.conflict()
 
-        memberFollowEpisodeRepository.delete(memberFollowEpisode)
+        repository.delete(memberFollowEpisode)
         traceActionService.createTraceAction(memberFollowEpisode, TraceAction.Action.DELETE)
         InvalidationService.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()

@@ -25,11 +25,15 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
     @Inject private lateinit var memberRepository: MemberRepository
     @Inject private lateinit var memberActionService: MemberActionService
+    @Inject
+    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject
+    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject
+    private lateinit var mailService: MailService
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var memberFactory: MemberFactory
     @Inject private lateinit var attachmentService: AttachmentService
-
-    override fun getRepository() = memberRepository
 
     private fun findAllByRoles(roles: List<Role>) = memberRepository.findAllByRoles(roles)
 
@@ -112,6 +116,20 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         requireNotNull(member.email)
         // Creation member action
         return memberActionService.save(Action.FORGOT_IDENTIFIER, member.uuid!!, member.email!!)
+    }
+
+    override fun delete(entity: Member) {
+        val memberUuid = entity.uuid!!
+
+        memberFollowAnimeService.deleteAllByMember(memberUuid)
+        memberFollowEpisodeService.deleteAllByMember(memberUuid)
+        memberActionService.deleteAllByMember(memberUuid)
+        traceActionService.deleteAllByEntityUuid(memberUuid)
+        attachmentService.deleteAllByEntityUuid(memberUuid)
+        entity.email?.let { mailService.deleteAllByRecipient(it) }
+
+        super.delete(entity)
+        InvalidationService.invalidate(Member::class.java)
     }
 
     suspend fun changeProfileImage(member: Member, multiPartData: MultiPartData) {
