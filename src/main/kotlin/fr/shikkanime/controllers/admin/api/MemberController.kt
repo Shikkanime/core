@@ -139,4 +139,12 @@ class MemberController : HasPageableRoute() {
             )
         )
     }
+
+    @Path("/{memberUuid}")
+    @Delete
+    private fun deleteMember(@PathParam memberUuid: UUID): Response {
+        val member = memberService.find(memberUuid) ?: return Response.notFound()
+        memberService.delete(member)
+        return Response.noContent()
+    }
 }

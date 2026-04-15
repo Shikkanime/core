@@ -12,31 +12,33 @@ import fr.shikkanime.utils.routes.Response
 import java.util.*
 
 class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollowAnimeRepository>() {
-    @Inject private lateinit var memberFollowAnimeRepository: MemberFollowAnimeRepository
-
     @Inject
     private lateinit var memberService: MemberService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var traceActionService: TraceActionService
 
-    override fun getRepository() = memberFollowAnimeRepository
+    fun findAllFollowedAnimes(memberUuid: UUID, page: Int, limit: Int) =
+        repository.findAllFollowedAnimes(memberUuid, page, limit)
 
-    fun findAllFollowedAnimes(memberUuid: UUID, page: Int, limit: Int) = memberFollowAnimeRepository.findAllFollowedAnimes(memberUuid, page, limit)
+    fun findAllFollowedAnimesUUID(memberUuid: UUID) = repository.findAllFollowedAnimesUUID(memberUuid)
 
-    fun findAllFollowedAnimesUUID(memberUuid: UUID) = memberFollowAnimeRepository.findAllFollowedAnimesUUID(memberUuid)
-
-    fun findAllByAnime(anime: Anime) = memberFollowAnimeRepository.findAllByAnime(anime)
+    fun findAllByAnime(anime: Anime) = repository.findAllByAnime(anime)
 
     fun findAllMissedAnimes(memberUuid: UUID, page: Int, limit: Int) =
-        memberFollowAnimeRepository.findAllMissedAnimes(memberUuid, page, limit)
+        repository.findAllMissedAnimes(memberUuid, page, limit)
 
-    fun existsByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID) = memberFollowAnimeRepository.existsByMemberUuidAndAnimeUuid(memberUuid, animeUuid)
+    fun findAllByMember(memberUuid: UUID) = repository.findAllByMember(memberUuid)
+
+    fun existsByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID) =
+        repository.existsByMemberUuidAndAnimeUuid(memberUuid, animeUuid)
 
     fun existsByMemberAndAnime(member: Member, anime: Anime) = existsByMemberUuidAndAnimeUuid(member.uuid!!, anime.uuid!!)
 
+    fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
+
     fun follow(memberUuid: UUID, anime: GenericDto): Response {
         val animeReference = animeService.getReference(anime.uuid) ?: return Response.notFound()
-        if (memberFollowAnimeRepository.existsByMemberUuidAndAnimeUuid(memberUuid, animeReference.uuid!!))
+        if (repository.existsByMemberUuidAndAnimeUuid(memberUuid, animeReference.uuid!!))
             return Response.conflict()
 
         val memberFollowAnime = save(MemberFollowAnime(member = memberService.getReference(memberUuid), anime = animeReference))
@@ -46,10 +48,10 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
     }
 
     fun unfollow(memberUuid: UUID, anime: GenericDto): Response {
-        val memberFollowAnime = memberFollowAnimeRepository.findByMemberUuidAndAnimeUuid(memberUuid, anime.uuid)
+        val memberFollowAnime = repository.findByMemberUuidAndAnimeUuid(memberUuid, anime.uuid)
             ?: return Response.conflict()
 
-        memberFollowAnimeRepository.delete(memberFollowAnime)
+        repository.delete(memberFollowAnime)
         traceActionService.createTraceAction(memberFollowAnime, TraceAction.Action.DELETE)
         InvalidationService.invalidate(MemberFollowAnime::class.java)
         return Response.ok()

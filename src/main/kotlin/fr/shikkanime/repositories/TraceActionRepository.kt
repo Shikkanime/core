@@ -14,6 +14,21 @@ import java.util.*
 class TraceActionRepository : AbstractRepository<TraceAction>() {
     override fun getEntityClass() = TraceAction::class.java
 
+    fun findAllByEntityUuid(entityUuid: UUID): List<TraceAction> {
+        return database.entityManager.use {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
+
+            query.where(
+                cb.equal(root[TraceAction_.entityUuid], entityUuid)
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int): Pageable<TraceAction> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

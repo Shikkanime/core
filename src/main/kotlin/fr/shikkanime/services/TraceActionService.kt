@@ -1,6 +1,5 @@
 package fr.shikkanime.services
 
-import com.google.inject.Inject
 import fr.shikkanime.dtos.analytics.KeyCountDto
 import fr.shikkanime.entities.ShikkEntity
 import fr.shikkanime.entities.TraceAction
@@ -8,6 +7,7 @@ import fr.shikkanime.repositories.TraceActionRepository
 import fr.shikkanime.utils.Constant
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.util.*
 
 class TraceActionService : AbstractService<TraceAction, TraceActionRepository>() {
     data class DateVersionCountDto(
@@ -24,21 +24,22 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
         val dailyWmaCounts: List<KeyCountDto>
     )
 
-    @Inject private lateinit var traceActionRepository: TraceActionRepository
+    fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) =
+        repository.findAllBy(entityType, action, page, limit)
 
-    override fun getRepository() = traceActionRepository
+    fun findAllByEntityUuid(entityUuid: UUID) = repository.findAllByEntityUuid(entityUuid)
 
-    fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) = traceActionRepository.findAllBy(entityType, action, page, limit)
+    fun deleteAllByEntityUuid(entityUuid: UUID) = repository.deleteAll(repository.findAllByEntityUuid(entityUuid))
 
     fun getUserAnalytics(date: LocalDate, minActiveDays: Int = 2): AnalyticsReport {
         val since = date.atStartOfDay(Constant.utcZoneId)
-        val uuids = traceActionRepository.getReturningUserUuids(since, minActiveDays)
-        val lastLoginUuids = traceActionRepository.findLastLoginsByEntityUuids(uuids)
-        val versionCounts = traceActionRepository.getAppVersionCount(since, lastLoginUuids)
-        val localeCounts = traceActionRepository.getLocaleCount(since, lastLoginUuids)
-        val deviceCounts = traceActionRepository.getDeviceCount(since, lastLoginUuids)
-        val dailyUserVersionCounts = traceActionRepository.getDailyReturningUserCount(since, uuids)
-        val dailyWmaCounts = traceActionRepository.getDailyWmaCount(since, uuids)
+        val uuids = repository.getReturningUserUuids(since, minActiveDays)
+        val lastLoginUuids = repository.findLastLoginsByEntityUuids(uuids)
+        val versionCounts = repository.getAppVersionCount(since, lastLoginUuids)
+        val localeCounts = repository.getLocaleCount(since, lastLoginUuids)
+        val deviceCounts = repository.getDeviceCount(since, lastLoginUuids)
+        val dailyUserVersionCounts = repository.getDailyReturningUserCount(since, uuids)
+        val dailyWmaCounts = repository.getDailyWmaCount(since, uuids)
         return AnalyticsReport(versionCounts, localeCounts, deviceCounts, dailyUserVersionCounts, dailyWmaCounts)
     }
 

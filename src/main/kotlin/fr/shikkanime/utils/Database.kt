@@ -80,7 +80,9 @@ class Database {
     @Suppress("unused")
     constructor() : this(
         File(
-            ClassLoader.getSystemClassLoader().getResource("hibernate.cfg.xml")?.file ?: "hibernate.cfg.xml"
+            (Database::class.java.classLoader.getResource("hibernate.cfg.xml")
+                ?: Thread.currentThread().contextClassLoader.getResource("hibernate.cfg.xml"))?.file
+                ?: "hibernate.cfg.xml"
         )
     )
 

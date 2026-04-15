@@ -22,29 +22,28 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject private lateinit var memberActionRepository: MemberActionRepository
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var traceActionService: TraceActionService
-
-    override fun getRepository() = memberActionRepository
 
     @OptIn(ExperimentalEncodingApi::class)
     private fun toWebToken(memberAction: MemberAction): String = EncryptionManager.toBase64(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
 
     fun validateWebAction(webToken: String) {
-        val actionTokens = memberActionRepository.findAllNotValidated().associateBy(this::toWebToken)
+        val actionTokens = repository.findAllNotValidated().associateBy(this::toWebToken)
         require(actionTokens.containsKey(webToken)) { "Action not found" }
         val memberAction = actionTokens[webToken] ?: return
         doValidateAction(memberAction)
     }
 
     fun validateAction(uuid: UUID, code: String) {
-        val memberAction = memberActionRepository.findByUuidAndCode(uuid, code)
+        val memberAction = repository.findByUuidAndCode(uuid, code)
         checkNotNull(memberAction) { "Invalid action" }
         require(ZonedDateTime.now() < memberAction.creationDateTime.plusMinutes(ACTION_EXPIRED_AFTER)) { "Action expired" }
         doValidateAction(memberAction)
     }
+
+    fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
 
     fun save(action: Action, memberUuid: UUID, email: String): UUID {
         val code = StringUtils.generateRandomString(8).uppercase()
@@ -137,6 +136,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
         memberAction.validated = true
         memberAction.updateDateTime = ZonedDateTime.now()
-        memberActionRepository.update(memberAction)
+        repository.update(memberAction)
     }
 }

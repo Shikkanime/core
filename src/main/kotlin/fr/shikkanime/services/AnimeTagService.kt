@@ -7,12 +7,9 @@ import fr.shikkanime.repositories.AnimeTagRepository
 import java.util.*
 
 class AnimeTagService : AbstractService<AnimeTag, AnimeTagRepository>() {
-    @Inject private lateinit var animeTagRepository: AnimeTagRepository
     @Inject private lateinit var traceActionService: TraceActionService
 
-    override fun getRepository() = animeTagRepository
-
-    fun findAllByAnime(animeUuid: UUID) = animeTagRepository.findAllByAnime(animeUuid)
+    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
     override fun update(entity: AnimeTag): AnimeTag {
         val tag = super.update(entity)

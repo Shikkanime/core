@@ -7,16 +7,13 @@ import fr.shikkanime.repositories.GenreRepository
 import java.util.*
 
 class GenreService : AbstractService<Genre, GenreRepository>() {
-    @Inject private lateinit var genreRepository: GenreRepository
     @Inject private lateinit var traceActionService: TraceActionService
 
-    override fun getRepository() = genreRepository
+    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
-    fun findAllByAnime(animeUuid: UUID) = genreRepository.findAllByAnime(animeUuid)
+    fun findByName(name: String) = repository.findByName(name)
 
-    fun findByName(name: String) = genreRepository.findByName(name)
-
-    fun findOrSave(name: String) = genreRepository.findByName(name) ?: save(Genre(name = name))
+    fun findOrSave(name: String) = repository.findByName(name) ?: save(Genre(name = name))
 
     override fun save(entity: Genre): Genre {
         val genre = super.save(entity)

@@ -18,8 +18,6 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class MemberRepository : AbstractRepository<Member>() {
-    override fun getEntityClass() = Member::class.java
-
     fun findAllByRoles(roles: List<Role>): List<Member> {
         return database.entityManager.use {
             val cb = it.criteriaBuilder

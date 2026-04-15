@@ -35,23 +35,28 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     @Volatile private var pendingInvalidation: ScheduledFuture<*>? = null
 
-    @Inject private lateinit var attachmentRepository: AttachmentRepository
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var memberService: MemberService
 
-    override fun getRepository() = attachmentRepository
+    fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType) =
+        repository.findAllByEntityUuidAndType(entityUuid, type)
 
-    fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType) = attachmentRepository.findAllByEntityUuidAndType(entityUuid, type)
+    fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime) = repository.findAllNeededUpdate(lastUpdateDateTime)
 
-    fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime) = attachmentRepository.findAllNeededUpdate(lastUpdateDateTime)
+    fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) =
+        repository.findByEntityUuidTypeAndActive(entityUuid, type)
 
-    fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) = attachmentRepository.findByEntityUuidTypeAndActive(entityUuid, type)
+    fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = repository.findAllActiveWithUrlAndNotIn(uuids)
 
-    fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = attachmentRepository.findAllActiveWithUrlAndNotIn(uuids)
+    fun deleteAllByEntityUuid(entityUuid: UUID) {
+        val attachments = repository.findAllByEntityUuid(entityUuid)
+        attachments.forEach { getFile(it).delete() }
+        repository.deleteAll(attachments)
+    }
 
-    fun getAttachmentCountsByDate() = attachmentRepository.getCumulativeAttachmentCounts()
+    fun getAttachmentCountsByDate() = repository.getCumulativeAttachmentCounts()
 
     private fun scheduleInvalidation() {
         synchronized(this) {

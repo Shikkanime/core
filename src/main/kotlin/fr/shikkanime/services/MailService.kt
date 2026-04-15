@@ -14,12 +14,13 @@ import java.io.StringWriter
 class MailService : AbstractService<Mail, MailRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject private lateinit var mailRepository: MailRepository
     @Inject private lateinit var configCacheService: ConfigCacheService
 
-    override fun getRepository() = mailRepository
+    fun findAllNotSent() = repository.findAllNotSent()
 
-    fun findAllNotSent() = mailRepository.findAllNotSent()
+    fun deleteAllByRecipient(recipient: String) {
+        repository.deleteAll(repository.findAllByRecipient(recipient))
+    }
 
     fun getFreemarkerContent(template: String, code: String? = null, model: Map<String, String>? = null): StringWriter {
         val stringWriter = StringWriter()

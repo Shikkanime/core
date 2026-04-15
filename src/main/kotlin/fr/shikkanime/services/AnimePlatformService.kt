@@ -1,6 +1,5 @@
 package fr.shikkanime.services
 
-import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
 import fr.shikkanime.entities.enums.Platform
@@ -8,24 +7,20 @@ import fr.shikkanime.repositories.AnimePlatformRepository
 import java.util.*
 
 class AnimePlatformService : AbstractService<AnimePlatform, AnimePlatformRepository>() {
-    @Inject private lateinit var animePlatformRepository: AnimePlatformRepository
+    fun findAllByAnime(uuid: UUID) = repository.findAllByAnime(uuid)
 
-    override fun getRepository() = animePlatformRepository
+    fun findAllByAnime(anime: Anime) = repository.findAllByAnime(anime.uuid!!)
 
-    fun findAllByAnime(uuid: UUID) = animePlatformRepository.findAllByAnime(uuid)
-
-    fun findAllByAnime(anime: Anime) = animePlatformRepository.findAllByAnime(anime.uuid!!)
-
-    fun findAllByPlatform(platform: Platform) = animePlatformRepository.findAllByPlatform(platform)
+    fun findAllByPlatform(platform: Platform) = repository.findAllByPlatform(platform)
 
     fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) =
-        animePlatformRepository.findAllIdByAnimeAndPlatform(animeUuid, platform)
+        repository.findAllIdByAnimeAndPlatform(animeUuid, platform)
 
     fun findAllIdByAnimeAndPlatform(anime: Anime, platform: Platform) =
         findAllIdByAnimeAndPlatform(anime.uuid!!, platform)
 
     fun findByAnimePlatformAndId(animeUuid: UUID, platform: Platform, platformId: String) =
-        animePlatformRepository.findByAnimePlatformAndId(animeUuid, platform, platformId)
+        repository.findByAnimePlatformAndId(animeUuid, platform, platformId)
 
     fun findByAnimePlatformAndId(anime: Anime, platform: Platform, platformId: String) =
         findByAnimePlatformAndId(anime.uuid!!, platform, platformId)
