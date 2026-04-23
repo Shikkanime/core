@@ -9,13 +9,13 @@ import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import java.io.ByteArrayOutputStream
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 
 class AttachmentServiceTest : AbstractTest() {
     @ParameterizedTest
@@ -30,7 +30,7 @@ class AttachmentServiceTest : AbstractTest() {
             "https://media.animationdigitalnetwork.com/images/show/7ae5e0e2-277a-4fd8-bbd3-dceb58ce43df/carousel169.width=1920,height=1080,quality=100",
         ]
     )
-    fun webpConversion(url: String) {
+    suspend fun webpConversion(url: String) {
         val uuid = UUID.randomUUID()
 
         val attachment = attachmentService.createAttachmentOrMarkAsActive(
@@ -43,7 +43,7 @@ class AttachmentServiceTest : AbstractTest() {
         var i = 0
 
         while (!file.exists() || file.length() <= 0) {
-            runBlocking { delay(1000) }
+            delay(1000.milliseconds)
 
             if (i++ > 10) {
                 throw Exception("Image not found for url $url")

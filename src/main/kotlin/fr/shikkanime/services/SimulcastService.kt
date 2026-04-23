@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.factories.impl.SimulcastFactory
 import fr.shikkanime.repositories.SimulcastRepository
@@ -13,7 +12,6 @@ import jakarta.persistence.Tuple
 import java.time.ZonedDateTime
 
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var simulcastFactory: SimulcastFactory
 
     fun findAllModified() = repository.findAllModified()
@@ -29,14 +27,8 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
 
     override fun save(entity: Simulcast): Simulcast {
         val save = super.save(entity)
-        traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
         InvalidationService.invalidate(Simulcast::class.java)
         return save
-    }
-
-    override fun delete(entity: Simulcast) {
-        super.delete(entity)
-        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
     companion object {

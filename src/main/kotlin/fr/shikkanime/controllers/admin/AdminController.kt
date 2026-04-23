@@ -23,6 +23,7 @@ import fr.shikkanime.wrappers.ThreadsWrapper
 import io.ktor.http.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration.Companion.milliseconds
 
 const val ADMIN = "/admin"
 
@@ -55,12 +56,12 @@ class AdminController {
 
     @Path("/login")
     @Post
-    private fun login(@BodyParam parameters: Parameters): Response {
+    private suspend fun login(@BodyParam parameters: Parameters): Response {
         val username = parameters["username"] ?: return Response.redirect(ADMIN)
         val password = parameters["password"] ?: return Response.redirect(ADMIN)
 
-        val user = memberService.findByUsernameAndPassword(username, password) ?: return runBlocking {
-            delay(1000)
+        val user = memberService.findByUsernameAndPassword(username, password) ?: return run {
+            delay(1000.milliseconds)
             Response.redirect("$ADMIN?error=1")
         }
 
@@ -224,21 +225,19 @@ class AdminController {
     @Path("/threads-publish")
     @Get
     @AdminSessionAuthenticated
-    private fun threadsPublish(
+    private suspend fun threadsPublish(
         @QueryParam message: String,
         @QueryParam("image_url") imageUrl: String?
     ): Response {
         val hasImage = !imageUrl.isNullOrBlank()
 
-        runBlocking {
-            ThreadsWrapper.post(
-                requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_ACCESS_TOKEN)),
-                if (hasImage) ThreadsWrapper.PostType.IMAGE else ThreadsWrapper.PostType.TEXT,
-                message,
-                imageUrl.takeIf { hasImage },
-                "An example image".takeIf { hasImage }
-            )
-        }
+        ThreadsWrapper.post(
+            requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_ACCESS_TOKEN)),
+            if (hasImage) ThreadsWrapper.PostType.IMAGE else ThreadsWrapper.PostType.TEXT,
+            message,
+            imageUrl.takeIf { hasImage },
+            "An example image".takeIf { hasImage }
+        )
 
         return Response.redirect(Link.THREADS.href)
     }

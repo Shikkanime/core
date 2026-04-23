@@ -1,12 +1,14 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.Action
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.*
 import java.time.ZonedDateTime
 import java.util.*
 
 @Entity
 @Table(name = "member_action")
+@Tracing
 class MemberAction(
     uuid: UUID? = null,
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

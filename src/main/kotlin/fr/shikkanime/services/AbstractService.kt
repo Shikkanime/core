@@ -6,8 +6,7 @@ import fr.shikkanime.repositories.AbstractRepository
 import java.util.*
 
 abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
-    @Inject
-    protected lateinit var repository: R
+    @Inject protected lateinit var repository: R
 
     open fun findAll() = repository.findAll()
 

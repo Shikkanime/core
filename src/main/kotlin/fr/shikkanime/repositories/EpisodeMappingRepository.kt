@@ -345,7 +345,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         if (map.isEmpty()) return
 
         database.inTransaction {
-            val bySimulcast = map.entries.groupBy({ it.value }, { it.key })
+            val bySimulcast = map.entries.groupBy({ entry -> entry.value }, { entry -> entry.key })
 
             bySimulcast.forEach { (simulcastUuid, episodeMappingUuids) ->
                 episodeMappingUuids.chunked(10_000).forEach { chunk ->

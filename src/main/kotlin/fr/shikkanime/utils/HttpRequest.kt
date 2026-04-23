@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.util.concurrent.CancellationException
+import kotlin.time.Duration.Companion.milliseconds
 
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
@@ -102,7 +103,7 @@ class HttpRequest(private val timeout: Long = 60_000) {
 
                     if (attempt < times - 1) {
                         logger.warning("Retrying in $delay ms...")
-                        delay(delay)
+                        delay(delay.milliseconds)
                     }
                 }
             }

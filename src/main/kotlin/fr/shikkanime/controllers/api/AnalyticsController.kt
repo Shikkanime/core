@@ -12,8 +12,7 @@ import java.time.LocalDate
 
 @Controller("/api/v1/analytics")
 class AnalyticsController {
-    @Inject
-    private lateinit var analyticsCacheService: AnalyticsCacheService
+    @Inject private lateinit var analyticsCacheService: AnalyticsCacheService
 
     @Path("/market-share")
     @Get

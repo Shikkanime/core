@@ -6,10 +6,8 @@ import fr.shikkanime.entities.miscellaneous.MarketShare
 import fr.shikkanime.factories.IGenericFactory
 
 class MarketShareFactory : IGenericFactory<MarketShare, MarketShareDto> {
-    @Inject
-    private lateinit var simulcastFactory: SimulcastFactory
-    @Inject
-    private lateinit var platformFactory: PlatformFactory
+    @Inject private lateinit var simulcastFactory: SimulcastFactory
+    @Inject private lateinit var platformFactory: PlatformFactory
 
     override fun toDto(entity: MarketShare) = MarketShareDto(
         simulcast = simulcastFactory.toDto(entity.simulcast),

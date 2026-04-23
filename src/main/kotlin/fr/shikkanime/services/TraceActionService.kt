@@ -52,19 +52,4 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
             additionalData = additionalData
         )
     )
-
-    fun createTraceActions(entities: List<ShikkEntity>, action: TraceAction.Action) {
-        val now = ZonedDateTime.now()
-
-        saveAll(
-            entities.map {
-                TraceAction(
-                    actionDateTime = now,
-                    entityType = it::class.java.simpleName,
-                    entityUuid = it.uuid,
-                    action = action,
-                )
-            }
-        )
-    }
 }

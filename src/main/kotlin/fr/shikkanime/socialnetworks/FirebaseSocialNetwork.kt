@@ -20,8 +20,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
     private val logger = LoggerFactory.getLogger(FirebaseSocialNetwork::class.java)
     private var isInitialized = false
 
-    @Inject
-    private lateinit var memberService: MemberService
+    @Inject private lateinit var memberService: MemberService
 
     override val priority: Int
         get() = 0

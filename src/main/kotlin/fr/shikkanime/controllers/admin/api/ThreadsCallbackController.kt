@@ -18,7 +18,6 @@ import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
 import fr.shikkanime.wrappers.ThreadsWrapper
-import kotlinx.coroutines.runBlocking
 
 @Controller("$ADMIN/api/threads")
 @AdminSessionAuthenticated
@@ -28,35 +27,33 @@ class ThreadsCallbackController {
 
     @Path
     @Get
-    private fun callback(@QueryParam code: String): Response {
+    private suspend fun callback(@QueryParam code: String): Response {
         val appId = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))
         val appSecret = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_SECRET))
 
-        return runBlocking {
-            try {
-                val accessToken = ThreadsWrapper.getAccessToken(
-                    appId,
-                    appSecret,
-                    code,
-                )
+        return try {
+            val accessToken = ThreadsWrapper.getAccessToken(
+                appId,
+                appSecret,
+                code,
+            )
 
-                val longLivedAccessToken = ThreadsWrapper.getLongLivedAccessToken(
-                    appSecret,
-                    accessToken,
-                )
+            val longLivedAccessToken = ThreadsWrapper.getLongLivedAccessToken(
+                appSecret,
+                accessToken,
+            )
 
-                configService.findAllByName(ConfigPropertyKey.THREADS_ACCESS_TOKEN.key).firstOrNull()?.let {
-                    it.propertyValue = longLivedAccessToken
-                    configService.update(it)
-                    InvalidationService.invalidate(Config::class.java)
-                    Constant.injector.getInstance(ThreadsSocialNetwork::class.java).logout()
-                }
-
-                Response.redirect("${Link.THREADS.href}?success=1")
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Response.badRequest(MessageDto.error("Impossible to get token with code $code"))
+            configService.findAllByName(ConfigPropertyKey.THREADS_ACCESS_TOKEN.key).firstOrNull()?.let {
+                it.propertyValue = longLivedAccessToken
+                configService.update(it)
+                InvalidationService.invalidate(Config::class.java)
+                Constant.injector.getInstance(ThreadsSocialNetwork::class.java).logout()
             }
+
+            Response.redirect("${Link.THREADS.href}?success=1")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Response.badRequest(MessageDto.error("Impossible to get token with code $code"))
         }
     }
 }

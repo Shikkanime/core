@@ -2,7 +2,6 @@ package fr.shikkanime.jobs
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Config
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
@@ -11,12 +10,11 @@ import fr.shikkanime.exceptions.EpisodeNoSubtitlesOrVoiceException
 import fr.shikkanime.platforms.*
 import fr.shikkanime.platforms.AbstractPlatform.Episode
 import fr.shikkanime.services.ConfigService
-import fr.shikkanime.services.EpisodeVariantService
-import fr.shikkanime.services.TraceActionService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -27,8 +25,9 @@ import java.time.format.DateTimeFormatter
 import java.util.logging.Level
 import kotlin.streams.asSequence
 
-@Suppress("unused")
-class FetchOldEpisodesJob : AbstractJob {
+class FetchOldEpisodesJob(
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
@@ -36,11 +35,9 @@ class FetchOldEpisodesJob : AbstractJob {
     @Inject private lateinit var disneyPlusPlatform: DisneyPlusPlatform
     @Inject private lateinit var netflixPlatform: NetflixPlatform
     @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
-    @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var configService: ConfigService
     @Inject private lateinit var configCacheService: ConfigCacheService
-    @Inject private lateinit var traceActionService: TraceActionService
 
     override suspend fun run() {
         val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
@@ -152,7 +149,7 @@ class FetchOldEpisodesJob : AbstractJob {
                 }
             }
 
-            val outputStream = withContext(Dispatchers.IO) {
+            val outputStream = withContext(coroutineDispatcher) {
                 FileOutputStream(
                     File(
                         Constant.exportsFolder,
@@ -168,7 +165,6 @@ class FetchOldEpisodesJob : AbstractJob {
         config.propertyValue = from.toString()
         configService.update(config)
         InvalidationService.invalidate(Config::class.java)
-        traceActionService.createTraceAction(config, TraceAction.Action.UPDATE)
 
         logger.info("Take ${(System.currentTimeMillis() - start) / 1000}s to check ${dates.size} dates")
     }

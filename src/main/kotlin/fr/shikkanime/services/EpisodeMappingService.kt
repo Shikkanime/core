@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.EpisodeCalculateDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.EpisodeMappingRepository
@@ -15,7 +14,6 @@ import java.util.*
 class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepository>() {
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
 
@@ -71,16 +69,9 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
 
     fun updateAllSimulcast(map: Map<UUID, UUID>) = repository.updateAllSimulcast(map)
 
-    override fun save(entity: EpisodeMapping): EpisodeMapping {
-        val save = super.save(entity)
-        traceActionService.createTraceAction(save, TraceAction.Action.CREATE)
-        return save
-    }
-
     override fun delete(entity: EpisodeMapping) {
         episodeVariantService.findAllByMapping(entity).forEach { episodeVariantService.delete(it) }
         memberFollowEpisodeService.findAllByEpisode(entity).forEach { memberFollowEpisodeService.delete(it) }
         super.delete(entity)
-        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 }

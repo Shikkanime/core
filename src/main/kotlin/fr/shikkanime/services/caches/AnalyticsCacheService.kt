@@ -13,12 +13,9 @@ import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 
 class AnalyticsCacheService : ICacheService {
-    @Inject
-    private lateinit var analyticsService: AnalyticsService
-    @Inject
-    private lateinit var marketShareFactory: MarketShareFactory
-    @Inject
-    private lateinit var genreCoverageFactory: GenreCoverageFactory
+    @Inject private lateinit var analyticsService: AnalyticsService
+    @Inject private lateinit var marketShareFactory: MarketShareFactory
+    @Inject private lateinit var genreCoverageFactory: GenreCoverageFactory
 
     fun getAllMarketShare(startYear: Int, endYear: Int) = MapCache.getOrCompute(
         "AnalyticsCacheService.getAllMarketShare",

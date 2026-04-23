@@ -9,11 +9,8 @@ import fr.shikkanime.utils.withUTCString
 import java.time.ZonedDateTime
 
 class RuleFactory : IGenericFactory<Rule, RuleDto> {
-    @Inject
-    private lateinit var ruleService: RuleService
-
-    @Inject
-    private lateinit var platformFactory: PlatformFactory
+    @Inject private lateinit var ruleService: RuleService
+    @Inject private lateinit var platformFactory: PlatformFactory
 
     override fun toDto(entity: Rule) = RuleDto(
         uuid = entity.uuid,

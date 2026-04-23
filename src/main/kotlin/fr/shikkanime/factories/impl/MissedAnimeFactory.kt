@@ -6,8 +6,7 @@ import fr.shikkanime.entities.miscellaneous.MissedAnime
 import fr.shikkanime.factories.IGenericFactory
 
 class MissedAnimeFactory : IGenericFactory<MissedAnime, MissedAnimeDto> {
-    @Inject
-    private lateinit var animeFactory: AnimeFactory
+    @Inject private lateinit var animeFactory: AnimeFactory
 
     override fun toDto(entity: MissedAnime) = MissedAnimeDto(
         anime = animeFactory.toDto(entity.anime),

@@ -23,6 +23,11 @@ private val NUMBER_CLEANUP_REGEX = "\\(.*\\)".toRegex()
 private const val SHOW_TYPE_MOVIE = "MOV"
 private const val SHOW_TYPE_OAV = "OAV"
 
+private val LOCALE_MAP = mapOf(
+    "vostf" to Locale.JA_JP.code,
+    "vf" to Locale.FR_FR.code
+)
+
 class AnimationDigitalNetworkPlatform :
     AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
     @Inject private lateinit var animeCacheService: AnimeCacheService
@@ -99,7 +104,7 @@ class AnimationDigitalNetworkPlatform :
         val season = video.season?.toIntOrNull() ?: 1
         val animeName = cleanAnimeName(video.show.shortTitle?.takeIf { it.isNotBlank() } ?: video.show.title, season.toString())
 
-        if (isBlacklisted(animeName.lowercase())) throw AnimeException("\"$animeName\" is blacklisted")
+        if (isBlacklisted(animeName)) throw AnimeException("\"$animeName\" is blacklisted")
 
         val genres = video.show.genres
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
@@ -145,7 +150,7 @@ class AnimationDigitalNetworkPlatform :
                 description = video.summary,
                 image = video.fullHDImage.takeIf { image -> image.contains("/video/") } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 platform = getPlatform(),
-                audioLocale = getAudioLocale(it),
+                audioLocale = requireNotNull(LOCALE_MAP[it]) { "Language not supported" },
                 id = video.id.toString(),
                 url = video.url,
                 uncensored = video.title.contains("(NC)", true) || video.title.contains("Non censuré", true),
@@ -181,13 +186,5 @@ class AnimationDigitalNetworkPlatform :
         }
 
         return initialNumber to EpisodeType.EPISODE
-    }
-
-    private fun getAudioLocale(string: String): String {
-        return when (string) {
-            "vostf" -> "ja-JP"
-            "vf" -> "fr-FR"
-            else -> throw Exception("Language is null")
-        }
     }
 }

@@ -12,6 +12,7 @@ import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.*
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
@@ -20,17 +21,16 @@ import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
 
-class MemberService : AbstractService<Member, MemberRepository>() {
+class MemberService(
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject private lateinit var memberRepository: MemberRepository
     @Inject private lateinit var memberActionService: MemberActionService
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-    @Inject
-    private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-    @Inject
-    private lateinit var mailService: MailService
+    @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
+    @Inject private lateinit var mailService: MailService
     @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var memberFactory: MemberFactory
     @Inject private lateinit var attachmentService: AttachmentService
@@ -72,18 +72,13 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         return password
     }
 
-    fun register(identifier: String): Member {
-        val saved = save(
-            Member(
-                isPrivate = true,
-                username = EncryptionManager.toSHA512(identifier),
-                encryptedPassword = byteArrayOf()
-            )
+    fun register(identifier: String) = save(
+        Member(
+            isPrivate = true,
+            username = EncryptionManager.toSHA512(identifier),
+            encryptedPassword = byteArrayOf()
         )
-
-        traceActionService.createTraceAction(saved, TraceAction.Action.CREATE)
-        return saved
-    }
+    )
 
     fun login(identifier: String, appVersion: String? = null, device: String? = null, locale: String? = null): MemberDto? {
         val member = findByIdentifier(identifier) ?: return null
@@ -108,7 +103,6 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         member.email = null
         member.lastUpdateDateTime = ZonedDateTime.now()
         update(member)
-        traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
         InvalidationService.invalidate(Member::class.java)
     }
 
@@ -144,7 +138,7 @@ class MemberService : AbstractService<Member, MemberRepository>() {
         }
 
         requireNotNull(bytes) { "No file provided" }
-        val imageInputStream = withContext(Dispatchers.IO) {
+        val imageInputStream = withContext(coroutineDispatcher) {
             ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
         }
         val imageReaders = ImageIO.getImageReaders(imageInputStream)
@@ -162,6 +156,5 @@ class MemberService : AbstractService<Member, MemberRepository>() {
 
         member.lastUpdateDateTime = ZonedDateTime.now()
         update(member)
-        traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
     }
 }

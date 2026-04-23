@@ -6,7 +6,12 @@ enum class CountryCode(
     val locale: String,
     val timezone: String
 ) {
-    FR(setOf("ja-JP", "zh-CN", "ko-KR"), setOf("en-US"), "fr-FR", "Europe/Paris"),
+    FR(
+        setOf(Locale.JA_JP.code, Locale.ZH_CH.code, Locale.KO_KR.code),
+        setOf(Locale.EN_US.code),
+        Locale.FR_FR.code,
+        "Europe/Paris"
+    ),
     ;
 
     companion object {

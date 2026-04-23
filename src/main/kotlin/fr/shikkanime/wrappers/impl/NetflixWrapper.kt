@@ -7,6 +7,7 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Locale
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -223,9 +224,9 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
                 runCatching { getEpisodeAudioTrackList(countryCode, show.id) }
-                    .map { it[show.id] ?: setOf("ja-JP") }
+                    .map { it[show.id] ?: setOf(Locale.JA_JP.code) }
                     .onFailure { logger.warning("Failed to get audio tracks for movie $id: ${it.message}") }
-                    .getOrNull() ?: setOf("ja-JP")
+                    .getOrNull() ?: setOf(Locale.JA_JP.code)
             )
         )
     }
@@ -323,7 +324,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             show.metadata?.episodes?.find { it.id == episodeId }?.image
                 ?: episode.getAsJsonObject("artwork").getAsString("url")!!.substringBefore("?"),
             episode.getAsInt("runtimeSec")!!.toLong(),
-            audioTracksMap[episodeId] ?: setOf("ja-JP")
+            audioTracksMap[episodeId] ?: setOf(Locale.JA_JP.code)
         )
     }
 

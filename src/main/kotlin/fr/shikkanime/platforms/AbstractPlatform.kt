@@ -46,10 +46,8 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val hasError: Boolean
     )
 
-    @Inject
-    protected lateinit var configCacheService: ConfigCacheService
-    @Inject
-    protected lateinit var animePlatformCacheService: AnimePlatformCacheService
+    @Inject protected lateinit var configCacheService: ConfigCacheService
+    @Inject protected lateinit var animePlatformCacheService: AnimePlatformCacheService
 
     val logger = LoggerFactory.getLogger(javaClass)
     var configuration: C? = null
@@ -59,9 +57,8 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
     private var hasLatestShowsFetchError = false
 
     protected fun isBlacklisted(name: String): Boolean {
-        val shortName = StringUtils.getShortName(name)
-        val blacklist = configuration!!.blacklistedSimulcasts.toSet()
-        return name in blacklist || name.lowercase() in blacklist || shortName in blacklist || shortName.lowercase() in blacklist
+        val blacklist = configuration?.blacklistedSimulcasts?.takeIfNotEmpty()?.toSet() ?: return false
+        return name.lowercase() in blacklist || StringUtils.getShortName(name).lowercase() in blacklist
     }
 
     abstract fun getPlatform(): Platform

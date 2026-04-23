@@ -106,7 +106,9 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     fun saveAll(entities: List<E>) {
         return database.inTransaction { entityManager ->
-            entities.forEach { entityManager.persist(it) }
+            entities.forEach {
+                entityManager.persist(it)
+            }
         }
     }
 
@@ -119,7 +121,9 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     fun updateAll(entities: List<E>) {
         return database.inTransaction { entityManager ->
-            entities.forEach { entityManager.merge(it) }
+            entities.forEach {
+                entityManager.merge(it)
+            }
         }
     }
 
@@ -131,7 +135,9 @@ abstract class AbstractRepository<E : ShikkEntity> {
 
     fun deleteAll(entities: List<E>) {
         database.inTransaction { entityManager ->
-            entities.forEach { entityManager.remove(it) }
+            entities.forEach {
+                entityManager.remove(it)
+            }
         }
     }
 }

@@ -6,7 +6,6 @@ import fr.shikkanime.dtos.mappings.UpdateAllEpisodeMappingDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.LangType
@@ -24,7 +23,6 @@ class EpisodeMappingAdminService {
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var attachmentService: AttachmentService
 
@@ -131,7 +129,6 @@ class EpisodeMappingAdminService {
         }
 
         episodeMappingService.update(targetEpisode)
-        traceActionService.createTraceAction(targetEpisode, TraceAction.Action.UPDATE)
 
         return episodeMappingService.find(targetEpisode.uuid!!)
     }
@@ -297,7 +294,6 @@ class EpisodeMappingAdminService {
             }
 
             episodeMappingService.update(episode)
-            traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
         }
 
         // Recalculate simulcasts if dates were updated
@@ -493,7 +489,6 @@ class EpisodeMappingAdminService {
         // Handle episode variants
         val updatedEpisode = episodeMappingService.update(episode)
         updateEpisodeMappingVariants(dto, updatedEpisode)
-        traceActionService.createTraceAction(episode, TraceAction.Action.UPDATE)
 
         return updatedEpisode
     }
@@ -540,9 +535,6 @@ class EpisodeMappingAdminService {
 
             // Delete the source episode
             episodeMappingService.delete(episode)
-
-            // Create trace action for the target episode
-            traceActionService.createTraceAction(existingEpisode, TraceAction.Action.UPDATE)
 
             // Update variants specified in the DTO
             updateEpisodeMappingVariants(dto, updatedEpisode)

@@ -5,7 +5,6 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
-import kotlinx.coroutines.runBlocking
 import java.awt.*
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
@@ -22,7 +21,7 @@ object MediaImage {
     private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
     private val httpRequest = HttpRequest(timeout = 5_000L)
 
-    fun toMediaImage(episodes: List<GroupedEpisode>): BufferedImage {
+    suspend fun toMediaImage(episodes: List<GroupedEpisode>): BufferedImage {
         require(episodes.isNotEmpty()) { "The grouped episodes list is empty" }
 
         val bannerImage = loadAndResizeBannerImage()
@@ -90,7 +89,7 @@ object MediaImage {
         )
     }
 
-    private fun drawGridEpisode(
+    private suspend fun drawGridEpisode(
         graphics: Graphics2D,
         x: Int,
         y: Int,
@@ -206,10 +205,14 @@ object MediaImage {
         graphics.fillRect(0, 0, mediaImage.width, mediaImage.height)
     }
 
-    fun getLongTimeoutImage(url: String): BufferedImage =
-        ByteArrayInputStream(runBlocking { HttpRequest.retryOnTimeout(3) { httpRequest.get(url).readRawBytes() } }).use { ImageIO.read(it) }
+    suspend fun getLongTimeoutImage(url: String): BufferedImage =
+        ByteArrayInputStream(HttpRequest.retryOnTimeout(3) { httpRequest.get(url).readRawBytes() }).use {
+            ImageIO.read(
+                it
+            )
+        }
 
-    private fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
+    private suspend fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
         val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)
         val thumbnailAttachment = attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, ImageType.THUMBNAIL)
         val bannerAttachment = attachmentService.findByEntityUuidTypeAndActive(anime.uuid, ImageType.BANNER)

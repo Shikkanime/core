@@ -4,23 +4,19 @@ import java.util.*
 
 data class UUIDPaginationKeyCache(
     val uuid: UUID,
-    val page: Int,
-    val limit: Int,
-) {
+    override val page: Int,
+    override val limit: Int,
+) : PaginationKeyCache(page, limit) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is UUIDPaginationKeyCache) return false
-
-        if (page != other.page) return false
-        if (limit != other.limit) return false
+        if (!super.equals(other)) return false
         if (uuid != other.uuid) return false
-
         return true
     }
 
     override fun hashCode(): Int {
-        var result = page
-        result = 31 * result + limit
+        var result = super.hashCode()
         result = 31 * result + uuid.hashCode()
         return result
     }

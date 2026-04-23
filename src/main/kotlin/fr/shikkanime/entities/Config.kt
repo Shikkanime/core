@@ -1,5 +1,6 @@
 package fr.shikkanime.entities
 
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.Cacheable
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -12,6 +13,7 @@ import java.util.*
 @Table(name = "config")
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Tracing
 class Config(
     uuid: UUID? = null,
     @Column(nullable = false, name = "property_key", unique = true)

@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -20,6 +21,7 @@ import java.util.*
 @Indexed
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Tracing
 class Anime(
     uuid: UUID? = null,
     @Column(nullable = false, name = "country_code")

@@ -22,7 +22,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animePlatformService: AnimePlatformService
     @Inject private lateinit var ruleCacheService: RuleCacheService
     @Inject private lateinit var ruleService: RuleService
@@ -192,12 +191,11 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
                     platform = episode.platform,
                     platformId = episode.animeId
                 )
-            ).apply { traceActionService.createTraceAction(this, TraceAction.Action.CREATE) }
+            )
         } else {
             // Update the anime platform's last update date-time
             animePlatform.lastValidateDateTime = now
             animePlatformService.update(animePlatform)
-            traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
         }
 
         // Retrieve or create the episode mapping
@@ -238,9 +236,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
             )
         )
 
-        // Log the creation of the `EpisodeVariant`
-        traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
-
         // Add the episode variant to the GroupedIndexer
         GroupedIndexer.add(
             GroupedIndexer.CompositeKey(
@@ -258,16 +253,6 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
 
         // Return the saved entity
         return savedEntity
-    }
-
-    override fun update(entity: EpisodeVariant): EpisodeVariant {
-        traceActionService.createTraceAction(entity, TraceAction.Action.UPDATE)
-        return super.update(entity)
-    }
-
-    override fun delete(entity: EpisodeVariant) {
-        super.delete(entity)
-        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 
     /**

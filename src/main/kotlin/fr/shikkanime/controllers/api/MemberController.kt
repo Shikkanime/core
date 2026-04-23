@@ -22,6 +22,7 @@ import io.ktor.http.content.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 
 @Controller("/api/v1/members")
 class MemberController : HasPageableRoute() {
@@ -46,13 +47,13 @@ class MemberController : HasPageableRoute() {
 
     @Path("/login")
     @Post
-    private fun loginMember(
+    private suspend fun loginMember(
         @HttpHeader("X-App-Version") appVersion: String?,
         @HttpHeader("X-Device") device: String?,
         @HttpHeader("X-Locale") locale: String?,
         @BodyParam identifier: String
-    ) = memberService.login(identifier, appVersion, device, locale)?.let(Response::ok) ?: runBlocking {
-        delay(1000)
+    ) = memberService.login(identifier, appVersion, device, locale)?.let(Response::ok) ?: run {
+        delay(1000.milliseconds)
         Response.notFound(MessageDto.error("Member not found"))
     }
 
@@ -74,7 +75,7 @@ class MemberController : HasPageableRoute() {
     @Path("/forgot-identifier")
     @Post
     @JWTAuthenticated
-    private fun forgotIdentifier(
+    private suspend fun forgotIdentifier(
         @JWTUser memberUuid: UUID,
         @BodyParam email: String
     ): Response {
@@ -83,10 +84,8 @@ class MemberController : HasPageableRoute() {
         if (memberCacheService.find(memberUuid)!!.email == email)
             Response.badRequest(MessageDto.error("Email already associated to your account"))
 
-        val member = memberService.findByEmail(email)
-
-        if (member == null) {
-            runBlocking { delay(1000) }
+        val member = memberService.findByEmail(email) ?: run {
+            delay(1000.milliseconds)
             return Response.badRequest(MessageDto.error("Email not associated to any account"))
         }
 

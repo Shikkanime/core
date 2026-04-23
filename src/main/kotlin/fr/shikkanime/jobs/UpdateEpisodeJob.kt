@@ -41,7 +41,6 @@ class UpdateEpisodeJob : AbstractJob {
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var attachmentService: AttachmentService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animePlatformService: AnimePlatformService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var animationDigitalNetworkPlatform: AnimationDigitalNetworkPlatform
@@ -143,7 +142,6 @@ class UpdateEpisodeJob : AbstractJob {
                         logger.warning("${episodeVariant.identifier} not found for $mappingIdentifier, variant will be marked unavailable")
                         episodeVariant.available = false
                         episodeVariantService.update(episodeVariant)
-                        traceActionService.createTraceAction(episodeVariant, TraceAction.Action.UPDATE)
                     }
 
                     return@forEach
@@ -173,7 +171,6 @@ class UpdateEpisodeJob : AbstractJob {
 
                 if (hasChanged) {
                     episodeVariantService.update(episodeVariant)
-                    traceActionService.createTraceAction(episodeVariant, TraceAction.Action.UPDATE)
                 }
             }
 
@@ -187,7 +184,6 @@ class UpdateEpisodeJob : AbstractJob {
             val variantIdentifiers = episodeVariants.map(EpisodeVariant::identifier).toSet()
             val matchedAndKnownEpisodes =
                 platformEpisodes.filter { it.getIdentifier() in variantIdentifiers }.sortedBy { it.platform.sortIndex }
-            var hasChanged = false
 
             updateIfChanged(
                 mappingIdentifier,
@@ -200,7 +196,7 @@ class UpdateEpisodeJob : AbstractJob {
                         episodeMapping.uuid,
                         ImageType.BANNER,
                         it
-                    ); hasChanged = true; needInvalidation = true
+                    ); needInvalidation = true
                 }
             )
 
@@ -210,7 +206,7 @@ class UpdateEpisodeJob : AbstractJob {
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull { it.title.normalize() },
                 current = episodeMapping.title.normalize(),
                 isValid = { !it.isNullOrBlank() },
-                apply = { episodeMapping.title = it; hasChanged = true; needInvalidation = true }
+                apply = { episodeMapping.title = it; needInvalidation = true }
             )
 
             updateIfChanged(
@@ -221,7 +217,7 @@ class UpdateEpisodeJob : AbstractJob {
                 },
                 current = episodeMapping.description.normalize(),
                 isValid = { !it.isNullOrBlank() },
-                apply = { episodeMapping.description = it; hasChanged = true; needInvalidation = true }
+                apply = { episodeMapping.description = it; needInvalidation = true }
             )
 
             updateIfChanged(
@@ -230,14 +226,11 @@ class UpdateEpisodeJob : AbstractJob {
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull(AbstractPlatform.Episode::duration),
                 current = episodeMapping.duration,
                 isValid = { it > 0 },
-                apply = { episodeMapping.duration = it; hasChanged = true; needInvalidation = true }
+                apply = { episodeMapping.duration = it; needInvalidation = true }
             )
 
             episodeMapping.lastUpdateDateTime = zonedDateTime
             episodeMappingService.update(episodeMapping)
-
-            if (hasChanged)
-                traceActionService.createTraceAction(episodeMapping, TraceAction.Action.UPDATE)
 
             notKnownEpisodes.addAll(platformEpisodes.filter { it.getIdentifier() !in variantIdentifiers }
                 .map { it to episodeMapping })
@@ -256,10 +249,9 @@ class UpdateEpisodeJob : AbstractJob {
                                 platform = platform,
                                 platformId = animeId
                             )
-                        ).also { traceActionService.createTraceAction(it, TraceAction.Action.CREATE) }
+                        )
                 }.onEach { animePlatform ->
                     animePlatform.lastValidateDateTime = zonedDateTime
-                    traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
                 }
             }
         )

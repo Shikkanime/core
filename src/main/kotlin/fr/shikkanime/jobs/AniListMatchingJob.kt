@@ -6,7 +6,10 @@ import fr.shikkanime.entities.*
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AniListMatchingService
+import fr.shikkanime.services.AnimePlatformService
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.MailService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.*
@@ -21,7 +24,6 @@ class AniListMatchingJob : AbstractJob {
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var animePlatformService: AnimePlatformService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
 
@@ -97,7 +99,6 @@ class AniListMatchingJob : AbstractJob {
                 logger.info(stringBuilder, "Anime $shortName is already matched with AniList ID ${media.id}, validating...")
                 it.lastValidateDateTime = zonedDateTime
                 animePlatformService.update(it)
-                traceActionService.createTraceAction(it, TraceAction.Action.UPDATE)
                 return@forEach
             }
 
@@ -108,10 +109,8 @@ class AniListMatchingJob : AbstractJob {
                 platform = Platform.ANIL,
                 platformId = media.id.toString(),
                 lastValidateDateTime = zonedDateTime,
-            )).apply {
-                traceActionService.createTraceAction(this, TraceAction.Action.CREATE)
-                hasChange = true
-            }
+            )
+            ).apply { hasChange = true }
 
             deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, deprecatedAnimePlatformDateTime).onTrue { hasChange = true }
 
@@ -145,7 +144,6 @@ class AniListMatchingJob : AbstractJob {
             .forEach {
                 logger.warning(stringBuilder, "Deleting old anime platform ${it.platform} for anime $shortName with id ${it.platformId}")
                 animePlatformService.delete(it)
-                traceActionService.createTraceAction(it, TraceAction.Action.DELETE)
                 hasDeleted = true
             }
 

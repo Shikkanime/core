@@ -1,5 +1,6 @@
 val ktorVersion = "3.4.2"
 val hibernateCoreVersion = "7.3.1.Final"
+val javaxCache = "1.1.1"
 val ehcacheVersion = "3.12.0"
 val hibernateSearchVersion = "8.3.0.Final"
 val postgresqlVersion = "42.7.10"
@@ -80,7 +81,8 @@ dependencies {
 
     implementation("org.hibernate.orm:hibernate-core:$hibernateCoreVersion")
     implementation("org.hibernate.orm:hibernate-jcache:$hibernateCoreVersion")
-    implementation("org.ehcache:ehcache:$ehcacheVersion")
+    implementation("javax.cache:cache-api:$javaxCache")
+    implementation("org.ehcache:ehcache:$ehcacheVersion:jakarta")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")
     implementation("org.hibernate.search:hibernate-search-backend-lucene:$hibernateSearchVersion")
     implementation("org.postgresql:postgresql:$postgresqlVersion")

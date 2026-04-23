@@ -5,29 +5,23 @@ import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.SortParameter
 
 open class CountryCodeSortPaginationKeyCache(
-    open val countryCode: CountryCode?,
+    override val countryCode: CountryCode?,
     open val searchTypes: Array<LangType>? = null,
-    val sort: List<SortParameter>,
-    open val page: Int,
-    open val limit: Int,
-) {
+    open val sort: List<SortParameter>,
+    override val page: Int,
+    override val limit: Int,
+) : CountryCodePaginationKeyCache(countryCode, page, limit) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is CountryCodeSortPaginationKeyCache) return false
-
-        if (page != other.page) return false
-        if (limit != other.limit) return false
-        if (countryCode != other.countryCode) return false
+        if (!super.equals(other)) return false
         if (!searchTypes.contentEquals(other.searchTypes)) return false
         if (sort != other.sort) return false
-
         return true
     }
 
     override fun hashCode(): Int {
-        var result = page
-        result = 31 * result + limit
-        result = 31 * result + (countryCode?.hashCode() ?: 0)
+        var result = super.hashCode()
         result = 31 * result + (searchTypes?.contentHashCode() ?: 0)
         result = 31 * result + sort.hashCode()
         return result

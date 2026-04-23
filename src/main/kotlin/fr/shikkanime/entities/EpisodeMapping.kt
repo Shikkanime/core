@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -32,6 +33,7 @@ import java.util.*
 )
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Tracing
 class EpisodeMapping(
     uuid: UUID? = null,
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

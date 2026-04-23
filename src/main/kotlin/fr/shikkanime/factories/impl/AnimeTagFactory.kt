@@ -6,8 +6,7 @@ import fr.shikkanime.entities.AnimeTag
 import fr.shikkanime.factories.IGenericFactory
 
 class AnimeTagFactory : IGenericFactory<AnimeTag, AnimeTagDto> {
-    @Inject
-    private lateinit var tagFactory: TagFactory
+    @Inject private lateinit var tagFactory: TagFactory
 
     override fun toDto(entity: AnimeTag) = AnimeTagDto(
         uuid = entity.uuid,

@@ -22,8 +22,7 @@ import java.util.stream.Stream
 @AdminSessionAuthenticated
 class MemberController : HasPageableRoute() {
     @Inject private lateinit var memberService: MemberService
-    @Inject
-    private lateinit var memberFollowAnimeService: MemberFollowAnimeService
+    @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
