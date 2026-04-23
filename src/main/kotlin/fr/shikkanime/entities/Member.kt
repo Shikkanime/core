@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.Role
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -11,6 +12,7 @@ import java.util.*
 @Table(name = "member")
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Tracing(delete = false)
 class Member(
     uuid: UUID? = null,
     @Column(nullable = false, name = "creation_date_time")

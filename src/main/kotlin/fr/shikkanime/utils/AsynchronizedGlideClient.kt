@@ -95,7 +95,7 @@ object AsynchronizedGlideClient {
                 do {
                     val result = client.scan(cursor, options).get() ?: break
                     val arrays = result.filterIsInstance<Array<*>>()
-                    val keys = arrays.flatMap { it.mapNotNull { k -> k as? String } }
+                    val keys = arrays.flatMap { it.filterIsInstance<String>() }
                     allKeys += keys
 
                     val newCursor = result.filterIsInstance<String>().firstOrNull()

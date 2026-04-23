@@ -16,8 +16,7 @@ import java.util.*
 @Controller("$ADMIN/api/episode-variants")
 @AdminSessionAuthenticated
 class EpisodeVariantController : HasPageableRoute() {
-    @Inject
-    private lateinit var episodeVariantService: EpisodeVariantService
+    @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
     @Path("/{uuid}/separate")
     @Post

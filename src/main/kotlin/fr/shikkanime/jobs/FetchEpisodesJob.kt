@@ -46,8 +46,7 @@ class FetchEpisodesJob(
     @Volatile private var pendingSend: ScheduledFuture<*>? = null
 
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject
-    private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
+    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var mailService: MailService
     @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory

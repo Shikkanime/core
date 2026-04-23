@@ -6,6 +6,7 @@ import fr.shikkanime.wrappers.factories.AbstractAniListWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val MEDIA_DEFINITION = """id
                           idMal
@@ -65,7 +66,7 @@ object AniListWrapper : AbstractAniListWrapper() {
         if (elapsedTime < minInterval) {
             val waitTime = minInterval - elapsedTime
             logger.config("Throttling requests. Waiting for $waitTime ms")
-            delay(waitTime)
+            delay(waitTime.milliseconds)
         }
 
         lastRequestTime = System.currentTimeMillis()

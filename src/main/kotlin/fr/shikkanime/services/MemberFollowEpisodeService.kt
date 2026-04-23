@@ -6,7 +6,6 @@ import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Member
 import fr.shikkanime.entities.MemberFollowEpisode
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.repositories.MemberFollowEpisodeRepository
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.routes.Response
@@ -15,10 +14,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFollowEpisodeRepository>() {
-    @Inject
-    private lateinit var memberService: MemberService
+    @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
-    @Inject private lateinit var traceActionService: TraceActionService
 
     fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int) =
         repository.findAllFollowedEpisodes(memberUuid, page, limit)
@@ -45,7 +42,6 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         }
 
         saveAll(memberFollowEpisodes)
-        traceActionService.createTraceActions(memberFollowEpisodes, TraceAction.Action.CREATE)
         InvalidationService.invalidate(MemberFollowEpisode::class.java)
 
         val episodeUuids = nonFollowedEpisodes.mapNotNull { it.uuid }.toSet()
@@ -59,9 +55,7 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
         if (repository.existsByMemberUuidAndEpisodeUuid(memberUuid, episodeReference.uuid!!))
             return Response.conflict()
 
-        val memberFollowEpisode =
-            save(MemberFollowEpisode(member = memberService.getReference(memberUuid), episode = episodeReference))
-        traceActionService.createTraceAction(memberFollowEpisode, TraceAction.Action.CREATE)
+        save(MemberFollowEpisode(member = memberService.getReference(memberUuid), episode = episodeReference))
         InvalidationService.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()
     }
@@ -71,7 +65,6 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
             ?: return Response.conflict()
 
         repository.delete(memberFollowEpisode)
-        traceActionService.createTraceAction(memberFollowEpisode, TraceAction.Action.DELETE)
         InvalidationService.invalidate(MemberFollowEpisode::class.java)
         return Response.ok()
     }

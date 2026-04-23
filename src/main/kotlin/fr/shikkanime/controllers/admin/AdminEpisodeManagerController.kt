@@ -21,7 +21,9 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
 import io.ktor.utils.io.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.io.readByteArray
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
@@ -31,7 +33,9 @@ import java.time.ZonedDateTime
 
 @Controller("$ADMIN/episode-manager")
 @AdminSessionAuthenticated
-class AdminEpisodeManagerController {
+class AdminEpisodeManagerController(
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+) {
     private val logger = LoggerFactory.getLogger(javaClass)
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
@@ -76,21 +80,21 @@ class AdminEpisodeManagerController {
 
     @Path("/import")
     @Post
-    private fun postImport(@BodyParam multiPartData: MultiPartData): Response {
+    private suspend fun postImport(@BodyParam multiPartData: MultiPartData): Response {
         var bytes: ByteArray? = null
 
-        runBlocking {
-            multiPartData.forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    bytes = part.provider().readRemaining().readByteArray()
-                }
-
-                part.dispose()
+        multiPartData.forEachPart { part ->
+            if (part is PartData.FileItem) {
+                bytes = part.provider().readRemaining().readByteArray()
             }
+
+            part.dispose()
         }
 
         requireNotNull(bytes) { "No file provided" }
-        val file = File.createTempFile("import_", ".xlsx").apply { writeBytes(bytes) }
+        val file = withContext(coroutineDispatcher) {
+            File.createTempFile("import_", ".xlsx")
+        }.apply { writeBytes(bytes) }
 
         val episodes = XSSFWorkbook(file.inputStream()).use { workbook ->
             workbook.sheetIterator().asSequence().flatMap { sheet ->

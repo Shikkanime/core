@@ -17,7 +17,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.ktor.utils.io.jvm.javaio.*
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
@@ -482,7 +481,7 @@ class MemberControllerTest : AbstractControllerTest() {
             client.get("/api/v1/attachments?uuid=${member!!.uuid}&type=${ImageType.MEMBER_PROFILE}").apply {
                 assertEquals(HttpStatusCode.OK, status)
                 val byteArrayOutputStream = ByteArrayOutputStream()
-                runBlocking { bodyAsChannel().copyTo(byteArrayOutputStream) }
+                bodyAsChannel().copyTo(byteArrayOutputStream)
                 val image = byteArrayOutputStream.toByteArray()
                 assertTrue(image.isNotEmpty())
             }

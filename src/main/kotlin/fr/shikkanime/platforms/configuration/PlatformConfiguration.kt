@@ -68,11 +68,10 @@ abstract class PlatformConfiguration<S : PlatformSimulcast>(
         parameters["apiCheckDelayInMinutes"]?.let { apiCheckDelayInMinutes = it.toLong() }
         parameters["blacklistedSimulcasts"]?.let {
             blacklistedSimulcasts.clear()
-            blacklistedSimulcasts.addAll(it.split("||"))
+            blacklistedSimulcasts.addAll(it.split("||").map { title -> title.trim().lowercase() })
         }
     }
 
-    @Suppress("unused")
     open fun toConfigurationFields() = mutableSetOf(
         ConfigurationField(
             "Available countries",

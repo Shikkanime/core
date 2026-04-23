@@ -42,6 +42,8 @@ class Database {
             logger.config("Bypassing hibernate.cfg.xml with system environment variable DATABASE_PASSWORD")
         }
 
+        CacheHelper.configure()
+
         try {
             sessionFactory = configuration.buildSessionFactory()
         } catch (e: Exception) {
@@ -77,7 +79,6 @@ class Database {
         }
     }
 
-    @Suppress("unused")
     constructor() : this(
         File(
             (Database::class.java.classLoader.getResource("hibernate.cfg.xml")
@@ -93,5 +94,8 @@ class Database {
 
     fun truncate() = sessionFactory.schemaManager.truncate()
 
-    fun clearCache() = sessionFactory.cache.evictAllRegions()
+    fun clearCache() {
+        sessionFactory.statistics.logSummary()
+        sessionFactory.cache.evictAllRegions()
+    }
 }

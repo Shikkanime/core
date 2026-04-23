@@ -14,6 +14,8 @@ import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
@@ -67,7 +69,7 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path("/media-image")
     @Get
-    private fun getMediaImage(@QueryParam("uuids") uuidsGzip: String?): Response {
+    private suspend fun getMediaImage(@QueryParam("uuids") uuidsGzip: String?): Response {
         if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
 
         val fromGzip = runCatching { EncryptionManager.fromGzip(uuidsGzip) }.getOrNull() ?: return Response.badRequest()
@@ -81,7 +83,9 @@ class EpisodeMappingController : HasPageableRoute() {
 
         val image = MediaImage.toMediaImage(groupedEpisodes)
         val baos = ByteArrayOutputStream()
-        ImageIO.write(image, "jpg", baos)
+        withContext(Dispatchers.IO) {
+            ImageIO.write(image, "jpg", baos)
+        }
         return Response.multipart(baos.toByteArray(), ContentType.Image.JPEG)
     }
 }

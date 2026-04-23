@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.Season
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -17,6 +18,7 @@ import java.util.*
 )
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Tracing
 class Simulcast(
     uuid: UUID? = null,
     @Column(nullable = false)

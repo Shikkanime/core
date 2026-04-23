@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.impl
 
 import fr.shikkanime.entities.enums.CountryCode
+import fr.shikkanime.entities.enums.Locale
 import fr.shikkanime.utils.LocaleUtils
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -110,7 +111,10 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
 
                         val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
                         val resourceId = actionJsonObject.getAsString("resourceId")!!
-                        val audioLocales = if (checkAudioLocales) getAudioLocales(countryCode, resourceId) else arrayOf("ja-JP")
+                        val audioLocales = if (checkAudioLocales) getAudioLocales(
+                            countryCode,
+                            resourceId
+                        ) else arrayOf(Locale.JA_JP.code)
 
                         episodes.add(
                             Episode(

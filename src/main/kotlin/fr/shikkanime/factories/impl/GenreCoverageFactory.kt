@@ -6,10 +6,8 @@ import fr.shikkanime.entities.miscellaneous.GenreCoverage
 import fr.shikkanime.factories.IGenericFactory
 
 class GenreCoverageFactory : IGenericFactory<GenreCoverage, GenreCoverageDto> {
-    @Inject
-    private lateinit var simulcastFactory: SimulcastFactory
-    @Inject
-    private lateinit var genreFactory: GenreFactory
+    @Inject private lateinit var simulcastFactory: SimulcastFactory
+    @Inject private lateinit var genreFactory: GenreFactory
 
     override fun toDto(entity: GenreCoverage) = GenreCoverageDto(
         simulcast = simulcastFactory.toDto(entity.simulcast),

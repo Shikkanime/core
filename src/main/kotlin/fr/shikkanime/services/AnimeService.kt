@@ -6,7 +6,6 @@ import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.Simulcast
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.AnimeFactory
@@ -23,6 +22,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import java.util.Locale
 
 class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
@@ -31,10 +31,8 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animePlatformService: AnimePlatformService
-    @Inject
-    private lateinit var animeTagService: AnimeTagService
+    @Inject private lateinit var animeTagService: AnimeTagService
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
@@ -262,9 +260,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }.toMutableSet()
 
         entity.description = entity.description?.replace("\n", StringUtils.EMPTY_STRING)?.replace("\r", "")
-        val savedEntity = super.save(entity)
-        traceActionService.createTraceAction(savedEntity, TraceAction.Action.CREATE)
-        return savedEntity
+        return super.save(entity)
     }
 
     override fun delete(entity: Anime) {
@@ -276,6 +272,5 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         entity.genres = mutableSetOf()
         super.update(entity)
         super.delete(entity)
-        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
     }
 }

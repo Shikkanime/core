@@ -1,6 +1,7 @@
 package fr.shikkanime.entities
 
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.*
 import org.hibernate.annotations.Cache
 import org.hibernate.annotations.CacheConcurrencyStrategy
@@ -11,6 +12,7 @@ import java.util.*
 @Table(name = "rule")
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Tracing
 class Rule(
     uuid: UUID? = null,
     @Column(name = "creation_date_time", nullable = false)

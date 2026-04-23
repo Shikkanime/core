@@ -146,7 +146,7 @@ class UpdateAnimeJobTest : AbstractTest() {
                 ),
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/d128baf30c0638fafce3fd4e7c9ff37c.png",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/ede36e8f3e37587c90dbd8f1216d3022.png",
-                expectedDescription = "Pour sauver son camarade de classe, Yuji Itadori a mangé… un doigt de démon maudit."
+                expectedDescription = "Lycéen ordinaire, Yuji Itadori est toutefois doté d'une force physique hors du commun. Un jour, pour sauver un ami attaqué par un fléau, il mange un des doigts du démon à deux visages, devenant à son tour un fléau. Dès lors, il partage son corps avec Ryomen Sukuna. Guidé par le plus puissant des sorciers, Satoru Gojo, Itadori rejoint une organisation qui combat les fléaux…"
             ),
             TestCase(
                 name = "Oshi no Ko",
@@ -171,7 +171,7 @@ class UpdateAnimeJobTest : AbstractTest() {
                 ),
                 expectedThumbnail = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1560x2340/catalog/crunchyroll/8e8947479b3e8ceeffdad12ee61b2594.png",
                 expectedBanner = "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/36a685a3419b1a93e11e4d1e69d73f08.png",
-                expectedDescription = "Gen Kinokura just wanted to enjoy his peaceful solo camping trips—no distractions, no problems. Enter Shizuku Kusano, a clueless but enthusiastic newbie who crashes his campsite (literally). Now, this bothered outdoorsman is stuck teaching her the ropes. Laughs, mishaps, and heartwarming moments await this duo-camp adventure under the stars!"
+                expectedDescription = "Gen Kinokura voulait juste profiter de ses voyages de camping en solitaire, sans distraction ni problème. C'est alors qu'entre en scène la tornade Shizuku Kusano, une novice enthousiaste qui s'incruste littéralement dans son espace. Fini la tranquillité, Gen se sent obligé de lui apprendre les ficelles du métier. Et si c’était le début d’un duo improbable ?"
             ),
             TestCase(
                 name = "Anohana: The Flower We Saw That Day",

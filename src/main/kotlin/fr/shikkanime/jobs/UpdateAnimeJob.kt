@@ -3,12 +3,14 @@ package fr.shikkanime.jobs
 import com.google.inject.Inject
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.AnimePlatform
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
-import fr.shikkanime.services.*
+import fr.shikkanime.services.AniListMatchingService
+import fr.shikkanime.services.AnimePlatformService
+import fr.shikkanime.services.AnimeService
+import fr.shikkanime.services.AttachmentService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.impl.caches.*
@@ -33,10 +35,8 @@ class UpdateAnimeJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject private lateinit var animeService: AnimeService
-    @Inject
-    private lateinit var configCacheService: ConfigCacheService
+    @Inject private lateinit var configCacheService: ConfigCacheService
     @Inject private lateinit var animePlatformService: AnimePlatformService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var attachmentService: AttachmentService
 
     private fun <T> updateIfChanged(
@@ -90,7 +90,6 @@ class UpdateAnimeJob : AbstractJob {
                     ) {
                         logger.warning("Deleting old anime platform ${animePlatform.platform} for anime ${anime.name} with id ${animePlatform.platformId}")
                         animePlatformService.delete(animePlatform)
-                        traceActionService.createTraceAction(animePlatform, TraceAction.Action.DELETE)
                         return@forEach
                     }
 
@@ -142,7 +141,6 @@ class UpdateAnimeJob : AbstractJob {
 
             require(animeDatas.isNotEmpty()) { "No data found for anime ${anime.name}" }
             val matchedAnimes = animeDatas.sortedBy { it.platform.sortIndex }
-            var hasChanged = false
 
             ImageType.entries.forEach { imageType ->
                 updateIfChanged(
@@ -156,7 +154,7 @@ class UpdateAnimeJob : AbstractJob {
                             anime.uuid,
                             imageType,
                             it
-                        ); hasChanged = true; needInvalidation = true
+                        ); needInvalidation = true
                     }
                 )
             }
@@ -169,7 +167,7 @@ class UpdateAnimeJob : AbstractJob {
                 },
                 current = anime.description,
                 isValid = { !it.isNullOrBlank() },
-                apply = { anime.description = it; hasChanged = true; needInvalidation = true }
+                apply = { anime.description = it; needInvalidation = true }
             )
 
             animePlatforms.filterNot { it.platform!!.isStreamingPlatform }
@@ -184,16 +182,12 @@ class UpdateAnimeJob : AbstractJob {
                             media
                         )
                     ) {
-                        hasChanged = true
                         logger.info("Genres or tags updated for anime ${anime.name}")
                     }
                 }
 
             anime.lastUpdateDateTime = zonedDateTime
             animeService.update(anime)
-
-            if (hasChanged)
-                traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
 
             logger.info("Anime ${anime.name} updated")
         }

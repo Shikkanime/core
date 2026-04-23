@@ -5,6 +5,7 @@ import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
+import fr.shikkanime.entities.enums.Locale
 import fr.shikkanime.entities.miscellaneous.GroupedEpisode
 import fr.shikkanime.utils.Constant
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,7 +21,11 @@ class SocialNetworkTextTest : AbstractTest() {
         override suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?) {}
     }
 
-    private fun createGroupedEpisode(animeName: String, episodeNumber: Int, audioLocale: String = "ja-JP"): GroupedEpisode {
+    private fun createGroupedEpisode(
+        animeName: String,
+        episodeNumber: Int,
+        audioLocale: String = Locale.JA_JP.code
+    ): GroupedEpisode {
         val anime = Anime(name = animeName, countryCode = CountryCode.FR, uuid = UUID.randomUUID())
         val variant = EpisodeVariant(
             uuid = UUID.randomUUID(),

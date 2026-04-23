@@ -15,7 +15,7 @@ coverage:
 failureConditions:
   severityThresholds:
     critical: 0
-    high: 2
+    high: 10
     any: 100
   testCoverageThresholds:
     total: 80

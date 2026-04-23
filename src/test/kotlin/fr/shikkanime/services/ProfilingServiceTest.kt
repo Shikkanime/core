@@ -6,8 +6,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ProfilingServiceTest : AbstractTest() {
-    @Inject
-    private lateinit var profilingService: ProfilingService
+    @Inject private lateinit var profilingService: ProfilingService
 
     @Test
     fun testJfrRecording() {

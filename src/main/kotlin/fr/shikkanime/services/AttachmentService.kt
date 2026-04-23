@@ -2,7 +2,6 @@ package fr.shikkanime.services
 
 import com.google.inject.Inject
 import fr.shikkanime.entities.Attachment
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.repositories.AttachmentRepository
 import fr.shikkanime.utils.*
@@ -35,7 +34,6 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     @Volatile private var pendingInvalidation: ScheduledFuture<*>? = null
 
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var animeService: AnimeService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var memberService: MemberService
@@ -102,7 +100,6 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         }
 
         val attachment = save(Attachment(entityUuid = entityUuid, type = type, url = url))
-        traceActionService.createTraceAction(attachment, TraceAction.Action.CREATE)
         encodeAttachment(attachment, url, bytes, async)
         scheduleInvalidation()
         return attachment
@@ -276,7 +273,6 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         // Remove attachments that are not associated with valid UUIDs
         attachments.values.filter { it.entityUuid !in validUuids && it.uuid !in inProgressAttachments }.forEach {
             delete(it) // Delete the attachment from the database
-            traceActionService.createTraceAction(it, TraceAction.Action.DELETE) // Log the deletion action
             attachments.remove(it.uuid) // Remove the attachment from the map
             imageCache.remove(it.uuid!!) // Remove the attachment from the cache
         }

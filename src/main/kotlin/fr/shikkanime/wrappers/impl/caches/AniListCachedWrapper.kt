@@ -2,6 +2,7 @@ package fr.shikkanime.wrappers.impl.caches
 
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.AnimePlatform
+import fr.shikkanime.entities.enums.Locale
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractAniListWrapper
@@ -167,7 +168,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
 
         val alternativeTitles = when {
             hasSingleLowSimilarityParentRelation -> listOfNotNull(first.relations.edges.first(::isParentTvRelation).node.title.english)
-            isAlternativeTitleSearchNeeded -> platforms.mapNotNull { getLocalizedAnimeTitle("en-US", it) }
+            isAlternativeTitleSearchNeeded -> platforms.mapNotNull { getLocalizedAnimeTitle(Locale.EN_US.code, it) }
             else -> listOf()
         }.flatMap { it.split(" / ") }
             .toMutableSet()

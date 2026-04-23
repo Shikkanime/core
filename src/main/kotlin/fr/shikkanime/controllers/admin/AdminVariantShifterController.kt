@@ -29,8 +29,7 @@ import java.util.logging.Level
 class AdminVariantShifterController {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Inject
-    private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
+    @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
 
     @Path
     @Get

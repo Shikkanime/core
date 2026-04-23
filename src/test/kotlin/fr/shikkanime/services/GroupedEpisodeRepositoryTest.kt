@@ -16,8 +16,7 @@ import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
 class GroupedEpisodeRepositoryTest : AbstractTest() {
-    @Inject
-    lateinit var groupedEpisodeService: GroupedEpisodeService
+    @Inject private lateinit var groupedEpisodeService: GroupedEpisodeService
 
     @BeforeEach
     override fun setUp() {

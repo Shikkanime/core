@@ -3,7 +3,6 @@ package fr.shikkanime.services.admin
 import com.google.inject.Inject
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.services.*
 import fr.shikkanime.utils.Constant
@@ -14,7 +13,6 @@ class AnimeAdminService : IAdminService {
     @Inject private lateinit var attachmentService: AttachmentService
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
-    @Inject private lateinit var traceActionService: TraceActionService
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var animePlatformService: AnimePlatformService
 
@@ -55,9 +53,7 @@ class AnimeAdminService : IAdminService {
             attachmentService.createAttachmentOrMarkAsActive(anime.uuid!!, ImageType.TITLE, url = animeDto.title!!)
         }
 
-        val update = animeService.update(anime)
-        traceActionService.createTraceAction(anime, TraceAction.Action.UPDATE)
-        return update
+        return animeService.update(anime)
     }
 
     fun merge(from: Anime, to: Anime): Anime {
@@ -98,13 +94,11 @@ class AnimeAdminService : IAdminService {
 
             if (findByAnimePlatformAndId != null) {
                 animePlatformService.delete(animePlatform)
-                traceActionService.createTraceAction(animePlatform, TraceAction.Action.DELETE)
                 return@forEach
             }
 
             animePlatform.anime = to
             animePlatformService.update(animePlatform)
-            traceActionService.createTraceAction(animePlatform, TraceAction.Action.UPDATE)
         }
 
         delete(from)

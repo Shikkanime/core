@@ -3,7 +3,6 @@ package fr.shikkanime.services
 import com.google.inject.Inject
 import fr.shikkanime.entities.Mail
 import fr.shikkanime.entities.MemberAction
-import fr.shikkanime.entities.TraceAction
 import fr.shikkanime.entities.enums.Action
 import fr.shikkanime.repositories.MemberActionRepository
 import fr.shikkanime.utils.Constant
@@ -24,7 +23,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var mailService: MailService
-    @Inject private lateinit var traceActionService: TraceActionService
 
     @OptIn(ExperimentalEncodingApi::class)
     private fun toWebToken(memberAction: MemberAction): String = EncryptionManager.toBase64(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
@@ -100,7 +98,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
             Action.VALIDATE_EMAIL -> {
                 member.email = memberAction.email
                 memberService.update(member)
-                traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
 
                 mailService.save(
                     Mail(
@@ -120,7 +117,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
 
                 member.username = EncryptionManager.toSHA512(identifier)
                 memberService.update(member)
-                traceActionService.createTraceAction(member, TraceAction.Action.UPDATE)
 
                 mailService.save(
                     Mail(
