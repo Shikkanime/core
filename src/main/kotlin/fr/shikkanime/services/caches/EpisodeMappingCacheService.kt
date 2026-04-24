@@ -2,8 +2,8 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeUUIDSeasonSortPaginationKeyCache
-import fr.shikkanime.caches.SeasonEpisodeTypeNumberKeyCache
+import fr.shikkanime.caches.EpisodeMappingQueryCacheKey
+import fr.shikkanime.caches.EpisodeNavigationCacheKey
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingDto
 import fr.shikkanime.dtos.mappings.EpisodeMappingSeoDto
@@ -40,7 +40,7 @@ class EpisodeMappingCacheService : ICacheService {
         "EpisodeMappingCacheService.findAllBy",
         classes = listOf(EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<EpisodeMappingDto>>>() {},
-        key = CountryCodeUUIDSeasonSortPaginationKeyCache(countryCode, anime, season, searchTypes, sort, page, limit),
+        key = EpisodeMappingQueryCacheKey(countryCode, anime, season, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             episodeMappingService.findAllBy(
@@ -73,7 +73,7 @@ class EpisodeMappingCacheService : ICacheService {
     ) = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findPreviousAndNextBy",
         classes = listOf(EpisodeMapping::class.java),
-        typeToken = object : TypeToken<MapCacheValue<HashMap<SeasonEpisodeTypeNumberKeyCache, Triple<EpisodeMappingDto?, EpisodeMappingDto, EpisodeMappingDto?>>>>() {},
+        typeToken = object : TypeToken<MapCacheValue<HashMap<EpisodeNavigationCacheKey, Triple<EpisodeMappingDto?, EpisodeMappingDto, EpisodeMappingDto?>>>>() {},
         serializationType = SerializationUtils.SerializationType.OBJECT,
         key = countryCode to animeSlug,
     ) { (countryCode, animeSlug) ->
@@ -83,14 +83,14 @@ class EpisodeMappingCacheService : ICacheService {
 
         HashMap(
             episodeMappings.mapIndexed { index, current ->
-                SeasonEpisodeTypeNumberKeyCache(current.season!!, current.episodeType!!, current.number!!) to Triple(
+                EpisodeNavigationCacheKey(current.season!!, current.episodeType!!, current.number!!) to Triple(
                     episodeMappings.getOrNull(index - 1)?.let { episodeMappingFactory.toDto(it, animeDto, episodeVariants[it.uuid!!] ?: emptyList()) },
                     episodeMappingFactory.toDto(current, animeDto, episodeVariants[current.uuid!!] ?: emptyList()),
                     episodeMappings.getOrNull(index + 1)?.let { episodeMappingFactory.toDto(it, animeDto, episodeVariants[it.uuid!!] ?: emptyList()) },
                 )
             }.toMap()
         )
-    }[SeasonEpisodeTypeNumberKeyCache(season, episodeType, number)]
+    }[EpisodeNavigationCacheKey(season, episodeType, number)]
 
     fun findMinimalReleaseDateTime() = MapCache.getOrCompute(
         "EpisodeMappingCacheService.findMinimalReleaseDateTime",

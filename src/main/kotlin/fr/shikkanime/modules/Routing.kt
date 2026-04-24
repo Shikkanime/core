@@ -285,7 +285,7 @@ private suspend fun callMethodWithParameters(method: KFunction<*>, controller: A
     method.isAccessible = true
 
     try {
-        return method.callBy(methodParams) as Response
+        return method.callSuspendBy(methodParams) as Response
     } catch (e: Exception) {
         logger.log(Level.SEVERE, "Error while calling method $method", e)
         return Response.internalServerError()

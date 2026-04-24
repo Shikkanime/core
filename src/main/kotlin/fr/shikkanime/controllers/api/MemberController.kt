@@ -10,6 +10,8 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.ifNull
+import fr.shikkanime.utils.readFileAsByteArray
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -20,7 +22,6 @@ import fr.shikkanime.utils.routes.param.HttpHeader
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -135,16 +136,13 @@ class MemberController : HasPageableRoute() {
     @Path("/image")
     @Post
     @JWTAuthenticated
-    private fun uploadProfileImage(
+    private suspend fun uploadProfileImage(
         @JWTUser memberUuid: UUID,
         @BodyParam multiPartData: MultiPartData
     ): Response {
-        try {
-            runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
-        } catch (e: Exception) {
-            return Response.badRequest(MessageDto.error(e.message ?: "Invalid file format"))
-        }
-
+        memberCacheService.find(memberUuid).ifNull { return Response.notFound(MessageDto.error("Member not found")) }
+            .runCatching { memberService.changeProfileImage(this, multiPartData.readFileAsByteArray()) }
+            .onFailure { return Response.badRequest(MessageDto.error(it.message ?: "Invalid file format")) }
         InvalidationService.invalidate(Member::class.java)
         return Response.ok()
     }

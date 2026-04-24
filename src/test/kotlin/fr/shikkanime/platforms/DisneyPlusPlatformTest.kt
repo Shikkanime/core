@@ -2,7 +2,7 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.caches.PlatformSimulcastFetchCacheKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.ImageType
@@ -51,8 +51,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
         val platformSpy = spyk(platform)
 
         // Mock getApiContent to throw exception for first show but return valid data for second
-        val key1 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast1)
-        val key2 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast2)
+        val key1 = PlatformSimulcastFetchCacheKey(CountryCode.FR, simulcast1)
+        val key2 = PlatformSimulcastFetchCacheKey(CountryCode.FR, simulcast2)
 
         // First show throws an exception
         coEvery { platformSpy.getApiContent(key1, zonedDateTime) } throws RuntimeException("Test exception for show 1")
@@ -110,8 +110,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
         val zonedDateTime = ZonedDateTime.parse("2025-10-22T08:00:00Z")
         val platformSpy = spyk(platform)
 
-        val key1 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast1)
-        val key2 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast2)
+        val key1 = PlatformSimulcastFetchCacheKey(CountryCode.FR, simulcast1)
+        val key2 = PlatformSimulcastFetchCacheKey(CountryCode.FR, simulcast2)
 
         // Both shows throw exceptions
         coEvery { platformSpy.getApiContent(key1, zonedDateTime) } throws RuntimeException("Test exception for show 1")
@@ -136,8 +136,8 @@ class DisneyPlusPlatformTest : AbstractTest() {
         val zonedDateTime = ZonedDateTime.parse("2025-10-22T08:00:00Z")
         val platformSpy = spyk(platform)
 
-        val key1 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast1)
-        val key2 = CountryCodeReleaseDayPlatformSimulcastKeyCache(CountryCode.FR, simulcast2)
+        val key1 = PlatformSimulcastFetchCacheKey(CountryCode.FR, simulcast1)
+        val key2 = PlatformSimulcastFetchCacheKey(CountryCode.FR, simulcast2)
 
         val episode1 = AbstractPlatform.Episode(
             countryCode = CountryCode.FR,

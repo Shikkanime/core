@@ -2,8 +2,8 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
-import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
+import fr.shikkanime.caches.WeeklyAnimeQueryCacheKey
+import fr.shikkanime.caches.AnimeQueryCacheKey
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.animes.AnimeDto
@@ -46,12 +46,12 @@ class AnimeCacheService : ICacheService {
         "AnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<AnimeDto>>>() {},
-        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, simulcastUuid, name, searchTypes, sort, page, limit),
+        key = AnimeQueryCacheKey(countryCode, simulcastUuid, name, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             animeService.findAllBy(
                 it.countryCode,
-                it.simulcastUuid,
+                it.uuid,
                 it.name,
                 it.searchTypes,
                 it.sort,
@@ -121,12 +121,12 @@ class AnimeCacheService : ICacheService {
             "AnimeCacheService.getWeeklyAnimes",
             classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, MemberFollowAnime::class.java),
             typeToken = object : TypeToken<MapCacheValue<Array<WeeklyAnimesDto>>>() {},
-            key = CountryCodeLocalDateKeyCache(countryCode, memberUuid, startOfWeekDay, searchTypes),
+            key = WeeklyAnimeQueryCacheKey(countryCode, memberUuid, startOfWeekDay, searchTypes),
         ) {
             animeService.getWeeklyAnimes(
                 it.countryCode,
-                it.member,
-                it.localDate,
+                it.uuid,
+                it.weekStartDate,
                 it.searchTypes,
             ).toTypedArray()
         }

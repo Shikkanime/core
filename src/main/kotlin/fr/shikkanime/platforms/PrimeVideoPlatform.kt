@@ -1,6 +1,6 @@
 package fr.shikkanime.platforms
 
-import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
+import fr.shikkanime.caches.PrimeVideoSimulcastFetchCacheKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
@@ -14,19 +14,19 @@ import java.time.ZonedDateTime
 import java.util.logging.Level
 
 class PrimeVideoPlatform :
-    AbstractPlatform<PrimeVideoConfiguration, CountryCodePrimeVideoSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
+    AbstractPlatform<PrimeVideoConfiguration, PrimeVideoSimulcastFetchCacheKey, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.PRIM
 
     override fun getConfigurationClass() = PrimeVideoConfiguration::class.java
 
     override suspend fun fetchApiContent(
-        key: CountryCodePrimeVideoSimulcastKeyCache,
+        key: PrimeVideoSimulcastFetchCacheKey,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
         val episodes = HttpRequest.retryOnTimeout(3) {
             PrimeVideoWrapper.getEpisodesByShowId(
                 key.countryCode,
-                key.primeVideoSimulcast.name
+                key.simulcast.name
             )
         }
 
@@ -34,7 +34,7 @@ class PrimeVideoPlatform :
             try {
                 convertEpisode(
                     key.countryCode,
-                    key.primeVideoSimulcast.image,
+                    key.simulcast.image,
                     it,
                     zonedDateTime
                 )
@@ -47,7 +47,7 @@ class PrimeVideoPlatform :
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?) = configuration!!.availableCountries.flatMap { countryCode ->
         configuration!!.simulcasts.filter { it.canBeFetch(zonedDateTime) }
-            .flatMap { simulcast -> getApiContent(CountryCodePrimeVideoSimulcastKeyCache(countryCode, simulcast), zonedDateTime) }
+            .flatMap { simulcast -> getApiContent(PrimeVideoSimulcastFetchCacheKey(countryCode, simulcast), zonedDateTime) }
     }
 
     fun convertEpisode(

@@ -2,7 +2,7 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodePlatformWeekKeyCache
+import fr.shikkanime.caches.PlatformReleaseWindowCacheKey
 import fr.shikkanime.dtos.variants.EpisodeVariantDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
@@ -50,13 +50,13 @@ class EpisodeVariantCacheService : ICacheService {
         "EpisodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween",
         classes = listOf(EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<Pair<String, ZonedDateTime>>>>() {},
-        key = CountryCodePlatformWeekKeyCache(countryCode, platform, startZonedDateTime, endZonedDateTime),
+        key = PlatformReleaseWindowCacheKey(countryCode, platform, startZonedDateTime, endZonedDateTime)
     ) {
         episodeVariantService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
             it.countryCode,
             it.platform,
-            it.startZonedDateTime,
-            it.endZonedDateTime
+            it.windowStart,
+            it.windowEnd
         ).toTypedArray()
     }
 

@@ -2,7 +2,7 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.caches.CountryCodePrimeVideoSimulcastKeyCache
+import fr.shikkanime.caches.PrimeVideoSimulcastFetchCacheKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.PrimeVideoConfiguration
 import org.junit.jupiter.api.Assertions.*
@@ -124,7 +124,7 @@ class PrimeVideoPlatformTest : AbstractTest() {
     suspend fun `should fetch episodes from Prime Video`(testCase: SimulcastTestCase) {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse(testCase.testDate)
-        val key = CountryCodePrimeVideoSimulcastKeyCache(
+        val key = PrimeVideoSimulcastFetchCacheKey(
             countryCode,
             PrimeVideoConfiguration.PrimeVideoSimulcast().apply {
                 name = testCase.simulcastName

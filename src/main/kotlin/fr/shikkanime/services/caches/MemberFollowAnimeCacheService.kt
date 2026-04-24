@@ -2,7 +2,7 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.UUIDPaginationKeyCache
+import fr.shikkanime.caches.UuidPageCacheKey
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.animes.AnimeDto
 import fr.shikkanime.dtos.animes.MissedAnimeDto
@@ -26,7 +26,7 @@ class MemberFollowAnimeCacheService : ICacheService {
         "MemberFollowAnimeCacheService.getMissedAnimes",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, MemberFollowAnime::class.java, MemberFollowEpisode::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<MissedAnimeDto>>>() {},
-        key = UUIDPaginationKeyCache(member, page, limit),
+        key = UuidPageCacheKey(member, page, limit),
     ) {
         PageableDto.fromPageable(
             memberFollowAnimeService.findAllMissedAnimes(
@@ -42,7 +42,7 @@ class MemberFollowAnimeCacheService : ICacheService {
         "MemberFollowAnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, MemberFollowAnime::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<AnimeDto>>>() {},
-        key = UUIDPaginationKeyCache(member, page, limit),
+        key = UuidPageCacheKey(member, page, limit),
     ) {
         PageableDto.fromPageable(
             memberFollowAnimeService.findAllFollowedAnimes(

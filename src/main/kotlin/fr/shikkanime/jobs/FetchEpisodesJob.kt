@@ -15,11 +15,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import jakarta.persistence.Tuple
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.ZonedDateTime
@@ -28,11 +24,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
-import javax.imageio.ImageIO
 
-class FetchEpisodesJob(
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : AbstractJob {
+class FetchEpisodesJob : AbstractJob {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var isInitialized = false
     private var isRunning = false
@@ -189,18 +182,9 @@ class FetchEpisodesJob(
     }
 
     private suspend fun sendToSocialNetworks(episodes: List<GroupedEpisode>) {
-        val mediaImage = try {
-            val byteArrayOutputStream = ByteArrayOutputStream()
-
-            withContext(coroutineDispatcher) {
-                ImageIO.write(MediaImage.toMediaImage(episodes), "jpg", byteArrayOutputStream)
-            }
-
-            byteArrayOutputStream.toByteArray()
-        } catch (e: Exception) {
-            logger.log(Level.SEVERE, "Error while converting episode image for social networks", e)
-            null
-        }
+        val mediaImage = runCatching { MediaImage.toMediaImage(episodes).toByteArray() }
+            .onFailure { logger.log(Level.SEVERE, "Error while converting episode image for social networks", it) }
+            .getOrNull()
 
         Constant.abstractSocialNetworks.forEach { socialNetwork ->
             try {

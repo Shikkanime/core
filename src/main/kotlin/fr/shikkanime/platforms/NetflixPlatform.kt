@@ -1,6 +1,6 @@
 package fr.shikkanime.platforms
 
-import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.caches.PlatformSimulcastFetchCacheKey
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.CountryCode
@@ -15,15 +15,15 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.*
 
-class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
+class NetflixPlatform : AbstractPlatform<NetflixConfiguration, PlatformSimulcastFetchCacheKey, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.NETF
 
     override fun getConfigurationClass() = NetflixConfiguration::class.java
 
     override suspend fun fetchApiContent(
-        key: CountryCodeReleaseDayPlatformSimulcastKeyCache,
+        key: PlatformSimulcastFetchCacheKey,
         zonedDateTime: ZonedDateTime
-    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode, key.releaseDayPlatformSimulcast.name.toInt())
+    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode, key.simulcast.name.toInt())
         .flatMap { video -> convertEpisode(key.countryCode, video) }
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
@@ -70,7 +70,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, CountryCodeReleas
                 .forEach { simulcast ->
                     list.addAll(
                         getApiContent(
-                            CountryCodeReleaseDayPlatformSimulcastKeyCache(
+                            PlatformSimulcastFetchCacheKey(
                                 countryCode,
                                 simulcast
                             ), zonedDateTime

@@ -2,7 +2,7 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.UUIDPaginationKeyCache
+import fr.shikkanime.caches.UuidPageCacheKey
 import fr.shikkanime.dtos.member.RefreshMemberDto
 import fr.shikkanime.entities.*
 import fr.shikkanime.factories.impl.RefreshMemberFactory
@@ -28,6 +28,6 @@ class MemberCacheService : ICacheService {
         "MemberCacheService.getRefreshMember",
         classes = listOf(Member::class.java, Anime::class.java, MemberFollowAnime::class.java, EpisodeMapping::class.java, MemberFollowEpisode::class.java),
         typeToken = object : TypeToken<MapCacheValue<RefreshMemberDto>>() {},
-        key = UUIDPaginationKeyCache(uuid, 1, limit)
+        key = UuidPageCacheKey(uuid, 1, limit)
     ) { find(it.uuid)?.let { member -> refreshMemberFactory.toDto(member, it.limit) } }
 }

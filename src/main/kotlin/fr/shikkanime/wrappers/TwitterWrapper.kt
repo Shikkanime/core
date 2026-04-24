@@ -7,7 +7,6 @@ import fr.shikkanime.utils.takeIfNotEmpty
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
@@ -159,7 +158,7 @@ object TwitterWrapper {
     ): String {
         val mediaId = uploadMediaChunkedInit(authParams, mediaCategory, mediaType, bytes.size.toLong())
 
-        ByteArrayInputStream(bytes).use { inputStream ->
+        bytes.inputStream().use { inputStream ->
             generateSequence { inputStream.readNBytes(CHUNK_SIZE).takeIfNotEmpty() }
                 .forEachIndexed { index, segment -> uploadMediaChunkedAppend(authParams, index.toLong(), mediaId, fileName, segment) }
         }

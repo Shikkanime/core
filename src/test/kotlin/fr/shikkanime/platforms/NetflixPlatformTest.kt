@@ -2,7 +2,7 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.caches.PlatformSimulcastFetchCacheKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.ReleaseDayPlatformSimulcast
 import kotlinx.coroutines.runBlocking
@@ -82,7 +82,7 @@ class NetflixPlatformTest : AbstractTest() {
             releaseDay = testCase.releaseDay
         }
         
-        val key = CountryCodeReleaseDayPlatformSimulcastKeyCache(countryCode, simulcastDay)
+        val key = PlatformSimulcastFetchCacheKey(countryCode, simulcastDay)
         val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
         
         assertNotNull(episodes)

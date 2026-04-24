@@ -11,6 +11,7 @@ import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.readFileAsByteArray
 import fr.shikkanime.utils.routes.AdminSessionAuthenticated
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
@@ -20,11 +21,6 @@ import fr.shikkanime.utils.routes.method.Post
 import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.io.readByteArray
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
 import java.net.URLEncoder
@@ -33,9 +29,7 @@ import java.time.ZonedDateTime
 
 @Controller("$ADMIN/episode-manager")
 @AdminSessionAuthenticated
-class AdminEpisodeManagerController(
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
-) {
+class AdminEpisodeManagerController {
     private val logger = LoggerFactory.getLogger(javaClass)
     @Inject private lateinit var episodeVariantService: EpisodeVariantService
 
@@ -81,22 +75,7 @@ class AdminEpisodeManagerController(
     @Path("/import")
     @Post
     private suspend fun postImport(@BodyParam multiPartData: MultiPartData): Response {
-        var bytes: ByteArray? = null
-
-        multiPartData.forEachPart { part ->
-            if (part is PartData.FileItem) {
-                bytes = part.provider().readRemaining().readByteArray()
-            }
-
-            part.dispose()
-        }
-
-        requireNotNull(bytes) { "No file provided" }
-        val file = withContext(coroutineDispatcher) {
-            File.createTempFile("import_", ".xlsx")
-        }.apply { writeBytes(bytes) }
-
-        val episodes = XSSFWorkbook(file.inputStream()).use { workbook ->
+        val episodes = XSSFWorkbook(multiPartData.readFileAsByteArray().inputStream()).use { workbook ->
             workbook.sheetIterator().asSequence().flatMap { sheet ->
                 sheet.rowIterator().asSequence().drop(1).mapNotNull { row ->
                     var cell = 0
@@ -134,9 +113,6 @@ class AdminEpisodeManagerController(
                 }
             }.toList()
         }
-
-        if (!file.delete())
-            logger.warning("Could not delete file: ${file.absolutePath}")
 
         episodes.forEach { episodeVariantService.save(it) }
 

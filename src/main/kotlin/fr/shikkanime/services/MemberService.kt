@@ -10,20 +10,11 @@ import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.factories.impl.MemberFactory
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.*
-import io.ktor.http.content.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.io.readByteArray
-import java.io.ByteArrayInputStream
 import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
 
-class MemberService(
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : AbstractService<Member, MemberRepository>() {
+class MemberService : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject private lateinit var memberRepository: MemberRepository
@@ -126,21 +117,8 @@ class MemberService(
         InvalidationService.invalidate(Member::class.java)
     }
 
-    suspend fun changeProfileImage(member: Member, multiPartData: MultiPartData) {
-        var bytes: ByteArray? = null
-
-        multiPartData.forEachPart { part ->
-            if (part is PartData.FileItem) {
-                bytes = part.provider().readRemaining().readByteArray()
-            }
-
-            part.dispose()
-        }
-
-        requireNotNull(bytes) { "No file provided" }
-        val imageInputStream = withContext(coroutineDispatcher) {
-            ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
-        }
+    fun changeProfileImage(member: Member, bytes: ByteArray) {
+        val imageInputStream = ImageIO.createImageInputStream(bytes.inputStream())
         val imageReaders = ImageIO.getImageReaders(imageInputStream)
         require(imageReaders.hasNext()) { "Invalid file format" }
         val imageReader = imageReaders.next()

@@ -1,6 +1,6 @@
 package fr.shikkanime.platforms
 
-import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.caches.PlatformSimulcastFetchCacheKey
 import fr.shikkanime.dtos.AnimePlatformDto
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.platforms.configuration.DisneyPlusConfiguration
@@ -11,18 +11,18 @@ import java.io.File
 import java.time.ZonedDateTime
 import java.util.*
 
-class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCodeReleaseDayPlatformSimulcastKeyCache, List<AbstractPlatform.Episode>>() {
+class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, PlatformSimulcastFetchCacheKey, List<AbstractPlatform.Episode>>() {
     override fun getPlatform(): Platform = Platform.DISN
 
     override fun getConfigurationClass() = DisneyPlusConfiguration::class.java
 
     override suspend fun fetchApiContent(
-        key: CountryCodeReleaseDayPlatformSimulcastKeyCache,
+        key: PlatformSimulcastFetchCacheKey,
         zonedDateTime: ZonedDateTime
     ): List<Episode> {
         val episodes = DisneyPlusWrapper.getEpisodesByShowId(
             key.countryCode,
-            key.releaseDayPlatformSimulcast.name,
+            key.simulcast.name,
             configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
         )
 
@@ -67,7 +67,7 @@ class DisneyPlusPlatform : AbstractPlatform<DisneyPlusConfiguration, CountryCode
                     runCatching {
                         list.addAll(
                             getApiContent(
-                                CountryCodeReleaseDayPlatformSimulcastKeyCache(
+                                PlatformSimulcastFetchCacheKey(
                                     countryCode,
                                     simulcast
                                 ), zonedDateTime
