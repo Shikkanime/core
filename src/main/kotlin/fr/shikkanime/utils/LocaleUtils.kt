@@ -8,9 +8,11 @@ object LocaleUtils {
         // Japanese
         "日本語" to Locale.JA_JP.code,
         "ja-jpn" to Locale.JA_JP.code,
+        "ja" to Locale.JA_JP.code,
         // English
         "English" to Locale.EN_US.code,
         "en-eng" to Locale.EN_US.code,
+        "en" to Locale.EN_US.code,
         // French
         "Français" to Locale.FR_FR.code,
         "Français (France)" to Locale.FR_FR.code,

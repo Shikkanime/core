@@ -7,15 +7,18 @@ import fr.shikkanime.services.MemberActionService
 import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
+import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.routes.Controller
 import fr.shikkanime.utils.routes.Path
 import fr.shikkanime.utils.routes.Response
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.PathParam
 import java.util.*
+import java.util.logging.Level
 
 @Controller("/")
 class ShortLinkController {
+    private val logger = LoggerFactory.getLogger(javaClass)
     @Inject private lateinit var memberActionService: MemberActionService
     @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
 
@@ -35,7 +38,8 @@ class ShortLinkController {
             InvalidationService.invalidate(Member::class.java)
             return Response.template("/site/validateAction.ftl")
         } catch (e: Exception) {
-            throw e
+            logger.log(Level.SEVERE, "Could not validate web token", e)
+            return Response.notFound()
         }
     }
 }
