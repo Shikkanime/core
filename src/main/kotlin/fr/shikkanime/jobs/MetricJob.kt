@@ -11,10 +11,14 @@ class MetricJob : AbstractJob {
     @Inject private lateinit var metricService: MetricService
 
     override suspend fun run() {
+        val threadMXBean = ManagementFactory.getThreadMXBean()
+
         metricService.save(
             Metric(
                 cpuLoad = getProcessCPULoad(),
                 memoryUsage = getProcessMemoryUsage(),
+                threadCount = threadMXBean.threadCount,
+                peakThreadCount = threadMXBean.peakThreadCount,
             )
         )
     }

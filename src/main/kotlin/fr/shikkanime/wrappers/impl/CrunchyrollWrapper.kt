@@ -1,4 +1,5 @@
 package fr.shikkanime.wrappers.impl
+import fr.shikkanime.utils.HttpRequest
 
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
@@ -16,7 +17,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         start: Int,
         simulcast: String?
     ): List<BrowseObject> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else StringUtils.EMPTY_STRING}")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/discover/browse?sort_by=${sortBy.name.lowercase()}&type=${type.name.lowercase()}&n=$size&start=$start&locale=$locale${if (simulcast != null) "&seasonal_tag=$simulcast" else StringUtils.EMPTY_STRING}")
         require(response.status == HttpStatusCode.OK) { "Failed to get media list (${response.status.value})" }
         return response.body<CrunchyrollResponse<BrowseObject>>().data
     }
@@ -25,7 +26,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String
     ): Series {
-         val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/series/$id?locale=$locale")
+         val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/cms/series/$id?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get series (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get series")
         return ObjectParser.fromJson(asJsonArray.first(), Series::class.java)
@@ -35,7 +36,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String
     ): Array<Season> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/series/$id/seasons?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/cms/series/$id/seasons?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get seasons with series id (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get seasons with series id")
         return ObjectParser.fromJson(asJsonArray, Array<Season>::class.java)
@@ -45,7 +46,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String
     ): Season {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/seasons/$id?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/cms/seasons/$id?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get season (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get season")
         return ObjectParser.fromJson(asJsonArray.first(), Season::class.java)
@@ -56,7 +57,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String
     ): Array<Episode> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/seasons/$id/episodes?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/cms/seasons/$id/episodes?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get episodes by season id (${response.status.value})" }
         return response.body<CrunchyrollResponse<Episode>>().data.toTypedArray()
     }
@@ -68,7 +69,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         id: String
     ): Episode {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/episodes/$id?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/cms/episodes/$id?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get episode (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get episode")
         return ObjectParser.fromJson(asJsonArray.first(), Episode::class.java)
@@ -82,7 +83,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         type: String,
         id: String
     ): BrowseObject {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/discover/$type/$id?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/discover/$type/$id?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get $type episode (${response.status.value})" }
         return response.body<CrunchyrollResponse<Playhead>>().data.first().panel
     }
@@ -94,7 +95,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         locale: String,
         vararg ids: String
     ): List<BrowseObject> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v2/cms/objects/${ids.joinToString(StringUtils.COMMA_STRING)}?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v2/cms/objects/${ids.joinToString(StringUtils.COMMA_STRING)}?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get objects (${response.status.value})" }
         return response.body<CrunchyrollResponse<BrowseObject>>().data
     }
@@ -109,7 +110,7 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
     ) = getEpisodesBySeriesIdBase(locale, id, original)
 
     override suspend fun getSimulcasts(locale: String): Array<Simulcast> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}content/v1/season_list?locale=$locale")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}content/v1/season_list?locale=$locale")
         require(response.status == HttpStatusCode.OK) { "Failed to get simulcasts (${response.status.value})" }
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("items") ?: throw Exception("Failed to get simulcasts")
         return ObjectParser.fromJson(asJsonArray, Array<Simulcast>::class.java)

@@ -18,7 +18,6 @@ object ThreadsWrapper {
     private const val AUTHORIZATION_URL = "https://www.threads.net"
     private const val API_URL = "https://graph.threads.net"
     private const val API_VERSION = "v1.0"
-    private val httpRequest = HttpRequest()
 
     private fun getRedirectUri() = "${Constant.baseUrl}$ADMIN/api/threads".replace("http://", "https://")
 
@@ -29,7 +28,7 @@ object ThreadsWrapper {
             "scope=threads_basic,threads_content_publish"
 
     suspend fun getAccessToken(appId: String, appSecret: String, code: String): String {
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$API_URL/oauth/access_token?" +
                     "client_id=$appId&" +
                     "client_secret=$appSecret&" +
@@ -44,7 +43,7 @@ object ThreadsWrapper {
     }
 
     suspend fun getLongLivedAccessToken(appSecret: String, accessToken: String): String {
-        val response = httpRequest.get(
+        val response = HttpRequest.get(
             "$API_URL/access_token?" +
                     "client_secret=$appSecret&" +
                     "access_token=$accessToken&" +
@@ -74,7 +73,7 @@ object ThreadsWrapper {
         }.map { (key, value) -> "$key=$value" }
             .joinToString("&")
 
-        val createResponse = httpRequest.post(
+        val createResponse = HttpRequest.post(
             "$API_URL/$API_VERSION/me/threads?$parameters",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )
@@ -82,7 +81,7 @@ object ThreadsWrapper {
         require(createResponse.status == HttpStatusCode.OK) { "Failed to post (${createResponse.status.value} - ${createResponse.bodyAsText()})" }
         val creationId = ObjectParser.fromJson(createResponse.bodyAsText())["id"].asString
 
-        val publishResponse = httpRequest.post(
+        val publishResponse = HttpRequest.post(
             "$API_URL/$API_VERSION/me/threads_publish?access_token=$accessToken&creation_id=$creationId",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
         )

@@ -21,6 +21,8 @@ class MetricRepository : AbstractRepository<Metric>() {
                     groupedDate,
                     cb.avg(root[Metric_.cpuLoad]),
                     cb.avg(root[Metric_.memoryUsage]),
+                    cb.avg(root[Metric_.threadCount]),
+                    cb.max(root[Metric_.peakThreadCount]),
                 )
             )
 
@@ -34,7 +36,9 @@ class MetricRepository : AbstractRepository<Metric>() {
                     GroupedMetricDto(
                         date = tuple[0, ZonedDateTime::class.java].withUTCString(),
                         avgCpuLoad = (tuple[1, Double::class.java] * 100).toString().replace(',', '.'),
-                        avgMemoryUsage = (tuple[2, Double::class.java] / 1024.0 / 1024.0).toString().replace(',', '.')
+                        avgMemoryUsage = (tuple[2, Double::class.java] / 1024.0 / 1024.0).toString().replace(',', '.'),
+                        avgThreadCount = tuple[3, Double::class.java].toString().replace(',', '.'),
+                        maxPeakThreadCount = tuple[4, Int::class.java].toString()
                     )
                 }
         }

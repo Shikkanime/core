@@ -235,7 +235,6 @@ abstract class AbstractCrunchyrollWrapper {
     )
 
     protected val baseUrl = "https://www.crunchyroll.com/"
-    protected val httpRequest = HttpRequest()
     private val configCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
 
     @Synchronized
@@ -247,7 +246,7 @@ abstract class AbstractCrunchyrollWrapper {
         key = StringUtils.EMPTY_STRING
     ) {
         runBlocking {
-            val response = httpRequest.post(
+            val response = HttpRequest.post(
                 "${baseUrl}auth/v1/token",
                 headers = mapOf(
                     HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),

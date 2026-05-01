@@ -78,7 +78,6 @@ abstract class AbstractDisneyPlusWrapper {
     }
 
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
-    protected val httpRequest = HttpRequest()
 
     @Synchronized
     private fun getAccessToken() = MapCache.getOrCompute(
@@ -91,7 +90,7 @@ abstract class AbstractDisneyPlusWrapper {
         val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
 
         runBlocking {
-            val response = httpRequest.post(
+            val response = HttpRequest.post(
                 "${baseUrl}graph/v1/device/graphql",
                 headers = mapOf(HttpHeaders.Authorization to (configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION) ?: StringUtils.EMPTY_STRING)),
                 body = ObjectParser.toJson(

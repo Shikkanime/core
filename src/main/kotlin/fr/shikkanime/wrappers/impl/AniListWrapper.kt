@@ -1,4 +1,5 @@
 package fr.shikkanime.wrappers.impl
+import fr.shikkanime.utils.HttpRequest
 
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.ObjectParser
@@ -79,7 +80,7 @@ object AniListWrapper : AbstractAniListWrapper() {
         status: List<Status>
     ): Array<Media> {
         throttle()
-        val response = httpRequest.post(baseUrl, mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()), ObjectParser.toJson(
+        val response = HttpRequest.post(baseUrl, mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()), ObjectParser.toJson(
             mapOf(
                 "query" to $$"""
                     query ($search: String, $page: Int, $perPage: Int, $statusIn: [MediaStatus]) {
@@ -110,7 +111,7 @@ object AniListWrapper : AbstractAniListWrapper() {
 
     override suspend fun getMediaById(id: Int): Media {
         throttle()
-        val response = httpRequest.post(baseUrl, mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()), ObjectParser.toJson(
+        val response = HttpRequest.post(baseUrl, mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()), ObjectParser.toJson(
             mapOf(
                 "query" to $$"""
                     query Media($mediaId: Int) {

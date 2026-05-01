@@ -16,7 +16,6 @@ import kotlin.experimental.and
 
 class BotDetectorCache : ICacheService {
     private val logger = LoggerFactory.getLogger(javaClass)
-    private val httpRequest = HttpRequest()
     private val ipv4Regex = Regex("(?:[0-9]{1,3}\\.){3}[0-9]{1,3}(?:/[0-9]+)*")
 
     @Inject private lateinit var configCacheService: ConfigCacheService
@@ -54,7 +53,7 @@ class BotDetectorCache : ICacheService {
         key = StringUtils.EMPTY_STRING
     ) {
         val response =
-            httpRequest.get("https://raw.githubusercontent.com/AnTheMaker/GoodBots/refs/heads/main/all.ips")
+            HttpRequest.get("https://raw.githubusercontent.com/AnTheMaker/GoodBots/refs/heads/main/all.ips")
 
         if (response.status != HttpStatusCode.OK) {
             logger.severe("Failed to fetch good bots IPs: ${response.status}")
@@ -69,7 +68,7 @@ class BotDetectorCache : ICacheService {
         typeToken = object : TypeToken<MapCacheValue<CopyOnWriteArraySet<String>>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
-        val response = httpRequest.get("https://raw.githubusercontent.com/matomo-org/device-detector/refs/heads/master/regexes/bots.yml")
+        val response = HttpRequest.get("https://raw.githubusercontent.com/matomo-org/device-detector/refs/heads/master/regexes/bots.yml")
 
         if (response.status != HttpStatusCode.OK) {
             logger.severe("Failed to fetch good bots regex: ${response.status}")
@@ -90,7 +89,7 @@ class BotDetectorCache : ICacheService {
         key = StringUtils.EMPTY_STRING
     ) {
         val response =
-            httpRequest.get("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4")
+            HttpRequest.get("https://raw.githubusercontent.com/borestad/blocklist-abuseipdb/main/abuseipdb-s100-30d.ipv4")
 
         if (response.status != HttpStatusCode.OK) {
             logger.severe("Failed to fetch abuse IPs: ${response.status}")

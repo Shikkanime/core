@@ -19,7 +19,6 @@ import javax.imageio.ImageIO
 object MediaImage {
     private const val BLUR_SIZE = 25
     private val blurKernel = FloatArray(BLUR_SIZE * BLUR_SIZE) { 1f / (BLUR_SIZE * BLUR_SIZE) }
-    private val httpRequest = HttpRequest(timeout = 5_000L)
 
     suspend fun toMediaImage(episodes: List<GroupedEpisode>): BufferedImage {
         require(episodes.isNotEmpty()) { "The grouped episodes list is empty" }
@@ -206,7 +205,7 @@ object MediaImage {
     }
 
     suspend fun getLongTimeoutImage(url: String): BufferedImage =
-        ByteArrayInputStream(HttpRequest.retryOnTimeout(3) { httpRequest.get(url).readRawBytes() }).use {
+        ByteArrayInputStream(HttpRequest.retryOnTimeout(3) { HttpRequest.get(url, timeout = 5000L).readRawBytes() }).use {
             ImageIO.read(
                 it
             )
