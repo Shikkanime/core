@@ -20,6 +20,10 @@ class Metric(
     val cpuLoad: Double = 0.0,
     @Column(name = "memory_usage")
     val memoryUsage: Long = 0,
+    @Column(name = "thread_count")
+    val threadCount: Int = 0,
+    @Column(name = "peak_thread_count")
+    val peakThreadCount: Int = 0,
     @Column(nullable = false)
     val date: ZonedDateTime = ZonedDateTime.now(),
 ) : ShikkEntity(uuid)

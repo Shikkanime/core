@@ -19,13 +19,9 @@ import kotlin.time.Duration.Companion.milliseconds
 
 private val logger = LoggerFactory.getLogger(HttpRequest::class.java)
 
-class HttpRequest(private val timeout: Long = 60_000) {
-    private fun httpClient() = HttpClient(OkHttp) {
-        install(HttpTimeout) {
-            requestTimeoutMillis = timeout
-            connectTimeoutMillis = timeout
-            socketTimeoutMillis = timeout
-        }
+object HttpRequest {
+    private val client = HttpClient(OkHttp) {
+        install(HttpTimeout)
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
@@ -38,13 +34,16 @@ class HttpRequest(private val timeout: Long = 60_000) {
         }
     }
 
-    suspend fun get(url: String, headers: Map<String, String> = emptyMap()): HttpResponse {
+    suspend fun get(url: String, headers: Map<String, String> = emptyMap(), timeout: Long = 60_000): HttpResponse {
         logger.info("Making request to $url... (GET)")
         val start = System.currentTimeMillis()
 
-        val response = httpClient().use {
-            it.get(url) {
-                headers.forEach(::header)
+        val response = client.get(url) {
+            headers.forEach(::header)
+            timeout {
+                requestTimeoutMillis = timeout
+                connectTimeoutMillis = timeout
+                socketTimeoutMillis = timeout
             }
         }
 
@@ -52,20 +51,28 @@ class HttpRequest(private val timeout: Long = 60_000) {
         return response
     }
 
-    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: Any? = null): HttpResponse {
+    suspend fun post(url: String, headers: Map<String, String> = emptyMap(), body: Any? = null, timeout: Long = 60_000): HttpResponse {
         logger.info("Making request to $url... (POST)")
         val start = System.currentTimeMillis()
 
-        val response = httpClient().use {
-            if (body is List<*> && body.all { element -> element is PartData }) {
-                @Suppress("UNCHECKED_CAST")
-                it.submitFormWithBinaryData(url, body as List<PartData>) {
-                    headers.forEach(::header)
+        val response = if (body is List<*> && body.all { element -> element is PartData }) {
+            @Suppress("UNCHECKED_CAST")
+            client.submitFormWithBinaryData(url, body as List<PartData>) {
+                headers.forEach(::header)
+                timeout {
+                    requestTimeoutMillis = timeout
+                    connectTimeoutMillis = timeout
+                    socketTimeoutMillis = timeout
                 }
-            } else {
-                it.post(url) {
-                    headers.forEach(::header)
-                    body?.let(::setBody)
+            }
+        } else {
+            client.post(url) {
+                headers.forEach(::header)
+                body?.let(::setBody)
+                timeout {
+                    requestTimeoutMillis = timeout
+                    connectTimeoutMillis = timeout
+                    socketTimeoutMillis = timeout
                 }
             }
         }
@@ -74,52 +81,50 @@ class HttpRequest(private val timeout: Long = 60_000) {
         return response
     }
 
-    suspend fun getCookies(url: String): Pair<Document, Map<String, String>> {
-        val response = get(url)
+    suspend fun getCookies(url: String, timeout: Long = 60_000): Pair<Document, Map<String, String>> {
+        val response = get(url, timeout = timeout)
         return Jsoup.parse(response.bodyAsText()) to response.setCookie().associate { it.name to it.value }
     }
 
-    companion object {
-        suspend fun <T> retry(
-            times: Int,
-            delay: Long = 500,
-            shouldRetry: (Exception) -> Boolean = { true },
-            operation: suspend () -> T
-        ): T {
-            var lastException: Exception? = null
+    suspend fun <T> retry(
+        times: Int,
+        delay: Long = 500,
+        shouldRetry: (Exception) -> Boolean = { true },
+        operation: suspend () -> T
+    ): T {
+        var lastException: Exception? = null
 
-            repeat(times) { attempt ->
-                try {
-                    return operation()
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
+        repeat(times) { attempt ->
+            try {
+                return operation()
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
 
-                    if (!shouldRetry(e)) throw e
+                if (!shouldRetry(e)) throw e
 
-                    lastException = e
-                    val attemptNum = attempt + 1
+                lastException = e
+                val attemptNum = attempt + 1
 
-                    logger.warning("Attempt $attemptNum failed: ${e.message}")
+                logger.warning("Attempt $attemptNum failed: ${e.message}")
 
-                    if (attempt < times - 1) {
-                        logger.warning("Retrying in $delay ms...")
-                        delay(delay.milliseconds)
-                    }
+                if (attempt < times - 1) {
+                    logger.warning("Retrying in $delay ms...")
+                    delay(delay.milliseconds)
                 }
             }
-
-            throw lastException ?: Exception("Failed after $times attempts")
         }
 
-        suspend fun <T> retryOnTimeout(
-            times: Int,
-            delay: Long = 500,
-            operation: suspend () -> T
-        ) = retry(
-            times = times,
-            delay = delay,
-            shouldRetry = { it is HttpRequestTimeoutException },
-            operation = operation
-        )
+        throw lastException ?: Exception("Failed after $times attempts")
     }
+
+    suspend fun <T> retryOnTimeout(
+        times: Int,
+        delay: Long = 500,
+        operation: suspend () -> T
+    ) = retry(
+        times = times,
+        delay = delay,
+        shouldRetry = { it is HttpRequestTimeoutException },
+        operation = operation
+    )
 }

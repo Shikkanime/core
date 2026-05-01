@@ -36,7 +36,6 @@ object TwitterWrapper {
     private const val ALGORITHM = "HmacSHA1"
     private val secureRandom = SecureRandom()
     private val charset = StandardCharsets.UTF_8
-    private val httpRequest = HttpRequest()
     private const val CHUNK_SIZE = 2 * 1024 * 1024
 
     private fun generateSignature(
@@ -92,7 +91,7 @@ object TwitterWrapper {
         mediaType: MediaType,
         totalBytes: Long
     ): String {
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$API_URL/media/upload/initialize",
             headers = mapOf(
                 HttpHeaders.ContentType to ContentType.Application.Json.toString(),
@@ -118,7 +117,7 @@ object TwitterWrapper {
         fileName: String,
         segment: ByteArray,
     ) {
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$API_URL/media/upload/$mediaId/append",
             headers = mapOf(
                 HttpHeaders.ContentType to ContentType.MultiPart.FormData.toString(),
@@ -139,7 +138,7 @@ object TwitterWrapper {
         authParams: AuthParams,
         mediaId: String,
     ) {
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$API_URL/media/upload/$mediaId/finalize",
             headers = mapOf(
                 HttpHeaders.ContentType to ContentType.Application.Json.toString(),
@@ -180,7 +179,7 @@ object TwitterWrapper {
             text?.let { put("text", it) }
         }
 
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$API_URL/tweets",
             headers = mapOf(
                 HttpHeaders.ContentType to ContentType.Application.Json.toString(),

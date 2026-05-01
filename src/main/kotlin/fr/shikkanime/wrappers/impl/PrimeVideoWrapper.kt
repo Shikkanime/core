@@ -190,7 +190,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
     }
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
-        val response = httpRequest.get(
+        val response = HttpRequest.get(
             "$url?dvWebAppClientVersion=1.0.121090.",
             headers = mapOf(
                 HttpHeaders.Accept to ContentType.Application.Json.toString(),
@@ -207,7 +207,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
     }
 
     private suspend fun loadMoreData(id: String, token: String): JsonObject {
-        val response = httpRequest.get(
+        val response = HttpRequest.get(
             "$baseUrl/api/getDetailWidgets?titleID=$id&widgets=${URLEncoder.encode("[{\"widgetType\":\"EpisodeList\",\"widgetToken\":\"$token\"}]", StandardCharsets.UTF_8)}",
             headers = mapOf("Accept" to ContentType.Application.Json.toString())
         )

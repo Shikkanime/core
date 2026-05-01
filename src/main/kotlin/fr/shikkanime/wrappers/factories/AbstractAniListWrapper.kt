@@ -1,6 +1,5 @@
 package fr.shikkanime.wrappers.factories
 
-import fr.shikkanime.utils.HttpRequest
 import java.io.Serializable
 
 abstract class AbstractAniListWrapper {
@@ -70,7 +69,6 @@ abstract class AbstractAniListWrapper {
     }
 
     protected val baseUrl = "https://graphql.anilist.co"
-    protected val httpRequest = HttpRequest()
 
     abstract suspend fun search(query: String, page: Int = 1, limit: Int = 5, status: List<Status> = listOf(Status.RELEASING, Status.FINISHED)): Array<Media>
     abstract suspend fun getMediaById(id: Int): Media

@@ -82,7 +82,6 @@ abstract class AbstractNetflixWrapper {
 
     protected val baseUrl = "https://www.netflix.com"
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
-    protected val httpRequest = HttpRequest()
 
     private fun decodeUtf8(input: String) = input.replace("""\\x([0-9A-Fa-f]{2})""".toRegex()) { matchResult ->
         val hexCode = matchResult.groupValues[1]
@@ -96,7 +95,7 @@ abstract class AbstractNetflixWrapper {
         typeToken = object : TypeToken<MapCacheValue<NetflixAuthentification>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
-        val (document, cookies) = httpRequest.getCookies(baseUrl)
+        val (document, cookies) = HttpRequest.getCookies(baseUrl)
 
         return@getOrComputeAsync NetflixAuthentification(
             requireNotNull(cookies["NetflixId"]),

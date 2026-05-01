@@ -3,6 +3,7 @@ const activedaysmenuElement = document.getElementById('activedaysmenu');
 const daysmenuElement = document.getElementById('daysmenu');
 const cpuChartElement = document.getElementById('cpuLoadChart').getContext('2d');
 const memoryChartElement = document.getElementById('memoryUsageChart').getContext('2d');
+const threadCountChartElement = document.getElementById('threadCountChart').getContext('2d');
 const attachmentsChartElement = document.getElementById('attachmentsChart').getContext('2d');
 const versionsPieElement = document.getElementById('versionsPie').getContext('2d');
 const localesPieElement = document.getElementById('localesPie').getContext('2d');
@@ -39,6 +40,38 @@ const createPieChart = (element, label) => new Chart(element, {
 
 const cpuChart = createLineChart(cpuChartElement, '% CPU', 'hour');
 const memoryChart = createLineChart(memoryChartElement, 'RAM in MB', 'hour');
+const threadCountChart = new Chart(threadCountChartElement, {
+    type: 'line',
+    data: {
+        labels: [],
+        datasets: [
+            {
+                label: 'Avg Threads',
+                data: [],
+                borderColor: 'rgba(33,37,41, 1)',
+                backgroundColor: 'rgba(33,37,41,0.1)',
+                tension: 0.1,
+                fill: true
+            },
+            {
+                label: 'Peak Threads',
+                data: [],
+                borderColor: 'rgba(225, 87, 89, 1)',
+                backgroundColor: 'rgba(225, 87, 89, 0.1)',
+                borderDash: [5, 5],
+                tension: 0.1,
+                fill: false
+            }
+        ]
+    },
+    options: {
+        maintainAspectRatio: false,
+        scales: { x: { type: 'time', time: { unit: 'hour' } }, y: { beginAtZero: true } },
+        elements: { point: { radius: 0 } },
+        animation: { duration: 0 },
+        plugins: { legend: { display: false } }
+    }
+});
 const attachmentsChart = createLineChart(attachmentsChartElement, 'Attachments', 'day');
 const versionsPie = createPieChart(versionsPieElement, 'Versions');
 const localesPie = createPieChart(localesPieElement, 'Locales');
@@ -79,7 +112,7 @@ function updateMetricsChart() {
         const labels = data.map(m => m.date);
         const toNumberArray = (arr, key) => arr.map(m => parseFloat(m[key]));
 
-        [cpuChart, memoryChart].forEach(c => c.options.scales.x.time.unit = timeUnit);
+        [cpuChart, memoryChart, threadCountChart].forEach(c => c.options.scales.x.time.unit = timeUnit);
 
         cpuChart.data.labels = labels;
         cpuChart.data.datasets[0].data = toNumberArray(data, 'avgCpuLoad');
@@ -88,6 +121,11 @@ function updateMetricsChart() {
         memoryChart.data.labels = labels;
         memoryChart.data.datasets[0].data = toNumberArray(data, 'avgMemoryUsage');
         memoryChart.update();
+
+        threadCountChart.data.labels = labels;
+        threadCountChart.data.datasets[0].data = toNumberArray(data, 'avgThreadCount');
+        threadCountChart.data.datasets[1].data = toNumberArray(data, 'maxPeakThreadCount');
+        threadCountChart.update();
     });
 }
 

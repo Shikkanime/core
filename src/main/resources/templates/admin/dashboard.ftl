@@ -43,7 +43,7 @@
     <div class="row g-2">
         <!-- Line charts group -->
         <!-- CPU time series -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-2">
             <div class="card p-3">
                 <div style="height: 36vh">
                     <canvas id="cpuLoadChart"></canvas>
@@ -52,10 +52,19 @@
         </div>
 
         <!-- Memory time series -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-2">
             <div class="card p-3">
                 <div style="height: 36vh">
                     <canvas id="memoryUsageChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thread count time series -->
+        <div class="col-12 col-md-2">
+            <div class="card p-3">
+                <div style="height: 36vh">
+                    <canvas id="threadCountChart"></canvas>
                 </div>
             </div>
         </div>

@@ -39,10 +39,10 @@ object BskyWrapper {
 
     private const val BASE_URL = "https://bsky.social/xrpc"
     private val contentType = ContentType.Application.Json
-    private val httpRequest = HttpRequest()
+     
 
     suspend fun createSession(identifier: String, password: String): JsonObject {
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$BASE_URL/com.atproto.server.createSession",
             headers = mapOf(
                 HttpHeaders.ContentType to contentType.toString(),
@@ -61,7 +61,7 @@ object BskyWrapper {
     }
 
     suspend fun uploadBlob(accessJwt: String, contentType: ContentType, content: ByteArray): JsonObject {
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$BASE_URL/com.atproto.repo.uploadBlob",
             headers = mapOf(
                 HttpHeaders.ContentType to contentType.toString(),
@@ -125,7 +125,7 @@ object BskyWrapper {
         }
 
         if (embed != null) {
-            val (title, description, image) = Jsoup.parse(httpRequest.get(embed).bodyAsText()).run {
+            val (title, description, image) = Jsoup.parse(HttpRequest.get(embed).bodyAsText()).run {
                 Triple(
                     select("meta[property=og:title]").attr("content"),
                     select("meta[property=og:description]").attr("content"),
@@ -137,7 +137,7 @@ object BskyWrapper {
                 uploadBlob(
                     accessJwt,
                     ContentType.Image.JPEG,
-                    httpRequest.get(image).readRawBytes()
+                    HttpRequest.get(image).readRawBytes()
                 )
             }
 
@@ -152,7 +152,7 @@ object BskyWrapper {
             ))
         }
 
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$BASE_URL/com.atproto.repo.createRecord",
             headers = mapOf(
                 HttpHeaders.ContentType to contentType.toString(),

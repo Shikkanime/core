@@ -35,7 +35,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val netflixId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_ID)
         val netflixSecureId = configCacheService.getValueAsString(ConfigPropertyKey.NETFLIX_SECURE_ID)
         require(netflixId?.isNotBlank() == true && netflixSecureId?.isNotBlank() == true) { "NetflixId and NetflixSecureId must be set in the configuration" }
-        val authUrl = extractAuthUrl(httpRequest.get(baseUrl, mapOf(HttpHeaders.Cookie to getCookieValue(netflixId, netflixSecureId))).bodyAsText())
+        val authUrl = extractAuthUrl(HttpRequest.get(baseUrl, mapOf(HttpHeaders.Cookie to getCookieValue(netflixId, netflixSecureId))).bodyAsText())
         NetflixAuthentification(netflixId, netflixSecureId, authUrl)
     }
 
@@ -50,7 +50,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
     private suspend fun getMetadata(id: Int): ShowMetadata {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
 
-        val response = httpRequest.get(
+        val response = HttpRequest.get(
             "$baseUrl/nq/website/memberapi/release/metadata?movieid=$id&imageFormat=jpg",
             mapOf(
                 HttpHeaders.ContentType to ContentType.Application.Json.toString(),
@@ -81,7 +81,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
 
     override suspend fun getLatestShows(): Array<LatestShow> {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$baseUrl/nq/website/memberapi/release/pathEvaluator?isTop10Supported=true&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
             mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
             FormDataContent(
@@ -114,7 +114,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
     }
 
     override suspend fun getShow(locale: String, id: Int): Show {
-        val response = httpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
+        val response = HttpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "DetailModal",
             "variables" to mapOf(
                 "opaqueImageFormat" to "PNG",
@@ -174,7 +174,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
     }
 
     private suspend fun fetchSeasonsData(countryCode: CountryCode, id: Int, seasonCount: Int): HttpResponse {
-        val seasonsResponse = httpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
+        val seasonsResponse = HttpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelector",
             "variables" to mapOf(
                 "showId" to id,
@@ -254,7 +254,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
     }
 
     private suspend fun fetchAndCreateEpisodesForSeason(countryCode: CountryCode, show: Show, season: Season, seasonNumber: Int): List<Episode> {
-        val response = httpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
+        val response = HttpRequest.postGraphQL(countryCode, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
             "variables" to mapOf(
                 "seasonId" to season.id,
@@ -330,7 +330,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
 
     suspend fun getEpisodeAudioTrackList(countryCode: CountryCode, vararg ids: Int): Map<Int, Set<String>> {
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$baseUrl/nq/website/memberapi/release/pathEvaluator?method=call&original_path=%2Fshakti%2Fmre%2FpathEvaluator",
             mapOf(HttpHeaders.Cookie to getCookieValue(netflixAuthentification.id, netflixAuthentification.secureId)),
             FormDataContent(

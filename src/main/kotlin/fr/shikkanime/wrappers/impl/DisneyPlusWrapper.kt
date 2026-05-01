@@ -2,6 +2,7 @@ package fr.shikkanime.wrappers.impl
 
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.Locale
+import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.LocaleUtils
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsBoolean
@@ -17,7 +18,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
     private const val API_VERSION = "v1.15"
 
     override suspend fun getLatestShowIds(): Array<String> {
-        val response = httpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/set/c6cc13eb-14ad-42fd-82b4-6d959032996c?limit=5&offset=0&pageId=00ef9b51-0ed0-4883-b1e4-fd5a075c7f54")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/set/c6cc13eb-14ad-42fd-82b4-6d959032996c?limit=5&offset=0&pageId=00ef9b51-0ed0-4883-b1e4-fd5a075c7f54")
         require(response.status == HttpStatusCode.OK) { "Failed to fetch latest show ids (${response.status.value})" }
         return ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("data")
@@ -33,7 +34,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
     }
 
     override suspend fun getShow(id: String): Show {
-        val response = httpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
+        val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
         require(response.status == HttpStatusCode.OK) { "Failed to fetch show (${response.status.value})" }
         val jsonObject = ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("data")
@@ -89,7 +90,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             var hasMore: Boolean
 
             do {
-                val response = httpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}")
+                val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/season/$seasonId?limit=24&offset=${(page++ - 1) * 24}")
                 require(response.status == HttpStatusCode.OK) { "Failed to fetch episodes (${response.status.value})" }
 
                 val jsonObject = ObjectParser.fromJson(response.bodyAsText())
@@ -171,7 +172,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             "playbackId": "$resourceId"
         }""".trimIndent()
 
-        val response = httpRequest.postWithAccessToken(
+        val response = HttpRequest.postWithAccessToken(
             "${baseUrl}v7/playback/ctr-regular",
             headers,
             body

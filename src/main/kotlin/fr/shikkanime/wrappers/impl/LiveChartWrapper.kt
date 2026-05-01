@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.impl
 
 import fr.shikkanime.entities.enums.Platform
+import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.atStartOfWeek
@@ -15,7 +16,7 @@ object LiveChartWrapper : AbstractLiveChartWrapper() {
     private val platformIdRegex = "https://(?:www\\.)?(?:animationdigitalnetwork|crunchyroll|disneyplus|netflix|primevideo)\\.com/[a-z-]+/(?:entity-)?([^/]+)".toRegex()
 
     override suspend fun getAnimeIdsFromDate(date: LocalDate): Array<String> {
-        val response = httpRequest.get(
+        val response = HttpRequest.get(
             "$baseUrl/schedule?date=${date.atStartOfWeek()}&layout=full&sort=release_date&start=monday",
             mapOf(
                 HttpHeaders.Accept to ContentType.Text.Html.toString(),
@@ -53,7 +54,7 @@ object LiveChartWrapper : AbstractLiveChartWrapper() {
             )
         )
 
-        val response = httpRequest.post(
+        val response = HttpRequest.post(
             "$baseUrl/graphql",
             mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
             payload
