@@ -161,7 +161,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
         // Find or create the anime entity
-        val anime = episodeMapping?.anime
+        val anime = episodeMapping?.anime?.uuid?.let(animeService::find)
             ?: animeService.findBySlug(episode.countryCode, slug)
             ?: animeService.save(
                 Anime(
