@@ -4,7 +4,7 @@ enum class Locale {
     JA_JP,
     EN_US,
     FR_FR,
-    ZH_CH,
+    ZH_CN,
     KO_KR
     ;
 
