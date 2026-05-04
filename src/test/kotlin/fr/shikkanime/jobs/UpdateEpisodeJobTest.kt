@@ -346,6 +346,48 @@ class UpdateEpisodeJobTest : AbstractTest() {
                 expectedMappingsCount = 2,
                 expectedVariantsCount = 4
             ),
+            TestCase(
+                animeName = "The Daily Life of the Immortal King",
+                slug = "the-daily-life-of-the-immortal-king",
+                season = 5,
+                episodeType = EpisodeType.EPISODE,
+                episodeNumber = 12,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "zh-CN",
+                        identifier = "FR-CRUN-GE00364578ZHCN-ZH-CN",
+                        url = "https://www.crunchyroll.com/fr/watch/GE00364578ZHCN/siblings-alliance"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 1,
+                previousAndNextDepth = 0
+            ),
+            TestCase(
+                animeName = "My Hero Academia",
+                slug = "my-hero-academia",
+                season = 4,
+                episodeType = EpisodeType.FILM,
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-G7PU4ZDDM-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/G7PU4ZDDM/"
+                    ),
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-CRUN-G4VUQJ77K-FR-FR",
+                        url = "https://www.crunchyroll.com/fr/watch/G4VUQJ77K/my-hero-academia-heroes-rising"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 3,
+                previousAndNextDepth = 0
+            )
         )
     }
 

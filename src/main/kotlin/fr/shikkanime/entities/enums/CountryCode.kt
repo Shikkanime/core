@@ -7,7 +7,7 @@ enum class CountryCode(
     val timezone: String
 ) {
     FR(
-        setOf(Locale.JA_JP.code, Locale.ZH_CH.code, Locale.KO_KR.code),
+        setOf(Locale.JA_JP.code, Locale.ZH_CN.code, Locale.KO_KR.code),
         setOf(Locale.EN_US.code),
         Locale.FR_FR.code,
         "Europe/Paris"
