@@ -132,7 +132,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             "extensions" to mapOf(
                 "persistedQuery" to mapOf(
                     "version" to 102,
-                    "id" to "ecdd7d08-5135-458c-a111-0e9cb3b6ac21"
+                    "id" to "534ae583-bdba-4f45-b254-119a8bd25852"
                 )
             )
         )))
@@ -147,7 +147,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             metadata?.thumbnail,
             metadata?.banner ?: showJson.getAsJsonObject("boxartHighRes")!!.getAsString("url")!!.substringBefore("?"),
             metadata?.carousel ?: showJson.getAsJsonObject("storyArt")!!.getAsString("url")!!.substringBefore("?"),
-            showJson.getAsJsonObjectNullable("logoArtwork")?.getAsString("url")?.substringBefore("?"),
+            showJson.getAsJsonObjectNullable("titleLogoUnbranded")?.getAsString("url")?.substringBefore("?"),
             showJson.getAsJsonObject("contextualSynopsis")?.getAsString("text"),
             showJson.getAsJsonObject("seasons")?.getAsInt("totalCount"),
             showJson.getAsString("availabilityStartTime")?.let(ZonedDateTime::parse),
@@ -183,7 +183,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             "extensions" to mapOf(
                 "persistedQuery" to mapOf(
                     "version" to 102,
-                    "id" to "98e53734-bab9-4622-8dbe-b3080c888287"
+                    "id" to "dbc3b274-d4f9-4811-aaf1-d082d3b936f2"
                 )
             )
         )))
@@ -265,7 +265,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             "extensions" to mapOf(
                 "persistedQuery" to mapOf(
                     "version" to 102,
-                    "id" to "9492d2b1-888a-47e5-b02d-dbee58872f1e"
+                    "id" to "1cb23633-2b2e-418f-8871-a73349ae72be"
                 )
             )
         )))
