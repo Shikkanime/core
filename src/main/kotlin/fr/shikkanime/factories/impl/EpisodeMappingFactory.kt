@@ -40,7 +40,7 @@ class EpisodeMappingFactory : IEpisodeMappingFactory {
         )
     }
 
-    override fun toDto(
+    override suspend fun toDto(
         entity: EpisodeMapping,
         useAnime: Boolean
     ) = toDto(

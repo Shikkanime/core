@@ -1,7 +1,6 @@
 package fr.shikkanime.wrappers.impl.caches
 
 import com.google.gson.reflect.TypeToken
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.StringUtils
@@ -15,25 +14,25 @@ object DisneyPlusCachedWrapper : AbstractDisneyPlusWrapper() {
         key = StringUtils.EMPTY_STRING
     ) { DisneyPlusWrapper.getLatestShowIds() }
 
-    override suspend fun getShow(id: String) = MapCache.getOrComputeAsync(
+    override suspend fun getShow(locale: String, id: String) = MapCache.getOrComputeAsync(
         "DisneyPlusCachedWrapper.getShow",
         typeToken = object : TypeToken<MapCacheValue<Show>>() {},
-        key = id
-    ) { DisneyPlusWrapper.getShow(it) }
+        key = locale to id
+    ) { DisneyPlusWrapper.getShow(it.first, it.second) }
 
     override suspend fun getEpisodesByShowId(
-        countryCode: CountryCode,
+        locale: String,
         showId: String,
         checkAudioLocales: Boolean,
     ) = MapCache.getOrComputeAsync(
         "DisneyPlusCachedWrapper.getEpisodesByShowId",
         typeToken = object : TypeToken<MapCacheValue<Array<Episode>>>() {},
-        key = Triple(countryCode, showId, checkAudioLocales)
+        key = Triple(locale, showId, checkAudioLocales)
     ) { DisneyPlusWrapper.getEpisodesByShowId(it.first, it.second, it.third) }
 
-    override suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String) = MapCache.getOrComputeAsync(
-        "DisneyPlusCachedWrapper.getAudioLocales",
-        typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
-        key = countryCode to resourceId
-    ) { DisneyPlusWrapper.getAudioLocales(it.first, it.second) }
+    override suspend fun getShowIdByEpisodeId(episodeId: String) = MapCache.getOrComputeAsync(
+        "DisneyPlusCachedWrapper.getShowIdByEpisodeId",
+        typeToken = object : TypeToken<MapCacheValue<String>>() {},
+        key = episodeId
+    ) { DisneyPlusWrapper.getShowIdByEpisodeId(it) }
 }

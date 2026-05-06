@@ -19,7 +19,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
     override val priority: Int
         get() = 4
 
-    override fun login() {
+    override suspend fun login() {
         if (isInitialized) return
 
         if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.THREADS_ENABLED)) {
@@ -42,7 +42,7 @@ class ThreadsSocialNetwork : AbstractSocialNetwork() {
         isInitialized = false
     }
 
-    private fun checkSession() {
+    private suspend fun checkSession() {
         if (isInitialized) return
 
         logout()

@@ -23,7 +23,7 @@ class AnimeController : HasPageableRoute() {
     @Path
     @Get
     @JWTAuthenticated(optional = true)
-    private fun getAll(
+    private suspend fun getAll(
         @JWTUser memberUuid: UUID?,
         @QueryParam parameters: Map<String, String>
     ): Response {
@@ -64,7 +64,7 @@ class AnimeController : HasPageableRoute() {
     @Path("/weekly")
     @Get
     @JWTAuthenticated(optional = true)
-    fun getWeekly(
+    suspend fun getWeekly(
         @JWTUser memberUuid: UUID?,
         @QueryParam(defaultValue = "FR") country: CountryCode,
         @QueryParam date: String?,
@@ -82,7 +82,7 @@ class AnimeController : HasPageableRoute() {
     @Path("/missed")
     @Get
     @JWTAuthenticated
-    private fun getMissedAnimes(
+    private suspend fun getMissedAnimes(
         @JWTUser uuid: UUID,
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int

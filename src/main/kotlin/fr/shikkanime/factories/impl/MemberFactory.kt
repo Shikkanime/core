@@ -16,7 +16,7 @@ class MemberFactory : IGenericFactory<Member, MemberDto> {
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    override fun toDto(entity: Member): MemberDto {
+    override suspend fun toDto(entity: Member): MemberDto {
         val seenAndUnseenDuration = memberFollowEpisodeService.getSeenAndUnseenDuration(entity)
         val attachment = attachmentService.findByEntityUuidTypeAndActive(entity.uuid!!, ImageType.MEMBER_PROFILE)
 

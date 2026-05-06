@@ -48,7 +48,7 @@ object AniListCachedWrapper : AbstractAniListWrapper() {
             when(animePlatform.platform!!) {
                 Platform.ANIM -> AnimationDigitalNetworkCachedWrapper.getShow(locale.split(StringUtils.DASH_STRING).last(), platformId.toInt()).originalTitle
                 Platform.CRUN -> CrunchyrollCachedWrapper.getSeries(locale, platformId).title
-                Platform.DISN -> DisneyPlusCachedWrapper.getShow(platformId).name
+                Platform.DISN -> DisneyPlusCachedWrapper.getShow(locale, platformId).name
                 Platform.NETF -> NetflixCachedWrapper.getShow(locale, platformId.toInt()).name
                 Platform.PRIM -> PrimeVideoCachedWrapper.getShow(locale, platformId).name
                 else -> null

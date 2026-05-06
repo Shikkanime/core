@@ -27,23 +27,23 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     @OptIn(ExperimentalEncodingApi::class)
     private fun toWebToken(memberAction: MemberAction): String = EncryptionManager.toBase64(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
 
-    fun validateWebAction(webToken: String) {
+    suspend fun validateWebAction(webToken: String) {
         val actionTokens = repository.findAllNotValidated().associateBy(this::toWebToken)
         require(actionTokens.containsKey(webToken)) { "Action not found" }
         val memberAction = actionTokens[webToken] ?: return
         doValidateAction(memberAction)
     }
 
-    fun validateAction(uuid: UUID, code: String) {
+    suspend fun validateAction(uuid: UUID, code: String) {
         val memberAction = repository.findByUuidAndCode(uuid, code)
         checkNotNull(memberAction) { "Invalid action" }
         require(ZonedDateTime.now() < memberAction.creationDateTime.plusMinutes(ACTION_EXPIRED_AFTER)) { "Action expired" }
         doValidateAction(memberAction)
     }
 
-    fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
+    suspend fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
 
-    fun save(action: Action, memberUuid: UUID, email: String): UUID {
+    suspend fun save(action: Action, memberUuid: UUID, email: String): UUID {
         val code = StringUtils.generateRandomString(8).uppercase()
 
         val savedAction = save(
@@ -65,7 +65,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         return savedAction.uuid!!
     }
 
-    private fun doAction(memberAction: MemberAction, code: String, email: String) {
+    private suspend fun doAction(memberAction: MemberAction, code: String, email: String) {
         when (memberAction.action) {
             Action.VALIDATE_EMAIL -> {
                 mailService.save(
@@ -91,7 +91,7 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
         }
     }
 
-    private fun doValidateAction(memberAction: MemberAction) {
+    private suspend fun doValidateAction(memberAction: MemberAction) {
         val member = memberService.find(memberAction.member!!.uuid!!)!!
 
         when (memberAction.action) {

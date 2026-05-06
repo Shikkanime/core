@@ -1,6 +1,7 @@
 package fr.shikkanime.controllers.api
 
 import com.google.inject.Inject
+import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
@@ -8,17 +9,12 @@ import fr.shikkanime.services.EpisodeVariantService
 import fr.shikkanime.services.MediaImage
 import fr.shikkanime.services.caches.EpisodeMappingCacheService
 import fr.shikkanime.services.caches.MemberFollowEpisodeCacheService
-import fr.shikkanime.utils.EncryptionManager
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.*
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Get
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 import java.util.*
-import javax.imageio.ImageIO
 
 @Controller("/api/v1/episode-mappings")
 class EpisodeMappingController : HasPageableRoute() {
@@ -30,7 +26,7 @@ class EpisodeMappingController : HasPageableRoute() {
     @Path
     @Get
     @JWTAuthenticated(optional = true)
-    private fun getAll(
+    private suspend fun getAll(
         @JWTUser memberUuid: UUID?,
         @QueryParam parameters: Map<String, String>
     ): Response {
@@ -70,22 +66,20 @@ class EpisodeMappingController : HasPageableRoute() {
     @Path("/media-image")
     @Get
     private suspend fun getMediaImage(@QueryParam("uuids") uuidsGzip: String?): Response {
-        if (uuidsGzip.isNullOrBlank()) return Response.badRequest()
+        val uuids = uuidsGzip.ifNullOrBlank { return Response.badRequest(MessageDto.error("Missing 'uuids' query parameter")) }
+            .runCatching(EncryptionManager::fromGzip).getOrElse { return Response.badRequest(MessageDto.error("Failed to decode 'uuids' parameter (expected gzip-encoded data)")) }
+            .split(StringUtils.COMMA_STRING)
+            .mapNotNull { runCatching { UUID.fromString(it) }.getOrNull() }
+            .distinct()
+            .takeIfNotEmpty() ?: return Response.badRequest(MessageDto.error("No valid UUIDs found in 'uuids' parameter"))
 
-        val fromGzip = runCatching { EncryptionManager.fromGzip(uuidsGzip) }.getOrNull() ?: return Response.badRequest()
-        val uuids = fromGzip.split(StringUtils.COMMA_STRING).mapNotNull(UUID::fromString).distinct()
-        val variants = episodeVariantService.findAllByUuids(uuids)
-        if (variants.isEmpty()) return Response.notFound()
+        val groupedEpisodes = episodeVariantService.findAllByUuids(uuids)
+            .takeIfNotEmpty()
+            ?.let(groupedEpisodeFactory::toEntities) ?: return Response.notFound(MessageDto.error("No episode variant found for the provided UUIDs"))
 
-        val groupedEpisodes = variants.groupBy { it.mapping?.anime to it.mapping?.episodeType }
-            .values
-            .map(groupedEpisodeFactory::toEntity)
-
-        val image = MediaImage.toMediaImage(groupedEpisodes)
-        val baos = ByteArrayOutputStream()
-        withContext(Dispatchers.IO) {
-            ImageIO.write(image, "jpg", baos)
-        }
-        return Response.multipart(baos.toByteArray(), ContentType.Image.JPEG)
+        return Response.multipart(
+            MediaImage.toMediaImage(groupedEpisodes).toByteArray(),
+            ContentType.Image.JPEG
+        )
     }
 }

@@ -23,7 +23,7 @@ class AttachmentController {
     @Path
     @Get
     @Cached(maxAgeSeconds = Constant.DEFAULT_CACHE_DURATION)
-    private fun getAttachment(
+    private suspend fun getAttachment(
         @QueryParam uuid: UUID?,
         @QueryParam("type") typeString: String?
     ): Response {

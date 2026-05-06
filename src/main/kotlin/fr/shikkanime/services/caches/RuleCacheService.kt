@@ -12,13 +12,13 @@ import fr.shikkanime.utils.StringUtils
 class RuleCacheService : ICacheService {
     @Inject private lateinit var ruleService: RuleService
 
-    fun findAll() = MapCache.getOrCompute(
+    suspend fun findAll() = MapCache.getOrComputeAsync(
         "RuleCacheService.findAll",
         classes = listOf(Rule::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<Rule>>>() {},
         key = StringUtils.EMPTY_STRING,
     ) { ruleService.findAll().toTypedArray() }
 
-    fun findAllByPlatformSeriesIdAndSeasonId(platform: Platform, seriesId: String, seasonId: String) =
+    suspend fun findAllByPlatformSeriesIdAndSeasonId(platform: Platform, seriesId: String, seasonId: String) =
         findAll().filter { it.platform == platform && it.seriesId == seriesId && it.seasonId == seasonId }
 }

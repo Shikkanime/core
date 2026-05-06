@@ -1,12 +1,12 @@
 package fr.shikkanime.wrappers
 
+import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.factories.AbstractDisneyPlusWrapper
 import fr.shikkanime.wrappers.impl.DisneyPlusWrapper
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.mockk.*
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -45,9 +45,9 @@ class DisneyPlusWrapperTest {
         
         // Mock the getShow method to call the real implementation but with mocked HTTP
         coEvery { 
-            DisneyPlusWrapper.getShow(any())
+            DisneyPlusWrapper.getShow(any(), any())
         } coAnswers {
-            val showId = firstArg<String>()
+            val showId = arg<String>(1)
             // Simulate what getShow does with our mock response
             if (statusCode != HttpStatusCode.OK) {
                 throw IllegalArgumentException("Failed to fetch show (${statusCode.value})")
@@ -104,7 +104,8 @@ class DisneyPlusWrapperTest {
     }
 
     @Test
-    fun `getShow should successfully parse complete show data`() = runBlocking {
+    suspend fun `getShow should successfully parse complete show data`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val completeJson = """
         {
@@ -158,7 +159,7 @@ class DisneyPlusWrapperTest {
 
         mockHttpGet(completeJson)
 
-        val result = DisneyPlusWrapper.getShow(showId)
+        val result = DisneyPlusWrapper.getShow(locale, showId)
 
         assertNotNull(result)
         assertEquals(showId, result.id)
@@ -174,7 +175,8 @@ class DisneyPlusWrapperTest {
     }
 
     @Test
-    fun `getShow should throw IllegalArgumentException when artwork is null`() = runBlocking {
+    suspend fun `getShow should throw IllegalArgumentException when artwork is null`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val missingArtworkJson = """
         {
@@ -205,14 +207,15 @@ class DisneyPlusWrapperTest {
         mockHttpGet(missingArtworkJson)
 
         val exception = assertThrows<IllegalArgumentException> {
-            DisneyPlusWrapper.getShow(showId)
+            DisneyPlusWrapper.getShow(locale, showId)
         }
 
         assertTrue(exception.message?.contains("Show image (0.71) is required but was null") == true)
     }
 
     @Test
-    fun `getShow should throw IllegalArgumentException when tile is missing`() = runBlocking {
+    suspend fun `getShow should throw IllegalArgumentException when tile is missing`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val missingTileJson = """
         {
@@ -239,14 +242,15 @@ class DisneyPlusWrapperTest {
         mockHttpGet(missingTileJson)
 
         val exception = assertThrows<IllegalArgumentException> {
-            DisneyPlusWrapper.getShow(showId)
+            DisneyPlusWrapper.getShow(locale, showId)
         }
 
         assertTrue(exception.message?.contains("is required but was null") == true)
     }
 
     @Test
-    fun `getShow should fallback to 1_78 from tile when 1_33 is missing`() = runBlocking {
+    suspend fun `getShow should fallback to 1_78 from tile when 1_33 is missing`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val missing133Json = """
         {
@@ -288,7 +292,7 @@ class DisneyPlusWrapperTest {
 
         mockHttpGet(missing133Json)
 
-        val result = DisneyPlusWrapper.getShow(showId)
+        val result = DisneyPlusWrapper.getShow(locale, showId)
 
         assertNotNull(result)
         assertEquals("Test Anime Show", result.name)
@@ -301,7 +305,8 @@ class DisneyPlusWrapperTest {
     }
 
     @Test
-    fun `getShow should throw IllegalArgumentException when both 1_33 and 1_78 are missing from tile`() = runBlocking {
+    suspend fun `getShow should throw IllegalArgumentException when both 1_33 and 1_78 are missing from tile`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val missingBothSizesJson = """
         {
@@ -338,14 +343,15 @@ class DisneyPlusWrapperTest {
         mockHttpGet(missingBothSizesJson)
 
         val exception = assertThrows<IllegalArgumentException> {
-            DisneyPlusWrapper.getShow(showId)
+            DisneyPlusWrapper.getShow(locale, showId)
         }
 
         assertTrue(exception.message?.contains("Show banner (1.33 or 1.78 from tile) is required but was null") == true)
     }
 
     @Test
-    fun `getShow should throw IllegalArgumentException when title is null`() = runBlocking {
+    suspend fun `getShow should throw IllegalArgumentException when title is null`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val missingTitleJson = """
         {
@@ -380,14 +386,15 @@ class DisneyPlusWrapperTest {
         mockHttpGet(missingTitleJson)
 
         val exception = assertThrows<IllegalArgumentException> {
-            DisneyPlusWrapper.getShow(showId)
+            DisneyPlusWrapper.getShow(locale, showId)
         }
 
         assertTrue(exception.message?.contains("Show title is required but was null") == true)
     }
 
     @Test
-    fun `getShow should handle empty seasons`() = runBlocking {
+    suspend fun `getShow should handle empty seasons`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val noSeasonsJson = """
         {
@@ -429,7 +436,7 @@ class DisneyPlusWrapperTest {
 
         mockHttpGet(noSeasonsJson)
 
-        val result = DisneyPlusWrapper.getShow(showId)
+        val result = DisneyPlusWrapper.getShow(locale, showId)
 
         assertNotNull(result)
         assertEquals("Test Anime Show", result.name)
@@ -437,7 +444,8 @@ class DisneyPlusWrapperTest {
     }
 
     @Test
-    fun `getShow should handle missing description gracefully`() = runBlocking {
+    suspend fun `getShow should handle missing description gracefully`() {
+        val locale = CountryCode.FR.locale
         val showId = "test-show-id"
         val noDescriptionJson = """
         {
@@ -476,7 +484,7 @@ class DisneyPlusWrapperTest {
 
         mockHttpGet(noDescriptionJson)
 
-        val result = DisneyPlusWrapper.getShow(showId)
+        val result = DisneyPlusWrapper.getShow(locale, showId)
 
         assertNotNull(result)
         assertNull(result.description)

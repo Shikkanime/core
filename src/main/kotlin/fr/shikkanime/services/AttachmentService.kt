@@ -37,23 +37,23 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
     @Inject private lateinit var episodeMappingService: EpisodeMappingService
     @Inject private lateinit var memberService: MemberService
 
-    fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType) =
+    suspend fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType) =
         repository.findAllByEntityUuidAndType(entityUuid, type)
 
-    fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime) = repository.findAllNeededUpdate(lastUpdateDateTime)
+    suspend fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime) = repository.findAllNeededUpdate(lastUpdateDateTime)
 
-    fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) =
+    suspend fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType) =
         repository.findByEntityUuidTypeAndActive(entityUuid, type)
 
-    fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = repository.findAllActiveWithUrlAndNotIn(uuids)
+    suspend fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>) = repository.findAllActiveWithUrlAndNotIn(uuids)
 
-    fun deleteAllByEntityUuid(entityUuid: UUID) {
+    suspend fun deleteAllByEntityUuid(entityUuid: UUID) {
         val attachments = repository.findAllByEntityUuid(entityUuid)
         attachments.forEach { getFile(it).delete() }
         repository.deleteAll(attachments)
     }
 
-    fun getAttachmentCountsByDate() = repository.getCumulativeAttachmentCounts()
+    suspend fun getAttachmentCountsByDate() = repository.getCumulativeAttachmentCounts()
 
     private fun scheduleInvalidation() {
         synchronized(this) {
@@ -74,7 +74,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         }
     }
 
-    fun createAttachmentOrMarkAsActive(entityUuid: UUID, type: ImageType, url: String? = null, bytes: ByteArray? = null, async: Boolean = true): Attachment {
+    suspend fun createAttachmentOrMarkAsActive(entityUuid: UUID, type: ImageType, url: String? = null, bytes: ByteArray? = null, async: Boolean = true): Attachment {
         val attachments = findAllByEntityUuidAndType(entityUuid, type)
         val existingAttachment = attachments.find { it.url == url }
 
@@ -104,7 +104,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         return attachment
     }
 
-    fun encodeAllActiveWithUrlAndWithoutFile() {
+    suspend fun encodeAllActiveWithUrlAndWithoutFile() {
         val now = ZonedDateTime.now()
         val existingFiles = Constant.imagesFolder.list().mapNotNull {
             runCatching { UUID.fromString(it.substringBeforeLast(".")) }.getOrNull()
@@ -135,7 +135,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
      *
      * @throws IllegalArgumentException If both `url` and `bytes` are null.
      */
-    fun encodeAttachment(attachment: Attachment, url: String?, bytes: ByteArray?, async: Boolean = true) {
+    suspend fun encodeAttachment(attachment: Attachment, url: String?, bytes: ByteArray?, async: Boolean = true) {
         // Ensure that at least one of `url` or `bytes` is provided
         require(!url.isNullOrBlank() || !bytes.isNullOrEmpty()) { "Either url or bytes must be provided" }
 
@@ -146,7 +146,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         inProgressAttachments.add(uuid)
 
         // Define the encoding task
-        val task = {
+        val task = suspend {
             try {
                 // Perform the encoding process
                 taskEncode(attachment, url, bytes)
@@ -157,7 +157,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         }
 
         // Execute the task asynchronously or synchronously based on the `async` flag
-        if (async) threadPool.submit(task) else task()
+        if (async) threadPool.submit { runBlocking { task() } } else task()
     }
 
     private fun getFileName(attachment: Attachment) = "${attachment.uuid}.webp"
@@ -172,7 +172,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         imageCache[attachment.uuid!!] = bytes
     }
 
-    private fun removeFile(attachment: Attachment) {
+    private suspend fun removeFile(attachment: Attachment) {
         if (!getFile(attachment).delete())
             logger.warning("Failed to delete file ${getFile(attachment)}")
 
@@ -183,10 +183,10 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         scheduleInvalidation()
     }
 
-    private fun taskEncode(attachment: Attachment, url: String?, bytes: ByteArray?) {
+    private suspend fun taskEncode(attachment: Attachment, url: String?, bytes: ByteArray?) {
         val attachmentBytes = try {
             if (!url.isNullOrBlank() && bytes.isNullOrEmpty()) {
-                val (httpResponse, urlBytes) = runBlocking {
+                val (httpResponse, urlBytes) = run {
                     val response = HttpRequest.retryOnTimeout(3) {
                         HttpRequest.get(
                             url,
@@ -217,7 +217,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
         encodeImage(attachment, attachmentBytes)
     }
     
-    private fun encodeImage(attachment: Attachment, bytes: ByteArray) {
+    private suspend fun encodeImage(attachment: Attachment, bytes: ByteArray) {
         val take = measureTimeMillis {
             try {
                 if (bytes.isEmpty()) {
@@ -257,7 +257,7 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
      * 2. Removes attachments that are no longer associated with valid UUIDs.
      * 3. Deletes files in the images folder that are not linked to active attachments or are in progress.
      */
-    fun cleanUnusedAttachments() {
+    suspend fun cleanUnusedAttachments() {
         val now = System.currentTimeMillis()
 
         // Retrieve all valid UUIDs from anime, episode mappings, and members

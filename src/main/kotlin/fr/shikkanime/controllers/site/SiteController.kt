@@ -25,12 +25,12 @@ class SiteController {
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
 
-    private fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
+    private suspend fun getFullAnimesSimulcast(): MutableList<AnimeDto> {
         val animeSimulcastLimit = 6
 
         val animes = animeCacheService.findAllBy(
             CountryCode.FR,
-            simulcastCacheService.currentSimulcast?.uuid,
+            simulcastCacheService.currentSimulcast()?.uuid,
             null,
             null,
             listOf(SortParameter("name", SortParameter.Order.ASC)),
@@ -59,7 +59,7 @@ class SiteController {
 
     @Path
     @Get
-    private fun home(@QueryParam searchTypes: Array<LangType>?) = Response.template(
+    private suspend fun home(@QueryParam searchTypes: Array<LangType>?) = Response.template(
         Link.HOME,
         mutableMapOf(
             "animes" to getFullAnimesSimulcast(),
@@ -82,7 +82,7 @@ class SiteController {
 
     @Path("catalog/{slug}")
     @Get
-    private fun catalogSimulcast(
+    private suspend fun catalogSimulcast(
         @PathParam slug: String,
         @QueryParam searchTypes: Array<LangType>?,
     ): Response {
@@ -109,7 +109,7 @@ class SiteController {
         )
     }
 
-    private fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null, sort: String? = null): Response {
+    private suspend fun getAnimeDetail(slug: String, season: Int? = null, page: Int? = null, sort: String? = null): Response {
         val isNewest = sort.equals("newest", true)
         val dto = animeCacheService.findBySlug(CountryCode.FR, slug) ?: return Response.notFound()
         val seasonDto = dto.seasons?.firstOrNull { it.number == (season ?: it.number) } ?: return Response.redirect("/animes/$slug")
@@ -150,11 +150,11 @@ class SiteController {
 
     @Path("animes/{slug}")
     @Get
-    private fun animeDetail(@PathParam slug: String) = getAnimeDetail(slug)
+    private suspend fun animeDetail(@PathParam slug: String) = getAnimeDetail(slug)
 
     @Path("animes/{slug}/season-{season}")
     @Get
-    private fun animeDetailBySeason(
+    private suspend fun animeDetailBySeason(
         @PathParam slug: String,
         @PathParam season: Int?,
         @QueryParam page: Int?,
@@ -163,7 +163,7 @@ class SiteController {
 
     @Path("animes/{slug}/season-{season}/{episodeSlug}")
     @Get
-    private fun episodeDetails(
+    private suspend fun episodeDetails(
         @PathParam slug: String,
         @PathParam season: Int,
         @PathParam episodeSlug: String
@@ -215,7 +215,7 @@ class SiteController {
 
     @Path("calendar")
     @Get
-    private fun calendar(
+    private suspend fun calendar(
         @QueryParam date: String?,
         @QueryParam searchTypes: Array<LangType>?,
     ): Response {
@@ -244,7 +244,7 @@ class SiteController {
 
     @Path("analytics")
     @Get
-    private fun analytics(
+    private suspend fun analytics(
         @QueryParam("startYear") startYearParam: Int?,
         @QueryParam("endYear") endYearParam: Int?,
     ): Response {

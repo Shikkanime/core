@@ -12,10 +12,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class TraceActionRepository : AbstractRepository<TraceAction>() {
-    override fun getEntityClass() = TraceAction::class.java
-
-    fun findAllByEntityUuid(entityUuid: UUID): List<TraceAction> {
-        return database.entityManager.use {
+    suspend fun findAllByEntityUuid(entityUuid: UUID): List<TraceAction> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -29,8 +27,8 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int): Pageable<TraceAction> {
-        return database.entityManager.use {
+    suspend fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int): Pageable<TraceAction> {
+        return dispatchSuspending {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -46,8 +44,8 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getReturningUserUuids(since: ZonedDateTime, minDays: Int): List<UUID> {
-        return database.entityManager.use { em ->
+    suspend fun getReturningUserUuids(since: ZonedDateTime, minDays: Int): List<UUID> {
+        return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
@@ -65,10 +63,10 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun findLastLoginsByEntityUuids(returningUuids: List<UUID>): List<UUID> {
+    suspend fun findLastLoginsByEntityUuids(returningUuids: List<UUID>): List<UUID> {
         if (returningUuids.isEmpty()) return emptyList()
 
-        return database.entityManager.use { em ->
+        return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
@@ -94,10 +92,10 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getDailyReturningUserCount(since: ZonedDateTime, returningUuids: List<UUID>): List<TraceActionService.DateVersionCountDto> {
+    suspend fun getDailyReturningUserCount(since: ZonedDateTime, returningUuids: List<UUID>): List<TraceActionService.DateVersionCountDto> {
         if (returningUuids.isEmpty()) return emptyList()
 
-        return database.entityManager.use { em ->
+        return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(TraceActionService.DateVersionCountDto::class.java)
             val root = query.from(getEntityClass())
@@ -124,13 +122,13 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getDailyWmaCount(since: ZonedDateTime, returningUuids: List<UUID>): List<KeyCountDto> {
+    suspend fun getDailyWmaCount(since: ZonedDateTime, returningUuids: List<UUID>): List<KeyCountDto> {
         if (returningUuids.isEmpty()) return emptyList()
 
         val wmaPeriod = 7
         val wmaSumOfWeights = (1..wmaPeriod).sum().toDouble()
 
-        val dailyCounts = database.entityManager.use { em ->
+        val dailyCounts = dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -162,7 +160,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }.toList()
     }
 
-    private fun getCountPerJsonKey(
+    private suspend fun getCountPerJsonKey(
         since: ZonedDateTime,
         traceActionUuids: List<UUID>,
         jsonKey: String,
@@ -170,7 +168,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
     ): List<KeyCountDto> {
         if (traceActionUuids.isEmpty()) return emptyList()
 
-        return database.entityManager.use { em ->
+        return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(KeyCountDto::class.java)
             val root = query.from(getEntityClass())
@@ -196,11 +194,11 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         }
     }
 
-    fun getAppVersionCount(since: ZonedDateTime, lastLoginTraceActionUuids: List<UUID>) = getCountPerJsonKey(since, lastLoginTraceActionUuids, "appVersion")
+    suspend fun getAppVersionCount(since: ZonedDateTime, lastLoginTraceActionUuids: List<UUID>) = getCountPerJsonKey(since, lastLoginTraceActionUuids, "appVersion")
 
-    fun getLocaleCount(since: ZonedDateTime, lastLoginTraceActionUuids: List<UUID>) = getCountPerJsonKey(since, lastLoginTraceActionUuids, "locale") { cb, keyExpr ->
+    suspend fun getLocaleCount(since: ZonedDateTime, lastLoginTraceActionUuids: List<UUID>) = getCountPerJsonKey(since, lastLoginTraceActionUuids, "locale") { cb, keyExpr ->
         cb.substring(keyExpr, 1, 2)
     }
 
-    fun getDeviceCount(since: ZonedDateTime, lastLoginTraceActionUuids: List<UUID>) = getCountPerJsonKey(since, lastLoginTraceActionUuids, "device")
+    suspend fun getDeviceCount(since: ZonedDateTime, lastLoginTraceActionUuids: List<UUID>) = getCountPerJsonKey(since, lastLoginTraceActionUuids, "device")
 }

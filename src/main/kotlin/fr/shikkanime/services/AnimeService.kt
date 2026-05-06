@@ -37,7 +37,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     @Inject private lateinit var platformFactory: PlatformFactory
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
 
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         simulcastUuid: UUID?,
         name: String?,
@@ -47,9 +47,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         limit: Int,
     ) = repository.findAllBy(countryCode, simulcastUuid, name, searchTypes, sort, page, limit)
 
-    fun findAllBySimulcast(simulcastUuid: UUID) = repository.findAllBySimulcast(simulcastUuid)
+    suspend fun findAllBySimulcast(simulcastUuid: UUID) = repository.findAllBySimulcast(simulcastUuid)
 
-    fun findAllNeedUpdate(): List<Anime> {
+    suspend fun findAllNeedUpdate(): List<Anime> {
         val simulcasts = simulcastCacheService.findAll()
 
         val currentSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_CURRENT_SEASON, 7).toLong()
@@ -65,11 +65,11 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         )
     }
 
-    fun findAllAudioLocales(uuid: UUID) = repository.findAllAudioLocales(uuid)
+    suspend fun findAllAudioLocales(uuid: UUID) = repository.findAllAudioLocales(uuid)
 
-    fun findAllSeasons(uuid: UUID) = repository.findAllSeasons(uuid)
+    suspend fun findAllSeasons(uuid: UUID) = repository.findAllSeasons(uuid)
 
-    fun findAllSimulcastedWithAnimePlatformInvalid(
+    suspend fun findAllSimulcastedWithAnimePlatformInvalid(
         simulcastUuids: Collection<UUID>,
         platform: Platform,
         lastValidateDateTime: ZonedDateTime,
@@ -81,16 +81,16 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         ignoreAudioLocale
     )
 
-    fun findAllSlugs() = repository.findAllSlugs()
+    suspend fun findAllSlugs() = repository.findAllSlugs()
 
-    fun preIndex() = repository.preIndex()
+    suspend fun preIndex() = repository.preIndex()
 
-    fun findBySlug(countryCode: CountryCode, slug: String) = repository.findBySlug(countryCode, slug)
+    suspend fun findBySlug(countryCode: CountryCode, slug: String) = repository.findBySlug(countryCode, slug)
 
-    fun findByName(countryCode: CountryCode, name: String?) =
+    suspend fun findByName(countryCode: CountryCode, name: String?) =
         repository.findByName(countryCode, name)
 
-    fun getWeeklyAnimes(
+    suspend fun getWeeklyAnimes(
         countryCode: CountryCode,
         memberUuid: UUID?,
         startOfWeekDay: LocalDate,
@@ -104,7 +104,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         val endOfCurrentWeek = startOfWeekDay.atEndOfWeek().atEndOfTheDay(zoneId)
         val currentWeekRange = startOfCurrentWeek..endOfCurrentWeek
 
-        val followed = memberUuid?.let(memberFollowAnimeService::findAllFollowedAnimesUUID)
+        val followed = memberUuid?.let { memberFollowAnimeService.findAllFollowedAnimesUUID(it) }
 
         val indexes = GroupedIndexer.filterAndSortDataRecords(
             filter = { (data, record) ->
@@ -198,7 +198,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         }
     }
 
-    fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
+    suspend fun addSimulcastToAnime(anime: Anime, simulcast: Simulcast): Boolean {
         if (anime.simulcasts.none { it.uuid == simulcast.uuid }) {
             simulcast.uuid ?: simulcastService.save(simulcast)
             anime.simulcasts.add(simulcast)
@@ -208,7 +208,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return false
     }
 
-    fun recalculateSimulcasts() {
+    suspend fun recalculateSimulcasts() {
         val ignoreEpisodeTypes = setOf(EpisodeType.SUMMARY)
 
         repository.deleteAllWithoutEpisodes()
@@ -254,7 +254,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         episodeMappingService.updateAllSimulcast(episodeSimulcasts)
     }
 
-    override fun save(entity: Anime): Anime {
+    override suspend fun save(entity: Anime): Anime {
         entity.simulcasts = entity.simulcasts.map { simulcast ->
             simulcastService.findBySeasonAndYear(simulcast.season!!, simulcast.year!!) ?: simulcastService.save(simulcast)
         }.toMutableSet()
@@ -263,7 +263,7 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
         return super.save(entity)
     }
 
-    override fun delete(entity: Anime) {
+    override suspend fun delete(entity: Anime) {
         episodeMappingService.findAllByAnime(entity).forEach { episodeMappingService.delete(it) }
         memberFollowAnimeService.findAllByAnime(entity).forEach { memberFollowAnimeService.delete(it) }
         animePlatformService.findAllByAnime(entity).forEach { animePlatformService.delete(it) }

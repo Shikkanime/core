@@ -6,7 +6,7 @@ import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.utils.withUTCString
 
 class SeasonFactory : IGenericFactory<Season, SeasonDto> {
-    override fun toDto(entity: Season): SeasonDto {
+    override suspend fun toDto(entity: Season): SeasonDto {
         return SeasonDto(
             entity.number,
             entity.releaseDateTime.withUTCString(),

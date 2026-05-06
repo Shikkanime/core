@@ -5,7 +5,7 @@ import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.factories.IGenericFactory
 
 class PlatformFactory : IGenericFactory<Platform, PlatformDto> {
-    override fun toDto(entity: Platform) = PlatformDto(
+    override suspend fun toDto(entity: Platform) = PlatformDto(
         id = entity.name,
         name = entity.platformName,
         url = entity.url,
@@ -13,5 +13,5 @@ class PlatformFactory : IGenericFactory<Platform, PlatformDto> {
         isStreaming = entity.isStreamingPlatform
     )
 
-    override fun toEntity(dto: PlatformDto) = Platform.findByName(dto.name)!!
+    override suspend fun toEntity(dto: PlatformDto) = Platform.findByName(dto.name)!!
 }

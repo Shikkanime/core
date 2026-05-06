@@ -10,7 +10,7 @@ import java.util.*
 
 class ConfigServiceTest : AbstractTest() {
     @Test
-    fun updateConfigSuccessfully() {
+    suspend fun updateConfigSuccessfully() {
         val saved = configService.save(Config(null, "propertyName", "oldValue"))
         val configDto = ConfigDto(null, "propertyName", "newValue")
         val result = configService.update(saved.uuid!!, configDto)
@@ -22,7 +22,7 @@ class ConfigServiceTest : AbstractTest() {
     }
 
     @Test
-    fun updateConfigNoChange() {
+    suspend fun updateConfigNoChange() {
         val saved = configService.save(Config(null, "propertyName", "sameValue"))
         val configDto = ConfigDto(null, "propertyName", "sameValue")
         val result = configService.update(saved.uuid!!, configDto)
@@ -34,7 +34,7 @@ class ConfigServiceTest : AbstractTest() {
     }
 
     @Test
-    fun updateConfigNotFound() {
+    suspend fun updateConfigNotFound() {
         val uuid = UUID.randomUUID()
         val configDto = ConfigDto(null, "propertyName", "newValue")
         val result = configService.update(uuid, configDto)

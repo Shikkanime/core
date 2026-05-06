@@ -9,7 +9,7 @@ class MarketShareFactory : IGenericFactory<MarketShare, MarketShareDto> {
     @Inject private lateinit var simulcastFactory: SimulcastFactory
     @Inject private lateinit var platformFactory: PlatformFactory
 
-    override fun toDto(entity: MarketShare) = MarketShareDto(
+    override suspend fun toDto(entity: MarketShare) = MarketShareDto(
         simulcast = simulcastFactory.toDto(entity.simulcast),
         platform = platformFactory.toDto(entity.platform),
         value = entity.value

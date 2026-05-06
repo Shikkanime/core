@@ -9,7 +9,7 @@ import fr.shikkanime.utils.withUTCString
 class AnimePlatformFactory : IGenericFactory<AnimePlatform, AnimePlatformDto> {
     @Inject private lateinit var platformFactory: PlatformFactory
 
-    override fun toDto(entity: AnimePlatform) = AnimePlatformDto(
+    override suspend fun toDto(entity: AnimePlatform) = AnimePlatformDto(
         uuid = entity.uuid,
         platform = platformFactory.toDto(entity.platform!!),
         platformId = entity.platformId!!,

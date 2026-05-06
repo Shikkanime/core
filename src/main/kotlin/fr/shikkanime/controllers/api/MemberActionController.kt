@@ -21,7 +21,7 @@ class MemberActionController {
     @Path("/validate")
     @Post
     @JWTAuthenticated
-    fun validateAction(
+    suspend fun validateAction(
         @QueryParam uuid: UUID?,
         @BodyParam action: String?
     ): Response {

@@ -7,7 +7,7 @@ import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.repositories.GroupedEpisodeRepository
 
 class GroupedEpisodeService : AbstractService<EpisodeMapping, GroupedEpisodeRepository>() {
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         searchTypes: Array<LangType>?,
         sort: List<SortParameter>,

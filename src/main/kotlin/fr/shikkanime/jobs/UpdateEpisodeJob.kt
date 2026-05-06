@@ -49,7 +49,7 @@ class UpdateEpisodeJob : AbstractJob {
     @Inject private lateinit var netflixPlatform: NetflixPlatform
     @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
-    private fun <T> updateIfChanged(
+    private inline fun <T> updateIfChanged(
         identifier: String,
         fieldName: String,
         candidate: T?,
@@ -358,18 +358,18 @@ class UpdateEpisodeJob : AbstractJob {
     }
 
     private suspend fun fetchADN(context: Context) {
-        val video = fetchOrSkip(context.variantIdentifierInTimeout, context.episodeVariant) {
+        val episode = fetchOrSkip(context.variantIdentifierInTimeout, context.episodeVariant) {
             if (context.shouldIgnoreCache)
-                AnimationDigitalNetworkWrapper.getVideo(context.countryCode, context.episodePlatformId.toInt())
+                AnimationDigitalNetworkWrapper.getEpisode(context.countryCode.locale, context.episodePlatformId.toInt())
             else
-                AnimationDigitalNetworkCachedWrapper.getVideo(context.countryCode, context.episodePlatformId.toInt())
+                AnimationDigitalNetworkCachedWrapper.getEpisode(context.countryCode.locale, context.episodePlatformId.toInt())
         } ?: return
 
         context.platformEpisodes.addAll(
             runCatching {
                 animationDigitalNetworkPlatform.convertEpisode(
                     context.countryCode,
-                    video,
+                    episode,
                     context.zonedDateTime,
                     needSimulcast = false,
                     checkAnimation = false
@@ -380,16 +380,16 @@ class UpdateEpisodeJob : AbstractJob {
         fetchNeighbors(
             context,
             getPrevious = {
-                AnimationDigitalNetworkCachedWrapper.getPreviousVideo(
-                    context.countryCode,
-                    video.show.id,
+                AnimationDigitalNetworkCachedWrapper.getPreviousEpisode(
+                    context.countryCode.locale,
+                    episode.show.id,
                     it.toInt()
                 )
             },
             getNext = {
-                AnimationDigitalNetworkCachedWrapper.getNextVideo(
-                    context.countryCode,
-                    video.show.id,
+                AnimationDigitalNetworkCachedWrapper.getNextEpisode(
+                    context.countryCode.locale,
+                    episode.show.id,
                     it.toInt()
                 )
             },
@@ -397,7 +397,7 @@ class UpdateEpisodeJob : AbstractJob {
                 runCatching {
                     animationDigitalNetworkPlatform.convertEpisode(
                         context.countryCode,
-                        it as AbstractAnimationDigitalNetworkWrapper.Video,
+                        it as AbstractAnimationDigitalNetworkWrapper.Episode,
                         context.zonedDateTime,
                         needSimulcast = false,
                         checkAnimation = false
@@ -465,18 +465,16 @@ class UpdateEpisodeJob : AbstractJob {
     private suspend fun fetchDisneyPlus(context: Context) {
         val animePlatformIds =
             animePlatformService.findAllIdByAnimeAndPlatform(context.anime, context.episodeVariant.platform!!)
-        val shouldCheckAudioLocales =
-            configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
+                .ifEmpty { listOf(DisneyPlusCachedWrapper.getShowIdByEpisodeId(context.episodePlatformId)) }
 
         val episodes = animePlatformIds.flatMap { animePlatformId ->
             fetchOrSkip(context.variantIdentifierInTimeout, context.episodeVariant) {
                 if (context.shouldIgnoreCache)
-                    DisneyPlusWrapper.getEpisodesByShowId(context.countryCode, animePlatformId, shouldCheckAudioLocales)
+                    DisneyPlusWrapper.getEpisodesByShowId(context.countryCode.locale, animePlatformId)
                 else
                     DisneyPlusCachedWrapper.getEpisodesByShowId(
-                        context.countryCode,
-                        animePlatformId,
-                        shouldCheckAudioLocales
+                        context.countryCode.locale,
+                        animePlatformId
                     )
             }?.toList() ?: emptyList()
         }
@@ -498,18 +496,16 @@ class UpdateEpisodeJob : AbstractJob {
             context,
             getPrevious = {
                 DisneyPlusCachedWrapper.getPreviousEpisode(
-                    context.countryCode,
+                    context.countryCode.locale,
                     episode.show.id,
-                    it,
-                    shouldCheckAudioLocales
+                    it
                 )
             },
             getNext = {
                 DisneyPlusCachedWrapper.getNextEpisode(
-                    context.countryCode,
+                    context.countryCode.locale,
                     episode.show.id,
-                    it,
-                    shouldCheckAudioLocales
+                    it
                 )
             },
             convert = {
@@ -531,9 +527,9 @@ class UpdateEpisodeJob : AbstractJob {
         val episodes = animePlatformIds.flatMap { animePlatformId ->
             fetchOrSkip(context.variantIdentifierInTimeout, context.episodeVariant) {
                 if (context.shouldIgnoreCache)
-                    NetflixWrapper.getEpisodesByShowId(context.countryCode, animePlatformId.toInt())
+                    NetflixWrapper.getEpisodesByShowId(context.countryCode.locale, animePlatformId.toInt())
                 else
-                    NetflixCachedWrapper.getEpisodesByShowId(context.countryCode, animePlatformId.toInt())
+                    NetflixCachedWrapper.getEpisodesByShowId(context.countryCode.locale, animePlatformId.toInt())
             }?.toList() ?: emptyList()
         }
 
@@ -552,8 +548,8 @@ class UpdateEpisodeJob : AbstractJob {
 
         fetchNeighbors(
             context,
-            getPrevious = { NetflixCachedWrapper.getPreviousEpisode(context.countryCode, episode.show.id, it.toInt()) },
-            getNext = { NetflixCachedWrapper.getNextEpisode(context.countryCode, episode.show.id, it.toInt()) },
+            getPrevious = { NetflixCachedWrapper.getPreviousEpisode(context.countryCode.locale, episode.show.id, it.toInt()) },
+            getNext = { NetflixCachedWrapper.getNextEpisode(context.countryCode.locale, episode.show.id, it.toInt()) },
             convert = {
                 runCatching {
                     netflixPlatform.convertEpisode(
@@ -572,9 +568,9 @@ class UpdateEpisodeJob : AbstractJob {
         val episodes = animePlatformIds.flatMap { animePlatformId ->
             fetchOrSkip(context.variantIdentifierInTimeout, context.episodeVariant) {
                 if (context.shouldIgnoreCache)
-                    PrimeVideoWrapper.getEpisodesByShowId(context.countryCode, animePlatformId)
+                    PrimeVideoWrapper.getEpisodesByShowId(context.countryCode.locale, animePlatformId)
                 else
-                    PrimeVideoCachedWrapper.getEpisodesByShowId(context.countryCode, animePlatformId)
+                    PrimeVideoCachedWrapper.getEpisodesByShowId(context.countryCode.locale, animePlatformId)
             }?.toList() ?: emptyList()
         }
 
@@ -594,8 +590,8 @@ class UpdateEpisodeJob : AbstractJob {
 
         fetchNeighbors(
             context,
-            getPrevious = { PrimeVideoCachedWrapper.getPreviousEpisode(context.countryCode, episode.show.id, it) },
-            getNext = { PrimeVideoCachedWrapper.getNextEpisode(context.countryCode, episode.show.id, it) },
+            getPrevious = { PrimeVideoCachedWrapper.getPreviousEpisode(context.countryCode.locale, episode.show.id, it) },
+            getNext = { PrimeVideoCachedWrapper.getNextEpisode(context.countryCode.locale, episode.show.id, it) },
             convert = {
                 runCatching {
                     primeVideoPlatform.convertEpisode(

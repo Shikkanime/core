@@ -39,7 +39,7 @@ class UpdateAnimeJob : AbstractJob {
     @Inject private lateinit var animePlatformService: AnimePlatformService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    private fun <T> updateIfChanged(
+    private inline fun <T> updateIfChanged(
         identifier: String,
         fieldName: String,
         candidate: T?,
@@ -215,7 +215,7 @@ class UpdateAnimeJob : AbstractJob {
     private suspend fun fetchADN(context: Context) {
         val show = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
             AnimationDigitalNetworkCachedWrapper.getShow(
-                context.countryCode.name,
+                context.countryCode.locale,
                 context.animePlatform.platformId!!.toInt()
             )
         } ?: return
@@ -261,7 +261,7 @@ class UpdateAnimeJob : AbstractJob {
 
     private suspend fun fetchDisneyPlus(context: Context) {
         val show = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
-            DisneyPlusCachedWrapper.getShow(context.animePlatform.platformId!!)
+            DisneyPlusCachedWrapper.getShow(context.countryCode.locale, context.animePlatform.platformId!!)
         } ?: return
 
         context.animeDatas.add(
@@ -281,7 +281,7 @@ class UpdateAnimeJob : AbstractJob {
 
     private suspend fun fetchNetflix(context: Context) {
         val episodes = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
-            NetflixCachedWrapper.getEpisodesByShowId(context.countryCode, context.animePlatform.platformId!!.toInt())
+            NetflixCachedWrapper.getEpisodesByShowId(context.countryCode.locale, context.animePlatform.platformId!!.toInt())
         } ?: return
 
         if (episodes.isEmpty()) {
@@ -308,7 +308,7 @@ class UpdateAnimeJob : AbstractJob {
 
     private suspend fun fetchPrimeVideo(context: Context) {
         val episodes = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
-            PrimeVideoCachedWrapper.getEpisodesByShowId(context.countryCode, context.animePlatform.platformId!!)
+            PrimeVideoCachedWrapper.getEpisodesByShowId(context.countryCode.locale, context.animePlatform.platformId!!)
         } ?: return
 
         if (episodes.isEmpty()) {

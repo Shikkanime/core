@@ -8,10 +8,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class MemberActionRepository : AbstractRepository<MemberAction>() {
-    override fun getEntityClass() = MemberAction::class.java
-
-    fun findAllByMember(memberUuid: UUID): List<MemberAction> {
-        return database.entityManager.use {
+    suspend fun findAllByMember(memberUuid: UUID): List<MemberAction> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -25,8 +23,8 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
         }
     }
 
-    fun findAllNotValidated(): List<MemberAction> {
-        return database.entityManager.use {
+    suspend fun findAllNotValidated(): List<MemberAction> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -41,8 +39,8 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
         }
     }
 
-    fun findByUuidAndCode(uuid: UUID, code: String): MemberAction? {
-        return database.entityManager.use {
+    suspend fun findByUuidAndCode(uuid: UUID, code: String): MemberAction? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

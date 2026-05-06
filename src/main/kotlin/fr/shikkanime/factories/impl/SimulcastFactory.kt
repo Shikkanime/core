@@ -6,7 +6,7 @@ import fr.shikkanime.entities.enums.Season
 import fr.shikkanime.factories.IGenericFactory
 
 class SimulcastFactory : IGenericFactory<Simulcast, SimulcastDto> {
-    override fun toDto(entity: Simulcast) = SimulcastDto(
+    override suspend fun toDto(entity: Simulcast) = SimulcastDto(
         uuid = entity.uuid,
         season = entity.season!!,
         year = entity.year!!,

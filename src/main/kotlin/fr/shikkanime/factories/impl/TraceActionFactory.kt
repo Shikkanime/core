@@ -6,7 +6,7 @@ import fr.shikkanime.factories.IGenericFactory
 import fr.shikkanime.utils.withUTCString
 
 class TraceActionFactory : IGenericFactory<TraceAction, TraceActionDto> {
-    override fun toDto(entity: TraceAction) = TraceActionDto(
+    override suspend fun toDto(entity: TraceAction) = TraceActionDto(
         uuid = entity.uuid!!,
         actionDateTime = entity.actionDateTime!!.withUTCString(),
         entityType = entity.entityType!!,

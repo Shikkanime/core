@@ -76,13 +76,17 @@ private const val PERMISSIONS_POLICY_VALUE = "geolocation=(), microphone=()"
 private const val X_XSS_PROTECTION_HEADER = "X-XSS-Protection"
 private const val X_XSS_PROTECTION_VALUE = "1; mode=block"
 
-fun Application.configureRouting() {
-    monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
+private val callStartedPlugin = createApplicationPlugin("CallStartedPlugin") {
+    onCall { call ->
         call.attributes.put(callStartTime, ZonedDateTime.now())
         // If call is completed, the headers are already set
-        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@subscribe
+        if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.USE_SECURITY_HEADERS)) return@onCall
         setSecurityHeaders(call)
     }
+}
+
+fun Application.configureRouting() {
+    install(callStartedPlugin)
 
     monitor.subscribe(RoutingRoot.RoutingCallFinished) { call ->
         logCallDetails(call)
@@ -98,7 +102,7 @@ fun Application.configureRouting() {
     }
 }
 
-private fun setSecurityHeaders(call: ApplicationCall) {
+private suspend fun setSecurityHeaders(call: ApplicationCall) {
     val authorizedDomains = configCacheService.getValueAsStringList(ConfigPropertyKey.AUTHORIZED_DOMAINS).joinToString(StringUtils.SPACE_STRING).trim()
 
     call.response.headers.apply {

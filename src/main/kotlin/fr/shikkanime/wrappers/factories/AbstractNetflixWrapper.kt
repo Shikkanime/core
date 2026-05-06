@@ -2,7 +2,6 @@ package fr.shikkanime.wrappers.factories
 
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.MapCache
@@ -15,7 +14,7 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 
-abstract class AbstractNetflixWrapper {
+abstract class AbstractNetflixWrapper : IStreamingPlatformWrapper<Int, AbstractNetflixWrapper.Show, AbstractNetflixWrapper.Episode> {
     data class NetflixAuthentification(
         val id: String,
         val secureId: String,
@@ -41,7 +40,7 @@ abstract class AbstractNetflixWrapper {
     ) : Serializable
 
     data class Show(
-        val id: Int,
+        override val id: Int,
         val name: String,
         val thumbnail: String?,
         val banner: String,
@@ -56,7 +55,7 @@ abstract class AbstractNetflixWrapper {
         val runtimeSec: Long? = null,
         val metadata: ShowMetadata? = null,
         val json: JsonObject? = null,
-    ) : Serializable
+    ) : Serializable, IStreamingPlatformWrapper.Id<Int>
 
     data class Season(
         val id: Int,
@@ -67,7 +66,7 @@ abstract class AbstractNetflixWrapper {
     data class Episode(
         val show: Show,
         val oldId: String,
-        val id: Int,
+        override val id: Int,
         val releaseDateTime: ZonedDateTime?,
         val season: Int,
         val episodeType: EpisodeType,
@@ -78,7 +77,7 @@ abstract class AbstractNetflixWrapper {
         val image: String,
         val duration: Long,
         val audioLocales: Set<String>,
-    ) : Serializable
+    ) : Serializable, IStreamingPlatformWrapper.Id<Int>
 
     protected val baseUrl = "https://www.netflix.com"
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
@@ -112,8 +111,6 @@ abstract class AbstractNetflixWrapper {
             )
         }"
 
-    protected suspend fun HttpRequest.postGraphQL(countryCode: CountryCode, body: String) = postGraphQL(countryCode.locale, body)
-
     protected suspend fun HttpRequest.postGraphQL(locale: String, body: String): HttpResponse {
         val (id, secureId) = getNetflixAuthentification()
 
@@ -129,20 +126,4 @@ abstract class AbstractNetflixWrapper {
     }
 
     abstract suspend fun getLatestShows(): Array<LatestShow>
-    abstract suspend fun getShow(locale: String, id: Int): Show
-    abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: Int): Array<Episode>
-
-    suspend fun getPreviousEpisode(countryCode: CountryCode, showId: Int, episodeId: Int): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == 0) null else episodes[episodeIndex - 1]
-    }
-
-    suspend fun getNextEpisode(countryCode: CountryCode, showId: Int, episodeId: Int): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == episodes.size - 1) null else episodes[episodeIndex + 1]
-    }
 }

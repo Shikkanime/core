@@ -15,10 +15,10 @@ class GenreCacheService : ICacheService {
     @Inject private lateinit var genreService: GenreService
     @Inject private lateinit var genreFactory: GenreFactory
 
-    fun findAllByAnime(animeUuid: UUID) = MapCache.getOrCompute(
+    suspend fun findAllByAnime(animeUuid: UUID) = MapCache.getOrComputeAsync(
         "GenreCacheService.findAllByAnime",
         classes = listOf(Anime::class.java, Genre::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<GenreDto>>>() {},
         key = animeUuid,
-    ) { genreService.findAllByAnime(it).map(genreFactory::toDto).toTypedArray() }
+    ) { genreService.findAllByAnime(it).map { genre -> genreFactory.toDto(genre) }.toTypedArray() }
 }

@@ -13,7 +13,7 @@ object AniListMatchingService {
     private val tagService = Constant.injector.getInstance(TagService::class.java)
     private val animeTagService = Constant.injector.getInstance(AnimeTagService::class.java)
 
-    fun updateAnimeGenreAndTags(anime: Anime, shortName: String, media: AbstractAniListWrapper.Media?): Boolean {
+    suspend fun updateAnimeGenreAndTags(anime: Anime, shortName: String, media: AbstractAniListWrapper.Media?): Boolean {
         val currentGenres = genreService.findAllByAnime(anime.uuid!!)
         val currentAnimeTags = animeTagService.findAllByAnime(anime.uuid)
 
@@ -34,7 +34,7 @@ object AniListMatchingService {
         return genresChanged || tagsChanged
     }
 
-    private fun updateGenres(
+    private suspend fun updateGenres(
         anime: Anime,
         mediaGenres: List<String>,
         currentGenres: List<Genre>,
@@ -45,12 +45,12 @@ object AniListMatchingService {
 
         if (sortedMediaGenres == sortedCurrentGenres) return false
 
-        anime.genres = sortedMediaGenres.map(genreService::findOrSave).toMutableSet()
+        anime.genres = sortedMediaGenres.map { genreService.findOrSave(it) }.toMutableSet()
         logger.info("Genres updated for anime $shortName to ${sortedMediaGenres.joinToString()}")
         return true
     }
 
-    private fun updateTags(
+    private suspend fun updateTags(
         anime: Anime,
         mediaTags: List<AbstractAniListWrapper.Tag>,
         currentAnimeTags: List<AnimeTag>,
@@ -99,7 +99,7 @@ object AniListMatchingService {
         return true
     }
 
-    private fun updateExistingTagsMetadata(
+    private suspend fun updateExistingTagsMetadata(
         mediaTags: List<AbstractAniListWrapper.Tag>,
         currentAnimeTags: List<AnimeTag>
     ): Boolean {

@@ -13,7 +13,7 @@ import java.util.*
 class AttachmentCacheService : ICacheService {
     @Inject private lateinit var attachmentService: AttachmentService
 
-    fun findByEntityUuidTypeAndActive(uuid: UUID, type: ImageType) = MapCache.getOrComputeNullable(
+    suspend fun findByEntityUuidTypeAndActive(uuid: UUID, type: ImageType) = MapCache.getOrComputeNullableAsync(
         "AttachmentCacheService.findByEntityUuidTypeAndActive",
         classes = listOf(Attachment::class.java),
         typeToken = object : TypeToken<MapCacheValue<Attachment>>() {},

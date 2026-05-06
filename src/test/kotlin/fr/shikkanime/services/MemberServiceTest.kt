@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 class MemberServiceTest : AbstractTest() {
 
     @Test
-    fun disassociateEmail() {
+    suspend fun disassociateEmail() {
         val member = Member(
             username = "testuser",
             email = "test@example.com",
@@ -30,7 +30,7 @@ class MemberServiceTest : AbstractTest() {
     }
 
     @Test
-    fun deleteGDPR() {
+    suspend fun deleteGDPR() {
         val member = memberService.save(
             Member(
                 username = "testuser",

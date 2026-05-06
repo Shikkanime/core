@@ -5,7 +5,7 @@ import fr.shikkanime.entities.Genre
 import fr.shikkanime.factories.IGenericFactory
 
 class GenreFactory : IGenericFactory<Genre, GenreDto> {
-    override fun toDto(entity: Genre) = GenreDto(
+    override suspend fun toDto(entity: Genre) = GenreDto(
         uuid = entity.uuid,
         name = entity.name!!,
     )

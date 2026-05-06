@@ -20,7 +20,7 @@ class AnimeAdminServiceTest : AbstractTest() {
     @Inject private lateinit var animeAdminService: AnimeAdminService
 
     @Test
-    fun `update with no episodes`() {
+    suspend fun `update with no episodes`() {
         animeService.save(
             Anime(
                 countryCode = CountryCode.FR,
@@ -49,7 +49,7 @@ class AnimeAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `update with episodes`() {
+    suspend fun `update with episodes`() {
         val anime1 = animeService.save(
             Anime(
                 countryCode = CountryCode.FR,
@@ -128,7 +128,7 @@ class AnimeAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `update with episodes and follow`() {
+    suspend fun `update with episodes and follow`() {
         val member = memberService.register(StringUtils.generateRandomString(12))
 
         val anime1 = animeService.save(

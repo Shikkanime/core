@@ -1,12 +1,11 @@
 package fr.shikkanime.wrappers.factories
 
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.HttpRequest
 import java.io.Serializable
 import java.time.LocalDate
 import java.time.ZonedDateTime
 
-abstract class AbstractAnimationDigitalNetworkWrapper {
+abstract class AbstractAnimationDigitalNetworkWrapper : IStreamingPlatformWrapper<Int, AbstractAnimationDigitalNetworkWrapper.Show, AbstractAnimationDigitalNetworkWrapper.Episode> {
     companion object {
         private val sizeRegex = "\\d+x\\d+".toRegex()
         private val licenceSizeRegex = "\\d+x\\d+".toRegex()
@@ -20,7 +19,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
     ) : Serializable
 
     data class Show(
-        val id: Int,
+        override val id: Int,
         val shortTitle: String?,
         val title: String,
         val originalTitle: String?,
@@ -31,7 +30,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val simulcast: Boolean,
         val firstReleaseYear: String,
         val microdata: Microdata? = null,
-    ) : Serializable {
+    ) : Serializable, IStreamingPlatformWrapper.Id<Int> {
         val fullHDImage: String
             get() = image2x.replace(sizeRegex, "1560x2340")
                 .replace(afficheRegex, "/portrait-with-logo.width=1080,height=1920,quality=100")
@@ -48,8 +47,8 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
                 .replace(licenseRegex, "/logo.width=1920,quality=100")
     }
 
-    data class Video(
-        val id: Int,
+    data class Episode(
+        override val id: Int,
         val title: String,
         val season: String?,
         var releaseDate: ZonedDateTime?,
@@ -62,7 +61,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
         val duration: Long,
         val languages: List<String> = emptyList(),
         val show: Show,
-    ) : Serializable {
+    ) : Serializable, IStreamingPlatformWrapper.Id<Int> {
         val fullHDImage: String
             get() = image2x.replace(sizeRegex, "1920x1080")
                 .replace(epsRegex, "/eps.width=1920,height=1080,quality=100")
@@ -70,25 +69,8 @@ abstract class AbstractAnimationDigitalNetworkWrapper {
 
     protected val baseUrl = "https://gw.api.animationdigitalnetwork.com/"
 
-    protected suspend fun HttpRequest.getWithHeaders(countryCode: CountryCode, url: String) = getWithHeaders(countryCode.name, url)
-    protected suspend fun HttpRequest.getWithHeaders(country: String, url: String) = get(url, headers = mapOf("X-Source" to "Web", "X-Target-Distribution" to country.lowercase()))
+    protected suspend fun HttpRequest.getWithHeaders(locale: String, url: String) = get(url, headers = mapOf("X-Source" to "Web", "X-Target-Distribution" to locale.split("-").first().lowercase()))
 
-    abstract suspend fun getLatestVideos(countryCode: CountryCode, date: LocalDate): Array<Video>
-    abstract suspend fun getShow(country: String, id: Int): Show
-    abstract suspend fun getShowVideos(countryCode: CountryCode, id: Int): Array<Video>
-    abstract suspend fun getVideo(countryCode: CountryCode, id: Int): Video
-
-    suspend fun getPreviousVideo(countryCode: CountryCode, showId: Int, videoId: Int): Video? {
-        val videos = getShowVideos(countryCode, showId)
-        val videoIndex = videos.indexOfFirst { it.id == videoId }
-        require(videoIndex != -1) { "Video not found" }
-        return if (videoIndex == 0) null else videos[videoIndex - 1]
-    }
-
-    suspend fun getNextVideo(countryCode: CountryCode, showId: Int, videoId: Int): Video? {
-        val videos = getShowVideos(countryCode, showId)
-        val videoIndex = videos.indexOfFirst { it.id == videoId }
-        require(videoIndex != -1) { "Video not found" }
-        return if (videoIndex == videos.size - 1) null else videos[videoIndex + 1]
-    }
+    abstract suspend fun getLatestEpisodes(locale: String, date: LocalDate): Array<Episode>
+    abstract suspend fun getEpisode(locale: String, id: Int): Episode
 }

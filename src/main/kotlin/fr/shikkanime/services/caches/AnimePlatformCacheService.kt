@@ -16,21 +16,21 @@ class AnimePlatformCacheService : ICacheService {
     @Inject private lateinit var animePlatformService: AnimePlatformService
     @Inject private lateinit var animePlatformFactory: AnimePlatformFactory
 
-    fun findAllByAnime(anime: Anime) = MapCache.getOrCompute(
+    suspend fun findAllByAnime(anime: Anime) = MapCache.getOrComputeAsync(
         "AnimePlatformCacheService.findAllByAnime",
         classes = listOf(Anime::class.java, AnimePlatform::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
         key = anime.uuid!!,
-    ) { uuid -> animePlatformService.findAllByAnime(uuid).map(animePlatformFactory::toDto).toTypedArray() }
+    ) { uuid -> animePlatformService.findAllByAnime(uuid).map { animePlatformFactory.toDto(it) }.toTypedArray() }
 
-    fun findAllByPlatform(platform: Platform) = MapCache.getOrCompute(
+    suspend fun findAllByPlatform(platform: Platform) = MapCache.getOrComputeAsync(
         "AnimePlatformCacheService.findAllByPlatform",
         classes = listOf(AnimePlatform::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimePlatformDto>>>() {},
         key = platform,
-    ) { platform -> animePlatformService.findAllByPlatform(platform).map(animePlatformFactory::toDto).toTypedArray() }
+    ) { platform -> animePlatformService.findAllByPlatform(platform).map { animePlatformFactory.toDto(it) }.toTypedArray() }
 
-    fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) = MapCache.getOrCompute(
+    suspend fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform) = MapCache.getOrComputeAsync(
         "AnimePlatformCacheService.findAllIdByAnimeAndPlatform",
         classes = listOf(Anime::class.java, AnimePlatform::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},

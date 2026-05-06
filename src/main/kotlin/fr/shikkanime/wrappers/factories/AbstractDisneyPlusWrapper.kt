@@ -3,7 +3,6 @@ package fr.shikkanime.wrappers.factories
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
@@ -13,9 +12,9 @@ import kotlinx.coroutines.runBlocking
 import java.io.Serializable
 import java.time.Duration
 
-abstract class AbstractDisneyPlusWrapper {
+abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, AbstractDisneyPlusWrapper.Show, AbstractDisneyPlusWrapper.Episode> {
     data class Show(
-        val id: String,
+        override val id: String,
         val name: String,
         val image: String,
         val banner: String,
@@ -23,11 +22,11 @@ abstract class AbstractDisneyPlusWrapper {
         val title: String,
         val description: String?,
         val seasons: Set<String>
-    ) : Serializable
+    ) : Serializable, IStreamingPlatformWrapper.Id<String>
 
     data class Episode(
         val show: Show,
-        val id: String,
+        override val id: String,
         val oldId: String,
         val seasonId: String,
         val season: Int,
@@ -39,7 +38,7 @@ abstract class AbstractDisneyPlusWrapper {
         val duration: Long,
         val resourceId: String,
         val audioLocales: Array<String>
-    ) : Serializable {
+    ) : Serializable, IStreamingPlatformWrapper.Id<String> {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is Episode) return false
@@ -78,6 +77,7 @@ abstract class AbstractDisneyPlusWrapper {
     }
 
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
+    protected val configCacheService: ConfigCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
 
     @Synchronized
     private fun getAccessToken() = MapCache.getOrCompute(
@@ -87,8 +87,6 @@ abstract class AbstractDisneyPlusWrapper {
         typeToken = object : TypeToken<MapCacheValue<String>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
-        val configCacheService = Constant.injector.getInstance(ConfigCacheService::class.java)
-
         runBlocking {
             val response = HttpRequest.post(
                 "${baseUrl}graph/v1/device/graphql",
@@ -119,33 +117,16 @@ abstract class AbstractDisneyPlusWrapper {
     protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}").plus(headers), body = body)
 
     abstract suspend fun getLatestShowIds(): Array<String>
-    abstract suspend fun getShow(id: String): Show
-    abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, showId: String, checkAudioLocales: Boolean): Array<Episode>
-    abstract suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String): Array<String>
+
+    override suspend fun getEpisodesByShowId(locale: String, showId: String) = getEpisodesByShowId(
+        locale,
+        showId,
+        configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
+    )
+
+    abstract suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode>
+
+    abstract suspend fun getShowIdByEpisodeId(episodeId: String): String
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
-
-    suspend fun getPreviousEpisode(
-        countryCode: CountryCode,
-        showId: String,
-        episodeId: String,
-        checkAudioLocales: Boolean
-    ): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId, checkAudioLocales)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == 0) null else episodes[episodeIndex - 1]
-    }
-
-    suspend fun getNextEpisode(
-        countryCode: CountryCode,
-        showId: String,
-        episodeId: String,
-        checkAudioLocales: Boolean
-    ): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId, checkAudioLocales)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == episodes.size - 1) null else episodes[episodeIndex + 1]
-    }
 }

@@ -17,7 +17,7 @@ class AnalyticsCacheService : ICacheService {
     @Inject private lateinit var marketShareFactory: MarketShareFactory
     @Inject private lateinit var genreCoverageFactory: GenreCoverageFactory
 
-    fun getAllMarketShare(startYear: Int, endYear: Int) = MapCache.getOrCompute(
+    suspend fun getAllMarketShare(startYear: Int, endYear: Int) = MapCache.getOrComputeAsync(
         "AnalyticsCacheService.getAllMarketShare",
         classes = listOf(
             Anime::class.java,
@@ -28,10 +28,10 @@ class AnalyticsCacheService : ICacheService {
         typeToken = object : TypeToken<MapCacheValue<Array<MarketShareDto>>>() {},
         key = startYear to endYear
     ) { (startYear, endYear) ->
-        analyticsService.getAllMarketShare(startYear, endYear).map(marketShareFactory::toDto).toTypedArray()
+        analyticsService.getAllMarketShare(startYear, endYear).map { marketShareFactory.toDto(it) }.toTypedArray()
     }
 
-    fun getSubCoverage(countryCode: CountryCode, startYear: Int, endYear: Int) = MapCache.getOrCompute(
+    suspend fun getSubCoverage(countryCode: CountryCode, startYear: Int, endYear: Int) = MapCache.getOrComputeAsync(
         "AnalyticsCacheService.getSubCoverage",
         classes = listOf(
             Anime::class.java,
@@ -42,15 +42,15 @@ class AnalyticsCacheService : ICacheService {
         typeToken = object : TypeToken<MapCacheValue<Array<MarketShareDto>>>() {},
         key = Triple(countryCode, startYear, endYear)
     ) { (countryCode, startYear, endYear) ->
-        analyticsService.getSubCoverage(countryCode, startYear, endYear).map(marketShareFactory::toDto).toTypedArray()
+        analyticsService.getSubCoverage(countryCode, startYear, endYear).map { marketShareFactory.toDto(it) }.toTypedArray()
     }
 
-    fun getAllGenreCoverage(startYear: Int, endYear: Int) = MapCache.getOrCompute(
+    suspend fun getAllGenreCoverage(startYear: Int, endYear: Int) = MapCache.getOrComputeAsync(
         "AnalyticsCacheService.getAllGenreCoverage",
         classes = listOf(Anime::class.java, Genre::class.java, Simulcast::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<GenreCoverageDto>>>() {},
         key = startYear to endYear
     ) { (startYear, endYear) ->
-        analyticsService.getAllGenreCoverage(startYear, endYear).map(genreCoverageFactory::toDto).toTypedArray()
+        analyticsService.getAllGenreCoverage(startYear, endYear).map { genreCoverageFactory.toDto(it) }.toTypedArray()
     }
 }

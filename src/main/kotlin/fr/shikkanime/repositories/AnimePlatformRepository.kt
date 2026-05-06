@@ -7,10 +7,8 @@ import fr.shikkanime.entities.enums.Platform
 import java.util.*
 
 class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
-    override fun getEntityClass() = AnimePlatform::class.java
-
-    fun findAllByAnime(uuid: UUID): List<AnimePlatform> {
-        return database.entityManager.use {
+    suspend fun findAllByAnime(uuid: UUID): List<AnimePlatform> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -22,8 +20,8 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         }
     }
 
-    fun findAllByPlatform(platform: Platform): List<AnimePlatform> {
-        return database.entityManager.use {
+    suspend fun findAllByPlatform(platform: Platform): List<AnimePlatform> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -35,8 +33,8 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         }
     }
 
-    fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform): List<String> {
-        return database.entityManager.use {
+    suspend fun findAllIdByAnimeAndPlatform(animeUuid: UUID, platform: Platform): List<String> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
             val root = query.from(getEntityClass())
@@ -54,8 +52,8 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         }
     }
 
-    fun findByAnimePlatformAndId(animeUuid: UUID, platform: Platform, platformId: String): AnimePlatform? {
-        return database.entityManager.use {
+    suspend fun findByAnimePlatformAndId(animeUuid: UUID, platform: Platform, platformId: String): AnimePlatform? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

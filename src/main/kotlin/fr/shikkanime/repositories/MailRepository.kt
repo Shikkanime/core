@@ -4,10 +4,8 @@ import fr.shikkanime.entities.Mail
 import fr.shikkanime.entities.Mail_
 
 class MailRepository : AbstractRepository<Mail>() {
-    override fun getEntityClass() = Mail::class.java
-
-    fun findAllByRecipient(recipient: String): List<Mail> {
-        return database.entityManager.use {
+    suspend fun findAllByRecipient(recipient: String): List<Mail> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -21,8 +19,8 @@ class MailRepository : AbstractRepository<Mail>() {
         }
     }
 
-    fun findAllNotSent(): List<Mail> {
-        return database.entityManager.use {
+    suspend fun findAllNotSent(): List<Mail> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

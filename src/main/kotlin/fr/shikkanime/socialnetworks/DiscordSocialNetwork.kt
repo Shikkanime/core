@@ -34,7 +34,7 @@ class DiscordSocialNetwork : AbstractSocialNetwork() {
     override val priority: Int
         get() = 1
 
-    override fun login() {
+    override suspend fun login() {
         if (isInitialized) return
 
         if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.DISCORD_ENABLED)) {

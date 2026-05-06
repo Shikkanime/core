@@ -10,6 +10,8 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.services.caches.MemberCacheService
 import fr.shikkanime.utils.InvalidationService
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.ifNull
+import fr.shikkanime.utils.readFileAsByteArray
 import fr.shikkanime.utils.routes.*
 import fr.shikkanime.utils.routes.method.Delete
 import fr.shikkanime.utils.routes.method.Get
@@ -20,7 +22,6 @@ import fr.shikkanime.utils.routes.param.HttpHeader
 import fr.shikkanime.utils.routes.param.QueryParam
 import io.ktor.http.content.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import java.util.*
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -33,7 +34,7 @@ class MemberController : HasPageableRoute() {
 
     @Path("/register")
     @Post
-    private fun registerMember(): Response {
+    private suspend fun registerMember(): Response {
         var identifier: String
 
         do {
@@ -60,7 +61,7 @@ class MemberController : HasPageableRoute() {
     @Path("/associate-email")
     @Post
     @JWTAuthenticated
-    private fun associateEmail(
+    private suspend fun associateEmail(
         @JWTUser memberUuid: UUID,
         @BodyParam email: String
     ): Response {
@@ -95,7 +96,7 @@ class MemberController : HasPageableRoute() {
     @Path("/animes")
     @Put
     @JWTAuthenticated
-    private fun followAnime(
+    private suspend fun followAnime(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
     ) = memberFollowAnimeService.follow(memberUuid, anime)
@@ -103,7 +104,7 @@ class MemberController : HasPageableRoute() {
     @Path("/animes")
     @Delete
     @JWTAuthenticated
-    private fun unfollowAnime(
+    private suspend fun unfollowAnime(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
     ) = memberFollowAnimeService.unfollow(memberUuid, anime)
@@ -111,7 +112,7 @@ class MemberController : HasPageableRoute() {
     @Path("/follow-all-episodes")
     @Put
     @JWTAuthenticated
-    private fun followAllEpisodes(
+    private suspend fun followAllEpisodes(
         @JWTUser memberUuid: UUID,
         @BodyParam anime: GenericDto
     ) = memberFollowEpisodeService.followAll(memberUuid, anime)
@@ -119,7 +120,7 @@ class MemberController : HasPageableRoute() {
     @Path("/episodes")
     @Put
     @JWTAuthenticated
-    private fun followEpisode(
+    private suspend fun followEpisode(
         @JWTUser memberUuid: UUID,
         @BodyParam episode: GenericDto
     ) = memberFollowEpisodeService.follow(memberUuid, episode)
@@ -127,7 +128,7 @@ class MemberController : HasPageableRoute() {
     @Path("/episodes")
     @Delete
     @JWTAuthenticated
-    private fun unfollowEpisode(
+    private suspend fun unfollowEpisode(
         @JWTUser memberUuid: UUID,
         @BodyParam episode: GenericDto
     ) = memberFollowEpisodeService.unfollow(memberUuid, episode)
@@ -135,16 +136,13 @@ class MemberController : HasPageableRoute() {
     @Path("/image")
     @Post
     @JWTAuthenticated
-    private fun uploadProfileImage(
+    private suspend fun uploadProfileImage(
         @JWTUser memberUuid: UUID,
         @BodyParam multiPartData: MultiPartData
     ): Response {
-        try {
-            runBlocking { memberService.changeProfileImage(memberCacheService.find(memberUuid)!!, multiPartData) }
-        } catch (e: Exception) {
-            return Response.badRequest(MessageDto.error(e.message ?: "Invalid file format"))
-        }
-
+        memberCacheService.find(memberUuid).ifNull { return Response.notFound(MessageDto.error("Member not found")) }
+            .runCatching { memberService.changeProfileImage(this, multiPartData.readFileAsByteArray()) }
+            .onFailure { return Response.badRequest(MessageDto.error(it.message ?: "Invalid file format")) }
         InvalidationService.invalidate(Member::class.java)
         return Response.ok()
     }
@@ -152,7 +150,7 @@ class MemberController : HasPageableRoute() {
     @Path("/refresh")
     @Get
     @JWTAuthenticated
-    private fun getRefreshMember(
+    private suspend fun getRefreshMember(
         @JWTUser memberUuid: UUID,
         @QueryParam("limit", "9") limitParam: Int
     ): Response {
@@ -163,7 +161,7 @@ class MemberController : HasPageableRoute() {
     @Path
     @Delete
     @JWTAuthenticated
-    private fun deleteMember(@JWTUser memberUuid: UUID): Response {
+    private suspend fun deleteMember(@JWTUser memberUuid: UUID): Response {
         val member = memberService.find(memberUuid) ?: return Response.notFound()
         memberService.delete(member)
         return Response.noContent()

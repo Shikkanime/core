@@ -6,11 +6,11 @@ import fr.shikkanime.repositories.ConfigRepository
 import java.util.*
 
 class ConfigService : AbstractService<Config, ConfigRepository>() {
-    fun findAllByName(name: String) = repository.findAllByName(name)
+    suspend fun findAllByName(name: String) = repository.findAllByName(name)
 
-    fun findByName(name: String) = repository.findByName(name)
+    suspend fun findByName(name: String) = repository.findByName(name)
 
-    fun update(uuid: UUID, configDto: ConfigDto): Config? {
+    suspend fun update(uuid: UUID, configDto: ConfigDto): Config? {
         val config = find(uuid) ?: return null
 
         if (config.propertyValue == configDto.propertyValue) {

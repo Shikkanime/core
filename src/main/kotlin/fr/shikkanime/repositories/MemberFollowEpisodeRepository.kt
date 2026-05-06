@@ -7,10 +7,8 @@ import jakarta.persistence.criteria.JoinType
 import java.util.*
 
 class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() {
-    override fun getEntityClass() = MemberFollowEpisode::class.java
-
-    fun findAllByMember(memberUuid: UUID): List<MemberFollowEpisode> {
-        return database.entityManager.use {
+    suspend fun findAllByMember(memberUuid: UUID): List<MemberFollowEpisode> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -24,8 +22,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int): Pageable<EpisodeMapping> {
-        return database.entityManager.use {
+    suspend fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int): Pageable<EpisodeMapping> {
+        return dispatchSuspending {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(EpisodeMapping::class.java)
             val root = query.from(getEntityClass())
@@ -47,8 +45,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun findAllFollowedEpisodesUUID(memberUuid: UUID): List<UUID> {
-        return database.entityManager.use {
+    suspend fun findAllFollowedEpisodesUUID(memberUuid: UUID): List<UUID> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
             val root = query.from(getEntityClass())
@@ -63,8 +61,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun findAllByEpisode(episode: EpisodeMapping): List<MemberFollowEpisode> {
-        return database.entityManager.use {
+    suspend fun findAllByEpisode(episode: EpisodeMapping): List<MemberFollowEpisode> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -78,8 +76,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun existsByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): Boolean {
-        return database.entityManager.use {
+    suspend fun existsByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): Boolean {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
             val root = query.from(getEntityClass())
@@ -96,8 +94,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun findAllNonFollowedEpisodesByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID?): List<EpisodeMapping> {
-        return database.entityManager.use {
+    suspend fun findAllNonFollowedEpisodesByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID?): List<EpisodeMapping> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(EpisodeMapping::class.java)
             val root = query.from(EpisodeMapping::class.java)
@@ -120,8 +118,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun findByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): MemberFollowEpisode? {
-        return database.entityManager.use {
+    suspend fun findByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): MemberFollowEpisode? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -137,8 +135,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
-    fun getSeenAndUnseenDuration(member: Member): Pair<Long, Long> {
-        return database.entityManager.use {
+    suspend fun getSeenAndUnseenDuration(member: Member): Pair<Long, Long> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(MemberFollowAnime::class.java)

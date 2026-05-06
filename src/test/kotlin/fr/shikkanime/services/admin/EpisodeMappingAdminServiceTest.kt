@@ -21,7 +21,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     @Inject private lateinit var episodeMappingAdminService: EpisodeMappingAdminService
 
     @Test
-    fun `should delete variants not included in DTO`() {
+    suspend fun `should delete variants not included in DTO`() {
         // Arrange
         val anime = createTestAnime()
         val episodeMapping = createEpisodeMapping(
@@ -102,7 +102,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should update episode mapping type`() {
+    suspend fun `should update episode mapping type`() {
         // Arrange
         val anime = createTestAnime()
         val episodeMapping = createEpisodeMapping(
@@ -124,7 +124,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should create new mapping when updating with conflicting identifier`() {
+    suspend fun `should create new mapping when updating with conflicting identifier`() {
         // Arrange
         val anime = createTestAnime()
 
@@ -160,7 +160,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should update mapping with complex json data`() {
+    suspend fun `should update mapping with complex json data`() {
         // Arrange
         val anime = animeService.save(
             Anime(
@@ -204,7 +204,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should update episode mapping with different anime`() {
+    suspend fun `should update episode mapping with different anime`() {
         // Arrange
         val originalAnime = createTestAnime(name = "Test Anime", slug = "test-anime")
         val newAnime = createTestAnime(name = "Test Anime 2", slug = "test-anime-2")
@@ -231,7 +231,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should create anime when migrating episode to non-existing anime`() {
+    suspend fun `should create anime when migrating episode to non-existing anime`() {
         // Arrange
         val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
         val episodeMapping = createEpisodeMapping(
@@ -260,7 +260,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should migrate episodes in batch to existing anime`() {
+    suspend fun `should migrate episodes in batch to existing anime`() {
         // Arrange
         val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
         val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
@@ -305,7 +305,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should migrate episodes in batch and create new anime if not exists`() {
+    suspend fun `should migrate episodes in batch and create new anime if not exists`() {
         // Arrange
         val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
         
@@ -359,7 +359,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should merge episodes when migrating to anime with existing episode`() {
+    suspend fun `should merge episodes when migrating to anime with existing episode`() {
         // Arrange
         val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
         val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
@@ -431,7 +431,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should cleanup empty source anime after migration`() {
+    suspend fun `should cleanup empty source anime after migration`() {
         // Arrange
         val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
         val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
@@ -473,7 +473,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should not cleanup source anime if it still has episodes after migration`() {
+    suspend fun `should not cleanup source anime if it still has episodes after migration`() {
         // Arrange
         val sourceAnime = createTestAnime(name = "Source Anime", slug = "source-anime")
         val targetAnime = createTestAnime(name = "Target Anime", slug = "target-anime")
@@ -525,7 +525,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should handle batch migration with mixed scenarios`() {
+    suspend fun `should handle batch migration with mixed scenarios`() {
         // Arrange
         val sourceAnime1 = createTestAnime(name = "Source Anime 1", slug = "source-anime-1")
         val sourceAnime2 = createTestAnime(name = "Source Anime 2", slug = "source-anime-2")
@@ -582,7 +582,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `should shift variants correctly`() {
+    suspend fun `should shift variants correctly`() {
         val anime = createTestAnime(name = "Shift Anime", slug = "shift-anime")
 
         val ep1 = createEpisodeMapping(anime, EpisodeType.EPISODE, 1, 1)
@@ -658,7 +658,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
     }
 
     // Helper methods
-    private fun createTestAnime(
+    private suspend fun createTestAnime(
         name: String = "Test Anime",
         slug: String = "test-anime"
     ): Anime {
@@ -671,7 +671,7 @@ class EpisodeMappingAdminServiceTest : AbstractTest() {
         )
     }
 
-    private fun createEpisodeMapping(
+    private suspend fun createEpisodeMapping(
         anime: Anime,
         episodeType: EpisodeType,
         season: Int,

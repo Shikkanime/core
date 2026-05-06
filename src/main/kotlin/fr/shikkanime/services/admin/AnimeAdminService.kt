@@ -16,7 +16,7 @@ class AnimeAdminService : IAdminService {
     @Inject private lateinit var memberFollowAnimeService: MemberFollowAnimeService
     @Inject private lateinit var animePlatformService: AnimePlatformService
 
-    fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
+    suspend fun update(uuid: UUID, animeDto: AnimeDto): Anime? {
         val anime = animeService.find(uuid) ?: return null
 
         if (animeDto.name.isNotBlank() && animeDto.name != anime.name) {
@@ -56,7 +56,7 @@ class AnimeAdminService : IAdminService {
         return animeService.update(anime)
     }
 
-    fun merge(from: Anime, to: Anime): Anime {
+    suspend fun merge(from: Anime, to: Anime): Anime {
         episodeMappingService.findAllByAnime(from).forEach { episodeMapping ->
             val findByAnimeSeasonEpisodeTypeNumber = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
                 to.uuid!!,
@@ -105,18 +105,18 @@ class AnimeAdminService : IAdminService {
         return to
     }
 
-    fun delete(anime: Anime) {
+    suspend fun delete(anime: Anime) {
         animeService.delete(anime)
     }
 
-    fun forceUpdate(uuid: UUID): Anime? {
+    suspend fun forceUpdate(uuid: UUID): Anime? {
         val anime = animeService.find(uuid) ?: return null
         anime.lastUpdateDateTime = Constant.oldLastUpdateDateTime
         animeService.update(anime)
         return anime
     }
 
-    fun forceUpdateAll() {
+    suspend fun forceUpdateAll() {
         val animes = animeService.findAll()
         animes.forEach { it.lastUpdateDateTime = Constant.oldLastUpdateDateTime }
         animeService.updateAll(animes)

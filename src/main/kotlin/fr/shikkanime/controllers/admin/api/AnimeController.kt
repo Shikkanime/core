@@ -34,7 +34,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/force-update-all")
     @Get
-    private fun forceUpdateAllAnimes(): Response {
+    private suspend fun forceUpdateAllAnimes(): Response {
         animeAdminService.forceUpdateAll()
         InvalidationService.invalidate(Anime::class.java)
         return Response.redirect(Link.ANIMES.href)
@@ -42,7 +42,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}/force-update")
     @Get
-    private fun forceUpdateAnime(@PathParam uuid: UUID): Response {
+    private suspend fun forceUpdateAnime(@PathParam uuid: UUID): Response {
         animeAdminService.forceUpdate(uuid) ?: return Response.notFound()
         InvalidationService.invalidate(Anime::class.java)
         return Response.ok()
@@ -50,7 +50,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Get
-    private fun animeDetails(@PathParam uuid: UUID): Response {
+    private suspend fun animeDetails(@PathParam uuid: UUID): Response {
         return Response.ok(animeFactory.toDto(animeService.find(uuid) ?: return Response.notFound(), true).apply {
             thumbnail = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.THUMBNAIL)?.url
             banner = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url
@@ -61,7 +61,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Put
-    private fun updateAnime(
+    private suspend fun updateAnime(
         @PathParam uuid: UUID,
         @BodyParam animeDto: AnimeDto
     ): Response {
@@ -73,7 +73,7 @@ class AnimeController : HasPageableRoute() {
 
     @Path("/{uuid}")
     @Delete
-    private fun deleteAnime(@PathParam uuid: UUID): Response {
+    private suspend fun deleteAnime(@PathParam uuid: UUID): Response {
         animeAdminService.delete(animeService.find(uuid) ?: return Response.notFound())
         episodeVariantService.preIndex()
         InvalidationService.invalidate(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java)

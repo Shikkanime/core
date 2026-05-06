@@ -17,7 +17,7 @@ class TraceActionController : HasPageableRoute() {
 
     @Path
     @Get
-    private fun getTraceAction(
+    private suspend fun getTraceAction(
         @QueryParam("entityType") entityTypeParam: String?,
         @QueryParam("action") actionParam: String?,
         @QueryParam("page", "1") pageParam: Int,

@@ -9,10 +9,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class AttachmentRepository : AbstractRepository<Attachment>() {
-    override fun getEntityClass() = Attachment::class.java
-
-    fun findAllByEntityUuid(entityUuid: UUID): List<Attachment> {
-        return database.entityManager.use {
+    suspend fun findAllByEntityUuid(entityUuid: UUID): List<Attachment> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -26,8 +24,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType): List<Attachment> {
-        return database.entityManager.use {
+    suspend fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType): List<Attachment> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -42,25 +40,57 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime): List<Attachment> {
-        return database.entityManager.use {
-            val query = it.createQuery("""
-                SELECT att
-                FROM Attachment att
-                WHERE (att.lastUpdateDateTime <= :lastUpdateDateTime AND att.url IS NOT NULL AND att.active) OR
-                (att.type IN (:types) AND att.url IS NOT NULL AND att.active = false AND NOT EXISTS (SELECT 1 FROM Attachment att2 WHERE att2.entityUuid = att.entityUuid AND att2.type = att.type AND att2.active = true) AND att.creationDateTime = (SELECT MAX(att3.creationDateTime) FROM Attachment att3 WHERE att3.entityUuid = att.entityUuid AND att3.type = att.type))
-            """.trimIndent(), getEntityClass())
+    suspend fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime): List<Attachment> {
+        return dispatch {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(getEntityClass())
+            val root = query.from(getEntityClass())
 
-            query.setParameter("lastUpdateDateTime", lastUpdateDateTime)
-            query.setParameter("types", listOf(ImageType.THUMBNAIL, ImageType.BANNER))
+            val subquery1 = query.subquery(Long::class.java)
+            val subroot1 = subquery1.from(getEntityClass())
+            subquery1.select(cb.literal(1L))
+            subquery1.where(
+                cb.and(
+                    cb.equal(subroot1[Attachment_.entityUuid], root[Attachment_.entityUuid]),
+                    cb.equal(subroot1[Attachment_.type], root[Attachment_.type]),
+                    cb.isTrue(subroot1[Attachment_.active])
+                )
+            )
 
-            createReadOnlyQuery(query)
+            val subquery2 = query.subquery(ZonedDateTime::class.java)
+            val subroot2 = subquery2.from(getEntityClass())
+            subquery2.select(cb.greatest(subroot2[Attachment_.creationDateTime]))
+            subquery2.where(
+                cb.and(
+                    cb.equal(subroot2[Attachment_.entityUuid], root[Attachment_.entityUuid]),
+                    cb.equal(subroot2[Attachment_.type], root[Attachment_.type])
+                )
+            )
+
+            query.where(
+                cb.or(
+                    cb.and(
+                        cb.lessThanOrEqualTo(root[Attachment_.lastUpdateDateTime], lastUpdateDateTime),
+                        cb.isNotNull(root[Attachment_.url]),
+                        cb.isTrue(root[Attachment_.active])
+                    ),
+                    cb.and(
+                        root[Attachment_.type].`in`(listOf(ImageType.THUMBNAIL, ImageType.BANNER)),
+                        cb.isNotNull(root[Attachment_.url]),
+                        cb.isFalse(root[Attachment_.active]),
+                        cb.not(cb.exists(subquery1)),
+                        cb.equal(root[Attachment_.creationDateTime], subquery2)
+                    )
+                )
+            )
+
+            createReadOnlyQuery(it, query)
                 .resultList
         }
     }
 
-    fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>): List<Attachment> {
-        return database.entityManager.use {
+    suspend fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>): List<Attachment> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -79,8 +109,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun getCumulativeAttachmentCounts(): List<KeyCountDto> {
-        return database.entityManager.use {
+    suspend fun getCumulativeAttachmentCounts(): List<KeyCountDto> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -101,8 +131,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         }
     }
 
-    fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType): Attachment? {
-        return database.entityManager.use {
+    suspend fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType): Attachment? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

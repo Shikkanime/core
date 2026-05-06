@@ -20,7 +20,7 @@ class EpisodeVariantController : HasPageableRoute() {
 
     @Path("/{uuid}/separate")
     @Post
-    private fun separateVariant(
+    private suspend fun separateVariant(
         @PathParam uuid: UUID,
         @BodyParam separateVariantDto: SeparateVariantDto
     ): Response {

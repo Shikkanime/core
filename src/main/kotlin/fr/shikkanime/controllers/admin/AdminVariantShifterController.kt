@@ -46,7 +46,7 @@ class AdminVariantShifterController {
 
     @Path
     @Post
-    private fun postVariantShifter(@BodyParam parameters: Parameters): Response {
+    private suspend fun postVariantShifter(@BodyParam parameters: Parameters): Response {
         try {
             val animeUuidStr = parameters["animeUuid"] ?: throw IllegalArgumentException("animeUuid is required")
             val platformStr = parameters["platform"] ?: throw IllegalArgumentException("platform is required")

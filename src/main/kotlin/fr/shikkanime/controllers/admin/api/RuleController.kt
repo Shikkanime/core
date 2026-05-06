@@ -27,11 +27,11 @@ class RuleController {
 
     @Path
     @Get
-    private fun getRules() = Response.ok(ruleService.findAll().map { ruleFactory.toDto(it) })
+    private suspend fun getRules() = Response.ok(ruleService.findAll().map { ruleFactory.toDto(it) })
 
     @Path
     @Post
-    private fun createRule(@BodyParam ruleDto: RuleDto): Response {
+    private suspend fun createRule(@BodyParam ruleDto: RuleDto): Response {
         if (ruleDto.uuid != null)
             Response.badRequest(MessageDto.error("UUID must be null"))
 
@@ -42,7 +42,7 @@ class RuleController {
 
     @Path("/{uuid}")
     @Delete
-    private fun deleteRule(@PathParam uuid: UUID): Response {
+    private suspend fun deleteRule(@PathParam uuid: UUID): Response {
         val rule = ruleService.find(uuid) ?: return Response.notFound()
         ruleService.delete(rule)
         InvalidationService.invalidate(Rule::class.java)

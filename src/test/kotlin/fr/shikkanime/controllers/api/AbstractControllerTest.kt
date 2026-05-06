@@ -21,7 +21,7 @@ import java.time.ZonedDateTime
 
 abstract class AbstractControllerTest : AbstractTest() {
     @BeforeEach
-    override fun setUp() {
+    override suspend fun setUp() {
         Constant.injector.injectMembers(this)
 
         initOnePiece()
@@ -58,7 +58,7 @@ abstract class AbstractControllerTest : AbstractTest() {
         }
     }
 
-    private fun initOnePiece() {
+    private suspend fun initOnePiece() {
         val firstReleaseDateTime = ZonedDateTime.parse("2021-10-24T07:00:00Z")
 
         val anime = animeService.save(
@@ -124,7 +124,7 @@ abstract class AbstractControllerTest : AbstractTest() {
         }
     }
 
-    private fun init7thTimeLoop() {
+    private suspend fun init7thTimeLoop() {
         val firstReleaseDateTime = ZonedDateTime.parse("2024-01-07T15:15:00Z")
 
         val anime = animeService.save(

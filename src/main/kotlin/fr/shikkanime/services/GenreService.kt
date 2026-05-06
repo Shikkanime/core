@@ -5,9 +5,9 @@ import fr.shikkanime.repositories.GenreRepository
 import java.util.*
 
 class GenreService : AbstractService<Genre, GenreRepository>() {
-    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
+    suspend fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
-    fun findByName(name: String) = repository.findByName(name)
+    suspend fun findByName(name: String) = repository.findByName(name)
 
-    fun findOrSave(name: String) = repository.findByName(name) ?: save(Genre(name = name))
+    suspend fun findOrSave(name: String) = repository.findByName(name) ?: save(Genre(name = name))
 }

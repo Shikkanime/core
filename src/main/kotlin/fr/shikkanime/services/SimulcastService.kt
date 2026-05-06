@@ -14,7 +14,7 @@ import java.time.ZonedDateTime
 class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
     @Inject private lateinit var simulcastFactory: SimulcastFactory
 
-    fun findAllModified() = repository.findAllModified()
+    suspend fun findAllModified() = repository.findAllModified()
         .sortedWith(compareBy<Tuple>({ it[0, Simulcast::class.java].year }, { Season.entries.indexOf(it[0, Simulcast::class.java].season) }).reversed())
         .map {
             simulcastFactory.toDto(it[0, Simulcast::class.java]).apply {
@@ -23,9 +23,9 @@ class SimulcastService : AbstractService<Simulcast, SimulcastRepository>() {
             }
         }
 
-    fun findBySeasonAndYear(season: Season, year: Int) = repository.findBySeasonAndYear(season, year)
+    suspend fun findBySeasonAndYear(season: Season, year: Int) = repository.findBySeasonAndYear(season, year)
 
-    override fun save(entity: Simulcast): Simulcast {
+    override suspend fun save(entity: Simulcast): Simulcast {
         val save = super.save(entity)
         InvalidationService.invalidate(Simulcast::class.java)
         return save

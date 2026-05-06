@@ -19,7 +19,7 @@ private val configCacheService = Constant.injector.getInstance(ConfigCacheServic
 private val simulcastCacheService = Constant.injector.getInstance(SimulcastCacheService::class.java)
 private val animeCacheService = Constant.injector.getInstance(AnimeCacheService::class.java)
 
-fun setGlobalAttributes(
+suspend fun setGlobalAttributes(
     isBot: Boolean,
     modelMap: MutableMap<Any?, Any?>,
     controller: Any,
@@ -31,7 +31,7 @@ fun setGlobalAttributes(
     }
 
     val isAdminController = controller.javaClass.simpleName.startsWith("Admin")
-    val currentSimulcast = simulcastCacheService.currentSimulcast
+    val currentSimulcast = simulcastCacheService.currentSimulcast()
 
     modelMap["su"] = StringUtils
     modelMap["links"] =  (if (isAdminController) LinkObject.adminList else LinkObject.siteList)

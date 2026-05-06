@@ -10,7 +10,6 @@ import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
 import java.awt.image.ConvolveOp
 import java.awt.image.Kernel
-import java.io.ByteArrayInputStream
 import java.io.File
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -205,11 +204,8 @@ object MediaImage {
     }
 
     suspend fun getLongTimeoutImage(url: String): BufferedImage =
-        ByteArrayInputStream(HttpRequest.retryOnTimeout(3) { HttpRequest.get(url, timeout = 5000L).readRawBytes() }).use {
-            ImageIO.read(
-                it
-            )
-        }
+        HttpRequest.retryOnTimeout(3) { HttpRequest.get(url, timeout = 5000L).readRawBytes() }.inputStream()
+            .use { ImageIO.read(it) }
 
     private suspend fun drawAnimeImageAndBanner(mediaImage: BufferedImage, graphics: Graphics2D, anime: Anime): Int {
         val attachmentService = Constant.injector.getInstance(AttachmentService::class.java)

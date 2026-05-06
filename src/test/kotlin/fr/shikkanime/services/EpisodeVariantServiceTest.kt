@@ -16,14 +16,14 @@ import java.util.*
 
 class EpisodeVariantServiceTest : AbstractTest() {
     @BeforeEach
-    override fun setUp() {
+    override suspend fun setUp() {
         super.setUp()
         configService.save(Config(propertyKey = ConfigPropertyKey.SIMULCAST_RANGE.key, propertyValue = "15"))
         InvalidationService.invalidate(Config::class.java)
     }
 
     @Test
-    fun `getSimulcasts get next`() {
+    suspend fun `getSimulcasts get next`() {
         val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", slug = "test-anime")
         val episode = mockkClass(EpisodeMapping::class)
 
@@ -35,6 +35,8 @@ class EpisodeVariantServiceTest : AbstractTest() {
 
         animeService.save(anime)
         val simulcast = episodeVariantService.getSimulcast(
+            simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1),
+            simulcastRangeDelay = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 1),
             anime = anime,
             dto = EpisodeCalculateDto(
                 animeUuid = anime.uuid!!,
@@ -50,7 +52,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `getSimulcasts continue on current`() {
+    suspend fun `getSimulcasts continue on current`() {
         val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", slug = "test-anime")
         val episode = mockkClass(EpisodeMapping::class)
         val finalRelease = ZonedDateTime.parse("2024-01-03T16:00:00Z")
@@ -87,6 +89,8 @@ class EpisodeVariantServiceTest : AbstractTest() {
         every { episode.number } returns 12
 
         val simulcast = episodeVariantService.getSimulcast(
+            simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1),
+            simulcastRangeDelay = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 1),
             anime = anime,
             dto = EpisodeCalculateDto(
                 animeUuid = anime.uuid!!,
@@ -102,7 +106,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save platform episode`() {
+    suspend fun `save platform episode`() {
         episodeVariantService.save(
             AbstractPlatform.Episode(
                 CountryCode.FR,
@@ -141,7 +145,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save dan da dan multiple platform`() {
+    suspend fun `save dan da dan multiple platform`() {
         ruleService.save(Rule(platform = Platform.NETF, seriesId = "81736884", seasonId = "1", action = Rule.Action.REPLACE_ANIME_NAME, actionValue = "DAN DA DAN"))
         InvalidationService.invalidate(Rule::class.java)
 
@@ -268,7 +272,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save platform episode with rule`() {
+    suspend fun `save platform episode with rule`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GRMG8ZQZR", seasonId = "GYP8PM4KY", action = Rule.Action.REPLACE_ANIME_NAME, actionValue = "ONE PIECE Log: Fish-Man Island Saga"))
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GRMG8ZQZR", seasonId = "GYP8PM4KY", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "1"))
         InvalidationService.invalidate(Rule::class.java)
@@ -310,7 +314,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save platform episode with rule #2`() {
+    suspend fun `save platform episode with rule #2`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G649PJ0JY", seasonId = "G609CX8W1", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "4"))
         InvalidationService.invalidate(Rule::class.java)
 
@@ -351,7 +355,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save platform episode with rule #3`() {
+    suspend fun `save platform episode with rule #3`() {
         ruleService.save(Rule(platform = Platform.ANIM, seriesId = "1166", seasonId = "1", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "2"))
         InvalidationService.invalidate(Rule::class.java)
 
@@ -392,7 +396,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save platform episode with rule #4`() {
+    suspend fun `save platform episode with rule #4`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "GYQ43P3E6", seasonId = "G65VCD1KE", action = Rule.Action.ADD_TO_NUMBER, actionValue = "11"))
         InvalidationService.invalidate(Rule::class.java)
 
@@ -432,7 +436,7 @@ class EpisodeVariantServiceTest : AbstractTest() {
     }
 
     @Test
-    fun `save platform episode with rule #5`() {
+    suspend fun `save platform episode with rule #5`() {
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G1XHJV2X9", seasonId = "GRGGCVZV0", action = Rule.Action.REPLACE_SEASON_NUMBER, actionValue = "1"))
         ruleService.save(Rule(platform = Platform.CRUN, seriesId = "G1XHJV2X9", seasonId = "GRGGCVZV0", action = Rule.Action.REPLACE_EPISODE_TYPE, actionValue = "SPECIAL"))
         InvalidationService.invalidate(Rule::class.java)

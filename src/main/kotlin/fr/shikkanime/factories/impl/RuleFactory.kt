@@ -12,7 +12,7 @@ class RuleFactory : IGenericFactory<Rule, RuleDto> {
     @Inject private lateinit var ruleService: RuleService
     @Inject private lateinit var platformFactory: PlatformFactory
 
-    override fun toDto(entity: Rule) = RuleDto(
+    override suspend fun toDto(entity: Rule) = RuleDto(
         uuid = entity.uuid,
         creationDateTime = entity.creationDateTime.withUTCString(),
         platform = platformFactory.toDto(entity.platform!!),
@@ -23,8 +23,8 @@ class RuleFactory : IGenericFactory<Rule, RuleDto> {
         lastUsageDateTime = entity.lastUsageDateTime?.withUTCString()
     )
 
-    override fun toEntity(dto: RuleDto): Rule {
-        val entity = (if (dto.uuid != null) ruleService.find(dto.uuid) else null) ?: Rule()
+    override suspend fun toEntity(dto: RuleDto): Rule {
+        val entity = dto.uuid?.let { ruleService.find(it) } ?: Rule()
         entity.platform = platformFactory.toEntity(dto.platform)
         entity.seriesId = dto.seriesId
         entity.seasonId = dto.seasonId

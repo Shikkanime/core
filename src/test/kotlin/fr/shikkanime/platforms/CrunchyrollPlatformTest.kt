@@ -16,7 +16,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +30,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     @Inject lateinit var platform: CrunchyrollPlatform
 
     @BeforeEach
-    override fun setUp() {
+    override suspend fun setUp() {
         super.setUp()
         platform.loadConfiguration()
         platform.configuration!!.availableCountries = setOf(CountryCode.FR)
@@ -151,7 +150,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
 
     @ParameterizedTest
     @MethodSource("crunchyrollTestCases")
-    fun `should fetch episodes from JSON files`(testCase: EpisodeTestCase) {
+    suspend fun `should fetch episodes from JSON files`(testCase: EpisodeTestCase) {
         // Setup simulcasts
         testCase.simulcastNames.forEach { simulcastName ->
             platform.configuration!!.simulcasts.add(PlatformSimulcast(name = simulcastName))
@@ -166,15 +165,13 @@ class CrunchyrollPlatformTest : AbstractTest() {
         val formattedDate = testCase.testDate.replace(':', '-')
         
         // Load episodes from test JSON file
-        val episodes = runBlocking {
-            platform.fetchEpisodes(
-                zonedDateTime,
-                File(
-                    ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
-                        ?: throw Exception("File not found")
-                )
-            ).filterNot { it.anime != testCase.expectedAnimeName }
-        }
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
+                    ?: throw Exception("File not found")
+            )
+        ).filterNot { it.anime != testCase.expectedAnimeName }
         
         // Verify common expectations
         assertEquals(testCase.expectedEpisodes, episodes.isNotEmpty())
@@ -202,7 +199,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
         }
     }
     
-    private fun setupEpisodeVariantForAlya() {
+    private suspend fun setupEpisodeVariantForAlya() {
         episodeVariantService.save(
             AbstractPlatform.Episode(
                 CountryCode.FR,
@@ -236,19 +233,17 @@ class CrunchyrollPlatformTest : AbstractTest() {
     
     @ParameterizedTest
     @MethodSource("negativeTestCases")
-    fun `should not find specific anime in test dates`(testDate: String) {
+    suspend fun `should not find specific anime in test dates`(testDate: String) {
         val zonedDateTime = ZonedDateTime.parse(testDate)
         val formattedDate = testDate.replace(':', '-')
         
-        val episodes = runBlocking {
-            platform.fetchEpisodes(
-                zonedDateTime,
-                File(
-                    ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
-                        ?: throw Exception("File not found")
-                )
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            File(
+                ClassLoader.getSystemClassLoader().getResource("crunchyroll/api-$formattedDate.json")?.file
+                    ?: throw Exception("File not found")
             )
-        }
+        )
         
         // Verify specific exclusions for March 28, 2025
         assertTrue(episodes.none { it.anime == "Teogonia" })
@@ -257,18 +252,18 @@ class CrunchyrollPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun fetchNextEpisodeSuccessfully() {
+    suspend fun fetchNextEpisodeSuccessfully() {
         val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
 
         mockkStatic(CrunchyrollWrapper::class) {
             coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } returns expectedEpisode
-            val result = runBlocking { platform.getNextEpisode(CountryCode.FR, "someId") }
+            val result = platform.getNextEpisode(CountryCode.FR, "someId")
             assertEquals(expectedEpisode, result)
         }
     }
 
     @Test
-    fun getNextEpisodeFallbackToEpisode() = runBlocking {
+    suspend fun getNextEpisodeFallbackToEpisode() {
         val episode = AbstractCrunchyrollWrapper.Episode(
             "",
             StringUtils.EMPTY_STRING,
@@ -306,7 +301,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun getNextEpisodeFallbackToSeason() = runBlocking {
+    suspend fun getNextEpisodeFallbackToSeason() {
         val countryCode = CountryCode.FR
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(
@@ -352,7 +347,7 @@ class CrunchyrollPlatformTest : AbstractTest() {
     }
 
     @Test
-    fun getNextEpisodeNotFound() = runBlocking {
+    suspend fun getNextEpisodeNotFound() {
         val countryCode = CountryCode.FR
         val crunchyrollId = "someId"
         val episode = AbstractCrunchyrollWrapper.Episode(

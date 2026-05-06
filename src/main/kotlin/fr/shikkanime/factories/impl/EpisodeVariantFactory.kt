@@ -10,7 +10,7 @@ class EpisodeVariantFactory : IEpisodeVariantFactory {
     @Inject private lateinit var episodeMappingFactory: EpisodeMappingFactory
     @Inject private lateinit var platformFactory: PlatformFactory
 
-    override fun toDto(
+    override suspend fun toDto(
         entity: EpisodeVariant,
         useMapping: Boolean
     ) = EpisodeVariantDto(

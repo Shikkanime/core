@@ -13,5 +13,5 @@ class SimulcastController {
 
     @Path
     @Get
-    private fun getAll() = Response.ok(simulcastCacheService.findAll())
+    private suspend fun getAll() = Response.ok(simulcastCacheService.findAll())
 }
