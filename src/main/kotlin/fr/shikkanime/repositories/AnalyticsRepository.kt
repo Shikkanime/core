@@ -6,10 +6,8 @@ import fr.shikkanime.entities.miscellaneous.GenreCoverage
 import fr.shikkanime.entities.miscellaneous.MarketShare
 
 class AnalyticsRepository : AbstractRepository<EpisodeMapping>() {
-    override fun getEntityClass() = EpisodeMapping::class.java
-
-    fun getAllMarketShare(startYear: Int, endYear: Int): List<MarketShare> {
-        return database.entityManager.use {
+    suspend fun getAllMarketShare(startYear: Int, endYear: Int): List<MarketShare> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(MarketShare::class.java)
             val root = query.from(getEntityClass())
@@ -30,8 +28,8 @@ class AnalyticsRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun getSubCoverage(countryCode: CountryCode, startYear: Int, endYear: Int): List<MarketShare> {
-        return database.entityManager.use {
+    suspend fun getSubCoverage(countryCode: CountryCode, startYear: Int, endYear: Int): List<MarketShare> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(MarketShare::class.java)
             val root = query.from(getEntityClass())
@@ -76,8 +74,8 @@ class AnalyticsRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun getAllGenreCoverage(startYear: Int, endYear: Int): List<GenreCoverage> {
-        return database.entityManager.use {
+    suspend fun getAllGenreCoverage(startYear: Int, endYear: Int): List<GenreCoverage> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(GenreCoverage::class.java)
             val root = query.from(getEntityClass())

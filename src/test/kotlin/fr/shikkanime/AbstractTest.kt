@@ -2,6 +2,7 @@ package fr.shikkanime
 
 import com.google.inject.Inject
 import fr.shikkanime.services.*
+import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.Database
 import fr.shikkanime.utils.InvalidationService
@@ -23,13 +24,14 @@ abstract class AbstractTest {
     @Inject protected lateinit var tagService: TagService
     @Inject protected lateinit var animeTagService: AnimeTagService
     @Inject protected lateinit var configService: ConfigService
+    @Inject protected lateinit var configCacheService: ConfigCacheService
     @Inject protected lateinit var traceActionService: TraceActionService
     @Inject protected lateinit var ruleService: RuleService
     @Inject protected lateinit var attachmentService: AttachmentService
     @Inject protected lateinit var database: Database
 
     @BeforeEach
-    open fun setUp() {
+    open suspend fun setUp() {
         Constant.injector.injectMembers(this)
         InvalidationService.invalidateAll()
     }

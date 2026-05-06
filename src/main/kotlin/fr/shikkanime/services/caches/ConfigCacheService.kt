@@ -15,38 +15,38 @@ class ConfigCacheService : ICacheService {
     @Inject private lateinit var configService: ConfigService
     @Inject private lateinit var configFactory: ConfigFactory
 
-    fun findByName(name: String) = MapCache.getOrComputeNullable(
+    suspend fun findByName(name: String) = MapCache.getOrComputeNullableAsync(
         "ConfigCacheService.findByName",
         classes = listOf(Config::class.java),
         typeToken = object : TypeToken<MapCacheValue<ConfigDto>>() {},
         key = name,
-    ) { configService.findByName(it)?.let(configFactory::toDto) }
+    ) { configService.findByName(it)?.let { config -> configFactory.toDto(config) } }
 
-    fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue
+    suspend fun getValueAsString(configPropertyKey: ConfigPropertyKey) = findByName(configPropertyKey.key)?.propertyValue
 
-    fun getValueAsString(configPropertyKey: ConfigPropertyKey, defaultValue: String) =
+    suspend fun getValueAsString(configPropertyKey: ConfigPropertyKey, defaultValue: String) =
         getValueAsString(configPropertyKey)?.ifBlank { null } ?: defaultValue
 
-    fun getValueAsIntNullable(configPropertyKey: ConfigPropertyKey) =
+    suspend fun getValueAsIntNullable(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.toIntOrNull()
 
-    fun getValueAsInt(configPropertyKey: ConfigPropertyKey, defaultValue: Int) =
+    suspend fun getValueAsInt(configPropertyKey: ConfigPropertyKey, defaultValue: Int) =
         getValueAsIntNullable(configPropertyKey) ?: defaultValue
 
-    fun getValueAsInt(configPropertyKey: ConfigPropertyKey) = getValueAsInt(configPropertyKey, -1)
+    suspend fun getValueAsInt(configPropertyKey: ConfigPropertyKey) = getValueAsInt(configPropertyKey, -1)
 
-    fun getValueAsLongNullable(configPropertyKey: ConfigPropertyKey) =
+    suspend fun getValueAsLongNullable(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.toLongOrNull()
 
-    fun getValueAsLong(configPropertyKey: ConfigPropertyKey, defaultValue: Long) =
+    suspend fun getValueAsLong(configPropertyKey: ConfigPropertyKey, defaultValue: Long) =
         getValueAsLongNullable(configPropertyKey) ?: defaultValue
 
-    fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey) =
+    suspend fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.toBoolean() == true
 
-    fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey, defaultValue: Boolean) =
+    suspend fun getValueAsBoolean(configPropertyKey: ConfigPropertyKey, defaultValue: Boolean) =
         findByName(configPropertyKey.key)?.propertyValue?.toBoolean() ?: defaultValue
 
-    fun getValueAsStringList(configPropertyKey: ConfigPropertyKey) =
+    suspend fun getValueAsStringList(configPropertyKey: ConfigPropertyKey) =
         findByName(configPropertyKey.key)?.propertyValue?.split(StringUtils.COMMA_STRING) ?: emptyList()
 }

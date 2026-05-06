@@ -16,7 +16,7 @@ import java.time.ZonedDateTime
 
 class AnimeServiceTest : AbstractTest() {
     @Test
-    fun getWeeklyAnimes_shouldGroupMultipleLangTypes_whenReleasedOnSameHour() {
+    suspend fun getWeeklyAnimes_shouldGroupMultipleLangTypes_whenReleasedOnSameHour() {
         val now = ZonedDateTime.now().withHour(19).withMinute(30).withSecond(0).withNano(0)
         val previousWeek = now.minusWeeks(1)
         val anime = createAnime("A")
@@ -79,7 +79,7 @@ class AnimeServiceTest : AbstractTest() {
     }
 
     @Test
-    fun getWeeklyAnimes_shouldCreateSeparateReleases_forDifferentEpisodesOnSameDay() {
+    suspend fun getWeeklyAnimes_shouldCreateSeparateReleases_forDifferentEpisodesOnSameDay() {
         val now = ZonedDateTime.now().withHour(16).withMinute(0).withSecond(0).withNano(0)
         val previousWeek = now.minusWeeks(1)
         val anime = createAnime("A")
@@ -136,7 +136,7 @@ class AnimeServiceTest : AbstractTest() {
     }
 
     @Test
-    fun getWeeklyAnimes_shouldGroupMultipleLangTypes_whenReleasedWithSmallDelay() {
+    suspend fun getWeeklyAnimes_shouldGroupMultipleLangTypes_whenReleasedWithSmallDelay() {
         val now = ZonedDateTime.parse("2025-07-06T00:30:00Z[UTC]").withZoneSameInstant(Constant.utcZoneId)
         val anime = createAnime("TO BE HERO X")
 
@@ -177,7 +177,7 @@ class AnimeServiceTest : AbstractTest() {
         assertEquals(1, releases.size)
     }
 
-    private fun createAnime(
+    private suspend fun createAnime(
         name: String,
         slug: String = StringUtils.toSlug(StringUtils.getShortName(name)),
         countryCode: CountryCode = CountryCode.FR
@@ -189,7 +189,7 @@ class AnimeServiceTest : AbstractTest() {
         )
     )
 
-    private fun createEpisodeMapping(
+    private suspend fun createEpisodeMapping(
         anime: Anime,
         season: Int,
         number: Int,
@@ -205,7 +205,7 @@ class AnimeServiceTest : AbstractTest() {
         )
     )
 
-    private fun createEpisodeVariant(
+    private suspend fun createEpisodeVariant(
         mapping: EpisodeMapping,
         platform: Platform,
         audioLocale: String,
@@ -224,7 +224,7 @@ class AnimeServiceTest : AbstractTest() {
     )
 
     @Test
-    fun deleteAnimeWithDependencies() {
+    suspend fun deleteAnimeWithDependencies() {
         val anime = Anime(
             countryCode = CountryCode.FR,
             name = "Test Anime",

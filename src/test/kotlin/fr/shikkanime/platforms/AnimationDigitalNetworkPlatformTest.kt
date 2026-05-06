@@ -9,7 +9,6 @@ import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.platforms.configuration.AnimationDigitalNetworkConfiguration.AnimationDigitalNetworkSimulcast
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.InvalidationService
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -187,7 +186,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
     }
 
     @BeforeEach
-    override fun setUp() {
+    override suspend fun setUp() {
         super.setUp()
 
         platform.loadConfiguration()
@@ -212,7 +211,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
         platform.reset()
     }
 
-    private fun setupSimulcastDetectionRegexConfig() {
+    private suspend fun setupSimulcastDetectionRegexConfig() {
         configService.save(
             Config(
                 propertyKey = ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX.key,
@@ -224,7 +223,7 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
 
     @ParameterizedTest
     @MethodSource("adnTestCases")
-    fun fetchEpisodes(testCase: EpisodeTestCase) {
+    suspend fun fetchEpisodes(testCase: EpisodeTestCase) {
         if (testCase.needsSimulcastDetectionRegexConfig) {
             setupSimulcastDetectionRegexConfig()
         }
@@ -235,14 +234,12 @@ class AnimationDigitalNetworkPlatformTest : AbstractTest() {
 
         val zonedDateTime = ZonedDateTime.parse(testCase.date)
 
-        val episodes = runBlocking {
-            platform.fetchEpisodes(
-                zonedDateTime,
-                (ClassLoader.getSystemClassLoader()
-                    .getResource("animation_digital_network/api-${testCase.date.replace(':', '-')}.json")?.file
-                    ?.let { File(it) }).takeIf { testCase.useApiFile },
-            )
-        }
+        val episodes = platform.fetchEpisodes(
+            zonedDateTime,
+            (ClassLoader.getSystemClassLoader()
+                .getResource("animation_digital_network/api-${testCase.date.replace(':', '-')}.json")?.file
+                ?.let { File(it) }).takeIf { testCase.useApiFile },
+        )
 
         testCase.assertions(episodes)
     }

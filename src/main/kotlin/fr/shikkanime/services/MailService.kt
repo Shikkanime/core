@@ -16,9 +16,9 @@ class MailService : AbstractService<Mail, MailRepository>() {
 
     @Inject private lateinit var configCacheService: ConfigCacheService
 
-    fun findAllNotSent() = repository.findAllNotSent()
+    suspend fun findAllNotSent() = repository.findAllNotSent()
 
-    fun deleteAllByRecipient(recipient: String) {
+    suspend fun deleteAllByRecipient(recipient: String) {
         repository.deleteAll(repository.findAllByRecipient(recipient))
     }
 
@@ -40,7 +40,7 @@ class MailService : AbstractService<Mail, MailRepository>() {
         return stringWriter
     }
 
-    fun saveAdminMail(title: String, body: String) {
+    suspend fun saveAdminMail(title: String, body: String) {
         runCatching {
             save(
                 Mail(

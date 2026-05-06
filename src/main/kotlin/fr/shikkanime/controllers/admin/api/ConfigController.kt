@@ -27,7 +27,7 @@ class ConfigController {
 
     @Path
     @Get
-    private fun getConfigs(@QueryParam name: String?) = Response.ok(
+    private suspend fun getConfigs(@QueryParam name: String?) = Response.ok(
         if (name != null) {
             configService.findAllByName(name)
         } else {
@@ -37,7 +37,7 @@ class ConfigController {
 
     @Path("/{uuid}")
     @Put
-    private fun updateConfig(
+    private suspend fun updateConfig(
         @PathParam uuid: UUID,
         @BodyParam configDto: ConfigDto
     ): Response {

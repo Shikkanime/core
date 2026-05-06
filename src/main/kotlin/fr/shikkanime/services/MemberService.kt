@@ -10,20 +10,13 @@ import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.factories.impl.MemberFactory
 import fr.shikkanime.repositories.MemberRepository
 import fr.shikkanime.utils.*
-import io.ktor.http.content.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.io.readByteArray
-import java.io.ByteArrayInputStream
 import java.time.ZonedDateTime
 import java.util.*
 import javax.imageio.ImageIO
 
-class MemberService(
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
-) : AbstractService<Member, MemberRepository>() {
+class MemberService : AbstractService<Member, MemberRepository>() {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Inject private lateinit var memberRepository: MemberRepository
@@ -35,29 +28,29 @@ class MemberService(
     @Inject private lateinit var memberFactory: MemberFactory
     @Inject private lateinit var attachmentService: AttachmentService
 
-    private fun findAllByRoles(roles: List<Role>) = memberRepository.findAllByRoles(roles)
+    private suspend fun findAllByRoles(roles: List<Role>) = memberRepository.findAllByRoles(roles)
 
-    fun findAllByAnimeUUID(animeUuid: UUID) = memberRepository.findAllByAnimeUUID(animeUuid)
+    suspend fun findAllByAnimeUUID(animeUuid: UUID) = memberRepository.findAllByAnimeUUID(animeUuid)
 
-    fun findAllWithLastLogin(page: Int, limit: Int) = memberRepository.findAllWithLastLogin(page, limit)
+    suspend fun findAllWithLastLogin(page: Int, limit: Int) = memberRepository.findAllWithLastLogin(page, limit)
 
-    fun findDetailedMember(uuid: UUID) = memberRepository.findDetailedMember(uuid)
+    suspend fun findDetailedMember(uuid: UUID) = memberRepository.findDetailedMember(uuid)
 
-    fun findByUsernameAndPassword(username: String, password: String) =
+    suspend fun findByUsernameAndPassword(username: String, password: String) =
         memberRepository.findByUsernameAndPassword(username, EncryptionManager.generate(password))
 
-    fun findByIdentifier(identifier: String) =
+    suspend fun findByIdentifier(identifier: String) =
         memberRepository.findByIdentifier(EncryptionManager.toSHA512(identifier))
 
-    fun findByEmail(email: String) = memberRepository.findByEmail(email)
+    suspend fun findByEmail(email: String) = memberRepository.findByEmail(email)
 
-    fun getMemberLoginCounts(memberUuid: UUID) = memberRepository.getMemberLoginCounts(memberUuid)
+    suspend fun getMemberLoginCounts(memberUuid: UUID) = memberRepository.getMemberLoginCounts(memberUuid)
 
-    fun getCumulativeMemberFollowAnimeCounts(memberUuid: UUID) = memberRepository.getCumulativeMemberFollowAnimeCounts(memberUuid)
+    suspend fun getCumulativeMemberFollowAnimeCounts(memberUuid: UUID) = memberRepository.getCumulativeMemberFollowAnimeCounts(memberUuid)
 
-    fun getCumulativeMemberFollowEpisodeCounts(memberUuid: UUID) = memberRepository.getCumulativeMemberFollowEpisodeCounts(memberUuid)
+    suspend fun getCumulativeMemberFollowEpisodeCounts(memberUuid: UUID) = memberRepository.getCumulativeMemberFollowEpisodeCounts(memberUuid)
 
-    fun initDefaultAdminUser(): String {
+    suspend fun initDefaultAdminUser(): String {
         val adminUsers = findAllByRoles(listOf(Role.ADMIN))
         check(adminUsers.isEmpty()) { "Admin user already exists" }
         val password = RandomManager.generateRandomString(32)
@@ -72,7 +65,7 @@ class MemberService(
         return password
     }
 
-    fun register(identifier: String) = save(
+    suspend fun register(identifier: String) = save(
         Member(
             isPrivate = true,
             username = EncryptionManager.toSHA512(identifier),
@@ -80,7 +73,7 @@ class MemberService(
         )
     )
 
-    fun login(identifier: String, appVersion: String? = null, device: String? = null, locale: String? = null): MemberDto? {
+    suspend fun login(identifier: String, appVersion: String? = null, device: String? = null, locale: String? = null): MemberDto? {
         val member = findByIdentifier(identifier) ?: return null
 
         val traceData = if (!appVersion.isNullOrBlank() && !device.isNullOrBlank() && !locale.isNullOrBlank()) {
@@ -96,9 +89,9 @@ class MemberService(
         return memberFactory.toDto(member)
     }
 
-    fun associateEmail(memberUuid: UUID, email: String) = memberActionService.save(Action.VALIDATE_EMAIL, memberUuid, email)
+    suspend fun associateEmail(memberUuid: UUID, email: String) = memberActionService.save(Action.VALIDATE_EMAIL, memberUuid, email)
 
-    fun disassociateEmail(memberUuid: UUID) {
+    suspend fun disassociateEmail(memberUuid: UUID) {
         val member = find(memberUuid) ?: return
         member.email = null
         member.lastUpdateDateTime = ZonedDateTime.now()
@@ -106,13 +99,13 @@ class MemberService(
         InvalidationService.invalidate(Member::class.java)
     }
 
-    fun forgotIdentifier(member: Member): UUID {
+    suspend fun forgotIdentifier(member: Member): UUID {
         requireNotNull(member.email)
         // Creation member action
         return memberActionService.save(Action.FORGOT_IDENTIFIER, member.uuid!!, member.email!!)
     }
 
-    override fun delete(entity: Member) {
+    override suspend fun delete(entity: Member) {
         val memberUuid = entity.uuid!!
 
         memberFollowAnimeService.deleteAllByMember(memberUuid)
@@ -126,21 +119,8 @@ class MemberService(
         InvalidationService.invalidate(Member::class.java)
     }
 
-    suspend fun changeProfileImage(member: Member, multiPartData: MultiPartData) {
-        var bytes: ByteArray? = null
-
-        multiPartData.forEachPart { part ->
-            if (part is PartData.FileItem) {
-                bytes = part.provider().readRemaining().readByteArray()
-            }
-
-            part.dispose()
-        }
-
-        requireNotNull(bytes) { "No file provided" }
-        val imageInputStream = withContext(coroutineDispatcher) {
-            ImageIO.createImageInputStream(ByteArrayInputStream(bytes))
-        }
+    suspend fun changeProfileImage(member: Member, bytes: ByteArray) {
+        val imageInputStream = withContext(Dispatchers.IO) { ImageIO.createImageInputStream(bytes.inputStream()) }
         val imageReaders = ImageIO.getImageReaders(imageInputStream)
         require(imageReaders.hasNext()) { "Invalid file format" }
         val imageReader = imageReaders.next()

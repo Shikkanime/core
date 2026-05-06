@@ -176,10 +176,10 @@ class FetchOldEpisodesJob(
         return dates.flatMap { date ->
             val zonedDateTime = date.atStartOfDay(Constant.utcZoneId)
             try {
-                AnimationDigitalNetworkCachedWrapper.getLatestVideos(countryCode, zonedDateTime.toLocalDate()).flatMap { video ->
+                AnimationDigitalNetworkCachedWrapper.getLatestEpisodes(countryCode.locale, zonedDateTime.toLocalDate()).flatMap { episode ->
                     try {
                         animationDigitalNetworkPlatform.convertEpisode(
-                            countryCode, video, zonedDateTime, false
+                            countryCode, episode, zonedDateTime, false
                         )
                     } catch (e: EpisodeNoSubtitlesOrVoiceException) {
                         logger.warning("Error while fetching ADN episodes: ${e.message}")
@@ -207,17 +207,14 @@ class FetchOldEpisodesJob(
                             .mapNotNull { episode ->
                                 runCatching { crunchyrollPlatform.convertEpisode(countryCode, episode, false) }.getOrNull()
                             }
-                        Platform.DISN -> DisneyPlusCachedWrapper.getEpisodesByShowId(
-                            countryCode, id,
-                            configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_DISNEY_PLUS_AUDIO_LOCALES)
-                        ).flatMap { episode ->
+                        Platform.DISN -> DisneyPlusCachedWrapper.getEpisodesByShowId(countryCode.locale, id).flatMap { episode ->
                             runCatching {
                                 disneyPlusPlatform.convertEpisode(
                                     countryCode, episode, minimalDate.atStartOfDay(ZoneId.of(countryCode.timezone))
                                 )
                             }.getOrElse { emptyList() }
                         }
-                        Platform.NETF -> NetflixCachedWrapper.getEpisodesByShowId(countryCode, id.toInt())
+                        Platform.NETF -> NetflixCachedWrapper.getEpisodesByShowId(countryCode.locale, id.toInt())
                             .mapNotNull { episode ->
                                 runCatching {
                                     netflixPlatform.convertEpisode(
@@ -226,7 +223,7 @@ class FetchOldEpisodesJob(
                                 }.getOrNull()
                             }.flatten()
                         Platform.PRIM -> HttpRequest.retry(3) {
-                            PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode, id)
+                            PrimeVideoCachedWrapper.getEpisodesByShowId(countryCode.locale, id)
                                 .flatMap { episode ->
                                     runCatching {
                                         primeVideoPlatform.convertEpisode(

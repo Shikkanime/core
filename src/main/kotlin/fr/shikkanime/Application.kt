@@ -16,7 +16,7 @@ import io.ktor.server.netty.*
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
-fun main(args: Array<String>) {
+suspend fun main(args: Array<String>) {
     logger.info("Starting ${Constant.NAME}...")
 
     val profilingService = Constant.injector.getInstance(ProfilingService::class.java)
@@ -71,7 +71,7 @@ fun main(args: Array<String>) {
     ).start(wait = true)
 }
 
-private fun updateAndDeleteData() {
+private suspend fun updateAndDeleteData() {
     val animeService = Constant.injector.getInstance(AnimeService::class.java)
     val animeAdminService = Constant.injector.getInstance(AnimeAdminService::class.java)
     val episodeMappingService = Constant.injector.getInstance(EpisodeMappingService::class.java)

@@ -22,9 +22,9 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
     @Inject private lateinit var jsonLdBuilder: JsonLdBuilder
     @Inject private lateinit var attachmentCacheService: AttachmentCacheService
 
-    override fun toDto(entity: Anime) = toDto(entity, false)
+    override suspend fun toDto(entity: Anime) = toDto(entity, false)
 
-    fun toDto(entity: Anime, showAllPlatforms: Boolean): AnimeDto {
+    suspend fun toDto(entity: Anime, showAllPlatforms: Boolean): AnimeDto {
         val entityUuid = entity.uuid!!
         val audioLocales = animeCacheService.getAudioLocales(entityUuid)
         val langTypes = animeCacheService.getLangTypes(entity).toSet()
@@ -47,7 +47,7 @@ class AnimeFactory : IGenericFactory<Anime, AnimeDto> {
             lastReleaseDateTime = entity.lastReleaseDateTime.withUTCString(),
             lastUpdateDateTime = entity.lastUpdateDateTime.withUTCString(),
             description = entity.description,
-            simulcasts = if (Hibernate.isInitialized(entity.simulcasts)) entity.simulcasts.sortBySeasonAndYear().map(simulcastFactory::toDto).toSet() else null,
+            simulcasts = if (Hibernate.isInitialized(entity.simulcasts)) entity.simulcasts.sortBySeasonAndYear().map { simulcastFactory.toDto(it) }.toSet() else null,
             audioLocales = audioLocales.toTreeSet(),
             genres = genres.toSet(),
             tags = tags.toSet(),

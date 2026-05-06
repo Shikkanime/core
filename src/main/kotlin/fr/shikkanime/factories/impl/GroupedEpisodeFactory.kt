@@ -15,7 +15,7 @@ class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto>
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var episodeSourceFactory: EpisodeSourceFactory
 
-    override fun toDto(entity: GroupedEpisode): GroupedEpisodeDto {
+    override suspend fun toDto(entity: GroupedEpisode): GroupedEpisodeDto {
         val season = if (entity.minSeason == entity.maxSeason) entity.minSeason.toString() else "${entity.minSeason} - ${entity.maxSeason}"
         val number = if (entity.minNumber == entity.maxNumber) entity.minNumber.toString() else "${entity.minNumber} - ${entity.maxNumber}"
         val internalUrl = entity.mappings.takeIfNotEmpty()?.let {
@@ -43,7 +43,7 @@ class GroupedEpisodeFactory : IGenericFactory<GroupedEpisode, GroupedEpisodeDto>
             duration = entity.duration,
             internalUrl = internalUrl,
             mappings = entity.mappings.toSet(),
-            sources = entity.variants.map(episodeSourceFactory::toDto).toTreeSet()
+            sources = entity.variants.map { episodeSourceFactory.toDto(it) }.toTreeSet()
         )
     }
 

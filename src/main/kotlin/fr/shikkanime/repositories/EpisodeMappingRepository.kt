@@ -12,9 +12,7 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
-    override fun getEntityClass() = EpisodeMapping::class.java
-
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         animeUuid: UUID?,
         season: Int?,
@@ -23,7 +21,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         page: Int,
         limit: Int,
     ): Pageable<EpisodeMapping> {
-        return database.entityManager.use { entityManager ->
+        return dispatchSuspending { entityManager ->
             val cb = entityManager.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -75,8 +73,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllByAnime(animeUuid: UUID): List<EpisodeMapping> {
-        return database.entityManager.use {
+    suspend fun findAllByAnime(animeUuid: UUID): List<EpisodeMapping> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -94,7 +92,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllNeedUpdate(
+    suspend fun findAllNeedUpdate(
         currentSimulcastUuid: UUID?,
         lastSimulcastUuid: UUID?,
         currentSeasonDelay: Long,
@@ -102,7 +100,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         othersDelay: Long,
         lastImageUpdateDelay: Long,
     ): List<EpisodeMapping> {
-        return database.entityManager.use {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -165,8 +163,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllSeo(): List<EpisodeMappingSeoDto> {
-        return database.entityManager.use {
+    suspend fun findAllSeo(): List<EpisodeMappingSeoDto> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(EpisodeMappingSeoDto::class.java)
             val root = query.from(getEntityClass())
@@ -187,8 +185,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findAllSimulcasted(ignoreAudioLocale: String, ignoreEpisodeTypes: Set<EpisodeType>): List<EpisodeCalculateDto> {
-        return database.entityManager.use {
+    suspend fun findAllSimulcasted(ignoreAudioLocale: String, ignoreEpisodeTypes: Set<EpisodeType>): List<EpisodeCalculateDto> {
+        return dispatch {
             val query = it.createQuery("""
                     SELECT new fr.shikkanime.dtos.EpisodeCalculateDto(
                         em.anime.uuid, 
@@ -214,13 +212,13 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findByAnimeSeasonEpisodeTypeNumber(
+    suspend fun findByAnimeSeasonEpisodeTypeNumber(
         animeUuid: UUID,
         season: Int,
         episodeType: EpisodeType,
         number: Int
     ): EpisodeMapping? {
-        return database.entityManager.use {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -240,14 +238,14 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findLastNumber(
+    suspend fun findLastNumber(
         anime: Anime,
         episodeType: EpisodeType,
         season: Int,
         platform: Platform,
         audioLocale: String
     ): Int {
-        return database.entityManager.use {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Int::class.java)
             val root = query.from(getEntityClass())
@@ -273,11 +271,11 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(
+    suspend fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(
         anime: Anime,
         episodeMapping: EpisodeCalculateDto
     ): ZonedDateTime? {
-        return database.entityManager.use {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(ZonedDateTime::class.java)
             val root = query.from(getEntityClass())
@@ -305,8 +303,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun findMinimalReleaseDateTime(): ZonedDateTime {
-        return database.entityManager.use {
+    suspend fun findMinimalReleaseDateTime(): ZonedDateTime {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(ZonedDateTime::class.java)
             val root = query.from(getEntityClass())
@@ -318,8 +316,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun updateAllReleaseDate() {
-        database.inTransaction {
+    suspend fun updateAllReleaseDate() {
+        dispatch(true) {
             val cb = it.criteriaBuilder
             val update = cb.createCriteriaUpdate(getEntityClass())
             val root = update.from(getEntityClass())
@@ -341,10 +339,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         }
     }
 
-    fun updateAllSimulcast(map: Map<UUID, UUID>) {
+    suspend fun updateAllSimulcast(map: Map<UUID, UUID>) {
         if (map.isEmpty()) return
 
-        database.inTransaction {
+        dispatch(true) {
             val bySimulcast = map.entries.groupBy({ entry -> entry.value }, { entry -> entry.key })
 
             bySimulcast.forEach { (simulcastUuid, episodeMappingUuids) ->

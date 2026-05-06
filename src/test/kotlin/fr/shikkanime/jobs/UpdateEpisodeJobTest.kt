@@ -8,7 +8,6 @@ import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.EpisodeVariant
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.utils.InvalidationService
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
@@ -21,7 +20,7 @@ class UpdateEpisodeJobTest : AbstractTest() {
     @Inject private lateinit var updateEpisodeMappingJob: UpdateEpisodeJob
 
     @BeforeEach
-    override fun setUp() {
+    override suspend fun setUp() {
         super.setUp()
 
         configService.save(
@@ -394,7 +393,7 @@ class UpdateEpisodeJobTest : AbstractTest() {
 
     @ParameterizedTest(name = "Testing {0}")
     @MethodSource("testCases")
-    fun `should update episode mappings`(testCase: TestCase) {
+    suspend fun `should update episode mappings`(testCase: TestCase) {
         configService.save(
             Config(
                 propertyKey = ConfigPropertyKey.PREVIOUS_NEXT_EPISODES_DEPTH.key,
@@ -449,7 +448,7 @@ class UpdateEpisodeJobTest : AbstractTest() {
         InvalidationService.invalidateAll()
 
         // Run the job
-        runBlocking { updateEpisodeMappingJob.run() }
+        updateEpisodeMappingJob.run()
 
         // Verify results
         val animes = animeService.findAll()

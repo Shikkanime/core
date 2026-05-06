@@ -37,7 +37,7 @@ class AniListMatchingJob : AbstractJob {
         stringBuilder.appendLine(message)
     }
 
-    private fun getSimulcastUuids(): List<UUID>? {
+    private suspend fun getSimulcastUuids(): List<UUID>? {
         val allUuids = simulcastCacheService.findAll().mapNotNull(SimulcastDto::uuid)
         val matchingSize = configCacheService.getValueAsInt(ConfigPropertyKey.ANILIST_SIMULCAST_MATCHING_SIZE, 1)
 
@@ -132,7 +132,7 @@ class AniListMatchingJob : AbstractJob {
         }
     }
 
-    private fun deleteDeprecatedPlatforms(
+    private suspend fun deleteDeprecatedPlatforms(
         stringBuilder: StringBuilder,
         shortName: String,
         anilistPlatforms: List<AnimePlatform>,

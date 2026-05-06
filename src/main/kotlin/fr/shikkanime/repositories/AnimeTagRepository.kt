@@ -7,10 +7,8 @@ import fr.shikkanime.entities.Tag_
 import java.util.*
 
 class AnimeTagRepository : AbstractRepository<AnimeTag>() {
-    override fun getEntityClass() = AnimeTag::class.java
-
-    fun findAllByAnime(animeUuid: UUID): List<AnimeTag> {
-        return database.entityManager.use {
+    suspend fun findAllByAnime(animeUuid: UUID): List<AnimeTag> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

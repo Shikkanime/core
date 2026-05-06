@@ -7,7 +7,6 @@ import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.BskyWrapper
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.logging.Level
 
@@ -22,7 +21,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
     override val priority: Int
         get() = 3
 
-    override fun login() {
+    override suspend fun login() {
         if (isInitialized) return
 
         if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.BSKY_ENABLED)) {
@@ -34,7 +33,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
             val identifier = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.BSKY_IDENTIFIER))
             val password = requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.BSKY_PASSWORD))
             if (identifier.isBlank() || password.isBlank()) throw Exception("Identifier or password is empty")
-            val session = runBlocking { BskyWrapper.createSession(identifier, password) }
+            val session = BskyWrapper.createSession(identifier, password)
             accessJwt = requireNotNull(session.getAsString("accessJwt"))
             did = requireNotNull(session.getAsString("did"))
             require(accessJwt!!.isNotBlank()) { "Access JWT is empty" }
@@ -53,7 +52,7 @@ class BskySocialNetwork : AbstractSocialNetwork() {
         isInitialized = false
     }
 
-    private fun checkSession() {
+    private suspend fun checkSession() {
         if (initializedAt != null && initializedAt!!.plusMinutes(
                 configCacheService.getValueAsInt(
                     ConfigPropertyKey.BSKY_SESSION_TIMEOUT,

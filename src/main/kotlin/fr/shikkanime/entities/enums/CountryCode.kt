@@ -28,5 +28,7 @@ enum class CountryCode(
                 null
             }
         }
+
+        fun fromLocale(locale: String) = entries.find { locale == it.locale }
     }
 }

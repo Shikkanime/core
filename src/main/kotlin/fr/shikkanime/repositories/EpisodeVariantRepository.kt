@@ -14,10 +14,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
-    override fun getEntityClass() = EpisodeVariant::class.java
-
-    fun preIndex() {
-        database.entityManager.use {
+    suspend fun preIndex() {
+        dispatch {
             val cb = it.criteriaBuilder
 
             val query = cb.createTupleQuery().apply {
@@ -68,8 +66,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    override fun findAll(): List<EpisodeVariant> {
-        return database.entityManager.use {
+    override suspend fun findAll(): List<EpisodeVariant> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
 
@@ -82,8 +80,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllTypeIdentifier(): List<Tuple> {
-        return database.entityManager.use {
+    suspend fun findAllTypeIdentifier(): List<Tuple> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -105,8 +103,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllByAnime(animeUuid: UUID): List<EpisodeVariant> {
-        return database.entityManager.use {
+    suspend fun findAllByAnime(animeUuid: UUID): List<EpisodeVariant> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -118,8 +116,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllByMapping(mappingUUID: UUID): List<EpisodeVariant> {
-        return database.entityManager.use {
+    suspend fun findAllByMapping(mappingUUID: UUID): List<EpisodeVariant> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -131,8 +129,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform): List<String> {
-        return database.entityManager.use {
+    suspend fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform): List<String> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
             val root = query.from(getEntityClass())
@@ -151,8 +149,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllIdentifiers(): HashSet<String> {
-        return database.entityManager.use {
+    suspend fun findAllIdentifiers(): HashSet<String> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
             val root = query.from(getEntityClass())
@@ -165,13 +163,13 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+    suspend fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
         countryCode: CountryCode,
         platform: Platform,
         startZonedDateTime: ZonedDateTime,
         endZonedDateTime: ZonedDateTime
     ): List<Pair<String, ZonedDateTime>> {
-        return database.entityManager.use {
+        return dispatch {
             val query = it.createQuery("""
                 SELECT ev.identifier, ev.releaseDateTime
                 FROM EpisodeVariant ev
@@ -201,8 +199,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findAllByMappingAndPlatformAndAudioLocaleAndUncensored(episodeMappingUuid: UUID, platform: Platform, audioLocale: String, uncensored: Boolean): List<EpisodeVariant> {
-        return database.entityManager.use {
+    suspend fun findAllByMappingAndPlatformAndAudioLocaleAndUncensored(episodeMappingUuid: UUID, platform: Platform, audioLocale: String, uncensored: Boolean): List<EpisodeVariant> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -221,8 +219,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         }
     }
 
-    fun findByIdentifier(identifier: String): EpisodeVariant? {
-        return database.entityManager.use {
+    suspend fun findByIdentifier(identifier: String): EpisodeVariant? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

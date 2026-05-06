@@ -11,7 +11,7 @@ import fr.shikkanime.factories.IGenericFactory
 class EpisodeSourceFactory : IGenericFactory<EpisodeVariant, EpisodeSourceDto> {
     @Inject private lateinit var platformFactory: PlatformFactory
 
-    override fun toDto(entity: EpisodeVariant) = EpisodeSourceDto(
+    override suspend fun toDto(entity: EpisodeVariant) = EpisodeSourceDto(
         platform = platformFactory.toDto(entity.platform!!),
         url = entity.url!!,
         langType = LangType.fromAudioLocale(entity.mapping!!.anime!!.countryCode!!, entity.audioLocale!!)

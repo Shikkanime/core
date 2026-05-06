@@ -20,9 +20,9 @@ data class PageableDto<T>(
             )
         }
 
-        inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, factory: IGenericFactory<T, D>): PageableDto<D> {
+        suspend inline fun <T : Any, reified D> fromPageable(pageable: Pageable<T>, factory: IGenericFactory<T, D>): PageableDto<D> {
             return PageableDto(
-                data = pageable.data.asSequence().map(factory::toDto).toSet(),
+                data = pageable.data.map { factory.toDto(it) }.toSet(),
                 page = pageable.page,
                 limit = pageable.limit,
                 total = pageable.total,

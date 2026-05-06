@@ -6,7 +6,7 @@ import fr.shikkanime.repositories.MetricRepository
 import java.time.ZonedDateTime
 
 class MetricService : AbstractService<Metric, MetricRepository>() {
-    fun findAllAfterGrouped(hours: Long): List<GroupedMetricDto> {
+    suspend fun findAllAfterGrouped(hours: Long): List<GroupedMetricDto> {
         val date = ZonedDateTime.now().minusHours(hours)
         
         // Determine grouping strategy based on hours
@@ -20,5 +20,5 @@ class MetricService : AbstractService<Metric, MetricRepository>() {
         return repository.findAllAfterGrouped(date, groupByMinute)
     }
 
-    fun deleteAllBefore(date: ZonedDateTime) = repository.deleteAllBefore(date)
+    suspend fun deleteAllBefore(date: ZonedDateTime) = repository.deleteAllBefore(date)
 }

@@ -9,15 +9,12 @@ import fr.shikkanime.entities.miscellaneous.Pageable
 import fr.shikkanime.entities.miscellaneous.SortParameter
 import fr.shikkanime.factories.impl.GroupedEpisodeFactory
 import fr.shikkanime.utils.indexers.GroupedIndexer
-import jakarta.persistence.EntityManager
 import jakarta.persistence.criteria.*
 import java.time.ZonedDateTime
 import java.util.*
 
 class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
     @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
-
-    override fun getEntityClass() = EpisodeMapping::class.java
 
     /**
      * Defines the available fields for sorting grouped episodes.
@@ -84,40 +81,35 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
      * @param limit The number of items per page.
      * @return A [Pageable] containing the set of [GroupedEpisode].
      */
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int
     ): Pageable<GroupedEpisode> {
-        return database.entityManager.use { entityManager ->
-            val cb = entityManager.criteriaBuilder
-            val pagedGroupIdentifiers = paginateGroupedEpisodes(countryCode, searchTypes, sort, page, limit)
+        val pagedGroupIdentifiers = paginateGroupedEpisodes(countryCode, searchTypes, sort, page, limit)
 
-            if (pagedGroupIdentifiers.data.isEmpty()) {
-                return@use Pageable(emptySet(), page, limit, 0)
-            }
-
-            val variantsInGroups = findVariantsInGroups(
-                entityManager,
-                cb,
-                pagedGroupIdentifiers.data.flatMap { record ->
-                    record.dataEntries
-                        .filter { searchTypes == null || it.langType in searchTypes }
-                        .map { it.uuid }
-                }.toSet(),
-                sort
-            )
-            val groupedEpisodes = groupVariants(variantsInGroups, pagedGroupIdentifiers.data, sort)
-
-            Pageable(
-                data = groupedEpisodes,
-                page = pagedGroupIdentifiers.page,
-                limit = pagedGroupIdentifiers.limit,
-                total = pagedGroupIdentifiers.total,
-            )
+        if (pagedGroupIdentifiers.data.isEmpty()) {
+            return Pageable(emptySet(), page, limit, 0)
         }
+
+        val variantsInGroups = findVariantsInGroups(
+            pagedGroupIdentifiers.data.flatMap { record ->
+                record.dataEntries
+                    .filter { searchTypes == null || it.langType in searchTypes }
+                    .map { it.uuid }
+            }.toSet(),
+            sort
+        )
+        val groupedEpisodes = groupVariants(variantsInGroups, pagedGroupIdentifiers.data, sort)
+
+        return Pageable(
+            data = groupedEpisodes,
+            page = pagedGroupIdentifiers.page,
+            limit = pagedGroupIdentifiers.limit,
+            total = pagedGroupIdentifiers.total,
+        )
     }
 
     private fun paginateGroupedEpisodes(
@@ -150,38 +142,37 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
     /**
      * Fetches all [EpisodeVariant] entities that belong to a given set of group identifiers.
      *
-     * @param em The EntityManager.
-     * @param cb The CriteriaBuilder.
      * @param uuids The set of group identifiers to fetch variants for.
      * @param sort The sorting parameters to apply to the variants within their groups.
      * @return A list of [EpisodeVariant].
      */
-    private fun findVariantsInGroups(
-        em: EntityManager,
-        cb: CriteriaBuilder,
+    private suspend fun findVariantsInGroups(
         uuids: Set<UUID>,
         sort: List<SortParameter>
     ): List<EpisodeVariant> {
-        val query = cb.createQuery(EpisodeVariant::class.java)
-        val root = query.from(EpisodeVariant::class.java)
-        root.fetch(EpisodeVariant_.mapping, JoinType.INNER).fetch(EpisodeMapping_.anime, JoinType.INNER)
+        return dispatch { entityManager ->
+            val cb = entityManager.criteriaBuilder
+            val query = cb.createQuery(EpisodeVariant::class.java)
+            val root = query.from(EpisodeVariant::class.java)
+            root.fetch(EpisodeVariant_.mapping, JoinType.INNER).fetch(EpisodeMapping_.anime, JoinType.INNER)
 
-        val mapping = root[EpisodeVariant_.mapping]
-        val anime = mapping[EpisodeMapping_.anime]
+            val mapping = root[EpisodeVariant_.mapping]
+            val anime = mapping[EpisodeMapping_.anime]
 
-        query.where(root[EpisodeVariant_.uuid].`in`(uuids))
+            query.where(root[EpisodeVariant_.uuid].`in`(uuids))
 
-        val sortExpressions = mapOf(
-            SortField.EPISODE_TYPE to mapping[EpisodeMapping_.episodeType],
-            SortField.SEASON to mapping[EpisodeMapping_.season],
-            SortField.NUMBER to mapping[EpisodeMapping_.number],
-            SortField.ANIME_NAME to anime[Anime_.slug]
-        )
+            val sortExpressions = mapOf(
+                SortField.EPISODE_TYPE to mapping[EpisodeMapping_.episodeType],
+                SortField.SEASON to mapping[EpisodeMapping_.season],
+                SortField.NUMBER to mapping[EpisodeMapping_.number],
+                SortField.ANIME_NAME to anime[Anime_.slug]
+            )
 
-        val orders = sort.mapNotNull { SortField.toCriteriaOrder(it, cb, root[EpisodeVariant_.releaseDateTime], sortExpressions) }
-        query.orderBy(orders)
+            val orders = sort.mapNotNull { SortField.toCriteriaOrder(it, cb, root[EpisodeVariant_.releaseDateTime], sortExpressions) }
+            query.orderBy(orders)
 
-        return createReadOnlyQuery(em, query).resultList
+            createReadOnlyQuery(entityManager, query).resultList
+        }
     }
 
     /**

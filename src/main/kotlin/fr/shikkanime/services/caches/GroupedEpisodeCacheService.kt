@@ -2,7 +2,7 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeSortPaginationKeyCache
+import fr.shikkanime.caches.GroupedEpisodeQueryCacheKey
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.mappings.GroupedEpisodeDto
 import fr.shikkanime.entities.Anime
@@ -20,17 +20,17 @@ class GroupedEpisodeCacheService : ICacheService {
     @Inject private lateinit var groupedEpisodeService: GroupedEpisodeService
     @Inject private lateinit var groupedEpisodeFactory: GroupedEpisodeFactory
 
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         searchTypes: Array<LangType>?,
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "GroupedEpisodeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<GroupedEpisodeDto>>>() {},
-        key = CountryCodeSortPaginationKeyCache(countryCode, searchTypes, sort, page, limit),
+        key = GroupedEpisodeQueryCacheKey(countryCode, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             groupedEpisodeService.findAllBy(it.countryCode, it.searchTypes, it.sort, it.page, it.limit),

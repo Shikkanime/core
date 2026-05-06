@@ -24,14 +24,14 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
         val dailyWmaCounts: List<KeyCountDto>
     )
 
-    fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) =
+    suspend fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int) =
         repository.findAllBy(entityType, action, page, limit)
 
-    fun findAllByEntityUuid(entityUuid: UUID) = repository.findAllByEntityUuid(entityUuid)
+    suspend fun findAllByEntityUuid(entityUuid: UUID) = repository.findAllByEntityUuid(entityUuid)
 
-    fun deleteAllByEntityUuid(entityUuid: UUID) = repository.deleteAll(repository.findAllByEntityUuid(entityUuid))
+    suspend fun deleteAllByEntityUuid(entityUuid: UUID) = repository.deleteAll(repository.findAllByEntityUuid(entityUuid))
 
-    fun getUserAnalytics(date: LocalDate, minActiveDays: Int = 2): AnalyticsReport {
+    suspend fun getUserAnalytics(date: LocalDate, minActiveDays: Int = 2): AnalyticsReport {
         val since = date.atStartOfDay(Constant.utcZoneId)
         val uuids = repository.getReturningUserUuids(since, minActiveDays)
         val lastLoginUuids = repository.findLastLoginsByEntityUuids(uuids)
@@ -43,7 +43,7 @@ class TraceActionService : AbstractService<TraceAction, TraceActionRepository>()
         return AnalyticsReport(versionCounts, localeCounts, deviceCounts, dailyUserVersionCounts, dailyWmaCounts)
     }
 
-    fun createTraceAction(entity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
+    suspend fun createTraceAction(entity: ShikkEntity, action: TraceAction.Action, additionalData: String? = null) = save(
         TraceAction(
             actionDateTime = ZonedDateTime.now(),
             entityType = entity::class.java.simpleName,

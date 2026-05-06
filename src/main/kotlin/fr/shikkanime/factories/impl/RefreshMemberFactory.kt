@@ -13,7 +13,7 @@ class RefreshMemberFactory : IRefreshMemberFactory {
     @Inject private lateinit var memberFollowEpisodeCacheService: MemberFollowEpisodeCacheService
     @Inject private lateinit var memberFollowEpisodeService: MemberFollowEpisodeService
 
-    override fun toDto(entity: Member, limit: Int): RefreshMemberDto {
+    override suspend fun toDto(entity: Member, limit: Int): RefreshMemberDto {
         val memberUuid = entity.uuid!!
         val missedAnimesPageable = memberFollowAnimeCacheService.getMissedAnimes(memberUuid, 1, limit)
         val followedAnimesPageable = memberFollowAnimeCacheService.findAllBy(memberUuid, 1, limit)

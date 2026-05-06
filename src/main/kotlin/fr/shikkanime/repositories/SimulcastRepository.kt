@@ -7,10 +7,8 @@ import fr.shikkanime.entities.enums.Season
 import jakarta.persistence.Tuple
 
 class SimulcastRepository : AbstractRepository<Simulcast>() {
-    override fun getEntityClass() = Simulcast::class.java
-
-    fun findAllModified(): List<Tuple> {
-        return database.entityManager.use {
+    suspend fun findAllModified(): List<Tuple> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
 
@@ -33,8 +31,8 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
         }
     }
 
-    fun findBySeasonAndYear(season: Season, year: Int): Simulcast? {
-        return database.entityManager.use {
+    suspend fun findBySeasonAndYear(season: Season, year: Int): Simulcast? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

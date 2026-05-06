@@ -12,6 +12,8 @@ import fr.shikkanime.services.MemberService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.LoggerFactory
 import fr.shikkanime.utils.StringUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.util.logging.Level
@@ -25,7 +27,7 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
     override val priority: Int
         get() = 0
 
-    override fun login() {
+    override suspend fun login() {
         if (isInitialized)
             return
 
@@ -41,7 +43,9 @@ class FirebaseSocialNetwork : AbstractSocialNetwork() {
 
             FirebaseApp.initializeApp(
                 FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(FileInputStream(file)))
+                    .setCredentials(withContext(Dispatchers.IO) {
+                        GoogleCredentials.fromStream(FileInputStream(file))
+                    })
                     .build()
             )
 

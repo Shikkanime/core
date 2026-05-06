@@ -44,15 +44,16 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
     }
 
     override suspend fun getEpisodesByShowId(
-        countryCode: CountryCode,
-        id: String
+        locale: String,
+        showId: String
     ): Array<Episode> {
-        val show = getShow(countryCode.locale, id)
+        val show = getShow(locale, showId)
         val pageTitleId = show.atfState.getAsString("pageTitleId")
         val showJson = show.atfState.getAsJsonObject("detail").getAsJsonObject("headerDetail").getAsJsonObject(pageTitleId)
             ?: throw Exception("Failed to get show")
 
         if (showJson.getAsString("entityType") == "Movie") {
+            val countryCode = requireNotNull(CountryCode.fromLocale(locale)) { "Unsupported locale: $locale" }
             val audioTracks = showJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toHashSet() ?: HashSet()
             val subtitles = showJson.getAsJsonArray("subtitles")?.map { it.asString }?.toHashSet() ?: HashSet()
 
@@ -66,7 +67,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
                     1,
                     show.name,
                     show.description,
-                    "$baseUrl$id?autoplay=1&t=0",
+                    "$baseUrl$showId?autoplay=1&t=0",
                     showJson.getAsJsonObject("images")!!.getAsString("covershot")!!,
                     showJson.getAsLong("duration", -1),
                     LocaleUtils.getAllowedLocales(countryCode, audioTracks),
@@ -88,7 +89,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
         // Process all seasons and extract episodes
         return seasons?.flatMap { season ->
             // Use existing JSON for main page or fetch season-specific data
-            val json = if (season.id != pageTitleId) fetchPrimeVideoData("$baseUrl${season.link}", countryCode.locale) else show.globalJson
+            val json = if (season.id != pageTitleId) fetchPrimeVideoData("$baseUrl${season.link}", locale) else show.globalJson
             val btfState = json.getAsJsonObject("btf").getAsJsonObject("state")
             val metadata = btfState.getAsJsonObject("metadata") ?: throw Exception("Failed to get metadata")
             val episodes = mutableSetOf<Episode>()
@@ -106,7 +107,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
                         }
                         .map { (key, element) ->
                             createEpisode(
-                                countryCode,
+                                locale,
                                 key,
                                 element.asJsonObject,
                                 season,
@@ -139,7 +140,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
                             .map {
                                 val detailObject = it.asJsonObject!!.getAsJsonObject("detail")!!
                                 createEpisode(
-                                    countryCode,
+                                    locale,
                                     detailObject.getAsString("catalogId")!!,
                                     detailObject,
                                     season,
@@ -157,7 +158,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
     }
 
     private fun createEpisode(
-        countryCode: CountryCode,
+        locale: String,
         key: String,
         episodeJson: JsonObject,
         season: Season,
@@ -165,6 +166,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
         link: String,
         btfState: JsonObject?
     ): Episode {
+        val countryCode = requireNotNull(CountryCode.fromLocale(locale)) { "Unsupported locale: $locale" }
         val episodeNumber = episodeJson.getAsInt("episodeNumber")!!
         val audioTracks = episodeJson.getAsJsonArray("audioTracks")?.map { it.asString }?.toHashSet() ?: HashSet()
         val subtitles = episodeJson.getAsJsonArray("subtitles")?.map { it.asString }?.toHashSet() ?: HashSet()

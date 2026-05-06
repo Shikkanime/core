@@ -13,13 +13,12 @@ import fr.shikkanime.utils.StringUtils
 class SimulcastCacheService : ICacheService {
     @Inject private lateinit var simulcastService: SimulcastService
 
-    fun findAll() = MapCache.getOrCompute(
+    suspend fun findAll() = MapCache.getOrComputeAsync(
         "SimulcastCacheService.findAll",
         classes = listOf(Simulcast::class.java, Anime::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<SimulcastDto>>>() {},
         key = StringUtils.EMPTY_STRING
     ) { simulcastService.findAllModified().toTypedArray() }
 
-    val currentSimulcast: SimulcastDto?
-        get() = findAll().firstOrNull()
+    suspend fun currentSimulcast() = findAll().firstOrNull()
 }

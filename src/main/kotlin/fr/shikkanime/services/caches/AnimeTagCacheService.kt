@@ -16,10 +16,10 @@ class AnimeTagCacheService : ICacheService {
     @Inject private lateinit var animeTagService: AnimeTagService
     @Inject private lateinit var animeTagFactory: AnimeTagFactory
 
-    fun findAllByAnime(animeUuid: UUID) = MapCache.getOrCompute(
+    suspend fun findAllByAnime(animeUuid: UUID) = MapCache.getOrComputeAsync(
         "AnimeTagCacheService.findAllByAnime",
         classes = listOf(Anime::class.java, AnimeTag::class.java, Tag::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimeTagDto>>>() {},
         key = animeUuid,
-    ) { animeTagService.findAllByAnime(it).map(animeTagFactory::toDto).toTypedArray() }
+    ) { animeTagService.findAllByAnime(it).map { animeTag -> animeTagFactory.toDto(animeTag) }.toTypedArray() }
 }

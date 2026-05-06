@@ -7,10 +7,8 @@ import fr.shikkanime.entities.Genre_
 import java.util.*
 
 class GenreRepository : AbstractRepository<Genre>() {
-    override fun getEntityClass() = Genre::class.java
-
-    fun findAllByAnime(animeUuid: UUID): List<Genre> {
-        return database.entityManager.use {
+    suspend fun findAllByAnime(animeUuid: UUID): List<Genre> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(Anime::class.java)
@@ -25,8 +23,8 @@ class GenreRepository : AbstractRepository<Genre>() {
         }
     }
 
-    fun findByName(name: String): Genre? {
-        return database.entityManager.use {
+    suspend fun findByName(name: String): Genre? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

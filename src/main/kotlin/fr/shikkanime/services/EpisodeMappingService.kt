@@ -17,7 +17,7 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     @Inject private lateinit var simulcastCacheService: SimulcastCacheService
     @Inject private lateinit var configCacheService: ConfigCacheService
 
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         animeUuid: UUID?,
         season: Int?,
@@ -27,11 +27,11 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         limit: Int,
     ) = repository.findAllBy(countryCode, animeUuid, season, searchTypes, sort, page, limit)
 
-    fun findAllByAnime(anime: Anime) = repository.findAllByAnime(anime.uuid!!)
+    suspend fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
-    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
+    suspend fun findAllByAnime(anime: Anime) = findAllByAnime(anime.uuid!!)
 
-    fun findAllNeedUpdate(): List<EpisodeMapping> {
+    suspend fun findAllNeedUpdate(): List<EpisodeMapping> {
         val simulcasts = simulcastCacheService.findAll()
 
         val currentSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_CURRENT_SEASON, 7).toLong()
@@ -49,27 +49,27 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
         )
     }
 
-    fun findAllSeo() = repository.findAllSeo()
+    suspend fun findAllSeo() = repository.findAllSeo()
 
-    fun findAllSimulcasted(ignoreAudioLocale: String, ignoreEpisodeTypes: Set<EpisodeType>) =
+    suspend fun findAllSimulcasted(ignoreAudioLocale: String, ignoreEpisodeTypes: Set<EpisodeType>) =
         repository.findAllSimulcasted(ignoreAudioLocale, ignoreEpisodeTypes)
 
-    fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
+    suspend fun findLastNumber(anime: Anime, episodeType: EpisodeType, season: Int, platform: Platform, audioLocale: String) =
         repository.findLastNumber(anime, episodeType, season, platform, audioLocale)
 
-    fun findByAnimeSeasonEpisodeTypeNumber(animeUuid: UUID, season: Int, episodeType: EpisodeType, number: Int) =
+    suspend fun findByAnimeSeasonEpisodeTypeNumber(animeUuid: UUID, season: Int, episodeType: EpisodeType, number: Int) =
         repository.findByAnimeSeasonEpisodeTypeNumber(animeUuid, season, episodeType, number)
 
-    fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeCalculateDto) =
+    suspend fun findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime: Anime, episode: EpisodeCalculateDto) =
         repository.findPreviousReleaseDateOfSimulcastedEpisodeMapping(anime, episode)
 
-    fun findMinimalReleaseDateTime() = repository.findMinimalReleaseDateTime()
+    suspend fun findMinimalReleaseDateTime() = repository.findMinimalReleaseDateTime()
 
-    fun updateAllReleaseDate() = repository.updateAllReleaseDate()
+    suspend fun updateAllReleaseDate() = repository.updateAllReleaseDate()
 
-    fun updateAllSimulcast(map: Map<UUID, UUID>) = repository.updateAllSimulcast(map)
+    suspend fun updateAllSimulcast(map: Map<UUID, UUID>) = repository.updateAllSimulcast(map)
 
-    override fun delete(entity: EpisodeMapping) {
+    override suspend fun delete(entity: EpisodeMapping) {
         episodeVariantService.findAllByMapping(entity).forEach { episodeVariantService.delete(it) }
         memberFollowEpisodeService.findAllByEpisode(entity).forEach { memberFollowEpisodeService.delete(it) }
         super.delete(entity)

@@ -29,7 +29,7 @@ class EpisodeMappingAdminService {
     /**
      * Shifts variants of a specific platform by a given offset, for a given anime, season, and episode type.
      */
-    fun shiftVariants(
+    suspend fun shiftVariants(
         animeUuid: UUID,
         platform: fr.shikkanime.entities.enums.Platform,
         episodeType: EpisodeType,
@@ -103,7 +103,7 @@ class EpisodeMappingAdminService {
      * All variants from the source episode are transferred to the target episode,
      * while preserving existing variants.
      */
-    private fun mergeEpisodeMapping(
+    private suspend fun mergeEpisodeMapping(
         sourceEpisode: EpisodeMapping,
         targetEpisode: EpisodeMapping
     ): EpisodeMapping? {
@@ -137,7 +137,7 @@ class EpisodeMappingAdminService {
      * Checks if an episode can be merged with an existing one and performs the merge if possible.
      * Returns true if the episode was merged.
      */
-    private fun hasBeenMerged(
+    private suspend fun hasBeenMerged(
         updateDto: UpdateAllEpisodeMappingDto,
         episode: EpisodeMapping,
         forcedUpdate: Boolean
@@ -169,7 +169,7 @@ class EpisodeMappingAdminService {
      * Manages release dates for episode variants based on the provided configuration.
      * Returns the next date to use for sequencing if date incrementing is enabled.
      */
-    private fun processReleaseDates(
+    private suspend fun processReleaseDates(
         startDate: LocalDate?,
         episode: EpisodeMapping,
         updateDto: UpdateAllEpisodeMappingDto
@@ -239,7 +239,7 @@ class EpisodeMappingAdminService {
     /**
      * Updates multiple episodes based on the provided configuration.
      */
-    fun updateAll(updateDto: UpdateAllEpisodeMappingDto) {
+    suspend fun updateAll(updateDto: UpdateAllEpisodeMappingDto) {
         val episodesForMigration = updateDto.uuids
             .mapNotNull { episodeMappingService.find(it) }
             .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
@@ -309,7 +309,7 @@ class EpisodeMappingAdminService {
      * Handles migration of episodes to another anime.
      * Creates the target anime if it doesn't exist, using info from the source anime.
      */
-    private fun handleAnimeMigration(episodes: List<EpisodeMapping>, targetAnimeName: String) {
+    private suspend fun handleAnimeMigration(episodes: List<EpisodeMapping>, targetAnimeName: String) {
         if (episodes.isEmpty()) return
 
         // Group episodes by their current anime
@@ -333,7 +333,7 @@ class EpisodeMappingAdminService {
     /**
      * Creates a new anime based on the source anime with a different name.
      */
-    private fun createAnimeFromSource(sourceAnime: Anime, newName: String): Anime {
+    private suspend fun createAnimeFromSource(sourceAnime: Anime, newName: String): Anime {
         val slug = StringUtils.toSlug(StringUtils.getShortName(newName))
         
         // Check if an anime with this slug already exists
@@ -369,7 +369,7 @@ class EpisodeMappingAdminService {
      * Migrates an episode from source anime to target anime.
      * Handles merging if an episode with same season/type/number already exists.
      */
-    private fun migrateEpisodeToAnime(episode: EpisodeMapping, targetAnime: Anime) {
+    private suspend fun migrateEpisodeToAnime(episode: EpisodeMapping, targetAnime: Anime) {
         // Check if an episode with the same season/type/number already exists in the target anime
         val existingEpisode = episodeMappingService.findByAnimeSeasonEpisodeTypeNumber(
             targetAnime.uuid!!, episode.season!!, episode.episodeType!!, episode.number!!
@@ -410,7 +410,7 @@ class EpisodeMappingAdminService {
      * Updates episode variants from the provided DTO.
      * Updates variants that are explicitly mentioned in the DTO and removes variants that are not included.
      */
-    private fun updateEpisodeMappingVariants(
+    private suspend fun updateEpisodeMappingVariants(
         dto: EpisodeMappingDto,
         targetEpisode: EpisodeMapping,
     ) {
@@ -470,7 +470,7 @@ class EpisodeMappingAdminService {
      * Updates an episode mapping with the data from the provided DTO.
      * Returns the updated episode mapping or null if the episode wasn't found.
      */
-    fun update(uuid: UUID, dto: EpisodeMappingDto): EpisodeMapping? {
+    suspend fun update(uuid: UUID, dto: EpisodeMappingDto): EpisodeMapping? {
         val episode = episodeMappingService.find(uuid) ?: return null
         val oldAnime = episode.anime!!
 
@@ -497,7 +497,7 @@ class EpisodeMappingAdminService {
      * Handles changes to the anime a mapping belongs to.
      * Returns true if the method handled the complete update process.
      */
-    private fun handleAnimeChange(episode: EpisodeMapping, oldAnime: Anime, dto: EpisodeMappingDto): Boolean {
+    private suspend fun handleAnimeChange(episode: EpisodeMapping, oldAnime: Anime, dto: EpisodeMappingDto): Boolean {
         if (dto.anime?.name.isNullOrBlank() || dto.anime!!.name == oldAnime.name) {
             return false
         }
@@ -557,7 +557,7 @@ class EpisodeMappingAdminService {
     /**
      * Updates the episode properties from the DTO.
      */
-    private fun handleUpdateEpisodeProperties(episode: EpisodeMapping, dto: EpisodeMappingDto): EpisodeMapping? {
+    private suspend fun handleUpdateEpisodeProperties(episode: EpisodeMapping, dto: EpisodeMappingDto): EpisodeMapping? {
         // Update date/time fields
         updateEpisodeMappingDateTime(dto, episode)
 
@@ -589,7 +589,7 @@ class EpisodeMappingAdminService {
     /**
      * Updates metadata fields like title, description, duration, and image.
      */
-    private fun updateEpisodeMetadata(episode: EpisodeMapping, dto: EpisodeMappingDto) {
+    private suspend fun updateEpisodeMetadata(episode: EpisodeMapping, dto: EpisodeMappingDto) {
         // Update title if changed
         if (!dto.title.isNullOrBlank() && dto.title != episode.title) {
             episode.title = dto.title
@@ -616,7 +616,7 @@ class EpisodeMappingAdminService {
     /**
      * Deletes an anime if it has no remaining episodes.
      */
-    private fun cleanupAnimeIfEmpty(anime: Anime, excludeEpisodeUuid: UUID?) {
+    private suspend fun cleanupAnimeIfEmpty(anime: Anime, excludeEpisodeUuid: UUID?) {
         val remainingEpisodes = episodeMappingService.findAllByAnime(anime).toMutableList()
         excludeEpisodeUuid?.let { uuid -> remainingEpisodes.removeIf { it.uuid == uuid } }
 

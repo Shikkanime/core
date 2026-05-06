@@ -81,7 +81,7 @@ class AdminController {
     @Path("/simulcasts-invalidate")
     @Get
     @AdminSessionAuthenticated
-    private fun invalidateSimulcasts(): Response {
+    private suspend fun invalidateSimulcasts(): Response {
         animeService.recalculateSimulcasts()
         episodeVariantService.preIndex()
         InvalidationService.invalidate(
@@ -181,7 +181,7 @@ class AdminController {
     @Path("/emails")
     @Post
     @AdminSessionAuthenticated
-    private fun sendEmails(@BodyParam parameters: Parameters): Response {
+    private suspend fun sendEmails(@BodyParam parameters: Parameters): Response {
         val subject = parameters["subject"] ?: return Response.redirect(Link.EMAILS.href)
         val body = parameters["body"] ?: return Response.redirect(Link.EMAILS.href)
 
@@ -214,7 +214,7 @@ class AdminController {
     @Path("/threads")
     @Get
     @AdminSessionAuthenticated
-    private fun getThreads(@QueryParam success: Int?) = Response.template(
+    private suspend fun getThreads(@QueryParam success: Int?) = Response.template(
         Link.THREADS,
         mapOf(
             "askCodeUrl" to ThreadsWrapper.getCode(requireNotNull(configCacheService.getValueAsString(ConfigPropertyKey.THREADS_APP_ID))),

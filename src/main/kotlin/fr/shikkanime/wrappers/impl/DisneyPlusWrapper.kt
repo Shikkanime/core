@@ -33,7 +33,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             .toTypedArray()
     }
 
-    override suspend fun getShow(id: String): Show {
+    override suspend fun getShow(locale: String, id: String): Show {
         val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/page/entity-$id?disableSmartFocus=true&enhancedContainersLimit=15&limit=15")
         require(response.status == HttpStatusCode.OK) { "Failed to fetch show (${response.status.value})" }
         val jsonObject = ObjectParser.fromJson(response.bodyAsText())
@@ -81,8 +81,9 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(countryCode: CountryCode, showId: String, checkAudioLocales: Boolean): Array<Episode> {
-        val show = getShow(showId)
+    override suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode> {
+        val sessionId = UUID.randomUUID()
+        val show = getShow(locale, showId)
         val episodes = mutableListOf<Episode>()
 
         show.seasons.forEach { seasonId ->
@@ -113,8 +114,9 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                         val actionJsonObject = it.getAsJsonArray("actions")[0].asJsonObject
                         val resourceId = actionJsonObject.getAsString("resourceId")!!
                         val audioLocales = if (checkAudioLocales) getAudioLocales(
-                            countryCode,
-                            resourceId
+                            locale,
+                            resourceId,
+                            sessionId
                         ) else arrayOf(Locale.JA_JP.code)
 
                         episodes.add(
@@ -127,7 +129,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                                 visualsObject.getAsInt("episodeNumber") ?: -1,
                                 visualsObject.getAsString("episodeTitle"),
                                 visualsObject.getAsJsonObject("description")?.getAsString("medium"),
-                                "https://www.disneyplus.com/${countryCode.locale.lowercase()}/play/$id",
+                                "https://www.disneyplus.com/${locale.lowercase()}/play/$id",
                                 getImageUrl(visualsObject.getAsJsonObject("artwork")!!.getAsJsonObject("standard")!!.getAsJsonObject("thumbnail")!!.getAsJsonObject("1.78")!!.getAsString("imageId")!!),
                                 duration,
                                 resourceId,
@@ -143,12 +145,12 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         return episodes.toTypedArray()
     }
 
-    override suspend fun getAudioLocales(countryCode: CountryCode, resourceId: String): Array<String> {
+    private suspend fun getAudioLocales(locale: String, resourceId: String, sessionId: UUID): Array<String> {
         val headers = mapOf(
-            "x-application-version" to "1.1.2",
+            "x-application-version" to "754dc762",
             "x-bamsdk-client-id" to "disney-svod-3d9324fc",
-            "x-bamsdk-platform" to "javascript/windows/chrome",
-            "x-bamsdk-version" to "31.1",
+            "x-bamsdk-platform" to "javascript/linux/chrome",
+            "x-bamsdk-version" to "35.1",
             "x-dss-edge-accept" to "vnd.dss.edge+json; version=2",
             "x-dss-feature-filtering" to "true"
         )
@@ -166,7 +168,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                     "deviceAdId": "00000000-0000-0000-0000-000000000000"
                 },
                 "tracking": {
-                    "playbackSessionId": "${UUID.randomUUID()}"
+                    "playbackSessionId": "$sessionId"
                 }
             },
             "playbackId": "$resourceId"
@@ -196,7 +198,21 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
             .toSet()
 
         if (subtitleLocales.none { it in supportedLanguages }) return emptyArray()
+        val countryCode = requireNotNull(CountryCode.fromLocale(locale)) { "Unsupported locale: $locale" }
 
         return LocaleUtils.getAllowedLocales(countryCode, audioLocales).toTypedArray()
+    }
+
+    override suspend fun getShowIdByEpisodeId(episodeId: String): String {
+        val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/deeplink?action=playback&refId=$episodeId&refIdType=deeplinkId")
+        require(response.status == HttpStatusCode.OK) { "Failed to fetch video deeplink (${response.status.value} - ${response.bodyAsText()})" }
+        return ObjectParser.fromJson(response.bodyAsText())
+            .getAsJsonObject("data")
+            .getAsJsonObject("deeplink")
+            .getAsJsonArray("actions")
+            .first()
+            .asJsonObject
+            .getAsJsonObject("partnerFeed")
+            .getAsString("evaSeriesEntityId")!!
     }
 }

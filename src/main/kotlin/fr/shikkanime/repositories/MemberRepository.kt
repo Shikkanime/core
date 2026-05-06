@@ -18,8 +18,8 @@ import java.time.ZonedDateTime
 import java.util.*
 
 class MemberRepository : AbstractRepository<Member>() {
-    fun findAllByRoles(roles: List<Role>): List<Member> {
-        return database.entityManager.use {
+    suspend fun findAllByRoles(roles: List<Role>): List<Member> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -30,8 +30,8 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findAllByAnimeUUID(animeUuid: UUID): List<Member> {
-        return database.entityManager.use {
+    suspend fun findAllByAnimeUUID(animeUuid: UUID): List<Member> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -45,8 +45,8 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findAllWithLastLogin(page: Int, limit: Int): PageableDto<DetailedMemberDto> {
-        return database.entityManager.use {
+    suspend fun findAllWithLastLogin(page: Int, limit: Int): PageableDto<DetailedMemberDto> {
+        return dispatchSuspending {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -65,8 +65,8 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findDetailedMember(uuid: UUID): DetailedMemberDto? {
-        return database.entityManager.use {
+    suspend fun findDetailedMember(uuid: UUID): DetailedMemberDto? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -76,20 +76,20 @@ class MemberRepository : AbstractRepository<Member>() {
 
             query.where(cb.equal(root[Member_.uuid], uuid))
 
-            val tuple = createReadOnlyQuery(it, query).resultList.firstOrNull() ?: return null
+            val tuple = createReadOnlyQuery(it, query).resultList.firstOrNull() ?: return@dispatch null
             createDetailedMemberDto(tuple, includeAdditionalData = true)
         }
     }
 
-    override fun find(uuid: UUID): Member? {
-        return database.entityManager.use {
+    override suspend fun find(uuid: UUID): Member? {
+        return dispatch {
             it.find(getEntityClass(), uuid)
                 ?.apply { Hibernate.initialize(roles) }
         }
     }
 
-    private fun findBy(vararg pairs: Pair<SingularAttribute<Member, *>, Any>): Member? {
-        return database.entityManager.use {
+    private suspend fun findBy(vararg pairs: Pair<SingularAttribute<Member, *>, Any>): Member? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -105,17 +105,17 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun findByUsernameAndPassword(username: String, password: ByteArray) = findBy(
+    suspend fun findByUsernameAndPassword(username: String, password: ByteArray) = findBy(
         Member_.username to username,
         Member_.encryptedPassword to password
     )
 
-    fun findByIdentifier(identifier: String) = findBy(Member_.username to identifier)
+    suspend fun findByIdentifier(identifier: String) = findBy(Member_.username to identifier)
 
-    fun findByEmail(email: String) = findBy(Member_.email to email)
+    suspend fun findByEmail(email: String) = findBy(Member_.email to email)
 
-    fun getMemberLoginCounts(memberUuid: UUID): List<KeyCountDto> {
-        return database.entityManager.use {
+    suspend fun getMemberLoginCounts(memberUuid: UUID): List<KeyCountDto> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(TraceAction::class.java)
@@ -138,8 +138,8 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun getCumulativeMemberFollowAnimeCounts(memberUuid: UUID): List<KeyCountDto> {
-        return database.entityManager.use {
+    suspend fun getCumulativeMemberFollowAnimeCounts(memberUuid: UUID): List<KeyCountDto> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(MemberFollowAnime::class.java)
@@ -160,8 +160,8 @@ class MemberRepository : AbstractRepository<Member>() {
         }
     }
 
-    fun getCumulativeMemberFollowEpisodeCounts(memberUuid: UUID): List<KeyCountDto> {
-        return database.entityManager.use {
+    suspend fun getCumulativeMemberFollowEpisodeCounts(memberUuid: UUID): List<KeyCountDto> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(MemberFollowEpisode::class.java)

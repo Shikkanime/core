@@ -28,22 +28,22 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
     @Inject private lateinit var attachmentService: AttachmentService
     @Inject private lateinit var mailService: MailService
 
-    fun preIndex() = repository.preIndex()
+    suspend fun preIndex() = repository.preIndex()
 
-    fun findAllTypeIdentifier() = repository.findAllTypeIdentifier()
+    suspend fun findAllTypeIdentifier() = repository.findAllTypeIdentifier()
 
-    fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
+    suspend fun findAllByAnime(animeUuid: UUID) = repository.findAllByAnime(animeUuid)
 
-    fun findAllByMapping(mappingUUID: UUID) = repository.findAllByMapping(mappingUUID)
+    suspend fun findAllByMapping(mappingUUID: UUID) = repository.findAllByMapping(mappingUUID)
 
-    fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
+    suspend fun findAllByMapping(mapping: EpisodeMapping) = findAllByMapping(mapping.uuid!!)
 
-    fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform) =
+    suspend fun findAllIdentifiersByMappingsAndPlatform(mappingUuids: Collection<UUID>, platform: Platform) =
         repository.findAllIdentifiersByMappingsAndPlatform(mappingUuids, platform)
 
-    fun findAllIdentifiers() = repository.findAllIdentifiers()
+    suspend fun findAllIdentifiers() = repository.findAllIdentifiers()
 
-    fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
+    suspend fun findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
         countryCode: CountryCode,
         platform: Platform,
         startZonedDateTime: ZonedDateTime,
@@ -66,9 +66,9 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
      * @param simulcasts An optional collection of simulcasts to search for the appropriate simulcast. If not provided, the simulcast service will be used.
      * @return The chosen `Simulcast` based on the calculated conditions and parameters.
      */
-    fun getSimulcast(
-        simulcastRange: Int = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1),
-        simulcastRangeDelay: Int = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 3),
+    suspend fun getSimulcast(
+        simulcastRange: Int,
+        simulcastRangeDelay: Int,
         anime: Anime,
         dto: EpisodeCalculateDto,
         sqlCheck: Boolean = true,
@@ -126,7 +126,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
      *
      * @return The saved `EpisodeVariant` entity.
      */
-    fun save(
+    suspend fun save(
         episode: AbstractPlatform.Episode,
         updateMappingDateTime: Boolean = true,
         episodeMapping: EpisodeMapping? = null,
@@ -161,7 +161,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         val slug = StringUtils.toSlug(StringUtils.getShortName(animeName))
 
         // Find or create the anime entity
-        val anime = episodeMapping?.anime?.uuid?.let(animeService::find)
+        val anime = episodeMapping?.anime?.uuid?.let { animeService.find(it) }
             ?: animeService.findBySlug(episode.countryCode, slug)
             ?: animeService.save(
                 Anime(
@@ -265,7 +265,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
      *
      * @return The `EpisodeMapping` entity corresponding to the given anime and episode.
      */
-    private fun getEpisodeMapping(
+    private suspend fun getEpisodeMapping(
         anime: Anime,
         episode: AbstractPlatform.Episode,
         async: Boolean = true
@@ -343,7 +343,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
      * @param episode The `Episode` data from the platform containing updated information.
      * @param mapping The `EpisodeMapping` associated with the episode.
      */
-    private fun updateAnime(
+    private suspend fun updateAnime(
         anime: Anime,
         episode: AbstractPlatform.Episode,
         mapping: EpisodeMapping
@@ -360,6 +360,8 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         if (episode.audioLocale != episode.countryCode.locale) {
             // Determine the appropriate simulcast for the anime and mapping
             val simulcast = getSimulcast(
+                simulcastRange = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE, 1),
+                simulcastRangeDelay = configCacheService.getValueAsInt(ConfigPropertyKey.SIMULCAST_RANGE_DELAY, 1),
                 anime = anime,
                 dto = EpisodeCalculateDto(
                     animeUuid = anime.uuid!!,
@@ -385,7 +387,7 @@ class EpisodeVariantService : AbstractService<EpisodeVariant, EpisodeVariantRepo
         }
     }
 
-    fun separate(uuid: UUID, dto: SeparateVariantDto) {
+    suspend fun separate(uuid: UUID, dto: SeparateVariantDto) {
         val episodeVariant = find(uuid) ?: return
         val mapping = episodeVariant.mapping!!
 

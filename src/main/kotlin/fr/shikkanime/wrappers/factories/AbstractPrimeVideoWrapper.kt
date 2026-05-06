@@ -1,21 +1,20 @@
 package fr.shikkanime.wrappers.factories
 
 import com.google.gson.JsonObject
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import java.io.Serializable
 
-abstract class AbstractPrimeVideoWrapper {
+abstract class AbstractPrimeVideoWrapper : IStreamingPlatformWrapper<String, AbstractPrimeVideoWrapper.Show, AbstractPrimeVideoWrapper.Episode> {
     data class Show(
         val globalJson: JsonObject,
         val atfState: JsonObject,
-        val id: String,
+        override val id: String,
         val name: String,
         val banner: String,
         val carousel: String,
         val title: String,
         val description: String?,
-    ) : Serializable
+    ) : Serializable, IStreamingPlatformWrapper.Id<String>
 
     data class Season(
         val id: String,
@@ -27,7 +26,7 @@ abstract class AbstractPrimeVideoWrapper {
     data class Episode(
         val show: Show,
         val oldIds: Set<String>,
-        val id: String,
+        override val id: String,
         val season: Int,
         val episodeType: EpisodeType,
         val number: Int,
@@ -38,24 +37,7 @@ abstract class AbstractPrimeVideoWrapper {
         val duration: Long,
         val audioLocales: Set<String>,
         val subtitleLocales: Set<String>,
-    ) : Serializable
+    ) : Serializable, IStreamingPlatformWrapper.Id<String>
 
     protected val baseUrl = "https://www.primevideo.com"
-
-    abstract suspend fun getShow(locale: String, id: String): Show
-    abstract suspend fun getEpisodesByShowId(countryCode: CountryCode, id: String): Array<Episode>
-
-    suspend fun getPreviousEpisode(countryCode: CountryCode, showId: String, episodeId: String): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == 0) null else episodes[episodeIndex - 1]
-    }
-
-    suspend fun getNextEpisode(countryCode: CountryCode, showId: String, episodeId: String): Episode? {
-        val episodes = getEpisodesByShowId(countryCode, showId)
-        val episodeIndex = episodes.indexOfFirst { it.id == episodeId }
-        require(episodeIndex != -1) { "Episode not found" }
-        return if (episodeIndex == episodes.size - 1) null else episodes[episodeIndex + 1]
-    }
 }

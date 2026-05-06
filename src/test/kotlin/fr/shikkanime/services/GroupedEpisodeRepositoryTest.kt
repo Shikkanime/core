@@ -19,13 +19,13 @@ class GroupedEpisodeRepositoryTest : AbstractTest() {
     @Inject private lateinit var groupedEpisodeService: GroupedEpisodeService
 
     @BeforeEach
-    override fun setUp() {
+    override suspend fun setUp() {
         super.setUp()
         GroupedIndexer.clear()
     }
 
     @Test
-    fun `findAllBy with searchTypes should filter variants within groups`() {
+    suspend fun `findAllBy with searchTypes should filter variants within groups`() {
         val anime = Anime(countryCode = CountryCode.FR, name = "Test Anime", slug = "test-anime")
         animeService.save(anime)
 

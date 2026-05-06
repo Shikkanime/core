@@ -16,7 +16,7 @@ import java.util.*
 class SocialNetworkTextTest : AbstractTest() {
     private val socialNetwork = object : AbstractSocialNetwork() {
         override val priority: Int = 0
-        override fun login() {}
+        override suspend fun login() {}
         override fun logout() {}
         override suspend fun sendEpisodeRelease(groupedEpisodes: List<GroupedEpisode>, mediaImage: ByteArray?) {}
     }
@@ -47,7 +47,7 @@ class SocialNetworkTextTest : AbstractTest() {
     }
 
     @Test
-    fun testSingleEpisodeMessage() {
+    suspend fun testSingleEpisodeMessage() {
         setUp()
         val ge = createGroupedEpisode("One Piece", 1000)
         val baseMessage = "{ANIME_TITLE} : {EPISODE_INFORMATION} {VOICE} {BE} {AVAILABLE} sur {SHIKKANIME_URL} {ANIME_HASHTAG}"
@@ -58,7 +58,7 @@ class SocialNetworkTextTest : AbstractTest() {
     }
 
     @Test
-    fun testSingleEpisodeMessageWithNewPlaceholders() {
+    suspend fun testSingleEpisodeMessageWithNewPlaceholders() {
         setUp()
         val ge = createGroupedEpisode("One Piece", 1000)
         ge.title = "Un titre génial"
@@ -71,7 +71,7 @@ class SocialNetworkTextTest : AbstractTest() {
     }
 
     @Test
-    fun testMultipleEpisodesMessage() {
+    suspend fun testMultipleEpisodesMessage() {
         setUp()
         val ge1 = createGroupedEpisode("One Piece", 1000)
         val ge2 = createGroupedEpisode("Naruto", 500, "fr-FR")
@@ -83,7 +83,7 @@ class SocialNetworkTextTest : AbstractTest() {
     }
 
     @Test
-    fun testMultipleEpisodesMessageWithCustomListTemplate() {
+    suspend fun testMultipleEpisodesMessageWithCustomListTemplate() {
         setUp()
         val ge1 = createGroupedEpisode("One Piece", 1000)
         val ge2 = createGroupedEpisode("Naruto", 500, "fr-FR")
@@ -95,7 +95,7 @@ class SocialNetworkTextTest : AbstractTest() {
     }
 
     @Test
-    fun testSingleEpisodeMessageWithLangPlaceholder() {
+    suspend fun testSingleEpisodeMessageWithLangPlaceholder() {
         setUp()
         val ge = createGroupedEpisode("One Piece", 1000)
         val baseMessage = "{ANIME_TITLE} est dispo en {LANG} !"
@@ -106,7 +106,7 @@ class SocialNetworkTextTest : AbstractTest() {
     }
 
     @Test
-    fun testMultipleEpisodesMessageWithCustomListTemplate2() {
+    suspend fun testMultipleEpisodesMessageWithCustomListTemplate2() {
         setUp()
         val ge1 = createGroupedEpisode("One Piece", 1000)
         val ge2 = createGroupedEpisode("Naruto", 500, "fr-FR")

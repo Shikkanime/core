@@ -16,7 +16,7 @@ class AnalyticsController {
 
     @Path("/market-share")
     @Get
-    fun getMarketShare(
+    suspend fun getMarketShare(
         @QueryParam startYearParam: Int?,
         @QueryParam endYearParam: Int?
     ): Response {
@@ -28,7 +28,7 @@ class AnalyticsController {
 
     @Path("/sub-coverage")
     @Get
-    fun getSubCoverage(
+    suspend fun getSubCoverage(
         @QueryParam(defaultValue = "FR") countryCode: CountryCode,
         @QueryParam startYearParam: Int?,
         @QueryParam endYearParam: Int?
@@ -41,7 +41,7 @@ class AnalyticsController {
 
     @Path("/genre-coverage")
     @Get
-    fun getGenreCoverage(
+    suspend fun getGenreCoverage(
         @QueryParam startYearParam: Int?,
         @QueryParam endYearParam: Int?
     ): Response {

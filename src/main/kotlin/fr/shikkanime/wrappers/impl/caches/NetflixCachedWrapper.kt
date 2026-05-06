@@ -1,7 +1,6 @@
 package fr.shikkanime.wrappers.impl.caches
 
 import com.google.gson.reflect.TypeToken
-import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.utils.MapCache
 import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.StringUtils
@@ -25,11 +24,11 @@ object NetflixCachedWrapper : AbstractNetflixWrapper() {
     ) { NetflixWrapper.getShow(it.first, it.second) }
 
     override suspend fun getEpisodesByShowId(
-        countryCode: CountryCode,
-        id: Int
+        locale: String,
+        showId: Int
     ) = MapCache.getOrComputeAsync(
         "NetflixCachedWrapper.getEpisodesByShowId",
         typeToken = object : TypeToken<MapCacheValue<Array<Episode>>>() {},
-        key = countryCode to id
+        key = locale to showId
     ) { NetflixWrapper.getEpisodesByShowId(it.first, it.second) }
 }

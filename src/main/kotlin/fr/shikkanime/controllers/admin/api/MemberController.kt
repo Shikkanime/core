@@ -29,7 +29,7 @@ class MemberController : HasPageableRoute() {
 
     @Path
     @Get
-    private fun getMembers(
+    private suspend fun getMembers(
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int
     ): Response {
@@ -39,19 +39,19 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}")
     @Get
-    private fun getMember(@PathParam memberUuid: UUID) =
+    private suspend fun getMember(@PathParam memberUuid: UUID) =
         memberService.findDetailedMember(memberUuid)?.let(Response::ok) ?: Response.notFound()
 
     @Path("/{memberUuid}/email")
     @Delete
-    private fun disassociateEmail(@PathParam memberUuid: UUID): Response {
+    private suspend fun disassociateEmail(@PathParam memberUuid: UUID): Response {
         memberService.disassociateEmail(memberUuid)
         return Response.noContent()
     }
 
     @Path("/{memberUuid}/login-activities")
     @Get
-    private fun getMemberLoginActivities(@PathParam memberUuid: UUID): Response {
+    private suspend fun getMemberLoginActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val dateRange = now.minusMonths(1).datesUntil(now.plusDays(1))
         val actions = memberService.getMemberLoginCounts(memberUuid).associateBy { it.key }
@@ -60,7 +60,7 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/follow-anime-activities")
     @Get
-    private fun getMemberFollowAnimeActivities(@PathParam memberUuid: UUID): Response {
+    private suspend fun getMemberFollowAnimeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val dateRange = now.minusMonths(1).datesUntil(now.plusDays(1))
         val actions = memberService.getCumulativeMemberFollowAnimeCounts(memberUuid)
@@ -90,7 +90,7 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/follow-episode-activities")
     @Get
-    private fun getMemberFollowEpisodeActivities(@PathParam memberUuid: UUID): Response {
+    private suspend fun getMemberFollowEpisodeActivities(@PathParam memberUuid: UUID): Response {
         val now = LocalDate.now()
         val dateRange = now.minusMonths(1).datesUntil(now.plusDays(1))
         val actions = memberService.getCumulativeMemberFollowEpisodeCounts(memberUuid)
@@ -99,7 +99,7 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/animes")
     @Get
-    private fun getMemberAnimes(
+    private suspend fun getMemberAnimes(
         @PathParam memberUuid: UUID,
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int
@@ -120,7 +120,7 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}/episode-mappings")
     @Get
-    private fun getMemberEpisodeMappings(
+    private suspend fun getMemberEpisodeMappings(
         @PathParam memberUuid: UUID,
         @QueryParam("page", "1") pageParam: Int,
         @QueryParam("limit", "9") limitParam: Int
@@ -141,7 +141,7 @@ class MemberController : HasPageableRoute() {
 
     @Path("/{memberUuid}")
     @Delete
-    private fun deleteMember(@PathParam memberUuid: UUID): Response {
+    private suspend fun deleteMember(@PathParam memberUuid: UUID): Response {
         val member = memberService.find(memberUuid) ?: return Response.notFound()
         memberService.delete(member)
         return Response.noContent()

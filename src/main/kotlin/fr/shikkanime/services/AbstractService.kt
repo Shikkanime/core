@@ -8,25 +8,25 @@ import java.util.*
 abstract class AbstractService<E : ShikkEntity, R : AbstractRepository<E>> {
     @Inject protected lateinit var repository: R
 
-    open fun findAll() = repository.findAll()
+    open suspend fun findAll() = repository.findAll()
 
-    fun findAllUuids() = repository.findAllUuids()
+    suspend fun findAllUuids() = repository.findAllUuids()
 
-    fun findAllByUuids(uuids: Collection<UUID>) = repository.findAllByUuids(uuids)
+    suspend fun findAllByUuids(uuids: Collection<UUID>) = repository.findAllByUuids(uuids)
 
-    fun getReference(uuid: UUID) = repository.getReference(uuid)
+    suspend fun getReference(uuid: UUID) = repository.getReference(uuid)
 
-    fun find(uuid: UUID?) = if (uuid != null) repository.find(uuid) else null
+    suspend fun find(uuid: UUID?) = uuid?.let { repository.find(it) }
 
-    open fun save(entity: E) = repository.save(entity)
+    open suspend fun save(entity: E) = repository.save(entity)
 
-    open fun saveAll(entities: List<E>) = repository.saveAll(entities)
+    open suspend fun saveAll(entities: List<E>) = repository.saveAll(entities)
 
-    open fun update(entity: E) = repository.update(entity)
+    open suspend fun update(entity: E) = repository.update(entity)
 
-    fun updateAll(entities: List<E>) = repository.updateAll(entities)
+    suspend fun updateAll(entities: List<E>) = repository.updateAll(entities)
 
-    open fun delete(entity: E) = repository.delete(entity)
+    open suspend fun delete(entity: E) = repository.delete(entity)
 
-    open fun deleteAll(entities: List<E>) = repository.deleteAll(entities)
+    open suspend fun deleteAll(entities: List<E>) = repository.deleteAll(entities)
 }

@@ -8,7 +8,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.StringUtils
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
@@ -201,7 +200,7 @@ class UpdateAnimeJobTest : AbstractTest() {
 
     @ParameterizedTest(name = "Update anime {0}")
     @MethodSource("testCases")
-    fun `should update anime data`(testCase: TestCase) {
+    suspend fun `should update anime data`(testCase: TestCase) {
         // Data preparation
         val releaseDate = testCase.releaseDateTime?.let { ZonedDateTime.parse(it) } ?: ZonedDateTime.parse("2025-01-01T00:00:00Z")
         val lastReleaseDate = if (testCase.lastReleaseDateTime.isNotEmpty())
@@ -233,14 +232,12 @@ class UpdateAnimeJobTest : AbstractTest() {
         }
 
         // Job execution
-        runBlocking {
-            runCatching { updateAnimeJob.run() }.onFailure {
-                if (it is IllegalArgumentException && (it.message?.contains("(404") == true || it.message?.contains("(503") == true)) {
-                    assumeTrue(false, "Prime Video content not found (404 or 503)")
-                    return@onFailure
-                }
-                throw it
+        runCatching { updateAnimeJob.run() }.onFailure {
+            if (it is IllegalArgumentException && (it.message?.contains("(404") == true || it.message?.contains("(503") == true)) {
+                assumeTrue(false, "Prime Video content not found (404 or 503)")
+                return@onFailure
             }
+            throw it
         }
 
         // Verifications

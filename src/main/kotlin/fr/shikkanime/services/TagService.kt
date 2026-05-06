@@ -4,7 +4,7 @@ import fr.shikkanime.entities.Tag
 import fr.shikkanime.repositories.TagRepository
 
 class TagService : AbstractService<Tag, TagRepository>() {
-    fun findByName(name: String) = repository.findByName(name)
+    suspend fun findByName(name: String) = repository.findByName(name)
 
-    fun findOrSave(name: String) = repository.findByName(name) ?: save(Tag(name = name))
+    suspend fun findOrSave(name: String) = repository.findByName(name) ?: save(Tag(name = name))
 }

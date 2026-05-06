@@ -2,10 +2,9 @@ package fr.shikkanime.platforms
 
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
-import fr.shikkanime.caches.CountryCodeReleaseDayPlatformSimulcastKeyCache
+import fr.shikkanime.caches.PlatformSimulcastFetchCacheKey
 import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.platforms.configuration.ReleaseDayPlatformSimulcast
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -74,7 +73,7 @@ class NetflixPlatformTest : AbstractTest() {
 
     @ParameterizedTest
     @MethodSource("netflixTestCases")
-    fun `should fetch episodes from Netflix`(testCase: NetflixTestCase) {
+    suspend fun `should fetch episodes from Netflix`(testCase: NetflixTestCase) {
         val countryCode = CountryCode.FR
         val zonedDateTime = ZonedDateTime.parse(testCase.testDate)
         val simulcastDay = ReleaseDayPlatformSimulcast().apply {
@@ -82,8 +81,8 @@ class NetflixPlatformTest : AbstractTest() {
             releaseDay = testCase.releaseDay
         }
         
-        val key = CountryCodeReleaseDayPlatformSimulcastKeyCache(countryCode, simulcastDay)
-        val episodes = runBlocking { netflixPlatform.fetchApiContent(key, zonedDateTime) }
+        val key = PlatformSimulcastFetchCacheKey(countryCode, simulcastDay)
+        val episodes = netflixPlatform.fetchApiContent(key, zonedDateTime)
         
         assertNotNull(episodes)
         // Skip the test if no episodes are found

@@ -36,7 +36,7 @@ class SEOController {
 
     @Path("sitemap.xml")
     @Get
-    private fun sitemap(): Response {
+    private suspend fun sitemap(): Response {
         val globalLastModification = "2024-03-20T17:00:00+00:00"
 
         val lastReleaseDateTime = episodeMappingCacheService.findAllBy(
@@ -94,7 +94,7 @@ class SEOController {
 
     @Path("/feed/episodes")
     @Get
-    private fun feedRss() = Response.template(
+    private suspend fun feedRss() = Response.template(
         "/site/seo/rss.ftl",
         null,
         mutableMapOf("groupedEpisodes" to groupedEpisodeCacheService.findAllBy(

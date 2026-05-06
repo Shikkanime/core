@@ -7,10 +7,8 @@ import fr.shikkanime.utils.withUTCString
 import java.time.ZonedDateTime
 
 class MetricRepository : AbstractRepository<Metric>() {
-    override fun getEntityClass() = Metric::class.java
-
-    fun findAllAfterGrouped(date: ZonedDateTime, groupBy: String): List<GroupedMetricDto> {
-        return database.entityManager.use {
+    suspend fun findAllAfterGrouped(date: ZonedDateTime, groupBy: String): List<GroupedMetricDto> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
             val root = query.from(getEntityClass())
@@ -44,8 +42,8 @@ class MetricRepository : AbstractRepository<Metric>() {
         }
     }
 
-    fun deleteAllBefore(date: ZonedDateTime) {
-        database.inTransaction {
+    suspend fun deleteAllBefore(date: ZonedDateTime) {
+        dispatch(true) {
             val cb = it.criteriaBuilder
             val query = cb.createCriteriaDelete(getEntityClass())
             val root = query.from(getEntityClass())

@@ -14,10 +14,10 @@ class PlatformController {
 
     @Path
     @Get
-    fun getAll(): Response {
+    suspend fun getAll(): Response {
         return Response.ok(Platform.entries
             .filter { it.isStreamingPlatform }
             .sortedBy { it.name }
-            .map(platformFactory::toDto))
+            .map { platformFactory.toDto(it) })
     }
 }

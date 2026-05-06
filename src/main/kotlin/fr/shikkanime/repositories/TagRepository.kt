@@ -4,10 +4,8 @@ import fr.shikkanime.entities.Tag
 import fr.shikkanime.entities.Tag_
 
 class TagRepository : AbstractRepository<Tag>() {
-    override fun getEntityClass() = Tag::class.java
-
-    fun findByName(name: String): Tag? {
-        return database.entityManager.use {
+    suspend fun findByName(name: String): Tag? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

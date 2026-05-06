@@ -17,7 +17,7 @@ class EpisodeMappingController : HasPageableRoute() {
 
     @Path
     @Get
-    private fun getAll(
+    private suspend fun getAll(
         @QueryParam country: CountryCode?,
         @QueryParam searchTypes: Array<LangType>?,
         @QueryParam("page", "1") pageParam: Int,

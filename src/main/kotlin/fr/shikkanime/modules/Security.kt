@@ -81,7 +81,7 @@ private fun AuthenticationConfig.setupAdminSessionAuthentication(jwtVerifier: JW
     }
 }
 
-private fun validationSession(jwtVerifier: JWTVerifier, session: TokenDto): TokenDto? {
+private suspend fun validationSession(jwtVerifier: JWTVerifier, session: TokenDto): TokenDto? {
     val jwtPrincipal = jwtVerifier.verify(session.token) ?: return null
     val member = memberCacheService.find(UUID.fromString(jwtPrincipal.getClaim("uuid").asString())) ?: return null
 

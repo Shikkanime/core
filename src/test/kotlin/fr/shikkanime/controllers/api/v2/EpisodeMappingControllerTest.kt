@@ -50,7 +50,7 @@ class EpisodeMappingControllerTest : AbstractControllerTest() {
     }
 
     @Test
-    fun `release on 30 minutes difference`() {
+    suspend fun `release on 30 minutes difference`() {
         attachmentService.clearPool()
         database.truncate()
         database.clearCache()

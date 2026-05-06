@@ -4,10 +4,8 @@ import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.Config_
 
 class ConfigRepository : AbstractRepository<Config>() {
-    override fun getEntityClass() = Config::class.java
-
-    fun findAllByName(name: String): List<Config> {
-        return database.entityManager.use {
+    suspend fun findAllByName(name: String): List<Config> {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())
@@ -18,8 +16,8 @@ class ConfigRepository : AbstractRepository<Config>() {
         }
     }
 
-    fun findByName(name: String): Config? {
-        return database.entityManager.use {
+    suspend fun findByName(name: String): Config? {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(getEntityClass())
             val root = query.from(getEntityClass())

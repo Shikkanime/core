@@ -2,8 +2,8 @@ package fr.shikkanime.services.caches
 
 import com.google.gson.reflect.TypeToken
 import com.google.inject.Inject
-import fr.shikkanime.caches.CountryCodeLocalDateKeyCache
-import fr.shikkanime.caches.CountryCodeUUIDSortPaginationKeyCache
+import fr.shikkanime.caches.AnimeQueryCacheKey
+import fr.shikkanime.caches.WeeklyAnimeQueryCacheKey
 import fr.shikkanime.dtos.PageableDto
 import fr.shikkanime.dtos.SeasonDto
 import fr.shikkanime.dtos.animes.AnimeDto
@@ -27,14 +27,14 @@ class AnimeCacheService : ICacheService {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var seasonFactory: SeasonFactory
 
-    fun findAllSlugs() = MapCache.getOrCompute(
+    suspend fun findAllSlugs() = MapCache.getOrComputeAsync(
         "AnimeCacheService.findAllSlugs",
         classes = listOf(Anime::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
         key = StringUtils.EMPTY_STRING,
     ) { animeService.findAllSlugs().toTypedArray() }
 
-    fun findAllBy(
+    suspend fun findAllBy(
         countryCode: CountryCode?,
         simulcastUuid: UUID?,
         name: String?,
@@ -42,16 +42,16 @@ class AnimeCacheService : ICacheService {
         sort: List<SortParameter>,
         page: Int,
         limit: Int,
-    ) = MapCache.getOrCompute(
+    ) = MapCache.getOrComputeAsync(
         "AnimeCacheService.findAllBy",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<PageableDto<AnimeDto>>>() {},
-        key = CountryCodeUUIDSortPaginationKeyCache(countryCode, simulcastUuid, name, searchTypes, sort, page, limit),
+        key = AnimeQueryCacheKey(countryCode, simulcastUuid, name, searchTypes, sort, page, limit),
     ) {
         PageableDto.fromPageable(
             animeService.findAllBy(
                 it.countryCode,
-                it.simulcastUuid,
+                it.uuid,
                 it.name,
                 it.searchTypes,
                 it.sort,
@@ -62,18 +62,18 @@ class AnimeCacheService : ICacheService {
         )
     }
 
-    private fun findAllBySimulcast(simulcastUuid: UUID) = MapCache.getOrCompute(
+    private suspend fun findAllBySimulcast(simulcastUuid: UUID) = MapCache.getOrComputeAsync(
         "AnimeCacheService.findAllBySimulcast",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, Simulcast::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<AnimeDto>>>() {},
         key = simulcastUuid
     ) {
         animeService.findAllBySimulcast(it)
-            .map(animeFactory::toDto)
+            .map { entity -> animeFactory.toDto(entity) }
             .toTypedArray()
     }
 
-    fun findAllByCurrentSimulcastAndLastSimulcast(): Array<AnimeDto> {
+    suspend fun findAllByCurrentSimulcastAndLastSimulcast(): Array<AnimeDto> {
         return simulcastCacheService.findAll()
             .take(2)
             .mapNotNull { it.uuid }
@@ -81,52 +81,52 @@ class AnimeCacheService : ICacheService {
             .toTypedArray()
     }
 
-    fun getAudioLocales(animeUuid: UUID) = MapCache.getOrCompute(
+    suspend fun getAudioLocales(animeUuid: UUID) = MapCache.getOrComputeAsync(
         "AnimeCacheService.getAudioLocales",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<String>>>() {},
         key = animeUuid,
     ) { uuid -> animeService.findAllAudioLocales(uuid).distinct().toTypedArray() }
 
-    fun getLangTypes(anime: Anime) = MapCache.getOrCompute(
+    suspend fun getLangTypes(anime: Anime) = MapCache.getOrComputeAsync(
         "AnimeCacheService.getLangTypes",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<LangType>>>() {},
         key = anime.countryCode!! to anime.uuid!!,
     ) { (countryCode, uuid) -> getAudioLocales(uuid).map { LangType.fromAudioLocale(countryCode, it) }.sorted().toTypedArray() }
 
-    fun findAllSeasons(anime: Anime) = MapCache.getOrCompute(
+    suspend fun findAllSeasons(anime: Anime) = MapCache.getOrComputeAsync(
         "AnimeCacheService.findAllSeasons",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<Array<SeasonDto>>>() {},
         key = anime.uuid!!,
-    ) { uuid -> animeService.findAllSeasons(uuid).map(seasonFactory::toDto).toTypedArray() }
+    ) { uuid -> animeService.findAllSeasons(uuid).map { seasonFactory.toDto(it) }.toTypedArray() }
 
-    fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrComputeNullable(
+    suspend fun findBySlug(countryCode: CountryCode, slug: String) = MapCache.getOrComputeNullableAsync(
         "AnimeCacheService.findBySlug",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<AnimeDto>>() {},
         key = countryCode to slug,
-    ) { animeService.findBySlug(it.first, it.second)?.let(animeFactory::toDto) }
+    ) { animeService.findBySlug(it.first, it.second)?.let { anime -> animeFactory.toDto(anime) } }
 
-    fun findByName(countryCode: CountryCode, name: String) = MapCache.getOrComputeNullable(
+    suspend fun findByName(countryCode: CountryCode, name: String) = MapCache.getOrComputeNullableAsync(
         "AnimeCacheService.findByName",
         classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java),
         typeToken = object : TypeToken<MapCacheValue<AnimeDto>>() {},
         key = countryCode to name,
-    ) { animeService.findByName(it.first, it.second)?.let(animeFactory::toDto) }
+    ) { animeService.findByName(it.first, it.second)?.let { anime -> animeFactory.toDto(anime) } }
 
-    fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate, searchTypes: Array<LangType>? = null) =
-        MapCache.getOrCompute(
+    suspend fun getWeeklyAnimes(countryCode: CountryCode, memberUuid: UUID?, startOfWeekDay: LocalDate, searchTypes: Array<LangType>? = null) =
+        MapCache.getOrComputeAsync(
             "AnimeCacheService.getWeeklyAnimes",
             classes = listOf(Anime::class.java, EpisodeMapping::class.java, EpisodeVariant::class.java, MemberFollowAnime::class.java),
             typeToken = object : TypeToken<MapCacheValue<Array<WeeklyAnimesDto>>>() {},
-            key = CountryCodeLocalDateKeyCache(countryCode, memberUuid, startOfWeekDay, searchTypes),
+            key = WeeklyAnimeQueryCacheKey(countryCode, memberUuid, startOfWeekDay, searchTypes),
         ) {
             animeService.getWeeklyAnimes(
                 it.countryCode,
-                it.member,
-                it.localDate,
+                it.uuid,
+                it.weekStartDate,
                 it.searchTypes,
             ).toTypedArray()
         }

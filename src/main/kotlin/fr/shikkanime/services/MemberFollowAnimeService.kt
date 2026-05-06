@@ -14,26 +14,26 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var animeService: AnimeService
 
-    fun findAllFollowedAnimes(memberUuid: UUID, page: Int, limit: Int) =
+    suspend fun findAllFollowedAnimes(memberUuid: UUID, page: Int, limit: Int) =
         repository.findAllFollowedAnimes(memberUuid, page, limit)
 
-    fun findAllFollowedAnimesUUID(memberUuid: UUID) = repository.findAllFollowedAnimesUUID(memberUuid)
+    suspend fun findAllFollowedAnimesUUID(memberUuid: UUID) = repository.findAllFollowedAnimesUUID(memberUuid)
 
-    fun findAllByAnime(anime: Anime) = repository.findAllByAnime(anime)
+    suspend fun findAllByAnime(anime: Anime) = repository.findAllByAnime(anime)
 
-    fun findAllMissedAnimes(memberUuid: UUID, page: Int, limit: Int) =
+    suspend fun findAllMissedAnimes(memberUuid: UUID, page: Int, limit: Int) =
         repository.findAllMissedAnimes(memberUuid, page, limit)
 
-    fun findAllByMember(memberUuid: UUID) = repository.findAllByMember(memberUuid)
+    suspend fun findAllByMember(memberUuid: UUID) = repository.findAllByMember(memberUuid)
 
-    fun existsByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID) =
+    suspend fun existsByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID) =
         repository.existsByMemberUuidAndAnimeUuid(memberUuid, animeUuid)
 
-    fun existsByMemberAndAnime(member: Member, anime: Anime) = existsByMemberUuidAndAnimeUuid(member.uuid!!, anime.uuid!!)
+    suspend fun existsByMemberAndAnime(member: Member, anime: Anime) = existsByMemberUuidAndAnimeUuid(member.uuid!!, anime.uuid!!)
 
-    fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
+    suspend fun deleteAllByMember(memberUuid: UUID) = repository.deleteAll(repository.findAllByMember(memberUuid))
 
-    fun follow(memberUuid: UUID, anime: GenericDto): Response {
+    suspend fun follow(memberUuid: UUID, anime: GenericDto): Response {
         val animeReference = animeService.getReference(anime.uuid) ?: return Response.notFound()
         if (repository.existsByMemberUuidAndAnimeUuid(memberUuid, animeReference.uuid!!))
             return Response.conflict()
@@ -43,7 +43,7 @@ class MemberFollowAnimeService : AbstractService<MemberFollowAnime, MemberFollow
         return Response.ok()
     }
 
-    fun unfollow(memberUuid: UUID, anime: GenericDto): Response {
+    suspend fun unfollow(memberUuid: UUID, anime: GenericDto): Response {
         val memberFollowAnime = repository.findByMemberUuidAndAnimeUuid(memberUuid, anime.uuid)
             ?: return Response.conflict()
 

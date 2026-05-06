@@ -17,7 +17,7 @@ class TwitterSocialNetwork : AbstractSocialNetwork() {
     override val priority: Int
         get() = 2
 
-    override fun login() {
+    override suspend fun login() {
         if (isInitialized) return
 
         if (!configCacheService.getValueAsBoolean(ConfigPropertyKey.TWITTER_ENABLED)) {

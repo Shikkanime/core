@@ -8,33 +8,41 @@ import fr.shikkanime.utils.entities.Tracing
 import jakarta.persistence.PrePersist
 import jakarta.persistence.PreRemove
 import jakarta.persistence.PreUpdate
+import kotlinx.coroutines.runBlocking
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.hasAnnotation
 
 class EntityLifecycleListener {
-    private val traceActionService: TraceActionService by lazy { Constant.injector.getInstance(TraceActionService::class.java) }
+    private val traceActionService: TraceActionService by lazy {
+        Constant.injector.getInstance(TraceActionService::class.java)
+    }
+
+    private fun trace(
+        entity: Any,
+        action: TraceAction.Action,
+        requireDeleteEnabled: Boolean = false
+    ) {
+        if (entity !is ShikkEntity) return
+
+        val tracing = entity::class.findAnnotation<Tracing>() ?: return
+        if (requireDeleteEnabled && !tracing.delete) return
+
+        runBlocking {
+            traceActionService.createTraceAction(entity, action)
+        }
+    }
 
     @PrePersist
     fun onEntityCreate(entity: Any) {
-        if (entity !is ShikkEntity || !entity::class.hasAnnotation<Tracing>())
-            return
-
-        traceActionService.createTraceAction(entity, TraceAction.Action.CREATE)
+        trace(entity, TraceAction.Action.CREATE)
     }
 
     @PreUpdate
     fun onEntityUpdate(entity: Any) {
-        if (entity !is ShikkEntity || !entity::class.hasAnnotation<Tracing>())
-            return
-
-        traceActionService.createTraceAction(entity, TraceAction.Action.UPDATE)
+        trace(entity, TraceAction.Action.UPDATE)
     }
 
     @PreRemove
     fun onEntityRemove(entity: Any) {
-        if (entity !is ShikkEntity || (!entity::class.hasAnnotation<Tracing>() || entity::class.findAnnotation<Tracing>()?.delete == false))
-            return
-
-        traceActionService.createTraceAction(entity, TraceAction.Action.DELETE)
+        trace(entity, TraceAction.Action.DELETE, requireDeleteEnabled = true)
     }
 }

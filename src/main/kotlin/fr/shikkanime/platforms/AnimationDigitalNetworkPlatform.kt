@@ -29,7 +29,7 @@ private val LOCALE_MAP = mapOf(
 )
 
 class AnimationDigitalNetworkPlatform :
-    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Video>>() {
+    AbstractPlatform<AnimationDigitalNetworkConfiguration, CountryCode, Array<AbstractAnimationDigitalNetworkWrapper.Episode>>() {
     @Inject private lateinit var animeCacheService: AnimeCacheService
 
     override fun getPlatform(): Platform = Platform.ANIM
@@ -43,10 +43,10 @@ class AnimationDigitalNetworkPlatform :
         return title.replace(regex, StringUtils.EMPTY_STRING).trim()
     }
 
-    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Video> {
-        val latestVideos = AnimationDigitalNetworkWrapper.getLatestVideos(key, zonedDateTime.toLocalDate()).toMutableList()
+    override suspend fun fetchApiContent(key: CountryCode, zonedDateTime: ZonedDateTime): Array<AbstractAnimationDigitalNetworkWrapper.Episode> {
+        val latestEpisodes = AnimationDigitalNetworkWrapper.getLatestEpisodes(key.locale, zonedDateTime.toLocalDate()).toMutableList()
 
-        latestVideos.addAll(
+        latestEpisodes.addAll(
             configuration?.simulcasts
                 ?.filter { it.audioLocaleDelay == zonedDateTime.dayOfWeek.value }
                 ?.flatMap { simulcast ->
@@ -54,7 +54,7 @@ class AnimationDigitalNetworkPlatform :
                         animePlatformCacheService.findAllIdByAnimeAndPlatform(anime.uuid!!, getPlatform())
                             .flatMap { platformId ->
                                 platformId.toIntOrNull()?.let { id ->
-                                    AnimationDigitalNetworkWrapper.getShowVideos(key, id)
+                                    AnimationDigitalNetworkWrapper.getEpisodesByShowId(key.locale, id)
                                         .filter { it.releaseDate != null && it.releaseDate!!.toLocalTime() >= zonedDateTime.toLocalTime() }
                                         .onEach { it.releaseDate = zonedDateTime }
                                         .toList()
@@ -64,7 +64,7 @@ class AnimationDigitalNetworkPlatform :
                 } ?: emptyList()
         )
 
-        return latestVideos.toTypedArray()
+        return latestEpisodes.toTypedArray()
     }
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
@@ -74,7 +74,7 @@ class AnimationDigitalNetworkPlatform :
             val api = bypassFileContent?.takeIf { it.exists() }?.let {
                 ObjectParser.fromJson(
                     ObjectParser.fromJson(bypassFileContent.readText()).getAsJsonArray("videos"),
-                    Array<AbstractAnimationDigitalNetworkWrapper.Video>::class.java
+                    Array<AbstractAnimationDigitalNetworkWrapper.Episode>::class.java
                 )
             } ?: getApiContent(countryCode, zonedDateTime)
 
@@ -94,28 +94,28 @@ class AnimationDigitalNetworkPlatform :
         return list
     }
 
-    fun convertEpisode(
+    suspend fun convertEpisode(
         countryCode: CountryCode,
-        video: AbstractAnimationDigitalNetworkWrapper.Video,
+        episode: AbstractAnimationDigitalNetworkWrapper.Episode,
         zonedDateTime: ZonedDateTime,
         needSimulcast: Boolean = true,
         checkAnimation: Boolean = true
     ): List<Episode> {
-        val season = video.season?.toIntOrNull() ?: 1
-        val animeName = cleanAnimeName(video.show.shortTitle?.takeIf { it.isNotBlank() } ?: video.show.title, season.toString())
+        val season = episode.season?.toIntOrNull() ?: 1
+        val animeName = cleanAnimeName(episode.show.shortTitle?.takeIf { it.isNotBlank() } ?: episode.show.title, season.toString())
 
         if (isBlacklisted(animeName)) throw AnimeException("\"$animeName\" is blacklisted")
 
-        val genres = video.show.genres
+        val genres = episode.show.genres
         val isConfigurationSimulcasted = containsAnimeSimulcastConfiguration(animeName)
 
         if ((genres.isEmpty() || !genres.any { it.startsWith("Animation ", true) }) && !isConfigurationSimulcasted && checkAnimation)
             throw Exception("Anime is not an animation")
 
         val isSimulcasted =
-            video.show.simulcast || video.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(
+            episode.show.simulcast || episode.show.firstReleaseYear in (0..1).map { (zonedDateTime.year - it).toString() } || configCacheService.getValueAsString(
                 ConfigPropertyKey.ANIMATION_DITIGAL_NETWORK_SIMULCAST_DETECTION_REGEX
-            )?.let { Regex(it).containsMatchIn((video.show.summary ?: StringUtils.EMPTY_STRING).lowercase()) } == true
+            )?.let { Regex(it).containsMatchIn((episode.show.summary ?: StringUtils.EMPTY_STRING).lowercase()) } == true
 
         if (needSimulcast && !(isConfigurationSimulcasted || isSimulcasted))
             throw AnimeNotSimulcastedException("Anime is not simulcasted")
@@ -123,38 +123,38 @@ class AnimationDigitalNetworkPlatform :
         val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
         val specialShowTypes = listOf("PV", "BONUS")
 
-        if (trailerIndicators.any { video.shortNumber?.startsWith(it) == true } || video.type in specialShowTypes)
+        if (trailerIndicators.any { episode.shortNumber?.startsWith(it) == true } || episode.type in specialShowTypes)
             throw NotSimulcastedMediaException("Trailer or special show type")
 
-        val (number, episodeType) = getNumberAndEpisodeType(video.shortNumber, video.type)
+        val (number, episodeType) = getNumberAndEpisodeType(episode.shortNumber, episode.type)
 
-        return video.languages.map {
+        return episode.languages.map {
             Episode(
                 countryCode = countryCode,
-                animeId = video.show.id.toString(),
+                animeId = episode.show.id.toString(),
                 anime = animeName,
                 animeAttachments = mapOf(
-                    ImageType.THUMBNAIL to video.show.fullHDImage,
-                    ImageType.BANNER to video.show.fullHDBanner,
-                    ImageType.CAROUSEL to video.show.fullHDCarousel,
-                    ImageType.TITLE to video.show.fullHDTitle,
+                    ImageType.THUMBNAIL to episode.show.fullHDImage,
+                    ImageType.BANNER to episode.show.fullHDBanner,
+                    ImageType.CAROUSEL to episode.show.fullHDCarousel,
+                    ImageType.TITLE to episode.show.fullHDTitle,
                 ),
-                animeDescription = video.show.summary,
-                releaseDateTime = requireNotNull(video.releaseDate) { "Release date is null" },
+                animeDescription = episode.show.summary,
+                releaseDateTime = requireNotNull(episode.releaseDate) { "Release date is null" },
                 episodeType = episodeType,
-                seasonId = video.season ?: "1",
+                seasonId = episode.season ?: "1",
                 season = season,
                 number = number,
-                duration = video.duration,
-                title = video.name,
-                description = video.summary,
-                image = video.fullHDImage.takeIf { image -> image.contains("/video/") } ?: Constant.DEFAULT_IMAGE_PREVIEW,
+                duration = episode.duration,
+                title = episode.name,
+                description = episode.summary,
+                image = episode.fullHDImage.takeIf { image -> image.contains("/video/") } ?: Constant.DEFAULT_IMAGE_PREVIEW,
                 platform = getPlatform(),
                 audioLocale = requireNotNull(LOCALE_MAP[it]) { "Language not supported" },
-                id = video.id.toString(),
-                url = video.url,
-                uncensored = video.title.contains("(NC)", true) || video.title.contains("Non censuré", true),
-                original = video.languages.size == 1 || video.languages.indexOf(it) == 0
+                id = episode.id.toString(),
+                url = episode.url,
+                uncensored = episode.title.contains("(NC)", true) || episode.title.contains("Non censuré", true),
+                original = episode.languages.size == 1 || episode.languages.indexOf(it) == 0
             )
         }
     }

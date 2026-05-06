@@ -21,15 +21,15 @@ class AnalyticsController {
 
     @Path("/metrics")
     @Get
-    private fun getMetrics(@QueryParam(defaultValue = "1") hours: Long) = Response.ok(metricService.findAllAfterGrouped(hours))
+    private suspend fun getMetrics(@QueryParam(defaultValue = "1") hours: Long) = Response.ok(metricService.findAllAfterGrouped(hours))
 
     @Path("/attachments")
     @Get
-    private fun getAttachments() = Response.ok(attachmentService.getAttachmentCountsByDate())
+    private suspend fun getAttachments() = Response.ok(attachmentService.getAttachmentCountsByDate())
 
     @Path("/users")
     @Get
-    private fun getUsers(
+    private suspend fun getUsers(
         @QueryParam(defaultValue = "2") activeDays: Int,
         @QueryParam(defaultValue = "30") days: Long,
     ) = Response.ok(traceActionService.getUserAnalytics(LocalDate.now().minusDays(days), activeDays))

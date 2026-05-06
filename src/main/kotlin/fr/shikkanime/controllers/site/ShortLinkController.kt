@@ -27,12 +27,12 @@ class ShortLinkController {
 
     @Path("r/{episodeVariantUuid}")
     @Get
-    private fun redirectToRealLink(@PathParam episodeVariantUuid: UUID) =
+    private suspend fun redirectToRealLink(@PathParam episodeVariantUuid: UUID) =
         Response.redirect(episodeVariantCacheService.find(episodeVariantUuid)?.let(::getUrl) ?: "/404")
 
     @Path("v/{webToken}")
     @Get
-    private fun validateWebToken(@PathParam webToken: String): Response {
+    private suspend fun validateWebToken(@PathParam webToken: String): Response {
         try {
             memberActionService.validateWebAction(webToken)
             InvalidationService.invalidate(Member::class.java)

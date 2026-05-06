@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 
 class AnimeSearchTest : AbstractTest() {
     @Test
-    fun testExactMatchFirst() {
+    suspend fun testExactMatchFirst() {
         animeService.save(
             Anime(
                 countryCode = CountryCode.FR,
@@ -49,7 +49,7 @@ class AnimeSearchTest : AbstractTest() {
     }
 
     @Test
-    fun testPartialMatchSecond() {
+    suspend fun testPartialMatchSecond() {
         animeService.save(
             Anime(
                 countryCode = CountryCode.FR,

@@ -38,7 +38,7 @@ class EpisodeMappingController {
 
     @Path("/update-all")
     @Put
-    private fun updateAllEpisode(@BodyParam updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto): Response {
+    private suspend fun updateAllEpisode(@BodyParam updateAllEpisodeMappingDto: UpdateAllEpisodeMappingDto): Response {
         if (updateAllEpisodeMappingDto.uuids.isEmpty())
             return Response.badRequest(MessageDto.error("uuids must not be empty"))
 
@@ -60,14 +60,14 @@ class EpisodeMappingController {
 
     @Path("/{uuid}")
     @Get
-    private fun read(@PathParam uuid: UUID): Response {
+    private suspend fun read(@PathParam uuid: UUID): Response {
         val episodeMapping = episodeMappingService.find(uuid) ?: return Response.notFound()
         return Response.ok(episodeMappingFactory.toDto(episodeMapping).apply { image = attachmentService.findByEntityUuidTypeAndActive(uuid, ImageType.BANNER)?.url })
     }
 
     @Path("/{uuid}")
     @Put
-    private fun updateEpisode(
+    private suspend fun updateEpisode(
         @PathParam uuid: UUID,
         @BodyParam episodeMappingDto: EpisodeMappingDto
     ): Response {
@@ -79,7 +79,7 @@ class EpisodeMappingController {
 
     @Path("/{uuid}")
     @Delete
-    private fun deleteEpisode(@PathParam uuid: UUID): Response {
+    private suspend fun deleteEpisode(@PathParam uuid: UUID): Response {
         episodeMappingService.delete(episodeMappingService.find(uuid) ?: return Response.notFound())
         episodeVariantService.preIndex()
         InvalidationService.invalidate(EpisodeMapping::class.java, EpisodeVariant::class.java)
