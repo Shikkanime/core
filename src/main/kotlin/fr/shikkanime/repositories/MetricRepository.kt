@@ -11,7 +11,7 @@ class MetricRepository : AbstractRepository<Metric>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val groupedDate = cb.function("DATE_TRUNC", ZonedDateTime::class.java, cb.literal(groupBy), root[Metric_.date])
 
             query.select(
@@ -45,8 +45,8 @@ class MetricRepository : AbstractRepository<Metric>() {
     suspend fun deleteAllBefore(date: ZonedDateTime) {
         dispatch(true) {
             val cb = it.criteriaBuilder
-            val query = cb.createCriteriaDelete(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createCriteriaDelete(entityClass)
+            val root = query.from(entityClass)
             query.where(cb.lessThan(root[Metric_.date], date))
             it.createQuery(query).executeUpdate()
         }

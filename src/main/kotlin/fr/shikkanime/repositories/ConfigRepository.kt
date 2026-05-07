@@ -7,8 +7,8 @@ class ConfigRepository : AbstractRepository<Config>() {
     suspend fun findAllByName(name: String): List<Config> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             query.where(cb.like(cb.lower(root[Config_.propertyKey]), "%${name.lowercase()}%"))
 
             createReadOnlyQuery(it, query)
@@ -19,8 +19,8 @@ class ConfigRepository : AbstractRepository<Config>() {
     suspend fun findByName(name: String): Config? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             query.where(cb.equal(cb.lower(root[Config_.propertyKey]), name.lowercase()))
 
             createReadOnlyQuery(it, query)

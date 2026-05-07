@@ -11,8 +11,8 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
     suspend fun findAllByMember(memberUuid: UUID): List<MemberAction> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberAction_.member][Member_.uuid], memberUuid)
@@ -26,8 +26,8 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
     suspend fun findAllNotValidated(): List<MemberAction> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.isFalse(root[MemberAction_.validated]),
@@ -42,8 +42,8 @@ class MemberActionRepository : AbstractRepository<MemberAction>() {
     suspend fun findByUuidAndCode(uuid: UUID, code: String): MemberAction? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberAction_.uuid], uuid),

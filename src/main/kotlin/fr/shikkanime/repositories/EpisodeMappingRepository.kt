@@ -21,10 +21,10 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         page: Int,
         limit: Int,
     ): Pageable<EpisodeMapping> {
-        return dispatchSuspending { entityManager ->
+        return dispatch { entityManager ->
             val cb = entityManager.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             // Build predicates
             val predicates = listOfNotNull(
@@ -76,8 +76,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     suspend fun findAllByAnime(animeUuid: UUID): List<EpisodeMapping> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[EpisodeMapping_.anime][Anime_.uuid], animeUuid))
                 .orderBy(
@@ -102,8 +102,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     ): List<EpisodeMapping> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             val animeJoin = root.join(EpisodeMapping_.anime)
             val simulcastJoin = animeJoin.join(Anime_.simulcasts, JoinType.LEFT)
             val now = ZonedDateTime.now()
@@ -167,7 +167,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(EpisodeMappingSeoDto::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             query.select(
                 cb.construct(
@@ -220,8 +220,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     ): EpisodeMapping? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(
@@ -248,7 +248,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Int::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val variantJoin = root.join(EpisodeMapping_.variants)
 
             query.select(root[EpisodeMapping_.number])
@@ -278,7 +278,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(ZonedDateTime::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val variantJoin = root.join(EpisodeMapping_.variants)
             query.select(root[EpisodeMapping_.releaseDateTime])
 
@@ -307,7 +307,7 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(ZonedDateTime::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(cb.least(root[EpisodeMapping_.releaseDateTime]))
 
             createReadOnlyQuery(it, query)
@@ -319,8 +319,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
     suspend fun updateAllReleaseDate() {
         dispatch(true) {
             val cb = it.criteriaBuilder
-            val update = cb.createCriteriaUpdate(getEntityClass())
-            val root = update.from(getEntityClass())
+            val update = cb.createCriteriaUpdate(entityClass)
+            val root = update.from(entityClass)
 
             val subQueryMin = update.subquery(ZonedDateTime::class.java)
             val subRootMin = subQueryMin.from(EpisodeVariant::class.java)
@@ -348,8 +348,8 @@ class EpisodeMappingRepository : AbstractRepository<EpisodeMapping>() {
             bySimulcast.forEach { (simulcastUuid, episodeMappingUuids) ->
                 episodeMappingUuids.chunked(10_000).forEach { chunk ->
                     val cb = it.criteriaBuilder
-                    val update = cb.createCriteriaUpdate(getEntityClass())
-                    val root = update.from(getEntityClass())
+                    val update = cb.createCriteriaUpdate(entityClass)
+                    val root = update.from(entityClass)
 
                     update[root[EpisodeMapping_.simulcast][Simulcast_.uuid]] = simulcastUuid
                     update.where(root[EpisodeMapping_.uuid].`in`(chunk))

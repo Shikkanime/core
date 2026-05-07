@@ -7,8 +7,8 @@ class MailRepository : AbstractRepository<Mail>() {
     suspend fun findAllByRecipient(recipient: String): List<Mail> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[Mail_.recipient], recipient)
@@ -22,8 +22,8 @@ class MailRepository : AbstractRepository<Mail>() {
     suspend fun findAllNotSent(): List<Mail> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(

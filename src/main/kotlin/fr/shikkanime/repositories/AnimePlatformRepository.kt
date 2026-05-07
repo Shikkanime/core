@@ -10,8 +10,8 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
     suspend fun findAllByAnime(uuid: UUID): List<AnimePlatform> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[AnimePlatform_.anime][Anime_.uuid], uuid))
 
@@ -23,8 +23,8 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
     suspend fun findAllByPlatform(platform: Platform): List<AnimePlatform> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[AnimePlatform_.platform], platform))
 
@@ -37,7 +37,7 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(root[AnimePlatform_.platformId])
 
             query.where(
@@ -55,8 +55,8 @@ class AnimePlatformRepository : AbstractRepository<AnimePlatform>() {
     suspend fun findByAnimePlatformAndId(animeUuid: UUID, platform: Platform, platformId: String): AnimePlatform? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(

@@ -10,8 +10,8 @@ class AnimeTagRepository : AbstractRepository<AnimeTag>() {
     suspend fun findAllByAnime(animeUuid: UUID): List<AnimeTag> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[AnimeTag_.anime][Anime_.uuid], animeUuid))
                 .orderBy(cb.asc(cb.lower(root[AnimeTag_.tag][Tag_.name])))

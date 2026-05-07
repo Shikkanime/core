@@ -10,7 +10,7 @@ class AnalyticsRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(MarketShare::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val variantJoin = root.join(EpisodeMapping_.variants)
 
             query.select(
@@ -32,12 +32,12 @@ class AnalyticsRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(MarketShare::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val variantJoin = root.join(EpisodeMapping_.variants)
             val simulcastJoin = root.join(EpisodeMapping_.simulcast)
 
             val subQuery = query.subquery(Long::class.java)
-            val subRoot = subQuery.from(getEntityClass())
+            val subRoot = subQuery.from(entityClass)
             val subVariantJoin = subRoot.join(EpisodeMapping_.variants)
             val subSimulcastJoin = subRoot.join(EpisodeMapping_.simulcast)
 
@@ -78,7 +78,7 @@ class AnalyticsRepository : AbstractRepository<EpisodeMapping>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(GenreCoverage::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             val animeJoin = root.join(EpisodeMapping_.anime)
             val genreJoin = animeJoin.join(Anime_.genres)

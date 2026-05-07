@@ -18,7 +18,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun preIndex() {
         dispatch {
             val searchSession = Search.session(it)
-            val indexer = searchSession.massIndexer(getEntityClass())
+            val indexer = searchSession.massIndexer(entityClass)
             indexer.startAndWait()
         }
     }
@@ -91,7 +91,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
     ): Pageable<Anime> {
         val searchContext = SearchContext(countryCode, simulcastUuid, searchTypes)
 
-        return dispatchSuspending { entityManager ->
+        return dispatch { entityManager ->
             if (!name.isNullOrBlank() && name.length > 1) {
                 findByFullTextSearch(entityManager, searchContext, name, page, limit)
             } else {
@@ -114,7 +114,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
         val cb = entityManager.criteriaBuilder
         val countQuery = cb.createQuery(UUID::class.java)
-        val root = countQuery.from(getEntityClass())
+        val root = countQuery.from(entityClass)
 
         val predicates = buildList<Predicate> {
             add(root[Anime_.uuid].`in`(searchResults.keys))
@@ -147,7 +147,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
 
     private fun executeFullTextSearch(entityManager: EntityManager, name: String): Map<UUID, Float> {
         val searchSession = Search.session(entityManager)
-        return searchSession.search(getEntityClass())
+        return searchSession.search(entityClass)
             .select { s -> s.composite(s.id(), s.score()) }
             .where { w ->
                 w.bool()
@@ -168,8 +168,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
         limit: Int,
     ): Pageable<Anime> {
         val cb = entityManager.criteriaBuilder
-        val query = cb.createQuery(getEntityClass())
-        val root = query.from(getEntityClass())
+        val query = cb.createQuery(entityClass)
+        val root = query.from(entityClass)
         query.distinct(true).select(root)
 
         val predicates = buildList {
@@ -224,8 +224,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun findAllBySimulcast(simulcastUuid: UUID): List<Anime> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             val simulcastJoin = root.join(Anime_.simulcasts)
 
             query.where(cb.equal(simulcastJoin[Simulcast_.uuid], simulcastUuid))
@@ -245,8 +245,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     ): List<Anime> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             val simulcastJoin = root.join(Anime_.simulcasts, JoinType.LEFT)
             val now = ZonedDateTime.now()
 
@@ -306,7 +306,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Season::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val mappingJoin = root.join(Anime_.mappings)
 
             query.select(
@@ -329,8 +329,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun findAllSimulcastedWithAnimePlatformInvalid(simulcastUuids: Collection<UUID>, platform: Platform, lastValidateDateTime: ZonedDateTime, ignoreAudioLocale: String): List<Anime> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             val simulcastJoin = root.join(Anime_.simulcasts, JoinType.INNER)
             val animePlatformJoin = root.join(Anime_.platformIds, JoinType.LEFT)
@@ -357,7 +357,7 @@ class AnimeRepository : AbstractRepository<Anime>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             query.select(root[Anime_.slug])
 
@@ -369,8 +369,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     override suspend fun find(uuid: UUID): Anime? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[Anime_.uuid], uuid))
 
@@ -384,8 +384,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun findBySlug(countryCode: CountryCode, slug: String): Anime? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(
@@ -404,8 +404,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun findByName(countryCode: CountryCode, name: String?): Anime? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(
@@ -423,8 +423,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun updateAllReleaseDate() {
         dispatch(true) {
             val cb = it.criteriaBuilder
-            val update = cb.createCriteriaUpdate(getEntityClass())
-            val root = update.from(getEntityClass())
+            val update = cb.createCriteriaUpdate(entityClass)
+            val root = update.from(entityClass)
 
             val subQueryMin = update.subquery(ZonedDateTime::class.java)
             val subRootMin = subQueryMin.from(EpisodeMapping::class.java)
@@ -446,8 +446,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
     suspend fun deleteAllWithoutEpisodes() {
         dispatch(true) {
             val cb = it.criteriaBuilder
-            val delete = cb.createCriteriaDelete(getEntityClass())
-            val root = delete.from(getEntityClass())
+            val delete = cb.createCriteriaDelete(entityClass)
+            val root = delete.from(entityClass)
             delete.where(cb.isEmpty(root[Anime_.mappings]))
             it.createQuery(delete).executeUpdate()
         }

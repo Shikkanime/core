@@ -7,8 +7,8 @@ class TagRepository : AbstractRepository<Tag>() {
     suspend fun findByName(name: String): Tag? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             query.where(cb.equal(cb.lower(root[Tag_.name]), name.lowercase()))
 
             createReadOnlyQuery(it, query)
