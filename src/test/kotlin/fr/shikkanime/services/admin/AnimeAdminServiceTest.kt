@@ -2,6 +2,9 @@ package fr.shikkanime.services.admin
 
 import com.google.inject.Inject
 import fr.shikkanime.AbstractTest
+import fr.shikkanime.builders.AnimeBuilder
+import fr.shikkanime.builders.AnimeDtoBuilder
+import fr.shikkanime.builders.EpisodeMappingBuilder
 import fr.shikkanime.dtos.GenericDto
 import fr.shikkanime.entities.Anime
 import fr.shikkanime.entities.EpisodeMapping
@@ -18,6 +21,63 @@ import org.junit.jupiter.api.assertNotNull
 class AnimeAdminServiceTest : AbstractTest() {
     @Inject private lateinit var animeFactory: AnimeFactory
     @Inject private lateinit var animeAdminService: AnimeAdminService
+
+    @Test
+    suspend fun shouldMerge_whenAnimeHasNoEpisodes_withNewNameInDto() {
+        // Given
+        val from = AnimeBuilder().apply {
+            countryCode = CountryCode.FR
+            name = "DRAGON QUEST The Adventure of Dai"
+        }.build()
+
+        val to = AnimeBuilder().apply {
+            countryCode = CountryCode.FR
+            name = "Dragon Quest"
+        }.build()
+
+        // When
+        val dto = AnimeDtoBuilder().apply {
+            countryCode = CountryCode.FR
+            name = "Dragon Quest"
+        }.build()
+
+        val result = animeAdminService.update(from.uuid!!, dto)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(1, animeService.findAll().size)
+        assertEquals(to.uuid, result.uuid)
+        assertEquals("Dragon Quest", result.name)
+    }
+
+    @Test
+    suspend fun shouldUpdateName_whenAnimeHasEpisodes_withNewNameInDto() {
+        // Given
+        val anime = AnimeBuilder().apply {
+            countryCode = CountryCode.FR
+            name = "DRAGON QUEST The Adventure of Dai"
+            episodes = listOf(
+                EpisodeMappingBuilder().apply {
+                    season = 1
+                    episodeType = EpisodeType.EPISODE
+                    number = 1
+                }
+            )
+        }.build()
+
+        val dto = AnimeDtoBuilder().apply {
+            countryCode = CountryCode.FR
+            name = "Dragon Quest"
+        }.build()
+
+        // When
+        val result = animeAdminService.update(anime.uuid!!, dto)
+
+        // Then
+        assertNotNull(result)
+        assertEquals(anime.uuid, result.uuid)
+        assertEquals("Dragon Quest", result.name)
+    }
 
     @Test
     suspend fun `update with no episodes`() {
