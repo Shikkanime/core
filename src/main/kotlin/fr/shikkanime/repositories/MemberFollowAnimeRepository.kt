@@ -11,8 +11,8 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     suspend fun findAllByMember(memberUuid: UUID): List<MemberFollowAnime> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid)
@@ -24,10 +24,10 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     }
 
     suspend fun findAllFollowedAnimes(memberUuid: UUID, page: Int, limit: Int): Pageable<Anime> {
-        return dispatchSuspending {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Anime::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(root[MemberFollowAnime_.anime])
 
             query.where(
@@ -44,7 +44,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(root[MemberFollowAnime_.anime][Anime_.uuid])
 
             query.where(
@@ -61,10 +61,10 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         page: Int,
         limit: Int,
     ): Pageable<MissedAnime> {
-        return dispatchSuspending {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(MissedAnime::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val anime = root.join(MemberFollowAnime_.anime)
             val episodeMapping = anime.join(Anime_.mappings, JoinType.LEFT)
             // And episode type is not SUMMARY
@@ -93,8 +93,8 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     suspend fun findAllByAnime(anime: Anime): List<MemberFollowAnime> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberFollowAnime_.anime], anime)
@@ -109,7 +109,7 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(cb.literal(1))
 
             query.where(
@@ -126,8 +126,8 @@ class MemberFollowAnimeRepository : AbstractRepository<MemberFollowAnime>() {
     suspend fun findByMemberUuidAndAnimeUuid(memberUuid: UUID, animeUuid: UUID): MemberFollowAnime? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberFollowAnime_.member][Member_.uuid], memberUuid),

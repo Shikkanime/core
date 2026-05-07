@@ -12,8 +12,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
     suspend fun findAllByEntityUuid(entityUuid: UUID): List<Attachment> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[Attachment_.entityUuid], entityUuid)
@@ -27,8 +27,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
     suspend fun findAllByEntityUuidAndType(entityUuid: UUID, type: ImageType): List<Attachment> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[Attachment_.entityUuid], entityUuid),
@@ -43,11 +43,11 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
     suspend fun findAllNeededUpdate(lastUpdateDateTime: ZonedDateTime): List<Attachment> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             val subquery1 = query.subquery(Long::class.java)
-            val subroot1 = subquery1.from(getEntityClass())
+            val subroot1 = subquery1.from(entityClass)
             subquery1.select(cb.literal(1L))
             subquery1.where(
                 cb.and(
@@ -58,7 +58,7 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
             )
 
             val subquery2 = query.subquery(ZonedDateTime::class.java)
-            val subroot2 = subquery2.from(getEntityClass())
+            val subroot2 = subquery2.from(entityClass)
             subquery2.select(cb.greatest(subroot2[Attachment_.creationDateTime]))
             subquery2.where(
                 cb.and(
@@ -92,8 +92,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
     suspend fun findAllActiveWithUrlAndNotIn(uuids: HashSet<UUID>): List<Attachment> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(
@@ -113,7 +113,7 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val formattedCreationDate = cb.function("date", LocalDate::class.java, root[Attachment_.creationDateTime])
 
             query.select(cb.tuple(formattedCreationDate, cb.count(root)))
@@ -134,8 +134,8 @@ class AttachmentRepository : AbstractRepository<Attachment>() {
     suspend fun findByEntityUuidTypeAndActive(entityUuid: UUID, type: ImageType): Attachment? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[Attachment_.entityUuid], entityUuid),

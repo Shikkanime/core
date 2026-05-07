@@ -12,7 +12,7 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
 
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val animeJoin = root.join(Simulcast_.animes)
 
             query.select(
@@ -34,8 +34,8 @@ class SimulcastRepository : AbstractRepository<Simulcast>() {
     suspend fun findBySeasonAndYear(season: Season, year: Int): Simulcast? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.select(root)
                 .where(

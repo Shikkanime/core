@@ -19,7 +19,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
             val cb = it.criteriaBuilder
 
             val query = cb.createTupleQuery().apply {
-                val root = from(getEntityClass())
+                val root = from(entityClass)
                 distinct(true)
 
                 val episodeMappingRoot = root[EpisodeVariant_.mapping]
@@ -69,9 +69,9 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     override suspend fun findAll(): List<EpisodeVariant> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
+            val query = cb.createQuery(entityClass)
 
-            query.from(getEntityClass())
+            query.from(entityClass)
                 .fetch(EpisodeVariant_.mapping, JoinType.INNER)
                 .fetch(EpisodeMapping_.anime, JoinType.INNER)
 
@@ -84,7 +84,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             query.distinct(true)
                 .select(
@@ -106,8 +106,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     suspend fun findAllByAnime(animeUuid: UUID): List<EpisodeVariant> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.anime][Anime_.uuid], animeUuid))
 
@@ -119,8 +119,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     suspend fun findAllByMapping(mappingUUID: UUID): List<EpisodeVariant> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[EpisodeVariant_.mapping][EpisodeMapping_.uuid], mappingUUID))
 
@@ -133,7 +133,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             query.select(root[EpisodeVariant_.identifier])
 
@@ -153,7 +153,7 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(String::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             query.select(root[EpisodeVariant_.identifier])
 
@@ -202,8 +202,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     suspend fun findAllByMappingAndPlatformAndAudioLocaleAndUncensored(episodeMappingUuid: UUID, platform: Platform, audioLocale: String, uncensored: Boolean): List<EpisodeVariant> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.and(
@@ -222,8 +222,8 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
     suspend fun findByIdentifier(identifier: String): EpisodeVariant? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(cb.equal(root[EpisodeVariant_.identifier], identifier))
 

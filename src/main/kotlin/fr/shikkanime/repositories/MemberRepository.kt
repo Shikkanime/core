@@ -21,8 +21,8 @@ class MemberRepository : AbstractRepository<Member>() {
     suspend fun findAllByRoles(roles: List<Role>): List<Member> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             query.where(root.join(Member_.roles).`in`(roles))
 
             createReadOnlyQuery(it, query)
@@ -33,8 +33,8 @@ class MemberRepository : AbstractRepository<Member>() {
     suspend fun findAllByAnimeUUID(animeUuid: UUID): List<Member> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             val followedAnimesJoin = root.join(Member_.followedAnimes)
 
             query.distinct(true)
@@ -46,10 +46,10 @@ class MemberRepository : AbstractRepository<Member>() {
     }
 
     suspend fun findAllWithLastLogin(page: Int, limit: Int): PageableDto<DetailedMemberDto> {
-        return dispatchSuspending {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             val maxActionDateTimeSubquery = buildMemberQuery(cb, query, root)
 
@@ -69,7 +69,7 @@ class MemberRepository : AbstractRepository<Member>() {
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             val additionalDataSubquery = buildAdditionalDataSubquery(cb, query, root)
             buildMemberQuery(cb, query, root, additionalDataSubquery)
@@ -83,7 +83,7 @@ class MemberRepository : AbstractRepository<Member>() {
 
     override suspend fun find(uuid: UUID): Member? {
         return dispatch {
-            it.find(getEntityClass(), uuid)
+            it.find(entityClass, uuid)
                 ?.apply { Hibernate.initialize(roles) }
         }
     }
@@ -91,8 +91,8 @@ class MemberRepository : AbstractRepository<Member>() {
     private suspend fun findBy(vararg pairs: Pair<SingularAttribute<Member, *>, Any>): Member? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
             root.fetch(Member_.roles, JoinType.LEFT)
 
             query.where(*pairs.map { pair ->
@@ -125,7 +125,7 @@ class MemberRepository : AbstractRepository<Member>() {
                 .where(
                     cb.and(
                         cb.equal(root[TraceAction_.action], TraceAction.Action.LOGIN),
-                        cb.equal(root[TraceAction_.entityType], getEntityClass().simpleName),
+                        cb.equal(root[TraceAction_.entityType], entityClass.simpleName),
                         cb.equal(root[TraceAction_.entityUuid], memberUuid)
                     )
                 )

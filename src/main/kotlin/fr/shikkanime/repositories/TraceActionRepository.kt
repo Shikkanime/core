@@ -15,8 +15,8 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
     suspend fun findAllByEntityUuid(entityUuid: UUID): List<TraceAction> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[TraceAction_.entityUuid], entityUuid)
@@ -28,10 +28,10 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
     }
 
     suspend fun findAllBy(entityType: String?, action: String?, page: Int, limit: Int): Pageable<TraceAction> {
-        return dispatchSuspending {
+        return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             val predicates = mutableListOf(cb.conjunction())
             entityType?.let { entityType -> predicates.add(cb.equal(root[TraceAction_.entityType], entityType)) }
@@ -48,7 +48,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val actionDate = cb.function("date", LocalDate::class.java, root[TraceAction_.actionDateTime])
 
             query.select(root[TraceAction_.entityUuid])
@@ -69,10 +69,10 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             val subquery = query.subquery(ZonedDateTime::class.java)
-            val subRoot = subquery.from(getEntityClass())
+            val subRoot = subquery.from(entityClass)
 
             subquery.select(cb.function("MAX", ZonedDateTime::class.java, subRoot[TraceAction_.actionDateTime]))
                 .where(
@@ -98,7 +98,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(TraceActionService.DateVersionCountDto::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             val actionDate = cb.function("date", String::class.java, root[TraceAction_.actionDateTime])
             val appVersion = cb.function("json_extract_path_text", String::class.java, cb.function("json", String::class.java, root[TraceAction_.additionalData]), cb.literal("appVersion"))
@@ -131,7 +131,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         val dailyCounts = dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createTupleQuery()
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             val actionDate = cb.function("date", LocalDate::class.java, root[TraceAction_.actionDateTime])
 
             query.select(cb.tuple(actionDate, cb.countDistinct(root[TraceAction_.entityUuid])))
@@ -171,7 +171,7 @@ class TraceActionRepository : AbstractRepository<TraceAction>() {
         return dispatch { em ->
             val cb = em.criteriaBuilder
             val query = cb.createQuery(KeyCountDto::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
 
             var keyExpr = cb.function("json_extract_path_text", String::class.java, cb.function("json", String::class.java, root[TraceAction_.additionalData]), cb.literal(jsonKey))
             keyTransformer?.let { keyExpr = it(cb, keyExpr) }

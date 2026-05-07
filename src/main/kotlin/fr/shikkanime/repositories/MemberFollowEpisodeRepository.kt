@@ -10,8 +10,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     suspend fun findAllByMember(memberUuid: UUID): List<MemberFollowEpisode> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid)
@@ -23,10 +23,10 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     }
 
     suspend fun findAllFollowedEpisodes(memberUuid: UUID, page: Int, limit: Int): Pageable<EpisodeMapping> {
-        return dispatchSuspending {
+        return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(EpisodeMapping::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(root[MemberFollowEpisode_.episode])
 
             query.where(
@@ -49,7 +49,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(UUID::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(root[MemberFollowEpisode_.episode][EpisodeMapping_.UUID])
 
             query.where(
@@ -64,8 +64,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     suspend fun findAllByEpisode(episode: EpisodeMapping): List<MemberFollowEpisode> {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberFollowEpisode_.episode], episode)
@@ -80,7 +80,7 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         return dispatch {
             val cb = it.criteriaBuilder
             val query = cb.createQuery(Long::class.java)
-            val root = query.from(getEntityClass())
+            val root = query.from(entityClass)
             query.select(cb.literal(1))
 
             query.where(
@@ -121,8 +121,8 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
     suspend fun findByMemberUuidAndEpisodeUuid(memberUuid: UUID, episodeUuid: UUID): MemberFollowEpisode? {
         return dispatch {
             val cb = it.criteriaBuilder
-            val query = cb.createQuery(getEntityClass())
-            val root = query.from(getEntityClass())
+            val query = cb.createQuery(entityClass)
+            val root = query.from(entityClass)
 
             query.where(
                 cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid),
