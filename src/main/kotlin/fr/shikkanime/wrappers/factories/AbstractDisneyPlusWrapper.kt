@@ -27,7 +27,7 @@ abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, Abs
     data class Episode(
         val show: Show,
         override val id: String,
-        val oldId: String,
+        val oldId: String?,
         val seasonId: String,
         val season: Int,
         val number: Int,

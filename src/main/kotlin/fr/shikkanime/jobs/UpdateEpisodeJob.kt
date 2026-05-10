@@ -480,7 +480,7 @@ class UpdateEpisodeJob : AbstractJob {
         }
 
         val episode =
-            episodes.find { it.id == context.episodePlatformId || it.oldId == context.episodePlatformId } ?: return
+            episodes.find { it.id == context.episodePlatformId || (!it.oldId.isNullOrBlank() && it.oldId == context.episodePlatformId) } ?: return
 
         context.platformEpisodes.addAll(
             runCatching {

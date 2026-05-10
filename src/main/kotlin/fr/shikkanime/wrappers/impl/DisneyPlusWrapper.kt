@@ -123,7 +123,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                             Episode(
                                 show,
                                 id,
-                                actionJsonObject.getAsJsonObject("legacyPartnerFeed").getAsString("dmcContentId")!!,
+                                actionJsonObject.getAsJsonObject("legacyPartnerFeed").getAsString("dmcContentId"),
                                 seasonId,
                                 visualsObject.getAsInt("seasonNumber")!!,
                                 visualsObject.getAsInt("episodeNumber") ?: -1,
