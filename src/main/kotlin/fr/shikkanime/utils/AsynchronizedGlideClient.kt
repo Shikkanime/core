@@ -33,7 +33,7 @@ object AsynchronizedGlideClient {
     operator fun get(key: String): String? {
         return circuitBreaker.execute(
             action = {
-                val value = glideClient.getOrNull()?.get(key)?.get()?.takeIf { it.isNotBlank() }
+                val value = glideClient.getOrThrow().get(key).get().takeIf { it.isNotBlank() }
                 // If valkey is back, check if we have a value in memory to update it
                 if (inMemoryCache.containsKey(key)) {
                     value?.let { set(key, it) }
@@ -47,7 +47,7 @@ object AsynchronizedGlideClient {
 
     operator fun set(key: String, value: String) {
         circuitBreaker.execute(
-            action = { glideClient.getOrNull()?.set(key, value)?.get() },
+            action = { glideClient.getOrThrow().set(key, value).get() },
             fallback = { inMemoryCache[key] = value }
         )
     }
@@ -61,7 +61,7 @@ object AsynchronizedGlideClient {
 
     fun del(keys: Array<String>) {
         circuitBreaker.execute(
-            action = { glideClient.getOrNull()?.del(keys)?.get() },
+            action = { glideClient.getOrThrow().del(keys).get() },
             fallback = { keys.forEach { inMemoryCache.remove(it) } }
         )
     }
@@ -72,8 +72,7 @@ object AsynchronizedGlideClient {
 
         circuitBreaker.execute(
             action = {
-                val client = glideClient.getOrNull() ?: return@execute
-                copy.chunked(1000).forEach { chunk -> client.del(chunk.toTypedArray()).get() }
+                copy.chunked(1000).forEach { chunk -> glideClient.getOrThrow().del(chunk.toTypedArray()).get() }
                 keysDeletePool.removeAll(copy.toSet())
             },
             fallback = {
@@ -86,14 +85,13 @@ object AsynchronizedGlideClient {
     fun searchAll(pattern: String, count: Long = 5000): List<String> {
         return circuitBreaker.execute(
             action = {
-                val client = glideClient.getOrNull() ?: return@execute emptyList<String>()
                 val options = ScanOptions.builder().matchPattern(pattern).count(count).build()
 
                 val allKeys = mutableListOf<String>()
                 var cursor = "0"
 
                 do {
-                    val result = client.scan(cursor, options).get() ?: break
+                    val result = glideClient.getOrThrow().scan(cursor, options).get()
                     val arrays = result.filterIsInstance<Array<*>>()
                     val keys = arrays.flatMap { it.filterIsInstance<String>() }
                     allKeys += keys
