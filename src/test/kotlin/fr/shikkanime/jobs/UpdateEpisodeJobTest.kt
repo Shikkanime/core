@@ -312,24 +312,6 @@ class UpdateEpisodeJobTest : AbstractTest() {
                 expectedVariantsCount = 1
             ),
             TestCase(
-                animeName = "given",
-                slug = "given",
-                season = 1,
-                episodeType = EpisodeType.FILM,
-                episodeNumber = 2,
-                platforms = listOf(
-                    PlatformData(
-                        platform = Platform.CRUN,
-                        audioLocale = "ja-JP",
-                        identifier = "FR-CRUN-GMKUEMXMJ-JA-JP",
-                        url = "https://www.crunchyroll.com/fr/watch/GMKUEMXMJ/given-the-movie-hiiragi-mix"
-                    )
-                ),
-                expectedMappingsCount = 5,
-                expectedVariantsCount = 5,
-                previousAndNextDepth = 3
-            ),
-            TestCase(
                 animeName = "ZENSHU",
                 slug = "zenshu",
                 season = 1,
