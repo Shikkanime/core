@@ -76,6 +76,8 @@ inline fun <R, T : R> T?.ifNull(action: () -> R) = this ?: action()
  */
 inline fun <R : CharSequence, T : R> T?.ifNullOrBlank(action: () -> R) = if (this.isNullOrBlank()) action() else this
 
+fun <T : CharSequence> T.takeIfNotBlank() = ifBlank { null }
+
 /**
  * Reads the contents of a file from a `MultiPartData` object and returns it as a byte array.
  *

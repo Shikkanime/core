@@ -30,7 +30,7 @@ object CacheHelper {
 
     private fun entityRegionName(entityClass: Class<*>) =
         entityClass.getAnnotation(Cache::class.java)?.region
-            ?.takeIf { it.isNotBlank() }
+            ?.takeIfNotBlank()
             ?: entityClass.name
 
     private fun collectionRegionNames(entityClass: Class<*>) = entityClass.declaredFields
@@ -42,7 +42,7 @@ object CacheHelper {
         }
         .map { field ->
             field.getAnnotation(Cache::class.java)?.region
-                ?.takeIf { it.isNotBlank() }
+                ?.takeIfNotBlank()
                 ?: "${entityClass.name}.${field.name}"
         }
 

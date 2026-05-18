@@ -2,7 +2,6 @@ package fr.shikkanime.modules
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
-import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.controllers.admin.ADMIN
 import fr.shikkanime.dtos.MessageDto
 import fr.shikkanime.dtos.member.TokenDto
@@ -32,12 +31,15 @@ fun Application.configureSecurity() {
         cookie<TokenDto>("user_session") {
             cookie.path = "/"
             cookie.maxAgeInSeconds = 3600
+            cookie.extensions["SameSite"] = "Strict"
+            cookie.httpOnly = true
+            cookie.secure = Constant.baseUrl.startsWith("https")
         }
     }
 }
 
 private fun setupJWTVerifier(): JWTVerifier = JWT
-    .require(Algorithm.HMAC256(Constant.jwtSecret))
+    .require(Constant.defaultAlgorithm)
     .withAudience(Constant.jwtAudience)
     .withIssuer(Constant.jwtDomain)
     .withClaimPresence("uuid")

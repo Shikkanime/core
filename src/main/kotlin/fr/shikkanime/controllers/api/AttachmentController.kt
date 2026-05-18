@@ -27,14 +27,14 @@ class AttachmentController {
         @QueryParam uuid: UUID?,
         @QueryParam("type") typeString: String?
     ): Response {
-        if (uuid == null || runCatching { UUID.fromString(uuid.toString()) }.isFailure)
-            Response.badRequest(MessageDto.error("UUID is required"))
+        if (uuid == null)
+            return Response.badRequest(MessageDto.error("UUID is required"))
 
         val type = ImageType.entries.find { it.name.equals(typeString, true) }
             ?: return Response.badRequest(MessageDto.error("Invalid type"))
 
         // Get attachment from cache or database
-        val attachment = attachmentCacheService.findByEntityUuidTypeAndActive(uuid!!, type)
+        val attachment = attachmentCacheService.findByEntityUuidTypeAndActive(uuid, type)
             ?: return Response.notFound(MessageDto.error("Attachment not found"))
 
         // Check if image is in the memory cache

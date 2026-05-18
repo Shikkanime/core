@@ -1,5 +1,6 @@
 package fr.shikkanime.utils
 
+import com.auth0.jwt.algorithms.Algorithm
 import com.google.inject.Guice
 import com.google.inject.Injector
 import fr.shikkanime.modules.DefaultModule
@@ -9,6 +10,7 @@ import org.reflections.Reflections
 import java.io.File
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.logging.Level
 import kotlin.io.path.createTempDirectory
 
 object Constant {
@@ -71,6 +73,10 @@ object Constant {
     val jwtDomain: String = System.getenv("JWT_DOMAIN") ?: "https://jwt-provider-domain/"
     val jwtRealm: String = System.getenv("JWT_REALM") ?: "ktor sample app"
     val jwtSecret: String = System.getenv("JWT_SECRET") ?: "secret"
+    val jwtPublicKey = runCatching { EncryptionManager.loadPublicKey(File(configFolder, "public_key.pem").readText()) }
+        .onFailure { logger.log(Level.WARNING, "Failed to load JWT public key, falling back to HMAC256 algorithm", it) }
+    val jwtPrivateKey = runCatching { EncryptionManager.loadPrivateKey(File(configFolder, "private_key.pem").readText()) }
+        .onFailure { logger.log(Level.WARNING, "Failed to load JWT private key, falling back to HMAC256 algorithm", it) }
     val apiUrl: String = System.getenv("API_URL") ?: "http://localhost:$PORT/api"
     val baseUrl: String = System.getenv("BASE_URL") ?: "http://localhost:$PORT"
     val DEFAULT_IMAGE_PREVIEW = "$baseUrl/assets/img/episode_no_image_preview.jpg"
@@ -84,5 +90,13 @@ object Constant {
         abstractPlatforms.forEach {
             it.loadConfiguration()
         }
+    }
+
+    val defaultAlgorithm: Algorithm = if (jwtPublicKey.isSuccess && jwtPrivateKey.isSuccess) {
+        logger.warning("Using RSA256 algorithm for JWT")
+        Algorithm.RSA256(jwtPublicKey.getOrNull(), jwtPrivateKey.getOrNull())
+    } else {
+        logger.warning("Using HMAC256 algorithm for JWT")
+        Algorithm.HMAC256(jwtSecret)
     }
 }

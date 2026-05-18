@@ -33,10 +33,10 @@ object AsynchronizedGlideClient {
     operator fun get(key: String): String? {
         return circuitBreaker.execute(
             action = {
-                val value = glideClient.getOrThrow().get(key).get().takeIf { it.isNotBlank() }
+                val value = glideClient.getOrThrow().get(key).get()?.takeIfNotBlank()
                 // If valkey is back, check if we have a value in memory to update it
-                if (inMemoryCache.containsKey(key)) {
-                    value?.let { set(key, it) }
+                if (value != null && inMemoryCache.containsKey(key)) {
+                    set(key, value)
                     inMemoryCache.remove(key)
                 }
                 value

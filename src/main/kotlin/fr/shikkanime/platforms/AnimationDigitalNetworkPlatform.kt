@@ -10,6 +10,7 @@ import fr.shikkanime.services.caches.AnimeCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.ObjectParser
 import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.utils.takeIfNotBlank
 import fr.shikkanime.wrappers.factories.AbstractAnimationDigitalNetworkWrapper
 import fr.shikkanime.wrappers.impl.AnimationDigitalNetworkWrapper
 import java.io.File
@@ -102,7 +103,7 @@ class AnimationDigitalNetworkPlatform :
         checkAnimation: Boolean = true
     ): List<Episode> {
         val season = episode.season?.toIntOrNull() ?: 1
-        val animeName = cleanAnimeName(episode.show.shortTitle?.takeIf { it.isNotBlank() } ?: episode.show.title, season.toString())
+        val animeName = cleanAnimeName(episode.show.shortTitle?.takeIfNotBlank() ?: episode.show.title, season.toString())
 
         if (isBlacklisted(animeName)) throw AnimeException("\"$animeName\" is blacklisted")
 

@@ -5,6 +5,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
+import java.util.logging.Level
 
 class CircuitBreaker(
     private val name: String,
@@ -36,7 +37,7 @@ class CircuitBreaker(
                     result
                 } catch (e: Exception) {
                     recordFailure()
-                    logger.warning("CircuitBreaker[$name]: Service call failed. ${e.message}")
+                    logger.log(Level.WARNING, "CircuitBreaker[$name]: Service call failed.", e)
                     fallback()
                 }
             }
