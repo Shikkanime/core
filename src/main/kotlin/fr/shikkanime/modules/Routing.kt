@@ -20,6 +20,7 @@ import fr.shikkanime.utils.routes.param.BodyParam
 import fr.shikkanime.utils.routes.param.HttpHeader
 import fr.shikkanime.utils.routes.param.PathParam
 import fr.shikkanime.utils.routes.param.QueryParam
+import fr.shikkanime.utils.takeIfNotBlank
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -298,7 +299,7 @@ private suspend fun callMethodWithParameters(method: KFunction<*>, controller: A
 
 private fun fromString(value: String?, jvmErasure: KClass<*>): Any? {
     if (jvmErasure == arrayLangTypeKClass) {
-        return value?.takeIf { it.isNotBlank() }
+        return value?.takeIfNotBlank()
             ?.split(StringUtils.COMMA_STRING)
             ?.mapNotNull(LangType::valueOfNullable)
             ?.toTypedArray()
@@ -314,7 +315,7 @@ private fun handleHttpHeader(kParameter: KParameter, call: ApplicationCall): Any
 }
 
 private fun handlePathParam(kParameter: KParameter, parameters: Map<String, List<String>>): Any? {
-    val name = kParameter.findAnnotation<PathParam>()?.name?.takeIf { it.isNotBlank() } ?: kParameter.name
+    val name = kParameter.findAnnotation<PathParam>()?.name?.takeIfNotBlank() ?: kParameter.name
     val value = name?.let { parameters[name]?.firstOrNull() }
     return fromString(value, jvmErasureCache.getOrPut(kParameter) { kParameter.type.jvmErasure })
 }
@@ -328,8 +329,8 @@ private fun handleQueryParam(kParameter: KParameter, parameters: Map<String, Lis
         return parameters.mapValues { it.value.first() }
     }
 
-    val paramName = annotationName?.takeIf { it.isNotBlank() } ?: kParameter.name
-    val paramValue = paramName?.let { parameters[it]?.firstOrNull() } ?: annotation?.defaultValue?.takeIf { it.isNotBlank() }
+    val paramName = annotationName?.takeIfNotBlank() ?: kParameter.name
+    val paramValue = paramName?.let { parameters[it]?.firstOrNull() } ?: annotation?.defaultValue?.takeIfNotBlank()
 
     return fromString(paramValue, jvmErasure)
 }

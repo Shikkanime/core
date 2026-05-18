@@ -1,12 +1,12 @@
 package fr.shikkanime.dtos.member
 
 import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import fr.shikkanime.entities.Member
+import fr.shikkanime.entities.enums.Role
 import fr.shikkanime.utils.Constant
 import kotlinx.serialization.Serializable
 import java.util.*
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.hours
 
 @Serializable
 data class TokenDto(
@@ -23,9 +23,9 @@ data class TokenDto(
                 .withClaim("isPrivate", member.isPrivate)
                 .withClaim("username", member.username)
                 .withClaim("creationDateTime", member.creationDateTime.toString())
-                .withClaim("roles", member.roles.map { it.name })
-                .withExpiresAt(Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
-                .sign(Algorithm.HMAC256(Constant.jwtSecret))
+                .withClaim("roles", member.roles.map(Role::name))
+                .withExpiresAt(Date(System.currentTimeMillis() + 1.hours.inWholeMilliseconds))
+                .sign(Constant.defaultAlgorithm)
         )
     }
 }

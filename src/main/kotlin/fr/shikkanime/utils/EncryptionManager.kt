@@ -4,7 +4,12 @@ import org.bouncycastle.crypto.generators.Argon2BytesGenerator
 import org.bouncycastle.crypto.params.Argon2Parameters
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
+import java.security.KeyFactory
 import java.security.MessageDigest
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 import kotlin.io.encoding.Base64
@@ -56,5 +61,22 @@ object EncryptionManager {
         val outputStream = ByteArrayOutputStream()
         bytes.inputStream().use { GZIPInputStream(it).copyTo(outputStream) }
         return outputStream.toString(StandardCharsets.UTF_8)
+    }
+
+    private fun cleanPem(pem: String) = pem.replace("-----BEGIN PRIVATE KEY-----", StringUtils.EMPTY_STRING)
+        .replace("-----END PRIVATE KEY-----", StringUtils.EMPTY_STRING)
+        .replace("-----BEGIN PUBLIC KEY-----", StringUtils.EMPTY_STRING)
+        .replace("-----END PUBLIC KEY-----", StringUtils.EMPTY_STRING)
+        .replace("\\s".toRegex(), StringUtils.EMPTY_STRING)
+
+    fun loadPublicKey(pem: String): RSAPublicKey {
+        val bytes = Base64.decode(cleanPem(pem))
+        val spec = X509EncodedKeySpec(bytes)
+        return KeyFactory.getInstance("RSA").generatePublic(spec) as RSAPublicKey
+    }
+
+    fun loadPrivateKey(pem: String): RSAPrivateKey {
+        val bytes = Base64.decode(cleanPem(pem))
+        return KeyFactory.getInstance("RSA").generatePrivate(PKCS8EncodedKeySpec(bytes)) as RSAPrivateKey
     }
 }

@@ -96,7 +96,7 @@ class BotDetectorCache : ICacheService {
             return@getOrComputeAsync arrayOf()
         }
 
-        ipv4Regex.findAll(response.bodyAsText()).map { it.value }.filter { it.isNotBlank() }.toSet().toTypedArray()
+        ipv4Regex.findAll(response.bodyAsText()).mapNotNull { it.value.takeIfNotBlank() }.toSet().toTypedArray()
     }
 
     private suspend fun isKnownBotByIp(clientIp: String): Boolean {
