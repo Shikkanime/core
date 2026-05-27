@@ -11,19 +11,20 @@
         <property name="connection.password"/>
         <property name="dialect">org.hibernate.dialect.H2Dialect</property>
         <property name="show_sql">false</property>
-        <property name="hibernate.current_session_context_class">
-            org.hibernate.context.internal.ThreadLocalSessionContext
-        </property>
+        <property name="hibernate.current_session_context_class">org.hibernate.context.internal.ThreadLocalSessionContext</property>
         <property name="hibernate.search.backend.type">lucene</property>
         <property name="hibernate.search.backend.directory.type">local-heap</property>
-        <property name="hibernate.search.backend.analysis.configurer">
-            fr.shikkanime.modules.CustomLuceneAnalysisDefinitionProvider
-        </property>
+        <property name="hibernate.search.backend.analysis.configurer">fr.shikkanime.modules.CustomLuceneAnalysisDefinitionProvider</property>
         <property name="hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS">20</property>
         <property name="hibernate.cache.use_second_level_cache">true</property>
         <property name="hibernate.cache.region.factory_class">jcache</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.javax.cache.missing_cache_strategy">fail</property>
         <property name="hibernate.generate_statistics">true</property>
+        <property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+        <property name="hibernate.hikari.maximumPoolSize">10</property>
+        <property name="hibernate.hikari.minimumIdle">3</property>
+        <property name="hibernate.hikari.connectionTimeout">10000</property>
+        <property name="hibernate.hikari.idleTimeout">10000</property>
     </session-factory>
 </hibernate-configuration>

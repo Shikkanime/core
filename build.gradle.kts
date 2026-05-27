@@ -81,6 +81,7 @@ dependencies {
 
     implementation("org.hibernate.orm:hibernate-core:$hibernateCoreVersion")
     implementation("org.hibernate.orm:hibernate-jcache:$hibernateCoreVersion")
+    implementation("org.hibernate.orm:hibernate-hikaricp:$hibernateCoreVersion")
     implementation("javax.cache:cache-api:$javaxCache")
     implementation("org.ehcache:ehcache:$ehcacheVersion:jakarta")
     implementation("org.hibernate.search:hibernate-search-mapper-orm:$hibernateSearchVersion")

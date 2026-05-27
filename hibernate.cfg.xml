@@ -18,5 +18,10 @@
         <property name="hibernate.cache.region.factory_class">jcache</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.javax.cache.missing_cache_strategy">fail</property>
+        <property name="hibernate.connection.provider_class">org.hibernate.hikaricp.internal.HikariCPConnectionProvider</property>
+        <property name="hibernate.hikari.maximumPoolSize">40</property>
+        <property name="hibernate.hikari.minimumIdle">10</property>
+        <property name="hibernate.hikari.connectionTimeout">10000</property>
+        <property name="hibernate.hikari.idleTimeout">300000</property>
     </session-factory>
 </hibernate-configuration>

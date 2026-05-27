@@ -101,7 +101,7 @@ suspend fun MultiPartData.readFileAsByteArray(): ByteArray {
             }
         }
 
-        part.dispose()
+        part.release()
     }
 
     requireNotNull(bytes) { "No file provided" }
