@@ -61,6 +61,24 @@ class UpdateEpisodeJobTest : AbstractTest() {
         @JvmStatic
         fun testCases(): Stream<TestCase> = Stream.of(
             TestCase(
+                animeName = "Rent-a-Girlfriend",
+                slug = "rent-a-girlfriend",
+                season = 1,
+                episodeType = EpisodeType.EPISODE,
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-CRUN-GZ7UV8KWZ-FR-FR",
+                        url = "https://www.crunchyroll.com/fr/watch/GZ7UV8KWZ/rent-a-girlfriend"
+                    )
+                ),
+                expectedMappingsCount = 2,
+                expectedVariantsCount = 3,
+                expectedUpdatedTitle = "Petite amie à louer"
+            ),
+            TestCase(
                 animeName = "The Eminence in Shadow",
                 slug = "the-eminence-in-shadow",
                 season = 1,
