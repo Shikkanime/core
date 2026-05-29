@@ -14,7 +14,7 @@ val bcprovVersion = "1.84"
 val javaImageScalingVersion = "0.8.6"
 val firebaseVersion = "9.9.0"
 val simpleJavaMailVersion = "8.12.6"
-val jacksonVersion = "2.21.3"
+val jacksonVersion = "2.21.4"
 val valkeyVersion = "2.3.1"
 val apachePoiVersion = "5.5.1"
 
