@@ -351,6 +351,30 @@ class UpdateEpisodeJobTest : AbstractTest() {
                 expectedMappingsCount = 1,
                 expectedVariantsCount = 3,
                 previousAndNextDepth = 0
+            ),
+            TestCase(
+                animeName = "JUJUTSU KAISEN",
+                slug = "jujutsu-kaisen",
+                season = 1,
+                episodeType = EpisodeType.FILM,
+                episodeNumber = 1,
+                platforms = listOf(
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "ja-JP",
+                        identifier = "FR-CRUN-G4VUQ9ZQ3-JA-JP",
+                        url = "https://www.crunchyroll.com/fr/watch/G4VUQ9ZQ3/jujutsu-kaisen-0"
+                    ),
+                    PlatformData(
+                        platform = Platform.CRUN,
+                        audioLocale = "fr-FR",
+                        identifier = "FR-CRUN-GN7UDEGDG-FR-FR",
+                        url = "https://www.crunchyroll.com/fr/watch/GN7UDEGDG/jujutsu-kaisen-0"
+                    )
+                ),
+                expectedMappingsCount = 1,
+                expectedVariantsCount = 2,
+                previousAndNextDepth = 0
             )
         )
     }

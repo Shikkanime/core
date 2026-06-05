@@ -142,7 +142,7 @@ abstract class AbstractCrunchyrollWrapper {
         val numberString: String,
         @SerializedName("episode_number")
         @SerialName("episode_number")
-        val number: Int?,
+        val number: Int? = null,
         val title: String? = null,
         @SerializedName("slug_title")
         @SerialName("slug_title")
