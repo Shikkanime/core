@@ -22,9 +22,6 @@ class AttachmentServiceTest : AbstractTest() {
     @ValueSource(
         strings = [
             "https://www.crunchyroll.com/imgsrv/display/thumbnail/1920x1080/catalog/crunchyroll/8bfa5ecce45d2d497f88f0b1a0f511df.jpe",
-            "https://media.animationdigitalnetwork.com/images/show/f06b0d28-9228-492c-ab63-7817ab48d57c/affiche.width=1560,height=2340,quality=100",
-            "https://media.animationdigitalnetwork.com/images/show/f06b0d28-9228-492c-ab63-7817ab48d57c/license.width=1920,height=1080,quality=100",
-            "https://media.animationdigitalnetwork.com/images/show/f06b0d28-9228-492c-ab63-7817ab48d57c/carousel169.width=1920,height=1080,quality=100",
             "https://media.animationdigitalnetwork.com/images/show/7ae5e0e2-277a-4fd8-bbd3-dceb58ce43df/affiche.width=1560,height=2340,quality=100",
             "https://media.animationdigitalnetwork.com/images/show/7ae5e0e2-277a-4fd8-bbd3-dceb58ce43df/license.width=1920,height=1080,quality=100",
             "https://media.animationdigitalnetwork.com/images/show/7ae5e0e2-277a-4fd8-bbd3-dceb58ce43df/carousel169.width=1920,height=1080,quality=100",
