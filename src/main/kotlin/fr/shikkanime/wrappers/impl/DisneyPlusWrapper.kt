@@ -203,16 +203,22 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         return LocaleUtils.getAllowedLocales(countryCode, audioLocales).toTypedArray()
     }
 
-    override suspend fun getShowIdByEpisodeId(episodeId: String): String {
+    override suspend fun getMetadataByEpisodeId(episodeId: String): Metadata {
         val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/deeplink?action=playback&refId=$episodeId&refIdType=deeplinkId")
         require(response.status == HttpStatusCode.OK) { "Failed to fetch video deeplink (${response.status.value} - ${response.bodyAsText()})" }
-        return ObjectParser.fromJson(response.bodyAsText())
+
+        val deeplinkAction = ObjectParser.fromJson(response.bodyAsText())
             .getAsJsonObject("data")
             .getAsJsonObject("deeplink")
             .getAsJsonArray("actions")
             .first()
             .asJsonObject
-            .getAsJsonObject("partnerFeed")
-            .getAsString("evaSeriesEntityId")!!
+
+        return Metadata(
+            deeplinkAction
+                .getAsJsonObject("partnerFeed")
+                .getAsString("evaSeriesEntityId")!!,
+            deeplinkAction.getAsString("deeplinkId")!!
+        )
     }
 }

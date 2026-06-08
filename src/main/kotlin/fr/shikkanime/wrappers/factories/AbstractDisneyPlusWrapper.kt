@@ -76,6 +76,11 @@ abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, Abs
         }
     }
 
+    data class Metadata(
+        val showId: String,
+        val id: String,
+    ) : Serializable
+
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
     protected val configCacheService: ConfigCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
 
@@ -126,7 +131,7 @@ abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, Abs
 
     abstract suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode>
 
-    abstract suspend fun getShowIdByEpisodeId(episodeId: String): String
+    abstract suspend fun getMetadataByEpisodeId(episodeId: String): Metadata
 
     fun getImageUrl(id: String) = "https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/$id/compose"
 }

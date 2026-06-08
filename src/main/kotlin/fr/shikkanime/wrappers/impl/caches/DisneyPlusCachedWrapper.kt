@@ -30,9 +30,9 @@ object DisneyPlusCachedWrapper : AbstractDisneyPlusWrapper() {
         key = Triple(locale, showId, checkAudioLocales)
     ) { DisneyPlusWrapper.getEpisodesByShowId(it.first, it.second, it.third) }
 
-    override suspend fun getShowIdByEpisodeId(episodeId: String) = MapCache.getOrComputeAsync(
-        "DisneyPlusCachedWrapper.getShowIdByEpisodeId",
-        typeToken = object : TypeToken<MapCacheValue<String>>() {},
+    override suspend fun getMetadataByEpisodeId(episodeId: String) = MapCache.getOrComputeAsync(
+        "DisneyPlusCachedWrapper.getMetadataByEpisodeId",
+        typeToken = object : TypeToken<MapCacheValue<Metadata>>() {},
         key = episodeId
-    ) { DisneyPlusWrapper.getShowIdByEpisodeId(it) }
+    ) { DisneyPlusWrapper.getMetadataByEpisodeId(it) }
 }

@@ -349,7 +349,7 @@ class UpdateEpisodeJobTest : AbstractTest() {
                     )
                 ),
                 expectedMappingsCount = 1,
-                expectedVariantsCount = 3,
+                expectedVariantsCount = 2,
                 previousAndNextDepth = 0
             ),
             TestCase(
