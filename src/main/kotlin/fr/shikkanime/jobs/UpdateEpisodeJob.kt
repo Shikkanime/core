@@ -463,9 +463,14 @@ class UpdateEpisodeJob : AbstractJob {
     }
 
     private suspend fun fetchDisneyPlus(context: Context) {
+        var episodeMetadata: AbstractDisneyPlusWrapper.Metadata? = null
+
         val animePlatformIds =
             animePlatformService.findAllIdByAnimeAndPlatform(context.anime, context.episodeVariant.platform!!)
-                .ifEmpty { listOf(DisneyPlusCachedWrapper.getShowIdByEpisodeId(context.episodePlatformId)) }
+                .ifEmpty {
+                    episodeMetadata = DisneyPlusCachedWrapper.getMetadataByEpisodeId(context.episodePlatformId)
+                    listOf(episodeMetadata.showId)
+                }
 
         val episodes = animePlatformIds.flatMap { animePlatformId ->
             fetchOrSkip(context.variantIdentifierInTimeout, context.episodeVariant) {
@@ -479,8 +484,11 @@ class UpdateEpisodeJob : AbstractJob {
             }?.toList() ?: emptyList()
         }
 
-        val episode =
-            episodes.find { it.id == context.episodePlatformId || (!it.oldId.isNullOrBlank() && it.oldId == context.episodePlatformId) } ?: return
+        val episode = episodes.find {
+            it.id == context.episodePlatformId ||
+                    (!it.oldId.isNullOrBlank() && it.oldId == context.episodePlatformId) ||
+                    (episodeMetadata != null && episodeMetadata.id != context.episodePlatformId && it.id == episodeMetadata.id)
+        } ?: return
 
         context.platformEpisodes.addAll(
             runCatching {
