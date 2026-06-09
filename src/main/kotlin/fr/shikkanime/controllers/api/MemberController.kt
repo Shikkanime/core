@@ -166,4 +166,18 @@ class MemberController : HasPageableRoute() {
         memberService.delete(member)
         return Response.noContent()
     }
+
+    @Path("/me/watched-episodes/batch")
+    @Post
+    @JWTAuthenticated
+    private suspend fun filterFollowedEpisodeUUIDs(
+        @JWTUser memberUuid: UUID,
+        @BodyParam episodes: Array<UUID>
+    ): Response {
+        if (episodes.isEmpty())
+            return Response.badRequest(MessageDto.error("No episodes provided"))
+        if (episodes.size > 50)
+            return Response.badRequest(MessageDto.error("Too many episodes provided"))
+        return Response.ok(memberFollowEpisodeService.filterFollowedEpisodeUUIDs(memberUuid, episodes.toList()))
+    }
 }
