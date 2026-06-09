@@ -127,7 +127,7 @@ class UpdateAnimeJob : AbstractJob {
 
             if (platformCounts.isNotEmpty()) {
                 logger.warning("Found multiple platforms for anime ${anime.name}: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
-                fun normalize(string: String) = string.replace(":", "")
+                fun normalize(string: String) = string.replace(":", "").lowercase()
                 val animeNameNormalized = normalize(anime.name!!)
 
                 platformCounts.forEach { (platform, _) ->
