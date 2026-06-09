@@ -181,6 +181,15 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.ANIM, "1299"),
                 )
             ),
+            TestCase(
+                name = "ISEKAI QUARTET",
+                slug = "isekai-quartet",
+                releaseDateTime = "2019-04-23T15:45:00Z",
+                platforms = listOf(
+                    PlatformData(Platform.CRUN, "GMTE00258378"),
+                    PlatformData(Platform.CRUN, "GR8DN7N7R"),
+                )
+            )
         )
     }
 
