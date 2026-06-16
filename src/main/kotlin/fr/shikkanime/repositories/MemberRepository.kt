@@ -231,11 +231,12 @@ class MemberRepository : AbstractRepository<Member>() {
         
         return subquery.select(cb.greatest(traceActionRoot[TraceAction_.actionDateTime]))
             .where(
-                cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid]),
                 cb.or(
                     cb.equal(traceActionRoot[TraceAction_.action], TraceAction.Action.LOGIN),
                     cb.isNull(traceActionRoot[TraceAction_.action])
-                )
+                ),
+                cb.equal(traceActionRoot[TraceAction_.entityType], "Member"),
+                cb.equal(traceActionRoot[TraceAction_.entityUuid], root[Member_.uuid])
             )
     }
     

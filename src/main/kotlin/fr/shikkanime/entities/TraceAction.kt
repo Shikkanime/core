@@ -10,7 +10,8 @@ import java.util.*
     indexes = [
         Index(name = "trace_action_entity_type_index", columnList = "entity_type"),
         Index(name = "trace_action_entity_uuid_index", columnList = "entity_uuid"),
-        Index(name = "trace_action_action_index", columnList = "action")
+        Index(name = "trace_action_action_index", columnList = "action"),
+        Index(name = "trace_action_action_entity_type_entity_uuid_action_date_time_index", columnList = "action, entity_type, entity_uuid, action_date_time")
     ]
 )
 class TraceAction(

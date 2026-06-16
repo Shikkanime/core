@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd">
+    <property global="false" name="id" value="1781589930383"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="trace_action" indexName="trace_action_action_entity_type_entity_uuid_action_date_time_index"/>
+            </not>
+        </preConditions>
+
+        <createIndex tableName="trace_action" indexName="trace_action_action_entity_type_entity_uuid_action_date_time_index">
+            <column name="action"/>
+            <column name="entity_type"/>
+            <column name="entity_uuid"/>
+            <column name="action_date_time"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
