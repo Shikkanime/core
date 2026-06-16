@@ -24,7 +24,7 @@ class CrunchyrollWrapperTest {
             locale,
             sortBy = AbstractCrunchyrollWrapper.SortType.POPULARITY,
             type = AbstractCrunchyrollWrapper.MediaType.SERIES,
-            size = 200,
+            size = 100,
             simulcast = "winter-2024"
         )
         assertEquals(true, series.isNotEmpty())
