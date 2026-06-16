@@ -35,6 +35,7 @@ suspend fun setGlobalAttributes(
 
     modelMap["su"] = StringUtils
     modelMap["links"] =  (if (isAdminController) LinkObject.adminList else LinkObject.siteList)
+        .map(LinkObject::copy)
         .onEach { link ->
             link.href = link.href.replace("{currentSimulcast}", currentSimulcast?.slug ?: StringUtils.EMPTY_STRING)
             link.active = if (link.href == "/") replacedPath == link.href else replacedPath.startsWith(link.href)
