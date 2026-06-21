@@ -83,6 +83,8 @@ jobs:
 
       - name: Start services
         run: docker compose up -d --build --wait
+        env:
+          DOCKER_DEFAULT_PLATFORM: ${{ matrix.platform }}
 
       - name: Show logs on failure
         if: failure()

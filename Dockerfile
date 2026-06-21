@@ -27,7 +27,7 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && \
       dpkg-deb -x /tmp/chrome.deb /tmp/chrome && \
       find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
-        cp -r /tmp/chrome/opt/google/chrome/WidevineCdm "$dir/"; \
+        cp -rL /tmp/chrome/opt/google/chrome/WidevineCdm "$dir/"; \
       done && \
       rm -rf /tmp/chrome* ; \
     elif [ "$ARCH" = "aarch64" ]; then \
@@ -36,7 +36,7 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       git clone https://github.com/AsahiLinux/widevine-installer.git /tmp/widevine-installer && \
       printf "\n\n" | sh /tmp/widevine-installer/widevine-installer && \
       find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
-        cp -r /var/lib/widevine/WidevineCdm "$dir/"; \
+        cp -rL /var/lib/widevine/WidevineCdm "$dir/"; \
       done && \
       apt-get purge -y git squashfs-tools && \
       apt-get autoremove -y && \

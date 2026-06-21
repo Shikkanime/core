@@ -149,11 +149,12 @@ class BrowserBuilder {
                         }
                     """.trimIndent())
                     .build()
-                val result = results.firstOrNull()?.second == "true"
+                val response = results.firstOrNull()?.second
+                val result = response == "true"
                 if (result) {
                     logger.info("Widevine DRM is supported!")
                 } else {
-                    logger.severe("Widevine DRM is NOT supported!")
+                    logger.severe("Widevine DRM is NOT supported! Response: $response")
                 }
                 result
             } catch (e: Exception) {
