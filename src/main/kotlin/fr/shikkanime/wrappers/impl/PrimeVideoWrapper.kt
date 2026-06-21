@@ -193,7 +193,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = HttpRequest.get(
-            "$url?dvWebAppClientVersion=1.0.121090.",
+            "$url${if (url.contains("?")) "&" else "?"}dvWebAppClientVersion=1.0.124589.0",
             headers = mapOf(
                 HttpHeaders.Accept to ContentType.Application.Json.toString(),
                 HttpHeaders.AcceptLanguage to locale.split(StringUtils.DASH_STRING).first().lowercase(),

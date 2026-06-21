@@ -36,9 +36,6 @@ services:
       BASE_URL: "http://localhost:37100"
       API_URL: "http://localhost:37100/api"
       VALKEY_HOST: "shikkanime-valkey"
-    volumes:
-      - ./data:/app/data/
-      - ./dumps:/app/dumps/
     healthcheck:
       test: curl --fail http://localhost:37100/ || exit 1
       interval: 30s

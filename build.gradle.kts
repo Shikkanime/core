@@ -17,6 +17,7 @@ val simpleJavaMailVersion = "8.12.6"
 val jacksonVersion = "2.22.0"
 val valkeyVersion = "2.3.1"
 val apachePoiVersion = "5.5.1"
+val playwrightVersion = "1.60.0"
 
 val jdaVersion = "6.4.2"
 
@@ -102,6 +103,7 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
     implementation("org.apache.poi:poi:$apachePoiVersion")
     implementation("net.dv8tion:JDA:$jdaVersion")
+    implementation("com.microsoft.playwright:playwright:$playwrightVersion")
 
     kapt("org.hibernate.orm:hibernate-jpamodelgen:$hibernateCoreVersion")
 
