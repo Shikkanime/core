@@ -77,4 +77,6 @@ enum class ConfigPropertyKey(val key: String) {
     DISNEY_PLUS_FETCH_LATEST_SHOWS("disney_plus_fetch_latest_shows"),
     NETFLIX_FETCH_LATEST_SHOWS("netflix_fetch_latest_shows"),
     CHECK_NETFLIX_AUDIO_LOCALES("check_netflix_audio_locales"),
+    SAVE_BROWSER_SCREENSHOT_ON_ERROR("save_browser_screenshot_on_error"),
+    BROWSER_WAIT_TIMEOUT("browser_wait_timeout"),
 }

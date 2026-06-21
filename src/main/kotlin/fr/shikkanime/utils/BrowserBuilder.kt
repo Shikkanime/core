@@ -4,6 +4,8 @@ import com.microsoft.playwright.BrowserContext
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
+import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.services.caches.ConfigCacheService
 import java.nio.file.Files
 
 class BrowserBuilder {
@@ -31,6 +33,7 @@ class BrowserBuilder {
         val domain: String
     )
 
+    private val configCacheService: ConfigCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
     private val cookies = mutableListOf<Cookie>()
     private val urls = mutableSetOf<String>()
     private var waitFunction: String? = null
@@ -56,7 +59,7 @@ class BrowserBuilder {
         return this
     }
 
-    fun build(): List<Pair<String, String>> {
+    suspend fun build(): List<Pair<String, String>> {
         require(urls.isNotEmpty()) { "At least one url must be provided" }
 
         logger.info("Launching browser with ${cookies.size} cookies and ${urls.size} URLs...")
@@ -103,13 +106,15 @@ class BrowserBuilder {
                                 null,
                                 Page.WaitForFunctionOptions()
                                     .setPollingInterval(1000.0)
-                                    .setTimeout(10_000.0)
+                                    .setTimeout(configCacheService.getValueAsInt(ConfigPropertyKey.BROWSER_WAIT_TIMEOUT, 10_000).toDouble())
                             )
                         } ?: page.waitForLoadState()
 
                         result.add(url to page.evaluate(evaluateFunction) as String)
                         break
                     } catch (e: Exception) {
+                        if (configCacheService.getValueAsBoolean(ConfigPropertyKey.SAVE_BROWSER_SCREENSHOT_ON_ERROR))
+                            page.screenshot(Page.ScreenshotOptions().setPath(Constant.browserScreenshotFolder.toPath()))
                         logger.warning("Error while fetching $url: ${e.message} (try $i)")
                     }
                 }

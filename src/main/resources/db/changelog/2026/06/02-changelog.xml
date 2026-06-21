@@ -19,4 +19,32 @@
             <column name="property_value" value="true"/>
         </insert>
     </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'save_browser_screenshot_on_error'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="save_browser_screenshot_on_error"/>
+            <column name="property_value" value="true"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'browser_wait_timeout'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="browser_wait_timeout"/>
+            <column name="property_value" value="10000"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

@@ -52,6 +52,13 @@ object Constant {
             return folder
         }
 
+    val browserScreenshotFolder: File
+        get() {
+            val folder = File(dataFolder, "browser-screenshots")
+            if (!folder.exists()) folder.mkdirs().onFalse { logger.warning("Failed to created folder '${folder.name}'") }
+            return folder
+        }
+
     val profilesFolder: File
         get() {
             val folder = File(dataFolder, "profiles")
