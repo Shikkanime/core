@@ -11,8 +11,6 @@ import java.nio.file.Files
 import java.util.*
 
 class BrowserBuilder {
-    private val logger = LoggerFactory.getLogger(javaClass)
-
     private class BrowserCloseable(
         private val playwright: Playwright,
         private val context: BrowserContext,
@@ -124,5 +122,44 @@ class BrowserBuilder {
         }
 
         return result
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BrowserBuilder::class.java)
+
+        suspend fun checkWidevine(): Boolean {
+            logger.info("Checking Widevine DRM support...")
+            return try {
+                val results = BrowserBuilder()
+                    .setUrls("https://example.com")
+                    .setEvaluateFunction("""
+                        async () => {
+                            try {
+                                if (!navigator.requestMediaKeySystemAccess) {
+                                    return 'API_NOT_FOUND';
+                                }
+                                const access = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', [{
+                                    initDataTypes: ['keyids', 'webm'],
+                                    videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }]
+                                }]);
+                                return 'true';
+                            } catch (e) {
+                                return e.name + ': ' + e.message;
+                            }
+                        }
+                    """.trimIndent())
+                    .build()
+                val result = results.firstOrNull()?.second == "true"
+                if (result) {
+                    logger.info("Widevine DRM is supported!")
+                } else {
+                    logger.severe("Widevine DRM is NOT supported!")
+                }
+                result
+            } catch (e: Exception) {
+                logger.severe("Failed to check Widevine DRM support: ${e.message}")
+                false
+            }
+        }
     }
 }
