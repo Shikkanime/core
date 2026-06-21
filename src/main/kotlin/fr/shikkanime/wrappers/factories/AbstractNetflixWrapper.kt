@@ -2,11 +2,10 @@ package fr.shikkanime.wrappers.factories
 
 import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.entities.enums.EpisodeType
-import fr.shikkanime.utils.HttpRequest
-import fr.shikkanime.utils.MapCache
-import fr.shikkanime.utils.MapCacheValue
-import fr.shikkanime.utils.StringUtils
+import fr.shikkanime.services.caches.ConfigCacheService
+import fr.shikkanime.utils.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.io.Serializable
@@ -81,6 +80,7 @@ abstract class AbstractNetflixWrapper : IStreamingPlatformWrapper<Int, AbstractN
 
     protected val baseUrl = "https://www.netflix.com"
     private val apiUrl = "https://web.prod.cloud.netflix.com/graphql"
+    protected val configCacheService: ConfigCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
 
     private fun decodeUtf8(input: String) = input.replace("""\\x([0-9A-Fa-f]{2})""".toRegex()) { matchResult ->
         val hexCode = matchResult.groupValues[1]
@@ -126,4 +126,14 @@ abstract class AbstractNetflixWrapper : IStreamingPlatformWrapper<Int, AbstractN
     }
 
     abstract suspend fun getLatestShows(): Array<LatestShow>
+
+    override suspend fun getEpisodesByShowId(locale: String, showId: Int) = getEpisodesByShowId(
+        locale,
+        showId,
+        configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_NETFLIX_AUDIO_LOCALES)
+    )
+
+    abstract suspend fun getEpisodesByShowId(locale: String, showId: Int, checkAudioLocales: Boolean): Array<Episode>
+
+    abstract suspend fun getEpisodeAudioTrackList(locale: String, vararg ids: Int): Map<Int, Set<String>>
 }

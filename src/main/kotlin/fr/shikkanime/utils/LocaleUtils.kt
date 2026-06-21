@@ -18,6 +18,7 @@ object LocaleUtils {
         "Français (France)" to Locale.FR_FR.code,
         "Français [CC]" to Locale.FR_FR.code,
         "fr-fra" to Locale.FR_FR.code,
+        "fr" to Locale.FR_FR.code,
     )
 
     fun getConvertedLocales(locales: Collection<String?>): Set<String> {
