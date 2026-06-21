@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
 import java.io.File
 import java.nio.file.Files
+import java.util.*
 
 class BrowserBuilder {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -115,7 +116,7 @@ class BrowserBuilder {
                         break
                     } catch (e: Exception) {
                         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.SAVE_BROWSER_SCREENSHOT_ON_ERROR))
-                            File(Constant.browserScreenshotFolder, "$url.png").writeBytes(page.screenshot())
+                            File(Constant.browserScreenshotFolder, "${UUID.randomUUID()}.png").writeBytes(page.screenshot())
                         logger.warning("Error while fetching $url: ${e.message} (try $i)")
                     }
                 }
