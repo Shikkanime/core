@@ -20,7 +20,28 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
     npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps chromium && \
     rm -rf ~/.npm && \
     apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl fonts-dejavu fontconfig libfreetype6 tzdata webp gosu xvfb && \
+    apt-get install -y --no-install-recommends ca-certificates curl unzip wget fonts-dejavu fontconfig libfreetype6 tzdata webp gosu xvfb && \
+    ARCH="$(uname -m)" && \
+    if [ "$ARCH" = "x86_64" ]; then \
+      echo "Downloading Widevine for x86_64..." && \
+      wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && \
+      dpkg-deb -x /tmp/chrome.deb /tmp/chrome && \
+      find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
+        cp -r /tmp/chrome/opt/google/chrome/WidevineCdm "$dir/"; \
+      done && \
+      rm -rf /tmp/chrome* ; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+      echo "Downloading and patching Widevine for aarch64 (ARM64)..." && \
+      apt-get install -y --no-install-recommends git squashfs-tools python3 && \
+      git clone https://github.com/AsahiLinux/widevine-installer.git /tmp/widevine-installer && \
+      printf "\n\n" | sh /tmp/widevine-installer/widevine-installer && \
+      find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
+        cp -r /var/lib/widevine/WidevineCdm "$dir/"; \
+      done && \
+      apt-get purge -y git squashfs-tools && \
+      apt-get autoremove -y && \
+      rm -rf /tmp/widevine-installer /var/lib/widevine ; \
+    fi && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* && \
     ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && \
     echo "$TZ" > /etc/timezone && \
