@@ -6,6 +6,7 @@ import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
+import java.io.File
 import java.nio.file.Files
 
 class BrowserBuilder {
@@ -114,7 +115,7 @@ class BrowserBuilder {
                         break
                     } catch (e: Exception) {
                         if (configCacheService.getValueAsBoolean(ConfigPropertyKey.SAVE_BROWSER_SCREENSHOT_ON_ERROR))
-                            page.screenshot(Page.ScreenshotOptions().setPath(Constant.browserScreenshotFolder.toPath()))
+                            File(Constant.browserScreenshotFolder, "$url.png").writeBytes(page.screenshot())
                         logger.warning("Error while fetching $url: ${e.message} (try $i)")
                     }
                 }
