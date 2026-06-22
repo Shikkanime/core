@@ -69,6 +69,7 @@ class BrowserBuilder {
                 Files.createTempDirectory("chrome-profile"),
                 BrowserType.LaunchPersistentContextOptions()
                     .setHeadless(false)
+                    .setIgnoreDefaultArgs(listOf("--disable-component-update"))
                     .setArgs(listOf(
                         "--autoplay-policy=no-user-gesture-required",
                         "--no-sandbox",
