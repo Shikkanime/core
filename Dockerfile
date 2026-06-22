@@ -37,7 +37,9 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       git clone https://github.com/AsahiLinux/widevine-installer.git /tmp/widevine-installer && \
       printf "\n\n" | sh /tmp/widevine-installer/widevine-installer && \
       find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
-        cp -rL /var/lib/widevine/WidevineCdm "$dir/"; \
+        cp -rL /var/lib/widevine/WidevineCdm "$dir/" && \
+        mkdir -p "$dir/WidevineCdm/_platform_specific/linux_x64" && \
+        cp -f "$dir/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so" "$dir/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so"; \
       done && \
       echo "Patching WidevineCdm manifest.json for Linux arm64..." && \
       find ${PLAYWRIGHT_BROWSERS_PATH} -path "*/WidevineCdm/manifest.json" | while read -r manifest; do \
@@ -48,7 +50,7 @@ m['x-cdm-persistent-license-support']=false;\
 fs.writeFileSync(f,JSON.stringify(m,null,2));" "$manifest" && \
         echo "Patched: $manifest"; \
       done && \
-      apt-get purge -y git squashfs-tools && \
+      apt-get purge -y git squashfs-tools python3 && \
       apt-get autoremove -y && \
       rm -rf /tmp/widevine-installer /var/lib/widevine ; \
     else \

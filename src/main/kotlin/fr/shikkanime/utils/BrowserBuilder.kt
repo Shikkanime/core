@@ -72,7 +72,8 @@ class BrowserBuilder {
                     .setArgs(listOf(
                         "--autoplay-policy=no-user-gesture-required",
                         "--no-sandbox",
-                        "--disable-dev-shm-usage"
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu"
                     ))
             )
 

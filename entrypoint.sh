@@ -7,6 +7,11 @@ echo "Kernel: $(uname -r)"
 
 chown -R appuser:appuser . 2>/dev/null || true
 
+# Clean up leftover socket and lock files from previous runs
+echo "--- Cleaning up leftover lock files and sockets ---"
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
+rm -f /run/dbus/pid /run/dbus/system_bus_socket /var/run/dbus/pid /var/run/dbus/system_bus_socket 2>/dev/null || true
+
 # Ensure X11 socket directory exists with world-accessible permissions
 echo "--- Setting up X11 socket directory ---"
 mkdir -p /tmp/.X11-unix
