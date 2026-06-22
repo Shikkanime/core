@@ -2,7 +2,7 @@ ARG JAVA_VERSION=25
 ARG PLAYWRIGHT_VERSION=1.60.0
 
 FROM amazoncorretto:${JAVA_VERSION} AS java
-FROM node:25-bookworm-slim
+FROM node:26-bookworm-slim
 ARG JAVA_VERSION
 COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 COPY --from=java /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto/lib/security/cacerts /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto/lib/security/cacerts
