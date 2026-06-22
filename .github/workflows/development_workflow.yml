@@ -40,6 +40,16 @@ jobs:
       - name: Start services
         run: docker compose up -d --wait
 
+      - name: Inspect Xvfb runtime (ARM)
+        if: matrix.platform == 'ubuntu-24.04-arm'
+        run: |
+          docker compose exec -T shikkanime-core sh -lc '
+            echo "DISPLAY=$DISPLAY"
+            command -v xvfb-run
+            pgrep -a Xvfb || true
+            test -S /tmp/.X11-unix/X99 || true
+          '
+
       - name: Show logs on failure
         if: failure()
         run: |
