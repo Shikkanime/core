@@ -1,8 +1,7 @@
 services:
   shikkanime-db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     restart: always
-    container_name: shikkanime-db
     environment:
       POSTGRES_PASSWORD: "mysecretpassword"
       POSTGRES_USER: postgres
@@ -10,8 +9,7 @@ services:
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "postgres" ]
   shikkanime-valkey:
-    image: valkey/valkey:8.1-alpine
-    container_name: shikkanime-valkey
+    image: valkey/valkey:9-alpine
     restart: always
   shikkanime-core:
     build:
@@ -19,7 +17,6 @@ services:
     ports:
       - "37100:37100"
     restart: on-failure
-    container_name: shikkanime-core
     depends_on:
       shikkanime-db:
         condition: service_healthy
@@ -38,7 +35,7 @@ services:
       VALKEY_HOST: "shikkanime-valkey"
     healthcheck:
       test: curl --fail http://localhost:37100/ || exit 1
-      interval: 120s
-      timeout: 30s
+      interval: 60s
+      timeout: 10s
       retries: 10
-      start_period: 60s
+      start_period: 30s

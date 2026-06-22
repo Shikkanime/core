@@ -10,6 +10,7 @@ import fr.shikkanime.utils.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlin.system.exitProcess
 
 private val logger = LoggerFactory.getLogger(Constant.NAME)
 
@@ -41,7 +42,7 @@ suspend fun main(args: Array<String>) {
 
     if ("--enable-jobs" in args) {
         if (!BrowserBuilder.checkWidevine()) {
-            throw IllegalStateException("Widevine DRM is not supported on this platform. Please check your browser installation and Widevine configuration.")
+            exitProcess(1)
         }
 
         logger.info("Starting jobs...")
