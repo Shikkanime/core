@@ -43,8 +43,8 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       find ${PLAYWRIGHT_BROWSERS_PATH} -path "*/WidevineCdm/manifest.json" | while read -r manifest; do \
         node -e "\
 const fs=require('fs'),f=process.argv[1],m=JSON.parse(fs.readFileSync(f,'utf8'));\
-if(!m.platforms.some(p=>p.os==='linux'&&p.arch==='arm64')){\
-m.platforms.push({os:'linux',arch:'arm64',sub_package_path:'_platform_specific/linux_arm64/'});}\
+m.platforms=[{os:'linux',arch:'x64',sub_package_path:'_platform_specific/linux_x64/'},{os:'linux',arch:'arm64',sub_package_path:'_platform_specific/linux_arm64/'}];\
+m['x-cdm-persistent-license-support']=false;\
 fs.writeFileSync(f,JSON.stringify(m,null,2));" "$manifest" && \
         echo "Patched: $manifest"; \
       done && \
