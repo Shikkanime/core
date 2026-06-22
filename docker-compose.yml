@@ -35,7 +35,7 @@ services:
       VALKEY_HOST: "shikkanime-valkey"
     healthcheck:
       test: curl --fail http://localhost:37100/ || exit 1
-      interval: 60s
+      interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 30
       start_period: 30s

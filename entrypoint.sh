@@ -1,15 +1,26 @@
 #!/bin/sh
 set -e
 
-# Applique les droits à TOUT le dossier courant (/app) de manière récursive.
-# Cela inclut donc 'data', 'dumps' et tout autre volume monté dans ce dossier.
 chown -R appuser:appuser . 2>/dev/null || true
 
-# Démarre Xvfb en tâche de fond (pas besoin de xauth ou de HOME grâce à -ac)
-Xvfb :99 -ac -screen 0 1280x1024x24 > /dev/null 2>&1 &
+Xvfb_PID=$(Xvfb :99 -ac -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 & echo $!)
+timeout=50; current=0
+while [ $current -lt $timeout ]; do
+    if [ -S /tmp/.X11-unix/X99 ]; then break; fi
+    if ! kill -0 "$Xvfb_PID" 2>/dev/null; then
+        echo "Xvfb failed to start:" >&2
+        cat /tmp/xvfb.log >>/dev/stderr
+        exit 1
+    fi
+    sleep 0.1
+    current=$((current + 1))
+done
 
-# Exporte le DISPLAY pour que Playwright/Chromium le trouve
+if ! [ -S /tmp/.X11-unix/X99 ]; then
+    echo "Xvfb did not become ready in time:" >&2
+    cat /tmp/xvfb.log >>/dev/stderr
+    exit 1
+fi
+
 export DISPLAY=:99
-
-# Lance la commande en tant que 'appuser'
 exec gosu appuser "$@"

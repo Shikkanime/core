@@ -11,6 +11,7 @@ ENV LANG=C.UTF-8 \
     JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto \
     TZ=Europe/Paris \
     DEBIAN_FRONTEND=noninteractive \
+    DISPLAY=:99 \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
