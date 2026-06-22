@@ -22,8 +22,8 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
     rm -rf ~/.npm && \
     apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl unzip wget fonts-dejavu fontconfig libfreetype6 tzdata webp gosu xvfb && \
-    ARCH="$(uname -m)" && \
-    if [ "$ARCH" = "x86_64" ]; then \
+    ARCH="$(dpkg --print-architecture)" && \
+    if [ "$ARCH" = "amd64" ]; then \
       echo "Downloading Widevine for x86_64..." && \
       wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && \
       dpkg-deb -x /tmp/chrome.deb /tmp/chrome && \
@@ -31,8 +31,8 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
         cp -rL /tmp/chrome/opt/google/chrome/WidevineCdm "$dir/"; \
       done && \
       rm -rf /tmp/chrome* ; \
-    elif [ "$ARCH" = "aarch64" ]; then \
-      echo "Downloading and patching Widevine for aarch64 (ARM64)..." && \
+    elif [ "$ARCH" = "arm64" ]; then \
+      echo "Downloading and patching Widevine for arm64..." && \
       apt-get install -y --no-install-recommends git squashfs-tools python3 && \
       git clone https://github.com/AsahiLinux/widevine-installer.git /tmp/widevine-installer && \
       printf "\n\n" | sh /tmp/widevine-installer/widevine-installer && \
@@ -42,7 +42,17 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       apt-get purge -y git squashfs-tools && \
       apt-get autoremove -y && \
       rm -rf /tmp/widevine-installer /var/lib/widevine ; \
+    else \
+      echo "Unsupported architecture for Widevine: $ARCH" && \
+      exit 1 ; \
     fi && \
+    WIDEVINE_FILES="$(find ${PLAYWRIGHT_BROWSERS_PATH} -path '*/WidevineCdm/manifest.json' -o -path '*/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so' -o -path '*/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so')" && \
+    if [ -z "$WIDEVINE_FILES" ]; then \
+      echo "Widevine files were not installed into ${PLAYWRIGHT_BROWSERS_PATH}" && \
+      exit 1 ; \
+    fi && \
+    echo "Widevine files installed:" && \
+    printf '%s\n' "$WIDEVINE_FILES" && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* && \
     ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && \
     echo "$TZ" > /etc/timezone && \

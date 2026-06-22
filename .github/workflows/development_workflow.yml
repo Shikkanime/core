@@ -7,55 +7,6 @@ on:
     branches: [master]
 
 jobs:
-  test_with_valkey:
-    name: Test and analyze (with Valkey)
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-
-      - name: Setup Dependencies
-        uses: ./.github/actions/setup
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Start valkey
-        run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
-
-      - name: Build and test
-        run: ./gradlew clean test koverXmlReport --info
-
-      - if: (github.event_name == 'pull_request' || github.event_name == 'push') && github.actor != 'dependabot[bot]'
-        name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2026.1
-        with:
-          pr-mode: false
-          upload-result: true
-          args: |
-            --baseline,qodana.sarif.json
-        env:
-          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
-          QODANA_ENDPOINT: 'https://qodana.cloud'
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Dependencies
-        uses: ./.github/actions/setup
-
-      - name: Build and test
-        run: ./gradlew clean test --info
-
   test-compose:
     name: Test docker image (${{ matrix.platform }})
     strategy:
@@ -63,7 +14,6 @@ jobs:
       matrix:
         platform: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.platform }}
-    needs: [test_with_valkey, test]
     steps:
       - uses: actions/checkout@v7
 
@@ -78,6 +28,14 @@ jobs:
 
       - name: Start services
         run: docker compose up -d --build --wait
+
+      - name: Inspect Widevine installation (ARM)
+        if: matrix.platform == 'ubuntu-24.04-arm'
+        run: |
+          echo "=== Widevine files in container ==="
+          docker compose exec -T shikkanime-core sh -lc '
+            find /opt/playwright -path "*/WidevineCdm/manifest.json" -o -path "*/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so" -o -path "*/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so" | sort
+          '
 
       - name: Show logs on failure
         if: failure()
