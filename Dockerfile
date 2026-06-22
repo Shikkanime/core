@@ -39,6 +39,15 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
         cp -rL /var/lib/widevine/WidevineCdm "$dir/"; \
       done && \
+      echo "Patching WidevineCdm manifest.json for Linux arm64..." && \
+      find ${PLAYWRIGHT_BROWSERS_PATH} -path "*/WidevineCdm/manifest.json" | while read -r manifest; do \
+        node -e "\
+const fs=require('fs'),f=process.argv[1],m=JSON.parse(fs.readFileSync(f,'utf8'));\
+if(!m.platforms.some(p=>p.os==='linux'&&p.arch==='arm64')){\
+m.platforms.push({os:'linux',arch:'arm64',sub_package_path:'_platform_specific/linux_arm64/'});}\
+fs.writeFileSync(f,JSON.stringify(m,null,2));" "$manifest" && \
+        echo "Patched: $manifest"; \
+      done && \
       apt-get purge -y git squashfs-tools && \
       apt-get autoremove -y && \
       rm -rf /tmp/widevine-installer /var/lib/widevine ; \
