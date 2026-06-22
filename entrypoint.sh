@@ -115,5 +115,44 @@ echo "  XAUTHORITY=${XAUTHORITY:-<not set>}"
 echo "  HOME=$(gosu appuser sh -c 'echo $HOME')"
 echo "  USER=$(gosu appuser id)"
 
+# Widevine CDM diagnostics
+echo "--- Widevine CDM diagnostics ---"
+PLAYWRIGHT_PATH="${PLAYWRIGHT_BROWSERS_PATH:-/opt/playwright}"
+echo "Playwright browsers path: $PLAYWRIGHT_PATH"
+
+echo "--- WidevineCdm directory structure ---"
+find "$PLAYWRIGHT_PATH" -path "*/WidevineCdm*" -exec ls -la {} \; 2>/dev/null || echo "No WidevineCdm files found!"
+
+echo "--- WidevineCdm manifest.json content ---"
+find "$PLAYWRIGHT_PATH" -path "*/WidevineCdm/manifest.json" -exec cat {} \; 2>/dev/null || echo "No manifest.json found!"
+
+echo "--- libwidevinecdm.so details ---"
+WIDEVINE_SO=$(find "$PLAYWRIGHT_PATH" -name "libwidevinecdm.so" 2>/dev/null | head -1)
+if [ -n "$WIDEVINE_SO" ]; then
+    echo "Found: $WIDEVINE_SO"
+    ls -la "$WIDEVINE_SO"
+    echo "File type: $(file "$WIDEVINE_SO" 2>/dev/null)"
+    echo "Shared library dependencies:"
+    ldd "$WIDEVINE_SO" 2>&1 || echo "ldd failed (might be static or cross-arch)"
+else
+    echo "ERROR: libwidevinecdm.so NOT FOUND in $PLAYWRIGHT_PATH"
+fi
+
+echo "--- Chromium version ---"
+CHROME_BIN=$(find "$PLAYWRIGHT_PATH" -name "chrome" -type f 2>/dev/null | head -1)
+if [ -n "$CHROME_BIN" ]; then
+    echo "Chrome binary: $CHROME_BIN"
+    echo "File type: $(file "$CHROME_BIN" 2>/dev/null)"
+    "$CHROME_BIN" --version 2>&1 || echo "Could not get Chrome version"
+    echo "Chrome directory contents (WidevineCdm):"
+    CHROME_DIR=$(dirname "$CHROME_BIN")
+    ls -la "$CHROME_DIR/WidevineCdm/" 2>/dev/null || echo "No WidevineCdm in Chrome dir"
+    ls -laR "$CHROME_DIR/WidevineCdm/" 2>/dev/null || true
+else
+    echo "Chrome binary not found"
+fi
+
+echo "--- End Widevine CDM diagnostics ---"
+
 echo "=== Starting application with DISPLAY=$DISPLAY ==="
 exec gosu appuser "$@"

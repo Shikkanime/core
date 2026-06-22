@@ -21,7 +21,7 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
     npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps chromium && \
     rm -rf ~/.npm && \
     apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl unzip wget fonts-dejavu fontconfig libfreetype6 tzdata webp gosu xvfb xauth dbus x11-utils && \
+    apt-get install -y --no-install-recommends ca-certificates curl unzip wget fonts-dejavu fontconfig libfreetype6 tzdata webp gosu xvfb xauth dbus x11-utils file && \
     ARCH="$(dpkg --print-architecture)" && \
     if [ "$ARCH" = "amd64" ]; then \
       echo "Downloading Widevine for x86_64..." && \
