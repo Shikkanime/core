@@ -26,16 +26,19 @@ jobs:
       - name: Build
         run: gradle clean installDist -x test
 
-      - name: Start services
-        run: docker compose up -d --build --wait
+      - name: Build docker image
+        run: docker compose build shikkanime-core
 
       - name: Inspect Widevine installation (ARM)
         if: matrix.platform == 'ubuntu-24.04-arm'
         run: |
-          echo "=== Widevine files in container ==="
-          docker compose exec -T shikkanime-core sh -lc '
+          echo "=== Widevine files in image ==="
+          docker compose run --rm --no-deps --entrypoint sh shikkanime-core -lc '
             find /opt/playwright -path "*/WidevineCdm/manifest.json" -o -path "*/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so" -o -path "*/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so" | sort
           '
+
+      - name: Start services
+        run: docker compose up -d --wait
 
       - name: Show logs on failure
         if: failure()
