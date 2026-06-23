@@ -64,18 +64,20 @@ class BrowserBuilder {
 
         logger.info("Launching browser with ${cookies.size} cookies and ${urls.size} URLs...")
         val playwright = Playwright.create()
+        val userDataDir = Files.createTempDirectory("chrome-profile")
+        val browserArgs = buildChromiumArgs()
+        logger.info(
+            "Browser runtime: os.arch=${System.getProperty("os.arch")}, DISPLAY=${System.getenv("DISPLAY")}, " +
+                "PLAYWRIGHT_BROWSERS_PATH=${System.getenv("PLAYWRIGHT_BROWSERS_PATH")}, MOZ_GMP_PATH=${System.getenv("MOZ_GMP_PATH")}, " +
+                "userDataDir=$userDataDir, args=${browserArgs.joinToString(" ")}"
+        )
         val context = playwright.chromium()
             .launchPersistentContext(
-                Files.createTempDirectory("chrome-profile"),
+                userDataDir,
                 BrowserType.LaunchPersistentContextOptions()
                     .setHeadless(false)
                     .setIgnoreDefaultArgs(listOf("--disable-component-update"))
-                    .setArgs(listOf(
-                        "--autoplay-policy=no-user-gesture-required",
-                        "--no-sandbox",
-                        "--disable-dev-shm-usage",
-                        "--disable-gpu"
-                    ))
+                    .setArgs(browserArgs)
             )
 
         logger.info("Setting cookies...")
@@ -126,6 +128,27 @@ class BrowserBuilder {
         return result
     }
 
+    private fun buildChromiumArgs(): List<String> {
+        val args = mutableListOf(
+            "--autoplay-policy=no-user-gesture-required",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--enable-logging=stderr",
+            "--vmodule=*widevine*=2,*cdm*=2,*media*=1"
+        )
+
+        val widevineLibrary = File("/var/lib/widevine/libwidevinecdm.so")
+        if (widevineLibrary.isFile) {
+            args.add("--widevine-cdm-path=${widevineLibrary.absolutePath}")
+            File("/var/lib/widevine/manifest.json").takeIf { it.isFile }?.readText()
+                ?.let { Regex("\"version\"\\s*:\\s*\"([^\"]+)\"").find(it)?.groupValues?.getOrNull(1) }
+                ?.let { args.add("--widevine-cdm-version=$it") }
+        }
+
+        return args
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(BrowserBuilder::class.java)
 
@@ -136,25 +159,48 @@ class BrowserBuilder {
                     .setUrls("https://example.com")
                     .setEvaluateFunction("""
                         async () => {
+                            const details = {
+                                userAgent: navigator.userAgent,
+                                platform: navigator.platform,
+                                userAgentDataPlatform: navigator.userAgentData?.platform ?? null,
+                                hasRequestMediaKeySystemAccess: !!navigator.requestMediaKeySystemAccess
+                            };
                             try {
                                 if (!navigator.requestMediaKeySystemAccess) {
-                                    return 'API_NOT_FOUND';
+                                    details.result = 'API_NOT_FOUND';
+                                    return JSON.stringify(details);
                                 }
                                 const access = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', [{
-                                    initDataTypes: ['keyids', 'webm'],
-                                    videoCapabilities: [{ contentType: 'video/webm; codecs="vp9"' }]
+                                    initDataTypes: ['cenc', 'keyids', 'webm'],
+                                    distinctiveIdentifier: 'optional',
+                                    persistentState: 'optional',
+                                    sessionTypes: ['temporary'],
+                                    videoCapabilities: [
+                                        { contentType: 'video/mp4; codecs="avc1.42E01E"' },
+                                        { contentType: 'video/webm; codecs="vp9"' }
+                                    ],
+                                    audioCapabilities: [
+                                        { contentType: 'audio/mp4; codecs="mp4a.40.2"' },
+                                        { contentType: 'audio/webm; codecs="opus"' }
+                                    ]
                                 }]);
-                                return 'true';
+                                details.result = 'SUPPORTED';
+                                details.keySystem = access.keySystem;
+                                details.configuration = access.getConfiguration();
+                                return JSON.stringify(details);
                             } catch (e) {
-                                return e.name + ': ' + e.message;
+                                details.result = 'ERROR';
+                                details.errorName = e.name;
+                                details.errorMessage = e.message;
+                                return JSON.stringify(details);
                             }
                         }
                     """.trimIndent())
                     .build()
                 val response = results.firstOrNull()?.second
-                val result = response == "true"
+                val result = response?.contains("\"result\":\"SUPPORTED\"") == true
                 if (result) {
-                    logger.info("Widevine DRM is supported!")
+                    logger.info("Widevine DRM is supported! Response: $response")
                 } else {
                     logger.severe("Widevine DRM is NOT supported! Response: $response")
                 }

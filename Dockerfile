@@ -12,6 +12,7 @@ ENV LANG=C.UTF-8 \
     TZ=Europe/Paris \
     DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:99 \
+    MOZ_GMP_PATH=/var/lib/widevine/gmp-widevinecdm/system-installed \
     PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
@@ -36,30 +37,55 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       apt-get install -y --no-install-recommends git squashfs-tools python3 && \
       git clone https://github.com/AsahiLinux/widevine-installer.git /tmp/widevine-installer && \
       printf "\n\n" | sh /tmp/widevine-installer/widevine-installer && \
-      find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
-        cp -rL /var/lib/widevine/WidevineCdm "$dir/" && \
-        mkdir -p "$dir/WidevineCdm/_platform_specific/linux_x64" && \
-        cp -f "$dir/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so" "$dir/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so"; \
-      done && \
-      echo "Patching WidevineCdm manifest.json for Linux arm64..." && \
-      find ${PLAYWRIGHT_BROWSERS_PATH} -path "*/WidevineCdm/manifest.json" | while read -r manifest; do \
-        node -e "\
-const fs=require('fs'),f=process.argv[1],m=JSON.parse(fs.readFileSync(f,'utf8'));\
-m.platforms=[{os:'linux',arch:'x64',sub_package_path:'_platform_specific/linux_x64/'},{os:'linux',arch:'arm64',sub_package_path:'_platform_specific/linux_arm64/'}];\
+      echo "Patching Asahi Widevine manifest for Linux arm64..." && \
+      node -e "\
+const fs=require('fs'),f='/var/lib/widevine/manifest.json',m=JSON.parse(fs.readFileSync(f,'utf8'));\
+m.platforms=[{os:'linux',arch:'arm64',sub_package_path:'_platform_specific/linux_arm64/'},{os:'linux',arch:'x64',sub_package_path:'_platform_specific/linux_x64/'}];\
 m['x-cdm-persistent-license-support']=false;\
-fs.writeFileSync(f,JSON.stringify(m,null,2));" "$manifest" && \
-        echo "Patched: $manifest"; \
+fs.writeFileSync(f,JSON.stringify(m,null,2));" && \
+      find ${PLAYWRIGHT_BROWSERS_PATH} -type d -name "chrome-linux*" | while read -r dir; do \
+        rm -rf "$dir/WidevineCdm" && \
+        ln -s /var/lib/widevine/WidevineCdm "$dir/WidevineCdm" && \
+        echo "Linked Asahi WidevineCdm into $dir"; \
       done && \
+      echo "Effective Widevine manifests:" && \
+      find -L /var/lib/widevine ${PLAYWRIGHT_BROWSERS_PATH} -path "*/WidevineCdm/manifest.json" -exec sh -c 'echo "--- $1"; cat "$1"' sh {} \; && \
+      echo "Effective Widevine libraries:" && \
+      find -L /var/lib/widevine ${PLAYWRIGHT_BROWSERS_PATH} -name "libwidevinecdm.so" -exec sh -c '\
+        for file do \
+          echo "--- $file"; \
+          ls -la "$file"; \
+          file "$file"; \
+        done' sh {} + && \
+      find ${PLAYWRIGHT_BROWSERS_PATH} -type l -name "WidevineCdm" -exec sh -c '\
+        for link do \
+          echo "--- $link -> $(readlink "$link")"; \
+        done' sh {} + && \
+      find /var/lib/widevine -maxdepth 4 -type l -exec sh -c '\
+        for link do \
+          echo "--- $link -> $(readlink "$link")"; \
+        done' sh {} + && \
       apt-get purge -y git squashfs-tools python3 && \
       apt-get autoremove -y && \
-      rm -rf /tmp/widevine-installer /var/lib/widevine ; \
+      rm -rf /tmp/widevine-installer ; \
     else \
       echo "Unsupported architecture for Widevine: $ARCH" && \
       exit 1 ; \
     fi && \
-    WIDEVINE_FILES="$(find ${PLAYWRIGHT_BROWSERS_PATH} -path '*/WidevineCdm/manifest.json' -o -path '*/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so' -o -path '*/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so')" && \
+    if [ "$ARCH" = "amd64" ]; then \
+      echo "Patching WidevineCdm manifest.json for Linux amd64..." && \
+      find ${PLAYWRIGHT_BROWSERS_PATH} -path "*/WidevineCdm/manifest.json" | while read -r manifest; do \
+        node -e "\
+const fs=require('fs'),f=process.argv[1],m=JSON.parse(fs.readFileSync(f,'utf8'));\
+m.platforms=[{os:'linux',arch:'x64',sub_package_path:'_platform_specific/linux_x64/'}];\
+m['x-cdm-persistent-license-support']=false;\
+fs.writeFileSync(f,JSON.stringify(m,null,2));" "$manifest" && \
+        echo "Patched: $manifest"; \
+      done ; \
+    fi && \
+    WIDEVINE_FILES="$(find -L ${PLAYWRIGHT_BROWSERS_PATH} /var/lib/widevine -path '*/WidevineCdm/manifest.json' -o -path '*/WidevineCdm/_platform_specific/linux_arm64/libwidevinecdm.so' -o -path '*/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so' -o -path '*/gmp-widevinecdm/system-installed/libwidevinecdm.so' 2>/dev/null || true)" && \
     if [ -z "$WIDEVINE_FILES" ]; then \
-      echo "Widevine files were not installed into ${PLAYWRIGHT_BROWSERS_PATH}" && \
+      echo "Widevine files were not installed into ${PLAYWRIGHT_BROWSERS_PATH} or /var/lib/widevine" && \
       exit 1 ; \
     fi && \
     echo "Widevine files installed:" && \
@@ -69,7 +95,7 @@ fs.writeFileSync(f,JSON.stringify(m,null,2));" "$manifest" && \
     echo "$TZ" > /etc/timezone && \
     dpkg-reconfigure --frontend noninteractive tzdata && \
     groupadd -r -g 1001 appuser && useradd -r -u 1001 -g appuser -m -d /home/appuser appuser && \
-    chown -R appuser:appuser ${PLAYWRIGHT_BROWSERS_PATH}
+    (chown -R appuser:appuser ${PLAYWRIGHT_BROWSERS_PATH} /var/lib/widevine 2>/dev/null || true)
 
 COPY --chown=appuser:appuser build/install/core hibernate.cfg.xml /app/
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh

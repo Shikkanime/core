@@ -116,6 +116,7 @@ fi
 
 echo "--- Environment for appuser ---"
 echo "  DISPLAY=$DISPLAY"
+echo "  MOZ_GMP_PATH=${MOZ_GMP_PATH:-<not set>}"
 echo "  XAUTHORITY=${XAUTHORITY:-<not set>}"
 echo "  HOME=$(gosu appuser sh -c 'echo $HOME')"
 echo "  USER=$(gosu appuser id)"
@@ -124,23 +125,67 @@ echo "  USER=$(gosu appuser id)"
 echo "--- Widevine CDM diagnostics ---"
 PLAYWRIGHT_PATH="${PLAYWRIGHT_BROWSERS_PATH:-/opt/playwright}"
 echo "Playwright browsers path: $PLAYWRIGHT_PATH"
+echo "Asahi Widevine path: /var/lib/widevine"
+
+if [ -d /var/lib/widevine ]; then
+    echo "--- /var/lib/widevine structure ---"
+    find /var/lib/widevine -maxdepth 5 -exec ls -ld {} \; 2>/dev/null || true
+
+    echo "--- /var/lib/widevine symlinks ---"
+    find /var/lib/widevine -maxdepth 5 -type l -exec sh -c '
+        for link do
+            echo "$link -> $(readlink "$link")"
+        done
+    ' sh {} + 2>/dev/null || true
+
+    echo "--- /var/lib/widevine manifest.json content ---"
+    cat /var/lib/widevine/manifest.json 2>/dev/null || echo "No /var/lib/widevine/manifest.json found"
+
+    echo "--- Firefox/GMP Widevine path ---"
+    ls -la "${MOZ_GMP_PATH:-/var/lib/widevine/gmp-widevinecdm/system-installed}" 2>/dev/null || echo "No GMP Widevine path found"
+else
+    echo "No /var/lib/widevine directory found"
+fi
 
 echo "--- WidevineCdm directory structure ---"
-find "$PLAYWRIGHT_PATH" -path "*/WidevineCdm*" -exec ls -la {} \; 2>/dev/null || echo "No WidevineCdm files found!"
+find -L "$PLAYWRIGHT_PATH" -path "*/WidevineCdm*" -exec ls -ld {} \; 2>/dev/null || echo "No WidevineCdm files found!"
+
+echo "--- Playwright WidevineCdm symlinks ---"
+find "$PLAYWRIGHT_PATH" -type l -name "WidevineCdm" -exec sh -c '
+    for link do
+        echo "$link -> $(readlink "$link")"
+    done
+' sh {} + 2>/dev/null || echo "No Playwright WidevineCdm symlink found"
 
 echo "--- WidevineCdm manifest.json content ---"
-find "$PLAYWRIGHT_PATH" -path "*/WidevineCdm/manifest.json" -exec cat {} \; 2>/dev/null || echo "No manifest.json found!"
+find -L "$PLAYWRIGHT_PATH" -path "*/WidevineCdm/manifest.json" -exec sh -c '
+    for manifest do
+        echo "--- $manifest"
+        cat "$manifest"
+    done
+' sh {} + 2>/dev/null || echo "No manifest.json found!"
 
 echo "--- libwidevinecdm.so details ---"
-WIDEVINE_SO=$(find "$PLAYWRIGHT_PATH" -name "libwidevinecdm.so" 2>/dev/null | head -1)
-if [ -n "$WIDEVINE_SO" ]; then
-    echo "Found: $WIDEVINE_SO"
+WIDEVINE_SO_COUNT=0
+find -L "$PLAYWRIGHT_PATH" /var/lib/widevine -name "libwidevinecdm.so" 2>/dev/null | sort | while read -r WIDEVINE_SO; do
+    WIDEVINE_SO_COUNT=$((WIDEVINE_SO_COUNT + 1))
+    echo "--- $WIDEVINE_SO"
     ls -la "$WIDEVINE_SO"
     echo "File type: $(file "$WIDEVINE_SO" 2>/dev/null)"
-    echo "Shared library dependencies:"
-    ldd "$WIDEVINE_SO" 2>&1 || echo "ldd failed (might be static or cross-arch)"
-else
-    echo "ERROR: libwidevinecdm.so NOT FOUND in $PLAYWRIGHT_PATH"
+    if gosu appuser test -r "$WIDEVINE_SO"; then
+        echo "Readable by appuser: yes"
+    else
+        echo "Readable by appuser: no"
+    fi
+    if [ -s "$WIDEVINE_SO" ]; then
+        echo "Shared library dependencies:"
+        ldd "$WIDEVINE_SO" 2>&1 || echo "ldd failed (might be static or cross-arch)"
+    else
+        echo "Skipping ldd: file is empty"
+    fi
+done
+if ! find -L "$PLAYWRIGHT_PATH" /var/lib/widevine -name "libwidevinecdm.so" -print -quit 2>/dev/null | grep -q .; then
+    echo "ERROR: libwidevinecdm.so NOT FOUND in $PLAYWRIGHT_PATH or /var/lib/widevine"
 fi
 
 echo "--- Chromium version ---"
@@ -151,8 +196,12 @@ if [ -n "$CHROME_BIN" ]; then
     "$CHROME_BIN" --version 2>&1 || echo "Could not get Chrome version"
     echo "Chrome directory contents (WidevineCdm):"
     CHROME_DIR=$(dirname "$CHROME_BIN")
+    ls -la "$CHROME_DIR" 2>/dev/null || true
+    if [ -L "$CHROME_DIR/WidevineCdm" ]; then
+        echo "$CHROME_DIR/WidevineCdm -> $(readlink "$CHROME_DIR/WidevineCdm")"
+    fi
     ls -la "$CHROME_DIR/WidevineCdm/" 2>/dev/null || echo "No WidevineCdm in Chrome dir"
-    ls -laR "$CHROME_DIR/WidevineCdm/" 2>/dev/null || true
+    find -L "$CHROME_DIR/WidevineCdm" -maxdepth 5 -exec ls -ld {} \; 2>/dev/null || true
 else
     echo "Chrome binary not found"
 fi
