@@ -117,6 +117,7 @@ fi
 echo "--- Environment for appuser ---"
 echo "  DISPLAY=$DISPLAY"
 echo "  MOZ_GMP_PATH=${MOZ_GMP_PATH:-<not set>}"
+echo "  SHIKKANIME_BROWSER=${SHIKKANIME_BROWSER:-<not set>}"
 echo "  XAUTHORITY=${XAUTHORITY:-<not set>}"
 echo "  HOME=$(gosu appuser sh -c 'echo $HOME')"
 echo "  USER=$(gosu appuser id)"
@@ -125,27 +126,30 @@ echo "  USER=$(gosu appuser id)"
 echo "--- Widevine CDM diagnostics ---"
 PLAYWRIGHT_PATH="${PLAYWRIGHT_BROWSERS_PATH:-/opt/playwright}"
 echo "Playwright browsers path: $PLAYWRIGHT_PATH"
-echo "Asahi Widevine path: /var/lib/widevine"
+echo "Raspberry Pi Widevine path: /opt/WidevineCdm"
+echo "Asahi Widevine fallback path: /var/lib/widevine"
 
-if [ -d /var/lib/widevine ]; then
-    echo "--- /var/lib/widevine structure ---"
-    find /var/lib/widevine -maxdepth 5 -exec ls -ld {} \; 2>/dev/null || true
+for WIDEVINE_ROOT in /opt/WidevineCdm /var/lib/widevine; do
+if [ -d "$WIDEVINE_ROOT" ]; then
+    echo "--- $WIDEVINE_ROOT structure ---"
+    find "$WIDEVINE_ROOT" -maxdepth 5 -exec ls -ld {} \; 2>/dev/null || true
 
-    echo "--- /var/lib/widevine symlinks ---"
-    find /var/lib/widevine -maxdepth 5 -type l -exec sh -c '
+    echo "--- $WIDEVINE_ROOT symlinks ---"
+    find "$WIDEVINE_ROOT" -maxdepth 5 -type l -exec sh -c '
         for link do
             echo "$link -> $(readlink "$link")"
         done
     ' sh {} + 2>/dev/null || true
 
-    echo "--- /var/lib/widevine manifest.json content ---"
-    cat /var/lib/widevine/manifest.json 2>/dev/null || echo "No /var/lib/widevine/manifest.json found"
-
-    echo "--- Firefox/GMP Widevine path ---"
-    ls -la "${MOZ_GMP_PATH:-/var/lib/widevine/gmp-widevinecdm/system-installed}" 2>/dev/null || echo "No GMP Widevine path found"
+    echo "--- $WIDEVINE_ROOT manifest.json content ---"
+    cat "$WIDEVINE_ROOT/manifest.json" 2>/dev/null || echo "No $WIDEVINE_ROOT/manifest.json found"
 else
-    echo "No /var/lib/widevine directory found"
+    echo "No $WIDEVINE_ROOT directory found"
 fi
+done
+
+echo "--- Firefox/GMP Widevine path ---"
+ls -la "${MOZ_GMP_PATH:-/opt/WidevineCdm/gmp-widevinecdm/latest}" 2>/dev/null || echo "No GMP Widevine path found"
 
 echo "--- WidevineCdm directory structure ---"
 find -L "$PLAYWRIGHT_PATH" -path "*/WidevineCdm*" -exec ls -ld {} \; 2>/dev/null || echo "No WidevineCdm files found!"
@@ -167,7 +171,7 @@ find -L "$PLAYWRIGHT_PATH" -path "*/WidevineCdm/manifest.json" -exec sh -c '
 
 echo "--- libwidevinecdm.so details ---"
 WIDEVINE_SO_COUNT=0
-find -L "$PLAYWRIGHT_PATH" /var/lib/widevine -name "libwidevinecdm.so" 2>/dev/null | sort | while read -r WIDEVINE_SO; do
+find -L "$PLAYWRIGHT_PATH" /opt/WidevineCdm /var/lib/widevine -name "libwidevinecdm.so" 2>/dev/null | sort | while read -r WIDEVINE_SO; do
     WIDEVINE_SO_COUNT=$((WIDEVINE_SO_COUNT + 1))
     echo "--- $WIDEVINE_SO"
     ls -la "$WIDEVINE_SO"
@@ -184,8 +188,8 @@ find -L "$PLAYWRIGHT_PATH" /var/lib/widevine -name "libwidevinecdm.so" 2>/dev/nu
         echo "Skipping ldd: file is empty"
     fi
 done
-if ! find -L "$PLAYWRIGHT_PATH" /var/lib/widevine -name "libwidevinecdm.so" -print -quit 2>/dev/null | grep -q .; then
-    echo "ERROR: libwidevinecdm.so NOT FOUND in $PLAYWRIGHT_PATH or /var/lib/widevine"
+if ! find -L "$PLAYWRIGHT_PATH" /opt/WidevineCdm /var/lib/widevine -name "libwidevinecdm.so" -print -quit 2>/dev/null | grep -q .; then
+    echo "ERROR: libwidevinecdm.so NOT FOUND in $PLAYWRIGHT_PATH, /opt/WidevineCdm or /var/lib/widevine"
 fi
 
 echo "--- Chromium version ---"
@@ -212,6 +216,13 @@ if [ -n "$CHROME_BIN" ]; then
 else
     echo "Chrome binary not found"
 fi
+
+echo "--- Firefox binaries found ---"
+find "$PLAYWRIGHT_PATH" -path "*/firefox/firefox" -type f 2>/dev/null | sort | while read -r firefox; do
+    echo "--- $firefox"
+    echo "File type: $(file "$firefox" 2>/dev/null)"
+    "$firefox" --version 2>&1 || echo "Could not get Firefox version"
+done
 
 echo "--- End Widevine CDM diagnostics ---"
 
