@@ -129,6 +129,8 @@ class UpdateAnimeJob : AbstractJob {
                 logger.warning("Found multiple platforms for anime ${anime.name}: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
                 fun normalize(string: String) = string.replace(":", "").lowercase()
                 val animeNameNormalized = normalize(anime.name!!)
+                val animeShortNameNormalized = normalize(StringUtils.getShortName(anime.name!!))
+                val animeDatasTmp = animeDatas.toList()
 
                 platformCounts.forEach { (platform, _) ->
                     animeDatas.filter { it.platform == platform && normalize(it.name) != animeNameNormalized }
@@ -136,6 +138,16 @@ class UpdateAnimeJob : AbstractJob {
                             logger.warning("Removing ${it.name} from matching list because it doesn't match the anime name")
                             animeDatas.remove(it)
                         }
+                }
+
+                if (animeDatas.isEmpty()) {
+                    platformCounts.forEach { (platform, _) ->
+                        animeDatasTmp.filter { it.platform == platform && normalize(StringUtils.getShortName(it.name)) == animeShortNameNormalized }
+                            .forEach {
+                                logger.warning("Adding ${it.name} back to matching list because it matches the anime short name")
+                                animeDatas.add(it)
+                            }
+                    }
                 }
             }
 

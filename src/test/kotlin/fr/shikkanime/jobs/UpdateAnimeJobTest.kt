@@ -189,6 +189,15 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.CRUN, "GMTE00258378"),
                     PlatformData(Platform.CRUN, "GR8DN7N7R"),
                 )
+            ),
+            TestCase(
+                name = "Sekai-ichi Hatsukoi",
+                slug = "sekai-ichi-hatsukoi",
+                releaseDateTime = "2014-03-15T14:00:00Z",
+                platforms = listOf(
+                    PlatformData(Platform.ANIM, "928"),
+                    PlatformData(Platform.ANIM, "929"),
+                )
             )
         )
     }
