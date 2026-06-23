@@ -30,7 +30,7 @@ fi
 
 # Check Xvfb binary
 echo "--- Checking Xvfb ---"
-which Xvfb && Xvfb -version 2>&1 || echo "WARNING: Xvfb version check failed"
+which Xvfb || echo "WARNING: Xvfb binary not found"
 
 echo "--- Starting Xvfb on display :99 ---"
 Xvfb :99 -ac -screen 0 1280x1024x24 -nolisten tcp > /tmp/xvfb.log 2>&1 &
@@ -189,7 +189,14 @@ if ! find -L "$PLAYWRIGHT_PATH" /var/lib/widevine -name "libwidevinecdm.so" -pri
 fi
 
 echo "--- Chromium version ---"
-CHROME_BIN=$(find "$PLAYWRIGHT_PATH" -name "chrome" -type f 2>/dev/null | head -1)
+echo "--- Chromium binaries found ---"
+find "$PLAYWRIGHT_PATH" -path "*/chrome-linux/chrome" -type f 2>/dev/null | sort | while read -r chrome; do
+    echo "--- $chrome"
+    echo "File type: $(file "$chrome" 2>/dev/null)"
+    "$chrome" --version 2>&1 || echo "Could not get Chrome version"
+done
+
+CHROME_BIN=$(find "$PLAYWRIGHT_PATH" -name "chrome" -type f 2>/dev/null | sort | head -1)
 if [ -n "$CHROME_BIN" ]; then
     echo "Chrome binary: $CHROME_BIN"
     echo "File type: $(file "$CHROME_BIN" 2>/dev/null)"

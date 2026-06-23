@@ -1,5 +1,6 @@
 ARG JAVA_VERSION=25
 ARG PLAYWRIGHT_VERSION=1.60.0
+ARG ARM_PLAYWRIGHT_VERSION=1.40.1
 
 FROM amazoncorretto:${JAVA_VERSION} AS java
 FROM node:25-bookworm-slim
@@ -17,6 +18,7 @@ ENV LANG=C.UTF-8 \
     PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
 
 ARG PLAYWRIGHT_VERSION
+ARG ARM_PLAYWRIGHT_VERSION
 # Install necessary packages and set timezone
 RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
     npx -y playwright@${PLAYWRIGHT_VERSION} install --with-deps chromium && \
@@ -37,6 +39,9 @@ RUN mkdir -p ${PLAYWRIGHT_BROWSERS_PATH} && \
       apt-get install -y --no-install-recommends git squashfs-tools python3 && \
       git clone https://github.com/AsahiLinux/widevine-installer.git /tmp/widevine-installer && \
       printf "\n\n" | sh /tmp/widevine-installer/widevine-installer && \
+      echo "Installing Chromium from Playwright ${ARM_PLAYWRIGHT_VERSION} for Widevine ${WIDEVINE_VERSION:-4.10.2662.3} compatibility..." && \
+      npx -y playwright@${ARM_PLAYWRIGHT_VERSION} install chromium && \
+      rm -rf ~/.npm && \
       echo "Patching Asahi Widevine manifest for Linux arm64..." && \
       node -e "\
 const fs=require('fs'),f='/var/lib/widevine/manifest.json',m=JSON.parse(fs.readFileSync(f,'utf8'));\

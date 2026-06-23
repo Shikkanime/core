@@ -65,19 +65,23 @@ class BrowserBuilder {
         logger.info("Launching browser with ${cookies.size} cookies and ${urls.size} URLs...")
         val playwright = Playwright.create()
         val userDataDir = Files.createTempDirectory("chrome-profile")
+        val executablePath = findChromiumExecutablePath()
         val browserArgs = buildChromiumArgs()
         logger.info(
             "Browser runtime: os.arch=${System.getProperty("os.arch")}, DISPLAY=${System.getenv("DISPLAY")}, " +
                 "PLAYWRIGHT_BROWSERS_PATH=${System.getenv("PLAYWRIGHT_BROWSERS_PATH")}, MOZ_GMP_PATH=${System.getenv("MOZ_GMP_PATH")}, " +
-                "userDataDir=$userDataDir, args=${browserArgs.joinToString(" ")}"
+                "userDataDir=$userDataDir, executablePath=${executablePath?.absolutePath ?: "<playwright-default>"}, args=${browserArgs.joinToString(" ")}"
         )
+        val launchOptions = BrowserType.LaunchPersistentContextOptions()
+            .setHeadless(false)
+            .setIgnoreDefaultArgs(listOf("--disable-component-update"))
+            .setArgs(browserArgs)
+        executablePath?.let { launchOptions.setExecutablePath(it.toPath()) }
+
         val context = playwright.chromium()
             .launchPersistentContext(
                 userDataDir,
-                BrowserType.LaunchPersistentContextOptions()
-                    .setHeadless(false)
-                    .setIgnoreDefaultArgs(listOf("--disable-component-update"))
-                    .setArgs(browserArgs)
+                launchOptions
             )
 
         logger.info("Setting cookies...")
@@ -126,6 +130,29 @@ class BrowserBuilder {
         }
 
         return result
+    }
+
+    private fun findChromiumExecutablePath(): File? {
+        val configuredPath = System.getenv("SHIKKANIME_CHROMIUM_EXECUTABLE_PATH")
+            ?.takeIf { it.isNotBlank() }
+            ?.let(::File)
+            ?.takeIf { it.isFile && it.canExecute() }
+
+        if (configuredPath != null) {
+            return configuredPath
+        }
+
+        val browsersPath = File(System.getenv("PLAYWRIGHT_BROWSERS_PATH") ?: "/opt/playwright")
+        return browsersPath.listFiles()
+            ?.filter { it.isDirectory && it.name.startsWith("chromium-") && it.name != "chromium_headless_shell" }
+            ?.mapNotNull { File(it, "chrome-linux/chrome").takeIf { chrome -> chrome.isFile && chrome.canExecute() } }
+            ?.sortedWith(
+                compareBy<File> {
+                    // Prefer Chromium 120 from Playwright 1.40 on ARM because Asahi Widevine currently ships a CDM from Lacros 120.
+                    it.absolutePath.contains("chromium-1091")
+                }.reversed().thenBy { it.absolutePath }
+            )
+            ?.firstOrNull()
     }
 
     private fun buildChromiumArgs(): List<String> {
