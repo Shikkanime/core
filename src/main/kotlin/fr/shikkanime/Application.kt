@@ -6,7 +6,10 @@ import fr.shikkanime.modules.configureRouting
 import fr.shikkanime.modules.configureSecurity
 import fr.shikkanime.services.*
 import fr.shikkanime.services.admin.AnimeAdminService
-import fr.shikkanime.utils.*
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.JobManager
+import fr.shikkanime.utils.LoggerFactory
+import fr.shikkanime.utils.StringUtils
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -40,10 +43,6 @@ suspend fun main(args: Array<String>) {
     }
 
     if ("--enable-jobs" in args) {
-        if (!BrowserBuilder.checkWidevine()) {
-            throw IllegalStateException("Widevine DRM is not supported on this platform. Please check your browser installation and Widevine configuration.")
-        }
-
         logger.info("Starting jobs...")
         // Every 10 seconds
         JobManager.scheduleJob("*/10 * * * * ?", MetricJob::class.java)

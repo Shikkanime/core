@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.26.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <property global="false" name="id" value="1782306725021"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'check_netflix_audio_locales'</sqlCheck>
+        </preConditions>
+
+        <delete tableName="config">
+            <where>property_key = 'check_netflix_audio_locales'</where>
+        </delete>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'save_browser_screenshot_on_error'</sqlCheck>
+        </preConditions>
+
+        <delete tableName="config">
+            <where>property_key = 'save_browser_screenshot_on_error'</where>
+        </delete>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'browser_wait_timeout'</sqlCheck>
+        </preConditions>
+
+        <delete tableName="config">
+            <where>property_key = 'browser_wait_timeout'</where>
+        </delete>
+    </changeSet>
+</databaseChangeLog>
