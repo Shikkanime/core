@@ -23,7 +23,8 @@ object StringUtils {
     private val nonLatinPattern: Pattern = Pattern.compile("[^\\w-]")
     private val whitespacePattern: Pattern = Pattern.compile("\\s|:\\b|\\.\\b|/\\b|&\\b")
     private val regex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([$ROMAN_NUMBERS_CHECK]+$)".toRegex()
-    private val separators = listOf(":", COMMA_STRING, "!", "–", " so ", " - ")
+    private val separators = listOf(":", COMMA_STRING, "!", "–", " so ", " $DASH_STRING ")
+    private val secondarySeparators = listOf("?")
     private val encasedRegex = "(<.*>|«.*») ?.*".toRegex()
     private val specialCharRegex: Regex = "[<«»]".toRegex()
     private val duplicateSpaceRegex = " +".toRegex()
@@ -47,14 +48,17 @@ object StringUtils {
                 val firstPart = parts[0].trim()
                 val lastPart = parts.drop(1).joinToString(SPACE_STRING).trim()
 
-                if (lastPart.count { it == ' ' } >= 2 &&
+                val shouldSkipFirstPart = secondarySeparators.any { it in firstPart } &&
+                        isAllPartsHaveSameAmountOfWords(firstPart.split(*secondarySeparators.toTypedArray()))
+
+                if (!shouldSkipFirstPart && lastPart.count { it == ' ' } >= 2 &&
                     ((separator != COMMA_STRING && firstPart.length > 5) || firstPart.count { it == ' ' } >= 2) &&
                     (separator == ":" || !isAllPartsHaveSameAmountOfWords(parts))) {
                     normalizedName = firstPart.replace(duplicateSpaceRegex, SPACE_STRING).trim()
                 }
             }
 
-        return normalizedName.replace(" ,", COMMA_STRING)
+        return normalizedName.replace(" $COMMA_STRING", COMMA_STRING)
             .replace(duplicateSpaceRegex, SPACE_STRING)
             .trim()
     }
