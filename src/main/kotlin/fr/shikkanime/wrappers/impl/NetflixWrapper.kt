@@ -15,7 +15,6 @@ import fr.shikkanime.utils.ObjectParser.getAsInt
 import fr.shikkanime.utils.ObjectParser.getAsJsonObjectNullable
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
-import fr.shikkanime.wrappers.impl.caches.NetflixCachedWrapper
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -162,19 +161,15 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(
-        locale: String,
-        showId: Int,
-        checkAudioLocales: Boolean
-    ): Array<Episode> {
+    override suspend fun getEpisodesByShowId(locale: String, showId: Int): Array<Episode> {
         val show = getShow(locale, showId)
         val seasonsResponse = fetchSeasonsData(locale, showId, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
 
         return when (firstVideoObject?.getAsString("__typename")) {
             "Season" -> getEpisodesByShowId(locale, show.json!!.getAsJsonObject("parentShow").getAsInt("videoId")!!).toList()
-            "Movie" -> createMovieEpisode(locale, show, checkAudioLocales)
-            else -> createSeriesEpisodes(locale, show, firstVideoObject, checkAudioLocales)
+            "Movie" -> createMovieEpisode(locale, show)
+            else -> createSeriesEpisodes(locale, show, firstVideoObject)
         }.toTypedArray()
     }
 
@@ -205,11 +200,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.firstOrNull()?.asJsonObject
     }
 
-    private suspend fun createMovieEpisode(
-        locale: String,
-        show: Show,
-        checkAudioLocales: Boolean
-    ): List<Episode> {
+    private suspend fun createMovieEpisode(locale: String, show: Show): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
         val isAvailable = show.isAvailable
         val isPlayable = show.isPlayable
@@ -232,29 +223,22 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 "$baseUrl/watch/${show.id}",
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
-                if (checkAudioLocales)
-                    runCatching { NetflixCachedWrapper.getEpisodeAudioTrackList(locale, show.id) }
-                        .map { it[show.id] ?: setOf(Locale.JA_JP.code) }
-                        .onFailure { logger.warning("Failed to get audio tracks for movie ${show.id}: ${it.message}") }
-                        .getOrNull() ?: setOf(Locale.JA_JP.code)
-                else setOf(Locale.JA_JP.code)
+                runCatching { getEpisodeAudioTrackList(locale, show.id) }
+                    .map { it[show.id] ?: setOf(Locale.JA_JP.code) }
+                    .onFailure { logger.warning("Failed to get audio tracks for movie ${show.id}: ${it.message}") }
+                    .getOrNull() ?: setOf(Locale.JA_JP.code)
             )
         )
     }
 
-    private suspend fun createSeriesEpisodes(
-        locale: String,
-        show: Show,
-        firstVideoObject: JsonObject?,
-        checkAudioLocales: Boolean
-    ): List<Episode> {
+    private suspend fun createSeriesEpisodes(locale: String, show: Show, firstVideoObject: JsonObject?): List<Episode> {
         val seasonsJson = firstVideoObject?.getAsJsonObject("seasons")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get seasons")
         
         val seasons = parseSeasons(seasonsJson)
         
         return seasons.flatMapIndexed { index, season ->
-            fetchAndCreateEpisodesForSeason(locale, show, season, index + 1, checkAudioLocales)
+            fetchAndCreateEpisodesForSeason(locale, show, season, index + 1)
         }
     }
 
@@ -269,13 +253,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private suspend fun fetchAndCreateEpisodesForSeason(
-        locale: String,
-        show: Show,
-        season: Season,
-        seasonNumber: Int,
-        checkAudioLocales: Boolean
-    ): List<Episode> {
+    private suspend fun fetchAndCreateEpisodesForSeason(locale: String, show: Show, season: Season, seasonNumber: Int): List<Episode> {
         val response = HttpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
             "variables" to mapOf(
@@ -305,8 +283,8 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         val episodeIds = episodesJson.filter { it.asJsonObject.getAsJsonObject("node")?.getAsBoolean("isAvailable") == true }
             .mapNotNull { it.asJsonObject.getAsJsonObject("node")?.getAsInt("videoId") }.toIntArray()
 
-        val audioTracksMap = if (episodeIds.isNotEmpty() && checkAudioLocales)
-            runCatching { NetflixCachedWrapper.getEpisodeAudioTrackList(locale, *episodeIds) }
+        val audioTracksMap = if (episodeIds.isNotEmpty())
+            runCatching { getEpisodeAudioTrackList(locale, *episodeIds) }
                 .onFailure { logger.warning("Failed to get audio tracks for season ${season.id}: ${it.message}") }
                 .getOrNull() ?: emptyMap()
         else emptyMap()
@@ -351,59 +329,15 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodeAudioTrackList(locale: String, vararg ids: Int): Map<Int, Set<String>> {
+    suspend fun getEpisodeAudioTrackList(locale: String, vararg ids: Int): Map<Int, Set<String>> {
         val countryCode = requireNotNull(CountryCode.fromLocale(locale)) { "Unsupported locale: $locale" }
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
 
-        logger.info("Getting audio track list for ${ids.joinToString()}...")
-        logger.config("NetflixId: ${netflixAuthentification.id}")
-        logger.config("SecureNetflixId: ${netflixAuthentification.secureId}")
-
-        return BrowserBuilder()
-            .addCookie(
-                BrowserBuilder.Cookie(
-                    "NetflixId",
-                    netflixAuthentification.id,
-                    ".netflix.com"
-                )
-            )
-            .addCookie(
-                BrowserBuilder.Cookie(
-                    "SecureNetflixId",
-                    netflixAuthentification.secureId,
-                    ".netflix.com"
-                )
-            )
-            .setUrls(*ids.map { "https://www.netflix.com/watch/$it" }.toTypedArray())
-            .setWaitFunction("""
-                () => {
-                    try {
-                        const videoPlayerAPI = window.netflix?.appContext?.state?.playerApp?.getAPI?.()?.videoPlayer;
-                        const sessionId = videoPlayerAPI?.getAllPlayerSessionIds?.()?.[0];
-                        const player = sessionId ? videoPlayerAPI?.getVideoPlayerBySessionId?.(sessionId) : null;
-                        const audioTrackList = player?.getAudioTrackList?.();
-            
-                        return audioTrackList != null && typeof audioTrackList.length === 'number' && audioTrackList.length > 0;
-                    } catch {
-                        return false;
-                    }
-                }
-            """.trimIndent())
-            .setEvaluateFunction("""
-                () => {
-                    const videoPlayerAPI = window.netflix.appContext.state.playerApp.getAPI().videoPlayer;
-                    const sessionId = videoPlayerAPI.getAllPlayerSessionIds()[0];
-                    const player = videoPlayerAPI.getVideoPlayerBySessionId(sessionId);
-                    const audioTrackList = player.getAudioTrackList();
-                    return JSON.stringify(audioTrackList);
-                }
-            """.trimIndent())
-            .build()
-            .associate { (url, json) ->
-                val id = url.substringAfterLast('/').toInt()
-                val audios = ObjectParser.fromJson(json, JsonArray::class.java).map { it.asJsonObject.get("bcp47").asString }.toSet()
-                logger.info("Audio track list for $id: $audios")
-                id to LocaleUtils.getAllowedLocales(countryCode, audios)
-            }
+        return ShikkanimeWorkerWrapper.getNetflixEpisodes(
+            netflixAuthentification.id,
+            netflixAuthentification.secureId,
+            *ids
+        ).associate { it.id to LocaleUtils.getAllowedLocales(countryCode, it.audioLocales) }
+            .filterValues { it.isNotEmpty() }
     }
 }
