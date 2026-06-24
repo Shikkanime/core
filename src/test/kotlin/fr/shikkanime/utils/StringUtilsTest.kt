@@ -93,6 +93,7 @@ class StringUtilsTest {
             "Yano-kun's Ordinary Days" to "Yano-kun's Ordinary Days",
             "With you, Our Love will Make it Through" to "With you, Our Love will Make it Through",
             "Anime « Monster Strike: Deadverse Reloaded »" to "Monster Strike: Deadverse Reloaded",
+            "Heroine? Saint? No, I'm an All-Works Maid (And Proud of It)!" to "Heroine? Saint? No, I'm an All-Works Maid (And Proud of It)!",
         )
 
         list.forEach { (input, expected) ->
