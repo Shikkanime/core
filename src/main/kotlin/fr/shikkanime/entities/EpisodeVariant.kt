@@ -48,5 +48,5 @@ class EpisodeVariant(
     @Column(nullable = false)
     var uncensored: Boolean = false,
     @Column(nullable = false)
-    var available: Boolean = true,
-) : ShikkEntity(uuid)
+    override var available: Boolean = true,
+) : ShikkEntity(uuid), Availability

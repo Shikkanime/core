@@ -34,10 +34,10 @@ class EpisodeMappingService : AbstractService<EpisodeMapping, EpisodeMappingRepo
     suspend fun findAllNeedUpdate(): List<EpisodeMapping> {
         val simulcasts = simulcastCacheService.findAll()
 
-        val currentSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_CURRENT_SEASON, 7).toLong()
-        val lastSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_LAST_SEASON, 30).toLong()
-        val othersDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_EPISODE_DELAY_OTHERS, 90).toLong()
-        val lastImageUpdateDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2).toLong()
+        val currentSeasonDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_EPISODE_DELAY_CURRENT_SEASON, 7)
+        val lastSeasonDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_EPISODE_DELAY_LAST_SEASON, 30)
+        val othersDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_EPISODE_DELAY_OTHERS, 90)
+        val lastImageUpdateDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2)
 
         return repository.findAllNeedUpdate(
             currentSimulcastUuid = simulcasts.getOrNull(0)?.uuid,

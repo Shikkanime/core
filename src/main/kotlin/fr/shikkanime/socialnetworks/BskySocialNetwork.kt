@@ -54,10 +54,10 @@ class BskySocialNetwork : AbstractSocialNetwork() {
 
     private suspend fun checkSession() {
         if (initializedAt != null && initializedAt!!.plusMinutes(
-                configCacheService.getValueAsInt(
+                configCacheService.getValueAsLong(
                     ConfigPropertyKey.BSKY_SESSION_TIMEOUT,
                     10
-                ).toLong()
+                )
             ) > ZonedDateTime.now()
         ) {
             return

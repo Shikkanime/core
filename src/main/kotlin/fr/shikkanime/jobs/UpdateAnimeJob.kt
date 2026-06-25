@@ -20,6 +20,7 @@ import java.time.ZonedDateTime
 class UpdateAnimeJob : AbstractJob {
     private data class AnimeData(
         val platform: Platform,
+        val id: String,
         val name: String,
         val attachments: Map<ImageType, String>,
         val description: String?,
@@ -71,12 +72,7 @@ class UpdateAnimeJob : AbstractJob {
             return
         }
 
-        val deprecatedAnimePlatformDateTime = zonedDateTime.minusMonths(
-            configCacheService.getValueAsInt(
-                ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION,
-                3
-            ).toLong()
-        )
+        val animePlatformDeprecatedDuration = configCacheService.getValueAsLong(ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION, 3)
         var needInvalidation = false
 
         needUpdateAnimes.forEach { anime ->
@@ -88,10 +84,7 @@ class UpdateAnimeJob : AbstractJob {
 
             animePlatforms.filter { it.platform!!.isStreamingPlatform }
                 .forEach { animePlatform ->
-                    if (animePlatform.lastValidateDateTime != null && animePlatform.lastValidateDateTime!!.isBeforeOrEqual(
-                            deprecatedAnimePlatformDateTime
-                        )
-                    ) {
+                    if (animePlatform.isInvalid(zonedDateTime, animePlatformDeprecatedDuration)) {
                         logger.warning("Deleting old anime platform ${animePlatform.platform} for anime ${anime.name} with id ${animePlatform.platformId}")
                         animePlatformService.delete(animePlatform)
                         return@forEach
@@ -104,18 +97,43 @@ class UpdateAnimeJob : AbstractJob {
                         animeDatas
                     )
 
-                    when (animePlatform.platform!!) {
+                    when (animePlatform.platform) {
                         Platform.ANIM -> fetchADN(context)
                         Platform.CRUN -> fetchCrunchyroll(context)
                         Platform.DISN -> fetchDisneyPlus(context)
                         Platform.NETF -> fetchNetflix(context)
                         Platform.PRIM -> fetchPrimeVideo(context)
-                        else -> logger.warning("Unknown platform ${animePlatform.platform.platformName}")
+                        else -> logger.warning("Unknown platform ${animePlatform.platform?.platformName}")
                     }
 
                     if (animePlatformInTimeout.contains(animePlatform.platformId)) {
                         logger.warning("${animePlatform.platformId} failed to fetch on timeout, retry update later")
                         return@forEach
+                    }
+
+                    if (animeDatas.none { it.platform == animePlatform.platform && it.id == animePlatform.platformId }) {
+                        if (animePlatform.available) {
+                            logger.warning("Anime platform ${animePlatform.platform?.platformName} with ID ${animePlatform.platformId} not found for ${anime.name}, anime platform will be marked unavailable")
+                            animePlatform.available = false
+                            animePlatformService.update(animePlatform)
+                        }
+
+                        return@forEach
+                    }
+
+                    var hasChanged = false
+
+                    updateIfChanged(
+                        "[${animePlatform.platform?.platformName}] ${animePlatform.platformId}",
+                        fieldName = "available",
+                        candidate = true,
+                        current = animePlatform.available,
+                        isValid = { true },
+                        apply = { animePlatform.available = it; hasChanged = true }
+                    )
+
+                    if (hasChanged) {
+                        animePlatformService.update(animePlatform)
                     }
                 }
 
@@ -124,35 +142,15 @@ class UpdateAnimeJob : AbstractJob {
                 return@forEach
             }
 
-            // Check if a platform is present multiple times
-            val platformCounts = animeDatas.groupingBy { it.platform }
-                .eachCount()
-                .filter { it.value > 1 }
-
-            if (platformCounts.isNotEmpty()) {
-                logger.warning("Found multiple platforms for anime ${anime.name}: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
-                val animeNameNormalized = normalize(anime.name!!)
-                val animeShortNameNormalized = normalize(StringUtils.getShortName(anime.name!!))
-                val animeDatasTmp = animeDatas.toList()
-
-                platformCounts.forEach { (platform, _) ->
-                    animeDatas.filter { it.platform == platform && normalize(it.name) != animeNameNormalized }
-                        .forEach {
-                            logger.warning("Removing ${it.name} from matching list because it doesn't match the anime name")
-                            animeDatas.remove(it)
-                        }
-                }
-
-                if (animeDatas.isEmpty()) {
-                    platformCounts.forEach { (platform, _) ->
-                        animeDatasTmp.filter { it.platform == platform && normalize(StringUtils.getShortName(it.name)) == animeShortNameNormalized }
-                            .forEach {
-                                logger.warning("Adding ${it.name} back to matching list because it matches the anime short name")
-                                animeDatas.add(it)
-                            }
-                    }
-                }
+            // Cannot be fetched due to license removed or other things
+            if (animeDatas.isEmpty()) {
+                logger.warning("Anime ${anime.name} has no data found on any platform, skipping update...")
+                anime.lastUpdateDateTime = zonedDateTime
+                animeService.update(anime)
+                return@forEach
             }
+
+            filterDuplicatePlatforms(anime.name!!, animeDatas)
 
             require(animeDatas.isNotEmpty()) { "No data found for anime ${anime.name}" }
             val matchedAnimes = animeDatas.sortedBy { it.platform.sortIndex }
@@ -186,7 +184,7 @@ class UpdateAnimeJob : AbstractJob {
             )
 
             animePlatforms.filterNot { it.platform!!.isStreamingPlatform }
-                .sortedByDescending { it.lastValidateDateTime }
+                .sortedByDescending { it.lastUpdateDateTime }
                 .singleOrNull { it.platform == Platform.ANIL }
                 ?.platformId?.toIntOrNull()
                 ?.let { aniListMediaId -> runCatching { AniListCachedWrapper.getMediaById(aniListMediaId) } }
@@ -211,6 +209,40 @@ class UpdateAnimeJob : AbstractJob {
             InvalidationService.invalidate(Anime::class.java)
 
         logger.info("All animes processed")
+    }
+
+    private fun filterDuplicatePlatforms(animeName: String, animeDatas: MutableList<AnimeData>) {
+        // Check if a platform is present multiple times
+        val platformCounts = animeDatas.groupingBy { it.platform }
+            .eachCount()
+            .filter { it.value > 1 }
+
+        if (platformCounts.isEmpty())
+            return
+
+        logger.warning("Found multiple platforms for anime $animeName: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
+        val animeNameNormalized = normalize(animeName)
+        val animeShortNameNormalized = normalize(StringUtils.getShortName(animeName))
+        val animeDatasTmp = animeDatas.toList()
+
+        platformCounts.forEach { (platform, _) ->
+            animeDatas.filter { it.platform == platform && normalize(it.name) != animeNameNormalized }
+                .forEach {
+                    logger.warning("Removing ${it.name} from matching list because it doesn't match the anime name")
+                    animeDatas.remove(it)
+                }
+        }
+
+        if (animeDatas.isNotEmpty())
+            return
+
+        platformCounts.forEach { (platform, _) ->
+            animeDatasTmp.filter { it.platform == platform && normalize(StringUtils.getShortName(it.name)) == animeShortNameNormalized }
+                .forEach {
+                    logger.warning("Adding ${it.name} back to matching list because it matches the anime short name")
+                    animeDatas.add(it)
+                }
+        }
     }
 
     private suspend fun <T> fetchOrSkip(
@@ -238,6 +270,7 @@ class UpdateAnimeJob : AbstractJob {
         context.animeDatas.add(
             AnimeData(
                 platform = context.animePlatform.platform!!,
+                id = show.id.toString(),
                 name = show.shortTitle?.ifBlank { null } ?: show.title,
                 attachments = mapOf(
                     ImageType.THUMBNAIL to show.fullHDImage,
@@ -252,8 +285,9 @@ class UpdateAnimeJob : AbstractJob {
 
     private suspend fun fetchCrunchyroll(context: Context) {
         val series = fetchOrSkip(context.animeInTimeout, context.animePlatform) {
-            CrunchyrollCachedWrapper.getObjects(context.countryCode.locale, context.animePlatform.platformId!!).first()
+            CrunchyrollCachedWrapper.getObjects(context.countryCode.locale, context.animePlatform.platformId!!).firstOrNull()
         } ?: return
+
         val seasons = CrunchyrollCachedWrapper.getSeasonsBySeriesId(
             context.countryCode.locale,
             context.animePlatform.platformId!!
@@ -262,6 +296,7 @@ class UpdateAnimeJob : AbstractJob {
         context.animeDatas.add(
             AnimeData(
                 platform = context.animePlatform.platform!!,
+                id = series.id,
                 name = series.title!!,
                 attachments = mapOf(
                     ImageType.THUMBNAIL to series.images!!.fullHDImage!!,
@@ -282,6 +317,7 @@ class UpdateAnimeJob : AbstractJob {
         context.animeDatas.add(
             AnimeData(
                 platform = context.animePlatform.platform!!,
+                id = show.id,
                 name = show.name,
                 attachments = mapOf(
                     ImageType.THUMBNAIL to show.image,
@@ -309,6 +345,7 @@ class UpdateAnimeJob : AbstractJob {
         context.animeDatas.add(
             AnimeData(
                 platform = context.animePlatform.platform!!,
+                id = show.id.toString(),
                 name = show.name,
                 attachments = buildMap {
                     show.thumbnail?.let { put(ImageType.THUMBNAIL, it) }
@@ -336,6 +373,7 @@ class UpdateAnimeJob : AbstractJob {
         context.animeDatas.add(
             AnimeData(
                 platform = context.animePlatform.platform!!,
+                id = show.id,
                 name = show.name,
                 attachments = mapOf(
                     ImageType.BANNER to show.banner,

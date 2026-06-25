@@ -18,7 +18,7 @@ class UpdateAttachmentJob : AbstractJob {
 
     override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
-        val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ATTACHMENT_DELAY, 30).toLong())
+        val lastUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_ATTACHMENT_DELAY, 30))
         val attachments = attachmentService.findAllNeededUpdate(lastUpdateDateTime).shuffled().toList()
         logger.info("Found ${attachments.size} attachments to update")
 
