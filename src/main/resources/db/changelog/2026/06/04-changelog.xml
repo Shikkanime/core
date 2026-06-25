@@ -24,7 +24,7 @@
         </preConditions>
 
         <addColumn tableName="anime_platform">
-            <column name="available" type="boolean">
+            <column name="available" type="boolean" defaultValue="true">
                 <constraints nullable="false"/>
             </column>
         </addColumn>
