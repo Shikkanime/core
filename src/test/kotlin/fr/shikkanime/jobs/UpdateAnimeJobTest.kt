@@ -198,6 +198,16 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.ANIM, "928"),
                     PlatformData(Platform.ANIM, "929"),
                 )
+            ),
+            TestCase(
+                name = "Kuroko’s Basket",
+                slug = "kurokos-basket",
+                releaseDateTime = "2012-04-08T15:00:00Z",
+                platforms = listOf(
+                    PlatformData(Platform.ANIM, "280"),
+                    PlatformData(Platform.ANIM, "437"),
+                    PlatformData(Platform.ANIM, "458")
+                )
             )
         )
     }
