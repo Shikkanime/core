@@ -52,9 +52,9 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     suspend fun findAllNeedUpdate(): List<Anime> {
         val simulcasts = simulcastCacheService.findAll()
 
-        val currentSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_CURRENT_SEASON, 7).toLong()
-        val lastSeasonDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_LAST_SEASON, 30).toLong()
-        val othersDelay = configCacheService.getValueAsInt(ConfigPropertyKey.UPDATE_ANIME_DELAY_OTHERS, 90).toLong()
+        val currentSeasonDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_ANIME_DELAY_CURRENT_SEASON, 7)
+        val lastSeasonDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_ANIME_DELAY_LAST_SEASON, 30)
+        val othersDelay = configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_ANIME_DELAY_OTHERS, 90)
 
         return repository.findAllNeedUpdate(
             currentSimulcastUuid = simulcasts.getOrNull(0)?.uuid,

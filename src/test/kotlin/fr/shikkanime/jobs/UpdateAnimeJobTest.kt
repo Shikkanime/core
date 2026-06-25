@@ -208,6 +208,14 @@ class UpdateAnimeJobTest : AbstractTest() {
                     PlatformData(Platform.ANIM, "437"),
                     PlatformData(Platform.ANIM, "458")
                 )
+            ),
+            TestCase(
+                name = "86 EIGHTY-SIX",
+                slug = "86-eighty-six",
+                releaseDateTime = "2021-04-10T16:30:00Z",
+                platforms = listOf(
+                    PlatformData(Platform.CRUN, "GVDHX8DM5"),
+                )
             )
         )
     }

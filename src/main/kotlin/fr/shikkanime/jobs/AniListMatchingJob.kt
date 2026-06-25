@@ -55,7 +55,7 @@ class AniListMatchingJob : AbstractJob {
             animeService.findAllSimulcastedWithAnimePlatformInvalid(
                 simulcastUuids,
                 Platform.ANIL,
-                zonedDateTime.minusDays(configCacheService.getValueAsInt(ConfigPropertyKey.MATCHING_ANILIST_DELAY, 30).toLong()),
+                zonedDateTime.minusDays(configCacheService.getValueAsLong(ConfigPropertyKey.MATCHING_ANILIST_DELAY, 30)),
                 countryCode.locale
             )
         }.distinctBy { it.uuid }
@@ -67,7 +67,7 @@ class AniListMatchingJob : AbstractJob {
             return
         }
 
-        val deprecatedAnimePlatformDateTime = zonedDateTime.minusMonths(configCacheService.getValueAsInt(ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION, 3).toLong())
+        val animePlatformDeprecatedDuration = configCacheService.getValueAsLong(ConfigPropertyKey.ANIME_PLATFORM_DEPRECATED_DURATION, 3)
         val needMatchingAnimes = animes.shuffled().take(configCacheService.getValueAsInt(ConfigPropertyKey.MATCHING_ANILIST_ANIME_SIZE, 5))
         var hasChange = false
 
@@ -83,7 +83,7 @@ class AniListMatchingJob : AbstractJob {
 
             if (media == null) {
                 logger.warning(stringBuilder, "No AniList media found for $shortName")
-                deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, deprecatedAnimePlatformDateTime).onTrue { hasChange = true }
+                deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, zonedDateTime, animePlatformDeprecatedDuration).onTrue { hasChange = true }
 
                 if (AniListMatchingService.updateAnimeGenreAndTags(anime, shortName, null)) {
                     hasChange = true
@@ -97,7 +97,7 @@ class AniListMatchingJob : AbstractJob {
 
             anilistPlatforms.singleOrNull { it.platformId == media.id.toString() }?.let {
                 logger.info(stringBuilder, "Anime $shortName is already matched with AniList ID ${media.id}, validating...")
-                it.lastValidateDateTime = zonedDateTime
+                it.lastUpdateDateTime = zonedDateTime
                 animePlatformService.update(it)
                 return@forEach
             }
@@ -108,11 +108,11 @@ class AniListMatchingJob : AbstractJob {
                 anime = anime,
                 platform = Platform.ANIL,
                 platformId = media.id.toString(),
-                lastValidateDateTime = zonedDateTime,
+                lastUpdateDateTime = zonedDateTime,
             )
             ).apply { hasChange = true }
 
-            deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, deprecatedAnimePlatformDateTime).onTrue { hasChange = true }
+            deleteDeprecatedPlatforms(stringBuilder, shortName, anilistPlatforms, zonedDateTime, animePlatformDeprecatedDuration).onTrue { hasChange = true }
 
             if (AniListMatchingService.updateAnimeGenreAndTags(anime, shortName, media)) {
                 hasChange = true
@@ -137,10 +137,11 @@ class AniListMatchingJob : AbstractJob {
         shortName: String,
         anilistPlatforms: List<AnimePlatform>,
         zonedDateTime: ZonedDateTime,
+        deprecatedDuration: Long
     ): Boolean {
         var hasDeleted = false
 
-        anilistPlatforms.filter { it.lastValidateDateTime != null && it.lastValidateDateTime!!.isBeforeOrEqual(zonedDateTime) }
+        anilistPlatforms.filter { it.isInvalid(zonedDateTime, deprecatedDuration) }
             .forEach {
                 logger.warning(stringBuilder, "Deleting old anime platform ${it.platform} for anime $shortName with id ${it.platformId}")
                 animePlatformService.delete(it)

@@ -40,12 +40,12 @@ class FetchOldEpisodesJob(
     @Inject private lateinit var configCacheService: ConfigCacheService
 
     override suspend fun run() {
-        val range = configCacheService.getValueAsIntNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
+        val range = configCacheService.getValueAsLongNullable(ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE) ?: run {
             logger.warning("Config ${ConfigPropertyKey.FETCH_OLD_EPISODES_RANGE.key} not found")
             return
         }
 
-        if (range == -1) {
+        if (range == -1L) {
             logger.warning("FetchOldEpisodesJob is disabled")
             return
         }
@@ -56,7 +56,7 @@ class FetchOldEpisodesJob(
         }
 
         val to = LocalDate.parse(config.propertyValue!!)
-        val from = to.minusDays(range.toLong())
+        val from = to.minusDays(range)
         val dates = from.datesUntil(to.plusDays(1), Period.ofDays(1)).asSequence().toSortedSet()
 
         val episodes = mutableListOf<Episode>()
