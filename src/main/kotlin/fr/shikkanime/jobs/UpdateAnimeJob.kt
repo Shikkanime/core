@@ -54,6 +54,10 @@ class UpdateAnimeJob : AbstractJob {
         logger.info("Updating $fieldName for $identifier to $candidate")
     }
 
+    private fun normalize(string: String) = string.replace(":", "")
+        .replace('’', '\'')
+        .lowercase()
+
     override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val animesNeedingUpdate = animeService.findAllNeedUpdate()
@@ -127,7 +131,6 @@ class UpdateAnimeJob : AbstractJob {
 
             if (platformCounts.isNotEmpty()) {
                 logger.warning("Found multiple platforms for anime ${anime.name}: ${platformCounts.keys.joinToString { it.platformName }}, using the one with same series name...")
-                fun normalize(string: String) = string.replace(":", "").lowercase()
                 val animeNameNormalized = normalize(anime.name!!)
                 val animeShortNameNormalized = normalize(StringUtils.getShortName(anime.name!!))
                 val animeDatasTmp = animeDatas.toList()
