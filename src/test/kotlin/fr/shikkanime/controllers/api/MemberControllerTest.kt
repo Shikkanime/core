@@ -595,4 +595,89 @@ class MemberControllerTest : AbstractControllerTest() {
             }
         }
     }
+
+    @Test
+    fun batchFollowWatchedEpisodesEmptyList() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (_, token) = registerAndLogin()
+
+            client.post("/api/v1/members/me/watched-episodes/batch") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody("[]")
+            }.apply {
+                assertEquals(HttpStatusCode.BadRequest, status)
+                val responseMap = ObjectParser.fromJson(bodyAsText(), Map::class.java)
+                assertEquals("No episodes provided", responseMap["message"])
+            }
+        }
+    }
+
+    @Test
+    fun batchFollowWatchedEpisodesTooMany() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (_, token) = registerAndLogin()
+            val largeList = (1..51).map { UUID.randomUUID() }
+
+            client.post("/api/v1/members/me/watched-episodes/batch") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(largeList))
+            }.apply {
+                assertEquals(HttpStatusCode.BadRequest, status)
+                val responseMap = ObjectParser.fromJson(bodyAsText(), Map::class.java)
+                assertEquals("Too many episodes provided", responseMap["message"])
+            }
+        }
+    }
+
+    @Test
+    fun batchFollowWatchedEpisodesSuccess() {
+        testApplication {
+            application {
+                module()
+            }
+
+            val (_, token) = registerAndLogin()
+            val anime = animeService.findAll().first()
+            val allEpisodes = episodeMappingService.findAllByAnime(anime)
+
+            val episodeFollowed1 = allEpisodes[0]
+            val episodeFollowed2 = allEpisodes[1]
+            val episodeNotFollowed = allEpisodes[2]
+
+            client.put("/api/v1/members/episodes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(episodeFollowed1.uuid!!)))
+            }
+            client.put("/api/v1/members/episodes") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(GenericDto(episodeFollowed2.uuid!!)))
+            }
+
+            val requestList = listOf(episodeFollowed1.uuid!!, episodeFollowed2.uuid!!, episodeNotFollowed.uuid!!)
+
+            client.post("/api/v1/members/me/watched-episodes/batch") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(ObjectParser.toJson(requestList))
+            }.apply {
+                assertEquals(HttpStatusCode.OK, status)
+                val responseList = ObjectParser.fromJson(bodyAsText(), List::class.java)
+                assertEquals(2, responseList.size)
+                assertTrue(responseList.contains(episodeFollowed1.uuid.toString()))
+                assertTrue(responseList.contains(episodeFollowed2.uuid.toString()))
+            }
+        }
+    }
 }
