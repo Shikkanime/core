@@ -72,12 +72,12 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
     suspend fun findAllSimulcastedWithAnimePlatformInvalid(
         simulcastUuids: Collection<UUID>,
         platform: Platform,
-        lastValidateDateTime: ZonedDateTime,
+        lastUpdateDateTime: ZonedDateTime,
         ignoreAudioLocale: String
     ) = repository.findAllSimulcastedWithAnimePlatformInvalid(
         simulcastUuids,
         platform,
-        lastValidateDateTime,
+        lastUpdateDateTime,
         ignoreAudioLocale
     )
 
