@@ -6,10 +6,21 @@ import fr.shikkanime.utils.HttpRequest
 import fr.shikkanime.utils.ObjectParser
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 object ThreadsWrapper {
+    enum class Status {
+        EXPIRED,
+        ERROR,
+        FINISHED,
+        IN_PROGRESS,
+        PUBLISHED
+    }
+
     enum class PostType {
         TEXT,
         IMAGE
@@ -54,7 +65,7 @@ object ThreadsWrapper {
         return ObjectParser.fromJson(response.bodyAsText())["access_token"].asString
     }
 
-    suspend fun post(
+    suspend fun createThreads(
         accessToken: String,
         postType: PostType,
         text: String,
@@ -73,20 +84,56 @@ object ThreadsWrapper {
         }.map { (key, value) -> "$key=$value" }
             .joinToString("&")
 
-        val createResponse = HttpRequest.post(
-            "$API_URL/$API_VERSION/me/threads?$parameters",
-            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
-        )
+        val response = HttpRequest.post("$API_URL/$API_VERSION/me/threads?$parameters", headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()))
+        require(response.status == HttpStatusCode.OK) { "Failed to post (${response.status.value} - ${response.bodyAsText()})" }
+        return ObjectParser.fromJson(response.bodyAsText())["id"].asLong
+    }
 
-        require(createResponse.status == HttpStatusCode.OK) { "Failed to post (${createResponse.status.value} - ${createResponse.bodyAsText()})" }
-        val creationId = ObjectParser.fromJson(createResponse.bodyAsText())["id"].asString
+    suspend fun getThreadsStatus(
+        accessToken: String,
+        containerId: Long
+    ): Status {
+        val response = HttpRequest.get("$API_URL/$API_VERSION/$containerId?access_token=$accessToken&fields=status,error_message")
+        require(response.status == HttpStatusCode.OK) { "Failed to publish (${response.status.value} - ${response.bodyAsText()})" }
+        return Status.valueOf(ObjectParser.fromJson(response.bodyAsText())["status"].asString)
+    }
 
-        val publishResponse = HttpRequest.post(
-            "$API_URL/$API_VERSION/me/threads_publish?access_token=$accessToken&creation_id=$creationId",
-            headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString())
-        )
+    suspend fun threadsPublish(
+        accessToken: String,
+        containerId: Long
+    ): Long {
+        val response = HttpRequest.post("$API_URL/$API_VERSION/me/threads_publish?access_token=$accessToken&creation_id=$containerId")
+        require(response.status == HttpStatusCode.OK) { "Failed to publish (${response.status.value} - ${response.bodyAsText()})" }
+        return ObjectParser.fromJson(response.bodyAsText())["id"].asLong
+    }
 
-        require(publishResponse.status == HttpStatusCode.OK) { "Failed to publish (${publishResponse.status.value} - ${publishResponse.bodyAsText()})" }
-        return ObjectParser.fromJson(publishResponse.bodyAsText())["id"].asLong
+    private suspend fun waitUntilContainerReadyForPublishing(accessToken: String, containerId: Long) {
+        delay(30.seconds)
+
+        var status = getThreadsStatus(accessToken, containerId)
+        check(status != Status.ERROR) { "Failed to publish container $containerId due to error status" }
+
+        for (attempt in 1..5) {
+            if (status != Status.IN_PROGRESS) {
+                return
+            }
+
+            delay(attempt.minutes)
+            status = getThreadsStatus(accessToken, containerId)
+            check(status != Status.ERROR) { "Failed to publish container $containerId due to error status" }
+        }
+    }
+
+    suspend fun post(
+        accessToken: String,
+        postType: PostType,
+        text: String,
+        imageUrl: String? = null,
+        altText: String? = null,
+        replyToId: Long? = null
+    ): Long {
+        val containerId = createThreads(accessToken, postType, text, imageUrl, altText, replyToId)
+        waitUntilContainerReadyForPublishing(accessToken, containerId)
+        return threadsPublish(accessToken, containerId)
     }
 }
