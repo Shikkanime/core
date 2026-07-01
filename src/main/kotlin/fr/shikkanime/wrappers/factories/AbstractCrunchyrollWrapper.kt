@@ -360,7 +360,7 @@ abstract class AbstractCrunchyrollWrapper {
     companion object {
         const val CRUNCHYROLL_CHUNK = 100
         // Updated automatically by the update-credentials GitHub Actions workflow - do not edit manually
-        const val CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT = "cmpzMGx0eDBkYndrbGl3eGR6ZGY6NFY3cmYyMS1VRlhlWi01WEFkMFhfUVB3cjFndV9pMXM="
-        const val CRUNCHYROLL_APK_VERSION = "3.65.0_22347"
+        const val CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT = "bGFzcnF6eGJlbXZvcWlveTU2bTA6ZHlodDVSWVYyXzIyUm4xaWF0X29YV0c2ejBUWUswazE="
+        const val CRUNCHYROLL_APK_VERSION = "3.66.0_22348"
     }
 }
