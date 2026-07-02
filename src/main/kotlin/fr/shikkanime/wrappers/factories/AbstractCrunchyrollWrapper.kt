@@ -257,7 +257,7 @@ abstract class AbstractCrunchyrollWrapper {
                 ),
                 body = "grant_type=client_id&client_id=offline_access&device_id=$deviceId&device_type=Chrome on Linux"
             )
-            require(response.status == HttpStatusCode.OK) { "Failed to get anonymous access token (${response.status.value})" }
+            require(response.status == HttpStatusCode.OK) { "Failed to get anonymous access token (${response.status.value} - ${response.bodyAsText()})" }
             ObjectParser.fromJson(response.bodyAsText()).getAsString("access_token")!!
         }
     }
