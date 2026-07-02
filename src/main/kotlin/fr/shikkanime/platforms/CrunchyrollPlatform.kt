@@ -112,7 +112,12 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         shouldFetchSimulcasts: Boolean,
         alreadyFetched: List<Episode>
     ): List<Episode> {
-        val previousWeek = zonedDateTime.minusWeeks(configCacheService.getValueAsLong(ConfigPropertyKey.PREDICT_FUTURE_EPISODES_WEEKS, 1))
+        val weeksToPredict = configCacheService.getValueAsLong(ConfigPropertyKey.PREDICT_FUTURE_EPISODES_WEEKS, 1)
+
+        if (weeksToPredict <= 0)
+            return emptyList()
+
+        val previousWeek = zonedDateTime.minusWeeks(weeksToPredict)
 
         val predictedNextEpisodes =
             episodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
