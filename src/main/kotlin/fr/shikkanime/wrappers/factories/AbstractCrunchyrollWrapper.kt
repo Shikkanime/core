@@ -245,15 +245,17 @@ abstract class AbstractCrunchyrollWrapper {
         typeToken = object : TypeToken<MapCacheValue<String>>() {},
         key = StringUtils.EMPTY_STRING
     ) {
+        val deviceId = UUID.randomUUID().toString()
+
         runBlocking {
             val response = HttpRequest.post(
                 "${baseUrl}auth/v1/token",
                 headers = mapOf(
                     HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),
                     HttpHeaders.Authorization to "Basic ${configCacheService.getValueAsString(ConfigPropertyKey.CRUNCHYROLL_BASIC_AUTH_TOKEN, CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT)}",
-                    "ETP-Anonymous-ID" to UUID.randomUUID().toString(),
+                    "ETP-Anonymous-ID" to deviceId,
                 ),
-                body = "grant_type=client_id&client_id=offline_access"
+                body = "grant_type=client_id&client_id=offline_access&device_id=$deviceId&device_type=Chrome on Linux"
             )
             require(response.status == HttpStatusCode.OK) { "Failed to get anonymous access token (${response.status.value})" }
             ObjectParser.fromJson(response.bodyAsText()).getAsString("access_token")!!
