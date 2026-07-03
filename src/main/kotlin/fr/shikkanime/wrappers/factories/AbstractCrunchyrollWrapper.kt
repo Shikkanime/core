@@ -9,6 +9,7 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.ObjectParser.getAsString
 import fr.shikkanime.utils.serializers.ZonedDateTimeSerializer
+import fr.shikkanime.wrappers.Throttle
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -18,7 +19,7 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.*
 
-abstract class AbstractCrunchyrollWrapper {
+abstract class AbstractCrunchyrollWrapper : Throttle(60) {
     @kotlinx.serialization.Serializable
     data class CrunchyrollResponse<T>(
         val data: List<T>
@@ -248,21 +249,23 @@ abstract class AbstractCrunchyrollWrapper {
         val deviceId = UUID.randomUUID().toString()
 
         runBlocking {
-            val response = HttpRequest.post(
-                "${baseUrl}auth/v1/token",
-                headers = mapOf(
-                    HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),
-                    HttpHeaders.Authorization to "Basic ${configCacheService.getValueAsString(ConfigPropertyKey.CRUNCHYROLL_BASIC_AUTH_TOKEN, CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT)}",
-                    "ETP-Anonymous-ID" to deviceId,
-                ),
-                body = "grant_type=client_id&client_id=offline_access&device_id=$deviceId&device_type=Chrome on Linux"
-            )
+            val response = execute {
+                HttpRequest.post(
+                    "${baseUrl}auth/v1/token",
+                    headers = mapOf(
+                        HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),
+                        HttpHeaders.Authorization to "Basic ${configCacheService.getValueAsString(ConfigPropertyKey.CRUNCHYROLL_BASIC_AUTH_TOKEN, CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT)}",
+                        "ETP-Anonymous-ID" to deviceId,
+                    ),
+                    body = "grant_type=client_id&client_id=offline_access&device_id=$deviceId&device_type=Chrome on Linux"
+                )
+            }
             require(response.status == HttpStatusCode.OK) { "Failed to get anonymous access token (${response.status.value} - ${response.bodyAsText()})" }
             ObjectParser.fromJson(response.bodyAsText()).getAsString("access_token")!!
         }
     }
 
-    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAnonymousAccessToken()}"))
+    protected suspend fun HttpRequest.getWithAccessToken(url: String) = execute { get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAnonymousAccessToken()}")) }
 
     protected suspend fun getEpisodesBySeriesIdBase(
         locale: String,
