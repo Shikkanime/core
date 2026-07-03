@@ -76,4 +76,6 @@ enum class ConfigPropertyKey(val key: String) {
     PREDICT_FUTURE_EPISODES_WEEKS("predict_future_episodes_weeks"),
     DISNEY_PLUS_FETCH_LATEST_SHOWS("disney_plus_fetch_latest_shows"),
     NETFLIX_FETCH_LATEST_SHOWS("netflix_fetch_latest_shows"),
+    CRUNCHYROLL_PRELOAD_DATAS("crunchyroll_preload_datas"),
+    CRUNCHYROLL_PREDICT_NEXT_EPISODES("crunchyroll_predict_next_episodes"),
 }

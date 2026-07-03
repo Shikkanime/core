@@ -62,9 +62,6 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         return response.body<CrunchyrollResponse<Episode>>().data.toTypedArray()
     }
 
-    @JvmStatic
-    suspend fun getJvmStaticEpisodesBySeasonId(locale: String, id: String) = getEpisodesBySeasonId(locale, id)
-
     override suspend fun getEpisode(
         locale: String,
         id: String
@@ -74,9 +71,6 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         val asJsonArray = ObjectParser.fromJson(response.bodyAsText()).getAsJsonArray("data") ?: throw Exception("Failed to get episode")
         return ObjectParser.fromJson(asJsonArray.first(), Episode::class.java)
     }
-
-    @JvmStatic
-    suspend fun getJvmStaticEpisode(locale: String, id: String) = getEpisode(locale, id)
 
     override suspend fun getEpisodeDiscoverByType(
         locale: String,
@@ -88,9 +82,6 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         return response.body<CrunchyrollResponse<Playhead>>().data.first().panel
     }
 
-    @JvmStatic
-    suspend fun getUpNext(locale: String, id: String) = getEpisodeDiscoverByType(locale, "up_next", id)
-
     override suspend fun getObjects(
         locale: String,
         vararg ids: String
@@ -99,9 +90,6 @@ object CrunchyrollWrapper : AbstractCrunchyrollWrapper() {
         require(response.status == HttpStatusCode.OK) { "Failed to get objects (${response.status.value})" }
         return response.body<CrunchyrollResponse<BrowseObject>>().data
     }
-
-    @JvmStatic
-    suspend fun getJvmStaticObjects(locale: String, vararg ids: String) = getObjects(locale, *ids)
 
     override suspend fun getEpisodesBySeriesId(
         locale: String,

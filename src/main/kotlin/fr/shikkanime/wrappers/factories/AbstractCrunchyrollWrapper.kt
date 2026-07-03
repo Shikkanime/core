@@ -161,7 +161,7 @@ abstract class AbstractCrunchyrollWrapper {
         val nextEpisodeId: String? = null,
         @SerializedName("season_sequence_number")
         @SerialName("season_sequence_number")
-        val seasonSequenceNumber: Int,
+        val seasonSequenceNumber: Int? = null,
         @SerializedName("sequence_number")
         @SerialName("sequence_number")
         val sequenceNumber: Double,
@@ -169,7 +169,7 @@ abstract class AbstractCrunchyrollWrapper {
         @SerialName("identifier")
         val identifier: String?,
     ) : Serializable {
-        fun index() = ((seasonSequenceNumber - 1) * 100) + sequenceNumber
+        fun index() = (((seasonSequenceNumber ?: 1) - 1) * 100) + sequenceNumber
 
         fun convertToBrowseObject() = BrowseObject(
             id = requireNotNull(id) { "Episode ID cannot be null to convert to BrowseObject" },
