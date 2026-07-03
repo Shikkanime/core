@@ -21,7 +21,7 @@ object AsynchronizedGlideClient {
                 .requestTimeout(5000)
                 .build()
         ).get()
-    }
+    }.onFailure { logger.warning("Can not access to Valkey: ${it.message}") }
 
     init {
         if (!isAvailable())

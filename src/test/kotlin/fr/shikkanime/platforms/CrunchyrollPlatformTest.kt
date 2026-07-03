@@ -9,15 +9,9 @@ import fr.shikkanime.entities.enums.ImageType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.platforms.configuration.PlatformSimulcast
 import fr.shikkanime.utils.InvalidationService
-import fr.shikkanime.utils.StringUtils
-import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
-import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockkClass
-import io.mockk.mockkStatic
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -249,141 +243,6 @@ class CrunchyrollPlatformTest : AbstractTest() {
         assertTrue(episodes.none { it.anime == "Teogonia" })
         assertTrue(episodes.none { it.anime == "Can a Boy-Girl Friendship Survive?" })
         assertTrue(episodes.none { it.anime == "The Brilliant Healer's New Life in the Shadows" })
-    }
-
-    @Test
-    suspend fun fetchNextEpisodeSuccessfully() {
-        val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
-
-        mockkStatic(CrunchyrollWrapper::class) {
-            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } returns expectedEpisode
-            val result = platform.getNextEpisode(CountryCode.FR, "someId")
-            assertEquals(expectedEpisode, result)
-        }
-    }
-
-    @Test
-    suspend fun getNextEpisodeFallbackToEpisode() {
-        val episode = AbstractCrunchyrollWrapper.Episode(
-            "",
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            emptyList(),
-            ZonedDateTime.now(),
-            StringUtils.EMPTY_STRING,
-            null,
-            null,
-            StringUtils.EMPTY_STRING,
-            null,
-            null,
-            null,
-            null,
-            1440000L,
-            null,
-            false,
-            null,
-            "nextId",
-            1,
-            1.0,
-            null
-        )
-        val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
-
-        mockkStatic(CrunchyrollWrapper::class) {
-            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
-            coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
-            val result = platform.getNextEpisode(CountryCode.FR, "someId")
-            assertEquals(expectedEpisode, result)
-        }
-    }
-
-    @Test
-    suspend fun getNextEpisodeFallbackToSeason() {
-        val countryCode = CountryCode.FR
-        val crunchyrollId = "someId"
-        val episode = AbstractCrunchyrollWrapper.Episode(
-            "",
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            emptyList(),
-            ZonedDateTime.now().minusDays(1),
-            "seasonId",
-            null,
-            null,
-            StringUtils.EMPTY_STRING,
-            null,
-            null,
-            null,
-            null,
-            1440000L,
-            null,
-            false,
-            null,
-            null,
-            1,
-            1.0,
-            null
-        )
-        val nextEpisode = mockkClass(AbstractCrunchyrollWrapper.Episode::class)
-        every { nextEpisode.id } returns "nextId"
-        every { nextEpisode.sequenceNumber } returns 2.0
-        val expectedEpisode = mockkClass(AbstractCrunchyrollWrapper.BrowseObject::class)
-        every { nextEpisode.convertToBrowseObject() } returns expectedEpisode
-
-        mockkStatic(CrunchyrollWrapper::class) {
-            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns arrayOf(nextEpisode)
-            coEvery { CrunchyrollWrapper.getJvmStaticObjects(any(String::class), any(String::class)) } returns listOf(expectedEpisode)
-
-            val result = platform.getNextEpisode(countryCode, crunchyrollId)
-            assertEquals(expectedEpisode, result)
-        }
-    }
-
-    @Test
-    suspend fun getNextEpisodeNotFound() {
-        val countryCode = CountryCode.FR
-        val crunchyrollId = "someId"
-        val episode = AbstractCrunchyrollWrapper.Episode(
-            "",
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            StringUtils.EMPTY_STRING,
-            emptyList(),
-            ZonedDateTime.now().minusDays(1),
-            "seasonId",
-            null,
-            null,
-            StringUtils.EMPTY_STRING,
-            null,
-            null,
-            null,
-            null,
-            1440000L,
-            null,
-            false,
-            null,
-            null,
-            1,
-            1.0,
-            null
-        )
-
-        mockkStatic(CrunchyrollWrapper::class) {
-            coEvery { CrunchyrollWrapper.getUpNext(any(String::class), any(String::class)) } throws Exception()
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisode(any(String::class), any(String::class)) } returns episode
-            coEvery { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(any(String::class), any(String::class)) } returns arrayOf()
-
-            val result = platform.getNextEpisode(countryCode, crunchyrollId)
-            assertNull(result)
-        }
     }
 
     @Test

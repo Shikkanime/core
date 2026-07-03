@@ -2,7 +2,11 @@ package fr.shikkanime.utils
 
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.lang.reflect.Type
@@ -27,6 +31,12 @@ object ObjectParser {
         .registerTypeAdapter(ZonedDateTime::class.java, ZonedDateTimeAdapterSerializer())
         .create()
 
+    val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
+
     fun fromJson(json: String): JsonObject {
         return gson.fromJson(json, JsonObject::class.java)
     }
@@ -42,6 +52,10 @@ object ObjectParser {
     fun <T> fromJson(jsonElement: JsonElement, clazz: Class<T>): T {
         return gson.fromJson(jsonElement, clazz)
     }
+
+    @OptIn(ExperimentalSerializationApi::class)
+    inline fun <reified T> fromJson(inputStream: InputStream): T =
+        json.decodeFromStream(inputStream)
 
     fun <T> toJson(obj: T): String {
         return gson.toJson(obj)

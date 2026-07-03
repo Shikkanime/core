@@ -3,9 +3,8 @@ package fr.shikkanime.platforms
 import com.google.inject.Inject
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.exceptions.*
+import fr.shikkanime.fetchers.CrunchyrollEpisodeFetcher
 import fr.shikkanime.platforms.configuration.CrunchyrollConfiguration
-import fr.shikkanime.services.caches.AnimeCacheService
-import fr.shikkanime.services.caches.EpisodeVariantCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.wrappers.factories.AbstractCrunchyrollWrapper
 import fr.shikkanime.wrappers.impl.CrunchyrollWrapper
@@ -20,8 +19,7 @@ private val SPECIAL_EPISODE_REGEX = "SP(\\d*)".toRegex()
 private val IDENTIFIER_REGEX = "(.+)\\|(.+)\\|(.+)".toRegex()
 
 class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCode, List<AbstractCrunchyrollWrapper.BrowseObject>>() {
-    @Inject private lateinit var episodeVariantCacheService: EpisodeVariantCacheService
-    @Inject private lateinit var animeCacheService: AnimeCacheService
+    @Inject private lateinit var crunchyrollEpisodeFetcher: CrunchyrollEpisodeFetcher
 
     override fun getPlatform(): Platform = Platform.CRUN
 
@@ -30,71 +28,29 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
     override suspend fun fetchApiContent(
         key: CountryCode,
         zonedDateTime: ZonedDateTime
-    ): List<AbstractCrunchyrollWrapper.BrowseObject> {
-        return CrunchyrollWrapper.getBrowse(
-            key.locale,
-            size = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
-        )
-    }
+    ): List<AbstractCrunchyrollWrapper.BrowseObject> =
+        CrunchyrollWrapper.getBrowse(key.locale, size = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25))
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {
         val list = mutableListOf<Episode>()
+        val fetched = crunchyrollEpisodeFetcher.fetch(this, zonedDateTime, bypassFileContent)
+        val needSimulcast = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_SIMULCAST, true)
 
-        configuration!!.availableCountries.forEach { countryCode ->
-            val api = (bypassFileContent?.takeIf { it.exists() }?.let {
-                ObjectParser.fromJson(
-                    ObjectParser.fromJson(it.readText()).getAsJsonArray("data"),
-                    Array<AbstractCrunchyrollWrapper.BrowseObject>::class.java
-                ).toList()
-            } ?: getApiContent(countryCode, zonedDateTime)).toMutableList()
-
-            retrieveAdditionalAudioVariants(countryCode, api)
-
-            // Preload all series
-            runCatching {
-                CrunchyrollCachedWrapper.getChunkedObjects(
-                    countryCode.locale,
-                    *api.mapNotNull { it.episodeMetadata?.seriesId }.distinct().toTypedArray()
-                )
-            }
-
-            api.forEach { addToList(list, countryCode, it) }
-
-            list.addAll(predictFutureEpisodes(countryCode, zonedDateTime, bypassFileContent?.exists() != true && configCacheService.getValueAsBoolean(ConfigPropertyKey.CRUNCHYROLL_CHECK_SERIES_SIMULCAST, true), list))
+        configuration?.availableCountries?.forEach { countryCode ->
+            fetched.forEach { browseObject -> addToList(list, countryCode, browseObject, needSimulcast) }
         }
 
         return list
     }
 
-    private suspend fun retrieveAdditionalAudioVariants(
-        countryCode: CountryCode,
-        api: MutableList<AbstractCrunchyrollWrapper.BrowseObject>,
-    ) {
-        val currentIds = api.map { it.id }.toSet()
-
-        val variantIds = api.flatMap { browseObject ->
-            val metadata = browseObject.episodeMetadata ?: return@flatMap emptyList()
-            val versions = metadata.versions ?: emptyList()
-
-            val allAudioLocales = versions.map { it.audioLocale }.toSet() + setOfNotNull(metadata.audioLocale)
-            val allowedAudioLocales = LocaleUtils.getAllowedLocales(countryCode, allAudioLocales)
-
-            versions.filter { it.audioLocale in allowedAudioLocales && it.guid !in currentIds }.map { it.guid }
-        }.distinct()
-
-        if (variantIds.isNotEmpty()) {
-            val additionalObjects = runCatching { CrunchyrollWrapper.getChunkedObjects(countryCode.locale, *variantIds.toTypedArray()) }.getOrNull() ?: emptyList()
-            api.addAll(additionalObjects)
-        }
-    }
-
     private suspend fun addToList(
         list: MutableList<Episode>,
         countryCode: CountryCode,
-        browseObject: AbstractCrunchyrollWrapper.BrowseObject
+        browseObject: AbstractCrunchyrollWrapper.BrowseObject,
+        needSimulcast: Boolean = true
     ) {
         try {
-            list.add(convertEpisode(countryCode, browseObject, needSimulcast = configCacheService.getValueAsBoolean(ConfigPropertyKey.CHECK_SIMULCAST, true)))
+            list.add(convertEpisode(countryCode, browseObject, needSimulcast))
         } catch (_: EpisodeException) {
             // Ignore
         } catch (_: AnimeException) {
@@ -104,98 +60,6 @@ class CrunchyrollPlatform : AbstractPlatform<CrunchyrollConfiguration, CountryCo
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Error on converting episode", e)
         }
-    }
-
-    private suspend fun predictFutureEpisodes(
-        countryCode: CountryCode,
-        zonedDateTime: ZonedDateTime,
-        shouldFetchSimulcasts: Boolean,
-        alreadyFetched: List<Episode>
-    ): List<Episode> {
-        val weeksToPredict = configCacheService.getValueAsLong(ConfigPropertyKey.PREDICT_FUTURE_EPISODES_WEEKS, 1)
-
-        if (weeksToPredict <= 0)
-            return emptyList()
-
-        val previousWeek = zonedDateTime.minusWeeks(weeksToPredict)
-
-        val predictedNextEpisodes =
-            episodeVariantCacheService.findAllVariantsByCountryCodeAndPlatformAndReleaseDateTimeBetween(
-                countryCode,
-                getPlatform(),
-                previousWeek.toLocalDate().atStartOfDay(Constant.utcZoneId),
-                previousWeek.toLocalDate().atEndOfTheDay(Constant.utcZoneId)
-            ).filter { (_, releaseDateTime) -> previousWeek.isAfterOrEqual(releaseDateTime) }
-                .mapNotNull { (identifier, _) ->
-                    val crunchyrollId = StringUtils.getVideoOldIdOrId(identifier) ?: run {
-                        logger.warning("Crunchyroll ID not found in $identifier")
-                        return@mapNotNull null
-                    }
-
-                    val nextEpisode = getNextEpisode(countryCode, crunchyrollId) ?: run {
-                        logger.warning("Next episode not found for $crunchyrollId")
-                        return@mapNotNull null
-                    }
-
-                    if (alreadyFetched.any { it.id == nextEpisode.id }) {
-                        logger.warning("Episode ${nextEpisode.id} already fetched")
-                        return@mapNotNull null
-                    }
-
-                    nextEpisode
-                }
-
-        val simulcastEpisodes = if (shouldFetchSimulcasts)
-            CrunchyrollCachedWrapper.getSimulcasts(countryCode.locale)
-                .firstOrNull()
-                ?.let { simulcast ->
-                    val fetchApiSize = configCacheService.getValueAsInt(ConfigPropertyKey.CRUNCHYROLL_FETCH_API_SIZE, 25)
-                    val currentSimulcastAnimes = animeCacheService.findAllByCurrentSimulcastAndLastSimulcast()
-
-                    CrunchyrollWrapper.getBrowse(
-                        locale = countryCode.locale,
-                        sortBy = AbstractCrunchyrollWrapper.SortType.NEWLY_ADDED,
-                        type = AbstractCrunchyrollWrapper.MediaType.SERIES,
-                        size = fetchApiSize,
-                        start = 0,
-                        simulcast = simulcast.id
-                    ).filterNot { series ->
-                        currentSimulcastAnimes.any { anime -> anime.platformIds?.any { it.platform.id == getPlatform().name && it.platformId == series.id } == true } ||
-                                alreadyFetched.any { it.animeId == series.id }
-                    }.flatMap { series -> CrunchyrollWrapper.getEpisodesBySeriesId(countryCode.locale, series.id).toList() }
-                } ?: emptyList()
-        else
-            emptyList()
-
-        val futureEpisodes = mutableListOf<Episode>()
-
-        (predictedNextEpisodes + simulcastEpisodes)
-            .distinctBy { it.id }
-            .forEach { addToList(futureEpisodes, countryCode, it) }
-
-        return futureEpisodes
-    }
-
-    suspend fun getNextEpisode(countryCode: CountryCode, id: String): AbstractCrunchyrollWrapper.BrowseObject? {
-        // Attempt to fetch the next episode directly
-        runCatching { CrunchyrollWrapper.getUpNext(countryCode.locale, id) }.getOrNull()?.let { return it }
-
-        logger.warning("Cannot fetch next episode for $id, trying alternative methods...")
-
-        // Fetch the current episode and check for nextEpisodeId
-        val episode = runCatching { CrunchyrollWrapper.getJvmStaticEpisode(countryCode.locale, id) }.getOrNull() ?: return null
-
-        episode.nextEpisodeId?.let { nextEpisodeId ->
-            runCatching { CrunchyrollWrapper.getJvmStaticObjects(countryCode.locale, nextEpisodeId) }.getOrNull()?.firstOrNull()
-                ?.let { return it }
-        }
-
-        // Fetch episodes by season and find the next episode
-        logger.warning("Next episode ID not found for $id, searching by season...")
-        return runCatching { CrunchyrollWrapper.getJvmStaticEpisodesBySeasonId(countryCode.locale, episode.seasonId) }.getOrNull()
-                ?.sortedBy { it.sequenceNumber }
-                ?.firstOrNull { it.sequenceNumber > episode.sequenceNumber }
-                ?.convertToBrowseObject()
     }
 
     suspend fun convertEpisode(
