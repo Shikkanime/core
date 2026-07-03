@@ -336,7 +336,8 @@ abstract class AbstractCrunchyrollWrapper : Throttle(60) {
 
         // Fetch the current episode and check for nextEpisodeId
         val episode = runCatching { getEpisode(locale, id) }.getOrNull() ?: return null
-        episode.nextEpisodeId?.let { return getObjects(locale, it).firstOrNull() }
+        episode.nextEpisodeId?.let { runCatching { getObjects(locale, it).firstOrNull() }.getOrNull() }
+            ?.let { return it }
 
         // Fetch episodes by season and find the next episode
         runCatching { getEpisodesBySeasonId(locale, episode.seasonId) }
