@@ -62,7 +62,7 @@ class CrunchyrollEpisodeFetcher {
      * @param countryEpisodesBrowse A collection of browse objects representing episodes, which may include metadata for series and variants.
      * @return A set of browse objects containing the preloaded variants and series data.
      */
-    private suspend fun preloadVariantsAndSeries(
+    suspend fun preloadVariantsAndSeries(
         countryCode: CountryCode,
         countryEpisodesBrowse: Collection<BrowseObject>
     ): Set<BrowseObject> {
@@ -75,13 +75,13 @@ class CrunchyrollEpisodeFetcher {
             val allowedAudioLocales = LocaleUtils.getAllowedLocales(countryCode, allEpisodeAudioLocales)
 
             versions.filter { it.audioLocale in allowedAudioLocales && it.guid !in currentEpisodeIds }
-                .map(AbstractCrunchyrollWrapper.Version::guid)
+                .mapNotNull { it.guid.takeIfNotBlank() }
         }
-        val seriesIds = countryEpisodesBrowse.mapNotNull { it.episodeMetadata?.seriesId }.toSet()
+        val seriesIds = countryEpisodesBrowse.mapNotNull { it.episodeMetadata?.seriesId?.takeIfNotBlank() }.toSet()
 
         val preloadIds = (variantIds + seriesIds).distinct()
         val preloadObjects =
-            (if (preloadIds.isNotEmpty()) runCatching { CrunchyrollCachedWrapper.getChunkedObjects(countryCode.locale, *preloadIds.toTypedArray()) }.getOrNull() ?: emptyList()
+            (if (preloadIds.isNotEmpty()) runCatching { CrunchyrollCachedWrapper.getObjects(countryCode.locale, *preloadIds.toTypedArray()) }.getOrNull() ?: emptyList()
             else emptyList())
                 .associateBy(BrowseObject::id)
 
@@ -100,13 +100,13 @@ class CrunchyrollEpisodeFetcher {
      * @return A list of browse objects representing the upcoming episodes, uniquely identified and aggregated
      *         from both predicted releases and simulcast data.
      */
-    private suspend fun fetchUpcomingEpisodes(
+    suspend fun fetchUpcomingEpisodes(
         countryCode: CountryCode,
         crunchyrollPlatform: CrunchyrollPlatform,
         zonedDateTime: ZonedDateTime,
         fileExists: Boolean,
         countryEpisodesBrowse: Collection<BrowseObject>,
-    ): List<BrowseObject> {
+    ): Set<BrowseObject> {
         val weeksToPredict = configCacheService.getValueAsLong(ConfigPropertyKey.PREDICT_FUTURE_EPISODES_WEEKS, 1)
         val checkSeriesSimulcast = configCacheService.getValueAsBoolean(ConfigPropertyKey.CRUNCHYROLL_CHECK_SERIES_SIMULCAST, true)
 
@@ -120,14 +120,14 @@ class CrunchyrollEpisodeFetcher {
             crunchyrollPlatform.getPlatform(),
             atStartOfDayPreviousWeek,
             atEndOfDayPreviousWeek
-        ).filter { (_, releaseDateTime) -> previousWeek.isAfterOrEqual(releaseDateTime) && previousWeek.isBeforeOrEqual(releaseDateTime.plusMinutes(30)) }
+        ).filter { (_, releaseDateTime) -> previousWeek.isBetween(releaseDateTime..releaseDateTime.plusMinutes(30)) }
             .mapNotNull { (identifier, _) -> StringUtils.getVideoOldIdOrId(identifier)?.let { CrunchyrollWrapper.retrieveNextEpisode(countryCode.locale, it) } }
 
         val simulcastEpisodes =
             if (!fileExists && checkSeriesSimulcast) fetchNewSimulcastEpisodes(countryCode, crunchyrollPlatform, countryEpisodesBrowse)
             else emptyList()
 
-        return (predictedNextEpisodes + simulcastEpisodes).distinctBy(BrowseObject::id)
+        return (predictedNextEpisodes + simulcastEpisodes).distinctBy(BrowseObject::id).toSet()
     }
 
     /**

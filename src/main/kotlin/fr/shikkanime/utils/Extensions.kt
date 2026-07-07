@@ -19,6 +19,17 @@ fun ZonedDateTime.isAfterOrEqual(other: ZonedDateTime): Boolean = this.isAfter(o
 
 fun ZonedDateTime.isBeforeOrEqual(other: ZonedDateTime): Boolean = this.isBefore(other) || this.isEqual(other)
 
+/**
+ * Checks if the current `ZonedDateTime` instance is within the specified range.
+ *
+ * The range is inclusive of its start and exclusive of its end.
+ *
+ * @param range The time range as a `ClosedRange<ZonedDateTime>` where the start is inclusive and the end is exclusive.
+ * @return `true` if the current `ZonedDateTime` is within the range, otherwise `false`.
+ */
+fun ZonedDateTime.isBetween(range: ClosedRange<ZonedDateTime>): Boolean =
+    this.isAfterOrEqual(range.start) && this.isBefore(range.endInclusive)
+
 fun LocalDate.atStartOfWeek(): LocalDate = this.with(DayOfWeek.MONDAY)
 
 fun LocalDate.atEndOfWeek(): LocalDate = this.with(DayOfWeek.SUNDAY)
