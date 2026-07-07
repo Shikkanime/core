@@ -26,7 +26,7 @@ class EpisodeMappingMockBuilder {
     var simulcast: Simulcast? = null
 
     fun build(): EpisodeMapping {
-        val mockK = mockk<EpisodeMapping>()
+        val mockK = mockk<EpisodeMapping>(relaxed = true)
 
         every { mockK.uuid } returns uuid
         every { mockK.anime } returns anime
