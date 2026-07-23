@@ -8,6 +8,7 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.Platform
 import fr.shikkanime.utils.indexers.GroupedIndexer
+import fr.shikkanime.utils.indexers.NewGroupIndexer
 import jakarta.persistence.Tuple
 import jakarta.persistence.criteria.JoinType
 import java.time.ZonedDateTime
@@ -31,9 +32,11 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                         animeRoot[Anime_.uuid],
                         animeRoot[Anime_.slug],
                         episodeMappingRoot[EpisodeMapping_.uuid],
+                        episodeMappingRoot[EpisodeMapping_.season],
                         episodeMappingRoot[EpisodeMapping_.episodeType],
-                        root[EpisodeVariant_.releaseDateTime],
+                        episodeMappingRoot[EpisodeMapping_.number],
                         root[EpisodeVariant_.uuid],
+                        root[EpisodeVariant_.releaseDateTime],
                         root[EpisodeVariant_.audioLocale]
                     )
                 )
@@ -47,23 +50,46 @@ class EpisodeVariantRepository : AbstractRepository<EpisodeVariant>() {
                 )
             }
 
-            GroupedIndexer.clear()
-
             createReadOnlyQuery(it, query).resultStream.forEach { tuple ->
+                val countryCode = tuple[0, CountryCode::class.java]
+                val animeUuid = tuple[1, UUID::class.java]
+                val animeSlug = tuple[2, String::class.java]
+                val episodeMappingUuid = tuple[3, UUID::class.java]
+                val season = tuple[4, Int::class.java]
+                val episodeType = tuple[5, EpisodeType::class.java]
+                val number = tuple[6, Int::class.java]
+                val variantUuid = tuple[7, UUID::class.java]
+                val releaseDateTime = tuple[8, ZonedDateTime::class.java]
+                val audioLocale = tuple[9, String::class.java]
+
                 GroupedIndexer.add(
                     GroupedIndexer.CompositeKey(
-                        tuple[0, CountryCode::class.java],
-                        tuple[1, UUID::class.java],
-                        tuple[2, String::class.java],
-                        tuple[4, EpisodeType::class.java],
+                        countryCode,
+                        animeUuid,
+                        animeSlug,
+                        episodeType
                     ),
-                    tuple[6, UUID::class.java],
-                    tuple[3, UUID::class.java],
-                    tuple[5, ZonedDateTime::class.java],
-                    tuple[7, String::class.java]
+                    variantUuid,
+                    episodeMappingUuid,
+                    releaseDateTime,
+                    audioLocale
+                )
+
+                NewGroupIndexer.addToBucket(
+                    countryCode,
+                    animeUuid,
+                    animeSlug,
+                    season,
+                    episodeType,
+                    number,
+                    variantUuid,
+                    releaseDateTime,
+                    audioLocale
                 )
             }
         }
+
+        NewGroupIndexer.buildIndex()
     }
 
     override suspend fun findAll(): List<EpisodeVariant> {

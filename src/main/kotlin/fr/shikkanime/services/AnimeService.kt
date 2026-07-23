@@ -4,7 +4,7 @@ import com.google.inject.Inject
 import fr.shikkanime.dtos.weekly.WeeklyAnimeDto
 import fr.shikkanime.dtos.weekly.WeeklyAnimesDto
 import fr.shikkanime.entities.Anime
-import fr.shikkanime.entities.EpisodeVariant
+import fr.shikkanime.entities.EpisodeMapping
 import fr.shikkanime.entities.Simulcast
 import fr.shikkanime.entities.enums.*
 import fr.shikkanime.entities.miscellaneous.SortParameter
@@ -16,7 +16,8 @@ import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.services.caches.SimulcastCacheService
 import fr.shikkanime.utils.*
 import fr.shikkanime.utils.StringUtils.capitalizeWords
-import fr.shikkanime.utils.indexers.GroupedIndexer
+import fr.shikkanime.utils.indexers.NewGroupIndexer
+import fr.shikkanime.utils.indexers.NewGroupIndexer.ElementVariant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -106,83 +107,79 @@ class AnimeService : AbstractService<Anime, AnimeRepository>() {
 
         val followed = memberUuid?.let { memberFollowAnimeService.findAllFollowedAnimesUUID(it) }
 
-        val indexes = GroupedIndexer.filterAndSortDataRecords(
-            filter = { (data, record) ->
-                (searchTypes?.let { LangType.fromAudioLocale(countryCode, data.audioLocale) in it } ?: true)
-                        && (followed?.contains(record.key.animeUuid) ?: true)
+        val predicate: (ElementVariant) -> Boolean = { variant -> searchTypes?.contains(variant.langType) == true }
+
+        val elements = NewGroupIndexer.getElements(
+            predicate = { element ->
+                element.countryCode == countryCode
+                        && element.releaseDateTime in startAtPreviousWeek..endOfCurrentWeek
+                        && (followed?.contains(element.animeUuid) ?: true)
+                        && (searchTypes?.let { element.variants.any { variant -> variant.langType in it } } ?: true)
             },
-            comparator = compareBy(
-                { it.record.releaseMillis },
-                { it.record.key.animeSlug },
-                { it.record.key.episodeType }),
-            minDateTime = startAtPreviousWeek,
-            maxDateTime = endOfCurrentWeek,
-            countryCode = countryCode
+            comparator = compareBy<NewGroupIndexer.Element> { it.releaseDateTime }
+                .thenBy { it.animeSlug }
+                .thenBy { it.episodeType }
         )
 
-        val variants = episodeVariantService.findAllByUuids(indexes.map { it.data.uuid }.toSet())
+        val groupedElements = elements.groupBy { Triple(it.countryCode, it.animeUuid, it.episodeType) }
+
+        val variantUuids = elements.flatMap { element ->
+            element.variants
+                .filterNotNull(predicate.takeIf { !searchTypes.isNullOrEmpty() })
+                .map(ElementVariant::uuid)
+        }.toLinkedSet()
+
+        val variants = episodeVariantService.findAllByUuids(variantUuids)
             .associateBy { it.uuid }
 
-        val groupedVariants =
-            mutableMapOf<GroupedIndexer.CompositeKey, TreeMap<ZonedDateTime, MutableSet<EpisodeVariant>>>()
+        val releases = elements.mapNotNull { element ->
+            val groupedElement = groupedElements[Triple(element.countryCode, element.animeUuid, element.episodeType)] ?: return@mapNotNull null
+            val variants = element.variants.mapNotNull { variants[it.uuid] }.takeIfNotEmpty() ?: return@mapNotNull null
 
-        indexes.forEach { (data, record) ->
-            variants[data.uuid]?.let { variant ->
-                val innerMap = groupedVariants.getOrPut(record.key) { TreeMap() }
-                val variantSet = innerMap.getOrPut(record.releaseDateTime) { mutableSetOf() }
-                variantSet.add(variant)
-            }
-        }
+            val isReleaseInCurrentWeek = element.releaseDateTime.withZoneSameInstant(zoneId) in currentWeekRange
+            val anime = variants.first().mapping?.anime ?: return@mapNotNull null
+            val mappings = variants.takeIf { isReleaseInCurrentWeek }
+                ?.mapNotNull { it.mapping }
+                ?.distinctBy { it.uuid }
+                ?.sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number })) ?: emptyList()
+            val mappingCount = mappings.takeIfNotEmpty()?.size ?: variants.mapNotNull { it.mapping?.uuid }.distinct().count()
 
-        val groupedAnimes = groupedVariants.flatMap { (compositeKey, treeMap) ->
-            treeMap.mapNotNull { (zonedDateTime, variants) ->
-                val isReleaseInCurrentWeek = zonedDateTime.withZoneSameInstant(zoneId) in currentWeekRange
-                val anime = variants.first().mapping!!.anime!!
-                val mappings = variants.takeIf { it.isNotEmpty() && isReleaseInCurrentWeek }
-                    ?.map { it.mapping!! }
-                    ?.distinctBy { it.uuid }
-                    ?.sortedWith(compareBy({ it.releaseDateTime }, { it.season }, { it.episodeType }, { it.number })) ?: emptyList()
-                val mappingCount = mappings.takeIfNotEmpty()?.size ?: variants.map { it.mapping!!.uuid }.distinct().count()
+            if (!isReleaseInCurrentWeek
+                && (groupedElement.any { it.releaseDateTime.withZoneSameInstant(zoneId) in currentWeekRange }
+                        || mappingCount > 5
+                        || element.episodeType in listOf(EpisodeType.FILM, EpisodeType.SUMMARY)))
+                return@mapNotNull null
 
-                if (!isReleaseInCurrentWeek && (treeMap.lastEntry().key in currentWeekRange || mappingCount > 5 || compositeKey.episodeType in listOf(
-                        EpisodeType.FILM,
-                        EpisodeType.SUMMARY
-                    ))
-                ) {
-                    return@mapNotNull null
-                }
+            WeeklyAnimeDto(
+                animeFactory.toDto(anime),
+                variants.map { platformFactory.toDto(it.platform!!) }.toTreeSet(),
+                element.releaseDateTime.withUTCString(),
+                buildString {
+                    append("/animes/${anime.slug}")
 
-                WeeklyAnimeDto(
-                    animeFactory.toDto(anime),
-                    variants.map { platformFactory.toDto(it.platform!!) }.toTreeSet(),
-                    zonedDateTime.withUTCString(),
-                    buildString {
-                        append("/animes/${anime.slug}")
+                    val season = mappings.mapNotNull(EpisodeMapping::season).distinct().singleOrNull()
+                        ?: variants.mapNotNull { it.mapping?.season }.distinct().singleOrNull()
 
-                        val season = mappings.map { it.season }.distinct().singleOrNull()
-                            ?: treeMap.lastEntry().value.map { it.mapping!!.season }.distinct().singleOrNull()
-
-                        season?.let {
-                            append("/season-$it")
-                            if (mappings.size == 1) {
-                                val episode = mappings.first()
-                                append("/${episode.episodeType!!.slug}-${episode.number}")
-                            }
+                    season?.let {
+                        append("/season-$it")
+                        if (mappings.size == 1) {
+                            val episode = mappings.first()
+                            append("/${episode.episodeType!!.slug}-${episode.number}")
                         }
-                    },
-                    variants.map { LangType.fromAudioLocale(countryCode, it.audioLocale!!) }.toTreeSet(),
-                    compositeKey.episodeType,
-                    mappings.minOfOrNull { it.number!! },
-                    mappings.maxOfOrNull { it.number!! },
-                    mappings.firstOrNull()?.number,
-                    mappings.map { episodeMappingFactory.toDto(it, false) }.toSet()
-                )
-            }
+                    }
+                },
+                variants.map { LangType.fromAudioLocale(countryCode, it.audioLocale!!) }.toTreeSet(),
+                element.episodeType,
+                mappings.minOfOrNull { it.number!! },
+                mappings.maxOfOrNull { it.number!! },
+                mappings.firstOrNull()?.number,
+                mappings.map { episodeMappingFactory.toDto(it, false) }.toSet()
+            )
         }
 
         return (0..6).map { dayOffset ->
             val date = startOfWeekDay.plusDays(dayOffset.toLong())
-            val tuplesDay = groupedAnimes.filter {
+            val tuplesDay = releases.filter {
                 ZonedDateTime.parse(it.releaseDateTime).withZoneSameInstant(zoneId).dayOfWeek.value == dayOffset + 1
             }
 

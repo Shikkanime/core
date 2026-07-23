@@ -52,6 +52,20 @@ fun String?.normalize(): String? {
 fun <T> Array<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>().also { it.addAll(this) }
 fun <T> Iterable<T>.toTreeSet(comparator: Comparator<T>): TreeSet<T> = TreeSet(comparator).also { it.addAll(this) }
 fun <T> Iterable<T>.toTreeSet(): TreeSet<T> where T : Comparable<T> = TreeSet<T>().also { it.addAll(this) }
+fun <T> Iterable<T>.toLinkedSet(): LinkedHashSet<T> = this.toCollection(linkedSetOf())
+fun <T> Sequence<T>.toLinkedSet(): LinkedHashSet<T> = this.toCollection(linkedSetOf())
+
+fun <T> Collection<T>.filterNotNull(predicate: ((T) -> Boolean)?): Collection<T> =
+    predicate?.let { this.filter(it) } ?: this
+
+fun <T> Sequence<T>.filterNotNull(predicate: ((T) -> Boolean)?): Sequence<T> =
+    predicate?.let { this.filter(it) } ?: this
+
+fun <T> Collection<T>.sortedWithNotNull(comparator: Comparator<T>?): Collection<T> =
+    comparator?.let { this.sortedWith(it) } ?: this
+
+fun <T> Sequence<T>.sortedWithNotNull(comparator: Comparator<T>?): Sequence<T> =
+    comparator?.let { this.sortedWith(it) } ?: this
 
 fun ByteArray?.isNullOrEmpty(): Boolean = this == null || this.isEmpty()
 
@@ -59,6 +73,7 @@ inline fun <T> Boolean.onTrue(block: () -> T): T? = if (this) block() else null
 fun Boolean.onFalse(block: () -> Unit) = if (!this) block() else Unit
 
 fun <C> C.takeIfNotEmpty(): C? where C : Collection<*> = ifEmpty { null }
+
 fun ByteArray.takeIfNotEmpty() = this.takeIf { it.isNotEmpty() }
 fun Boolean.takeIfFalse() = if (!this) true else null
 
