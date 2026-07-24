@@ -49,21 +49,6 @@ class UpdateEpisodeJob : AbstractJob {
     @Inject private lateinit var netflixPlatform: NetflixPlatform
     @Inject private lateinit var primeVideoPlatform: PrimeVideoPlatform
 
-    private inline fun <T> updateIfChanged(
-        identifier: String,
-        fieldName: String,
-        candidate: T?,
-        current: T,
-        isValid: (T) -> Boolean,
-        apply: (T) -> Unit
-    ) {
-        if (candidate == null || !(isValid(candidate) && candidate != current))
-            return
-
-        apply(candidate)
-        logger.info("Updating $fieldName for $identifier to $candidate")
-    }
-
     override suspend fun run() {
         val zonedDateTime = ZonedDateTime.now().withSecond(0).withNano(0).withUTC()
         val lastImageUpdateDateTime = zonedDateTime.minusDays(configCacheService.getValueAsLong(ConfigPropertyKey.UPDATE_IMAGE_EPISODE_DELAY, 2))
@@ -149,7 +134,8 @@ class UpdateEpisodeJob : AbstractJob {
                 val matchingVariant = platformEpisodes.singleOrNull(predicate)
                 var hasChanged = false
 
-                updateIfChanged(
+                updateIfValidAndChanged(
+                    logger,
                     episodeVariant.identifier!!,
                     fieldName = "url",
                     candidate = matchingVariant?.url,
@@ -158,7 +144,8 @@ class UpdateEpisodeJob : AbstractJob {
                     apply = { episodeVariant.url = it; hasChanged = true; needInvalidation = true }
                 )
 
-                updateIfChanged(
+                updateIfValidAndChanged(
+                    logger,
                     episodeVariant.identifier!!,
                     fieldName = "available",
                     candidate = true,
@@ -183,7 +170,8 @@ class UpdateEpisodeJob : AbstractJob {
             val matchedAndKnownEpisodes =
                 platformEpisodes.filter { it.getIdentifier() in variantIdentifiers }.sortedBy { it.platform.sortIndex }
 
-            updateIfChanged(
+            updateIfValidAndChanged(
+                logger,
                 mappingIdentifier,
                 fieldName = "image",
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull(AbstractPlatform.Episode::image),
@@ -198,7 +186,8 @@ class UpdateEpisodeJob : AbstractJob {
                 }
             )
 
-            updateIfChanged(
+            updateIfValidAndChanged(
+                logger,
                 mappingIdentifier,
                 fieldName = "title",
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull { it.title.normalize() },
@@ -207,7 +196,8 @@ class UpdateEpisodeJob : AbstractJob {
                 apply = { episodeMapping.title = it; needInvalidation = true }
             )
 
-            updateIfChanged(
+            updateIfValidAndChanged(
+                logger,
                 mappingIdentifier,
                 fieldName = "description",
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull {
@@ -218,7 +208,8 @@ class UpdateEpisodeJob : AbstractJob {
                 apply = { episodeMapping.description = it; needInvalidation = true }
             )
 
-            updateIfChanged(
+            updateIfValidAndChanged(
+                logger,
                 mappingIdentifier,
                 fieldName = "duration",
                 candidate = matchedAndKnownEpisodes.firstNotNullOfOrNull(AbstractPlatform.Episode::duration),
@@ -539,9 +530,7 @@ class UpdateEpisodeJob : AbstractJob {
             }?.toList() ?: emptyList()
         }
 
-        val episode =
-            episodes.find { it.id.toString() == context.episodePlatformId || it.oldId == context.episodePlatformId }
-                ?: return
+        val episode = episodes.find { it.id.toString() == context.episodePlatformId } ?: return
 
         context.platformEpisodes.addAll(
             runCatching {

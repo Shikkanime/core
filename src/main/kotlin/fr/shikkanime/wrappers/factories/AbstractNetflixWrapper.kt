@@ -1,6 +1,5 @@
 package fr.shikkanime.wrappers.factories
 
-import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.utils.HttpRequest
@@ -53,19 +52,11 @@ abstract class AbstractNetflixWrapper : IStreamingPlatformWrapper<Int, AbstractN
         val isPlayable: Boolean,
         val genres: List<String>,
         val runtimeSec: Long? = null,
-        val metadata: ShowMetadata? = null,
-        val json: JsonObject? = null,
+        val metadata: ShowMetadata? = null
     ) : Serializable, IStreamingPlatformWrapper.Id<Int>
-
-    data class Season(
-        val id: Int,
-        val name: String,
-        val episodeCount: Int,
-    )
 
     data class Episode(
         val show: Show,
-        val oldId: String,
         override val id: Int,
         val releaseDateTime: ZonedDateTime?,
         val season: Int,
@@ -111,7 +102,7 @@ abstract class AbstractNetflixWrapper : IStreamingPlatformWrapper<Int, AbstractN
             )
         }"
 
-    protected suspend fun HttpRequest.postGraphQL(locale: String, body: String): HttpResponse {
+    protected suspend fun HttpRequest.postGraphQL(locale: String, body: Any): HttpResponse {
         val (id, secureId) = getNetflixAuthentification()
 
         return post(

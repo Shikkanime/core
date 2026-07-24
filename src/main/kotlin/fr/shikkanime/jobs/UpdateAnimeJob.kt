@@ -40,21 +40,6 @@ class UpdateAnimeJob : AbstractJob {
     @Inject private lateinit var animePlatformService: AnimePlatformService
     @Inject private lateinit var attachmentService: AttachmentService
 
-    private inline fun <T> updateIfChanged(
-        identifier: String,
-        fieldName: String,
-        candidate: T?,
-        current: T,
-        isValid: (T) -> Boolean,
-        apply: (T) -> Unit
-    ) {
-        if (candidate == null || !(isValid(candidate) && candidate != current))
-            return
-
-        apply(candidate)
-        logger.info("Updating $fieldName for $identifier to $candidate")
-    }
-
     private fun normalize(string: String) = string.replace(":", "")
         .replace('’', '\'')
         .lowercase()
@@ -123,7 +108,8 @@ class UpdateAnimeJob : AbstractJob {
 
                     var hasChanged = false
 
-                    updateIfChanged(
+                    updateIfValidAndChanged(
+                        logger,
                         "[${animePlatform.platform?.platformName}] ${animePlatform.platformId}",
                         fieldName = "available",
                         candidate = true,
@@ -156,8 +142,9 @@ class UpdateAnimeJob : AbstractJob {
             val matchedAnimes = animeDatas.sortedBy { it.platform.sortIndex }
 
             ImageType.entries.forEach { imageType ->
-                updateIfChanged(
-                    anime.name!!,
+                updateIfValidAndChanged(
+                    logger,
+                    "[${anime.name!!}] ${imageType.name.lowercase()}",
                     fieldName = imageType.name.lowercase(),
                     candidate = matchedAnimes.firstNotNullOfOrNull { it.attachments[imageType] },
                     current = attachmentService.findByEntityUuidTypeAndActive(anime.uuid!!, imageType)?.url,
@@ -172,8 +159,9 @@ class UpdateAnimeJob : AbstractJob {
                 )
             }
 
-            updateIfChanged(
-                anime.name!!,
+            updateIfValidAndChanged(
+                logger,
+                "[${anime.name!!}] description",
                 fieldName = "description",
                 candidate = matchedAnimes.firstNotNullOfOrNull {
                     it.description.normalize()?.take(Constant.MAX_DESCRIPTION_LENGTH)
