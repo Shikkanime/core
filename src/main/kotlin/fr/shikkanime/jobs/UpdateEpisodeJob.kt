@@ -413,12 +413,12 @@ class UpdateEpisodeJob : AbstractJob {
                 CrunchyrollCachedWrapper.getObjects(context.countryCode.locale, context.episodePlatformId)
         }?.firstOrNull() ?: return
 
-        val allAudioLocales = (episode.episodeMetadata!!.versions?.map { it.audioLocale }?.toSet()
-            ?: emptySet()) + setOf(episode.episodeMetadata.audioLocale)
+        val allAudioLocales = (episode.episodeMetadata?.versions?.map { it.audioLocale }?.toSet()
+            ?: emptySet()) + setOf(episode.episodeMetadata?.audioLocale)
         val allowedAudioLocales = LocaleUtils.getAllowedLocales(context.countryCode, allAudioLocales)
         val variantObjects = mutableListOf(episode)
 
-        episode.episodeMetadata.versions
+        episode.episodeMetadata?.versions
             ?.filter { it.guid != episode.id && it.audioLocale in allowedAudioLocales }
             ?.distinct()
             ?.let {
