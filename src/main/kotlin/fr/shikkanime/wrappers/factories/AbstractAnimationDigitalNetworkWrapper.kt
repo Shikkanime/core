@@ -1,6 +1,7 @@
 package fr.shikkanime.wrappers.factories
 
 import fr.shikkanime.utils.HttpRequest
+import io.ktor.http.*
 import java.io.Serializable
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -69,7 +70,14 @@ abstract class AbstractAnimationDigitalNetworkWrapper : IStreamingPlatformWrappe
 
     protected val baseUrl = "https://gw.api.animationdigitalnetwork.com/"
 
-    protected suspend fun HttpRequest.getWithHeaders(locale: String, url: String) = get(url, headers = mapOf("X-Source" to "Web", "X-Target-Distribution" to locale.split("-").first().lowercase()))
+    protected suspend fun HttpRequest.getWithHeaders(locale: String, url: String) = get(
+        url,
+        headers = mapOf(
+            HttpHeaders.AcceptLanguage to locale.split("-").first().lowercase(),
+            "X-Source" to "Web",
+            "X-Target-Distribution" to locale.split("-").first().lowercase()
+        )
+    )
 
     abstract suspend fun getLatestEpisodes(locale: String, date: LocalDate): Array<Episode>
     abstract suspend fun getEpisode(locale: String, id: Int): Episode
