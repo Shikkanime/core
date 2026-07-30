@@ -10,10 +10,11 @@ object ShikkanimeWorkerWrapper : AbstractShikkanimeWorkerWrapper() {
     override suspend fun getNetflixEpisodes(
         netflixId: String,
         secureNetflixId: String,
-        vararg ids: Int
+        vararg ids: Int,
+        bypass: Boolean
     ): List<Episode> {
         val response = HttpRequest.post(
-            "$baseUrl/netflix-episodes",
+            "$baseUrl/netflix-episodes${if (bypass) "?bypass=true" else ""}",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
             timeout = 300_000,
             body = Request(

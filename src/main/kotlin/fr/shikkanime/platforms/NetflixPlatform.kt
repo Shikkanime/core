@@ -23,7 +23,7 @@ class NetflixPlatform : AbstractPlatform<NetflixConfiguration, PlatformSimulcast
     override suspend fun fetchApiContent(
         key: PlatformSimulcastFetchCacheKey,
         zonedDateTime: ZonedDateTime
-    ) = NetflixWrapper.getEpisodesByShowId(key.countryCode.locale, key.simulcast.name.toInt())
+    ) = NetflixWrapper.getEpisodesByShowId(zonedDateTime, key.countryCode.locale, key.simulcast.name.toInt())
         .flatMap { video -> convertEpisode(key.countryCode, video) }
 
     override suspend fun fetchEpisodes(zonedDateTime: ZonedDateTime, bypassFileContent: File?): List<Episode> {

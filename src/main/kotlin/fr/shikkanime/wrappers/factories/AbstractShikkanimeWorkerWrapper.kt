@@ -18,5 +18,5 @@ abstract class AbstractShikkanimeWorkerWrapper {
 
     protected val baseUrl = "https://worker.shikkanime.fr"
 
-    abstract suspend fun getNetflixEpisodes(netflixId: String, secureNetflixId: String, vararg ids: Int): List<Episode>
+    abstract suspend fun getNetflixEpisodes(netflixId: String, secureNetflixId: String, vararg ids: Int, bypass: Boolean = false): List<Episode>
 }

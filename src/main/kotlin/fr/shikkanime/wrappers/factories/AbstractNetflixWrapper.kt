@@ -126,4 +126,9 @@ abstract class AbstractNetflixWrapper : IStreamingPlatformWrapper<Int, AbstractN
     }
 
     abstract suspend fun getLatestShows(): Array<LatestShow>
+
+    override suspend fun getEpisodesByShowId(locale: String, showId: Int): Array<Episode> =
+        getEpisodesByShowId(ZonedDateTime.now(), locale, showId)
+
+    abstract suspend fun getEpisodesByShowId(zonedDateTime: ZonedDateTime, locale: String, showId: Int): Array<Episode>
 }

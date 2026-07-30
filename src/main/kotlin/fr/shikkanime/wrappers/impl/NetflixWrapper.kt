@@ -20,6 +20,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.time.Duration
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 object NetflixWrapper : AbstractNetflixWrapper() {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -161,15 +162,15 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    override suspend fun getEpisodesByShowId(locale: String, showId: Int): Array<Episode> {
+    override suspend fun getEpisodesByShowId(zonedDateTime: ZonedDateTime, locale: String, showId: Int): Array<Episode> {
         val show = getShow(locale, showId)
         val seasonsResponse = fetchSeasonsData(locale, showId, show.seasonCount ?: 1)
         val firstVideoObject = parseFirstVideoObject(seasonsResponse)
 
         return when (firstVideoObject?.getAsString("__typename")) {
             "Season" -> getEpisodesByShowId(locale, show.json!!.getAsJsonObject("parentShow").getAsInt("videoId")!!).toList()
-            "Movie" -> createMovieEpisode(locale, show)
-            else -> createSeriesEpisodes(locale, show, firstVideoObject)
+            "Movie" -> createMovieEpisode(zonedDateTime, locale, show)
+            else -> createSeriesEpisodes(zonedDateTime, locale, show, firstVideoObject)
         }.toTypedArray()
     }
 
@@ -200,7 +201,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             ?.firstOrNull()?.asJsonObject
     }
 
-    private suspend fun createMovieEpisode(locale: String, show: Show): List<Episode> {
+    private suspend fun createMovieEpisode(zonedDateTime: ZonedDateTime, locale: String, show: Show): List<Episode> {
         val releaseDateTime = show.availabilityStartTime
         val isAvailable = show.isAvailable
         val isPlayable = show.isPlayable
@@ -223,7 +224,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
                 "$baseUrl/watch/${show.id}",
                 show.metadata?.carousel ?: show.banner.substringBefore("?"),
                 show.runtimeSec!!,
-                runCatching { getEpisodeAudioTrackList(locale, show.id) }
+                runCatching { getEpisodeAudioTrackList(locale, show.id, bypass = sameTime(zonedDateTime, releaseDateTime)) }
                     .map { it[show.id] ?: setOf(Locale.JA_JP.code) }
                     .onFailure { logger.warning("Failed to get audio tracks for movie ${show.id}: ${it.message}") }
                     .getOrNull() ?: setOf(Locale.JA_JP.code)
@@ -231,14 +232,14 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    private suspend fun createSeriesEpisodes(locale: String, show: Show, firstVideoObject: JsonObject?): List<Episode> {
+    private suspend fun createSeriesEpisodes(zonedDateTime: ZonedDateTime, locale: String, show: Show, firstVideoObject: JsonObject?): List<Episode> {
         val seasonsJson = firstVideoObject?.getAsJsonObject("seasons")
             ?.getAsJsonArray("edges") ?: throw Exception("Failed to get seasons")
         
         val seasons = parseSeasons(seasonsJson)
         
         return seasons.flatMapIndexed { index, season ->
-            fetchAndCreateEpisodesForSeason(locale, show, season, index + 1)
+            fetchAndCreateEpisodesForSeason(zonedDateTime, locale, show, season, index + 1)
         }
     }
 
@@ -253,7 +254,12 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         }
     }
 
-    private suspend fun fetchAndCreateEpisodesForSeason(locale: String, show: Show, season: Season, seasonNumber: Int): List<Episode> {
+    fun sameTime(zonedDateTime1: ZonedDateTime?, zonedDateTime2: ZonedDateTime?): Boolean =
+        zonedDateTime1 != null
+                && zonedDateTime2 != null
+                && zonedDateTime1.withUTC().format(DateTimeFormatter.ofPattern("HH:mm:ss")) == zonedDateTime2.withUTC().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+    private suspend fun fetchAndCreateEpisodesForSeason(zonedDateTime: ZonedDateTime, locale: String, show: Show, season: Season, seasonNumber: Int): List<Episode> {
         val response = HttpRequest.postGraphQL(locale, ObjectParser.toJson(mapOf(
             "operationName" to "PreviewModalEpisodeSelectorSeasonEpisodes",
             "variables" to mapOf(
@@ -284,7 +290,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             .mapNotNull { it.asJsonObject.getAsJsonObject("node")?.getAsInt("videoId") }.toIntArray()
 
         val audioTracksMap = if (episodeIds.isNotEmpty())
-            runCatching { getEpisodeAudioTrackList(locale, *episodeIds) }
+            runCatching { getEpisodeAudioTrackList(locale, *episodeIds, bypass = sameTime(zonedDateTime, show.availabilityStartTime)) }
                 .onFailure { logger.warning("Failed to get audio tracks for season ${season.id}: ${it.message}") }
                 .getOrNull() ?: emptyMap()
         else emptyMap()
@@ -329,14 +335,15 @@ object NetflixWrapper : AbstractNetflixWrapper() {
         )
     }
 
-    suspend fun getEpisodeAudioTrackList(locale: String, vararg ids: Int): Map<Int, Set<String>> {
+    suspend fun getEpisodeAudioTrackList(locale: String, vararg ids: Int, bypass: Boolean = false): Map<Int, Set<String>> {
         val countryCode = requireNotNull(CountryCode.fromLocale(locale)) { "Unsupported locale: $locale" }
         val netflixAuthentification = getNetflixAuthentificationFromConfig()
 
         return ShikkanimeWorkerWrapper.getNetflixEpisodes(
             netflixAuthentification.id,
             netflixAuthentification.secureId,
-            *ids
+            *ids,
+            bypass = bypass,
         ).associate { it.id to LocaleUtils.getAllowedLocales(countryCode, it.audioLocales) }
             .filterValues { it.isNotEmpty() }
     }
