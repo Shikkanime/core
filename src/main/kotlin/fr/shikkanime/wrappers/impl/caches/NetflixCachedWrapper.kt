@@ -6,6 +6,7 @@ import fr.shikkanime.utils.MapCacheValue
 import fr.shikkanime.utils.StringUtils
 import fr.shikkanime.wrappers.factories.AbstractNetflixWrapper
 import fr.shikkanime.wrappers.impl.NetflixWrapper
+import java.time.ZonedDateTime
 
 object NetflixCachedWrapper : AbstractNetflixWrapper() {
     override suspend fun getLatestShows() = MapCache.getOrComputeAsync(
@@ -24,11 +25,12 @@ object NetflixCachedWrapper : AbstractNetflixWrapper() {
     ) { NetflixWrapper.getShow(it.first, it.second) }
 
     override suspend fun getEpisodesByShowId(
+        zonedDateTime: ZonedDateTime,
         locale: String,
         showId: Int
     ) = MapCache.getOrComputeAsync(
         "NetflixCachedWrapper.getEpisodesByShowId",
         typeToken = object : TypeToken<MapCacheValue<Array<Episode>>>() {},
-        key = locale to showId
-    ) { NetflixWrapper.getEpisodesByShowId(it.first, it.second) }
+        key = Triple(zonedDateTime, locale, showId)
+    ) { NetflixWrapper.getEpisodesByShowId(it.first, it.second, it.third) }
 }
