@@ -106,9 +106,9 @@ class AttachmentService : AbstractService<Attachment, AttachmentRepository>() {
 
     suspend fun encodeAllActiveWithUrlAndWithoutFile() {
         val now = ZonedDateTime.now()
-        val existingFiles = Constant.imagesFolder.list().mapNotNull {
+        val existingFiles = Constant.imagesFolder.list()?.mapNotNull {
             runCatching { UUID.fromString(it.substringBeforeLast(".")) }.getOrNull()
-        }.toHashSet()
+        }?.toHashSet() ?: HashSet()
 
         val attachmentsToUpdate = findAllActiveWithUrlAndNotIn(existingFiles)
         if (attachmentsToUpdate.isEmpty()) return
