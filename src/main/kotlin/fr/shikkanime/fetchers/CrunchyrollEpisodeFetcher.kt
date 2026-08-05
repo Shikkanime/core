@@ -68,8 +68,8 @@ class CrunchyrollEpisodeFetcher {
     ): Set<BrowseObject> {
         val currentEpisodeIds = countryEpisodesBrowse.map(BrowseObject::id).toSet()
         val variantIds = countryEpisodesBrowse.flatMap { browseObject ->
-            val metadata = browseObject.episodeMetadata ?: return@flatMap emptyList<String>()
-            val versions = metadata.versions ?: return@flatMap emptyList<String>()
+            val metadata = browseObject.episodeMetadata ?: return@flatMap emptyList()
+            val versions = metadata.versions ?: return@flatMap emptyList()
 
             val allEpisodeAudioLocales = versions.map(AbstractCrunchyrollWrapper.Version::audioLocale).toSet() + setOfNotNull(metadata.audioLocale)
             val allowedAudioLocales = LocaleUtils.getAllowedLocales(countryCode, allEpisodeAudioLocales)

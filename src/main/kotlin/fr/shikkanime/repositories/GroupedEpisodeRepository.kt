@@ -122,15 +122,15 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
         countryCode = countryCode,
         searchTypes = searchTypes,
         comparator = Comparator { a, b ->
-            for (param in sort) {
-                val comparison = when (SortField.from(param.field)) {
+            for ((field, order) in sort) {
+                val comparison = when (SortField.from(field)) {
                     SortField.RELEASE_DATE_TIME -> a.releaseMillis.compareTo(b.releaseMillis)
                     SortField.EPISODE_TYPE -> a.key.episodeType.compareTo(b.key.episodeType)
                     SortField.ANIME_NAME -> a.key.animeSlug.compareTo(b.key.animeSlug)
                     else -> 0
                 }
                 if (comparison != 0) {
-                    return@Comparator if (param.order == SortParameter.Order.ASC) comparison else -comparison
+                    return@Comparator if (order == SortParameter.Order.ASC) comparison else -comparison
                 }
             }
             0
@@ -209,8 +209,8 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
      */
     private fun getGroupedEpisodeComparator(sort: List<SortParameter>): Comparator<GroupedEpisode> {
         return Comparator { a, b ->
-            for (param in sort) {
-                val comparison = when (SortField.from(param.field)) {
+            for ((field, order) in sort) {
+                val comparison = when (SortField.from(field)) {
                     SortField.RELEASE_DATE_TIME -> a.releaseDateTime.compareTo(b.releaseDateTime)
                     SortField.EPISODE_TYPE -> a.episodeType.compareTo(b.episodeType)
                     SortField.SEASON -> a.minSeason.compareTo(b.minSeason)
@@ -219,7 +219,7 @@ class GroupedEpisodeRepository : AbstractRepository<EpisodeMapping>() {
                     else -> 0
                 }
                 if (comparison != 0) {
-                    return@Comparator if (param.order == SortParameter.Order.ASC) comparison else -comparison
+                    return@Comparator if (order == SortParameter.Order.ASC) comparison else -comparison
                 }
             }
             0

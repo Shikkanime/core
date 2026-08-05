@@ -40,8 +40,8 @@ class AnimeRepository : AbstractRepository<Anime>() {
         }
 
         override fun hashCode(): Int {
-            var result = countryCode?.hashCode() ?: 0
-            result = 31 * result + (simulcastUuid?.hashCode() ?: 0)
+            var result = countryCode.hashCode()
+            result = 31 * result + simulcastUuid.hashCode()
             result = 31 * result + (searchTypes?.contentHashCode() ?: 0)
             return result
         }

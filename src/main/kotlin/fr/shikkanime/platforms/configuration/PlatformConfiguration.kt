@@ -44,7 +44,7 @@ open class PlatformSimulcast(
     }
 
     override fun hashCode(): Int {
-        var result = uuid?.hashCode() ?: 0
+        var result = uuid.hashCode()
         result = 31 * result + name.hashCode()
         return result
     }

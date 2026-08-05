@@ -12,7 +12,6 @@ import fr.shikkanime.utils.StringUtils
 import java.time.ZonedDateTime
 import java.util.*
 import java.util.logging.Level
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 class MemberActionService : AbstractService<MemberAction, MemberActionRepository>() {
     companion object {
@@ -24,7 +23,6 @@ class MemberActionService : AbstractService<MemberAction, MemberActionRepository
     @Inject private lateinit var memberService: MemberService
     @Inject private lateinit var mailService: MailService
 
-    @OptIn(ExperimentalEncodingApi::class)
     private fun toWebToken(memberAction: MemberAction): String = EncryptionManager.toBase64(EncryptionManager.toSHA512("${memberAction.member?.uuid}|${memberAction.uuid}|${memberAction.action}|${memberAction.code}").toByteArray())
 
     suspend fun validateWebAction(webToken: String) {

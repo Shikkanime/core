@@ -4,7 +4,6 @@ import fr.shikkanime.entities.enums.CountryCode
 import fr.shikkanime.entities.enums.EpisodeType
 import fr.shikkanime.entities.enums.LangType
 import fr.shikkanime.entities.miscellaneous.Pageable
-import fr.shikkanime.utils.indexers.GroupedIndexer.add
 import fr.shikkanime.utils.indexers.GroupedIndexer.compositeIndex
 import fr.shikkanime.utils.indexers.GroupedIndexer.countryIndex
 import java.time.ZonedDateTime
@@ -82,17 +81,6 @@ object GroupedIndexer {
         countryIndex.clear()
     }
 
-    /**
-     * Adds an episode variant to the index.
-     *
-     * Logic:
-     * 1. Check if a [GroupedRecord] exists within a 2-hour window (+/- 2h) for the same [CompositeKey].
-     * 2. If it exists, add the new [DataEntry] to that record's [dataEntries] set.
-     * 3. Otherwise, create a new [GroupedRecord] and add it to both [compositeIndex] and [countryIndex].
-     *
-     * This grouping mechanism prevents multiple notifications or listings for the same episode released
-     * in different versions (subtitles vs voice) at slightly different times.
-     */
     fun add(
         key: CompositeKey,
         variantUuid: UUID,
@@ -128,16 +116,6 @@ object GroupedIndexer {
         }
     }
 
-    /**
-     * Retrieves all grouped records based on optional filters.
-     * Optimized using [countryIndex] and [TreeMap] operations ([subMap], [tailMap], [headMap]).
-     *
-     * @param minDateTime Start of the time range (inclusive).
-     * @param maxDateTime End of the time range (inclusive).
-     * @param countryCode Filter by country. If null, all countries are searched.
-     * @param searchTypes Filter by language types (SUBTITLES, VOICE). If null, all types are included.
-     * @return A sequence of [GroupedRecord] matching the criteria.
-     */
     fun getAllRecords(
         minDateTime: ZonedDateTime? = null,
         maxDateTime: ZonedDateTime? = null,

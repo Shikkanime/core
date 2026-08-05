@@ -74,21 +74,19 @@ abstract class AbstractPlatform<C : PlatformConfiguration<*>, K : Any, V> {
         val cacheEntry = apiCache[key] ?: return true
         val delayMinutes = configuration!!.apiCheckDelayInMinutes
 
-        if (cacheEntry.hasError || cacheEntry.cachedValue == null || delayMinutes <= 0) {
-            return true
-        }
-
-        return currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0
+        return cacheEntry.hasError
+                || cacheEntry.cachedValue == null
+                || delayMinutes <= 0
+                || (currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0)
     }
 
     private fun shouldFetchLatestShows(currentTime: ZonedDateTime): Boolean {
         val delayMinutes = configuration!!.apiCheckDelayInMinutes
 
-        if (lastLatestShowsFetch == null || hasLatestShowsFetchError || delayMinutes <= 0) {
-            return true
-        }
-
-        return currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0
+        return lastLatestShowsFetch == null
+                || hasLatestShowsFetchError
+                || delayMinutes <= 0
+                || (currentTime.minute.toLong() % delayMinutes == 0L && currentTime.second == 0)
     }
 
     suspend fun getApiContent(key: K, currentTime: ZonedDateTime): V {

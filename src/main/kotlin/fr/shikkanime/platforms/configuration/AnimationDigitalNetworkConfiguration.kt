@@ -35,7 +35,7 @@ class AnimationDigitalNetworkConfiguration : PlatformConfiguration<AnimationDigi
 
         override fun hashCode(): Int {
             var result = super.hashCode()
-            result = 31 * result + (audioLocaleDelay?.hashCode() ?: 0)
+            result = 31 * result + audioLocaleDelay.hashCode()
             return result
         }
     }

@@ -26,7 +26,7 @@ data class GroupedEpisodeQueryCacheKey(
     }
 
     override fun hashCode(): Int {
-        var result = countryCode?.hashCode() ?: 0
+        var result = countryCode.hashCode()
         result = 31 * result + (searchTypes?.contentHashCode() ?: 0)
         result = 31 * result + sort.hashCode()
         result = 31 * result + page

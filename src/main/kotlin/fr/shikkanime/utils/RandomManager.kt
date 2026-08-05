@@ -1,12 +1,16 @@
 package fr.shikkanime.utils
 
 object RandomManager {
-    fun generateRandomString(length: Int): String {
-        val allowedChars =
-            ('A'..'Z') + ('a'..'z') + ('0'..'9') + '_' + '-' + '.' + '!' + '~' + '*' + '\'' + '(' + ')' + ';' + ':' + '@' + '&' + '=' + '+' + '$' + ',' + '/' + '?' + '#' + '[' + ']' + '%'
+    private const val RANDOM_STRING_CHARACTERS =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.'!~*'();:@&=+$,/?#[]%"
 
-        return (1..length)
-            .map { allowedChars.random() }
-            .joinToString(StringUtils.EMPTY_STRING)
+    fun generateRandomString(length: Int): String {
+        require(length >= 0) { "Length must not be negative" }
+
+        return buildString(length) {
+            repeat(length) {
+                append(RANDOM_STRING_CHARACTERS.random())
+            }
+        }
     }
 }

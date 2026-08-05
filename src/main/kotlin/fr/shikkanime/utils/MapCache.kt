@@ -23,7 +23,7 @@ class MapCache<K : Any, V : Serializable>(
     serializationType: SerializationUtils.SerializationType = defaultSerializationType,
     private val block: suspend (K) -> V?,
 ) : InvalidationService(classes) {
-    private val cacheStrategy = if (!AsynchronizedGlideClient.isAvailable()) InMemoryCacheStrategy<K, MapCacheValue<V>>() else ValkeyCacheStrategy<K, MapCacheValue<V>>(name, serializationType, typeToken)
+    private val cacheStrategy = if (!AsynchronizedGlideClient.isAvailable()) InMemoryCacheStrategy() else ValkeyCacheStrategy<K, MapCacheValue<V>>(name, serializationType, typeToken)
 
     init {
         register(name, this)
