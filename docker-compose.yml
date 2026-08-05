@@ -1,44 +1,42 @@
+version: '3.8'
+
 services:
-  shikkanime-db:
-    image: postgres:17-alpine
-    restart: always
-    container_name: shikkanime-db
-    environment:
-      POSTGRES_PASSWORD: "mysecretpassword"
-      POSTGRES_USER: postgres
-      POSTGRES_DB: shikkanime
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
-  shikkanime-valkey:
-    image: valkey/valkey:8.1-alpine
-    container_name: shikkanime-valkey
-    restart: always
-  shikkanime-core:
+  api:
     build:
-        context: .
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: api
     ports:
-      - "37100:37100"
-    restart: on-failure
-    container_name: shikkanime-core
-    depends_on:
-      shikkanime-db:
-        condition: service_healthy
-      shikkanime-valkey:
-        condition: service_started
+      - "8080:8080"
     environment:
-      DATABASE_URL: jdbc:postgresql://shikkanime-db:5432/shikkanime
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: "mysecretpassword"
-      JWT_SECRET: "mysecretkey"
-      JWT_DOMAIN: "http://localhost:37100"
-      JWT_REALM: "Access to '/admin'"
-      JWT_AUDIENCE: "http://localhost:37100/admin"
-      BASE_URL: "http://localhost:37100"
-      API_URL: "http://localhost:37100/api"
-      VALKEY_HOST: "shikkanime-valkey"
-    healthcheck:
-      test: curl --fail http://localhost:37100/ || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
+      - PORT=8080
+
+  site:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: site
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: admin
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+
+  jobs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: jobs
