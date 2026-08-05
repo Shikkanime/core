@@ -1,0 +1,31 @@
+[versions]
+kotlin = "2.4.10"
+shikkanimeFramework = "0.0.13-SNAPSHOT"
+kotlinxDateTime = "0.8.0"
+quartz = "2.5.2"
+h2 = "2.4.240"
+junitJupiter = "6.1.2"
+
+[libraries]
+kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+
+# Shikkanime Framework
+shikkanimeFrameworkCore = { module = "fr.shikkanime.framework:core", version.ref = "shikkanimeFramework" }
+shikkanimeFrameworkExposed = { module = "fr.shikkanime.framework:exposed", version.ref = "shikkanimeFramework" }
+shikkanimeFrameworkKtor = { module = "fr.shikkanime.framework:ktor", version.ref = "shikkanimeFramework" }
+shikkanimeFrameworkKoin = { module = "fr.shikkanime.framework:koin", version.ref = "shikkanimeFramework" }
+shikkanimeFrameworkKoinExposed = { module = "fr.shikkanime.framework:koin-exposed", version.ref = "shikkanimeFramework" }
+kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTime" }
+quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartz" }
+
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
+junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
+
+[bundles]
+testEcosystem = ["junitJupiterApi", "junitJupiterEngine"]
+
+[plugins]
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shikkanimeFrameworkKtor = { id = "fr.shikkanime.framework.ktor", version.ref = "shikkanimeFramework" }
+shikkanimeFrameworkKoin = { id = "fr.shikkanime.framework.koin", version.ref = "shikkanimeFramework" }
