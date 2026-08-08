@@ -31,6 +31,6 @@ object NetflixCachedWrapper : AbstractNetflixWrapper() {
     ) = MapCache.getOrComputeAsync(
         "NetflixCachedWrapper.getEpisodesByShowId",
         typeToken = object : TypeToken<MapCacheValue<Array<Episode>>>() {},
-        key = Triple(zonedDateTime, locale, showId)
-    ) { NetflixWrapper.getEpisodesByShowId(it.first, it.second, it.third) }
+        key = Pair(locale, showId)
+    ) { NetflixWrapper.getEpisodesByShowId(zonedDateTime, it.first, it.second) }
 }

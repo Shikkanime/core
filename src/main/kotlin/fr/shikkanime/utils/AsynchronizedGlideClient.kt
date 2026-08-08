@@ -2,12 +2,14 @@ package fr.shikkanime.utils
 
 import fr.shikkanime.utils.system.CircuitBreaker
 import glide.api.GlideClient
+import glide.api.models.commands.SetOptions
 import glide.api.models.commands.scan.ScanOptions
 import glide.api.models.configuration.GlideClientConfiguration
 import glide.api.models.configuration.NodeAddress
 import io.ktor.util.collections.*
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.days
 
 object AsynchronizedGlideClient {
     private val logger = LoggerFactory.getLogger(AsynchronizedGlideClient::class.java)
@@ -47,7 +49,14 @@ object AsynchronizedGlideClient {
 
     operator fun set(key: String, value: String) {
         circuitBreaker.execute(
-            action = { glideClient.getOrThrow().set(key, value).get() },
+            action = {
+                glideClient.getOrThrow().set(
+                    key, value,
+                    SetOptions.builder()
+                        .expiry(SetOptions.Expiry.Seconds(1.days.inWholeSeconds))
+                        .build()
+                ).get()
+            },
             fallback = { inMemoryCache[key] = value }
         )
     }
