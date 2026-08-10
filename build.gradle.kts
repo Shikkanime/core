@@ -31,7 +31,7 @@ plugins {
     kotlin("plugin.serialization") version kotlinVersion
     kotlin("kapt") version kotlinVersion
 
-    id("io.ktor.plugin") version "3.5.1"
+    id("io.ktor.plugin") version "3.5.2"
     id("com.google.osdetector") version "1.7.3"
     id("org.jetbrains.kotlinx.kover") version "0.9.9"
 }
