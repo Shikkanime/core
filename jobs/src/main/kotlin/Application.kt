@@ -1,5 +1,6 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.DatabaseModule
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.jobs.platforms.StreamingPlatform
@@ -46,6 +47,8 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
 }
 
 suspend fun main() {
+    DatabaseManager.connect()
+
     val koin = startKoin<MyApp>().koin
     applyTransactionalProxies(koin)
 

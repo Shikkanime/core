@@ -33,7 +33,7 @@ class FetchLatestEpisodesJob(
                 val episodes = runBlocking { streamingPlatform.fetchEpisodes() }
 
                 // Keep only episodes whose release time has passed
-                val released = episodes.filter { now.compareTo(it.releaseDateTime) >= 0 }
+                val released = episodes.filter { it.releaseDateTime <= now }
 
                 if (released.isEmpty()) return@forEach
 
@@ -46,11 +46,15 @@ class FetchLatestEpisodesJob(
                 released
                     .filter { it.id !in existingIds }
                     .forEach { episode ->
+                        // Persist in UTC so release times stay comparable across platforms
                         episodeService.save(
                             platform,
                             episode.id,
                             episode.title,
-                            episode.releaseDateTime.toLocalDateTime().toKotlinLocalDateTime()
+                            episode.releaseDateTime
+                                .withZoneSameInstant(ZoneOffset.UTC)
+                                .toLocalDateTime()
+                                .toKotlinLocalDateTime()
                         )
                     }
             } catch (e: Exception) {
