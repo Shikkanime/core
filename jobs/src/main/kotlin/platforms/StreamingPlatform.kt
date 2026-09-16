@@ -5,5 +5,5 @@ import fr.shikkanime.models.Platform
 interface StreamingPlatform {
     val platform: Platform
 
-    suspend fun fetchLatestEpisodes(): List<PlatformEpisode>
+    suspend fun fetchEpisodes(): List<PlatformEpisode>
 }

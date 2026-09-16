@@ -1,6 +1,7 @@
 package fr.shikkanime.database
 
 import fr.shikkanime.database.entities.AnimeTable
+import fr.shikkanime.database.entities.EpisodeTable
 import fr.shikkanime.database.entities.JoinAnimeSimulcastTable
 import fr.shikkanime.database.entities.SimulcastTable
 import fr.shikkanime.database.entities.UserTable
@@ -19,6 +20,7 @@ class DatabaseManager(
             UserTable,
             AnimeTable,
             SimulcastTable,
+            EpisodeTable,
 
             JoinAnimeSimulcastTable
         )

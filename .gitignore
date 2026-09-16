@@ -42,3 +42,7 @@ out/
 /backups/
 /data/
 /logs/
+
+.kotlin/
+database/logs/
+jobs/logs/

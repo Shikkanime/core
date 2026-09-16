@@ -1,5 +1,7 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.database.DatabaseModule
+import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -22,7 +24,7 @@ import kotlin.system.exitProcess
 @ComponentScan("fr.shikkanime.jobs")
 internal class AppModule
 
-@KoinApplication(modules = [AppModule::class])
+@KoinApplication(modules = [AppModule::class, DatabaseModule::class])
 internal class MyApp
 
 internal class KoinJobFactory(private val koin: Koin) : JobFactory {
@@ -45,9 +47,10 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
 
 suspend fun main() {
     val koin = startKoin<MyApp>().koin
+    applyTransactionalProxies(koin)
 
     koin.getAll<StreamingPlatform>().forEach { streamingPlatform ->
-        println(streamingPlatform.fetchLatestEpisodes())
+        println(streamingPlatform.fetchEpisodes())
     }
 
     exitProcess(0)

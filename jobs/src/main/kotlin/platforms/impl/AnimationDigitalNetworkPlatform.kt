@@ -21,7 +21,7 @@ class AnimationDigitalNetworkPlatform(
 ) : StreamingPlatform {
     override val platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK
 
-    override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
+    override suspend fun fetchEpisodes(): List<PlatformEpisode> {
         val now = Clock.System.now()
             .toLocalDateTime(TimeZone.UTC)
             .date
@@ -33,14 +33,11 @@ class AnimationDigitalNetworkPlatform(
             1.minutes
         )
 
-        if (!response.hasChanged) {
-            return emptyList()
-        }
-
         return response.data.videos.map { video ->
             PlatformEpisode(
                 id = video.id.toString(),
-                title = video.title
+                title = video.title,
+                releaseDateTime = video.releaseDate
             )
         }
     }
