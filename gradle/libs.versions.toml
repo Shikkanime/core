@@ -2,10 +2,12 @@
 kotlin = "2.4.10"
 shikkanimeFramework = "0.0.15-SNAPSHOT"
 kotlinxDateTime = "0.8.0"
+kotlinxCoroutines = "1.10.2"
 quartz = "2.5.2"
 h2 = "2.4.240"
 junitJupiter = "6.1.2"
 mockk = "1.14.11"
+ktor = "3.5.2"
 
 [libraries]
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -23,9 +25,11 @@ h2 = { module = "com.h2database:h2", version.ref = "h2" }
 junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
 junitJupiterEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junitJupiter" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+ktorClientMock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 [bundles]
-testEcosystem = ["junitJupiterApi", "junitJupiterEngine", "mockk"]
+testEcosystem = ["junitJupiterApi", "junitJupiterEngine", "mockk", "kotlinxCoroutinesTest", "ktorClientMock"]
 
 [plugins]
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

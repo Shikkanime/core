@@ -13,12 +13,17 @@ import kotlinx.serialization.Serializable
 import org.koin.core.annotation.Single
 import java.time.ZonedDateTime
 import kotlin.time.Clock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 @Single(binds = [StreamingPlatform::class])
 class AnimationDigitalNetworkPlatform(
-    private val client: SmartHttpClient
+    private val client: SmartHttpClient,
+    private val calendarTtl: Duration = 1.minutes
 ) : StreamingPlatform {
+    private var cachedContentKey: String? = null
+    private var cachedEpisodes: List<PlatformEpisode> = emptyList()
+
     override val platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK
 
     override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
@@ -30,11 +35,15 @@ class AnimationDigitalNetworkPlatform(
         val response = client.get<AdnCalendarResponse>(
             "https://gw.api.animationdigitalnetwork.com/video/calendar?date=$now",
             "animation_digital_network:calendar:$now",
-            1.minutes
+            calendarTtl
         )
 
-        if (!response.hasChanged) {
-            return emptyList()
+        val contentKey = response.data.videos.joinToString(separator = ";") { video ->
+            "${video.id}:${video.releaseDate.toInstant().toEpochMilli()}"
+        }
+
+        if (contentKey == cachedContentKey) {
+            return cachedEpisodes
         }
 
         return response.data.videos.map { video ->
@@ -42,6 +51,9 @@ class AnimationDigitalNetworkPlatform(
                 id = video.id.toString(),
                 title = video.title
             )
+        }.also { episodes ->
+            cachedContentKey = contentKey
+            cachedEpisodes = episodes
         }
     }
 }
