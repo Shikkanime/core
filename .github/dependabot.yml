@@ -7,6 +7,8 @@ updates:
       interval: "daily"
       time: "10:00"
       timezone: "Europe/Paris"
+    cooldown:
+      default-days: 0
     assignees:
       - "Ziedelth"
     groups:
@@ -20,6 +22,8 @@ updates:
       interval: "daily"
       time: "10:00"
       timezone: "Europe/Paris"
+    cooldown:
+      default-days: 0
     assignees:
       - "Ziedelth"
 
@@ -29,5 +33,7 @@ updates:
       interval: "daily"
       time: "10:00"
       timezone: "Europe/Paris"
+    cooldown:
+      default-days: 0
     assignees:
       - "Ziedelth"
