@@ -67,6 +67,12 @@ class NetflixPlatformTest : AbstractTest() {
                 expectedAnimeName = "The Grimm Variations",
                 releaseDay = 0,
                 testDate = "2024-04-17T07:00:00Z"
+            ),
+            NetflixTestCase(
+                netflixId = "82012956",
+                expectedAnimeName = "Mononoke, le film : Chapitre III – La malédiction du serpent",
+                releaseDay = 2,
+                testDate = "2026-09-29T07:00:00Z"
             )
         )
     }

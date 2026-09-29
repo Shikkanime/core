@@ -138,6 +138,7 @@ object NetflixWrapper : AbstractNetflixWrapper() {
             )
         )))
         require(response.status == HttpStatusCode.OK) { "Failed to get show (${response.status.value} - ${response.bodyAsText()})" }
+        logger.info(response.bodyAsText())
         val showJson = ObjectParser.fromJson(response.bodyAsText()).getAsJsonObject("data")?.getAsJsonArray("unifiedEntities")?.get(0)?.asJsonObject ?: throw Exception("Failed to get show")
         val isAvailable = showJson.getAsBoolean("isAvailable") ?: false
         val metadata = if (isAvailable) runCatching { getMetadata(id) }.getOrNull() else null
