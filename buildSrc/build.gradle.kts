@@ -8,4 +8,5 @@ kotlin {
 
 dependencies {
     implementation(libs.kotlinGradlePlugin)
+    implementation(libs.koverGradlePlugin)
 }
