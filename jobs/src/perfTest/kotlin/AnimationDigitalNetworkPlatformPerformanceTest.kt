@@ -1,6 +1,7 @@
 package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.jobs.SmartHttpClient
+import fr.shikkanime.jobs.perf.PerfBudget
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformEpisode
 import io.ktor.client.*
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.*
 import java.lang.management.ManagementFactory
 import java.time.ZonedDateTime
 import kotlin.system.measureNanoTime
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AnimationDigitalNetworkPlatformPerformanceTest {
@@ -32,6 +35,51 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         Thread.sleep(100)
         System.gc()
         Thread.sleep(100)
+    }
+
+    /**
+     * Runs the mapping logic under a budget guard: prints the measures and then asserts
+     * the run stayed within [PerfBudget]. Throughput is the primary signal; allocation
+     * catches a regression that stays fast but bloats the heap (e.g. a lost memoization
+     * building a new list per video).
+     */
+    private fun measureAndAssert(
+        label: String,
+        episodeCount: Int,
+        expectedOutputSize: Int,
+        block: () -> List<PlatformEpisode>?
+    ): List<PlatformEpisode>? {
+        var output: List<PlatformEpisode>? = null
+        val measurement = PerfBudget.measure { output = block() }
+
+        val throughput = "%.0f".format(measurement.throughputPerSecond(episodeCount))
+        val megabytes = measurement.allocatedBytes / (1024 * 1024)
+        val bytesPerEpisode = measurement.allocatedBytes.toDouble() / episodeCount
+
+        println("  [$label] duration=" + "%.0f".format(measurement.durationMs) + " ms")
+        println("  [$label] throughput=$throughput episodes/sec")
+        println("  [$label] allocated=$megabytes MB (${"%.0f".format(bytesPerEpisode)} B/episode)")
+
+        val throughputFloor = PerfBudget.throughputFloor(episodeCount)
+        val allocationCeiling = PerfBudget.allocationCeiling(episodeCount)
+
+        assertTrue(
+            measurement.throughputPerSecond(episodeCount) >= throughputFloor,
+            "$label: throughput $throughput eps/s is below the floor " +
+                "${"%.0f".format(throughputFloor)} eps/s (regression or slow runner)"
+        )
+        assertTrue(
+            measurement.allocatedBytes <= allocationCeiling,
+            "$label: allocated $megabytes MB exceeds the ceiling " +
+                "${allocationCeiling / (1024 * 1024)} MB (memory regression)"
+        )
+        assertEquals(
+            expectedOutputSize,
+            output?.size,
+            "$label: the mapping produced an unexpected number of episodes"
+        )
+
+        return output
     }
 
     private fun getGcStats(): Pair<Long, Long> {
@@ -104,12 +152,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
         // Run the EXACT logic from AnimationDigitalNetworkPlatform.fetchLatestEpisodes
-        var resultList: List<PlatformEpisode>? = null
-        val durationNanos = measureNanoTime {
+        measureAndAssert(label = "benchmark-1-same-anime", episodeCount = 1_000_000, expectedOutputSize = 1_000_000) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
-            resultList = videos.mapNotNull { video ->
+            videos.mapNotNull { video ->
                 if (video.type in specialShowTypes) return@mapNotNull null
                 if (trailerIndicators.any { video.shortNumber.startsWith(it) }) return@mapNotNull null
 
@@ -144,10 +191,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        val durationMs = durationNanos / 1_000_000.0
-        println("Duration: ${"%.2f".format(durationMs)} ms (${"%.2f".format(durationMs / 1000.0)} s)")
-        println("Throughput: ${"%.0f".format(1_000_000.0 / (durationMs / 1000.0))} episodes/sec")
-        println("Output episodes count: ${resultList?.size}")
         println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
         println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
     }
@@ -191,12 +234,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        var resultList: List<PlatformEpisode>? = null
-        val durationNanos = measureNanoTime {
+        measureAndAssert(label = "benchmark-2-distinct-anime", episodeCount = 1_000_000, expectedOutputSize = 1_000_000) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
-            resultList = videos.mapNotNull { video ->
+            videos.mapNotNull { video ->
                 if (video.type in specialShowTypes) return@mapNotNull null
                 if (trailerIndicators.any { video.shortNumber.startsWith(it) }) return@mapNotNull null
 
@@ -231,10 +273,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        val durationMs = durationNanos / 1_000_000.0
-        println("Duration: ${"%.2f".format(durationMs)} ms (${"%.2f".format(durationMs / 1000.0)} s)")
-        println("Throughput: ${"%.0f".format(1_000_000.0 / (durationMs / 1000.0))} episodes/sec")
-        println("Output episodes count: ${resultList?.size}")
         println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
         println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
     }
@@ -294,12 +332,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        var resultList: List<PlatformEpisode>? = null
-        val durationNanos = measureNanoTime {
+        val resultList = measureAndAssert(label = "benchmark-3-realistic-catalog", episodeCount = 1_000_000, expectedOutputSize = 900_000) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
-            resultList = videos.mapNotNull { video ->
+            videos.mapNotNull { video ->
                 if (video.type in specialShowTypes) return@mapNotNull null
                 if (trailerIndicators.any { video.shortNumber.startsWith(it) }) return@mapNotNull null
 
@@ -334,9 +371,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        val durationMs = durationNanos / 1_000_000.0
-        println("Duration: ${"%.2f".format(durationMs)} ms (${"%.2f".format(durationMs / 1000.0)} s)")
-        println("Throughput: ${"%.0f".format(1_000_000.0 / (durationMs / 1000.0))} episodes/sec")
         println("Output episodes count: ${resultList?.size} (filtered out ~${1_000_000 - (resultList?.size ?: 0)})")
         println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
         println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
@@ -379,7 +413,18 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         } / 1_000_000.0
 
         println("Precompiled regex (reusing 3 Regex instances for 1M iterations): ${"%.2f".format(precompiledDurationMs)} ms")
-        println("Speedup factor for image URL transformation: ${"%.2f".format(currentDurationMs / precompiledDurationMs)}x faster!")
+
+        val speedup = currentDurationMs / precompiledDurationMs
+        println("Speedup factor for image URL transformation: ${"%.2f".format(speedup)}x faster!")
+
+        // The point of the precompiled regexes is that they are meaningfully faster. If a
+        // future JIT change makes recompiling free, this assertion is the signal to drop
+        // the optimisation rather than keep dead complexity.
+        assertTrue(
+            speedup >= PerfBudget.MIN_REGEX_SPEEDUP,
+            "benchmark-4: precompiled regex is only ${"%.2f".format(speedup)}x faster than recompiling " +
+                "(expected at least ${PerfBudget.MIN_REGEX_SPEEDUP}x) — the optimisation no longer pays off"
+        )
     }
 
     @Test
@@ -409,7 +454,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             }
         } / 1_000_000.0
         println("Pre-sized HashMap(1_333_334) (0 rehashes): ${"%.2f".format(preSizedMapDurationMs)} ms")
-        println("Speedup from pre-sizing: ${"%.2f".format(defaultMapDurationMs / preSizedMapDurationMs)}x faster!")
+
+        val speedup = defaultMapDurationMs / preSizedMapDurationMs
+        println("Speedup from pre-sizing: ${"%.2f".format(speedup)}x faster!")
+
+        assertTrue(
+            speedup >= PerfBudget.MIN_MAP_PRESIZE_SPEEDUP,
+            "benchmark-5: pre-sizing the map is only ${"%.2f".format(speedup)}x faster than the default " +
+                "(expected at least ${PerfBudget.MIN_MAP_PRESIZE_SPEEDUP}x) — the optimisation no longer pays off"
+        )
     }
 
     @Test
@@ -464,11 +517,20 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         // 2nd call: Cache hit (hasChanged = false)
         val duration2 = measureNanoTime {
             val episodes2 = platform.fetchLatestEpisodes()
-            assert(episodes2.size == episodes1?.size)
+            assertEquals(episodes1?.size, episodes2.size, "benchmark-6: the cached call returned a different episode count")
         } / 1_000_000.0
 
+        val cacheSpeedup = duration1 / duration2
         println("\n--- Second call (hasChanged = false: Cache hit / TTL fresh) ---")
         println("Duration: ${"%.4f".format(duration2)} ms")
-        println("Speedup from cache: ${"%.1f".format(duration1 / duration2)}x faster")
+        println("Speedup from cache: ${"%.1f".format(cacheSpeedup)}x faster")
+
+        // The whole point of the memoized list is that the second call is a cache hit. If
+        // this collapses, the hasChanged gate or the TTL logic has been broken.
+        assertTrue(
+            cacheSpeedup >= PerfBudget.MIN_CACHE_SPEEDUP,
+            "benchmark-6: the cached call is only ${"%.1f".format(cacheSpeedup)}x faster than the first " +
+                "(expected at least ${PerfBudget.MIN_CACHE_SPEEDUP}x) — caching no longer works"
+        )
     }
 }

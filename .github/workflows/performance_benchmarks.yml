@@ -1,0 +1,31 @@
+name: Performance Benchmarks
+
+# Benchmarks are excluded from `test` (see jobs/build.gradle.kts perfTest source set)
+# so they only run here, on demand or on a schedule.
+on:
+  workflow_dispatch:
+  schedule:
+    # Sunday at 04:00 UTC
+    - cron: '0 4 * * 0'
+
+jobs:
+  benchmarks:
+    name: Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Run performance benchmarks
+        run: ./gradlew :jobs:perfTest --info
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-test-reports
+          path: jobs/build/reports/tests/perfTest/
+          retention-days: 14
