@@ -141,12 +141,20 @@ mutableMapOf<Int, PlatformAnime>()
 
     private fun rejectVideo(video: AdnVideo): IngestionVerdict.Rejected? =
         video.type.takeIf { it in SPECIAL_SHOW_TYPES }?.let {
-            IngestionVerdict.rejected(video.toPlatformItem(), RejectionReason.PROMOTIONAL_CONTENT, "type=${video.type}")
+            IngestionVerdict.rejected(
+                item = video.toPlatformItem(),
+                reason = RejectionReason.PROMOTIONAL_CONTENT,
+                evidence = "type=${video.type}"
+            )
         }
 
     private fun rejectTrailer(video: AdnVideo): IngestionVerdict.Rejected? =
         TRAILER_INDICATORS.firstOrNull { video.shortNumber.startsWith(it) }?.let {
-            IngestionVerdict.rejected(video.toPlatformItem(), RejectionReason.TRAILER_OR_OPENING, "shortNumber=${video.shortNumber}")
+            IngestionVerdict.rejected(
+                item = video.toPlatformItem(),
+                reason = RejectionReason.TRAILER_OR_OPENING,
+                evidence = "shortNumber=${video.shortNumber}"
+            )
         }
 
     /**

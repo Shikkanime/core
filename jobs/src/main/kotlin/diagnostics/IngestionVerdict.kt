@@ -47,7 +47,9 @@ sealed interface IngestionVerdict {
     ) : IngestionVerdict {
         companion object {
             fun of(item: PlatformItem, reason: RejectionReason, evidence: String): Rejected {
-                require(evidence.isNotBlank()) { "A rejection must carry evidence, otherwise it cannot be diagnosed" }
+                require(evidence.isNotBlank()) {
+                    "A rejection must carry evidence, otherwise it cannot be diagnosed"
+                }
 
                 return Rejected(item, reason, evidence)
             }
@@ -58,7 +60,10 @@ sealed interface IngestionVerdict {
         fun accepted(item: PlatformItem, episode: PlatformEpisode): IngestionVerdict =
             Accepted(item, episode)
 
-        fun rejected(item: PlatformItem, reason: RejectionReason, evidence: String): IngestionVerdict.Rejected =
-            Rejected.of(item, reason, evidence)
+        fun rejected(
+            item: PlatformItem,
+            reason: RejectionReason,
+            evidence: String
+        ): IngestionVerdict.Rejected = Rejected.of(item, reason, evidence)
     }
 }

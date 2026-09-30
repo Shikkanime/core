@@ -30,7 +30,10 @@ data class IngestionRun(
             .groupingBy { it.reason }
             .eachCount()
             .entries
-            .sortedWith(compareByDescending<Map.Entry<RejectionReason, Int>> { it.value }.thenBy { it.key.name })
+            .sortedWith(
+                compareByDescending<Map.Entry<RejectionReason, Int>> { it.value }
+                    .thenBy { it.key.name }
+            )
             .map { it.key to it.value }
 
     fun rejectionsFor(reason: RejectionReason): List<IngestionVerdict.Rejected> =

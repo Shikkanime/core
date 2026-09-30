@@ -19,24 +19,34 @@ class IngestionRunRegistryTest {
     private val fetchedAt = LocalDateTime(2026, 1, 10, 8, 0, 0)
 
     private fun item(platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK, id: String = "1") =
-PlatformItem(
-        platform = platform,
-        platformId = id,
-        showTitle = "One Piece",
-        title = "Episode $id",
-        releaseDateTime = "2026-01-10T08:00:00Z",
-        audioLocales = listOf("vostf")
-    )
+        PlatformItem(
+            platform = platform,
+            platformId = id,
+            showTitle = "One Piece",
+            title = "Episode $id",
+            releaseDateTime = "2026-01-10T08:00:00Z",
+            audioLocales = listOf("vostf")
+        )
 
     private fun episode(id: String = "1") =
-PlatformEpisode(
-        anime = PlatformAnime(id = "1", title = "One Piece", description = null, thumbnail = "thumb"),
-        id = id,
-        title = "Episode $id",
-        description = null,
-        image = "image",
-        releaseDateTime = ZonedDateTime.parse("2026-01-10T08:00:00Z")
-    )
+        PlatformEpisode(
+            anime = PlatformAnime(id = "1", title = "One Piece", description = null, thumbnail = "thumb"),
+            id = id,
+            title = "Episode $id",
+            description = null,
+            image = "image",
+            releaseDateTime = ZonedDateTime.parse("2026-01-10T08:00:00Z")
+        )
+
+    private fun accepted(id: String = "1"): IngestionVerdict =
+        IngestionVerdict.accepted(item(id = id), episode(id))
+
+    private fun rejected(
+        id: String,
+        reason: RejectionReason,
+        evidence: String
+    ): IngestionVerdict =
+        IngestionVerdict.rejected(item(id = id), reason, evidence)
 
     private fun run(
         platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK,
@@ -68,8 +78,8 @@ PlatformEpisode(
         fun `should replace the previous run of the same platform`() {
             // Given
             val registry = IngestionRunRegistry()
-            val first = run(verdicts = listOf(IngestionVerdict.accepted(item(id = "1"), episode("1"))))
-            val second = run(verdicts = listOf(IngestionVerdict.accepted(item(id = "2"), episode("2"))))
+            val first = run(verdicts = listOf(accepted("1")))
+            val second = run(verdicts = listOf(accepted("2")))
             registry.record(first)
 
             // When
@@ -135,10 +145,10 @@ PlatformEpisode(
             // Given
             val run = run(
                 verdicts = listOf(
-                    IngestionVerdict.accepted(item(id = "1"), episode("1")),
-                    IngestionVerdict.accepted(item(id = "2"), episode("2")),
-                    IngestionVerdict.rejected(item(id = "3"), RejectionReason.PROMOTIONAL_CONTENT, "type=PV"),
-                    IngestionVerdict.rejected(item(id = "4"), RejectionReason.NOT_AN_ANIMATION, "genres=[Drama]")
+                    accepted("1"),
+                    accepted("2"),
+                    rejected("3", RejectionReason.PROMOTIONAL_CONTENT, "type=PV"),
+                    rejected("4", RejectionReason.NOT_AN_ANIMATION, "genres=[Drama]")
                 )
             )
 
@@ -154,10 +164,10 @@ PlatformEpisode(
             // Given
             val run = run(
                 verdicts = listOf(
-                    IngestionVerdict.rejected(item(id = "1"), RejectionReason.NOT_AN_ANIMATION, "genres=[Drama]"),
-                    IngestionVerdict.rejected(item(id = "2"), RejectionReason.PROMOTIONAL_CONTENT, "type=PV"),
-                    IngestionVerdict.rejected(item(id = "3"), RejectionReason.PROMOTIONAL_CONTENT, "type=BONUS"),
-                    IngestionVerdict.rejected(item(id = "4"), RejectionReason.PROMOTIONAL_CONTENT, "type=PV")
+                    rejected("1", RejectionReason.NOT_AN_ANIMATION, "genres=[Drama]"),
+                    rejected("2", RejectionReason.PROMOTIONAL_CONTENT, "type=PV"),
+                    rejected("3", RejectionReason.PROMOTIONAL_CONTENT, "type=BONUS"),
+                    rejected("4", RejectionReason.PROMOTIONAL_CONTENT, "type=PV")
                 )
             )
 
@@ -177,9 +187,9 @@ PlatformEpisode(
             // Given
             val run = run(
                 verdicts = listOf(
-                    IngestionVerdict.accepted(item(id = "1"), episode("1")),
-                    IngestionVerdict.rejected(item(id = "2"), RejectionReason.NOT_AN_ANIMATION, "genres=[Live Action, Drama]"),
-                    IngestionVerdict.rejected(item(id = "3"), RejectionReason.PROMOTIONAL_CONTENT, "type=PV")
+                    accepted("1"),
+                    rejected("2", RejectionReason.NOT_AN_ANIMATION, "genres=[Live Action, Drama]"),
+                    rejected("3", RejectionReason.PROMOTIONAL_CONTENT, "type=PV")
                 )
             )
 
@@ -188,9 +198,18 @@ PlatformEpisode(
 
             // Then each rejection must name the item, a reason alone is not enough to act on
             assertTrue(report.contains("3 item(s), 1 accepted, 2 rejected"), "got: $report")
-            assertTrue(report.contains("NOT_AN_ANIMATION — ANIMATION_DIGITAL_NETWORK #2"), "the item must be named, got: $report")
-            assertTrue(report.contains("genres=[Live Action, Drama]"), "the evidence must be shown, got: $report")
-            assertTrue(report.contains("PROMOTIONAL_CONTENT — ANIMATION_DIGITAL_NETWORK #3"), "got: $report")
+            assertTrue(
+                report.contains("NOT_AN_ANIMATION — ANIMATION_DIGITAL_NETWORK #2"),
+                "the item must be named, got: $report"
+            )
+            assertTrue(
+                report.contains("genres=[Live Action, Drama]"),
+                "the evidence must be shown, got: $report"
+            )
+            assertTrue(
+                report.contains("PROMOTIONAL_CONTENT — ANIMATION_DIGITAL_NETWORK #3"),
+                "got: $report"
+            )
         }
 
         @Test
@@ -213,9 +232,9 @@ PlatformEpisode(
             // Given
             val run = run(
                 verdicts = listOf(
-                    IngestionVerdict.rejected(item(id = "1"), RejectionReason.PROMOTIONAL_CONTENT, "type=PV"),
-                    IngestionVerdict.rejected(item(id = "2"), RejectionReason.PROMOTIONAL_CONTENT, "type=BONUS"),
-                    IngestionVerdict.rejected(item(id = "3"), RejectionReason.NOT_AN_ANIMATION, "genres=[Drama]")
+                    rejected("1", RejectionReason.PROMOTIONAL_CONTENT, "type=PV"),
+                    rejected("2", RejectionReason.PROMOTIONAL_CONTENT, "type=BONUS"),
+                    rejected("3", RejectionReason.NOT_AN_ANIMATION, "genres=[Drama]")
                 )
             )
 
