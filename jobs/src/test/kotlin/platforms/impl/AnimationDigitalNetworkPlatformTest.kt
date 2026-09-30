@@ -46,7 +46,8 @@ class AnimationDigitalNetworkPlatformTest {
             }
         )
 
-    private fun smartHttpClient(body: String): SmartHttpClient = smartHttpClient({ body })
+    private fun smartHttpClient(body: String): SmartHttpClient =
+smartHttpClient({ body })
 
     private fun platform(client: SmartHttpClient): AnimationDigitalNetworkPlatform =
         AnimationDigitalNetworkPlatform(client = client, ttl = Duration.ZERO)
@@ -81,7 +82,8 @@ class AnimationDigitalNetworkPlatformTest {
         }
     """.trimIndent()
 
-    private fun calendar(vararg videos: String): String = """{"videos": [${videos.joinToString(",")}]}"""
+    private fun calendar(vararg videos: String): String =
+"""{"videos": [${videos.joinToString(",")}]}"""
 
     @Nested
     @DisplayName("tests for the 'fetchLatestEpisodes' method")

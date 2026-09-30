@@ -22,7 +22,8 @@ class FetchLatestEpisodesJobTest {
 
     private val fetchedAt = LocalDateTime(2026, 1, 10, 8, 0, 0)
 
-    private fun runFor(platform: Platform) = IngestionRun(
+    private fun runFor(platform: Platform) =
+IngestionRun(
         platform = platform,
         verdicts = emptyList(),
         fetchedAt = fetchedAt

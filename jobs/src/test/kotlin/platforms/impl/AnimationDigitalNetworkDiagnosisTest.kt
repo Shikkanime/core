@@ -68,9 +68,11 @@ class AnimationDigitalNetworkDiagnosisTest {
         }
     """.trimIndent()
 
-    private fun calendar(vararg videos: String): String = """{"videos": [${videos.joinToString(",")}]}"""
+    private fun calendar(vararg videos: String): String =
+"""{"videos": [${videos.joinToString(",")}]}"""
 
-    private suspend fun diagnose(body: String) = AnimationDigitalNetworkPlatform(
+    private suspend fun diagnose(body: String) =
+AnimationDigitalNetworkPlatform(
         client = smartHttpClient(body),
         ttl = Duration.ZERO
     ).diagnoseLatestEpisodes()

@@ -40,7 +40,8 @@ class AnimationDigitalNetworkPlatform(
     private var cachedEpisodes: List<PlatformEpisode> = emptyList()
 
     override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
-        val response = client.get<AdnCalendarResponse>(
+        val response =
+client.get<AdnCalendarResponse>(
             "https://gw.api.animationdigitalnetwork.com/video/calendar?date=${today()}",
             "animation_digital_network:calendar:${today()}",
             ttl,
@@ -69,7 +70,8 @@ class AnimationDigitalNetworkPlatform(
      * rather than leaving the previous run in place looking fresh.
      */
     override suspend fun diagnoseLatestEpisodes(): IngestionRun {
-        val now = now()
+        val now =
+now()
 
         val response = try {
             client.get<AdnCalendarResponse>(
@@ -100,12 +102,14 @@ class AnimationDigitalNetworkPlatform(
         )
     }
 
-    private fun today(): String = Clock.System.now()
-        .toLocalDateTime(TimeZone.UTC)
-        .date
-        .format(LocalDate.Formats.ISO)
+    private fun today(): String =
+        Clock.System.now()
+            .toLocalDateTime(TimeZone.UTC)
+            .date
+            .format(LocalDate.Formats.ISO)
 
-    private fun now(): LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+    private fun now(): LocalDateTime =
+        Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
     /**
      * Maps every video to exactly one verdict, resolved anime included. A show already known to
@@ -113,7 +117,8 @@ class AnimationDigitalNetworkPlatform(
      * drop the episodes that come after the first one.
      */
     private fun diagnoseVideos(videos: List<AdnVideo>): List<IngestionVerdict> {
-        val animes = mutableMapOf<Int, PlatformAnime>()
+        val animes =
+mutableMapOf<Int, PlatformAnime>()
         val invalidShowReasons = mutableMapOf<Int, RejectionReason>()
 
         return videos.map { video ->
@@ -154,7 +159,8 @@ class AnimationDigitalNetworkPlatform(
         animes: MutableMap<Int, PlatformAnime>,
         invalidShowReasons: MutableMap<Int, RejectionReason>
     ): IngestionVerdict.Rejected? {
-        val show = video.show
+        val show =
+video.show
 
         invalidShowReasons[show.id]?.let { memoizedReason ->
             return IngestionVerdict.rejected(

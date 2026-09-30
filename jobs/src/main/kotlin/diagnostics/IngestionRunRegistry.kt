@@ -18,7 +18,9 @@ class IngestionRunRegistry {
         runs.updateAndGet { it + (run.platform to run) }
     }
 
-    fun latestRun(platform: Platform): IngestionRun? = runs.get()[platform]
+    fun latestRun(platform: Platform): IngestionRun? =
+        runs.get()[platform]
 
-    fun latestRuns(): List<IngestionRun> = runs.get().values.sortedBy { it.platform.name }
+    fun latestRuns(): List<IngestionRun> =
+        runs.get().values.sortedBy { it.platform.name }
 }

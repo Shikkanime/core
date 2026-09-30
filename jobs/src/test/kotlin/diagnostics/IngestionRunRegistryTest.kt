@@ -18,7 +18,8 @@ class IngestionRunRegistryTest {
 
     private val fetchedAt = LocalDateTime(2026, 1, 10, 8, 0, 0)
 
-    private fun item(platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK, id: String = "1") = PlatformItem(
+    private fun item(platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK, id: String = "1") =
+PlatformItem(
         platform = platform,
         platformId = id,
         showTitle = "One Piece",
@@ -27,7 +28,8 @@ class IngestionRunRegistryTest {
         audioLocales = listOf("vostf")
     )
 
-    private fun episode(id: String = "1") = PlatformEpisode(
+    private fun episode(id: String = "1") =
+PlatformEpisode(
         anime = PlatformAnime(id = "1", title = "One Piece", description = null, thumbnail = "thumb"),
         id = id,
         title = "Episode $id",
