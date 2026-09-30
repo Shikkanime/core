@@ -15,6 +15,15 @@ import org.quartz.Job
 import org.quartz.JobExecutionContext
 import kotlin.time.Clock
 
+/**
+ * Diagnoses every platform on a schedule and keeps the last run of each in the registry.
+ *
+ * It runs on the ingestion cron rather than at a slower diagnostic interval because the whole
+ * point of the report is to explain what happened on the tick that just ran.
+ *
+ * @property platforms Every platform to diagnose, injected by Koin.
+ * @property registry Where each run is kept for later inspection.
+ */
 @DisallowConcurrentExecution
 @Single(binds = [Job::class])
 @Expression("*/20 * * * * ?")
@@ -29,7 +38,8 @@ class FetchLatestEpisodesJob(
      *
      * A platform that throws is recorded as a failed run rather than skipped: leaving the
      * previous run in place would show a stale result as if it were fresh, which is exactly the
-     * kind of silent loss this diagnosis is meant to rule out.
+     * kind of silent loss this diagnosis is meant to rule out. One broken platform does not stop
+     * the others.
      */
     override fun execute(context: JobExecutionContext) = runBlocking {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)

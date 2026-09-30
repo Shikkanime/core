@@ -3,9 +3,16 @@ package fr.shikkanime.jobs.platforms
 import fr.shikkanime.jobs.diagnostics.IngestionRun
 import fr.shikkanime.models.Platform
 
+/**
+ * A streaming platform the jobs module can ingest episodes from.
+ */
 interface StreamingPlatform {
+    /** Platform this implementation reads from. */
     val platform: Platform
 
+    /**
+     * Returns the episodes ready to be ingested right now.
+     */
     suspend fun fetchLatestEpisodes(): List<PlatformEpisode>
 
     /**
