@@ -1,6 +1,7 @@
 package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.jobs.SmartHttpClient
+import fr.shikkanime.jobs.perf.PerfBudget
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformEpisode
 import io.ktor.client.*
@@ -8,12 +9,20 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.*
 import java.lang.management.ManagementFactory
 import java.time.ZonedDateTime
 import kotlin.system.measureNanoTime
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AnimationDigitalNetworkPlatformPerformanceTest {
@@ -32,6 +41,51 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         Thread.sleep(100)
         System.gc()
         Thread.sleep(100)
+    }
+
+    /**
+     * Runs the mapping logic under a budget guard: prints the measures and then asserts
+     * the run stayed within [PerfBudget]. Throughput is the primary signal; allocation
+     * catches a regression that stays fast but bloats the heap (e.g. a lost memoization
+     * building a new list per video).
+     */
+    private fun measureAndAssert(
+        label: String,
+        episodeCount: Int,
+        expectedOutputSize: Int,
+        block: () -> List<PlatformEpisode>?
+    ): List<PlatformEpisode>? {
+        var output: List<PlatformEpisode>? = null
+        val measurement = PerfBudget.measure { output = block() }
+
+        val throughput = "%.0f".format(measurement.throughputPerSecond(episodeCount))
+        val megabytes = measurement.allocatedBytes / (1024 * 1024)
+        val bytesPerEpisode = measurement.allocatedBytes.toDouble() / episodeCount
+
+        println("  [$label] duration=" + "%.0f".format(measurement.durationMs) + " ms")
+        println("  [$label] throughput=$throughput episodes/sec")
+        println("  [$label] allocated=$megabytes MB (${"%.0f".format(bytesPerEpisode)} B/episode)")
+
+        val throughputFloor = PerfBudget.throughputFloor(episodeCount)
+        val allocationCeiling = PerfBudget.allocationCeiling(episodeCount)
+
+        assertTrue(
+            measurement.throughputPerSecond(episodeCount) >= throughputFloor,
+            "$label: throughput $throughput eps/s is below the floor " +
+                "${"%.0f".format(throughputFloor)} eps/s (regression or slow runner)"
+        )
+        assertTrue(
+            measurement.allocatedBytes <= allocationCeiling,
+            "$label: allocated $megabytes MB exceeds the ceiling " +
+                "${allocationCeiling / (1024 * 1024)} MB (memory regression)"
+        )
+        assertEquals(
+            expectedOutputSize,
+            output?.size,
+            "$label: the mapping produced an unexpected number of episodes"
+        )
+
+        return output
     }
 
     private fun getGcStats(): Pair<Long, Long> {
@@ -60,6 +114,66 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             }
         }
         return SmartHttpClient(client = httpClient)
+    }
+
+    /**
+     * Same client, but the calendar body is produced lazily and in chunks instead of
+     * being materialised as one [String].
+     *
+     * Buffering the payload costs three copies of the document in memory at once: the
+     * StringBuilder's char[] (2 bytes/char), the String returned by toString() (1 byte/char
+     * once compressed to Latin-1), and the String that bodyAsText() materialises. For a
+     * 1M-video calendar that is well over a gigabyte before a single episode is mapped.
+     * Streaming keeps only the current chunk resident.
+     */
+    private fun createStreamingMockClient(videoCount: Int): SmartHttpClient {
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = streamCalendar(videoCount),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        return SmartHttpClient(client = httpClient)
+    }
+
+    /**
+     * Emits `{"videos":[…]}` for [videoCount] videos as a sequence of small chunks, so
+     * the test never has to materialise the whole document itself.
+     */
+    private fun streamCalendar(videoCount: Int): ByteReadChannel {
+        val channel = ByteChannel()
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+        scope.launch {
+            try {
+                channel.writeString("{\"videos\":[")
+                for (i in 1..videoCount) {
+                    if (i > 1) channel.writeString(",")
+                    channel.writeString(
+                        """{"id":$i,"name":"Episode $i","shortNumber":"$i","type":"EPS",""" +
+                            """"image2x":"https://image.animationdigitalnetwork.com/video/$i/100x100/eps",""" +
+                            """"summary":"Summary $i","releaseDate":"2026-09-21T12:00:00Z",""" +
+                            """"show":{"id":1,"title":"One Piece","summary":"Show summary\\nDescription",""" +
+                            """"image2x":"https://image.animationdigitalnetwork.com/show/1/100x100/portrait-with-logo",""" +
+                            """"genres":["Animation japonaise"]}}"""
+                    )
+                }
+                channel.writeString("]}")
+                channel.close()
+            } catch (e: Throwable) {
+                channel.close(e)
+            } finally {
+                scope.cancel()
+            }
+        }
+
+        return channel
     }
 
     @Test
@@ -104,12 +218,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
         // Run the EXACT logic from AnimationDigitalNetworkPlatform.fetchLatestEpisodes
-        var resultList: List<PlatformEpisode>? = null
-        val durationNanos = measureNanoTime {
+        measureAndAssert(label = "benchmark-1-same-anime", episodeCount = 1_000_000, expectedOutputSize = 1_000_000) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
-            resultList = videos.mapNotNull { video ->
+            videos.mapNotNull { video ->
                 if (video.type in specialShowTypes) return@mapNotNull null
                 if (trailerIndicators.any { video.shortNumber.startsWith(it) }) return@mapNotNull null
 
@@ -144,10 +257,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        val durationMs = durationNanos / 1_000_000.0
-        println("Duration: ${"%.2f".format(durationMs)} ms (${"%.2f".format(durationMs / 1000.0)} s)")
-        println("Throughput: ${"%.0f".format(1_000_000.0 / (durationMs / 1000.0))} episodes/sec")
-        println("Output episodes count: ${resultList?.size}")
         println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
         println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
     }
@@ -191,12 +300,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        var resultList: List<PlatformEpisode>? = null
-        val durationNanos = measureNanoTime {
+        measureAndAssert(label = "benchmark-2-distinct-anime", episodeCount = 1_000_000, expectedOutputSize = 1_000_000) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
-            resultList = videos.mapNotNull { video ->
+            videos.mapNotNull { video ->
                 if (video.type in specialShowTypes) return@mapNotNull null
                 if (trailerIndicators.any { video.shortNumber.startsWith(it) }) return@mapNotNull null
 
@@ -231,10 +339,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        val durationMs = durationNanos / 1_000_000.0
-        println("Duration: ${"%.2f".format(durationMs)} ms (${"%.2f".format(durationMs / 1000.0)} s)")
-        println("Throughput: ${"%.0f".format(1_000_000.0 / (durationMs / 1000.0))} episodes/sec")
-        println("Output episodes count: ${resultList?.size}")
         println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
         println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
     }
@@ -294,12 +398,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        var resultList: List<PlatformEpisode>? = null
-        val durationNanos = measureNanoTime {
+        val resultList = measureAndAssert(label = "benchmark-3-realistic-catalog", episodeCount = 1_000_000, expectedOutputSize = 900_000) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
-            resultList = videos.mapNotNull { video ->
+            videos.mapNotNull { video ->
                 if (video.type in specialShowTypes) return@mapNotNull null
                 if (trailerIndicators.any { video.shortNumber.startsWith(it) }) return@mapNotNull null
 
@@ -334,9 +437,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        val durationMs = durationNanos / 1_000_000.0
-        println("Duration: ${"%.2f".format(durationMs)} ms (${"%.2f".format(durationMs / 1000.0)} s)")
-        println("Throughput: ${"%.0f".format(1_000_000.0 / (durationMs / 1000.0))} episodes/sec")
         println("Output episodes count: ${resultList?.size} (filtered out ~${1_000_000 - (resultList?.size ?: 0)})")
         println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
         println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
@@ -379,7 +479,18 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         } / 1_000_000.0
 
         println("Precompiled regex (reusing 3 Regex instances for 1M iterations): ${"%.2f".format(precompiledDurationMs)} ms")
-        println("Speedup factor for image URL transformation: ${"%.2f".format(currentDurationMs / precompiledDurationMs)}x faster!")
+
+        val speedup = currentDurationMs / precompiledDurationMs
+        println("Speedup factor for image URL transformation: ${"%.2f".format(speedup)}x faster!")
+
+        // The point of the precompiled regexes is that they are meaningfully faster. If a
+        // future JIT change makes recompiling free, this assertion is the signal to drop
+        // the optimisation rather than keep dead complexity.
+        assertTrue(
+            speedup >= PerfBudget.MIN_REGEX_SPEEDUP,
+            "benchmark-4: precompiled regex is only ${"%.2f".format(speedup)}x faster than recompiling " +
+                "(expected at least ${PerfBudget.MIN_REGEX_SPEEDUP}x) — the optimisation no longer pays off"
+        )
     }
 
     @Test
@@ -409,43 +520,40 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             }
         } / 1_000_000.0
         println("Pre-sized HashMap(1_333_334) (0 rehashes): ${"%.2f".format(preSizedMapDurationMs)} ms")
-        println("Speedup from pre-sizing: ${"%.2f".format(defaultMapDurationMs / preSizedMapDurationMs)}x faster!")
+
+        val speedup = defaultMapDurationMs / preSizedMapDurationMs
+        println("Speedup from pre-sizing: ${"%.2f".format(speedup)}x faster!")
+
+        assertTrue(
+            speedup >= PerfBudget.MIN_MAP_PRESIZE_SPEEDUP,
+            "benchmark-5: pre-sizing the map is only ${"%.2f".format(speedup)}x faster than the default " +
+                "(expected at least ${PerfBudget.MIN_MAP_PRESIZE_SPEEDUP}x) — the optimisation no longer pays off"
+        )
     }
 
     @Test
     @Order(6)
-    @DisplayName("Benchmark 6: End-to-End via AnimationDigitalNetworkPlatform.fetchLatestEpisodes with MockEngine (1M episodes)")
-    fun `benchmark end to end with MockEngine 1M`() = runBlocking {
+    @DisplayName("Benchmark 6: End-to-end through SmartHttpClient with a streamed calendar")
+    fun `benchmark end to end with MockEngine`() = runBlocking {
         println("\n=======================================================")
-        println("TEST 6: FULL END-TO-END with SmartHttpClient + MockEngine (1,000,000 EPISODES)")
+        println("TEST 6: FULL END-TO-END with SmartHttpClient + MockEngine (streamed body)")
         println("=======================================================")
 
         runGc()
 
-        println("Generating JSON for 1,000,000 episodes (same anime)...")
-        val sb = StringBuilder(220 * 1024 * 1024)
-        sb.append("{\"videos\":[")
-        for (i in 1..1_000_000) {
-            if (i > 1) sb.append(",")
-            sb.append("{\"id\":").append(i)
-                .append(",\"name\":\"Episode ").append(i).append("\"")
-                .append(",\"shortNumber\":\"").append(i).append("\"")
-                .append(",\"type\":\"EPS\"")
-                .append(",\"image2x\":\"https://image.animationdigitalnetwork.fr/video/").append(i).append("/100x100/eps\"")
-                .append(",\"summary\":\"Summary ").append(i).append("\"")
-                .append(",\"releaseDate\":\"2026-09-21T12:00:00Z\"")
-                .append(",\"show\":{\"id\":1")
-                .append(",\"title\":\"One Piece\"")
-                .append(",\"summary\":\"Show summary\\nDescription\"")
-                .append(",\"image2x\":\"https://image.animationdigitalnetwork.fr/show/1/100x100/portrait-with-logo\"")
-                .append(",\"genres\":[\"Animation japonaise\"]}}")
-        }
-        sb.append("]}")
-        val json = sb.toString()
-        val jsonMb = json.length / (1024 * 1024)
-        println("JSON generated: $jsonMb MB")
+        // The calendar is streamed rather than buffered as one String: buffering a payload
+        // this size costs three copies in memory at once (the StringBuilder's char[] at 2
+        // bytes/char, the String from toString(), and the String bodyAsText() materialises).
+        //
+        // Note that streaming only removes the copies the TEST creates. SmartHttpClient
+        // itself still calls bodyAsText() to compute the content hash before response.body<T>(),
+        // so the client buffers the document regardless. The real ADN calendar holds ~33
+        // videos, so this is not a production concern — but it is the reason a 1M-video
+        // payload cannot be benchmarked end-to-end on a small heap.
+        val videoCount = 100_000
+        println("Streaming a calendar of $videoCount videos...")
 
-        val client = createMockClient(json)
+        val client = createStreamingMockClient(videoCount)
         val platform = AnimationDigitalNetworkPlatform(client)
 
         // 1st call: Full pipeline
@@ -464,11 +572,20 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         // 2nd call: Cache hit (hasChanged = false)
         val duration2 = measureNanoTime {
             val episodes2 = platform.fetchLatestEpisodes()
-            assert(episodes2.size == episodes1?.size)
+            assertEquals(episodes1?.size, episodes2.size, "benchmark-6: the cached call returned a different episode count")
         } / 1_000_000.0
 
+        val cacheSpeedup = duration1 / duration2
         println("\n--- Second call (hasChanged = false: Cache hit / TTL fresh) ---")
         println("Duration: ${"%.4f".format(duration2)} ms")
-        println("Speedup from cache: ${"%.1f".format(duration1 / duration2)}x faster")
+        println("Speedup from cache: ${"%.1f".format(cacheSpeedup)}x faster")
+
+        // The whole point of the memoized list is that the second call is a cache hit. If
+        // this collapses, the hasChanged gate or the TTL logic has been broken.
+        assertTrue(
+            cacheSpeedup >= PerfBudget.MIN_CACHE_SPEEDUP,
+            "benchmark-6: the cached call is only ${"%.1f".format(cacheSpeedup)}x faster than the first " +
+                "(expected at least ${PerfBudget.MIN_CACHE_SPEEDUP}x) — caching no longer works"
+        )
     }
 }
