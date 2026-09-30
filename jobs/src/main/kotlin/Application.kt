@@ -1,5 +1,6 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.jobs.diagnostics.IngestionRunRegistry
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -46,8 +47,15 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
 suspend fun main() {
     val koin = startKoin<MyApp>().koin
 
-    koin.getAll<StreamingPlatform>().forEach { streamingPlatform ->
-        streamingPlatform.fetchLatestEpisodes().forEach(::println)
+    val platforms = koin.getAll<StreamingPlatform>()
+    val registry = koin.get<IngestionRunRegistry>()
+
+    platforms.forEach { platform ->
+        registry.record(platform.diagnoseLatestEpisodes())
+    }
+
+    registry.latestRuns().forEach { run ->
+        println(run.describe())
     }
 
     exitProcess(0)

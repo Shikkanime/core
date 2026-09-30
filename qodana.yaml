@@ -1,0 +1,23 @@
+####################################################################################################################
+# WARNING: Do not store sensitive information in this file, as its contents will be included in the Qodana report. #
+####################################################################################################################
+version: "1.0"
+profile:
+  name: qodana.recommended
+exclude:
+  - name: UnusedSymbol
+    paths:
+      - api/src/main/kotlin
+      - site/src/main/kotlin
+      - admin/src/main/kotlin
+bootstrap: mkdir -p ./.qodana/code-coverage/ && find ./jobs/build/reports/kover ./database/build/reports/kover ./models/build/reports/kover ./admin/build/reports/kover -name '*.xml' -exec cp {} ./.qodana/code-coverage/ \; 2>/dev/null || true
+coverage:
+  reportProblems: true
+failureConditions:
+  severityThresholds:
+    critical: 0
+    high: 10
+    any: 100
+  testCoverageThresholds:
+    total: 80
+    fresh: 80

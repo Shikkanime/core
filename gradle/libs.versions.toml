@@ -6,9 +6,11 @@ quartz = "2.5.2"
 h2 = "2.4.240"
 junitJupiter = "6.1.2"
 mockk = "1.14.11"
+kover = "0.9.9"
 
 [libraries]
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+koverGradlePlugin = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
 
 # Shikkanime Framework
 shikkanimeFrameworkCore = { module = "fr.shikkanime.framework:core", version.ref = "shikkanimeFramework" }
@@ -29,6 +31,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 testEcosystem = ["junitJupiterApi", "junitJupiterEngine", "mockk"]
 
 [plugins]
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shikkanimeFrameworkKtor = { id = "fr.shikkanime.framework.ktor", version.ref = "shikkanimeFramework" }
 shikkanimeFrameworkKoin = { id = "fr.shikkanime.framework.koin", version.ref = "shikkanimeFramework" }

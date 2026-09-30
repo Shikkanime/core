@@ -8,6 +8,7 @@ version = providers.gradleProperty("version").orNull ?: "1.0.0-SNAPSHOT"
 plugins {
     kotlin("jvm")
     `java-library`
+    id("org.jetbrains.kotlinx.kover")
 }
 
 kotlin {
