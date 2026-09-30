@@ -9,6 +9,12 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.*
@@ -108,6 +114,66 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             }
         }
         return SmartHttpClient(client = httpClient)
+    }
+
+    /**
+     * Same client, but the calendar body is produced lazily and in chunks instead of
+     * being materialised as one [String].
+     *
+     * Buffering the payload costs three copies of the document in memory at once: the
+     * StringBuilder's char[] (2 bytes/char), the String returned by toString() (1 byte/char
+     * once compressed to Latin-1), and the String that bodyAsText() materialises. For a
+     * 1M-video calendar that is well over a gigabyte before a single episode is mapped.
+     * Streaming keeps only the current chunk resident.
+     */
+    private fun createStreamingMockClient(videoCount: Int): SmartHttpClient {
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = streamCalendar(videoCount),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+        val httpClient = HttpClient(mockEngine) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
+        return SmartHttpClient(client = httpClient)
+    }
+
+    /**
+     * Emits `{"videos":[…]}` for [videoCount] videos as a sequence of small chunks, so
+     * the test never has to materialise the whole document itself.
+     */
+    private fun streamCalendar(videoCount: Int): ByteReadChannel {
+        val channel = ByteChannel()
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+        scope.launch {
+            try {
+                channel.writeString("{\"videos\":[")
+                for (i in 1..videoCount) {
+                    if (i > 1) channel.writeString(",")
+                    channel.writeString(
+                        """{"id":$i,"name":"Episode $i","shortNumber":"$i","type":"EPS",""" +
+                            """"image2x":"https://image.animationdigitalnetwork.com/video/$i/100x100/eps",""" +
+                            """"summary":"Summary $i","releaseDate":"2026-09-21T12:00:00Z",""" +
+                            """"show":{"id":1,"title":"One Piece","summary":"Show summary\\nDescription",""" +
+                            """"image2x":"https://image.animationdigitalnetwork.com/show/1/100x100/portrait-with-logo",""" +
+                            """"genres":["Animation japonaise"]}}"""
+                    )
+                }
+                channel.writeString("]}")
+                channel.close()
+            } catch (e: Throwable) {
+                channel.close(e)
+            } finally {
+                scope.cancel()
+            }
+        }
+
+        return channel
     }
 
     @Test
@@ -467,38 +533,27 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
     @Test
     @Order(6)
-    @DisplayName("Benchmark 6: End-to-End via AnimationDigitalNetworkPlatform.fetchLatestEpisodes with MockEngine (1M episodes)")
-    fun `benchmark end to end with MockEngine 1M`() = runBlocking {
+    @DisplayName("Benchmark 6: End-to-end through SmartHttpClient with a streamed calendar")
+    fun `benchmark end to end with MockEngine`() = runBlocking {
         println("\n=======================================================")
-        println("TEST 6: FULL END-TO-END with SmartHttpClient + MockEngine (1,000,000 EPISODES)")
+        println("TEST 6: FULL END-TO-END with SmartHttpClient + MockEngine (streamed body)")
         println("=======================================================")
 
         runGc()
 
-        println("Generating JSON for 1,000,000 episodes (same anime)...")
-        val sb = StringBuilder(220 * 1024 * 1024)
-        sb.append("{\"videos\":[")
-        for (i in 1..1_000_000) {
-            if (i > 1) sb.append(",")
-            sb.append("{\"id\":").append(i)
-                .append(",\"name\":\"Episode ").append(i).append("\"")
-                .append(",\"shortNumber\":\"").append(i).append("\"")
-                .append(",\"type\":\"EPS\"")
-                .append(",\"image2x\":\"https://image.animationdigitalnetwork.fr/video/").append(i).append("/100x100/eps\"")
-                .append(",\"summary\":\"Summary ").append(i).append("\"")
-                .append(",\"releaseDate\":\"2026-09-21T12:00:00Z\"")
-                .append(",\"show\":{\"id\":1")
-                .append(",\"title\":\"One Piece\"")
-                .append(",\"summary\":\"Show summary\\nDescription\"")
-                .append(",\"image2x\":\"https://image.animationdigitalnetwork.fr/show/1/100x100/portrait-with-logo\"")
-                .append(",\"genres\":[\"Animation japonaise\"]}}")
-        }
-        sb.append("]}")
-        val json = sb.toString()
-        val jsonMb = json.length / (1024 * 1024)
-        println("JSON generated: $jsonMb MB")
+        // The calendar is streamed rather than buffered as one String: buffering a payload
+        // this size costs three copies in memory at once (the StringBuilder's char[] at 2
+        // bytes/char, the String from toString(), and the String bodyAsText() materialises).
+        //
+        // Note that streaming only removes the copies the TEST creates. SmartHttpClient
+        // itself still calls bodyAsText() to compute the content hash before response.body<T>(),
+        // so the client buffers the document regardless. The real ADN calendar holds ~33
+        // videos, so this is not a production concern — but it is the reason a 1M-video
+        // payload cannot be benchmarked end-to-end on a small heap.
+        val videoCount = 100_000
+        println("Streaming a calendar of $videoCount videos...")
 
-        val client = createMockClient(json)
+        val client = createStreamingMockClient(videoCount)
         val platform = AnimationDigitalNetworkPlatform(client)
 
         // 1st call: Full pipeline
