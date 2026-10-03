@@ -11,7 +11,7 @@ abstract class AbstractAnimationDigitalNetworkWrapper : IStreamingPlatformWrappe
         private val sizeRegex = "\\d+x\\d+".toRegex()
         private val licenceSizeRegex = "\\d+x\\d+".toRegex()
         private val epsRegex = "/eps$".toRegex()
-        private val afficheRegex = "/portrait-with-logo$".toRegex()
+        private val afficheRegex = "/portrait-with-logo(\\..*)?$".toRegex()
         private val licenseRegex = "/landscape-with-logo(\\..*)?$".toRegex()
     }
 

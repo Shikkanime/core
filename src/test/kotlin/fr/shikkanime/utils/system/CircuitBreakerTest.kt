@@ -1,10 +1,14 @@
 package fr.shikkanime.utils.system
 
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.cancellation.CancellationException
 
 class CircuitBreakerTest {
 
@@ -17,9 +21,16 @@ class CircuitBreakerTest {
         circuitBreaker = CircuitBreaker("test", failureThreshold, recoveryTimeout)
     }
 
+    private fun trip() {
+        repeat(failureThreshold) {
+            circuitBreaker.execute(action = { throw RuntimeException("Failure") }, fallback = { "FALLBACK" })
+        }
+    }
+
     @Test
     fun `should be in CLOSED state initially`() {
         assertTrue(circuitBreaker.isAvailable())
+        assertEquals(CircuitBreaker.State.CLOSED, circuitBreaker.getState())
     }
 
     @Test
@@ -39,27 +50,24 @@ class CircuitBreakerTest {
         }
 
         assertFalse(circuitBreaker.isAvailable())
+        assertEquals(CircuitBreaker.State.OPEN, circuitBreaker.getState())
     }
 
     @Test
     fun `should execute fallback immediately when in OPEN state`() {
-        // Trip the circuit breaker
-        repeat(failureThreshold) {
-            circuitBreaker.execute(action = { throw RuntimeException("Failure") }, fallback = { "FALLBACK" })
-        }
+        trip()
         assertFalse(circuitBreaker.isAvailable())
 
         // Attempt another call
-        val result = circuitBreaker.execute(action = { "SUCCESS" }, fallback = { "FALLBACK" })
+        val actionCalls = AtomicInteger(0)
+        val result = circuitBreaker.execute(action = { actionCalls.incrementAndGet(); "SUCCESS" }, fallback = { "FALLBACK" })
         assertEquals("FALLBACK", result)
+        assertEquals(0, actionCalls.get())
     }
 
     @Test
     fun `should transition to HALF_OPEN state after recovery timeout`() {
-        // Trip the circuit breaker
-        repeat(failureThreshold) {
-            circuitBreaker.execute(action = { throw RuntimeException("Failure") }, fallback = { "FALLBACK" })
-        }
+        trip()
         assertFalse(circuitBreaker.isAvailable())
 
         // Wait for the recovery timeout
@@ -73,10 +81,7 @@ class CircuitBreakerTest {
 
     @Test
     fun `should transition to CLOSED state from HALF_OPEN after a successful call`() {
-        // Trip the circuit breaker
-        repeat(failureThreshold) {
-            circuitBreaker.execute(action = { throw RuntimeException("Failure") }, fallback = { "FALLBACK" })
-        }
+        trip()
         assertFalse(circuitBreaker.isAvailable())
 
         // Wait for the recovery timeout
@@ -86,6 +91,69 @@ class CircuitBreakerTest {
         val result = circuitBreaker.execute(action = { "SUCCESS" }, fallback = { "FALLBACK" })
         assertEquals("SUCCESS", result)
         assertTrue(circuitBreaker.isAvailable()) // Should be back to CLOSED
+    }
+
+    @Test
+    fun `should support suspending action and fallback`() = runBlocking {
+        val result = circuitBreaker.execute(
+            action = {
+                delay(1)
+                "SUCCESS"
+            },
+            fallback = {
+                delay(1)
+                "FALLBACK"
+            }
+        )
+        assertEquals("SUCCESS", result)
+
+        val fallbackResult = circuitBreaker.execute(
+            action = {
+                delay(1)
+                throw RuntimeException("Failure")
+            },
+            fallback = {
+                delay(1)
+                "FALLBACK"
+            }
+        )
+        assertEquals("FALLBACK", fallbackResult)
+    }
+
+    @Test
+    fun `should rethrow CancellationException without counting it as a failure`() {
+        repeat(failureThreshold) {
+            assertThrows<CancellationException> {
+                circuitBreaker.execute(action = { throw CancellationException("Cancelled") }, fallback = { "FALLBACK" })
+            }
+        }
+
+        assertTrue(circuitBreaker.isAvailable())
+        assertEquals(CircuitBreaker.State.CLOSED, circuitBreaker.getState())
+    }
+
+    @Test
+    fun `should propagate exception thrown by the fallback`() {
+        assertThrows<IllegalStateException> {
+            circuitBreaker.execute(action = { throw RuntimeException("Failure") }, fallback = { throw IllegalStateException("Unavailable") })
+        }
+
+        trip()
+
+        assertThrows<IllegalStateException> {
+            circuitBreaker.execute(action = { "SUCCESS" }, fallback = { throw IllegalStateException("Unavailable") })
+        }
+    }
+
+    @Test
+    fun `should be CLOSED after a manual reset`() {
+        trip()
+        assertFalse(circuitBreaker.isAvailable())
+
+        circuitBreaker.reset()
+
+        assertTrue(circuitBreaker.isAvailable())
+        assertEquals("SUCCESS", circuitBreaker.execute(action = { "SUCCESS" }, fallback = { "FALLBACK" }))
     }
 
     @Test
@@ -125,4 +193,3 @@ class CircuitBreakerTest {
         assertTrue(fallbackCounter.get() > 0)
     }
 }
-

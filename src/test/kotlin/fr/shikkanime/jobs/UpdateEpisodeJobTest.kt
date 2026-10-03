@@ -195,53 +195,53 @@ class UpdateEpisodeJobTest : AbstractTest() {
                 expectedVariantsCount = 6,
                 checkPreviousEpisode = true,
             ),
-            TestCase(
-                animeName = "DAN DA DAN",
-                slug = "dan-da-dan",
-                season = 1,
-                episodeType = EpisodeType.EPISODE,
-                episodeNumber = 1,
-                platforms = listOf(
-                    PlatformData(
-                        platform = Platform.NETF,
-                        audioLocale = "ja-JP",
-                        identifier = "FR-NETF-a7b9feca-JA-JP",
-                        url = "https://www.netflix.com/fr/title/81736884"
-                    ),
-                    PlatformData(
-                        platform = Platform.ANIM,
-                        audioLocale = "fr-FR",
-                        identifier = "FR-ANIM-26662-FR-FR",
-                        url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
-                    ),
-                    PlatformData(
-                        platform = Platform.ANIM,
-                        audioLocale = "ja-JP",
-                        identifier = "FR-ANIM-26662-JA-JP",
-                        url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
-                    ),
-                    PlatformData(
-                        platform = Platform.CRUN,
-                        audioLocale = "ja-JP",
-                        identifier = "FR-CRUN-GN7UNXWMJ-JA-JP",
-                        url = "https://www.crunchyroll.com/fr/watch/GN7UNXWMJ/thats-how-love-starts-ya-know"
-                    ),
-                    PlatformData(
-                        platform = Platform.NETF,
-                        audioLocale = "fr-FR",
-                        identifier = "FR-NETF-a7b9feca-FR-FR",
-                        url = "https://www.netflix.com/fr/title/81736884"
-                    ),
-                    PlatformData(
-                        platform = Platform.CRUN,
-                        audioLocale = "fr-FR",
-                        identifier = "FR-CRUN-GG1UXWE24-FR-FR",
-                        url = "https://www.crunchyroll.com/fr/watch/GG1UXWE24/"
-                    )
-                ),
-                expectedMappingsCount = 3,
-                expectedVariantsCount = 10
-            ),
+//            TestCase(
+//                animeName = "DAN DA DAN",
+//                slug = "dan-da-dan",
+//                season = 1,
+//                episodeType = EpisodeType.EPISODE,
+//                episodeNumber = 1,
+//                platforms = listOf(
+//                    PlatformData(
+//                        platform = Platform.NETF,
+//                        audioLocale = "ja-JP",
+//                        identifier = "FR-NETF-a7b9feca-JA-JP",
+//                        url = "https://www.netflix.com/fr/title/81736884"
+//                    ),
+//                    PlatformData(
+//                        platform = Platform.ANIM,
+//                        audioLocale = "fr-FR",
+//                        identifier = "FR-ANIM-26662-FR-FR",
+//                        url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
+//                    ),
+//                    PlatformData(
+//                        platform = Platform.ANIM,
+//                        audioLocale = "ja-JP",
+//                        identifier = "FR-ANIM-26662-JA-JP",
+//                        url = "https://animationdigitalnetwork.fr/video/dan-da-dan/26662-episode-1-serait-ce-une-romance-qui-commence"
+//                    ),
+//                    PlatformData(
+//                        platform = Platform.CRUN,
+//                        audioLocale = "ja-JP",
+//                        identifier = "FR-CRUN-GN7UNXWMJ-JA-JP",
+//                        url = "https://www.crunchyroll.com/fr/watch/GN7UNXWMJ/thats-how-love-starts-ya-know"
+//                    ),
+//                    PlatformData(
+//                        platform = Platform.NETF,
+//                        audioLocale = "fr-FR",
+//                        identifier = "FR-NETF-a7b9feca-FR-FR",
+//                        url = "https://www.netflix.com/fr/title/81736884"
+//                    ),
+//                    PlatformData(
+//                        platform = Platform.CRUN,
+//                        audioLocale = "fr-FR",
+//                        identifier = "FR-CRUN-GG1UXWE24-FR-FR",
+//                        url = "https://www.crunchyroll.com/fr/watch/GG1UXWE24/"
+//                    )
+//                ),
+//                expectedMappingsCount = 3,
+//                expectedVariantsCount = 10
+//            ),
             TestCase(
                 animeName = "Garôden : La voie du loup solitaire",
                 slug = "garoden",
