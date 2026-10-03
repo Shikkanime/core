@@ -16,7 +16,7 @@ object ShikkanimeWorkerWrapper : AbstractShikkanimeWorkerWrapper() {
         val response = HttpRequest.post(
             "$baseUrl/netflix-episodes${if (bypass) "?bypass=true" else ""}",
             headers = mapOf(HttpHeaders.ContentType to ContentType.Application.Json.toString()),
-            timeout = 300_000,
+            timeout = if (bypass) 300_000 else 100_000,
             body = Request(
                 ids = ids.toList(),
                 netflixId = netflixId,
