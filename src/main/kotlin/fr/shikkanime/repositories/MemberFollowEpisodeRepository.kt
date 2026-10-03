@@ -61,6 +61,26 @@ class MemberFollowEpisodeRepository : AbstractRepository<MemberFollowEpisode>() 
         }
     }
 
+    suspend fun filterFollowedEpisodeUUIDs(memberUuid: UUID, list: List<UUID>): List<UUID> {
+        return dispatch {
+            val cb = it.criteriaBuilder
+            val query = cb.createQuery(UUID::class.java)
+            val root = query.from(entityClass)
+            query.distinct(true)
+                .select(root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid])
+
+            query.where(
+                cb.and(
+                    cb.equal(root[MemberFollowEpisode_.member][Member_.uuid], memberUuid),
+                    root[MemberFollowEpisode_.episode][EpisodeMapping_.uuid].`in`(list)
+                )
+            )
+
+            createReadOnlyQuery(it, query)
+                .resultList
+        }
+    }
+
     suspend fun findAllByEpisode(episode: EpisodeMapping): List<MemberFollowEpisode> {
         return dispatch {
             val cb = it.criteriaBuilder
