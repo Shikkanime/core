@@ -4,6 +4,7 @@ import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.perf.PerfBudget
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformEpisode
+import fr.shikkanime.models.EpisodeType
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -28,8 +29,10 @@ import kotlin.test.assertTrue
 class AnimationDigitalNetworkPlatformPerformanceTest {
 
     private val sampleDate: ZonedDateTime = ZonedDateTime.parse("2026-09-21T12:00:00Z")
-    private val specialShowTypes = listOf(AdnVideoType.PV, AdnVideoType.BONUS)
-    private val trailerIndicators = listOf("Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of")
+    private val specialShowTypes = listOf(AdnType.PV, AdnType.BONUS)
+    private val trailerIndicators = listOf(
+        "Bande-annonce", "Bande annonce", "Court-métrage", "Opening", "Making-of"
+    )
 
     private fun getUsedMemoryMb(): Long {
         val runtime = Runtime.getRuntime()
@@ -156,11 +159,17 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                 for (i in 1..videoCount) {
                     if (i > 1) channel.writeString(",")
                     channel.writeString(
-                        """{"id":$i,"name":"Episode $i","shortNumber":"$i","type":"EPS",""" +
-                            """"image2x":"https://image.animationdigitalnetwork.com/video/$i/100x100/eps",""" +
-                            """"summary":"Summary $i","releaseDate":"2026-09-21T12:00:00Z",""" +
-                            """"show":{"id":1,"title":"One Piece","summary":"Show summary\\nDescription",""" +
-                            """"image2x":"https://image.animationdigitalnetwork.com/show/1/100x100/portrait-with-logo",""" +
+                        """{"id":$i,"name":"Episode $i","title":null,"shortNumber":"$i",""" +
+                            """"season":"1","type":"EPS",""" +
+                            """"image2x":"https://image.animationdigitalnetwork.com/video/""" +
+                            """$i/100x100/eps","summary":"Summary $i",""" +
+                            """"releaseDate":"2026-09-21T12:00:00Z","duration":1440,""" +
+                            """"url":"https://animationdigitalnetwork.com/video/$i",""" +
+                            """"languages":["vostf"],"show":{"id":1,"title":"One Piece",""" +
+                            """"shortTitle":null,"originalTitle":null,""" +
+                            """"summary":"Show summary\\nDescription",""" +
+                            """"image2x":"https://image.animationdigitalnetwork.com/show/""" +
+                            """1/100x100/portrait-with-logo","imageHorizontal2x":null,""" +
                             """"genres":["Animation japonaise"]}}"""
                     )
                 }
@@ -190,8 +199,12 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val show = AdnShow(
             id = 1,
             title = "One Piece",
+            shortTitle = null,
+            originalTitle = null,
             summary = "Show description\nWith multiple lines",
             image2x = "https://image.animationdigitalnetwork.fr/show/1/100x100/portrait-with-logo",
+            imageHorizontal2x = null,
+            type = null,
             genres = listOf("Animation japonaise", "Action")
         )
 
@@ -202,11 +215,16 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                 AdnVideo(
                     id = i,
                     name = "Episode $i",
+                    title = null,
                     shortNumber = "$i",
-                    type = AdnVideoType.EPS,
+                    season = null,
+                    type = AdnType.EPS,
                     image2x = "https://image.animationdigitalnetwork.fr/video/$i/100x100/eps",
                     summary = "Summary of episode $i",
                     releaseDate = sampleDate,
+                    duration = 1430L,
+                    url = "https://animationdigitalnetwork.fr/video/$i",
+                    languages = listOf("vostf"),
                     show = show
                 )
             )
@@ -217,8 +235,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        // Run the EXACT logic from AnimationDigitalNetworkPlatform.fetchLatestEpisodes
-        measureAndAssert(label = "benchmark-1-same-anime", episodeCount = 1_000_000, expectedOutputSize = 1_000_000) {
+        measureAndAssert(
+            label = "benchmark-1-same-anime",
+            episodeCount = 1_000_000,
+            expectedOutputSize = 1_000_000
+        ) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
@@ -240,6 +261,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                         title = currentShow.title,
                         description = currentShow.summary?.replace("\n", ""),
                         thumbnail = currentShow.thumbnail,
+                        banner = currentShow.banner
                     ).also { animes[currentShow.id] = it }
                 }
 
@@ -249,7 +271,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                     title = video.name,
                     description = video.summary,
                     image = video.image,
-                    releaseDateTime = video.releaseDate
+                    releaseDateTime = video.releaseDate,
+                    season = video.parsedSeason,
+                    number = 1,
+                    episodeType = EpisodeType.EPISODE,
+                    duration = video.duration,
+                    url = video.url,
+                    audioLocale = "ja-JP",
+                    uncensored = false,
+                    original = true
                 )
             }
         }
@@ -257,8 +287,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
-        println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
+        val memDelta1 = memAfterProcess - memAfterGen
+        println("Memory delta during processing: $memDelta1 MB (Total: $memAfterProcess MB)")
+        val gcDelta1 = gcCountAfter - gcCountBefore
+        val gcTimeDelta1 = gcTimeAfter - gcTimeBefore
+        println("GC Collections: $gcDelta1, GC Time: $gcTimeDelta1 ms")
     }
 
     @Test
@@ -277,19 +310,28 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             val show = AdnShow(
                 id = i,
                 title = "Anime Title $i",
+                shortTitle = null,
+                originalTitle = null,
                 summary = "Anime description $i\nLine 2",
                 image2x = "https://image.animationdigitalnetwork.fr/show/$i/100x100/portrait-with-logo",
+                imageHorizontal2x = null,
+                type = null,
                 genres = listOf("Animation japonaise", "Action")
             )
             videos.add(
                 AdnVideo(
                     id = i,
                     name = "Episode 1",
+                    title = null,
                     shortNumber = "1",
-                    type = AdnVideoType.EPS,
+                    season = null,
+                    type = AdnType.EPS,
                     image2x = "https://image.animationdigitalnetwork.fr/video/$i/100x100/eps",
                     summary = "Summary of episode $i",
                     releaseDate = sampleDate,
+                    duration = 1430L,
+                    url = "https://animationdigitalnetwork.fr/video/$i",
+                    languages = listOf("vostf"),
                     show = show
                 )
             )
@@ -300,7 +342,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        measureAndAssert(label = "benchmark-2-distinct-anime", episodeCount = 1_000_000, expectedOutputSize = 1_000_000) {
+        measureAndAssert(
+            label = "benchmark-2-distinct-anime",
+            episodeCount = 1_000_000,
+            expectedOutputSize = 1_000_000
+        ) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
@@ -322,6 +368,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                         title = currentShow.title,
                         description = currentShow.summary?.replace("\n", ""),
                         thumbnail = currentShow.thumbnail,
+                        banner = currentShow.banner
                     ).also { animes[currentShow.id] = it }
                 }
 
@@ -331,7 +378,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                     title = video.name,
                     description = video.summary,
                     image = video.image,
-                    releaseDateTime = video.releaseDate
+                    releaseDateTime = video.releaseDate,
+                    season = video.parsedSeason,
+                    number = 1,
+                    episodeType = EpisodeType.EPISODE,
+                    duration = video.duration,
+                    url = video.url,
+                    audioLocale = "ja-JP",
+                    uncensored = false,
+                    original = true
                 )
             }
         }
@@ -339,8 +394,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
-        println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
+        val memDelta1 = memAfterProcess - memAfterGen
+        println("Memory delta during processing: $memDelta1 MB (Total: $memAfterProcess MB)")
+        val gcDelta1 = gcCountAfter - gcCountBefore
+        val gcTimeDelta1 = gcTimeAfter - gcTimeBefore
+        println("GC Collections: $gcDelta1, GC Time: $gcTimeDelta1 ms")
     }
 
     @Test
@@ -359,9 +417,17 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             AdnShow(
                 id = i + 1,
                 title = "Anime Title ${i + 1}",
+                shortTitle = null,
+                originalTitle = null,
                 summary = "Anime description ${i + 1}\nLine 2",
                 image2x = "https://image.animationdigitalnetwork.fr/show/${i + 1}/100x100/portrait-with-logo",
-                genres = if (isLiveAction) listOf("Live Action", "Drama") else listOf("Animation japonaise", "Action")
+                imageHorizontal2x = null,
+                type = null,
+                genres = if (isLiveAction) {
+                    listOf("Live Action", "Drama")
+                } else {
+                    listOf("Animation japonaise", "Action")
+                }
             )
         }
 
@@ -369,9 +435,9 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         for (i in 1..1_000_000) {
             val show = shows[i % 1000]
             val videoType = when {
-                i % 50 == 0 -> AdnVideoType.PV // 2% PV
-                i % 100 == 0 -> AdnVideoType.BONUS // 1% Bonus
-                else -> AdnVideoType.EPS
+                i % 50 == 0 -> AdnType.PV // 2% PV
+                i % 100 == 0 -> AdnType.BONUS // 1% Bonus
+                else -> AdnType.EPS
             }
             val shortNumber = when {
                 i % 40 == 0 -> "Bande-annonce 1"
@@ -383,11 +449,16 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                 AdnVideo(
                     id = i,
                     name = "Episode $i",
+                    title = null,
                     shortNumber = shortNumber,
+                    season = null,
                     type = videoType,
                     image2x = "https://image.animationdigitalnetwork.fr/video/$i/100x100/eps",
                     summary = "Summary of episode $i",
                     releaseDate = sampleDate,
+                    duration = 1430L,
+                    url = "https://animationdigitalnetwork.fr/video/$i",
+                    languages = listOf("vostf"),
                     show = show
                 )
             )
@@ -398,7 +469,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
         val (gcCountBefore, gcTimeBefore) = getGcStats()
 
-        val resultList = measureAndAssert(label = "benchmark-3-realistic-catalog", episodeCount = 1_000_000, expectedOutputSize = 900_000) {
+        val resultList = measureAndAssert(
+            label = "benchmark-3-realistic-catalog",
+            episodeCount = 1_000_000,
+            expectedOutputSize = 900_000
+        ) {
             val animes = mutableMapOf<Int, PlatformAnime>()
             val invalidShowIds = mutableSetOf<Int>()
 
@@ -420,6 +495,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                         title = currentShow.title,
                         description = currentShow.summary?.replace("\n", ""),
                         thumbnail = currentShow.thumbnail,
+                        banner = currentShow.banner
                     ).also { animes[currentShow.id] = it }
                 }
 
@@ -429,7 +505,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                     title = video.name,
                     description = video.summary,
                     image = video.image,
-                    releaseDateTime = video.releaseDate
+                    releaseDateTime = video.releaseDate,
+                    season = video.parsedSeason,
+                    number = 1,
+                    episodeType = EpisodeType.EPISODE,
+                    duration = video.duration,
+                    url = video.url,
+                    audioLocale = "ja-JP",
+                    uncensored = false,
+                    original = true
                 )
             }
         }
@@ -437,9 +521,13 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val (gcCountAfter, gcTimeAfter) = getGcStats()
         val memAfterProcess = getUsedMemoryMb()
 
-        println("Output episodes count: ${resultList?.size} (filtered out ~${1_000_000 - (resultList?.size ?: 0)})")
-        println("Memory delta during processing: ${memAfterProcess - memAfterGen} MB (Total: $memAfterProcess MB)")
-        println("GC Collections during test: ${gcCountAfter - gcCountBefore}, GC Time: ${gcTimeAfter - gcTimeBefore} ms")
+        val filteredOut = 1_000_000 - (resultList?.size ?: 0)
+        println("Output episodes count: ${resultList?.size} (filtered out ~$filteredOut)")
+        val memDelta1 = memAfterProcess - memAfterGen
+        println("Memory delta during processing: $memDelta1 MB (Total: $memAfterProcess MB)")
+        val gcDelta1 = gcCountAfter - gcCountBefore
+        val gcTimeDelta1 = gcTimeAfter - gcTimeBefore
+        println("GC Collections: $gcDelta1, GC Time: $gcTimeDelta1 ms")
     }
 
     @Test
@@ -459,11 +547,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             for (i in 1..count) {
                 dummy = sampleUrl.replace("\\d+x\\d+".toRegex(), "1920x1080")
                     .replace("/eps$".toRegex(), "/eps.width=1920,height=1080,quality=100")
-                    .replace("/landscape-with-logo$".toRegex(), "/landscape-with-logo.width=1920,height=1080,quality=100")
+                    .replace(
+                        "/landscape-with-logo$".toRegex(),
+                        "/landscape-with-logo.width=1920,height=1080,quality=100"
+                    )
             }
         } / 1_000_000.0
 
-        println("Current approach (3 .toRegex() recompiled per episode * 1M = 3M compilations): ${"%.2f".format(currentDurationMs)} ms")
+        val formattedCur = "%.2f".format(currentDurationMs)
+        println("Current approach (3M compilations): $formattedCur ms")
 
         // 2. Precompiled regex
         val regex1 = "\\d+x\\d+".toRegex()
@@ -478,7 +570,8 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
             }
         } / 1_000_000.0
 
-        println("Precompiled regex (reusing 3 Regex instances for 1M iterations): ${"%.2f".format(precompiledDurationMs)} ms")
+        val formattedPre = "%.2f".format(precompiledDurationMs)
+        println("Precompiled regex (3 Regex instances): $formattedPre ms")
 
         val speedup = currentDurationMs / precompiledDurationMs
         println("Speedup factor for image URL transformation: ${"%.2f".format(speedup)}x faster!")
@@ -501,7 +594,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         println("TEST 5: BOTTLENECK DEEP-DIVE - Map Resizing & Boxing (1M insertions)")
         println("=======================================================")
 
-        val dummyAnime = PlatformAnime("1", "Title", "Desc", "Thumb")
+        val dummyAnime = PlatformAnime("1", "Title", "Desc", "Thumb", null)
 
         // Default HashMap (capacity 16, rehashes 16+ times)
         val defaultMapDurationMs = measureNanoTime {
@@ -527,7 +620,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         assertTrue(
             speedup >= PerfBudget.MIN_MAP_PRESIZE_SPEEDUP,
             "benchmark-5: pre-sizing the map is only ${"%.2f".format(speedup)}x faster than the default " +
-                "(expected at least ${PerfBudget.MIN_MAP_PRESIZE_SPEEDUP}x) — the optimisation no longer pays off"
+                "(expected >= ${PerfBudget.MIN_MAP_PRESIZE_SPEEDUP}x) — optimisation no longer pays off"
         )
     }
 
@@ -564,7 +657,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         } / 1_000_000.0
         val (gcCount2, gcTime2) = getGcStats()
 
-        println("\n--- First call (hasChanged = true: Network + bodyAsText + hash + JSON parse + Mapping) ---")
+        println("\n--- First call (hasChanged = true: Network + hash + JSON parse + Mapping) ---")
         println("Total Duration: ${"%.2f".format(duration1)} ms (${"%.2f".format(duration1 / 1000.0)} s)")
         println("Fetched: ${episodes1?.size} episodes")
         println("GC Collections: ${gcCount2 - gcCount1}, GC Time: ${gcTime2 - gcTime1} ms")
@@ -572,7 +665,11 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         // 2nd call: Cache hit (hasChanged = false)
         val duration2 = measureNanoTime {
             val episodes2 = platform.fetchLatestEpisodes()
-            assertEquals(episodes1?.size, episodes2.size, "benchmark-6: the cached call returned a different episode count")
+            assertEquals(
+                episodes1?.size,
+                episodes2.size,
+                "benchmark-6: cached call returned different count"
+            )
         } / 1_000_000.0
 
         val cacheSpeedup = duration1 / duration2
