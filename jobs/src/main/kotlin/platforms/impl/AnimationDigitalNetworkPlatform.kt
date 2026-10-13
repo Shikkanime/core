@@ -1,11 +1,16 @@
 package fr.shikkanime.jobs.platforms.impl
 
+import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.ZonedDateTimeSerializer
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformEpisode
+import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
 import fr.shikkanime.jobs.platforms.StreamingPlatform
+import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
+import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.ktor.http.HttpHeaders
 import kotlinx.datetime.LocalDate
@@ -34,10 +39,33 @@ private val TRAILER_INDICATORS = listOf(
     "Making-of"
 )
 private val SPECIAL_SHOW_TYPES = setOf(AdnType.PV, AdnType.BONUS)
-private val LOCALE_MAP = mapOf(
-    "vostf" to "ja-JP",
-    "vf" to "fr-FR"
-)
+
+/**
+ * Resolves the canonical audio locale for a release given the target country and ADN language code.
+ *
+ * For Francophone countries (FR, BE, LU, CH, MC, AD), maps `"vostf"` to [Locale.JA_JP]
+ * and `"vf"` to [Locale.FR_FR].
+ * For Germany (DE), maps `"vostde"` to [Locale.JA_JP] and `"vde"` to [Locale.DE_DE].
+ *
+ * Any language code unsupported or outside the target country distribution returns `null`.
+ *
+ * @param country Target distribution country.
+ * @param language ADN language identifier tag (e.g. "vostf", "vf", "vostde", "vde").
+ * @return Canonical [Locale] instance, or `null` if unmapped for the country.
+ */
+internal fun getAudioLocale(country: Country, language: String): Locale? =
+    when (country) {
+        Country.DE -> when (language) {
+            "vostde" -> Locale.JA_JP
+            "vde" -> Country.DE.defaultLocale
+            else -> null
+        }
+        else -> when (language) {
+            "vostf" -> Locale.JA_JP
+            "vf" -> Country.FR.defaultLocale
+            else -> null
+        }
+    }
 
 /**
  * Sanitizes and normalizes an anime show title by removing redundant season tags, part labels,
@@ -189,57 +217,110 @@ internal fun parseInitialNumber(rawString: String?): Int =
 @Single(binds = [StreamingPlatform::class])
 class AnimationDigitalNetworkPlatform(
     private val client: SmartHttpClient,
-    private val ttl: Duration = 1.minutes
+    private val ttl: Duration = 1.minutes,
+    override val countries: Set<Country> = setOf(Country.FR)
 ) : StreamingPlatform {
     override val platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK
 
+    private val logger = LoggerFactory.getLogger()
     private var cachedEpisodes: List<PlatformEpisode> = emptyList()
+    private val cachedEpisodesByCountry = mutableMapOf<Country, List<PlatformEpisode>>()
 
     /**
-     * Retrieves the latest episodes released today on the ADN platform.
+     * Retrieves the latest episodes released today on the ADN platform across configured countries.
      *
-     * Constructs the current date in UTC ISO-8601 format, queries the ADN video calendar endpoint,
-     * and maps each valid video entry into one or more [PlatformEpisode] instances depending on the
-     * available audio languages (VOSTFR and/or VF).
+     * Constructs the current date in UTC ISO-8601 format, queries the ADN video calendar endpoint
+     * for each country declared in [countries], and maps valid releases into [PlatformEpisode] instances.
      *
-     * An in-memory cache is returned if [SmartHttpClient] reports that the remote payload has not changed.
+     * In-memory cache is returned if [SmartHttpClient] reports that the remote payload has not changed.
      *
-     * @return A [List] of normalized [PlatformEpisode] objects representing today's releases. Returns an
-     * empty list if no releases occurred today or if all entries were filtered out (e.g. live-action).
+     * @return A [List] of normalized [PlatformEpisode] objects representing today's releases.
      * @throws io.ktor.client.plugins.ResponseException If the ADN API responds with an unhandled HTTP error.
      * @see PlatformEpisode
-     * @see AdnVideo.toPlatformEpisodes
+     * @see AdnVideo.toPlatformEpisode
      */
     override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
+        if (countries.isEmpty()) return emptyList()
+
         val now = Clock.System.now()
             .toLocalDateTime(TimeZone.UTC)
             .date
             .format(LocalDate.Formats.ISO)
 
-        val response = client.get<AdnCalendarResponse>(
-            "https://gw.api.animationdigitalnetwork.com/video/calendar?date=$now",
-            "animation_digital_network:calendar:$now",
-            ttl,
-            headers = mapOf(
-                HttpHeaders.AcceptLanguage to "fr",
-                "X-Source" to "Web",
-                "X-Target-Distribution" to "fr",
-            )
-        )
+        var hasChanged = false
 
-        if (response.hasChanged) {
-            val animes = mutableMapOf<Int, PlatformAnime>()
-            val invalidShowIds = mutableSetOf<Int>()
+        val episodesByCountry = countries.flatMap { country ->
+            val (episodes, changed) = fetchEpisodesForCountry(now, country)
+            if (changed) hasChanged = true
+            episodes
+        }
 
-            cachedEpisodes = response.data.videos.flatMap { video ->
-                if (!video.isValid) return@flatMap emptyList()
-                val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason)
-                    ?: return@flatMap emptyList()
-                video.toPlatformEpisodes(anime)
-            }
+        if (hasChanged) {
+            cachedEpisodes = episodesByCountry
+                .groupBy { it.id }
+                .values
+                .map { group ->
+                    val first = group.first()
+                    val allAudioLocales = group.flatMap { it.audioLocales }.distinct()
+                    val allLocalizations = group.flatMap { it.localizations }.distinct()
+                    first.copy(
+                        audioLocales = allAudioLocales,
+                        localizations = allLocalizations
+                    )
+                }
         }
 
         return cachedEpisodes
+    }
+
+    /**
+     * Fetches and maps ADN calendar releases for a specific country.
+     *
+     * Injects localization headers ([HttpHeaders.AcceptLanguage], `X-Source`, and `X-Target-Distribution`)
+     * matching the country distribution, querying the video calendar and mapping all valid releases.
+     *
+     * @param now Current date in ISO-8601 format.
+     * @param country Target country distribution.
+     * @return Cached or freshly mapped list of [PlatformEpisode] instances for this country and changed flag.
+     */
+    private suspend fun fetchEpisodesForCountry(
+        now: String,
+        country: Country
+    ): Pair<List<PlatformEpisode>, Boolean> {
+        val distribution = country.code.lowercase()
+        val language = country.defaultLocale.code.substringBefore('-').lowercase()
+        val cacheKey = "animation_digital_network:calendar:$now:$distribution"
+
+        val response = client.get<AdnCalendarResponse>(
+            "https://gw.api.animationdigitalnetwork.com/video/calendar?date=$now",
+            cacheKey,
+            ttl,
+            headers = mapOf(
+                HttpHeaders.AcceptLanguage to language,
+                "X-Source" to "Web",
+                "X-Target-Distribution" to distribution,
+            ),
+        )
+
+        if (response.hasChanged || country !in cachedEpisodesByCountry) {
+            val animes = mutableMapOf<Int, PlatformAnime>()
+            val invalidShowIds = mutableSetOf<Int>()
+
+            cachedEpisodesByCountry[country] = response.data.videos.mapNotNull { video ->
+                if (!video.isValid) return@mapNotNull null
+                val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason)
+                    ?: return@mapNotNull null
+
+                try {
+                    video.toPlatformEpisode(anime, country)
+                } catch (e: MissingAudioLocaleException) {
+                    logger.warning(e.message)
+                    null
+                }
+            }
+        }
+
+        return cachedEpisodesByCountry[country].orEmpty() to response.hasChanged
     }
 
     /**
@@ -344,44 +425,56 @@ internal data class AdnVideo(
             season?.toIntOrNull() ?: 1
 
     /**
-     * Converts an ADN video and its parent show into platform episode representations across languages.
+     * Converts an ADN video and its parent show into a platform episode representation.
      *
-     * Maps `"vostf"` to audio locale `ja-JP` and `"vf"` to `fr-FR`. Each language track produces a distinct
-     * [PlatformEpisode], with [PlatformEpisode.original] set to `true` for the primary audio track.
+     * Resolves audio locales dynamically for [country]. Produces a [PlatformEpisode] with its
+     * localized metadata for the given [country].
      *
      * @param anime The parent [PlatformAnime] instance previously resolved for this episode.
-     * @return A list of [PlatformEpisode] instances, one per supported audio language track.
+     * @param country Target country distribution.
+     * @return The normalized [PlatformEpisode].
+     * @throws MissingAudioLocaleException If no audio locales can be resolved for [country].
      * @see PlatformEpisode
      * @see PlatformAnime
      * @see getNumberAndEpisodeType
      */
-    fun toPlatformEpisodes(anime: PlatformAnime): List<PlatformEpisode> {
+    fun toPlatformEpisode(
+        anime: PlatformAnime,
+        country: Country
+    ): PlatformEpisode {
         val (number, episodeType) = getNumberAndEpisodeType(shortNumber, type, show.type)
-        val audioLanguages = languages.ifEmpty { listOf("vostf") }
+        val audioLocales = languages.mapNotNull { getAudioLocale(country, it) }
+            .distinct()
 
-        return audioLanguages.mapNotNull { lang ->
-            val audioLocale = LOCALE_MAP[lang] ?: return@mapNotNull null
-            val isOriginal =
-                audioLanguages.size <= 1
-                    || audioLanguages.indexOf(lang) == 0
-
-            PlatformEpisode(
-                anime = anime,
-                id = id.toString(),
-                title = name,
-                description = summary,
-                image = image,
-                releaseDateTime = releaseDate,
-                season = parsedSeason,
-                number = number,
-                episodeType = episodeType,
-                duration = duration,
-                url = url,
-                audioLocale = audioLocale,
-                uncensored = isUncensored,
-                original = isOriginal
+        if (audioLocales.isEmpty()) {
+            throw MissingAudioLocaleException(
+                episodeId = id.toString(),
+                episodeName = "${anime.title} - $name",
+                languages = languages,
+                country = country
             )
         }
+
+        return PlatformEpisode(
+            anime = anime,
+            id = id.toString(),
+            image = image,
+            releaseDateTime = releaseDate,
+            season = parsedSeason,
+            number = number,
+            episodeType = episodeType,
+            duration = duration,
+            url = url,
+            audioLocales = audioLocales,
+            uncensored = isUncensored,
+            localizations = listOf(
+                PlatformEpisodeLocalization(
+                    country = country,
+                    title = name,
+                    description = summary
+                )
+            )
+        )
     }
 }
 

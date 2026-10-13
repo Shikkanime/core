@@ -2,12 +2,17 @@ package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.platforms.PlatformEpisode
+import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
+import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
+import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
@@ -17,7 +22,9 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.time.ZonedDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -28,15 +35,15 @@ import kotlin.time.Duration
 class AnimationDigitalNetworkPlatformTest {
 
     private fun smartHttpClient(
-        bodyProvider: () -> String,
-        onRequest: (io.ktor.client.request.HttpRequestData) -> Unit = {}
+        onRequest: (HttpRequestData) -> Unit = {},
+        bodyProvider: (HttpRequestData) -> String
     ): SmartHttpClient =
         SmartHttpClient(
             client = HttpClient(
                 MockEngine { request ->
                     onRequest(request)
                     respond(
-                        content = bodyProvider(),
+                        content = bodyProvider(request),
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json")
                     )
@@ -49,10 +56,57 @@ class AnimationDigitalNetworkPlatformTest {
         )
 
     private fun smartHttpClient(body: String): SmartHttpClient =
-        smartHttpClient({ body })
+        smartHttpClient { body }
 
-    private fun platform(client: SmartHttpClient): AnimationDigitalNetworkPlatform =
-        AnimationDigitalNetworkPlatform(client = client, ttl = Duration.ZERO)
+    private fun platform(
+        client: SmartHttpClient,
+        countries: Set<Country> = setOf(Country.FR)
+    ): AnimationDigitalNetworkPlatform =
+        AnimationDigitalNetworkPlatform(
+            client = client,
+            ttl = Duration.ZERO,
+            countries = countries
+        )
+
+    private fun adnShow(
+        id: Int = 1,
+        title: String = "One Piece",
+        type: AdnType = AdnType.EPS,
+        genres: List<String> = listOf("Animation ")
+    ): AdnShow =
+        AdnShow(
+            id = id,
+            title = title,
+            shortTitle = null,
+            originalTitle = null,
+            summary = null,
+            image2x = "https://image.animationdigitalnetwork.com/show/$id/100x100/portrait",
+            imageHorizontal2x = "https://image.animationdigitalnetwork.com/show/$id/100x100/landscape",
+            type = type,
+            genres = genres
+        )
+
+    private fun adnVideo(
+        id: Int = 1001,
+        name: String = "Major 105",
+        languages: List<String> = listOf("vostde"),
+        show: AdnShow = adnShow()
+    ): AdnVideo =
+        AdnVideo(
+            id = id,
+            name = name,
+            title = null,
+            shortNumber = "105",
+            season = "1",
+            type = AdnType.EPS,
+            image2x = "https://image.animationdigitalnetwork.com/video/$id/100x100/eps",
+            summary = null,
+            releaseDate = ZonedDateTime.now(),
+            duration = 1420L,
+            url = "https://example.com/video/$id",
+            languages = languages,
+            show = show
+        )
 
     private fun video(
         id: Int,
@@ -129,9 +183,9 @@ class AnimationDigitalNetworkPlatformTest {
             // Then
             assertEquals(2, episodes.size)
             assertEquals("1001", episodes[0].id)
-            assertEquals("Major 105", episodes[0].title)
+            assertEquals("Major 105", episodes[0].localizations.single().title)
             assertEquals("1002", episodes[1].id)
-            assertEquals("Autre 3", episodes[1].title)
+            assertEquals("Autre 3", episodes[1].localizations.single().title)
         }
 
         @Test
@@ -158,6 +212,84 @@ class AnimationDigitalNetworkPlatformTest {
 
             // Then
             assertEquals(Platform.ANIMATION_DIGITAL_NETWORK, actual)
+        }
+
+        @Test
+        @DisplayName("should expose france as the default configured country for adn")
+        fun `should expose france as the default configured country for adn`() = runTest {
+            // Given
+            val platform = platform(smartHttpClient(calendar()))
+
+            // When
+            val actual = platform.countries
+
+            // Then
+            assertEquals(setOf(Country.FR), actual)
+        }
+
+        @Test
+        @DisplayName("should map configured country on episode localizations")
+        fun `should map configured country on episode localizations`() = runTest {
+            // Given
+            val platform = platform(smartHttpClient(calendar(video(1001))))
+
+            // When
+            val episode = platform.fetchLatestEpisodes().single()
+
+            // Then
+            val localization = episode.localizations.single()
+            assertEquals(Country.FR, localization.country)
+            assertEquals("Episode 1001", localization.title)
+        }
+
+        @Test
+        @DisplayName("should fetch episodes for configured countries")
+        fun `should fetch episodes for configured countries`() = runTest {
+            // Given
+            val customCountries = setOf(Country.FR, Country.BE)
+            val platform = platform(
+                smartHttpClient(calendar(video(1001))),
+                countries = customCountries
+            )
+
+            // When
+            val episodes = platform.fetchLatestEpisodes()
+
+            // Then
+            assertEquals(1, episodes.size)
+            val episode = episodes.single()
+            assertEquals(2, episode.localizations.size)
+            assertTrue(episode.localizations.any { it.country == Country.FR })
+            assertTrue(episode.localizations.any { it.country == Country.BE })
+        }
+
+        @Test
+        @DisplayName("should merge audio locales across multiple countries for the same episode")
+        fun `should merge audio locales across multiple countries for the same episode`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient { request ->
+                    val dist = request.headers["X-Target-Distribution"]
+                    if (dist == "de") {
+                        calendar(video(1001, languages = listOf("vostde", "vde")))
+                    } else {
+                        calendar(video(1001, languages = listOf("vostf", "vf")))
+                    }
+                },
+                countries = setOf(Country.FR, Country.DE)
+            )
+
+            // When
+            val episodes = platform.fetchLatestEpisodes()
+
+            // Then
+            assertEquals(1, episodes.size)
+            val episode = episodes.single()
+            assertEquals(
+                listOf(Locale.JA_JP, Locale.FR_FR, Locale.DE_DE),
+                episode.audioLocales
+            )
+            assertEquals(2, episode.localizations.size)
         }
 
         @Test
@@ -195,7 +327,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.fetchLatestEpisodes()
 
             // Then
-            assertEquals("A great episode", episodes.single().description)
+            assertEquals("A great episode", episodes.single().localizations.single().description)
             assertEquals(
                 "https://image.animationdigitalnetwork.com/" +
                     "video/1001/1920x1080/eps.width=1920,height=1080,quality=100",
@@ -247,11 +379,26 @@ class AnimationDigitalNetworkPlatformTest {
         }
 
         @Test
+        @DisplayName("should reuse the same empty list instance when calendar has no releases")
+        fun `should reuse the same empty list instance when calendar has no releases`() = runTest {
+            // Given
+            val platform = platform(smartHttpClient(calendar()))
+
+            // When
+            val first = platform.fetchLatestEpisodes()
+            val second = platform.fetchLatestEpisodes()
+
+            // Then
+            assertSame(first, second)
+            assertTrue(first.isEmpty())
+        }
+
+        @Test
         @DisplayName("should map again when the calendar content changes")
         fun `should map again when the calendar content changes`() = runTest {
             // Given
             var body = calendar(video(1001))
-            val platform = platform(smartHttpClient({ body }))
+            val platform = platform(smartHttpClient { body })
             val first = platform.fetchLatestEpisodes()
 
             // When
@@ -290,6 +437,77 @@ class AnimationDigitalNetworkPlatformTest {
                 requestedUrl!!.startsWith("https://gw.api.animationdigitalnetwork.com/video/calendar?date="),
                 "unexpected url: $requestedUrl"
             )
+        }
+
+        @Test
+        @DisplayName("should send target distribution headers matching the configured country")
+        fun `should send target distribution headers matching the configured country`() = runTest {
+            // Given
+            val headers = mutableMapOf<String, String>()
+            val platform = platform(
+                smartHttpClient(
+                    bodyProvider = { calendar(video(1001, languages = listOf("vostde"))) },
+                    onRequest = { request ->
+                        request.headers.forEach { key, values ->
+                            headers[key] = values.joinToString(",")
+                        }
+                    }
+                ),
+                countries = setOf(Country.DE)
+            )
+
+            // When
+            val episodes = platform.fetchLatestEpisodes()
+
+            // Then
+            assertEquals("de", headers[HttpHeaders.AcceptLanguage])
+            assertEquals("Web", headers["X-Source"])
+            assertEquals("de", headers["X-Target-Distribution"])
+            val localization = episodes.single().localizations.single()
+            assertEquals(Country.DE, localization.country)
+            assertEquals(listOf(Locale.JA_JP), episodes.single().audioLocales)
+        }
+
+        @Test
+        @DisplayName("should map german audio tracks appropriately")
+        fun `should map german audio tracks appropriately`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(calendar(video(1001, languages = listOf("vostde", "vde")))),
+                countries = setOf(Country.DE)
+            )
+
+            // When
+            val episodes = platform.fetchLatestEpisodes()
+
+            // Then
+            assertEquals(1, episodes.size)
+            val episode = episodes.single()
+            val localization = episode.localizations.single()
+            assertEquals(Country.DE, localization.country)
+            assertEquals(listOf(Locale.JA_JP, Locale.DE_DE), episode.audioLocales)
+        }
+
+        @Test
+        @DisplayName("should skip episodes with missing audio locale without breaking calendar")
+        fun `should skip episodes with missing audio locale without breaking calendar`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    calendar(
+                        video(1001, name = "Invalid", languages = listOf("vostde")),
+                        video(1002, name = "Valid", languages = listOf("vostf"))
+                    )
+                ),
+                countries = setOf(Country.FR)
+            )
+
+            // When
+            val episodes = platform.fetchLatestEpisodes()
+
+            // Then
+            assertEquals(1, episodes.size)
+            assertEquals("1002", episodes.single().id)
         }
     }
 
@@ -450,6 +668,8 @@ class AnimationDigitalNetworkPlatformTest {
             val description = platform
                 .fetchLatestEpisodes()
                 .single()
+                .localizations
+                .single()
                 .description
 
             // Then
@@ -462,8 +682,8 @@ class AnimationDigitalNetworkPlatformTest {
     inner class EpisodeFieldsMappingTests {
 
         @Test
-        @DisplayName("should map season number episodeType duration url and audioLocale")
-        fun `should map season number episodeType duration url and audioLocale`() = runTest {
+        @DisplayName("should map season number episodeType duration url and audioLocales")
+        fun `should map season number episodeType duration url and audioLocales`() = runTest {
             // Given
             val platform = platform(
                 smartHttpClient(
@@ -492,8 +712,7 @@ class AnimationDigitalNetworkPlatformTest {
             assertEquals(EpisodeType.EPISODE, episode.episodeType)
             assertEquals(1420L, episode.duration)
             assertEquals("https://animationdigitalnetwork.fr/video/one-piece/10-the-beginning", episode.url)
-            assertEquals("ja-JP", episode.audioLocale)
-            assertTrue(episode.original)
+            assertEquals(listOf(Locale.JA_JP), episode.audioLocales)
             assertFalse(episode.uncensored)
         }
 
@@ -716,8 +935,8 @@ class AnimationDigitalNetworkPlatformTest {
         }
 
         @Test
-        @DisplayName("should fan out multiple episodes when a video has multiple languages")
-        fun `should fan out multiple episodes when a video has multiple languages`() = runTest {
+        @DisplayName("should produce single episode when a video has multiple languages")
+        fun `should produce single episode when a video has multiple languages`() = runTest {
             // Given
             val platform = platform(
                 smartHttpClient(
@@ -729,11 +948,8 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.fetchLatestEpisodes()
 
             // Then
-            assertEquals(2, episodes.size)
-            assertEquals("ja-JP", episodes[0].audioLocale)
-            assertTrue(episodes[0].original)
-            assertEquals("fr-FR", episodes[1].audioLocale)
-            assertFalse(episodes[1].original)
+            assertEquals(1, episodes.size)
+            assertEquals(listOf(Locale.JA_JP, Locale.FR_FR), episodes.single().audioLocales)
         }
 
         @Test
@@ -762,6 +978,58 @@ class AnimationDigitalNetworkPlatformTest {
                 "https://image.animationdigitalnetwork.fr/license/sample/web/affiche.jpg",
                 episode.image
             )
+        }
+
+        @Test
+        @DisplayName("should throw MissingAudioLocaleException when video languages is empty")
+        fun `should throw MissingAudioLocaleException when video languages is empty`() {
+            // Given
+            val video = adnVideo(1001, name = "Major 105", languages = emptyList())
+            val anime = video.show.toPlatformAnime(1)
+
+            // When & Then
+            val exception = assertFailsWith<MissingAudioLocaleException> {
+                video.toPlatformEpisode(anime, Country.FR)
+            }
+            assertEquals("1001", exception.episodeId)
+            assertEquals("One Piece - Major 105", exception.episodeName)
+            assertTrue(exception.languages.isEmpty())
+            assertEquals(Country.FR, exception.country)
+            assertTrue(exception.message!!.contains("1001"))
+            assertTrue(exception.message!!.contains("Major 105"))
+            assertTrue(exception.message!!.contains("FR"))
+        }
+
+        @Test
+        @DisplayName("should throw MissingAudioLocaleException when languages are incompatible")
+        fun `should throw MissingAudioLocaleException when languages are incompatible`() {
+            // Given
+            val video = adnVideo(1002, name = "Episode 2", languages = listOf("vostde"))
+            val anime = video.show.toPlatformAnime(1)
+
+            // When & Then
+            val exception = assertFailsWith<MissingAudioLocaleException> {
+                video.toPlatformEpisode(anime, Country.FR)
+            }
+            assertEquals("1002", exception.episodeId)
+            assertEquals("One Piece - Episode 2", exception.episodeName)
+            assertEquals(listOf("vostde"), exception.languages)
+            assertEquals(Country.FR, exception.country)
+        }
+
+        @Test
+        @DisplayName("should throw MissingAudioLocaleException with formatted title when name is blank")
+        fun `should throw MissingAudioLocaleException with formatted title when name is blank`() {
+            // Given
+            val video = adnVideo(1003, name = "", languages = emptyList())
+            val anime = video.show.toPlatformAnime(1)
+
+            // When & Then
+            val exception = assertFailsWith<MissingAudioLocaleException> {
+                video.toPlatformEpisode(anime, Country.FR)
+            }
+            assertEquals("1003", exception.episodeId)
+            assertEquals("One Piece - ", exception.episodeName)
         }
     }
 
