@@ -31,6 +31,7 @@ private val SHOW_PORTRAIT_LOGO_REGEX = Regex("""/portrait-with-logo$""")
 private val MOVIE_REGEX = Regex("""Film(?: (\d*))?""")
 private val SPECIAL_EPISODE_REGEX = Regex("""(?:Épisode spécial|OAV)(?: (\d*))?""")
 private val NUMBER_CLEANUP_REGEX = Regex("""\(.*\)""")
+private val STATIC_ANIME_NAME_CLEANUP_REGEX = Regex("""(?: -)? Saison \d+|Part .*| [IVXLCDM]+$""")
 private val TRAILER_INDICATORS = listOf(
     "Bande-annonce",
     "Bande annonce",
@@ -52,6 +53,8 @@ private val SPECIAL_SHOW_TYPES = setOf(AdnType.PV, AdnType.BONUS)
  * @param country Target distribution country.
  * @param language ADN language identifier tag (e.g. "vostf", "vf", "vostde", "vde").
  * @return Canonical [Locale] instance, or `null` if unmapped for the country.
+ * @see [Country]
+ * @see [Locale]
  */
 internal fun getAudioLocale(country: Country, language: String): Locale? =
     when (country) {
@@ -77,13 +80,16 @@ internal fun getAudioLocale(country: Country, language: String): Locale? =
  * @param title The raw anime title string provided by the platform (e.g. from [AdnShow.title]).
  * @param season The broadcast season number extracted for the episode, used to trim trailing numbers.
  * @return The cleaned and trimmed anime title suitable for [PlatformAnime.title].
- * @see PlatformAnime
- * @see AdnShow.toPlatformAnime
+ * @see [PlatformAnime]
+ * @see [AdnShow.toPlatformAnime]
  */
 internal fun cleanAnimeName(title: String, season: Int): String {
-    val regex = Regex("""(?: -)? Saison \d+|Part .*| $season$| [IVXLCDM]+$""")
-    return title.replace(regex, "")
-        .trim()
+    val withoutStatic = title.replace(STATIC_ANIME_NAME_CLEANUP_REGEX, "")
+    val withoutSeason = if (season > 0)
+        withoutStatic.removeSuffix(" $season")
+    else
+        withoutStatic
+    return withoutSeason.trim()
 }
 
 /**
@@ -95,8 +101,8 @@ internal fun cleanAnimeName(title: String, season: Int): String {
  * @param videoType The [AdnType] declared directly on the [AdnVideo].
  * @param showType The [AdnType] declared on the parent [AdnShow].
  * @return `true` if the media should be classified as a film, `false` otherwise.
- * @see AdnType
- * @see EpisodeType.FILM
+ * @see [AdnType]
+ * @see [EpisodeType.FILM]
  */
 private fun isMovie(
     movieMatch: MatchResult?,
@@ -118,8 +124,8 @@ private fun isMovie(
  * @param showType The [AdnType] declared on the parent [AdnShow].
  * @param rawEpisodeString The raw episode order string from [AdnVideo.shortNumber].
  * @return `true` if the media should be classified as a special episode or OVA, `false` otherwise.
- * @see AdnType
- * @see EpisodeType.SPECIAL
+ * @see [AdnType]
+ * @see [EpisodeType.SPECIAL]
  */
 private fun isSpecial(
     specialMatch: MatchResult?,
@@ -145,9 +151,9 @@ private fun isSpecial(
  * @param videoType The [AdnType] declared on the individual [AdnVideo].
  * @param showType The [AdnType] declared on the parent [AdnShow].
  * @return A [Pair] containing the resolved episode sequence number (-1 if unnumbered) and [EpisodeType].
- * @see EpisodeType
- * @see AdnType
- * @see parseInitialNumber
+ * @see [EpisodeType]
+ * @see [AdnType]
+ * @see [parseInitialNumber]
  */
 internal fun getNumberAndEpisodeType(
     rawEpisodeString: String?,
@@ -184,6 +190,7 @@ internal fun getNumberAndEpisodeType(
  *
  * @param rawString The raw string representation of the episode number from [AdnVideo.shortNumber].
  * @return The parsed positive integer sequence number, or `-1` if absent, blank, or non-numeric.
+ * @see [getNumberAndEpisodeType]
  */
 internal fun parseInitialNumber(rawString: String?): Int =
     rawString?.replace(NUMBER_CLEANUP_REGEX, "")
@@ -197,22 +204,13 @@ internal fun parseInitialNumber(rawString: String?): Int =
  * filters out non-animation and promotional content, normalizes metadata into domain representations,
  * and handles multi-language audio track fan-out (VOSTFR as `ja-JP` and VF as `fr-FR`).
  *
- * ### Usage
- * In a Koin-managed environment, inject this class as a [StreamingPlatform] implementation:
- * ```
- * val adnPlatform: StreamingPlatform by inject()
- * val episodes: List<PlatformEpisode> = adnPlatform.fetchLatestEpisodes()
- * ```
- *
- * The connector relies on [SmartHttpClient] with conditional requests (ETag / HTTP 304) and internal
- * in-memory caching to minimize outbound bandwidth when the calendar has not changed.
- *
  * @param client The [SmartHttpClient] instance used to execute cached HTTP requests against the ADN API.
  * @param ttl The cache time-to-live [Duration] for release calendar responses (defaults to 1 minute).
- * @see StreamingPlatform
- * @see PlatformEpisode
- * @see PlatformAnime
- * @see Platform.ANIMATION_DIGITAL_NETWORK
+ * @param countries The target countries enabled for this platform connector.
+ * @see [StreamingPlatform]
+ * @see [PlatformEpisode]
+ * @see [PlatformAnime]
+ * @see [Platform.ANIMATION_DIGITAL_NETWORK]
  */
 @Single(binds = [StreamingPlatform::class])
 class AnimationDigitalNetworkPlatform(
@@ -236,11 +234,12 @@ class AnimationDigitalNetworkPlatform(
      *
      * @return A [List] of normalized [PlatformEpisode] objects representing today's releases.
      * @throws io.ktor.client.plugins.ResponseException If the ADN API responds with an unhandled HTTP error.
-     * @see PlatformEpisode
-     * @see AdnVideo.toPlatformEpisode
+     * @see [PlatformEpisode]
+     * @see [AdnVideo.toPlatformEpisode]
      */
     override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
-        if (countries.isEmpty()) return emptyList()
+        if (countries.isEmpty())
+            return emptyList()
 
         val now = Clock.System.now()
             .toLocalDateTime(TimeZone.UTC)
@@ -251,7 +250,8 @@ class AnimationDigitalNetworkPlatform(
 
         val episodesByCountry = countries.flatMap { country ->
             val (episodes, changed) = fetchEpisodesForCountry(now, country)
-            if (changed) hasChanged = true
+            if (changed)
+                hasChanged = true
             episodes
         }
 
@@ -274,6 +274,41 @@ class AnimationDigitalNetworkPlatform(
     }
 
     /**
+     * Converts a list of [AdnVideo] entries into domain [PlatformEpisode] objects for a given [country].
+     *
+     * Applies filtering against promotional and invalid content, resolves parent anime instances,
+     * and maps localized audio tracks and descriptions.
+     *
+     * @param videos The raw ADN video list from the calendar response.
+     * @param country Target country distribution.
+     * @return A mapped list of [PlatformEpisode] objects.
+     * @see [AdnVideo]
+     * @see [PlatformEpisode]
+     * @see [Country]
+     */
+    internal fun convertVideos(
+        videos: List<AdnVideo>,
+        country: Country
+    ): List<PlatformEpisode> {
+        val animes = mutableMapOf<Int, PlatformAnime>()
+        val invalidShowIds = mutableSetOf<Int>()
+
+        return videos.mapNotNull { video ->
+            if (!video.isValid)
+                return@mapNotNull null
+            val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason)
+                ?: return@mapNotNull null
+
+            try {
+                video.toPlatformEpisode(anime, country)
+            } catch (e: MissingAudioLocaleException) {
+                logger.warning(e.message)
+                null
+            }
+        }
+    }
+
+    /**
      * Fetches and maps ADN calendar releases for a specific country.
      *
      * Injects localization headers ([HttpHeaders.AcceptLanguage], `X-Source`, and `X-Target-Distribution`)
@@ -282,6 +317,8 @@ class AnimationDigitalNetworkPlatform(
      * @param now Current date in ISO-8601 format.
      * @param country Target country distribution.
      * @return Cached or freshly mapped list of [PlatformEpisode] instances for this country and changed flag.
+     * @see [Country]
+     * @see [PlatformEpisode]
      */
     private suspend fun fetchEpisodesForCountry(
         now: String,
@@ -302,23 +339,8 @@ class AnimationDigitalNetworkPlatform(
             ),
         )
 
-        if (response.hasChanged || country !in cachedEpisodesByCountry) {
-            val animes = mutableMapOf<Int, PlatformAnime>()
-            val invalidShowIds = mutableSetOf<Int>()
-
-            cachedEpisodesByCountry[country] = response.data.videos.mapNotNull { video ->
-                if (!video.isValid) return@mapNotNull null
-                val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason)
-                    ?: return@mapNotNull null
-
-                try {
-                    video.toPlatformEpisode(anime, country)
-                } catch (e: MissingAudioLocaleException) {
-                    logger.warning(e.message)
-                    null
-                }
-            }
-        }
+        if (response.hasChanged || country !in cachedEpisodesByCountry)
+            cachedEpisodesByCountry[country] = convertVideos(response.data.videos, country)
 
         return cachedEpisodesByCountry[country].orEmpty() to response.hasChanged
     }
@@ -334,8 +356,8 @@ class AnimationDigitalNetworkPlatform(
      * @param invalidShowIds Set of show IDs identified as non-animation or invalid during the current batch.
      * @param season The broadcast season index associated with the current video release.
      * @return The resolved [PlatformAnime] instance, or `null` if the show is not an animation title.
-     * @see PlatformAnime
-     * @see AdnShow.toPlatformAnime
+     * @see [PlatformAnime]
+     * @see [AdnShow.toPlatformAnime]
      */
     private fun resolveAnime(
         show: AdnShow,
@@ -343,7 +365,8 @@ class AnimationDigitalNetworkPlatform(
         invalidShowIds: MutableSet<Int>,
         season: Int
     ): PlatformAnime? {
-        if (show.id in invalidShowIds) return null
+        if (show.id in invalidShowIds)
+            return null
 
         return animes[show.id] ?: run {
             if (!show.isAnimation) {
@@ -387,9 +410,6 @@ internal data class AdnVideo(
     val languages: List<String>,
     val show: AdnShow
 ) {
-    /**
-     * Resolves the high-resolution 1920x1080 thumbnail image URL derived from the 2x preview source.
-     */
     val image: String by lazy(LazyThreadSafetyMode.NONE) {
         image2x.replace(DIMENSION_REGEX, "1920x1080")
             .replace(VIDEO_EPS_REGEX, "/eps.width=1920,height=1080,quality=100")
@@ -399,17 +419,11 @@ internal data class AdnVideo(
             )
     }
 
-    /**
-     * Indicates whether the video is an active episode and not a promotional or bonus video.
-     */
     val isValid: Boolean
         get() =
             type !in SPECIAL_SHOW_TYPES
                 && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
 
-    /**
-     * Indicates whether the episode is an uncensored release based on title and summary flags.
-     */
     val isUncensored: Boolean
         get() =
             title?.let {
@@ -417,9 +431,6 @@ internal data class AdnVideo(
                     || it.contains("Non censuré", ignoreCase = true)
             } ?: false
 
-    /**
-     * Extracts the broadcast season number from the raw season string, defaulting to 1.
-     */
     val parsedSeason: Int
         get() =
             season?.toIntOrNull() ?: 1
@@ -434,9 +445,9 @@ internal data class AdnVideo(
      * @param country Target country distribution.
      * @return The normalized [PlatformEpisode].
      * @throws MissingAudioLocaleException If no audio locales can be resolved for [country].
-     * @see PlatformEpisode
-     * @see PlatformAnime
-     * @see getNumberAndEpisodeType
+     * @see [PlatformEpisode]
+     * @see [PlatformAnime]
+     * @see [getNumberAndEpisodeType]
      */
     fun toPlatformEpisode(
         anime: PlatformAnime,
@@ -490,9 +501,6 @@ internal data class AdnShow(
     val type: AdnType,
     val genres: List<String>
 ) {
-    /**
-     * Resolves the high-resolution portrait poster image URL with title logo.
-     */
     val thumbnail: String by lazy(LazyThreadSafetyMode.NONE) {
         image2x.replace(DIMENSION_REGEX, "1080x1543")
             .replace(
@@ -501,9 +509,6 @@ internal data class AdnShow(
             )
     }
 
-    /**
-     * Resolves the high-resolution landscape banner image URL with title logo.
-     */
     val banner: String by lazy(LazyThreadSafetyMode.NONE) {
         imageHorizontal2x.replace(DIMENSION_REGEX, "1920x1080")
             .replace(
@@ -512,9 +517,6 @@ internal data class AdnShow(
             )
     }
 
-    /**
-     * Indicates whether the show belongs to the animation genre.
-     */
     val isAnimation: Boolean
         get() =
             genres.any { it.contains("Animation ") }
@@ -527,8 +529,8 @@ internal data class AdnShow(
      *
      * @param season The broadcast season index used to clean trailing season numbers from the title.
      * @return The normalized [PlatformAnime] domain entity.
-     * @see PlatformAnime
-     * @see cleanAnimeName
+     * @see [PlatformAnime]
+     * @see [cleanAnimeName]
      */
     fun toPlatformAnime(season: Int): PlatformAnime {
         val rawTitle = shortTitle?.takeIf { it.isNotBlank() } ?: title
