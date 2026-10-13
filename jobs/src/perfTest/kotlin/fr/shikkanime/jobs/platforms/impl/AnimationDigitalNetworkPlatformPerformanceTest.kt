@@ -4,7 +4,10 @@ import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.perf.PerfBudget
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformEpisode
+import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
+import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.Locale
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -103,22 +106,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         return count to time
     }
 
-    private fun createMockClient(jsonContent: String): SmartHttpClient {
-        val mockEngine = MockEngine { _ ->
-            respond(
-                content = jsonContent,
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            )
-        }
-        val httpClient = HttpClient(mockEngine) {
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
-            }
-        }
-        return SmartHttpClient(client = httpClient)
-    }
-
     /**
      * Same client, but the calendar body is produced lazily and in chunks instead of
      * being materialised as one [String].
@@ -190,7 +177,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
     @Test
     @Order(1)
     @DisplayName("Benchmark 1: 1M episodes - SAME anime (Processing loop)")
-    fun `benchmark 1M episodes - SAME anime`() {
+    fun benchmark1MEpisodesSameAnime() {
         println("\n=======================================================")
         println("TEST 1: 1,000,000 EPISODES - SAME ANIME (1 show, 1M episodes)")
         println("=======================================================")
@@ -271,8 +258,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                 PlatformEpisode(
                     anime = anime,
                     id = video.id.toString(),
-                    title = video.name,
-                    description = video.summary,
                     image = video.image,
                     releaseDateTime = video.releaseDate,
                     season = video.parsedSeason,
@@ -280,9 +265,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                     episodeType = EpisodeType.EPISODE,
                     duration = video.duration,
                     url = video.url,
-                    audioLocale = "ja-JP",
+                    audioLocales = listOf(Locale.JA_JP),
                     uncensored = false,
-                    original = true
+                    localizations = listOf(
+                        PlatformEpisodeLocalization(
+                            country = Country.FR,
+                            title = video.name,
+                            description = video.summary
+                        )
+                    )
                 )
             }
         }
@@ -299,8 +290,8 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
     @Test
     @Order(2)
-    @DisplayName("Benchmark 2: 1M episodes - DIFFERENT anime (1M distinct shows)")
-    fun `benchmark 1M episodes - DIFFERENT anime`() {
+    @DisplayName("Benchmark 2: 1M episodes - DIFFERENT anime (Worst case for caches)")
+    fun benchmark1MEpisodesDifferentAnime() {
         println("\n=======================================================")
         println("TEST 2: 1,000,000 EPISODES - DIFFERENT ANIME (1M distinct shows)")
         println("=======================================================")
@@ -379,8 +370,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                 PlatformEpisode(
                     anime = anime,
                     id = video.id.toString(),
-                    title = video.name,
-                    description = video.summary,
                     image = video.image,
                     releaseDateTime = video.releaseDate,
                     season = video.parsedSeason,
@@ -388,9 +377,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                     episodeType = EpisodeType.EPISODE,
                     duration = video.duration,
                     url = video.url,
-                    audioLocale = "ja-JP",
+                    audioLocales = listOf(Locale.JA_JP),
                     uncensored = false,
-                    original = true
+                    localizations = listOf(
+                        PlatformEpisodeLocalization(
+                            country = Country.FR,
+                            title = video.name,
+                            description = video.summary
+                        )
+                    )
                 )
             }
         }
@@ -407,8 +402,8 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
 
     @Test
     @Order(3)
-    @DisplayName("Benchmark 3: 1M episodes - REALISTIC CATALOG with filters (PV, Trailers, Non-Animation)")
-    fun `benchmark 1M episodes - REALISTIC catalog`() {
+    @DisplayName("Benchmark 3: 1M episodes - REALISTIC catalog (100 shows, 10,000 eps each)")
+    fun benchmark1MEpisodesRealisticCatalog() {
         println("\n=======================================================")
         println("TEST 3: 1,000,000 EPISODES - 1,000 ANIME x 1,000 EPISODES (with PV & trailers)")
         println("=======================================================")
@@ -508,8 +503,6 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                 PlatformEpisode(
                     anime = anime,
                     id = video.id.toString(),
-                    title = video.name,
-                    description = video.summary,
                     image = video.image,
                     releaseDateTime = video.releaseDate,
                     season = video.parsedSeason,
@@ -517,9 +510,15 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
                     episodeType = EpisodeType.EPISODE,
                     duration = video.duration,
                     url = video.url,
-                    audioLocale = "ja-JP",
+                    audioLocales = listOf(Locale.JA_JP),
                     uncensored = false,
-                    original = true
+                    localizations = listOf(
+                        PlatformEpisodeLocalization(
+                            country = Country.FR,
+                            title = video.name,
+                            description = video.summary
+                        )
+                    )
                 )
             }
         }
@@ -539,7 +538,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
     @Test
     @Order(4)
     @DisplayName("Benchmark 4: Bottleneck Analysis - Regex recompilation impact (with landscape-with-logo)")
-    fun `benchmark regex bottleneck analysis`() {
+    fun benchmarkRegexBottleneckAnalysis() {
         println("\n=======================================================")
         println("TEST 4: BOTTLENECK DEEP-DIVE - Regex vs Precompiled Regex")
         println("=======================================================")
@@ -548,10 +547,10 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val count = 1_000_000
 
         // 1. Recompiling 3 regexes every time
+        var dummyCurrent: String? = null
         val currentDurationMs = measureNanoTime {
-            var dummy: String? = null
             for (i in 1..count) {
-                dummy = sampleUrl.replace("\\d+x\\d+".toRegex(), "1920x1080")
+                dummyCurrent = sampleUrl.replace("\\d+x\\d+".toRegex(), "1920x1080")
                     .replace("/eps$".toRegex(), "/eps.width=1920,height=1080,quality=100")
                     .replace(
                         "/landscape-with-logo$".toRegex(),
@@ -567,14 +566,16 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
         val regex1 = "\\d+x\\d+".toRegex()
         val regex2 = "/eps$".toRegex()
         val regex3 = "/landscape-with-logo$".toRegex()
+        var dummyPrecompiled: String? = null
         val precompiledDurationMs = measureNanoTime {
-            var dummy: String? = null
             for (i in 1..count) {
-                dummy = sampleUrl.replace(regex1, "1920x1080")
+                dummyPrecompiled = sampleUrl.replace(regex1, "1920x1080")
                     .replace(regex2, "/eps.width=1920,height=1080,quality=100")
                     .replace(regex3, "/landscape-with-logo.width=1920,height=1080,quality=100")
             }
         } / 1_000_000.0
+
+        assertEquals(dummyCurrent, dummyPrecompiled)
 
         val formattedPre = "%.2f".format(precompiledDurationMs)
         println("Precompiled regex (3 Regex instances): $formattedPre ms")
@@ -595,7 +596,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
     @Test
     @Order(5)
     @DisplayName("Benchmark 5: Bottleneck Analysis - MutableMap Pre-sizing vs Default")
-    fun `benchmark map presizing analysis`() {
+    fun benchmarkMapPresizingAnalysis() {
         println("\n=======================================================")
         println("TEST 5: BOTTLENECK DEEP-DIVE - Map Resizing & Boxing (1M insertions)")
         println("=======================================================")
@@ -633,7 +634,8 @@ class AnimationDigitalNetworkPlatformPerformanceTest {
     @Test
     @Order(6)
     @DisplayName("Benchmark 6: End-to-end through SmartHttpClient with a streamed calendar")
-    fun `benchmark end to end with MockEngine`() = runBlocking {
+    fun benchmarkEndToEndWithMockEngine() =
+        runBlocking {
         println("\n=======================================================")
         println("TEST 6: FULL END-TO-END with SmartHttpClient + MockEngine (streamed body)")
         println("=======================================================")
