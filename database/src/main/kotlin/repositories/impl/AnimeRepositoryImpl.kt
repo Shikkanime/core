@@ -18,6 +18,10 @@ internal class AnimeRepositoryImpl(
     private val imageRepository: ImageRepository
 ) : AnimeRepository() {
 
+    override fun findAll(): List<Anime> =
+        AnimeEntity.all()
+            .map { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
+
     /**
      * Finds the anime aggregate with its artwork.
      *
@@ -31,19 +35,29 @@ internal class AnimeRepositoryImpl(
     override fun findModelById(id: Uuid): Anime? =
         findById(id)?.toModel(imageRepository.findAllByEntityId(id))
 
-    override fun findAll(): List<Anime> =
-        AnimeEntity.all()
-            .map { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
-
-    override fun findByPlatformAndPlatformId(platform: Platform, platformId: String): Anime? =
+    /**
+     * Finds the identifier of the anime carrying a streaming platform source link.
+     *
+     * The lookup runs alone on the `(platform, platform_id)` index and stops at the first link:
+     * the row is never materialized, only the identifier of the anime it points to is kept.
+     *
+     * @param platform streaming platform owning the link.
+     * @param platformId identifier of the anime on the streaming platform.
+     * @return the identifier of the linked anime, or `null` when no anime carries this link.
+     */
+    private fun findAnimeIdByPlatformAndPlatformId(platform: Platform, platformId: String): Uuid? =
         AnimePlatformEntity.find {
             (AnimePlatformTable.platform eq platform) and
                 (AnimePlatformTable.platformId eq platformId)
         }
             .limit(1)
             .firstOrNull()
-            ?.let { findById(it.anime.value) }
-            ?.let { entity -> entity.toModel(imageRepository.findAllByEntityId(entity.id.value)) }
+            ?.anime
+            ?.value
+
+    override fun findByPlatformAndPlatformId(platform: Platform, platformId: String): Anime? =
+        findAnimeIdByPlatformAndPlatformId(platform, platformId)
+            ?.let { findById(it)?.toModel(imageRepository.findAllByEntityId(it)) }
 
     override fun save(anime: Anime): Anime =
         findById(anime.id)

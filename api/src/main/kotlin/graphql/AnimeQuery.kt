@@ -1,22 +1,9 @@
 package fr.shikkanime.api.graphql
 
 import com.expediagroup.graphql.server.operations.Query
-import fr.shikkanime.api.dtos.AnimeDto
-import fr.shikkanime.api.dtos.ImageDto
-import fr.shikkanime.api.dtos.AnimeLocalizationDto
-import fr.shikkanime.api.dtos.AnimePlatformDto
-import fr.shikkanime.api.dtos.toDto
+import fr.shikkanime.api.graphql.AnimeGraphQlDto.Companion.toGraphQl
 import fr.shikkanime.database.services.AnimeService
-
-/**
- * GraphQL view of a stored anime, with its identifier as a string so the schema stays scalar-free.
- */
-data class AnimeGraphQlDto(
-    val id: String,
-    val localizations: List<AnimeLocalizationDto>,
-    val platforms: List<AnimePlatformDto>,
-    val images: List<ImageDto>
-)
+import kotlin.uuid.Uuid
 
 /**
  * GraphQL queries on the stored anime aggregates.
@@ -30,21 +17,20 @@ class AnimeQuery(
 ) : Query {
     /**
      * Returns every anime persisted in the database.
+     *
+     * @return every stored anime, in no particular order, as GraphQL views.
+     * @see AnimeGraphQlDto
      */
     fun animes(): List<AnimeGraphQlDto> =
-        animeService.findAll().map { it.toDto().toGraphQl() }
+        animeService.findAll().map(::toGraphQl)
 
     /**
-     * Returns one anime persisted in the database, or `null` when it is unknown.
+     * Returns one anime persisted in the database.
+     *
+     * @param id identifier of the anime to load.
+     * @return the GraphQL view of the anime, or `null` when no anime has this identifier.
+     * @see AnimeGraphQlDto
      */
     fun anime(id: String): AnimeGraphQlDto? =
-        animeService.findById(kotlin.uuid.Uuid.parse(id))?.toDto()?.toGraphQl()
+        animeService.findById(Uuid.parse(id))?.let(::toGraphQl)
 }
-
-private fun AnimeDto.toGraphQl(): AnimeGraphQlDto =
-    AnimeGraphQlDto(
-        id = id.toString(),
-        localizations = localizations,
-        platforms = platforms,
-        images = images
-    )

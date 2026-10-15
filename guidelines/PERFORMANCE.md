@@ -14,6 +14,9 @@ All AI agents and developers must adhere to these directives when implementing o
 - **Minimize heap allocations in hot paths**: Favor primitive types, direct string manipulation (e.g. `removeSuffix`),
   and reuse cached domain objects instead of allocating intermediate collections.
 - **Limit database round trips**: Use batch queries, projections, and bulk inserts instead of N+1 select loops.
+  The N+1 shape is banned everywhere, including a single lookup: a query that finds rows and then
+  re-queries what each row points to (`find` a link row, then `findById` its anime per row) must be
+  replaced by one query resolving the target directly.
 - **Keep retry mechanisms bounded**: Exponential backoff with sensible ceilings to prevent thundering herd issues.
 
 ---

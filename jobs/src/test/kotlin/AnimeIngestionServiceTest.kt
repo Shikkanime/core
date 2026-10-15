@@ -1,14 +1,15 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.services.AnimeService
+import fr.shikkanime.jobs.builders.impl.PlatformAnimeLocalizationMockKBuilder
+import fr.shikkanime.jobs.builders.impl.PlatformAnimeMockKBuilder
+import fr.shikkanime.jobs.builders.impl.PlatformImageMockKBuilder
 import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
-import fr.shikkanime.jobs.platforms.PlatformImage
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Platform
-import fr.shikkanime.core.TimeUtils
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -28,13 +29,22 @@ class AnimeIngestionServiceTest {
 
     @InjectMockKs private lateinit var ingestionService: AnimeIngestionService
 
-    private val platformAnime = PlatformAnime(
-        id = "123",
-        images = listOf(PlatformImage(ImageType.BANNER, "https://example.test/banner.png")),
-        localizations = listOf(
-            PlatformAnimeLocalization(Country.FR, "Title", "Description")
+    private val platformAnime = PlatformAnimeMockKBuilder {
+        id = "123"
+        images = listOf(
+            PlatformImageMockKBuilder {
+                type = ImageType.BANNER
+                url = "https://example.test/banner.png"
+            }.build()
         )
-    )
+        localizations = listOf(
+            PlatformAnimeLocalizationMockKBuilder {
+                country = Country.FR
+                title = "Title"
+                description = "Description"
+            }.build()
+        )
+    }.build()
 
     @Nested
     @DisplayName("tests for the 'saveAll' method")
@@ -42,7 +52,9 @@ class AnimeIngestionServiceTest {
         @Test
         fun `should save a new anime when the platform link is unknown`() {
             // Given
-            every { animeService.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123") } returns null
+            every {
+                animeService.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123")
+            } returns null
             val saved = slot<Anime>()
             every { animeService.save(capture(saved)) } returnsArgument 0
 
@@ -56,14 +68,7 @@ class AnimeIngestionServiceTest {
         @Test
         fun `should reuse the stored anime identifier when the platform link exists`() {
             // Given
-            val existing = Anime(
-                id = Uuid.random(),
-                createdAt = TimeUtils.now(),
-                updatedAt = TimeUtils.now(),
-                images = emptyList(),
-                localizations = emptyList(),
-                platforms = emptyList()
-            )
+            val existing = AnimeMockKBuilder { id = Uuid.random() }.build()
             every {
                 animeService.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123")
             } returns existing
@@ -80,7 +85,9 @@ class AnimeIngestionServiceTest {
         @Test
         fun `should map the harvested children to the stored aggregate`() {
             // Given
-            every { animeService.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123") } returns null
+            every {
+                animeService.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123")
+            } returns null
             val saved = slot<Anime>()
             every { animeService.save(capture(saved)) } returnsArgument 0
 

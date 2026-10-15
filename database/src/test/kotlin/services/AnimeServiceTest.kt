@@ -149,7 +149,7 @@ class AnimeServiceTest {
                         .build()
                 )
             }.build()
-            every { animeRepository.findModelById(anime.id) } returns anime
+            every { animeRepository.findModelById(any()) } returns anime
 
             // When
             val found = animeService.findById(anime.id)

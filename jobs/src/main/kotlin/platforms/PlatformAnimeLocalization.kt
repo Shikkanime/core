@@ -1,6 +1,9 @@
 package fr.shikkanime.jobs.platforms
 
+import fr.shikkanime.core.TimeUtils
+import fr.shikkanime.models.AnimeLocalization
 import fr.shikkanime.models.Country
+import kotlin.uuid.Uuid
 
 /**
  * Editorial content of an anime localized for a specific distribution.
@@ -17,4 +20,22 @@ data class PlatformAnimeLocalization(
     val country: Country,
     val title: String,
     val description: String?
-)
+) {
+    /**
+     * Maps this harvested text to the canonical localization to persist.
+     *
+     * The platform key is a [Country], the canonical key is its [Country.defaultLocale].
+     *
+     * @return the [AnimeLocalization] to pass to the persistence.
+     * @see AnimeLocalization
+     */
+    fun toModel(): AnimeLocalization =
+        AnimeLocalization(
+            id = Uuid.random(),
+            createdAt = TimeUtils.now(),
+            updatedAt = TimeUtils.now(),
+            locale = country.defaultLocale,
+            title = title,
+            description = description
+        )
+}

@@ -1,9 +1,9 @@
 package fr.shikkanime.api.dtos
 
+import fr.shikkanime.api.dtos.AnimeLocalizationDto.Companion.toDto
+import fr.shikkanime.api.dtos.AnimePlatformDto.Companion.toDto
+import fr.shikkanime.api.dtos.ImageDto.Companion.toDto
 import fr.shikkanime.models.Anime
-import fr.shikkanime.models.ImageType
-import fr.shikkanime.models.Locale
-import fr.shikkanime.models.Platform
 import kotlinx.serialization.Serializable
 import kotlin.uuid.Uuid
 
@@ -16,61 +16,23 @@ data class AnimeDto(
     val localizations: List<AnimeLocalizationDto>,
     val platforms: List<AnimePlatformDto>,
     val images: List<ImageDto>
-)
-
-/**
- * API view of a localized editorial text.
- */
-@Serializable
-data class AnimeLocalizationDto(
-    val locale: Locale,
-    val title: String,
-    val description: String?
-)
-
-/**
- * API view of a platform source link.
- */
-@Serializable
-data class AnimePlatformDto(
-    val platform: Platform,
-    val platformId: String
-)
-
-/**
- * API view of an artwork row.
- */
-@Serializable
-data class ImageDto(
-    val type: ImageType,
-    val url: String
-)
-
-/**
- * Maps a stored anime to its API view.
- *
- * Audit columns are deliberately left out of the payload.
- */
-fun Anime.toDto(): AnimeDto =
-    AnimeDto(
-        id = id,
-        localizations = localizations.map {
-            AnimeLocalizationDto(
-                locale = it.locale,
-                title = it.title,
-                description = it.description
+) {
+    companion object {
+        /**
+         * Maps a stored anime to its API view.
+         *
+         * Audit columns are deliberately left out of the payload.
+         *
+         * @param anime aggregate read from the database.
+         * @return the API view of [anime], with its localizations, sources and artwork.
+         * @see Anime
+         */
+        fun toDto(anime: Anime): AnimeDto =
+            AnimeDto(
+                id = anime.id,
+                localizations = anime.localizations.map(::toDto),
+                platforms = anime.platforms.map(::toDto),
+                images = anime.images.map(::toDto)
             )
-        },
-        platforms = platforms.map {
-            AnimePlatformDto(
-                platform = it.platform,
-                platformId = it.platformId
-            )
-        },
-        images = images.map {
-            ImageDto(
-                type = it.type,
-                url = it.url
-            )
-        }
-    )
+    }
+}

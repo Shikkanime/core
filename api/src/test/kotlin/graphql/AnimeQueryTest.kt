@@ -1,10 +1,8 @@
 package fr.shikkanime.api.graphql
 
+import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.graphql.configureGraphQL
-import fr.shikkanime.models.Anime
-import fr.shikkanime.models.Country
-import fr.shikkanime.core.TimeUtils
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -33,14 +31,12 @@ class AnimeQueryTest {
         )
     }
 
-    private val anime = Anime(
-        id = Uuid.random(),
-        createdAt = TimeUtils.now(),
-        updatedAt = TimeUtils.now(),
-        images = emptyList(),
-        localizations = emptyList(),
+    private val anime = AnimeMockKBuilder {
+        id = Uuid.random()
+        images = emptyList()
+        localizations = emptyList()
         platforms = emptyList()
-    )
+    }.build()
 
     @Nested
     @DisplayName("tests for the 'animes' query")

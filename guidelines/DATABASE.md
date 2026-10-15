@@ -29,6 +29,10 @@ internal class AnimeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 Repositories encapsulate queries and entity mapping.
 
+- **Chain the mapping directly on the lookup:** `findById(id)?.toModel(...)` — never wrap a mapping
+  in `?.let { entity -> entity.toModel(...) }` and never hold it in an intermediate variable. The
+  lookup and the mapping read as one chain.
+
 ### Custom "Upsert" DSL (`EntityRepository`)
 
 Internal repositories extend `EntityRepository<UUID, ENTITY>` which provides standard methods (`findById`, `findAllByIds`) and an upsert DSL: `ifExists`, `newIfNotExists`, and `applyFlush`.

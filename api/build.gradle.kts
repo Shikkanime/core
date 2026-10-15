@@ -20,4 +20,5 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.testEcosystem)
     testImplementation(libs.shikkanimeFrameworkKtorTest)
+    testImplementation(testFixtures(project(":database")))
 }

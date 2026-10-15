@@ -1,20 +1,19 @@
 package fr.shikkanime.api.controllers
 
+import fr.shikkanime.database.builders.impl.AnimeLocalizationMockKBuilder
+import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
+import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
+import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.ktor.ControllerBinder
 import fr.shikkanime.ktor.configureDefaultModules
-import fr.shikkanime.models.Anime
-import fr.shikkanime.models.AnimeLocalization
-import fr.shikkanime.models.AnimePlatform
 import fr.shikkanime.models.Country
-import fr.shikkanime.models.Image
 import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Platform
-import fr.shikkanime.core.TimeUtils
 import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -37,14 +36,31 @@ class AnimeControllerTest {
         }
     }
 
-    private val anime = Anime(
-        id = Uuid.random(),
-        createdAt = TimeUtils.now(),
-        updatedAt = TimeUtils.now(),
-        images = listOf(Image(Uuid.random(), TimeUtils.now(), TimeUtils.now(), Uuid.random(), ImageType.BANNER, "https://example.test/banner.png")),
-        localizations = listOf(AnimeLocalization(Uuid.random(), TimeUtils.now(), TimeUtils.now(), Country.FR.defaultLocale, "Title", "Description")),
-        platforms = listOf(AnimePlatform(Uuid.random(), TimeUtils.now(), TimeUtils.now(), Platform.ANIMATION_DIGITAL_NETWORK, "123"))
-    )
+    private val anime = AnimeMockKBuilder {
+        id = Uuid.random()
+        images = listOf(
+            ImageMockKBuilder {
+                id = Uuid.random()
+                type = ImageType.BANNER
+                url = "https://example.test/banner.png"
+            }.build()
+        )
+        localizations = listOf(
+            AnimeLocalizationMockKBuilder {
+                id = Uuid.random()
+                locale = Country.FR.defaultLocale
+                title = "Title"
+                description = "Description"
+            }.build()
+        )
+        platforms = listOf(
+            AnimePlatformMockKBuilder {
+                id = Uuid.random()
+                platform = Platform.ANIMATION_DIGITAL_NETWORK
+                platformId = "123"
+            }.build()
+        )
+    }.build()
 
     @Nested
     @DisplayName("tests for listing the stored animes")
@@ -74,7 +90,7 @@ class AnimeControllerTest {
         fun `should return 200 with the stored anime`() =
             testApplication {
                 // Given
-                every { animeService.findById(anime.id) } returns anime
+                every { animeService.findById(any()) } returns anime
                 application {
                     configureDefaultModules()
                     registerControllers()
@@ -91,7 +107,7 @@ class AnimeControllerTest {
         fun `should return 404 when the anime is not stored`() =
             testApplication {
                 // Given
-                every { animeService.findById(anime.id) } returns null
+                every { animeService.findById(any()) } returns null
                 application {
                     configureDefaultModules()
                     registerControllers()

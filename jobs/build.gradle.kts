@@ -2,6 +2,7 @@ plugins {
     id("buildsrc.convention.kotlin-jvm")
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.shikkanimeFrameworkKoin)
+    `java-test-fixtures`
     application
 }
 
@@ -18,9 +19,12 @@ dependencies {
     implementation(libs.quartz)
     implementation(kotlin("reflect"))
 
+    testFixturesApi(testFixtures(project(":database")))
+
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.testEcosystem)
     testImplementation(libs.shikkanimeFrameworkKtorTest)
+    testImplementation(testFixtures(project(":database")))
 }
 
 // Benchmarks are excluded from `test` (and therefore from CI) because they allocate

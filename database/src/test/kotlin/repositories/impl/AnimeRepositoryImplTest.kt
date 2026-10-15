@@ -99,7 +99,7 @@ class AnimeRepositoryImplTest {
                     entityId = anime.id
                 }.build()
             )
-            every { imageRepository.findAllByEntityId(anime.id) } returns images
+            every { imageRepository.findAllByEntityId(any()) } returns images
             transaction { animeRepository.save(anime) }
 
             // When

@@ -75,6 +75,15 @@ class AnimeServiceTest {
 
 Always use MockK builders implementing `TestBuilder<T>` to instantiate test entities and complex objects instead of calling `mockk<T>()` directly in tests.
 
+**Every test fixture comes from its `*MockKBuilder`, for database entities and domain models alike:
+a test never constructs a model inline** (`Anime(...)`, `PlatformAnime(...)`) — that skips the mock
+contract and hides the fields the code under test really reads.
+
+**Never read a builder mock property inside another mock's `every { }` block.** MockK records the
+call and replaces the property stub with a relaxed child mock, so the fixture silently changes type
+(a mocked `Uuid` reaching `Uuid.parse` as `Uuid(child of …)`). Bind fixture values outside the
+block, or stub the call with `any()`.
+
 Builder fields default to `null` and are stubbed only when the test sets them: define only the
 values the test actually needs. Any field whose value is read back through the mock (a data-class
 `copy`, a mapped property) must be set explicitly, since an unstubbed mock value is not a usable
