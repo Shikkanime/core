@@ -2,9 +2,11 @@ package fr.shikkanime.database.repositories.impl
 
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
+import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.ImageType
+import fr.shikkanime.models.Platform
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -121,6 +123,77 @@ class AnimeRepositoryImplTest {
             assertTrue(found.localizations.isEmpty())
             assertTrue(found.platforms.isEmpty())
             assertTrue(found.images.isEmpty())
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'findAll' method")
+    inner class FindAllTests {
+        @Test
+        fun `should return an empty list when the database holds no anime`() {
+            // Given
+            // When
+            val found = transaction { animeRepository.findAll() }
+
+            // Then
+            assertTrue(found.isEmpty())
+        }
+
+        @Test
+        fun `should return every stored anime`() {
+            // Given
+            transaction {
+                animeRepository.save(AnimeMockKBuilder { id = Uuid.random() }.build())
+                animeRepository.save(AnimeMockKBuilder { id = Uuid.random() }.build())
+            }
+
+            // When
+            val found = transaction { animeRepository.findAll() }
+
+            // Then
+            assertEquals(2, found.size)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'findByPlatformAndPlatformId' method")
+    inner class FindByPlatformAndPlatformIdTests {
+        @Test
+        fun `should return null when no anime carries the platform link`() {
+            // Given
+            // When
+            val found = transaction {
+                animeRepository.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "404")
+            }
+
+            // Then
+            assertNull(found)
+        }
+
+        @Test
+        fun `should return the anime owning the platform link`() {
+            // Given
+            val anime = AnimeMockKBuilder { id = Uuid.random() }
+                .build()
+            transaction {
+                animeRepository.save(anime)
+                AnimePlatformRepositoryImpl(animeRepository).save(
+                    anime,
+                    AnimePlatformMockKBuilder {
+                        id = Uuid.random()
+                        platform = Platform.ANIMATION_DIGITAL_NETWORK
+                        platformId = "123"
+                    }.build()
+                )
+            }
+
+            // When
+            val found = transaction {
+                animeRepository.findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123")
+            }
+
+            // Then
+            assertEquals(anime.id, assertNotNull(found).id)
         }
     }
 }

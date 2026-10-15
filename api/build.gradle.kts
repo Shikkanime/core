@@ -1,5 +1,7 @@
 plugins {
     id("buildsrc.convention.kotlin-jvm")
+    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.shikkanimeFrameworkKoin)
     application
 }
 
@@ -11,8 +13,11 @@ dependencies {
     implementation(project(":models"))
     implementation(project(":database"))
     implementation(libs.shikkanimeFrameworkCore)
+    implementation(libs.shikkanimeFrameworkKoin)
     implementation(libs.shikkanimeFrameworkKtor)
+    implementation(libs.shikkanimeFrameworkGraphql)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.testEcosystem)
+    testImplementation(libs.shikkanimeFrameworkKtorTest)
 }

@@ -2,6 +2,7 @@ package fr.shikkanime.database.repositories
 
 import fr.shikkanime.database.entities.AnimeEntity
 import fr.shikkanime.models.Anime
+import fr.shikkanime.models.Platform
 import kotlin.uuid.Uuid
 
 /**
@@ -13,6 +14,22 @@ import kotlin.uuid.Uuid
  */
 internal abstract class AnimeRepository :
     ModelRepository<Uuid, AnimeEntity, Anime>(AnimeEntity) {
+    /**
+     * Loads every anime of the database with its children.
+     *
+     * @return every stored anime, in no particular order.
+     */
+    abstract fun findAll(): List<Anime>
+
+    /**
+     * Loads the anime linked to a streaming platform identifier.
+     *
+     * @param platform streaming platform owning the link.
+     * @param platformId identifier of the anime on the streaming platform.
+     * @return the linked anime, or `null` when no anime carries this platform link.
+     */
+    abstract fun findByPlatformAndPlatformId(platform: Platform, platformId: String): Anime?
+
     /**
      * Creates the anime identity row when it does not exist yet.
      *

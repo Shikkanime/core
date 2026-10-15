@@ -2,22 +2,55 @@ package fr.shikkanime.api
 
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.DatabaseManager
+import fr.shikkanime.database.DatabaseModule
+import fr.shikkanime.api.graphql.AnimeQuery
+import fr.shikkanime.graphql.configureGraphQL
+import fr.shikkanime.framework.koin.applyTransactionalProxies
+import fr.shikkanime.ktor.ControllerBinder
+import fr.shikkanime.ktor.IController
 import fr.shikkanime.ktor.configureDefaultModules
-import io.ktor.server.engine.*
 import io.ktor.server.cio.*
+import io.ktor.server.engine.*
+import io.ktor.server.routing.*
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.KoinApplication
+import org.koin.core.annotation.Module
+import org.koin.plugin.module.dsl.startKoin
 
 private val logger = LoggerFactory.getLogger("ApiApplication")
 
+@Module
+@ComponentScan("fr.shikkanime.api")
+internal class AppModule
+
+@KoinApplication(modules = [AppModule::class, DatabaseModule::class])
+internal class MyApp
+
 fun main() {
     logger.info("Starting API Application...")
-    val dbManager = DatabaseManager()
-    dbManager.init()
+
+    DatabaseManager.connect()
+
+    val koin = startKoin<MyApp>().koin
+    applyTransactionalProxies(koin)
 
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8080
     logger.info("Starting API HTTP Server on port $port...")
 
     embeddedServer(CIO, port = port) {
         configureDefaultModules()
+
+        configureGraphQL(
+            schemaPackages = listOf("fr.shikkanime.api.graphql", "fr.shikkanime.api.dtos"),
+            schemaQueries = listOf(AnimeQuery(koin.get()))
+        )
+
+        routing {
+            ControllerBinder.register(
+                this@routing,
+                koin.getAll<IController>()
+            )
+        }
     }.start(wait = false)
 
     logger.info("API Application started successfully.")

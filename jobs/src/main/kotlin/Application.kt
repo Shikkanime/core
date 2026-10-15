@@ -1,5 +1,10 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.core.LoggerFactory
+import fr.shikkanime.database.DatabaseManager
+import fr.shikkanime.database.DatabaseModule
+import fr.shikkanime.jobs.platforms.PlatformAnime
+import fr.shikkanime.jobs.platforms.PlatformEpisode
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -18,11 +23,13 @@ import java.time.ZonedDateTime
 import kotlin.reflect.full.findAnnotation
 import kotlin.system.exitProcess
 
+private val logger = LoggerFactory.getLogger("Application")
+
 @Module
 @ComponentScan("fr.shikkanime.jobs")
 internal class AppModule
 
-@KoinApplication(modules = [AppModule::class])
+@KoinApplication(modules = [AppModule::class, DatabaseModule::class])
 internal class MyApp
 
 internal class KoinJobFactory(private val koin: Koin) : JobFactory {
@@ -46,8 +53,15 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
 suspend fun main() {
     val koin = startKoin<MyApp>().koin
 
+    DatabaseManager.connect()
+
     koin.getAll<StreamingPlatform>().forEach { streamingPlatform ->
-        streamingPlatform.fetchLatestEpisodes().forEach(::println)
+        val animes = streamingPlatform.fetchLatestEpisodes()
+            .map(PlatformEpisode::anime)
+            .distinctBy(PlatformAnime::id)
+
+        val saved = koin.get<AnimeIngestionService>().saveAll(streamingPlatform.platform, animes)
+        logger.info("Saved $saved animes harvested from ${streamingPlatform.platform}")
     }
 
     exitProcess(0)

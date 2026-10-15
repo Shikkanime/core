@@ -2,6 +2,7 @@ package fr.shikkanime.database.services
 
 import fr.shikkanime.exposed.Transactional
 import fr.shikkanime.models.Anime
+import fr.shikkanime.models.Platform
 import kotlin.uuid.Uuid
 
 /**
@@ -13,6 +14,24 @@ import kotlin.uuid.Uuid
  * are actually intercepted.
  */
 interface AnimeService {
+    /**
+     * Loads every anime of the database with its images, localizations and platforms.
+     *
+     * @return every stored anime, in no particular order.
+     */
+    @Transactional
+    fun findAll(): List<Anime>
+
+    /**
+     * Loads the anime linked to a streaming platform identifier.
+     *
+     * @param platform streaming platform owning the link.
+     * @param platformId identifier of the anime on the streaming platform.
+     * @return the linked anime, or `null` when no anime carries this platform link.
+     */
+    @Transactional
+    fun findByPlatformAndPlatformId(platform: Platform, platformId: String): Anime?
+
     /**
      * Loads an anime with its images, localizations and platforms.
      *

@@ -17,6 +17,7 @@ shikkanimeFrameworkKtor = { module = "fr.shikkanime.framework:ktor", version.ref
 shikkanimeFrameworkKtorTest = { module = "fr.shikkanime.framework:ktor-test", version.ref = "shikkanimeFramework" }
 shikkanimeFrameworkKoin = { module = "fr.shikkanime.framework:koin", version.ref = "shikkanimeFramework" }
 shikkanimeFrameworkKoinExposed = { module = "fr.shikkanime.framework:koin-exposed", version.ref = "shikkanimeFramework" }
+shikkanimeFrameworkGraphql = { module = "fr.shikkanime.framework:graphql", version.ref = "shikkanimeFramework" }
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTime" }
 quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartz" }
 
