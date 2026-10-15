@@ -1,0 +1,126 @@
+package fr.shikkanime.database.repositories.impl
+
+import fr.shikkanime.database.DatabaseManager
+import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
+import fr.shikkanime.database.builders.impl.ImageMockKBuilder
+import fr.shikkanime.database.repositories.ImageRepository
+import fr.shikkanime.models.ImageType
+import io.mockk.every
+import io.mockk.impl.annotations.InjectMockKs
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.extension.ExtendWith
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.uuid.Uuid
+
+@ExtendWith(MockKExtension::class)
+@DisplayName("tests for the anime repository")
+class AnimeRepositoryImplTest {
+    @MockK private lateinit var imageRepository: ImageRepository
+
+    @InjectMockKs private lateinit var animeRepository: AnimeRepositoryImpl
+
+    @BeforeEach
+    fun setUp() {
+        val databaseManager = DatabaseManager("jdbc:h2:mem:${Uuid.random()};DB_CLOSE_DELAY=-1")
+        databaseManager.databaseWrapper.connect()
+        databaseManager.databaseWrapper.initializeSchema()
+
+        every { imageRepository.findAllByEntityId(any()) } returns emptyList()
+    }
+
+    @Nested
+    @DisplayName("tests for the 'save' method")
+    inner class SaveTests {
+        @Test
+        fun `should create the anime identity row when it does not exist yet`() {
+            // Given
+            val anime = AnimeMockKBuilder { id = Uuid.random() }
+                .build()
+
+            // When
+            val saved = transaction { animeRepository.save(anime) }
+
+            // Then
+            val found = transaction { animeRepository.findModelById(saved.id) }
+            assertEquals(anime.id, assertNotNull(found).id)
+        }
+
+        @Test
+        fun `should return the existing anime untouched when the same identifier is saved twice`() {
+            // Given
+            val anime = AnimeMockKBuilder { id = Uuid.random() }
+                .build()
+            val first = transaction { animeRepository.save(anime) }
+
+            // When
+            val second = transaction { animeRepository.save(anime) }
+
+            // Then
+            assertEquals(first.id, second.id)
+            assertEquals(first.createdAt, second.createdAt)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'findModelById' method")
+    inner class FindModelByIdTests {
+        @Test
+        fun `should return null when the anime does not exist`() {
+            // Given
+            val unknown = Uuid.random()
+
+            // When
+            val found = transaction { animeRepository.findModelById(unknown) }
+
+            // Then
+            assertNull(found)
+        }
+
+        @Test
+        fun `should return the anime with its images composed from their repository`() {
+            // Given
+            val anime = AnimeMockKBuilder { id = Uuid.random() }
+                .build()
+            val images = listOf(
+                ImageMockKBuilder {
+                    id = Uuid.random()
+                    type = ImageType.BANNER
+                    entityId = anime.id
+                }.build()
+            )
+            every { imageRepository.findAllByEntityId(anime.id) } returns images
+            transaction { animeRepository.save(anime) }
+
+            // When
+            val found = assertNotNull(transaction { animeRepository.findModelById(anime.id) })
+
+            // Then
+            assertEquals(ImageType.BANNER, found.images.single().type)
+        }
+
+        @Test
+        fun `should return an anime without child when it has none`() {
+            // Given
+            val anime = AnimeMockKBuilder { id = Uuid.random() }
+                .build()
+            transaction { animeRepository.save(anime) }
+
+            // When
+            val found = assertNotNull(transaction { animeRepository.findModelById(anime.id) })
+
+            // Then
+            assertTrue(found.localizations.isEmpty())
+            assertTrue(found.platforms.isEmpty())
+            assertTrue(found.images.isEmpty())
+        }
+    }
+}

@@ -19,7 +19,35 @@ the **business reason** for the call. The comment should explain the **intent**,
 val anime = animeRepository.findAnimeById(animeId)
 ```
 
+- **Do not repeat an inherited contract in KDoc.** An override implementing an interface or
+  supertype contract carries no KDoc of its own: the contract is already documented at the
+  declaration site. Document the override only when it diverges from the inherited contract — a
+  specialized overload, extra state composed from elsewhere, or a documented exception like
+  `AnimeEntity.toModel()` returning an aggregate without artwork.
+
 ### Variables and Properties
+
+- **A declaration with a single annotation keeps everything on one line, like a regular
+  declaration:** `@MockK private lateinit var imageRepository: ImageRepository`. Consecutive
+  declarations bearing the SAME annotation are packed together like regular variables, with no
+  blank line between them; declarations bearing DIFFERENT annotations form separate groups
+  separated by a blank line (the `double saut de ligne`), as in:
+  ```kotlin
+  @MockK private lateinit var animeRepository: AnimeRepository
+  @MockK private lateinit var localizationRepository: AnimeLocalizationRepository
+  @MockK private lateinit var platformRepository: AnimePlatformRepository
+  @MockK private lateinit var imageRepository: ImageRepository
+
+  @InjectMockKs private lateinit var animeService: AnimeServiceImpl
+  ```
+- **A declaration with several annotations stacks them, one per line above the declaration,** and
+  keeps its blank-line separation:
+  ```kotlin
+  @MockK
+  @Valid
+  private val a: A = A()
+  ```
+  This applies to tests and to all code in general.
 
 - **Never put KDoc on variables or properties.** Do not document global constants, enum entries,
   local variables, class fields, or constructor properties with KDoc. Names must be self-explanatory.
@@ -30,8 +58,27 @@ val anime = animeRepository.findAnimeById(animeId)
 
 - **Every non-test function and method must have complete KDoc.**
   The documentation must include a concise description of purpose, explicit `@param` tags for every
-  parameter, an `@return` tag describing the result, and `@see` tags referencing relevant classes
+  parameter, a `@return` tag describing the result, and `@see` tags referencing relevant classes
   using markdown links (e.g. `[PlatformEpisode]`, `[Country]`).
+
+### Declaration order in repositories and services
+
+Applies to every repository and service, interface and implementation alike. Declare members in
+this order:
+
+1. Read functions returning lists (`findAll...`), first.
+2. Unique read functions (`findById...`, `findModelById...`), next.
+3. Save and update functions (`save`, `update`, `persist`), after the reads.
+4. Delete functions, last, when there are any.
+
+Private helpers back a public function: place them directly above the function they serve, not in
+a separate block.
+
+### Naming of composite-key lookups
+
+A lookup function keyed on several criteria is named after the criteria it takes, joined by
+`And`, so the signature can be guessed from the name. The identifier criterion is `Id`:
+`findByIdAndType`, `findByIdAndLocale`, `findByIdPlatformAndPlatformId`.
 
 ## Control Flow and Layout
 

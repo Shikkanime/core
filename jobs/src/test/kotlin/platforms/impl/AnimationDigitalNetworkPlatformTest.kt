@@ -6,6 +6,7 @@ import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.ktor.client.HttpClient
@@ -360,8 +361,11 @@ class AnimationDigitalNetworkPlatformTest {
 
             // Then
             assertEquals("1353", anime.id)
-            assertEquals("Major", anime.title)
-            assertEquals("A baseball storywith two lines", anime.description)
+            assertEquals("Major", anime.localizations.single().title)
+            assertEquals(
+                "A baseball storywith two lines",
+                anime.localizations.single().description
+            )
         }
 
         @Test
@@ -632,7 +636,7 @@ class AnimationDigitalNetworkPlatformTest {
             val thumbnail = platform
                 .fetchLatestEpisodes()
                 .single()
-                .anime.thumbnail
+                .anime.images.single { it.type == ImageType.THUMBNAIL }.url
 
             // Then
             assertEquals(
@@ -652,7 +656,7 @@ class AnimationDigitalNetworkPlatformTest {
             val description = platform
                 .fetchLatestEpisodes()
                 .single()
-                .anime.description
+                .anime.localizations.single().description
 
             // Then
             assertEquals(null, description)
@@ -985,7 +989,7 @@ class AnimationDigitalNetworkPlatformTest {
         fun `should throw MissingAudioLocaleException when video languages is empty`() {
             // Given
             val video = adnVideo(1001, name = "Major 105", languages = emptyList())
-            val anime = video.show.toPlatformAnime(1)
+            val anime = video.show.toPlatformAnime(1, Country.FR)
 
             // When & Then
             val exception = assertFailsWith<MissingAudioLocaleException> {
@@ -1005,7 +1009,7 @@ class AnimationDigitalNetworkPlatformTest {
         fun `should throw MissingAudioLocaleException when languages are incompatible`() {
             // Given
             val video = adnVideo(1002, name = "Episode 2", languages = listOf("vostde"))
-            val anime = video.show.toPlatformAnime(1)
+            val anime = video.show.toPlatformAnime(1, Country.FR)
 
             // When & Then
             val exception = assertFailsWith<MissingAudioLocaleException> {
@@ -1022,7 +1026,7 @@ class AnimationDigitalNetworkPlatformTest {
         fun `should throw MissingAudioLocaleException with formatted title when name is blank`() {
             // Given
             val video = adnVideo(1003, name = "", languages = emptyList())
-            val anime = video.show.toPlatformAnime(1)
+            val anime = video.show.toPlatformAnime(1, Country.FR)
 
             // When & Then
             val exception = assertFailsWith<MissingAudioLocaleException> {
@@ -1054,7 +1058,7 @@ class AnimationDigitalNetworkPlatformTest {
                 .anime
 
             // Then
-            assertEquals("Overlord", anime.title)
+            assertEquals("Overlord", anime.localizations.single().title)
         }
 
         @Test
@@ -1074,7 +1078,7 @@ class AnimationDigitalNetworkPlatformTest {
                 .anime
 
             // Then
-            assertEquals("Attack on Titan", anime.title)
+            assertEquals("Attack on Titan", anime.localizations.single().title)
         }
 
         @Test
@@ -1094,7 +1098,7 @@ class AnimationDigitalNetworkPlatformTest {
                 .anime
 
             // Then
-            assertEquals("Sword Art Online", anime.title)
+            assertEquals("Sword Art Online", anime.localizations.single().title)
         }
 
         @Test
@@ -1120,7 +1124,7 @@ class AnimationDigitalNetworkPlatformTest {
                 .anime
 
             // Then
-            assertEquals("One Piece", anime.title)
+            assertEquals("One Piece", anime.localizations.single().title)
         }
 
         @Test
@@ -1149,7 +1153,7 @@ class AnimationDigitalNetworkPlatformTest {
             assertEquals(
                 "https://image.animationdigitalnetwork.com/" +
                     "show/1/1920x1080/landscape-with-logo.width=1920,height=1080,quality=100",
-                anime.banner
+                anime.images.single { it.type == ImageType.BANNER }.url
             )
         }
     }

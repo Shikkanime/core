@@ -33,7 +33,7 @@ Respect the multi-module project layers and responsibilities:
 - Manages database access using Exposed and `DatabaseWrapper`.
 - Defines Exposed tables (`UUIDTable`) and entities (`UUIDEntity`).
 - Entities and tables **must be `internal`** to `:database` and **never leak** to application modules.
-- Repositories extend `AbstractRepository` and expose functions returning pure `:models` domain objects.
+- Repositories extend `EntityRepository` and expose functions returning pure `:models` domain objects.
 
 ### Application Modules (`:api`, `:site`, `:admin`, `:jobs`)
 - Independent application entry points, runnable in separate Docker containers.

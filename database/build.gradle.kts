@@ -14,6 +14,7 @@ dependencies {
 
     testFixturesApi(libs.bundles.testEcosystem)
     testFixturesApi(project(":models"))
+    testFixturesApi(libs.shikkanimeFrameworkCore)
     testFixturesApi(libs.shikkanimeFrameworkExposed)
 
     testImplementation(kotlin("test"))

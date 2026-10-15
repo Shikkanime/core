@@ -4,12 +4,15 @@ import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.ZonedDateTimeSerializer
 import fr.shikkanime.jobs.platforms.PlatformAnime
+import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
 import fr.shikkanime.jobs.platforms.PlatformEpisode
 import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
+import fr.shikkanime.jobs.platforms.PlatformImage
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.ktor.http.HttpHeaders
@@ -79,7 +82,7 @@ internal fun getAudioLocale(country: Country, language: String): Locale? =
  *
  * @param title The raw anime title string provided by the platform (e.g. from [AdnShow.title]).
  * @param season The broadcast season number extracted for the episode, used to trim trailing numbers.
- * @return The cleaned and trimmed anime title suitable for [PlatformAnime.title].
+ * @return The cleaned and trimmed anime title suitable for [PlatformAnimeLocalization.title].
  * @see [PlatformAnime]
  * @see [AdnShow.toPlatformAnime]
  */
@@ -296,7 +299,7 @@ class AnimationDigitalNetworkPlatform(
         return videos.mapNotNull { video ->
             if (!video.isValid)
                 return@mapNotNull null
-            val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason)
+            val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason, country)
                 ?: return@mapNotNull null
 
             try {
@@ -355,6 +358,7 @@ class AnimationDigitalNetworkPlatform(
      * @param animes Mutable cache mapping ADN show IDs to already resolved [PlatformAnime] instances.
      * @param invalidShowIds Set of show IDs identified as non-animation or invalid during the current batch.
      * @param season The broadcast season index associated with the current video release.
+     * @param country Target country distribution, used as the key of the anime localization.
      * @return The resolved [PlatformAnime] instance, or `null` if the show is not an animation title.
      * @see [PlatformAnime]
      * @see [AdnShow.toPlatformAnime]
@@ -363,7 +367,8 @@ class AnimationDigitalNetworkPlatform(
         show: AdnShow,
         animes: MutableMap<Int, PlatformAnime>,
         invalidShowIds: MutableSet<Int>,
-        season: Int
+        season: Int,
+        country: Country
     ): PlatformAnime? {
         if (show.id in invalidShowIds)
             return null
@@ -374,7 +379,7 @@ class AnimationDigitalNetworkPlatform(
                 return null
             }
 
-            show.toPlatformAnime(season)
+            show.toPlatformAnime(season, country)
                 .also { animes[show.id] = it }
         }
     }
@@ -460,7 +465,7 @@ internal data class AdnVideo(
         if (audioLocales.isEmpty()) {
             throw MissingAudioLocaleException(
                 episodeId = id.toString(),
-                episodeName = "${anime.title} - $name",
+                episodeName = "${anime.localizations.first().title} - $name",
                 languages = languages,
                 country = country
             )
@@ -525,23 +530,32 @@ internal data class AdnShow(
      * Maps an ADN show into the platform anime domain entity.
      *
      * Cleans redundant season suffixes and part labels from the title using [cleanAnimeName],
-     * strips newlines from the description, and resolves high-resolution [thumbnail] and [banner] artwork.
+     * strips newlines from the description, resolves high-resolution artwork, and keys the
+     * localized texts by the target [country].
      *
      * @param season The broadcast season index used to clean trailing season numbers from the title.
+     * @param country Target country distribution, used as the key of the produced localization.
      * @return The normalized [PlatformAnime] domain entity.
      * @see [PlatformAnime]
      * @see [cleanAnimeName]
      */
-    fun toPlatformAnime(season: Int): PlatformAnime {
+    fun toPlatformAnime(season: Int, country: Country): PlatformAnime {
         val rawTitle = shortTitle?.takeIf { it.isNotBlank() } ?: title
         val cleanedTitle = cleanAnimeName(rawTitle, season)
 
         return PlatformAnime(
             id = id.toString(),
-            title = cleanedTitle,
-            description = summary?.replace("\n", ""),
-            thumbnail = thumbnail,
-            banner = banner
+            images = listOf(
+                PlatformImage(type = ImageType.THUMBNAIL, url = thumbnail),
+                PlatformImage(type = ImageType.BANNER, url = banner)
+            ),
+            localizations = listOf(
+                PlatformAnimeLocalization(
+                    country = country,
+                    title = cleanedTitle,
+                    description = summary?.replace("\n", "")
+                )
+            )
         )
     }
 }
