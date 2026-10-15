@@ -29,12 +29,12 @@ internal class AnimeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 Repositories encapsulate queries and entity mapping.
 
-### Custom "Upsert" DSL (`AbstractRepository`)
+### Custom "Upsert" DSL (`EntityRepository`)
 
-Internal repositories extend `AbstractRepository<UUID, ENTITY>` which provides standard methods (`findById`, `findAllByIds`) and an upsert DSL: `ifExists`, `newIfNotExists`, and `applyFlush`.
+Internal repositories extend `EntityRepository<UUID, ENTITY>` which provides standard methods (`findById`, `findAllByIds`) and an upsert DSL: `ifExists`, `newIfNotExists`, and `applyFlush`.
 
 ```kotlin
-internal class AnimeInternalRepository : AbstractRepository<UUID, AnimeEntity>(AnimeEntity)
+internal class AnimeInternalRepository : EntityRepository<UUID, AnimeEntity>(AnimeEntity)
 
 class AnimeRepository {
     private val repo = AnimeInternalRepository()

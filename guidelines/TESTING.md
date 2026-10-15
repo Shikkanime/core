@@ -75,6 +75,11 @@ class AnimeServiceTest {
 
 Always use MockK builders implementing `TestBuilder<T>` to instantiate test entities and complex objects instead of calling `mockk<T>()` directly in tests.
 
+Builder fields default to `null` and are stubbed only when the test sets them: define only the
+values the test actually needs. Any field whose value is read back through the mock (a data-class
+`copy`, a mapped property) must be set explicitly, since an unstubbed mock value is not a usable
+default.
+
 Test builders for database entities must reside in `:database` under `src/testFixtures/` so they can be reused across consumer modules via `testImplementation(testFixtures(project(":database")))`.
 
 ```kotlin
