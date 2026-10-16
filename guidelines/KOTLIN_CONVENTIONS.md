@@ -20,6 +20,8 @@
   self-explanatory names without KDoc comments.
 - **Import every type you use; never write a fully-qualified name inline.** `import kotlin.uuid.Uuid`
   and `Uuid.parse(id)`, never `kotlin.uuid.Uuid.parse(id)`.
+- **Name a property in camelCase, a type in PascalCase:** a top-level value reads `uuidScalar`, never
+  `UuidScalar`, which would name a type. The same rule covers local variables and parameters.
 - **Map lists with method references, never with lambdas:** `animes.map(Anime::toDto)` instead of
   `animes.map { it.toDto() }`, `map(ImageEntity::toModel)` instead of `map { it.toModel() }`. The
   unqualified `::toDto` form is accepted only when a single `toDto` is in scope; overloaded
