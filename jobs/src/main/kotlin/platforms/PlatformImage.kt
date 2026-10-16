@@ -1,9 +1,7 @@
 package fr.shikkanime.jobs.platforms
 
-import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.models.Image
 import fr.shikkanime.models.ImageType
-import kotlin.uuid.Uuid
 
 /**
  * Artwork harvested from a streaming platform for one of its entities.

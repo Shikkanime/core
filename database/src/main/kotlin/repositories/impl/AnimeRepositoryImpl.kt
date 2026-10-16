@@ -1,5 +1,6 @@
 package fr.shikkanime.database.repositories.impl
 
+import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.entities.AnimeEntity
 import fr.shikkanime.database.entities.AnimePlatformEntity
 import fr.shikkanime.database.entities.AnimePlatformTable
@@ -56,6 +57,9 @@ internal class AnimeRepositoryImpl(
 
     override fun save(anime: Anime): Anime =
         anime.id?.let(::findById)
+            .ifExists {
+                updatedAt = TimeUtils.now()
+            }
             .newIfNotExists(anime.id) { }
             .applyFlush()
             // The shared image table has no relation to walk, the repository resolves the artwork.

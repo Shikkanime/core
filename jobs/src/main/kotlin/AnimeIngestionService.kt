@@ -5,7 +5,6 @@ import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.Platform
 import org.koin.core.annotation.Single
-import kotlin.uuid.Uuid
 
 /**
  * Saves the animes harvested from a streaming platform into the database.

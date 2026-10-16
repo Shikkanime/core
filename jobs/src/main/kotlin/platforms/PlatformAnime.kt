@@ -3,7 +3,6 @@ package fr.shikkanime.jobs.platforms
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.AnimePlatform
 import fr.shikkanime.models.Platform
-import kotlin.uuid.Uuid
 
 /**
  * Normalized representation of an anime title harvested from a streaming platform.

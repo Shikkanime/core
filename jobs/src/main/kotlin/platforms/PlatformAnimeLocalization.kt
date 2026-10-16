@@ -1,10 +1,8 @@
 package fr.shikkanime.jobs.platforms
 
-import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.models.AnimeLocalization
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.Locale
-import kotlin.uuid.Uuid
 
 /**
  * Editorial content of an anime localized for a specific distribution.
