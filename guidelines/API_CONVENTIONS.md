@@ -30,7 +30,9 @@ data class AnimeDto(
   `String`; the OpenAPI response type is `ErrorMessageDto::class`.
 - **A controller parameter is typed with its real domain type, never with `String` to re-parse it:**
   `@PathParam("id") id: Uuid`. The framework resolver converts textual parameters and answers an
-  HTTP 400 carrying a `MessageDto` error when the value does not match the expected type.
+  HTTP 400 carrying a `MessageDto` error when a non-nullable parameter's value does not match its
+  type. A nullable parameter is optional by nature: a missing or unconvertible value resolves to
+  `null`, it never refuses the request.
 
 ```kotlin
 @Serializable
