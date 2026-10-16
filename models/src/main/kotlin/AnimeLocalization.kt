@@ -11,9 +11,9 @@ import kotlin.uuid.Uuid
  * @property description Localized synopsis, `null` when the source does not provide one yet.
  */
 data class AnimeLocalization(
-    override val id: Uuid,
-    override val createdAt: LocalDateTime,
-    override val updatedAt: LocalDateTime,
+    override val id: Uuid?,
+    override val createdAt: LocalDateTime?,
+    override val updatedAt: LocalDateTime?,
     val locale: Locale,
     val title: String,
     val description: String?

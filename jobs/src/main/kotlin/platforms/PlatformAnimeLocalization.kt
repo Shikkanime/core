@@ -36,9 +36,9 @@ data class PlatformAnimeLocalization(
      */
     fun toModel(): AnimeLocalization =
         AnimeLocalization(
-            id = Uuid.random(),
-            createdAt = TimeUtils.now(),
-            updatedAt = TimeUtils.now(),
+            id = null,
+            createdAt = null,
+            updatedAt = null,
             locale = locale,
             title = title,
             description = description

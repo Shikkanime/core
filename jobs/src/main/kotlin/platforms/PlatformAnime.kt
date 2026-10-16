@@ -34,18 +34,18 @@ data class PlatformAnime(
      * @return the [Anime] to pass to the persistence.
      * @see Anime
      */
-    fun toModel(platform: Platform, id: Uuid): Anime =
+    fun toModel(platform: Platform): Anime =
         Anime(
-            id = id,
-            createdAt = TimeUtils.now(),
-            updatedAt = TimeUtils.now(),
-            images = images.map { it.toModel(id) },
+            id = null,
+            createdAt = null,
+            updatedAt = null,
+            images = images.map(PlatformImage::toModel),
             localizations = localizations.map(PlatformAnimeLocalization::toModel),
             platforms = listOf(
                 AnimePlatform(
-                    id = Uuid.random(),
-                    createdAt = TimeUtils.now(),
-                    updatedAt = TimeUtils.now(),
+                    id = null,
+                    createdAt = null,
+                    updatedAt = null,
                     platform = platform,
                     platformId = this.id
                 )

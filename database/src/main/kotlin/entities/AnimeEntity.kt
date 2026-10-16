@@ -2,6 +2,7 @@ package fr.shikkanime.database.entities
 
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.Image
+import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.ModelConvertible
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
@@ -30,11 +31,20 @@ internal class AnimeEntity(id: EntityID<Uuid>) : ShikkEntity(id, AnimeTable), Mo
         toModel(emptyList())
 
     /**
+     * Maps this row and its children to the domain aggregate, resolving the shared artwork through
+     * [imageRepository].
+     *
+     * @param imageRepository repository owning the shared image table.
+     * @return the [Anime] representation of this row, with its artwork.
+     */
+    fun toModel(imageRepository: ImageRepository): Anime =
+        toModel(imageRepository.findAllByEntityId(id.value))
+
+    /**
      * Maps this row and its children to the domain aggregate.
      *
-     * Localizations and platforms are read through their lazy relations. [images] is passed in
-     * because the image table is shared by every entity and cannot be resolved by a foreign key;
-     * the repository loads it with its own query.
+     * [images] is passed in because the image table is shared by every entity and cannot be
+     * resolved by a foreign key.
      *
      * @param images artwork rows owned by this anime.
      * @return the [Anime] representation of this row.

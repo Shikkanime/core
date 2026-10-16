@@ -40,9 +40,9 @@ internal class AnimePlatformRepositoryImpl(
             .firstOrNull()
 
     override fun save(anime: Anime, animePlatform: AnimePlatform): AnimePlatform =
-        findByIdPlatformAndPlatformId(anime.id, animePlatform.platform, animePlatform.platformId)
+        findByIdPlatformAndPlatformId(requireNotNull(anime.id), animePlatform.platform, animePlatform.platformId)
             .newIfNotExists(animePlatform.id) {
-                this.anime = animeRepository.getReference(anime.id)
+                this.anime = animeRepository.getReference(requireNotNull(anime.id))
                 platform = animePlatform.platform
                 platformId = animePlatform.platformId
             }

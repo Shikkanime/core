@@ -20,7 +20,7 @@ internal class ImageRepositoryImpl : ImageRepository() {
         ImageEntity.find { ImageTable.entityId eq entityId }
             .map(ImageEntity::toModel)
 
-    override fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid, List<Image>> =
+    override fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid?, List<Image>> =
         ImageEntity.find { ImageTable.entityId inList entityIds }
             .map(ImageEntity::toModel)
             .groupBy(Image::entityId)
@@ -41,13 +41,13 @@ internal class ImageRepositoryImpl : ImageRepository() {
             .firstOrNull()
 
     override fun save(image: Image): Image =
-        findByIdAndType(image.entityId, image.type)
+        findByIdAndType(requireNotNull(image.entityId), image.type)
             .ifExists {
                 url = image.url
                 updatedAt = TimeUtils.now()
             }
             .newIfNotExists(image.id) {
-                entityId = image.entityId
+                entityId = requireNotNull(image.entityId)
                 type = image.type
                 url = image.url
             }

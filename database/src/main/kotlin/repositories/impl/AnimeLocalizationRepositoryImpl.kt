@@ -35,14 +35,14 @@ internal class AnimeLocalizationRepositoryImpl(
             .firstOrNull()
 
     override fun save(anime: Anime, localization: AnimeLocalization): AnimeLocalization =
-        findByIdAndLocale(anime.id, localization.locale)
+        findByIdAndLocale(requireNotNull(anime.id), localization.locale)
             .ifExists {
                 title = localization.title
                 description = localization.description
                 updatedAt = TimeUtils.now()
             }
             .newIfNotExists(localization.id) {
-                this.anime = animeRepository.getReference(anime.id)
+                this.anime = animeRepository.getReference(requireNotNull(anime.id))
                 locale = localization.locale
                 title = localization.title
                 description = localization.description

@@ -66,7 +66,7 @@ class AnimePlatformRepositoryImplTest {
             val saved = transaction { platformRepository.save(anime, link) }
 
             // Then
-            val found = assertNotNull(transaction { platformRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { platformRepository.findModelById(requireNotNull(saved.id)) })
             assertEquals(Platform.ANIMATION_DIGITAL_NETWORK, found.platform)
             assertEquals("123", found.platformId)
         }
@@ -130,8 +130,8 @@ class AnimePlatformRepositoryImplTest {
             }
 
             // Then
-            assertNotNull(transaction { platformRepository.findModelById(first.id) })
-            assertNotNull(transaction { platformRepository.findModelById(second.id) })
+            assertNotNull(transaction { platformRepository.findModelById(requireNotNull(first.id)) })
+            assertNotNull(transaction { platformRepository.findModelById(requireNotNull(second.id)) })
         }
     }
 
@@ -166,7 +166,7 @@ class AnimePlatformRepositoryImplTest {
             }
 
             // When
-            val found = assertNotNull(transaction { platformRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { platformRepository.findModelById(requireNotNull(saved.id)) })
 
             // Then
             assertEquals("123", found.platformId)

@@ -152,7 +152,7 @@ class AnimeServiceTest {
             every { animeRepository.findModelById(any()) } returns anime
 
             // When
-            val found = animeService.findById(anime.id)
+            val found = animeService.findById(requireNotNull(anime.id))
 
             // Then
             assertEquals("One Piece", found?.localizations?.single()?.title)

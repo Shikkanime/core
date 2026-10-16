@@ -30,7 +30,7 @@ data class AnimeDto(
  */
 fun Anime.toDto(): AnimeDto =
     AnimeDto(
-        id = id,
+        id = requireNotNull(id),
         localizations = localizations.map(AnimeLocalization::toDto),
         platforms = platforms.map(AnimePlatform::toDto),
         images = images.map(Image::toDto)

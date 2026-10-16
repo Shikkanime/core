@@ -53,7 +53,7 @@ class AnimeRepositoryImplTest {
             val saved = transaction { animeRepository.save(anime) }
 
             // Then
-            val found = transaction { animeRepository.findModelById(saved.id) }
+            val found = transaction { animeRepository.findModelById(requireNotNull(saved.id)) }
             assertEquals(anime.id, assertNotNull(found).id)
         }
 
@@ -104,7 +104,7 @@ class AnimeRepositoryImplTest {
             transaction { animeRepository.save(anime) }
 
             // When
-            val found = assertNotNull(transaction { animeRepository.findModelById(anime.id) })
+            val found = assertNotNull(transaction { animeRepository.findModelById(requireNotNull(anime.id)) })
 
             // Then
             assertEquals(ImageType.BANNER, found.images.single().type)
@@ -118,7 +118,7 @@ class AnimeRepositoryImplTest {
             transaction { animeRepository.save(anime) }
 
             // When
-            val found = assertNotNull(transaction { animeRepository.findModelById(anime.id) })
+            val found = assertNotNull(transaction { animeRepository.findModelById(requireNotNull(anime.id)) })
 
             // Then
             assertTrue(found.localizations.isEmpty())

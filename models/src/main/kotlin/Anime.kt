@@ -14,9 +14,9 @@ import kotlin.uuid.Uuid
  * @property platforms Platform source links of this anime.
  */
 data class Anime(
-    override val id: Uuid,
-    override val createdAt: LocalDateTime,
-    override val updatedAt: LocalDateTime,
+    override val id: Uuid?,
+    override val createdAt: LocalDateTime?,
+    override val updatedAt: LocalDateTime?,
     val images: List<Image>,
     val localizations: List<AnimeLocalization>,
     val platforms: List<AnimePlatform>

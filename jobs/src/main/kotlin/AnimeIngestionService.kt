@@ -41,6 +41,6 @@ internal class AnimeIngestionService(
     private fun save(platform: Platform, platformAnime: PlatformAnime): Anime {
         val existing = animeService.findByPlatformAndPlatformId(platform, platformAnime.id)
 
-        return animeService.save(platformAnime.toModel(platform, existing?.id ?: Uuid.random()))
+        return animeService.save(platformAnime.toModel(platform).copy(id = existing?.id))
     }
 }

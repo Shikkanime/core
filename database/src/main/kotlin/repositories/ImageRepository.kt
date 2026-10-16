@@ -31,7 +31,7 @@ internal abstract class ImageRepository :
      * @param entityIds identifiers of the owning entities.
      * @return the images of each owner, an empty list for an owner without artwork.
      */
-    abstract fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid, List<Image>>
+    abstract fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid?, List<Image>>
 
     /**
      * Upserts one image, overwriting the URL when the owner already has this image type.

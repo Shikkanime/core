@@ -66,7 +66,7 @@ class AnimeLocalizationRepositoryImplTest {
             val saved = transaction { localizationRepository.save(anime, localization) }
 
             // Then
-            val found = assertNotNull(transaction { localizationRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { localizationRepository.findModelById(requireNotNull(saved.id)) })
             assertEquals(Locale.FR_FR, found.locale)
             assertEquals("One Piece", found.title)
         }
@@ -129,8 +129,8 @@ class AnimeLocalizationRepositoryImplTest {
             }
 
             // Then
-            assertNotNull(transaction { localizationRepository.findModelById(first.id) })
-            assertNotNull(transaction { localizationRepository.findModelById(second.id) })
+            assertNotNull(transaction { localizationRepository.findModelById(requireNotNull(first.id)) })
+            assertNotNull(transaction { localizationRepository.findModelById(requireNotNull(second.id)) })
         }
     }
 
@@ -165,7 +165,7 @@ class AnimeLocalizationRepositoryImplTest {
             }
 
             // When
-            val found = assertNotNull(transaction { localizationRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { localizationRepository.findModelById(requireNotNull(saved.id)) })
 
             // Then
             assertEquals("One Piece", found.title)

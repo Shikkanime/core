@@ -22,12 +22,12 @@ data class PlatformImage(
      * @return the [Image] to pass to the persistence.
      * @see Image
      */
-    fun toModel(animeId: Uuid): Image =
+    fun toModel(): Image =
         Image(
-            id = Uuid.random(),
-            createdAt = TimeUtils.now(),
-            updatedAt = TimeUtils.now(),
-            entityId = animeId,
+            id = null,
+            createdAt = null,
+            updatedAt = null,
+            entityId = null,
             type = type,
             url = url
         )

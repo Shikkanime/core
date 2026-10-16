@@ -90,7 +90,7 @@ class ImageRepositoryImplTest {
             val saved = transaction { imageRepository.save(image) }
 
             // Then
-            val found = assertNotNull(transaction { imageRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { imageRepository.findModelById(requireNotNull(saved.id)) })
             assertEquals("https://a", found.url)
         }
 
@@ -150,7 +150,7 @@ class ImageRepositoryImplTest {
             }
 
             // When
-            val found = assertNotNull(transaction { imageRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { imageRepository.findModelById(requireNotNull(saved.id)) })
 
             // Then
             assertEquals(ImageType.THUMBNAIL, found.type)
