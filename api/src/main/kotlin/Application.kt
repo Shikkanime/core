@@ -7,6 +7,7 @@ import fr.shikkanime.database.DatabaseModule
 import fr.shikkanime.graphql.configureGraphQL
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.ktor.ControllerBinder
+import fr.shikkanime.ktor.configureSwaggerRoute
 import fr.shikkanime.ktor.IController
 import fr.shikkanime.ktor.configureDefaultModules
 import io.ktor.server.cio.*
@@ -46,12 +47,14 @@ fun main() {
         )
 
         routing {
+            configureSwaggerRoute("Shikkanime API", "1.0.0")
+
             ControllerBinder.register(
                 this@routing,
                 koin.getAll<IController>()
             )
         }
-    }.start(wait = false)
+    }.start(wait = true)
 
     logger.info("API Application started successfully.")
 }

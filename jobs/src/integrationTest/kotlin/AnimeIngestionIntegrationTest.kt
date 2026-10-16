@@ -1,6 +1,7 @@
 package fr.shikkanime.jobs
 
 import fr.shikkanime.database.DatabaseManager
+import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
@@ -8,6 +9,7 @@ import fr.shikkanime.jobs.platforms.PlatformImage
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Platform
+import org.koin.plugin.module.dsl.startKoin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -25,7 +27,9 @@ class AnimeIngestionIntegrationTest {
 
     companion object {
         /** The application graph is global: boot it once for the whole run. */
-        private val koin by lazy { bootstrap() }
+        private val koin by lazy {
+            startKoin<MyApp>().koin.also(::applyTransactionalProxies)
+        }
     }
 
     /**

@@ -51,25 +51,9 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
     }
 }
 
-/**
- * Starts the application graph exactly as the jobs run it.
- *
- * The transactional proxies are part of the bootstrap on purpose: a service consumed without them
- * runs its Exposed queries outside any transaction and dies with "No transaction in context".
- * The integration tests boot through this function so the wiring itself is covered.
- *
- * @return the started Koin instance, with every [fr.shikkanime.exposed.Transactional] bean wrapped.
- */
-internal fun bootstrap(): Koin {
-    val koin = startKoin<MyApp>().koin
-
-    applyTransactionalProxies(koin)
-
-    return koin
-}
-
 suspend fun main() {
-    val koin = bootstrap()
+    val koin = startKoin<MyApp>().koin
+    applyTransactionalProxies(koin)
 
     DatabaseManager.connect()
 
