@@ -11,19 +11,16 @@ import kotlinx.serialization.Serializable
 data class AnimePlatformDto(
     val platform: Platform,
     val platformId: String
-) {
-    companion object {
-        /**
-         * Maps a stored platform source link to its API view.
-         *
-         * @param animePlatform source link read from the database.
-         * @return the API view of [animePlatform].
-         * @see AnimePlatform
-         */
-        fun toDto(animePlatform: AnimePlatform): AnimePlatformDto =
-            AnimePlatformDto(
-                platform = animePlatform.platform,
-                platformId = animePlatform.platformId
-            )
-    }
-}
+)
+
+/**
+ * Maps a stored platform source link to its API view.
+ *
+ * @return the API view of this source link.
+ * @see AnimePlatformDto
+ */
+fun AnimePlatform.toDto(): AnimePlatformDto =
+    AnimePlatformDto(
+        platform = platform,
+        platformId = platformId
+    )

@@ -1,9 +1,9 @@
 package fr.shikkanime.api
 
+import com.expediagroup.graphql.server.operations.Query
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.DatabaseModule
-import fr.shikkanime.api.graphql.AnimeQuery
 import fr.shikkanime.graphql.configureGraphQL
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.ktor.ControllerBinder
@@ -41,8 +41,8 @@ fun main() {
         configureDefaultModules()
 
         configureGraphQL(
-            schemaPackages = listOf("fr.shikkanime.api.graphql", "fr.shikkanime.api.dtos"),
-            schemaQueries = listOf(AnimeQuery(koin.get()))
+            schemaPackages = listOf("fr.shikkanime.api.graphql.queries", "fr.shikkanime.api.dtos"),
+            schemaQueries = koin.getAll<Query>()
         )
 
         routing {

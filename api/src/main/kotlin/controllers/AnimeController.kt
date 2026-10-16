@@ -1,8 +1,9 @@
 package fr.shikkanime.api.controllers
 
 import fr.shikkanime.api.dtos.AnimeDto
-import fr.shikkanime.api.dtos.AnimeDto.Companion.toDto
+import fr.shikkanime.api.dtos.toDto
 import fr.shikkanime.database.services.AnimeService
+import fr.shikkanime.models.Anime
 import fr.shikkanime.ktor.ApiResponse
 import fr.shikkanime.ktor.ApiResponses
 import fr.shikkanime.ktor.GetMapping
@@ -11,6 +12,8 @@ import fr.shikkanime.ktor.Operation
 import fr.shikkanime.ktor.PathParam
 import fr.shikkanime.ktor.ResponseEntity
 import fr.shikkanime.ktor.RestController
+import fr.shikkanime.ktor.dtos.ErrorMessageDto
+import fr.shikkanime.ktor.dtos.MessageDto
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -33,7 +36,7 @@ class AnimeController(
         ApiResponse(200, "The stored animes", List::class, [AnimeDto::class])
     ])
     fun findAll(): ResponseEntity<*> =
-        ResponseEntity.ok(animeService.findAll().map(::toDto))
+        ResponseEntity.ok(animeService.findAll().map(Anime::toDto))
 
     @GetMapping("/{id}")
     @Operation(
@@ -43,10 +46,10 @@ class AnimeController(
     )
     @ApiResponses([
         ApiResponse(200, "The stored anime", AnimeDto::class),
-        ApiResponse(404, "No anime with this identifier", String::class)
+        ApiResponse(404, "No anime with this identifier", ErrorMessageDto::class)
     ])
     fun findById(@PathParam("id") id: String): ResponseEntity<*> =
         animeService.findById(Uuid.parse(id))
-            ?.let { ResponseEntity.ok(toDto(it)) }
-            ?: ResponseEntity.notFound("No anime with identifier $id")
+            ?.let { ResponseEntity.ok(it.toDto()) }
+            ?: ResponseEntity.notFound(MessageDto.error("No anime with identifier $id"))
 }

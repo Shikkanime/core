@@ -12,20 +12,17 @@ data class AnimeLocalizationDto(
     val locale: Locale,
     val title: String,
     val description: String?
-) {
-    companion object {
-        /**
-         * Maps a stored localization to its API view.
-         *
-         * @param localization localized text read from the database.
-         * @return the API view of [localization].
-         * @see AnimeLocalization
-         */
-        fun toDto(localization: AnimeLocalization): AnimeLocalizationDto =
-            AnimeLocalizationDto(
-                locale = localization.locale,
-                title = localization.title,
-                description = localization.description
-            )
-    }
-}
+)
+
+/**
+ * Maps a stored localization to its API view.
+ *
+ * @return the API view of this localization.
+ * @see AnimeLocalizationDto
+ */
+fun AnimeLocalization.toDto(): AnimeLocalizationDto =
+    AnimeLocalizationDto(
+        locale = locale,
+        title = title,
+        description = description
+    )

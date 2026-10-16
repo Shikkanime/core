@@ -1,4 +1,4 @@
-package fr.shikkanime.api.graphql
+package fr.shikkanime.api.graphql.queries
 
 import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.services.AnimeService
@@ -26,7 +26,7 @@ class AnimeQueryTest {
 
     private fun Application.registerGraphQL() {
         configureGraphQL(
-            schemaPackages = listOf("fr.shikkanime.api.graphql", "fr.shikkanime.api.dtos"),
+            schemaPackages = listOf("fr.shikkanime.api.graphql.queries", "fr.shikkanime.api.dtos"),
             schemaQueries = listOf(AnimeQuery(animeService))
         )
     }
