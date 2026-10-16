@@ -43,8 +43,10 @@ internal class ImageRepositoryImpl : ImageRepository() {
     override fun save(image: Image): Image =
         findByIdAndType(requireNotNull(image.entityId), image.type)
             .ifExists {
-                url = image.url
-                updatedAt = TimeUtils.now()
+                if (url != image.url) {
+                    url = image.url
+                    updatedAt = TimeUtils.now()
+                }
             }
             .newIfNotExists(image.id) {
                 entityId = requireNotNull(image.entityId)

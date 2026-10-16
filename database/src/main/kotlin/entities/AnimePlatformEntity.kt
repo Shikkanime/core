@@ -19,6 +19,9 @@ internal object AnimePlatformTable : ShikkTable(ANIME_PLATFORM_TABLE_NAME) {
     val platformId = varchar("platform_id", 255)
 
     init {
+        // The unique key is the triple, never (platform, platform_id): several stored animes can
+        // share one platform identifier (One Piece on Crunchyroll: same platform_id, one anime per
+        // season), while the same anime can carry several platform identifiers (One Piece on ADN).
         uniqueIndex("${ANIME_TABLE_ID}_platform_platform_id$UQ", anime, platform, platformId)
         index("platform_platform_id", false, platform, platformId)
     }

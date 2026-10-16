@@ -55,6 +55,15 @@ internal class AnimeRepositoryImpl(
             // The shared image table has no relation to walk, the repository resolves the artwork.
             ?.let { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
 
+    /**
+     * Persists the anime row and returns it without its children.
+     *
+     * The caller upserts the children right after and composes the returned aggregate from those
+     * fresh rows: composing them here would query what the caller immediately replaces.
+     *
+     * @param anime anime to persist.
+     * @return the stored anime row, with empty collections.
+     */
     override fun save(anime: Anime): Anime =
         anime.id?.let(::findById)
             .ifExists {
@@ -62,6 +71,5 @@ internal class AnimeRepositoryImpl(
             }
             .newIfNotExists(anime.id) { }
             .applyFlush()
-            // The shared image table has no relation to walk, the repository resolves the artwork.
-            .let { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
+            .toModel()
 }
