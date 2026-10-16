@@ -41,8 +41,10 @@ internal class AnimeIngestionService(
     private fun save(platform: Platform, platformAnime: PlatformAnime): Anime {
         val existing = animeService.findByPlatformAndPlatformId(platform, platformAnime.id)
 
+        // The fresh model carries no identity; the stored anime behind the platform link owns it.
         return animeService.save(
-            platformAnime.toModel(platform, existing?.id ?: Uuid.random()).copy(id = existing?.id)
+            platformAnime.toModel()
+                .copy(id = existing?.id)
         )
     }
 }

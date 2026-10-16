@@ -22,6 +22,11 @@
   and `Uuid.parse(id)`, never `kotlin.uuid.Uuid.parse(id)`.
 - **Name a property in camelCase, a type in PascalCase:** a top-level value reads `uuidScalar`, never
   `UuidScalar`, which would name a type. The same rule covers local variables and parameters.
+- **A conversion is a total function of its receiver:** `toModel()` / `toDto()` take NO parameter and
+  read only the constructor state of the source. When a mapping needs external state (a platform, an
+  owner identifier), the SOURCE misses a constructor parameter — fix the source, never grow the
+  conversion signature. Each value is written exactly once by the single holder of that fact: a
+  later `copy(...)` re-assigning what a previous step already decided is the smell to eliminate.
 - **Map lists with method references, never with lambdas:** `animes.map(Anime::toDto)` instead of
   `animes.map { it.toDto() }`, `map(ImageEntity::toModel)` instead of `map { it.toModel() }`. The
   unqualified `::toDto` form is accepted only when a single `toDto` is in scope; overloaded

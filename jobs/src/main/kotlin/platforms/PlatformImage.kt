@@ -18,16 +18,18 @@ data class PlatformImage(
     /**
      * Maps this harvested artwork to the canonical image to persist.
      *
-     * @param animeId identifier of the anime owning the image.
+     * The owner does not exist yet at harvest time: the persistence attaches the image to the anime
+     * it just saved, exactly once.
+     *
      * @return the [Image] to pass to the persistence.
      * @see Image
      */
-    fun toModel(entityId: Uuid): Image =
+    fun toModel(): Image =
         Image(
             id = null,
             createdAt = null,
             updatedAt = null,
-            entityId = entityId,
+            entityId = null,
             type = type,
             url = url
         )

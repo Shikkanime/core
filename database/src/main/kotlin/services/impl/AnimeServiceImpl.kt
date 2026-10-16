@@ -37,11 +37,11 @@ internal class AnimeServiceImpl(
 
         return saved.copy(
             // Refresh known locales in place and append the new ones, without deleting anything
-            localizations = anime.localizations.map { localizationRepository.save(anime, it) },
+            localizations = anime.localizations.map { localizationRepository.save(saved, it) },
             // Keep the platform source links in sync with the aggregate
-            platforms = anime.platforms.map { platformRepository.save(anime, it) },
-            // Store images under the anime identifier, whatever owner the given images carry
-            images = anime.images.map { imageRepository.save(it.copy(entityId = requireNotNull(saved.id))) }
+            platforms = anime.platforms.map { platformRepository.save(saved, it) },
+            // The saved anime owns its artwork: the owner is written here, exactly once
+            images = anime.images.map { imageRepository.save(it.copy(entityId = saved.id)) }
         )
     }
 }

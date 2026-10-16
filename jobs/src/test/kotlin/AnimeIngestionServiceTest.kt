@@ -31,6 +31,7 @@ class AnimeIngestionServiceTest {
 
     private val platformAnime = PlatformAnimeMockKBuilder {
         id = "123"
+        platform = Platform.ANIMATION_DIGITAL_NETWORK
         images = listOf(
             PlatformImageMockKBuilder {
                 type = ImageType.BANNER

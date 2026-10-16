@@ -545,6 +545,7 @@ internal data class AdnShow(
 
         return PlatformAnime(
             id = id.toString(),
+            platform = Platform.ANIMATION_DIGITAL_NETWORK,
             images = listOf(
                 PlatformImage(type = ImageType.THUMBNAIL, url = thumbnail),
                 PlatformImage(type = ImageType.BANNER, url = banner)
