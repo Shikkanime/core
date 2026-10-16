@@ -21,7 +21,7 @@ class PlatformImageMockKBuilder(
         type?.let { every { mockK.type } returns it }
         url?.let { every { mockK.url } returns it }
 
-        every { mockK.toModel() } answers { callOriginal() }
+        every { mockK.toModel(any()) } answers { callOriginal() }
 
         return mockK
     }

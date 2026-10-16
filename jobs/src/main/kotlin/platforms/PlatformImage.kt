@@ -22,12 +22,12 @@ data class PlatformImage(
      * @return the [Image] to pass to the persistence.
      * @see Image
      */
-    fun toModel(): Image =
+    fun toModel(entityId: Uuid): Image =
         Image(
             id = null,
             createdAt = null,
             updatedAt = null,
-            entityId = null,
+            entityId = entityId,
             type = type,
             url = url
         )

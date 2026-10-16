@@ -51,11 +51,13 @@ internal class AnimeRepositoryImpl(
                 .limit(1)
         )
             .firstOrNull()
-            ?.toModel(imageRepository)
+            // The shared image table has no relation to walk, the repository resolves the artwork.
+            ?.let { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
 
     override fun save(anime: Anime): Anime =
         anime.id?.let(::findById)
             .newIfNotExists(anime.id) { }
             .applyFlush()
-            .toModel(imageRepository)
+            // The shared image table has no relation to walk, the repository resolves the artwork.
+            .let { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
 }

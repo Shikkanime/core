@@ -2,7 +2,6 @@ package fr.shikkanime.database.entities
 
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.Image
-import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.ModelConvertible
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
@@ -29,16 +28,6 @@ internal class AnimeEntity(id: EntityID<Uuid>) : ShikkEntity(id, AnimeTable), Mo
      */
     override fun toModel(): Anime =
         toModel(emptyList())
-
-    /**
-     * Maps this row and its children to the domain aggregate, resolving the shared artwork through
-     * [imageRepository].
-     *
-     * @param imageRepository repository owning the shared image table.
-     * @return the [Anime] representation of this row, with its artwork.
-     */
-    fun toModel(imageRepository: ImageRepository): Anime =
-        toModel(imageRepository.findAllByEntityId(id.value))
 
     /**
      * Maps this row and its children to the domain aggregate.

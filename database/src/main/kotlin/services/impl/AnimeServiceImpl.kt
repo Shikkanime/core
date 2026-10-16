@@ -41,7 +41,7 @@ internal class AnimeServiceImpl(
             // Keep the platform source links in sync with the aggregate
             platforms = anime.platforms.map { platformRepository.save(anime, it) },
             // Store images under the anime identifier, whatever owner the given images carry
-            images = anime.images.map { imageRepository.save(it.copy(entityId = saved.id)) }
+            images = anime.images.map { imageRepository.save(it.copy(entityId = requireNotNull(saved.id))) }
         )
     }
 }

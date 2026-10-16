@@ -37,6 +37,9 @@ Repositories encapsulate queries and entity mapping.
 - **A lookup by a column of a joined table joins, it never walks:** `AnimeEntity.wrapRows(join)`
   reads the anime in one round trip; finding the link rows and then re-fetching each target is an
   N+1 (see [PERFORMANCE.md](./PERFORMANCE.md)).
+- **An entity never calls a repository or a service.** Entities only map rows; when a table cannot
+  be reached by a relation (the shared image table), the repository resolves the rows and passes
+  them to the mapping: `it.toModel(imageRepository.findAllByEntityId(it.id.value))`.
 
 ### Custom "Upsert" DSL (`EntityRepository`)
 
