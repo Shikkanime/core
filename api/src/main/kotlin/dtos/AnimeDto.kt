@@ -5,6 +5,7 @@ import fr.shikkanime.models.AnimeLocalization
 import fr.shikkanime.models.AnimePlatform
 import fr.shikkanime.models.Image
 import kotlinx.serialization.Serializable
+import kotlin.uuid.Uuid
 
 /**
  * API view of a stored anime, without any persistence metadata.
@@ -13,7 +14,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class AnimeDto(
-    val id: String,
+    val id: Uuid,
     val localizations: List<AnimeLocalizationDto>,
     val platforms: List<AnimePlatformDto>,
     val images: List<ImageDto>
@@ -29,7 +30,7 @@ data class AnimeDto(
  */
 fun Anime.toDto(): AnimeDto =
     AnimeDto(
-        id = id.toString(),
+        id = id,
         localizations = localizations.map(AnimeLocalization::toDto),
         platforms = platforms.map(AnimePlatform::toDto),
         images = images.map(Image::toDto)

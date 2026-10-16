@@ -40,6 +40,7 @@ class AnimeIngestionServiceTest {
         localizations = listOf(
             PlatformAnimeLocalizationMockKBuilder {
                 country = Country.FR
+                locale = Country.FR.defaultLocale
                 title = "Title"
                 description = "Description"
             }.build()

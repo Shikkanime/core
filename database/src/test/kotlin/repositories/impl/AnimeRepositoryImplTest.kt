@@ -37,6 +37,7 @@ class AnimeRepositoryImplTest {
         databaseManager.databaseWrapper.initializeSchema()
 
         every { imageRepository.findAllByEntityId(any()) } returns emptyList()
+        every { imageRepository.findAllByEntityIds(any()) } returns emptyMap()
     }
 
     @Nested
@@ -127,13 +128,13 @@ class AnimeRepositoryImplTest {
     }
 
     @Nested
-    @DisplayName("tests for the 'findAll' method")
+    @DisplayName("tests for the 'findAllModels' method")
     inner class FindAllTests {
         @Test
         fun `should return an empty list when the database holds no anime`() {
             // Given
             // When
-            val found = transaction { animeRepository.findAll() }
+            val found = transaction { animeRepository.findAllModels() }
 
             // Then
             assertTrue(found.isEmpty())
@@ -148,7 +149,7 @@ class AnimeRepositoryImplTest {
             }
 
             // When
-            val found = transaction { animeRepository.findAll() }
+            val found = transaction { animeRepository.findAllModels() }
 
             // Then
             assertEquals(2, found.size)

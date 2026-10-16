@@ -552,6 +552,7 @@ internal data class AdnShow(
             localizations = listOf(
                 PlatformAnimeLocalization(
                     country = country,
+                    locale = country.defaultLocale,
                     title = cleanedTitle,
                     description = summary?.replace("\n", "")
                 )

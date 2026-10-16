@@ -23,6 +23,17 @@ internal abstract class ImageRepository :
     abstract fun findAllByEntityId(entityId: Uuid): List<Image>
 
     /**
+     * Loads the artwork of several entities with one query, grouped by owner.
+     *
+     * The aggregate composition must not run one lookup per row: a whole page of animes resolves
+     * its artwork through this single call.
+     *
+     * @param entityIds identifiers of the owning entities.
+     * @return the images of each owner, an empty list for an owner without artwork.
+     */
+    abstract fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid, List<Image>>
+
+    /**
      * Upserts one image, overwriting the URL when the owner already has this image type.
      *
      * @param image image to persist; its identifier is only used for the creation.

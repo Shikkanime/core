@@ -17,9 +17,12 @@ internal abstract class AnimeRepository :
     /**
      * Loads every anime of the database with its children.
      *
+     * The entity-level read comes from the framework's `EntityRepository.findAll()`, called through
+     * `super.findAll()`: the repository layer owns every query.
+     *
      * @return every stored anime, in no particular order.
      */
-    abstract fun findAll(): List<Anime>
+    abstract fun findAllModels(): List<Anime>
 
     /**
      * Loads the anime linked to a streaming platform identifier.

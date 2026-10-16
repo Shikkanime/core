@@ -3,12 +3,15 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.database.entities.AnimeEntity
 import fr.shikkanime.database.entities.AnimePlatformEntity
 import fr.shikkanime.database.entities.AnimePlatformTable
+import fr.shikkanime.database.entities.AnimeTable
 import fr.shikkanime.database.repositories.AnimeRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.Platform
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -18,9 +21,12 @@ internal class AnimeRepositoryImpl(
     private val imageRepository: ImageRepository
 ) : AnimeRepository() {
 
-    override fun findAll(): List<Anime> =
-        AnimeEntity.all()
-            .map { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
+    override fun findAllModels(): List<Anime> {
+        val animes = super.findAll().toList()
+        val images = imageRepository.findAllByEntityIds(animes.map { it.id.value })
+
+        return animes.map { it.toModel(images[it.id.value].orEmpty()) }
+    }
 
     /**
      * Finds the anime aggregate with its artwork.
@@ -56,8 +62,17 @@ internal class AnimeRepositoryImpl(
             ?.value
 
     override fun findByPlatformAndPlatformId(platform: Platform, platformId: String): Anime? =
-        findAnimeIdByPlatformAndPlatformId(platform, platformId)
-            ?.let { findById(it)?.toModel(imageRepository.findAllByEntityId(it)) }
+        AnimeEntity.wrapRows(
+            AnimeTable.innerJoin(AnimePlatformTable)
+                .selectAll()
+                .where {
+                    (AnimePlatformTable.platform eq platform) and
+                        (AnimePlatformTable.platformId eq platformId)
+                }
+                .limit(1)
+        )
+            .firstOrNull()
+            ?.let { it.toModel(imageRepository.findAllByEntityId(it.id.value)) }
 
     override fun save(anime: Anime): Anime =
         findById(anime.id)

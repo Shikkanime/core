@@ -16,7 +16,9 @@ All AI agents and developers must adhere to these directives when implementing o
 - **Limit database round trips**: Use batch queries, projections, and bulk inserts instead of N+1 select loops.
   The N+1 shape is banned everywhere, including a single lookup: a query that finds rows and then
   re-queries what each row points to (`find` a link row, then `findById` its anime per row) must be
-  replaced by one query resolving the target directly.
+  replaced by one query resolving the target directly — joining on a foreign key (`innerJoin`) or
+  loading the whole group once through a repository read returning a `Map` of owner to rows
+  (`findAllByEntityIds`).
 - **Keep retry mechanisms bounded**: Exponential backoff with sensible ceilings to prevent thundering herd issues.
 
 ---

@@ -3,6 +3,7 @@ package fr.shikkanime.jobs.builders.impl
 import fr.shikkanime.database.builders.TestBuilder
 import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
 import fr.shikkanime.models.Country
+import fr.shikkanime.models.Locale
 import io.mockk.every
 import io.mockk.mockk
 
@@ -10,6 +11,7 @@ class PlatformAnimeLocalizationMockKBuilder(
     configuration: PlatformAnimeLocalizationMockKBuilder.() -> Unit = {}
 ) : TestBuilder<PlatformAnimeLocalization> {
     var country: Country? = null
+    var locale: Locale? = null
     var title: String? = null
     var description: String? = null
 
@@ -20,6 +22,7 @@ class PlatformAnimeLocalizationMockKBuilder(
     override fun build(): PlatformAnimeLocalization {
         val mockK = mockk<PlatformAnimeLocalization>(relaxed = true)
         country?.let { every { mockK.country } returns it }
+        locale?.let { every { mockK.locale } returns it }
         title?.let { every { mockK.title } returns it }
         description?.let { every { mockK.description } returns it }
 

@@ -21,7 +21,7 @@ internal class AnimeServiceImpl(
 
     override fun findAll(): List<Anime> =
         // Load every aggregate with its texts, sources and artwork
-        animeRepository.findAll()
+        animeRepository.findAllModels()
 
     override fun findByPlatformAndPlatformId(platform: Platform, platformId: String): Anime? =
         // Resolve the aggregate owning a platform source link

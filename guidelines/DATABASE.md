@@ -31,7 +31,12 @@ Repositories encapsulate queries and entity mapping.
 
 - **Chain the mapping directly on the lookup:** `findById(id)?.toModel(...)` — never wrap a mapping
   in `?.let { entity -> entity.toModel(...) }` and never hold it in an intermediate variable. The
-  lookup and the mapping read as one chain.
+  lookup and the mapping read as one chain. The single accepted wrapper shape is a mapping that
+  needs the matched row's own keys to resolve its children (`?.let { it.toModel(findBy(it.id)) }`):
+  there, the wrapper is the chain.
+- **A lookup by a column of a joined table joins, it never walks:** `AnimeEntity.wrapRows(join)`
+  reads the anime in one round trip; finding the link rows and then re-fetching each target is an
+  N+1 (see [PERFORMANCE.md](./PERFORMANCE.md)).
 
 ### Custom "Upsert" DSL (`EntityRepository`)
 

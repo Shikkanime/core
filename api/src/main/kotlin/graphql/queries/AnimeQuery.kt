@@ -36,6 +36,6 @@ class AnimeQuery(
      * @return the API view of the anime, or `null` when no anime has this identifier.
      * @see AnimeDto
      */
-    fun anime(id: String): AnimeDto? =
-        animeService.findById(Uuid.parse(id))?.toDto()
+    fun anime(id: Uuid): AnimeDto? =
+        animeService.findById(id)?.toDto()
 }

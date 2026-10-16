@@ -28,6 +28,9 @@ data class AnimeDto(
 - **Map lists with method references, never with lambdas:** `animes.map(Anime::toDto)`.
 - **Error responses use `MessageDto.error(...)`** (framework `fr.shikkanime.ktor.dtos`), never a raw
   `String`; the OpenAPI response type is `ErrorMessageDto::class`.
+- **A controller parameter is typed with its real domain type, never with `String` to re-parse it:**
+  `@PathParam("id") id: Uuid`. The framework resolver converts textual parameters and answers an
+  HTTP 400 carrying a `MessageDto` error when the value does not match the expected type.
 
 ```kotlin
 @Serializable

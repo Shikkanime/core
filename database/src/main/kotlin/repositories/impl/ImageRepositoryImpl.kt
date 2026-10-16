@@ -8,6 +8,7 @@ import fr.shikkanime.models.Image
 import fr.shikkanime.models.ImageType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -18,6 +19,11 @@ internal class ImageRepositoryImpl : ImageRepository() {
     override fun findAllByEntityId(entityId: Uuid): List<Image> =
         ImageEntity.find { ImageTable.entityId eq entityId }
             .map(ImageEntity::toModel)
+
+    override fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid, List<Image>> =
+        ImageEntity.find { ImageTable.entityId inList entityIds }
+            .map(ImageEntity::toModel)
+            .groupBy(Image::entityId)
 
     /**
      * Finds one image row of an entity by its type.

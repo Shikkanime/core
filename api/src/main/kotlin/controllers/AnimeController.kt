@@ -48,8 +48,8 @@ class AnimeController(
         ApiResponse(200, "The stored anime", AnimeDto::class),
         ApiResponse(404, "No anime with this identifier", ErrorMessageDto::class)
     ])
-    fun findById(@PathParam("id") id: String): ResponseEntity<*> =
-        animeService.findById(Uuid.parse(id))
+    fun findById(@PathParam("id") id: Uuid): ResponseEntity<*> =
+        animeService.findById(id)
             ?.let { ResponseEntity.ok(it.toDto()) }
             ?: ResponseEntity.notFound(MessageDto.error("No anime with identifier $id"))
 }
