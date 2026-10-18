@@ -15,7 +15,8 @@ import io.ktor.http.*
 import java.util.*
 
 object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
-    private const val API_VERSION = "v1.15"
+    private const val API_VERSION = "v1.21"
+    private val sessionId = UUID.randomUUID()
 
     override suspend fun getLatestShowIds(): Array<String> {
         val response = HttpRequest.getWithAccessToken("${baseUrl}explore/$API_VERSION/set/c6cc13eb-14ad-42fd-82b4-6d959032996c?limit=5&offset=0&pageId=00ef9b51-0ed0-4883-b1e4-fd5a075c7f54")
@@ -82,7 +83,6 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
     }
 
     override suspend fun getEpisodesByShowId(locale: String, showId: String, checkAudioLocales: Boolean): Array<Episode> {
-        val sessionId = UUID.randomUUID()
         val show = getShow(locale, showId)
         val episodes = mutableListOf<Episode>()
 
@@ -115,8 +115,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
                         val resourceId = actionJsonObject.getAsString("resourceId")!!
                         val audioLocales = if (checkAudioLocales) getAudioLocales(
                             locale,
-                            resourceId,
-                            sessionId
+                            resourceId
                         ) else arrayOf(Locale.JA_JP.code)
 
                         episodes.add(
@@ -145,7 +144,7 @@ object DisneyPlusWrapper : AbstractDisneyPlusWrapper() {
         return episodes.toTypedArray()
     }
 
-    private suspend fun getAudioLocales(locale: String, resourceId: String, sessionId: UUID): Array<String> {
+    private suspend fun getAudioLocales(locale: String, resourceId: String): Array<String> {
         val headers = mapOf(
             "x-application-version" to "754dc762",
             "x-bamsdk-client-id" to "disney-svod-3d9324fc",

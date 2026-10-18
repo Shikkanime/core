@@ -143,4 +143,8 @@
     <include file="/db/changelog/2026/06/04-changelog.xml"/>
     <!-- July 2026 -->
     <include file="/db/changelog/2026/07/01-changelog.xml"/>
+    <!-- August 2026 -->
+    <!-- September 2026 -->
+    <!-- October 2026 -->
+    <include file="/db/changelog/2026/10/01-changelog.xml"/>
 </databaseChangeLog>

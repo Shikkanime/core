@@ -1,16 +1,11 @@
 package fr.shikkanime.wrappers.factories
 
-import com.google.gson.reflect.TypeToken
-import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
 import fr.shikkanime.services.caches.ConfigCacheService
-import fr.shikkanime.utils.*
-import fr.shikkanime.utils.ObjectParser.getAsString
-import io.ktor.client.statement.*
+import fr.shikkanime.utils.Constant
+import fr.shikkanime.utils.HttpRequest
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
 import java.io.Serializable
-import java.time.Duration
 
 abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, AbstractDisneyPlusWrapper.Show, AbstractDisneyPlusWrapper.Episode> {
     data class Show(
@@ -84,42 +79,8 @@ abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, Abs
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
     protected val configCacheService: ConfigCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
 
-    @Synchronized
-    private fun getAccessToken() = MapCache.getOrCompute(
-        "AbstractDisneyPlusWrapper.getAccessToken",
-        duration = Duration.ofHours(3).plusMinutes(30),
-        classes = listOf(Config::class.java),
-        typeToken = object : TypeToken<MapCacheValue<String>>() {},
-        key = StringUtils.EMPTY_STRING
-    ) {
-        runBlocking {
-            val response = HttpRequest.post(
-                "${baseUrl}graph/v1/device/graphql",
-                headers = mapOf(HttpHeaders.Authorization to (configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION) ?: StringUtils.EMPTY_STRING)),
-                body = ObjectParser.toJson(
-                    mapOf(
-                        "operationName" to "refreshToken",
-                        "query" to $$"mutation refreshToken($input:RefreshTokenInput!){refreshToken(refreshToken:$input){activeSession{sessionId}}}",
-                        "variables" to mapOf(
-                            "input" to mapOf(
-                                "refreshToken" to configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_REFRESH_TOKEN)
-                            )
-                        ),
-                    )
-                )
-            )
-            require(response.status == HttpStatusCode.OK) { "Failed to get access token (${response.status.value})" }
-
-            requireNotNull(ObjectParser.fromJson(response.bodyAsText())
-                .getAsJsonObject("extensions")
-                .getAsJsonObject("sdk")
-                .getAsJsonObject("token")
-                .getAsString("accessToken")) { "Access token is null or empty"}
-        }
-    }
-
-    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}"))
-    protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}").plus(headers), body = body)
+    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_ACCESS_TOKEN)}"))
+    protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_ACCESS_TOKEN)}").plus(headers), body = body)
 
     abstract suspend fun getLatestShowIds(): Array<String>
 
