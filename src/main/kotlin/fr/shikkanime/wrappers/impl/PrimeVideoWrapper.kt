@@ -84,10 +84,15 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
                 it.asJsonObject.getAsInt("sequenceNumber")!!,
                 it.asJsonObject.getAsString("seasonLink")!!
             )
-        }
+        } ?: listOf(Season(
+            pageTitleId!!,
+            "Main season",
+            1,
+            ""
+        ))
 
         // Process all seasons and extract episodes
-        return seasons?.flatMap { season ->
+        return seasons.flatMap { season ->
             // Use existing JSON for main page or fetch season-specific data
             val json = if (season.id != pageTitleId) fetchPrimeVideoData("$baseUrl${season.link}", locale) else show.globalJson
             val btfState = json.getAsJsonObject("btf").getAsJsonObject("state")
@@ -154,7 +159,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
             }
 
             episodes
-        }?.toTypedArray() ?: emptyArray()
+        }.toTypedArray()
     }
 
     private fun createEpisode(
@@ -193,7 +198,7 @@ object PrimeVideoWrapper : AbstractPrimeVideoWrapper() {
 
     private suspend fun fetchPrimeVideoData(url: String, locale: String): JsonObject {
         val response = HttpRequest.get(
-            "$url${if (url.contains("?")) "&" else "?"}dvWebAppClientVersion=1.0.124589.0",
+            "$url${if (url.contains("?")) "&" else "?"}dvWebAppClientVersion=1.0.132106.0",
             headers = mapOf(
                 HttpHeaders.Accept to ContentType.Application.Json.toString(),
                 HttpHeaders.AcceptLanguage to locale.split(StringUtils.DASH_STRING).first().lowercase(),
