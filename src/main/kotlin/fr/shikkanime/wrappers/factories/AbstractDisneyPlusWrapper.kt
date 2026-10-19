@@ -1,11 +1,22 @@
 package fr.shikkanime.wrappers.factories
 
+import com.google.gson.reflect.TypeToken
+import fr.shikkanime.entities.Config
 import fr.shikkanime.entities.enums.ConfigPropertyKey
+import fr.shikkanime.services.ConfigService
 import fr.shikkanime.services.caches.ConfigCacheService
 import fr.shikkanime.utils.Constant
 import fr.shikkanime.utils.HttpRequest
+import fr.shikkanime.utils.MapCache
+import fr.shikkanime.utils.MapCacheValue
+import fr.shikkanime.utils.ObjectParser
+import fr.shikkanime.utils.ObjectParser.getAsString
+import fr.shikkanime.utils.StringUtils
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import java.io.Serializable
+import java.time.Duration
 
 abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, AbstractDisneyPlusWrapper.Show, AbstractDisneyPlusWrapper.Episode> {
     data class Show(
@@ -78,9 +89,42 @@ abstract class AbstractDisneyPlusWrapper : IStreamingPlatformWrapper<String, Abs
 
     protected val baseUrl = "https://disney.api.edge.bamgrid.com/"
     protected val configCacheService: ConfigCacheService by lazy { Constant.injector.getInstance(ConfigCacheService::class.java) }
+    protected val configService: ConfigService by lazy { Constant.injector.getInstance(ConfigService::class.java) }
 
-    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_ACCESS_TOKEN)}"))
-    protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_ACCESS_TOKEN)}").plus(headers), body = body)
+    @Synchronized
+    private fun getAccessToken() = MapCache.getOrCompute(
+        "AbstractDisneyPlusWrapper.getAccessToken",
+        duration = Duration.ofHours(2),
+        classes = listOf(Config::class.java),
+        typeToken = object : TypeToken<MapCacheValue<String>>() {},
+        key = StringUtils.EMPTY_STRING
+    ) {
+        runBlocking {
+            val refreshTokenConfig = configService.findByName(ConfigPropertyKey.DISNEY_PLUS_REFRESH_TOKEN.name)
+            if (refreshTokenConfig == null || refreshTokenConfig.propertyValue.isNullOrBlank())
+                throw IllegalStateException("Disney Plus refresh token is not set")
+
+            val response = HttpRequest.post(
+                "https://login.disney.com/token",
+                headers = mapOf(
+                    HttpHeaders.ContentType to ContentType.Application.FormUrlEncoded.toString(),
+                    "X-Dss-Client-Api-Key" to (configCacheService.getValueAsString(ConfigPropertyKey.DISNEY_PLUS_AUTHORIZATION) ?: StringUtils.EMPTY_STRING)
+                ),
+                body = "grant_type=refresh_token&client_id=DTCI-DISNEYPLUS.WEB&scope=openid streaming api:identity:user.write&refresh_token=${refreshTokenConfig.propertyValue}"
+            )
+            require(response.status == HttpStatusCode.OK) { "Failed to get access token (${response.status.value})" }
+            val json = ObjectParser.fromJson(response.bodyAsText())
+
+            // Change refresh token
+            refreshTokenConfig.propertyValue = requireNotNull(json.getAsString("refresh_token")) { "Refresh token is null or empty"}
+            configService.update(refreshTokenConfig)
+
+            requireNotNull(json.getAsString("access_token")) { "Access token is null or empty"}
+        }
+    }
+
+    protected suspend fun HttpRequest.getWithAccessToken(url: String) = get(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}"))
+    protected suspend fun HttpRequest.postWithAccessToken(url: String, headers: Map<String, String>, body: String) = post(url, headers = mapOf(HttpHeaders.Authorization to "Bearer ${getAccessToken()}").plus(headers), body = body)
 
     abstract suspend fun getLatestShowIds(): Array<String>
 
