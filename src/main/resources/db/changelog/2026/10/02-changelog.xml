@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <property global="false" name="id" value="1792414317967"/>
+    <property global="false" name="author" value="Ziedelth"/>
+
+    <changeSet id="${id}-1" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'disney_plus_access_token'</sqlCheck>
+        </preConditions>
+
+        <delete tableName="config">
+            <where>property_key = 'disney_plus_access_token'</where>
+        </delete>
+    </changeSet>
+
+    <changeSet id="${id}-2" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'disney_plus_authorization'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="disney_plus_authorization"/>
+            <column name="property_value" value=""/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="${id}-3" author="${author}" dbms="postgresql">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*)
+                                         FROM config
+                                         WHERE property_key = 'disney_plus_refresh_token'</sqlCheck>
+        </preConditions>
+
+        <insert tableName="config">
+            <column name="uuid" valueComputed="gen_random_uuid()"/>
+            <column name="property_key" value="disney_plus_refresh_token"/>
+            <column name="property_value" value=""/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
