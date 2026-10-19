@@ -3,7 +3,6 @@ package fr.shikkanime.models
 /**
  * Enumeration representing the editorial category of an episode release.
  *
- * @property slug The canonical URL-friendly identifier used in routes and external payloads.
  */
 enum class EpisodeType(val slug: String) {
     EPISODE("episode"),
@@ -18,6 +17,7 @@ enum class EpisodeType(val slug: String) {
          *
          * @param slug The slug identifier to look up.
          * @return The matching [EpisodeType], or [EPISODE] as safe default.
+         * @see [EpisodeType]
          */
         fun fromSlug(slug: String): EpisodeType =
             entries.firstOrNull { it.slug == slug } ?: EPISODE

@@ -6,14 +6,14 @@ import kotlin.uuid.Uuid
 /**
  * Localized editorial text of an anime for a single language.
  *
- * @property locale Language and region this text applies to.
- * @property title Localized title of the anime.
- * @property description Localized synopsis, `null` when the source does not provide one yet.
+ * The owning anime is referenced by [animeId], filled by the persistence when the row is attached
+ * to its owner, exactly like [Image.entityId].
  */
 data class AnimeLocalization(
-    override val id: Uuid,
-    override val createdAt: LocalDateTime,
-    override val updatedAt: LocalDateTime,
+    override val id: Uuid?,
+    override val createdAt: LocalDateTime?,
+    override val updatedAt: LocalDateTime?,
+    val animeId: Uuid?,
     val locale: Locale,
     val title: String,
     val description: String?

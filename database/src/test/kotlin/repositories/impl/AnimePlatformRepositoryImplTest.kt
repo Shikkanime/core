@@ -1,12 +1,10 @@
 package fr.shikkanime.database.repositories.impl
 
 import fr.shikkanime.database.DatabaseManager
-import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
-import fr.shikkanime.database.entities.AnimeEntity
+import fr.shikkanime.database.builders.impl.savedAnime
 import fr.shikkanime.database.entities.AnimeTable
 import fr.shikkanime.database.repositories.AnimeRepository
-import fr.shikkanime.models.Anime
 import fr.shikkanime.models.Platform
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -40,46 +38,71 @@ class AnimePlatformRepositoryImplTest {
         every { animeRepository.getReference(any()) } answers { EntityID(firstArg(), AnimeTable) }
     }
 
-    private fun savedAnime(): Anime {
-        val anime = AnimeMockKBuilder { id = Uuid.random() }
-            .build()
+    @Nested
+    @DisplayName("tests for the 'findAllByAnimeIds' method")
+    inner class FindAllByAnimeIdsTests {
+        @Test
+        @DisplayName("should load the platform links of every given anime in one grouped read")
+        fun `should load the platform links of every given anime in one grouped read`() {
+            // Given
+            val anime = savedAnime()
+            transaction {
+                platformRepository.save(
+                    AnimePlatformMockKBuilder {
+                        id = Uuid.random()
+                        animeId = anime.id
+                        platform = Platform.ANIMATION_DIGITAL_NETWORK
+                        platformId = "123"
+                    }.build()
+                )
+            }
 
-        transaction { AnimeEntity.new(anime.id) { } }
+            // When
+            val found = transaction {
+                platformRepository.findAllByAnimeIds(listOf(requireNotNull(anime.id)))
+            }
 
-        return anime
+            // Then
+            assertEquals("123", found[anime.id]?.single()?.platformId)
+        }
     }
 
     @Nested
     @DisplayName("tests for the 'save' method")
     inner class SaveTests {
         @Test
+        @DisplayName("should insert a link for a new platform identifier")
         fun `should insert a link for a new platform identifier`() {
             // Given
             val anime = savedAnime()
             val link = AnimePlatformMockKBuilder {
                 id = Uuid.random()
+                animeId = anime.id
                 platform = Platform.ANIMATION_DIGITAL_NETWORK
                 platformId = "123"
             }.build()
 
             // When
-            val saved = transaction { platformRepository.save(anime, link) }
+            val saved = transaction { platformRepository.save(link) }
 
             // Then
-            val found = assertNotNull(transaction { platformRepository.findModelById(saved.id) })
+            val found = assertNotNull(
+                transaction { platformRepository.findModelById(requireNotNull(saved.id)) }
+            )
             assertEquals(Platform.ANIMATION_DIGITAL_NETWORK, found.platform)
             assertEquals("123", found.platformId)
         }
 
         @Test
+        @DisplayName("should keep the same row when the platform link is saved twice")
         fun `should keep the same row when the platform link is saved twice`() {
             // Given
             val anime = savedAnime()
             val first = transaction {
                 platformRepository.save(
-                    anime,
                     AnimePlatformMockKBuilder {
                         id = Uuid.random()
+                        animeId = anime.id
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "123"
                     }.build()
@@ -89,9 +112,9 @@ class AnimePlatformRepositoryImplTest {
             // When
             val second = transaction {
                 platformRepository.save(
-                    anime,
                     AnimePlatformMockKBuilder {
                         id = Uuid.random()
+                        animeId = anime.id
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "123"
                     }.build()
@@ -103,14 +126,15 @@ class AnimePlatformRepositoryImplTest {
         }
 
         @Test
+        @DisplayName("should keep links of different platform identifiers side by side")
         fun `should keep links of different platform identifiers side by side`() {
             // Given
             val anime = savedAnime()
             val first = transaction {
                 platformRepository.save(
-                    anime,
                     AnimePlatformMockKBuilder {
                         id = Uuid.random()
+                        animeId = anime.id
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "123"
                     }.build()
@@ -120,9 +144,9 @@ class AnimePlatformRepositoryImplTest {
             // When
             val second = transaction {
                 platformRepository.save(
-                    anime,
                     AnimePlatformMockKBuilder {
                         id = Uuid.random()
+                        animeId = anime.id
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "456"
                     }.build()
@@ -130,8 +154,8 @@ class AnimePlatformRepositoryImplTest {
             }
 
             // Then
-            assertNotNull(transaction { platformRepository.findModelById(first.id) })
-            assertNotNull(transaction { platformRepository.findModelById(second.id) })
+            assertNotNull(transaction { platformRepository.findModelById(requireNotNull(first.id)) })
+            assertNotNull(transaction { platformRepository.findModelById(requireNotNull(second.id)) })
         }
     }
 
@@ -139,6 +163,7 @@ class AnimePlatformRepositoryImplTest {
     @DisplayName("tests for the 'findModelById' method")
     inner class FindModelByIdTests {
         @Test
+        @DisplayName("should return null when the platform link does not exist")
         fun `should return null when the platform link does not exist`() {
             // Given
             val unknown = Uuid.random()
@@ -151,14 +176,15 @@ class AnimePlatformRepositoryImplTest {
         }
 
         @Test
+        @DisplayName("should return the stored platform link")
         fun `should return the stored platform link`() {
             // Given
             val anime = savedAnime()
             val saved = transaction {
                 platformRepository.save(
-                    anime,
                     AnimePlatformMockKBuilder {
                         id = Uuid.random()
+                        animeId = anime.id
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "123"
                     }.build()
@@ -166,9 +192,12 @@ class AnimePlatformRepositoryImplTest {
             }
 
             // When
-            val found = assertNotNull(transaction { platformRepository.findModelById(saved.id) })
+            val found = assertNotNull(
+                transaction { platformRepository.findModelById(requireNotNull(saved.id)) }
+            )
 
             // Then
+            assertEquals(anime.id, found.animeId)
             assertEquals("123", found.platformId)
         }
     }

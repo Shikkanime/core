@@ -1,6 +1,8 @@
 package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.jobs.SmartHttpClient
+import fr.shikkanime.jobs.builders.impl.AdnShowMockKBuilder
+import fr.shikkanime.jobs.builders.impl.AdnVideoMockKBuilder
 import fr.shikkanime.jobs.platforms.PlatformEpisode
 import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
@@ -18,11 +20,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.ZonedDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -32,9 +36,18 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 
+@ExtendWith(MockKExtension::class)
 @DisplayName("tests for AnimationDigitalNetworkPlatform")
 class AnimationDigitalNetworkPlatformTest {
 
+    /**
+     * Builds a [SmartHttpClient] backed by a mock engine answering with the provided JSON body.
+     *
+     * @param onRequest Callback observing every outgoing request before the answer is produced.
+     * @param bodyProvider Produces the JSON response body for a given request.
+     * @return The [SmartHttpClient] under test.
+     * @see [SmartHttpClient]
+     */
     private fun smartHttpClient(
         onRequest: (HttpRequestData) -> Unit = {},
         bodyProvider: (HttpRequestData) -> String
@@ -56,9 +69,24 @@ class AnimationDigitalNetworkPlatformTest {
             }
         )
 
+    /**
+     * Builds a [SmartHttpClient] backed by a mock engine answering with a constant JSON body.
+     *
+     * @param body The JSON response body returned for every request.
+     * @return The [SmartHttpClient] under test.
+     * @see [SmartHttpClient]
+     */
     private fun smartHttpClient(body: String): SmartHttpClient =
         smartHttpClient { body }
 
+    /**
+     * Builds the [AnimationDigitalNetworkPlatform] under test.
+     *
+     * @param client The [SmartHttpClient] serving the calendar payloads.
+     * @param countries The configured target countries of the platform.
+     * @return The [AnimationDigitalNetworkPlatform] under test.
+     * @see [AnimationDigitalNetworkPlatform]
+     */
     private fun platform(
         client: SmartHttpClient,
         countries: Set<Country> = setOf(Country.FR)
@@ -69,46 +97,98 @@ class AnimationDigitalNetworkPlatformTest {
             countries = countries
         )
 
+    /**
+     * Builds an [AdnShow] fixture through the [AdnShowMockKBuilder].
+     *
+     * @param id The identifier of the show.
+     * @param title The title of the show.
+     * @param shortTitle The short title of the show.
+     * @param summary The optional summary of the show.
+     * @param type The content type of the show.
+     * @param genres The genres of the show.
+     * @return The mocked [AdnShow] fixture.
+     * @see [AdnShowMockKBuilder]
+     * @see [AdnShow]
+     */
     private fun adnShow(
         id: Int = 1,
         title: String = "One Piece",
+        shortTitle: String? = "One Piece",
+        summary: String? = "Pirates summary",
         type: AdnType = AdnType.EPS,
         genres: List<String> = listOf("Animation ")
     ): AdnShow =
-        AdnShow(
-            id = id,
-            title = title,
-            shortTitle = null,
-            originalTitle = null,
-            summary = null,
-            image2x = "https://image.animationdigitalnetwork.com/show/$id/100x100/portrait",
-            imageHorizontal2x = "https://image.animationdigitalnetwork.com/show/$id/100x100/landscape",
-            type = type,
-            genres = genres
-        )
+        AdnShowMockKBuilder {
+            this.id = id
+            this.title = title
+            this.shortTitle = shortTitle
+            this.summary = summary
+            this.type = type
+            this.genres = genres
+            thumbnail = "https://image.animationdigitalnetwork.com/show/$id/1080x1543/portrait"
+            banner = "https://image.animationdigitalnetwork.com/show/$id/1920x1080/landscape"
+        }.build()
 
+    /**
+     * Builds an [AdnVideo] fixture through the [AdnVideoMockKBuilder] with its parent show.
+     *
+     * @param id The identifier of the video.
+     * @param name The name of the video.
+     * @param title The optional title of the video.
+     * @param languages The audio language codes of the video.
+     * @param show The parent [AdnShow] fixture of the video.
+     * @return The mocked [AdnVideo] fixture.
+     * @see [AdnVideoMockKBuilder]
+     * @see [AdnShow]
+     */
     private fun adnVideo(
         id: Int = 1001,
         name: String = "Major 105",
+        title: String? = null,
         languages: List<String> = listOf("vostde"),
         show: AdnShow = adnShow()
     ): AdnVideo =
-        AdnVideo(
-            id = id,
-            name = name,
-            title = null,
-            shortNumber = "105",
-            season = "1",
-            type = AdnType.EPS,
-            image2x = "https://image.animationdigitalnetwork.com/video/$id/100x100/eps",
-            summary = null,
-            releaseDate = ZonedDateTime.now(),
-            duration = 1420L,
-            url = "https://example.com/video/$id",
-            languages = languages,
-            show = show
-        )
+        AdnVideoMockKBuilder {
+            this.id = id
+            this.name = name
+            this.title = title
+            shortNumber = "105"
+            season = "1"
+            type = AdnType.EPS
+            image = "https://image.animationdigitalnetwork.com/video/$id/1920x1080/" +
+                "eps.width=1920,height=1080,quality=100"
+            releaseDate = ZonedDateTime.now()
+            duration = 1420L
+            url = "https://example.com/video/$id"
+            this.languages = languages
+            this.show = show
+        }.build()
 
+    /**
+     * Serializes an ADN calendar video payload with the given field values.
+     *
+     * @param id The identifier of the video.
+     * @param name The name of the video.
+     * @param title The optional title of the video.
+     * @param shortNumber The short number of the video.
+     * @param season The optional season of the video.
+     * @param type The content type of the video.
+     * @param image2x The source image URL of the video.
+     * @param summary The optional summary of the video.
+     * @param releaseDate The ISO release date of the video.
+     * @param duration The duration of the video in seconds.
+     * @param url The URL of the video.
+     * @param languages The audio language codes of the video.
+     * @param showId The identifier of the parent show.
+     * @param showTitle The title of the parent show.
+     * @param showShortTitle The optional short title of the parent show.
+     * @param showSummary The optional summary of the parent show.
+     * @param showImageHorizontal2x The source landscape image URL of the parent show.
+     * @param showType The content type of the parent show.
+     * @param showGenres The genres of the parent show.
+     * @return The JSON payload of the calendar video.
+     * @see [AdnVideo]
+     */
     private fun video(
         id: Int,
         name: String = "Episode $id",
@@ -158,6 +238,13 @@ class AnimationDigitalNetworkPlatformTest {
         }
     """.trimIndent()
 
+    /**
+     * Wraps the given video payloads into an ADN calendar JSON body.
+     *
+     * @param videos The serialized video payloads of the calendar.
+     * @return The JSON body of the calendar response.
+     * @see [video]
+     */
     private fun calendar(vararg videos: String): String =
         """{"videos": [${videos.joinToString(",")}]}"""
 
@@ -235,7 +322,8 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(smartHttpClient(calendar(video(1001))))
 
             // When
-            val episode = platform.fetchLatestEpisodes().single()
+            val episode = platform.fetchLatestEpisodes()
+                .single()
 
             // Then
             val localization = episode.localizations.single()
@@ -271,11 +359,10 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(
                 smartHttpClient { request ->
                     val dist = request.headers["X-Target-Distribution"]
-                    if (dist == "de") {
+                    if (dist == "de")
                         calendar(video(1001, languages = listOf("vostde", "vde")))
-                    } else {
+                    else
                         calendar(video(1001, languages = listOf("vostf", "vf")))
-                    }
                 },
                 countries = setOf(Country.FR, Country.DE)
             )
@@ -988,7 +1075,7 @@ class AnimationDigitalNetworkPlatformTest {
         @DisplayName("should throw MissingAudioLocaleException when video languages is empty")
         fun `should throw MissingAudioLocaleException when video languages is empty`() {
             // Given
-            val video = adnVideo(1001, name = "Major 105", languages = emptyList())
+            val video = adnVideo(1001, name = "Major 105", title = "Major 105", languages = emptyList())
             val anime = video.show.toPlatformAnime(1, Country.FR)
 
             // When & Then
@@ -996,7 +1083,7 @@ class AnimationDigitalNetworkPlatformTest {
                 video.toPlatformEpisode(anime, Country.FR)
             }
             assertEquals("1001", exception.episodeId)
-            assertEquals("One Piece - Major 105", exception.episodeName)
+            assertEquals("Major 105", exception.episodeName)
             assertTrue(exception.languages.isEmpty())
             assertEquals(Country.FR, exception.country)
             assertTrue(exception.message!!.contains("1001"))
@@ -1008,7 +1095,7 @@ class AnimationDigitalNetworkPlatformTest {
         @DisplayName("should throw MissingAudioLocaleException when languages are incompatible")
         fun `should throw MissingAudioLocaleException when languages are incompatible`() {
             // Given
-            val video = adnVideo(1002, name = "Episode 2", languages = listOf("vostde"))
+            val video = adnVideo(1002, name = "Episode 2", title = "Episode 2", languages = listOf("vostde"))
             val anime = video.show.toPlatformAnime(1, Country.FR)
 
             // When & Then
@@ -1016,16 +1103,16 @@ class AnimationDigitalNetworkPlatformTest {
                 video.toPlatformEpisode(anime, Country.FR)
             }
             assertEquals("1002", exception.episodeId)
-            assertEquals("One Piece - Episode 2", exception.episodeName)
+            assertEquals("Episode 2", exception.episodeName)
             assertEquals(listOf("vostde"), exception.languages)
             assertEquals(Country.FR, exception.country)
         }
 
         @Test
-        @DisplayName("should throw MissingAudioLocaleException with formatted title when name is blank")
-        fun `should throw MissingAudioLocaleException with formatted title when name is blank`() {
+        @DisplayName("should throw MissingAudioLocaleException with the video title when name is blank")
+        fun `should throw MissingAudioLocaleException with the video title when name is blank`() {
             // Given
-            val video = adnVideo(1003, name = "", languages = emptyList())
+            val video = adnVideo(1003, name = "", title = "The Beginning", languages = emptyList())
             val anime = video.show.toPlatformAnime(1, Country.FR)
 
             // When & Then
@@ -1033,7 +1120,7 @@ class AnimationDigitalNetworkPlatformTest {
                 video.toPlatformEpisode(anime, Country.FR)
             }
             assertEquals("1003", exception.episodeId)
-            assertEquals("One Piece - ", exception.episodeName)
+            assertEquals("The Beginning", exception.episodeName)
         }
     }
 

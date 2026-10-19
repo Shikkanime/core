@@ -17,7 +17,8 @@ internal object AnimeLocalizationTable : ShikkTable(ANIME_LOCALIZATION_TABLE_NAM
     )
     val locale = enumerationByName<Locale>("locale", 10)
     val title = varchar("title", 255)
-    val description = text("description").nullable()
+    val description = text("description")
+        .nullable()
 
     init {
         uniqueIndex("${ANIME_TABLE_ID}_locale$UQ", anime, locale)
@@ -39,6 +40,7 @@ internal class AnimeLocalizationEntity(id: EntityID<Uuid>) :
             id = id.value,
             createdAt = createdAt,
             updatedAt = updatedAt,
+            animeId = anime.value,
             locale = locale,
             title = title,
             description = description

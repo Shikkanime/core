@@ -19,6 +19,7 @@ import io.ktor.http.HttpHeaders
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
+
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import org.koin.core.annotation.Single
@@ -328,7 +329,9 @@ class AnimationDigitalNetworkPlatform(
         country: Country
     ): Pair<List<PlatformEpisode>, Boolean> {
         val distribution = country.code.lowercase()
-        val language = country.defaultLocale.code.substringBefore('-').lowercase()
+        val language = country.defaultLocale.code
+            .substringBefore('-')
+            .lowercase()
         val cacheKey = "animation_digital_network:calendar:$now:$distribution"
 
         val response = client.get<AdnCalendarResponse>(
@@ -462,14 +465,13 @@ internal data class AdnVideo(
         val audioLocales = languages.mapNotNull { getAudioLocale(country, it) }
             .distinct()
 
-        if (audioLocales.isEmpty()) {
+        if (audioLocales.isEmpty())
             throw MissingAudioLocaleException(
                 episodeId = id.toString(),
-                episodeName = "${anime.localizations.first().title} - $name",
+                episodeName = title,
                 languages = languages,
                 country = country
             )
-        }
 
         return PlatformEpisode(
             anime = anime,
@@ -545,6 +547,7 @@ internal data class AdnShow(
 
         return PlatformAnime(
             id = id.toString(),
+            platform = Platform.ANIMATION_DIGITAL_NETWORK,
             images = listOf(
                 PlatformImage(type = ImageType.THUMBNAIL, url = thumbnail),
                 PlatformImage(type = ImageType.BANNER, url = banner)
@@ -552,8 +555,10 @@ internal data class AdnShow(
             localizations = listOf(
                 PlatformAnimeLocalization(
                     country = country,
+                    locale = country.defaultLocale,
                     title = cleanedTitle,
                     description = summary?.replace("\n", "")
+                        ?.replace(" ", " ")
                 )
             )
         )

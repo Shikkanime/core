@@ -29,6 +29,18 @@ internal class AnimeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 Repositories encapsulate queries and entity mapping.
 
+- **Chain the mapping directly on the lookup:** `findById(id)?.toModel(...)` — never wrap a mapping
+  in `?.let { entity -> entity.toModel(...) }` and never hold it in an intermediate variable. The
+  lookup and the mapping read as one chain. The single accepted wrapper shape is a mapping that
+  needs the matched row's own keys to resolve its children (`?.let { it.toModel(findBy(it.id)) }`):
+  there, the wrapper is the chain.
+- **A lookup by a column of a joined table joins, it never walks:** `AnimeEntity.wrapRows(join)`
+  reads the anime in one round trip; finding the link rows and then re-fetching each target is an
+  N+1 (see [PERFORMANCE.md](./PERFORMANCE.md)).
+- **An entity never calls a repository or a service.** Entities only map rows; when a table cannot
+  be reached by a relation (the shared image table), the repository resolves the rows and passes
+  them to the mapping: `it.toModel(imageRepository.findAllByEntityId(it.id.value))`.
+
 ### Custom "Upsert" DSL (`EntityRepository`)
 
 Internal repositories extend `EntityRepository<UUID, ENTITY>` which provides standard methods (`findById`, `findAllByIds`) and an upsert DSL: `ifExists`, `newIfNotExists`, and `applyFlush`.
@@ -61,3 +73,11 @@ class AnimeRepository {
 ```
 
 - Use `services/` (e.g. `SiteQueryService`, `AdminQueryService`) for module-specific complex queries.
+
+## Anime identity
+An anime is identified by its **normalized title**: `anime.normalized_title`, **unique**. The stored value is
+exactly the output of `normalizeTitle` (the historical `getShortName` rules) on the winning localized title -
+computed by `canonicalTitle`: the title shared by the most localizations, ties broken by `TITLE_LOCALE_PRIORITY`.
+A harvest looks the anime up on that column: one title, one anime, across platforms. A rename is a new title
+hence a new anime (both may be merged later), and a title really shared by two animes is reported as an
+anomaly. The title is derived from the localized ones - never entered by hand.

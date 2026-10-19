@@ -7,6 +7,20 @@ This guide outlines the conventions and patterns for writing tests in this proje
 - **[JUnit 5](https://junit.org/junit5/docs/current/user-guide/):** The primary framework for structuring tests.
 - **[MockK](https://mockk.io/):** The library used for creating mocks and verifying interactions.
 
+## Integration Tests (real stack)
+
+- A mocked unit test cannot see a wiring problem: a `@Transactional` service consumed without its
+  `TransactionalProxy`, a query outside a transaction, a bean missing from the Koin graph. Those
+  must fail during development, not on the first manual run.
+- They live in a dedicated source set (`jobs/src/integrationTest`) with its own
+  `./gradlew :jobs:integrationTest` task, modelled on the `perfTest` source set — never inside
+  `test`, which stays mocked and fast.
+- **They boot through the application bootstrap** (`bootstrap()`, shared with `main`): startKoin,
+  `applyTransactionalProxies`, database connect. Removing a step from the wiring must break the
+  tests; hand-made wiring would hide it.
+- Real beans against an in-memory H2 database, Koin booted once per test class, and the workflow
+  is exercised on its create AND update paths.
+
 ## Test Structure
 
 To ensure tests are organized, readable, and maintainable, follow these structural conventions:
@@ -74,6 +88,15 @@ class AnimeServiceTest {
 ## Test Builders
 
 Always use MockK builders implementing `TestBuilder<T>` to instantiate test entities and complex objects instead of calling `mockk<T>()` directly in tests.
+
+**Every test fixture comes from its `*MockKBuilder`, for database entities and domain models alike:
+a test never constructs a model inline** (`Anime(...)`, `PlatformAnime(...)`) — that skips the mock
+contract and hides the fields the code under test really reads.
+
+**Never read a builder mock property inside another mock's `every { }` block.** MockK records the
+call and replaces the property stub with a relaxed child mock, so the fixture silently changes type
+(a mocked `Uuid` reaching `Uuid.parse` as `Uuid(child of …)`). Bind fixture values outside the
+block, or stub the call with `any()`.
 
 Builder fields default to `null` and are stubbed only when the test sets them: define only the
 values the test actually needs. Any field whose value is read back through the mock (a data-class

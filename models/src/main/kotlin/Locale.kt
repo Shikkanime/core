@@ -21,6 +21,7 @@ enum class Locale(val code: String) {
          *
          * @param code The BCP-47 locale code to look up (e.g. "fr-FR", "ja-JP").
          * @return The matched [Locale] instance, or `null` if unmapped.
+         * @see [Locale]
          */
         fun fromCode(code: String): Locale? =
             entries.firstOrNull { it.code.equals(code, ignoreCase = true) }

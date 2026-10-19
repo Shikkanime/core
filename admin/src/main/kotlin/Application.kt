@@ -41,9 +41,7 @@ fun main() {
         configureDefaultModules()
 
         routing {
-            route("/api") {
-                configureSwaggerRoute("Admin API", "1.0-SNAPSHOT")
-            }
+            configureSwaggerRoute("Admin API", "1.0-SNAPSHOT")
 
             ControllerBinder.register(
                 this@routing,

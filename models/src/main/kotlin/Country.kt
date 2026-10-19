@@ -19,6 +19,7 @@ enum class Country(
          *
          * @param code The country code to look up (e.g. "FR", "DE").
          * @return The matched [Country] instance, or `null` if unmapped.
+         * @see [Country]
          */
         fun fromCode(code: String): Country? =
             entries.firstOrNull { it.code.equals(code, ignoreCase = true) }
