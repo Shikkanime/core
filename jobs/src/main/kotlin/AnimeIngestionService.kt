@@ -39,24 +39,26 @@ internal class AnimeIngestionService(
      *
      * @param harvest harvest of every streaming platform, episodes and change flag.
      * @return the number of animes passed to the persistence, `0` when no platform reported a
-     * change.
+     * change or the harvest carries no episode.
      * @see [SmartResponse]
      * @see [AnimeService.save]
      */
     fun saveAll(harvest: List<SmartResponse<List<PlatformEpisode>>>): Int {
-        if (harvest.none { it.hasChanged }) {
-            logger.fine("No platform reported a change, skipping the save workflow")
-            return 0
+        // Computed on first read: a quiet tick never groups the harvest
+        val harvestsByNormalizedTitle by lazy {
+            harvest.asSequence()
+                .flatMap { it.data.asSequence() }
+                .map(PlatformEpisode::anime)
+                .groupBy { it.normalizedTitle }
         }
 
-        val animes = harvest.asSequence()
-            .flatMap { it.data.asSequence() }
-            .map(PlatformEpisode::anime)
-        val harvestsByNormalizedTitle = animes.groupBy { it.normalizedTitle }
-
-        // A reported change can carry no episode: nothing to persist, so no read either
-        if (harvestsByNormalizedTitle.isEmpty())
+        // A quiet harvest or one carrying no episode has nothing to persist, so no read either
+        if (harvest.none { it.hasChanged }
+            || harvestsByNormalizedTitle.isEmpty()
+        ) {
+            logger.fine("Nothing to persist, skipping the save workflow")
             return 0
+        }
 
         // Load in one read the animes already stored under the normalized titles of this harvest
         val storedByNormalizedTitle = animeService

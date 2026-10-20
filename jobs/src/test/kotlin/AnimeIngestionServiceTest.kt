@@ -157,16 +157,18 @@ class AnimeIngestionServiceTest {
             every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
             every { animeService.save(any()) } returnsArgument 0
 
-            // When: the platform reports a change, then nothing, then a change again
-            val first = ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime()))))
-            val second = ingestionService.saveAll(listOf(harvest(false, harvestedEpisode(harvestedAnime()))))
-            val third = ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime()))))
+            // When: every platform of the pooled harvest reports a change
+            val saved = ingestionService.saveAll(
+                listOf(
+                    harvest(true, harvestedEpisode(harvestedAnime())),
+                    harvest(true, harvestedEpisode(harvestedAnime(id = "456", title = "Other"), id = "1002")),
+                    harvest(true, harvestedEpisode(harvestedAnime(id = "789", title = "Third"), id = "1003"))
+                )
+            )
 
-            // Then
-            assertEquals(1, first)
-            assertEquals(0, second)
-            assertEquals(1, third)
-            verify(exactly = 2) { animeService.save(any()) }
+            // Then: every reported change is honored
+            assertEquals(3, saved)
+            verify(exactly = 3) { animeService.save(any()) }
         }
 
         @Test

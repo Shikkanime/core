@@ -59,14 +59,13 @@ class AnimeIngestionIntegrationTest {
         @Test
         @DisplayName("should update the stored anime when the same platform link is harvested again")
         fun shouldUpdateTheStoredAnimeWhenTheSamePlatformLinkIsHarvestedAgain() {
-            // Given
+            // Given: the platform link is already stored from a previous harvest
             freshDatabase()
+            koin.get<AnimeService>()
+                .save(harvestedAnime(id = "456").toModel())
             val ingestion = koin.get<AnimeIngestionService>()
 
             // When
-            ingestion.saveAll(
-                listOf(harvest(true, harvestedEpisode(harvestedAnime(id = "456"), id = "5001")))
-            )
             ingestion.saveAll(
                 listOf(
                     harvest(
@@ -94,14 +93,13 @@ class AnimeIngestionIntegrationTest {
         @Test
         @DisplayName("should create a second anime when the identity name changes")
         fun shouldCreateASecondAnimeWhenTheIdentityNameChanges() {
-            // Given
+            // Given: the platform link is already stored under its identity name
             freshDatabase()
+            koin.get<AnimeService>()
+                .save(harvestedAnime(id = "789").toModel())
             val ingestion = koin.get<AnimeIngestionService>()
 
             // When
-            ingestion.saveAll(
-                listOf(harvest(true, harvestedEpisode(harvestedAnime(id = "789"), id = "7001")))
-            )
             ingestion.saveAll(
                 listOf(
                     harvest(

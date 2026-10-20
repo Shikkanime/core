@@ -348,15 +348,13 @@ class AnimationDigitalNetworkPlatform(
             ),
         )
 
-        val fresh = country !in cachedEpisodesByCountry
+        val hasChanged = response.hasChanged
+            || country !in cachedEpisodesByCountry
 
-        val changed = response.hasChanged
-            || fresh
-
-        if (changed)
+        if (hasChanged)
             cachedEpisodesByCountry[country] = convertVideos(response.data.videos, country)
 
-        return cachedEpisodesByCountry[country].orEmpty() to changed
+        return cachedEpisodesByCountry[country].orEmpty() to hasChanged
     }
 
     /**
