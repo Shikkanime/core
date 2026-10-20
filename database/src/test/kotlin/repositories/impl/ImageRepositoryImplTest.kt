@@ -33,6 +33,7 @@ class ImageRepositoryImplTest {
     @DisplayName("tests for the 'findAllByEntityId' method")
     inner class FindAllByEntityIdTests {
         @Test
+        @DisplayName("should return an empty list when the owner has no image")
         fun `should return an empty list when the owner has no image`() {
             // Given
             val owner = Uuid.random()
@@ -45,6 +46,7 @@ class ImageRepositoryImplTest {
         }
 
         @Test
+        @DisplayName("should return only the images of the given owner")
         fun `should return only the images of the given owner`() {
             // Given
             val owner = Uuid.random()
@@ -55,6 +57,7 @@ class ImageRepositoryImplTest {
                         id = Uuid.random()
                         type = ImageType.THUMBNAIL
                         entityId = owner
+                        url = "https://a"
                     }.build()
                 )
                 imageRepository.save(
@@ -62,6 +65,7 @@ class ImageRepositoryImplTest {
                         id = Uuid.random()
                         type = ImageType.BANNER
                         entityId = other
+                        url = "https://b"
                     }.build()
                 )
             }
@@ -78,10 +82,12 @@ class ImageRepositoryImplTest {
     @DisplayName("tests for the 'save' method")
     inner class SaveTests {
         @Test
+        @DisplayName("should insert a new image for a type not set yet")
         fun `should insert a new image for a type not set yet`() {
             // Given
             val image = ImageMockKBuilder {
                 id = Uuid.random()
+                entityId = Uuid.random()
                 type = ImageType.BANNER
                 url = "https://a"
             }.build()
@@ -90,11 +96,12 @@ class ImageRepositoryImplTest {
             val saved = transaction { imageRepository.save(image) }
 
             // Then
-            val found = assertNotNull(transaction { imageRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { imageRepository.findModelById(requireNotNull(saved.id)) })
             assertEquals("https://a", found.url)
         }
 
         @Test
+        @DisplayName("should overwrite the url in place for a known type")
         fun `should overwrite the url in place for a known type`() {
             // Given
             val owner = Uuid.random()
@@ -125,6 +132,7 @@ class ImageRepositoryImplTest {
     @DisplayName("tests for the 'findModelById' method")
     inner class FindModelByIdTests {
         @Test
+        @DisplayName("should return null when the image does not exist")
         fun `should return null when the image does not exist`() {
             // Given
             val unknown = Uuid.random()
@@ -137,12 +145,14 @@ class ImageRepositoryImplTest {
         }
 
         @Test
+        @DisplayName("should return the stored image")
         fun `should return the stored image`() {
             // Given
             val saved = transaction {
                 imageRepository.save(
                     ImageMockKBuilder {
                         id = Uuid.random()
+                        entityId = Uuid.random()
                         type = ImageType.THUMBNAIL
                         url = "https://a"
                     }.build()
@@ -150,7 +160,7 @@ class ImageRepositoryImplTest {
             }
 
             // When
-            val found = assertNotNull(transaction { imageRepository.findModelById(saved.id) })
+            val found = assertNotNull(transaction { imageRepository.findModelById(requireNotNull(saved.id)) })
 
             // Then
             assertEquals(ImageType.THUMBNAIL, found.type)

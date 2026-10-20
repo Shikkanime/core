@@ -8,6 +8,7 @@ import fr.shikkanime.models.Image
 import fr.shikkanime.models.ImageType
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -19,12 +20,18 @@ internal class ImageRepositoryImpl : ImageRepository() {
         ImageEntity.find { ImageTable.entityId eq entityId }
             .map(ImageEntity::toModel)
 
+    override fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid?, List<Image>> =
+        ImageEntity.find { ImageTable.entityId inList entityIds }
+            .map(ImageEntity::toModel)
+            .groupBy(Image::entityId)
+
     /**
      * Finds one image row of an entity by its type.
      *
      * @param entityId identifier of the entity owning the image.
      * @param type type of the image to load.
      * @return the matching entity, or `null` when this image type is not set yet.
+     * @see [Image]
      */
     private fun findByIdAndType(entityId: Uuid, type: ImageType): ImageEntity? =
         ImageEntity.find {
@@ -35,13 +42,15 @@ internal class ImageRepositoryImpl : ImageRepository() {
             .firstOrNull()
 
     override fun save(image: Image): Image =
-        findByIdAndType(image.entityId, image.type)
+        findByIdAndType(requireNotNull(image.entityId), image.type)
             .ifExists {
-                url = image.url
-                updatedAt = TimeUtils.now()
+                if (url != image.url) {
+                    url = image.url
+                    updatedAt = TimeUtils.now()
+                }
             }
             .newIfNotExists(image.id) {
-                entityId = image.entityId
+                entityId = requireNotNull(image.entityId)
                 type = image.type
                 url = image.url
             }

@@ -14,6 +14,7 @@ class AnimePlatformMockKBuilder(
     var id: Uuid? = null
     var createdAt: LocalDateTime? = null
     var updatedAt: LocalDateTime? = null
+    var animeId: Uuid? = null
     var platform: Platform? = null
     var platformId: String? = null
 
@@ -27,8 +28,20 @@ class AnimePlatformMockKBuilder(
         id?.let { every { mockK.id } returns it }
         createdAt?.let { every { mockK.createdAt } returns it }
         updatedAt?.let { every { mockK.updatedAt } returns it }
+        animeId?.let { every { mockK.animeId } returns it }
         platform?.let { every { mockK.platform } returns it }
         platformId?.let { every { mockK.platformId } returns it }
+
+        every { mockK.copy(any(), any(), any(), any(), any(), any()) } answers {
+            AnimePlatform(
+                id = firstArg(),
+                createdAt = secondArg(),
+                updatedAt = thirdArg(),
+                animeId = arg(3),
+                platform = arg(4),
+                platformId = arg(5)
+            )
+        }
 
         return mockK
     }

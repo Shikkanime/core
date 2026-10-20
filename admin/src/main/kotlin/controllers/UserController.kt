@@ -18,12 +18,20 @@ import org.koin.core.annotation.Single
 import java.util.logging.Level
 
 @Single(binds = [IController::class])
-@RestController("/api/users")
+@RestController("/v1/users")
 class UserController(
     private val loginAdminUseCase: LoginAdminUserUseCase
 ) : IController {
     private val logger = LoggerFactory.getLogger()
 
+    /**
+     * Logs an admin user in.
+     *
+     * @param request login request carrying the username and password of the admin user.
+     * @return `200` when the credentials are valid, `400` when they are not.
+     * @see [LoginAdminUserUseCase]
+     * @see [UserLoginDtoRequest]
+     */
     @PostMapping("/login")
     @Operation(
         summary = "Login an admin user",

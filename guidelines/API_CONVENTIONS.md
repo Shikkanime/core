@@ -16,6 +16,41 @@ data class AnimeDto(
 )
 ```
 
+## DTO Mapping
+
+A DTO field has the **same type as its model field**: a `Uuid` stays a `Uuid`, a nested model gets its own
+DTO with the equivalent types. No identifier is stringified - the transport carries the domain types.
+
+- **One DTO per file.** A file never holds several DTOs: `AnimeDto.kt` carries `AnimeDto` only.
+- **One DTO for both transports.** REST controllers and GraphQL queries return the very same DTO
+  type: a GraphQL-specific duplicate DTO is forbidden. GraphQL queries live in
+  `graphql/queries/`, DTOs stay in `dtos/`.
+- **A mapping is an extension function on the source model, declared in the DTO file it builds:**
+  `fun Anime.toDto(): AnimeDto`, `fun AnimeLocalization.toDto(): AnimeLocalizationDto` — never a
+  companion factory, never a top-level function without receiver.
+- **Map lists with method references, never with lambdas:** `animes.map(Anime::toDto)`.
+- **Error responses use `MessageDto.error(...)`** (framework `fr.shikkanime.ktor.dtos`), never a raw
+  `String`; the OpenAPI response type is `ErrorMessageDto::class`.
+- **A controller parameter is typed with its real domain type, never with `String` to re-parse it:**
+  `@PathParam("id") id: Uuid`. The framework resolver converts textual parameters and answers an
+  HTTP 400 carrying a `MessageDto` error when a non-nullable parameter's value does not match its
+  type. A nullable parameter is optional by nature: a missing or unconvertible value resolves to
+  `null`, it never refuses the request.
+
+```kotlin
+@Serializable
+data class AnimeDto(
+    val id: Uuid,
+    val localizations: List<AnimeLocalizationDto>
+)
+
+fun Anime.toDto(): AnimeDto =
+    AnimeDto(
+        id = requireNotNull(id),
+        localizations = localizations.map(AnimeLocalization::toDto)
+    )
+```
+
 ## Controllers and Routes
 
 - **Prefer one return type** per controller or route when possible.
@@ -27,7 +62,7 @@ data class AnimeDto(
 fun Application.configureApiRoutes() {
     routing {
         configureSwaggerRoute("Shikkanime API", "1.0.0")
-        get("/api/v1/animes") {
+        get("/v1/animes") {
             // Call service/repository and respond with DTO
         }
     }

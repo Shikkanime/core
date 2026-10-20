@@ -6,18 +6,15 @@ import kotlin.uuid.Uuid
 /**
  * Canonical anime identity, shared by every country and language.
  *
- * Translatable text lives in [AnimeLocalization] and artwork in [Image], so this model only
- * aggregates the rows owned by the anime without carrying any localized content itself.
+ * The model is flat on purpose: translatable text lives in [AnimeLocalization], source links in
+ * [AnimePlatform] and artwork in [Image], each referencing this row by identifier. The aggregated
+ * view is a projection composed by the persistence, see [AnimeWithChildren].
  *
- * @property images Artwork rows owned by this anime.
- * @property localizations Localized titles and descriptions of this anime.
- * @property platforms Platform source links of this anime.
+ * @see [AnimeWithChildren]
  */
 data class Anime(
-    override val id: Uuid,
-    override val createdAt: LocalDateTime,
-    override val updatedAt: LocalDateTime,
-    val images: List<Image>,
-    val localizations: List<AnimeLocalization>,
-    val platforms: List<AnimePlatform>
+    override val id: Uuid?,
+    override val createdAt: LocalDateTime?,
+    override val updatedAt: LocalDateTime?,
+    val normalizedTitle: String
 ) : ShikkModel(id, createdAt, updatedAt)

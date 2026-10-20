@@ -8,8 +8,10 @@ import org.jetbrains.exposed.v1.datetime.datetime
 import kotlin.uuid.Uuid
 
 open class ShikkTable(name: String) : UuidTable(name) {
-    val createdAt = datetime(CREATED_AT).defaultExpression(CurrentDateTime)
-    val updatedAt = datetime(UPDATED_AT).defaultExpression(CurrentDateTime)
+    val createdAt = datetime(CREATED_AT)
+        .defaultExpression(CurrentDateTime)
+    val updatedAt = datetime(UPDATED_AT)
+        .defaultExpression(CurrentDateTime)
 }
 
 open class ShikkEntity(

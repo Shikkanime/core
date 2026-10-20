@@ -22,7 +22,7 @@ import org.jetbrains.exposed.v1.dao.EntityClass
  * @param MODEL type of domain model returned by this repository.
  * @param entityClass Exposed DAO class used to create and query entities.
  */
-abstract class ModelRepository<T : Any, ENTITY, MODEL : ShikkModel>(
+internal abstract class ModelRepository<T : Any, ENTITY, MODEL : ShikkModel>(
     entityClass: EntityClass<T, ENTITY>
 ) : EntityRepository<T, ENTITY>(entityClass)
     where ENTITY : Entity<T>, ENTITY : ModelConvertible<MODEL> {
@@ -31,6 +31,7 @@ abstract class ModelRepository<T : Any, ENTITY, MODEL : ShikkModel>(
      *
      * @param id identifier to search for.
      * @return the matching model, or `null` when it does not exist.
+     * @see [ModelConvertible]
      */
     open fun findModelById(id: T): MODEL? =
         findById(id)?.toModel()
