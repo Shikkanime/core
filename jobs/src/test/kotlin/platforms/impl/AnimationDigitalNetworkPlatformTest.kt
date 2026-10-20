@@ -248,9 +248,67 @@ class AnimationDigitalNetworkPlatformTest {
     private fun calendar(vararg videos: String): String =
         """{"videos": [${videos.joinToString(",")}]}"""
 
+    /**
+     * Harvests the episodes of the platform, leaving the change flag aside.
+     *
+     * The mapping assertions only read the harvested episodes; the change flag of the payload is
+     * asserted through [AnimationDigitalNetworkPlatform.fetchLatestEpisodes] itself.
+     *
+     * @receiver the streaming platform to harvest.
+     * @return the harvested episodes.
+     * @see [AnimationDigitalNetworkPlatform.fetchLatestEpisodes]
+     */
+    private suspend fun AnimationDigitalNetworkPlatform.episodes(): List<PlatformEpisode> =
+        fetchLatestEpisodes().data
+
     @Nested
     @DisplayName("tests for the 'fetchLatestEpisodes' method")
     inner class FetchLatestEpisodesTests {
+
+        @Test
+        @DisplayName("should report a change on the first harvest")
+        fun `should report a change on the first harvest`() = runTest {
+            // Given
+            val platform = platform(smartHttpClient(calendar(video(1001))))
+
+            // When
+            val harvest = platform.fetchLatestEpisodes()
+
+            // Then: the payload is fetched for the first time, so its content changed
+            assertTrue(harvest.hasChanged)
+            assertEquals(1, harvest.data.size)
+        }
+
+        @Test
+        @DisplayName("should report no change while the calendar content is unchanged")
+        fun `should report no change while the calendar content is unchanged`() = runTest {
+            // Given
+            val platform = platform(smartHttpClient(calendar(video(1001))))
+            platform.fetchLatestEpisodes()
+
+            // When
+            val harvest = platform.fetchLatestEpisodes()
+
+            // Then: the cached payload reports no change
+            assertFalse(harvest.hasChanged)
+        }
+
+        @Test
+        @DisplayName("should report a change when the calendar content changes")
+        fun `should report a change when the calendar content changes`() = runTest {
+            // Given
+            var body = calendar(video(1001))
+            val platform = platform(smartHttpClient { body })
+            platform.fetchLatestEpisodes()
+
+            // When
+            body = calendar(video(2002))
+            val harvest = platform.fetchLatestEpisodes()
+
+            // Then
+            assertTrue(harvest.hasChanged)
+            assertEquals("2002", harvest.data.single().id)
+        }
 
         @Test
         @DisplayName("should map every video of the calendar to a platform episode")
@@ -266,7 +324,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(2, episodes.size)
@@ -283,7 +341,7 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(smartHttpClient(calendar()))
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(0, episodes.size)
@@ -322,7 +380,7 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(smartHttpClient(calendar(video(1001))))
 
             // When
-            val episode = platform.fetchLatestEpisodes()
+            val episode = platform.episodes()
                 .single()
 
             // Then
@@ -342,7 +400,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(1, episodes.size)
@@ -368,7 +426,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(1, episodes.size)
@@ -394,7 +452,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals("2026-01-10T08:00:00Z", episodes[0].releaseDateTime
@@ -412,7 +470,7 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(smartHttpClient(calendar(video(1001, summary = "A great episode"))))
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals("A great episode", episodes.single().localizations.single().description)
@@ -442,7 +500,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val anime = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime
 
@@ -462,8 +520,8 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(smartHttpClient(calendar(video(1001))))
 
             // When
-            val first = platform.fetchLatestEpisodes()
-            val second = platform.fetchLatestEpisodes()
+            val first = platform.episodes()
+            val second = platform.episodes()
 
             // Then
             assertSame(first, second)
@@ -476,8 +534,8 @@ class AnimationDigitalNetworkPlatformTest {
             val platform = platform(smartHttpClient(calendar()))
 
             // When
-            val first = platform.fetchLatestEpisodes()
-            val second = platform.fetchLatestEpisodes()
+            val first = platform.episodes()
+            val second = platform.episodes()
 
             // Then
             assertSame(first, second)
@@ -490,11 +548,11 @@ class AnimationDigitalNetworkPlatformTest {
             // Given
             var body = calendar(video(1001))
             val platform = platform(smartHttpClient { body })
-            val first = platform.fetchLatestEpisodes()
+            val first = platform.episodes()
 
             // When
             body = calendar(video(2002))
-            val second = platform.fetchLatestEpisodes()
+            val second = platform.episodes()
 
             // Then
             assertTrue(first !== second)
@@ -518,7 +576,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            platform.fetchLatestEpisodes()
+            platform.episodes()
 
             // Then
             assertEquals("fr", headers[HttpHeaders.AcceptLanguage])
@@ -548,7 +606,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals("de", headers[HttpHeaders.AcceptLanguage])
@@ -569,7 +627,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(1, episodes.size)
@@ -594,7 +652,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(1, episodes.size)
@@ -620,7 +678,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(listOf("1"), episodes.map { it.id })
@@ -644,7 +702,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(listOf("1"), episodes.map { it.id })
@@ -665,7 +723,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(listOf("3"), episodes.map { it.id })
@@ -680,7 +738,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(0, episodes.size)
@@ -702,7 +760,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then only the videos whose short number starts with a trailer keyword are dropped
             assertEquals(listOf("1", "2"), episodes.map { it.id })
@@ -721,7 +779,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val thumbnail = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime.images.single { it.type == ImageType.THUMBNAIL }.url
 
@@ -741,7 +799,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val description = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime.localizations.single().description
 
@@ -757,7 +815,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val description = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .localizations
                 .single()
@@ -794,7 +852,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -819,7 +877,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -839,7 +897,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -859,7 +917,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -879,7 +937,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -899,7 +957,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -919,7 +977,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -939,7 +997,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -959,7 +1017,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -979,7 +1037,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -999,7 +1057,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -1018,7 +1076,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -1036,7 +1094,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then
             assertEquals(1, episodes.size)
@@ -1061,7 +1119,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val episode = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
 
             // Then
@@ -1140,7 +1198,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val anime = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime
 
@@ -1160,7 +1218,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val anime = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime
 
@@ -1180,7 +1238,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val anime = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime
 
@@ -1206,7 +1264,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val anime = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime
 
@@ -1232,7 +1290,7 @@ class AnimationDigitalNetworkPlatformTest {
 
             // When
             val anime = platform
-                .fetchLatestEpisodes()
+                .episodes()
                 .single()
                 .anime
 
@@ -1267,7 +1325,7 @@ class AnimationDigitalNetworkPlatformTest {
             )
 
             // When
-            val episodes = platform.fetchLatestEpisodes()
+            val episodes = platform.episodes()
 
             // Then the platform does not implement the simulcast filter yet, unlike master
             assertEquals(listOf("1"), episodes.map { it.id })

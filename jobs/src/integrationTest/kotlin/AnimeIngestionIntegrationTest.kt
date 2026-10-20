@@ -3,23 +3,13 @@ package fr.shikkanime.jobs
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.database.services.AnimeService
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeLocalizationMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformEpisodeLocalizationMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformEpisodeMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformImageMockKBuilder
-import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.jobs.platforms.PlatformEpisode
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.ImageType
-import fr.shikkanime.models.Locale
+import fr.shikkanime.jobs.builders.harvest
+import fr.shikkanime.jobs.builders.harvestedAnime
+import fr.shikkanime.jobs.builders.harvestedEpisode
 import fr.shikkanime.models.Platform
-import fr.shikkanime.models.canonicalTitle
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.koin.plugin.module.dsl.startKoin
-import java.time.ZonedDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -54,7 +44,7 @@ class AnimeIngestionIntegrationTest {
 
             // When
             val saved = koin.get<AnimeIngestionService>()
-                .saveAll(listOf(harvestedEpisode(harvestedAnime(id = "123"), id = "3001")))
+                .saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime(id = "123"), id = "3001"))))
 
             // Then
             assertEquals(1, saved)
@@ -63,7 +53,7 @@ class AnimeIngestionIntegrationTest {
 
             assertNotNull(found)
             assertEquals("Title", found.localizations.single().title)
-            assertEquals("https://cdn.example/thumbnail.jpg", found.images.single().url)
+            assertEquals("https://example.test/banner.png", found.images.single().url)
         }
 
         @Test
@@ -74,12 +64,17 @@ class AnimeIngestionIntegrationTest {
             val ingestion = koin.get<AnimeIngestionService>()
 
             // When
-            ingestion.saveAll(listOf(harvestedEpisode(harvestedAnime(id = "456"), id = "5001")))
+            ingestion.saveAll(
+                listOf(harvest(true, harvestedEpisode(harvestedAnime(id = "456"), id = "5001")))
+            )
             ingestion.saveAll(
                 listOf(
-                    harvestedEpisode(
-                        harvestedAnime(localizationTitle = "Title (2024)", id = "456"),
-                        id = "5001"
+                    harvest(
+                        true,
+                        harvestedEpisode(
+                            harvestedAnime(title = "Title (2024)", id = "456"),
+                            id = "5001"
+                        )
                     )
                 )
             )
@@ -104,12 +99,17 @@ class AnimeIngestionIntegrationTest {
             val ingestion = koin.get<AnimeIngestionService>()
 
             // When
-            ingestion.saveAll(listOf(harvestedEpisode(harvestedAnime(id = "789"), id = "7001")))
+            ingestion.saveAll(
+                listOf(harvest(true, harvestedEpisode(harvestedAnime(id = "789"), id = "7001")))
+            )
             ingestion.saveAll(
                 listOf(
-                    harvestedEpisode(
-                        harvestedAnime(localizationTitle = "Renamed", id = "789"),
-                        id = "7001"
+                    harvest(
+                        true,
+                        harvestedEpisode(
+                            harvestedAnime(title = "Renamed", id = "789"),
+                            id = "7001"
+                        )
                     )
                 )
             )
@@ -132,69 +132,4 @@ class AnimeIngestionIntegrationTest {
             databaseWrapper.connect()
             databaseWrapper.initializeSchema()
         }
-
-    /**
-     * Builds one harvested anime exactly as a streaming platform produces it.
-     *
-     * @param localizationTitle title carried by the harvested localization.
-     * @param id identifier of the anime on the streaming platform.
-     * @return the normalized harvest to persist.
-     * @see [PlatformAnimeMockKBuilder]
-     */
-    private fun harvestedAnime(
-        localizationTitle: String = "Title",
-        id: String = "123"
-    ): PlatformAnime =
-        PlatformAnimeMockKBuilder {
-            this.id = id
-            platform = Platform.ANIMATION_DIGITAL_NETWORK
-            normalizedTitle = canonicalTitle(mapOf(Country.FR.defaultLocale to localizationTitle))
-            images = listOf(
-                PlatformImageMockKBuilder {
-                    type = ImageType.THUMBNAIL
-                    url = "https://cdn.example/thumbnail.jpg"
-                }.build()
-            )
-            localizations = listOf(
-                PlatformAnimeLocalizationMockKBuilder {
-                    country = Country.FR
-                    locale = Country.FR.defaultLocale
-                    title = localizationTitle
-                    description = "Description"
-                }.build()
-            )
-        }.build()
-
-    /**
-     * Builds one harvested episode carrying the given anime, with every field stubbed.
-     *
-     * The ingestion derives the content keys of the harvest from all these fields: an unstubbed
-     * mock value would make two runs look like two different harvests.
-     *
-     * @param anime harvested anime carried by the episode.
-     * @param id identifier of the episode on the streaming platform.
-     * @return the harvested episode to persist.
-     * @see [PlatformEpisodeMockKBuilder]
-     */
-    private fun harvestedEpisode(anime: PlatformAnime, id: String): PlatformEpisode =
-        PlatformEpisodeMockKBuilder {
-            this.anime = anime
-            this.id = id
-            image = "https://cdn.example/episode.jpg"
-            releaseDateTime = ZonedDateTime.parse("2026-10-20T10:00:00Z")
-            season = 1
-            number = 1
-            episodeType = EpisodeType.EPISODE
-            duration = 1440
-            url = "https://cdn.example/video"
-            audioLocales = listOf(Locale.JA_JP)
-            uncensored = false
-            localizations = listOf(
-                PlatformEpisodeLocalizationMockKBuilder {
-                    country = Country.FR
-                    title = "Episode 1"
-                    description = "Description"
-                }.build()
-            )
-        }.build()
 }

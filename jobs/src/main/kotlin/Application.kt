@@ -71,12 +71,13 @@ suspend fun main() {
     // Every platform is harvested first, then one global pass: the platforms are sorted by their
     // source priority and the first anime of a given normalized title wins, so a lower priority
     // platform never overwrites the data of a higher one.
-    val episodes = koin.getAll<StreamingPlatform>()
-        .flatMap { it.fetchLatestEpisodes() }
+    val harvest = koin.getAll<StreamingPlatform>()
+        // The lambda is required: a suspend function reference is not a valid map candidate
+        .map { it.fetchLatestEpisodes() }
 
     // Persist the pooled harvest before the process exits
     val saved = koin.get<AnimeIngestionService>()
-        .saveAll(episodes)
+        .saveAll(harvest)
     logger.info("Saved $saved animes")
 
     exitProcess(0)

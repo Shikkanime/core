@@ -2,6 +2,7 @@ package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.jobs.SmartHttpClient
+import fr.shikkanime.jobs.SmartResponse
 import fr.shikkanime.jobs.ZonedDateTimeSerializer
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
@@ -236,14 +237,16 @@ class AnimationDigitalNetworkPlatform(
      *
      * In-memory cache is returned if [SmartHttpClient] reports that the remote payload has not changed.
      *
-     * @return A [List] of normalized [PlatformEpisode] objects representing today's releases.
+     * @return A [SmartResponse] carrying the normalized [PlatformEpisode] objects representing
+     * today's releases and the change flag of the ADN payload.
      * @throws io.ktor.client.plugins.ResponseException If the ADN API responds with an unhandled HTTP error.
+     * @see [SmartResponse]
      * @see [PlatformEpisode]
      * @see [AdnVideo.toPlatformEpisode]
      */
-    override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
+    override suspend fun fetchLatestEpisodes(): SmartResponse<List<PlatformEpisode>> {
         if (countries.isEmpty())
-            return emptyList()
+            return SmartResponse(emptyList(), hasChanged = false)
 
         val now = Clock.System.now()
             .toLocalDateTime(TimeZone.UTC)
@@ -274,7 +277,7 @@ class AnimationDigitalNetworkPlatform(
                 }
         }
 
-        return cachedEpisodes
+        return SmartResponse(cachedEpisodes, hasChanged)
     }
 
     /**
@@ -345,10 +348,15 @@ class AnimationDigitalNetworkPlatform(
             ),
         )
 
-        if (response.hasChanged || country !in cachedEpisodesByCountry)
+        val fresh = country !in cachedEpisodesByCountry
+
+        val changed = response.hasChanged
+            || fresh
+
+        if (changed)
             cachedEpisodesByCountry[country] = convertVideos(response.data.videos, country)
 
-        return cachedEpisodesByCountry[country].orEmpty() to response.hasChanged
+        return cachedEpisodesByCountry[country].orEmpty() to changed
     }
 
     /**
