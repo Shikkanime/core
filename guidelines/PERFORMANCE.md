@@ -9,6 +9,12 @@ All AI agents and developers must adhere to these directives when implementing o
 
 - **Avoid redundant external calls**: Always check and leverage fresh cached data before querying remote APIs.
 - **Deduplicate input eagerly**: Group and normalize raw items before initiating expensive downstream processing.
+- **Skip unchanged harvests in periodic jobs**: A scheduled ingestion workflow must not re-enter its
+  save part when the harvested content is unchanged since the last successful run. Derive one content
+  key per harvested item from its data (every constructor field of the harvested graph), compare the
+  key set with the keys of the last successfully processed harvest, and skip before any database
+  access when they are equal. Store the keys only after the run completed, so a failed run is retried
+  on the next tick.
 - **Precompile static patterns**: Never dynamically compile regular expressions inside hot loops or mapping methods.
   Extract static patterns to top-level `Regex` constants.
 - **Minimize heap allocations in hot paths**: Favor primitive types, direct string manipulation (e.g. `removeSuffix`),
