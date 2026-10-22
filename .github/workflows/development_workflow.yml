@@ -163,3 +163,19 @@ jobs:
       # wiring, without any service to keep alive.
       - name: Provision a schema from the database image
         run: docker run --rm shikkanime/core-database:local
+
+      # The trimmed JRE must carry every module the applications reach: an image that starts and
+      # answers proves it, where a static module list alone would not.
+      - name: Start the api image and query it
+        run: |
+          docker run -d --name api -p 8080:8080 shikkanime/core-api:local
+          for attempt in $(seq 1 30); do
+            if curl -fsS -o /dev/null "http://127.0.0.1:8080/v1/animes"; then
+              echo "The api answered on attempt $attempt"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "The api did not answer"
+          docker logs api
+          exit 1

@@ -24,9 +24,25 @@ RUN --mount=type=cache,target=/root/.gradle \
     GITHUB_ACTOR="${GITHUB_ACTOR}" GITHUB_TOKEN="${GITHUB_TOKEN}" \
     ./gradlew --no-daemon installDist
 
-# Shared runtime of every module image: a JRE, the schema provisioner, and an entrypoint that
-# provisions the schema before starting the module.
-FROM eclipse-temurin:21-jre-alpine AS runtime
+# Runtime image: a jlink-trimmed JRE carrying only the JDK modules the applications reach, instead
+# of a full distribution.
+FROM eclipse-temurin:21-jdk-alpine AS jre
+RUN jlink \
+        --add-modules java.base,java.instrument,java.logging,java.management,java.naming,\
+java.net.http,java.security.jgss,java.sql,java.xml,jdk.crypto.ec,jdk.management,jdk.unsupported,\
+jdk.zipfs \
+        --strip-debug --no-header-files --no-man-pages --compress=zip-6 \
+        --output /opt/jre
+
+# Shared runtime of every module image: the trimmed JRE, the schema provisioner, and an entrypoint
+# that provisions the schema before starting the module.
+FROM alpine:3.22 AS runtime
+
+ENV JAVA_HOME=/opt/java \
+    PATH=/opt/java/bin:$PATH \
+    LANG=C.UTF-8
+
+COPY --from=jre /opt/jre /opt/java
 
 WORKDIR /app
 
