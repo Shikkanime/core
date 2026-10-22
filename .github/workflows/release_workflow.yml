@@ -35,7 +35,7 @@ jobs:
 
       - name: Build and test
         run: ./gradlew clean test --info
-        continue-on-error: ${{ github.event.inputs.bypass_tests }}
+        continue-on-error: ${{ github.event.inputs.bypass_tests == 'true' }}
 
   docker:
     name: Build and push Docker image

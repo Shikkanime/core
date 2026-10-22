@@ -131,8 +131,8 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  test-compose:
-    name: Test docker image (${{ matrix.platform }})
+  docker-images:
+    name: Docker images (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
     needs: [unit-tests, integration-tests]
     strategy:
@@ -148,11 +148,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Every module image is built, on both architectures. The stack is not started: `jobs` is a
-      # one-shot harvest and `site` starts its server without waiting, so `up --wait` cannot
-      # observe them.
+      # One image per executable module, on both architectures. The Gradle build runs once and its
+      # distributions are shared by the five final stages.
       - name: Build every module image
-        run: docker compose build
+        run: docker compose --profile migrate build
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Show the built images
+        run: docker image ls --filter 'reference=shikkanime/*' --format '{{.Repository}}:{{.Tag}} {{.Size}}'
+
+      # Proves the runtime of an image end to end: JRE, schema provisioner and the Liquibase
+      # wiring, without any service to keep alive.
+      - name: Provision a schema from the database image
+        run: docker run --rm shikkanime/core-database:local
