@@ -10,8 +10,7 @@ private val logger = LoggerFactory.getLogger("SiteApplication")
 
 fun main() {
     logger.info("Starting Site Application...")
-    val dbManager = DatabaseManager()
-    dbManager.init()
+    DatabaseManager.connect()
 
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8082
     logger.info("Starting Site HTTP Server on port $port...")
