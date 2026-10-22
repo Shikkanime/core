@@ -6,7 +6,9 @@
 - **Prefer short, readable, direct code** with explicit names.
 - **Keep one clear responsibility** per class or function.
 - **Keep comments rare, useful, and focused** on non-obvious behavior.
-- **Prefer line breaks** that keep lines short and readable (maximum 110 characters).
+- **Keep a code line at or under 110 characters, leading indentation excluded.** Break an over-long
+  line instead of leaving it long. The exact rule and its limits — documentation is out of scope — live
+  in the [Kotlin Conventions](KOTLIN_CONVENTIONS.md) and are enforced by `tools/check_line_length.py`.
 - **Reuse existing project patterns** instead of introducing new ones without need.
 
 ## Comments and KDoc
@@ -82,6 +84,9 @@ A lookup function keyed on several criteria is named after the criteria it takes
 
 ## Control Flow and Layout
 
+- **A guard clause opens the function, before any computation.** When a condition lets the function
+  skip its whole body, test it as the very first statement — before building a collection, a lazy or
+  a read — and return early. The same test is never repeated further down the body.
 - **`if` and `else` branches must always be placed on separate lines.**
   Never put single-line `if (...) ... else ...` on a single line.
 - **Curly braces `{}` are not required for `if` statements.**

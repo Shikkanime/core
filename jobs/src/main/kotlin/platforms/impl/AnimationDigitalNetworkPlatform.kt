@@ -114,9 +114,7 @@ private fun isMovie(
     videoType: AdnType,
     showType: AdnType
 ): Boolean =
-    movieMatch != null
-        || videoType == AdnType.MOV
-        || showType == AdnType.MOV
+    movieMatch != null || videoType == AdnType.MOV || showType == AdnType.MOV
 
 /**
  * Evaluates whether a video entry represents a special episode, OVA, or recap release.
@@ -142,6 +140,18 @@ private fun isSpecial(
         || videoType == AdnType.OAV
         || showType == AdnType.OAV
         || rawEpisodeString?.contains(".") == true
+
+/**
+ * Checks whether an ADN title announces an uncensored release.
+ *
+ * Recognizes the `(NC)` suffix and the French `Non censuré` label alike.
+ *
+ * @param title title of the video, as published by ADN.
+ * @return `true` when the title announces an uncensored release, `false` otherwise.
+ * @see [AdnVideo.isUncensored]
+ */
+private fun hasUncensoredMarker(title: String): Boolean =
+    title.contains("(NC)", ignoreCase = true) || title.contains("Non censuré", ignoreCase = true)
 
 /**
  * Analyzes the raw episode identifier string and platform types to determine the numerical sequence
@@ -348,8 +358,7 @@ class AnimationDigitalNetworkPlatform(
             ),
         )
 
-        val hasChanged = response.hasChanged
-            || country !in cachedEpisodesByCountry
+        val hasChanged = response.hasChanged || country !in cachedEpisodesByCountry
 
         if (hasChanged)
             cachedEpisodesByCountry[country] = convertVideos(response.data.videos, country)
@@ -435,15 +444,11 @@ internal data class AdnVideo(
 
     val isValid: Boolean
         get() =
-            type !in SPECIAL_SHOW_TYPES
-                && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
+            type !in SPECIAL_SHOW_TYPES && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
 
     val isUncensored: Boolean
         get() =
-            title?.let {
-                it.contains("(NC)", ignoreCase = true)
-                    || it.contains("Non censuré", ignoreCase = true)
-            } ?: false
+            title?.let(::hasUncensoredMarker) ?: false
 
     val parsedSeason: Int
         get() =

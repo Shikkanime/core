@@ -44,21 +44,17 @@ internal class AnimeIngestionService(
      * @see [AnimeService.save]
      */
     fun saveAll(harvest: List<SmartResponse<List<PlatformEpisode>>>): Int {
-        // Computed on first read: a quiet tick never groups the harvest
-        val harvestsByNormalizedTitle by lazy {
-            harvest.asSequence()
-                .flatMap { it.data.asSequence() }
-                .map(PlatformEpisode::anime)
-                .groupBy { it.normalizedTitle }
-        }
-
         // A quiet harvest or one carrying no episode has nothing to persist, so no read either
-        if (harvest.none { it.hasChanged }
-            || harvestsByNormalizedTitle.isEmpty()
-        ) {
+        if (harvest.none { it.hasChanged } || harvest.all { it.data.isEmpty() }) {
             logger.fine("Nothing to persist, skipping the save workflow")
             return 0
         }
+
+        // Group the pooled harvest by normalized title: one title, one anime
+        val harvestsByNormalizedTitle = harvest.asSequence()
+            .flatMap { it.data.asSequence() }
+            .map(PlatformEpisode::anime)
+            .groupBy { it.normalizedTitle }
 
         // Load in one read the animes already stored under the normalized titles of this harvest
         val storedByNormalizedTitle = animeService
@@ -73,9 +69,7 @@ internal class AnimeIngestionService(
             val storedSortIndex = existing?.platforms?.minOf { it.platform.sortIndex }
             val candidateSortIndex = candidate.platform.sortIndex
 
-            if (storedSortIndex != null
-                && storedSortIndex < candidateSortIndex
-            ) {
+            if (storedSortIndex != null && storedSortIndex < candidateSortIndex) {
                 logger.warning(
                     "A minus priority platform for '$normalizedTitle' is being ingested, " +
                         "skipping it."

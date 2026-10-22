@@ -43,9 +43,7 @@ internal class AnimeLocalizationRepositoryImpl(
     override fun save(localization: AnimeLocalization): AnimeLocalization =
         findByIdAndLocale(requireNotNull(localization.animeId), localization.locale)
             .ifExists {
-                if (title != localization.title
-                    || description != localization.description
-                ) {
+                if (title != localization.title || description != localization.description) {
                     title = localization.title
                     description = localization.description
                     updatedAt = TimeUtils.now()

@@ -3,9 +3,12 @@
 - **Use expression bodies with `=`** for simple functions, placing the expression on the line
   following the `=`.
 - **Keep return types explicit.**
-- **Format multi-operator conditions (`&&`, `||`)** with each condition on its own line,
-  prefixed by the operator. If the total condition is complex or long, extract it into a dedicated
-  function for readability.
+- **Keep a condition of up to three operands on a single line:**
+  `if (storedSortIndex != null && storedSortIndex < candidateSortIndex)`, and the same for a boolean
+  value: `val hasChanged = response.hasChanged || country !in cachedEpisodesByCountry`.
+- **Past three operands, place one operand per line,** prefixed by its operator, and move the whole
+  condition into a dedicated function named after what it checks: `if (isEpisodeOutOfRange(episode))`.
+  A condition of three operands or fewer that no longer fits 110 characters is extracted the same way.
 - **Break chained function calls** so that each call after the first one is placed on a new indented line.
 - **`if` and `else` branches must always be placed on separate lines.** Never write `if` and `else`
   together on a single line.
@@ -37,18 +40,23 @@
   target). Never a companion factory, never a wrapper `?.let { entity -> entity.toModel(...) }`.
 - **Every non-test method must have complete KDoc.** Must include a descriptive summary, `@param` for
   each parameter, `@return` explaining the return value, and `@see` referencing related classes.
-- **Maximum line length is 110 characters** (including comments, KDoc, and strings).
+- **A code line stays at or under 110 characters, counted from its first non-whitespace character.**
+  Leading indentation is free, so an indented guard keeps its whole budget. Only code is measured:
+  strings count, a line holding nothing but a comment or KDoc does not, and neither do Markdown and
+  the `guidelines/` documents. Break an over-long line rather than leaving it long, and run
+  `tools/check_line_length.py` before committing.
 
 ```kotlin
 fun isAnimeValid(anime: Anime): Boolean =
-    anime.name.isNotBlank()
-        && anime.name.length <= 255
+    anime.name.isNotBlank() && anime.name.length <= 255
 
 val isValid: Boolean
     get() =
-        !video.isPromo
-            && video.order > 0
-            && video.id > 0
+        !video.isPromo && video.order > 0 && video.id > 0
+
+// Four operands: one per line, inside a function named after the check
+if (isEpisodeOutOfRange(episode))
+    return@mapNotNull null
 
 val withoutSeason = if (season > 0)
     withoutStatic.removeSuffix(" $season")

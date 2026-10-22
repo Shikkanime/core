@@ -16,9 +16,13 @@ class SetEnumColumnTransformer<T : Enum<T>>(
     override fun unwrap(value: Set<T>): String =
         value.joinToString(separator = ",") { it.name }
 
+    private fun toEnumConstant(name: String): T =
+        enumConstants[name]
+            ?: error("'$name' can't be associated with any value from ${enumClass.qualifiedName}")
+
     override fun wrap(value: String): Set<T> =
         value.takeUnless { it.isBlank() }
-            ?.let { it.split(",").map { enumConstants[it] ?: error("$it can't be associated with any value from ${enumClass.qualifiedName}") }.toSet() }
+            ?.let { it.split(",").map(::toEnumConstant).toSet() }
             ?: emptySet()
 }
 

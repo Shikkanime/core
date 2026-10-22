@@ -19,7 +19,9 @@ class LoginAdminUserUseCaseImpl(
     private val logger = LoggerFactory.getLogger()
 
     override fun login(username: String, password: String) {
-        val user = requireNotNull(userRepository.findByUsername(username)) { "User with username $username not found" }
+        val user = requireNotNull(userRepository.findByUsername(username)) {
+            "User with username $username not found"
+        }
         val userPassword = requireNotNull(user.password) { "User with username $username has no password set" }
         require(user.roles?.contains(UserRole.ADMIN) == true) { "User with username $username is not an admin" }
         require(userPassword.matches(password)) { "Invalid password for user $username" }
