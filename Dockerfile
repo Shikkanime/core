@@ -13,8 +13,11 @@ COPY api api
 COPY admin admin
 COPY site site
 
+# The build resolves the private framework snapshot from GitHub Packages, which needs a token.
 ARG MODULE=api
-RUN ./gradlew :${MODULE}:installDist --no-daemon
+ARG GITHUB_ACTOR
+ARG GITHUB_TOKEN
+RUN GITHUB_ACTOR="${GITHUB_ACTOR}" GITHUB_TOKEN="${GITHUB_TOKEN}" ./gradlew :${MODULE}:installDist --no-daemon
 
 FROM eclipse-temurin:21-jre-alpine
 

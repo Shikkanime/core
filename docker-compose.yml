@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
       args:
         MODULE: api
+        GITHUB_ACTOR: ${GITHUB_ACTOR:-}
+        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
       - "8080:8080"
     environment:
@@ -18,6 +20,8 @@ services:
       dockerfile: Dockerfile
       args:
         MODULE: site
+        GITHUB_ACTOR: ${GITHUB_ACTOR:-}
+        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
       - "8082:8082"
     environment:
@@ -29,6 +33,8 @@ services:
       dockerfile: Dockerfile
       args:
         MODULE: admin
+        GITHUB_ACTOR: ${GITHUB_ACTOR:-}
+        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
       - "8081:8081"
     environment:
@@ -40,3 +46,5 @@ services:
       dockerfile: Dockerfile
       args:
         MODULE: jobs
+        GITHUB_ACTOR: ${GITHUB_ACTOR:-}
+        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
