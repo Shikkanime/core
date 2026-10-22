@@ -1,12 +1,14 @@
-version: '3.8'
+name: shikkanime
 
+# One image per executable module: updating a single module rebuilds and restarts only that
+# service, for example `docker compose up -d --build jobs`.
 services:
   api:
+    image: shikkanime/core-api:local
     build:
       context: .
-      dockerfile: Dockerfile
+      target: api
       args:
-        MODULE: api
         GITHUB_ACTOR: ${GITHUB_ACTOR:-}
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
@@ -15,11 +17,11 @@ services:
       - PORT=8080
 
   site:
+    image: shikkanime/core-site:local
     build:
       context: .
-      dockerfile: Dockerfile
+      target: site
       args:
-        MODULE: site
         GITHUB_ACTOR: ${GITHUB_ACTOR:-}
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
@@ -28,11 +30,11 @@ services:
       - PORT=8082
 
   admin:
+    image: shikkanime/core-admin:local
     build:
       context: .
-      dockerfile: Dockerfile
+      target: admin
       args:
-        MODULE: admin
         GITHUB_ACTOR: ${GITHUB_ACTOR:-}
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
     ports:
@@ -41,10 +43,22 @@ services:
       - PORT=8081
 
   jobs:
+    image: shikkanime/core-jobs:local
     build:
       context: .
-      dockerfile: Dockerfile
+      target: jobs
       args:
-        MODULE: jobs
         GITHUB_ACTOR: ${GITHUB_ACTOR:-}
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+
+  # Schema provisioner on its own, for a deployment that migrates before rolling out an
+  # application image: `docker compose run --rm database`.
+  database:
+    image: shikkanime/core-database:local
+    build:
+      context: .
+      target: database
+      args:
+        GITHUB_ACTOR: ${GITHUB_ACTOR:-}
+        GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    profiles: [migrate]

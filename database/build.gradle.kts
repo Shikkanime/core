@@ -2,6 +2,12 @@ plugins {
     id("buildsrc.convention.kotlin-jvm")
     alias(libs.plugins.shikkanimeFrameworkKoin)
     `java-test-fixtures`
+    application
+}
+
+// Ships as its own distribution: every application image provisions the schema before it starts.
+application {
+    mainClass.set("fr.shikkanime.database.ApplicationKt")
 }
 
 dependencies {
