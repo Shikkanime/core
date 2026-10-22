@@ -6,14 +6,95 @@ on:
   push:
     branches: [master]
 
+# A superseded run of the same ref has no value: stop it before it burns minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# The build resolves the private framework snapshot from GitHub Packages, which needs a token.
+permissions:
+  contents: read
+  packages: read
+
 jobs:
-  test_with_valkey:
-    name: Test and analyze (with Valkey)
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Run unit tests
+        run: ./gradlew test
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: '*/build/reports/tests/test/'
+          retention-days: 14
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Run integration tests
+        run: ./gradlew :jobs:integrationTest
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-reports
+          path: 'jobs/build/reports/tests/integrationTest/'
+          retention-days: 14
+
+  performance-tests:
+    name: Performance tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Run performance tests
+        run: ./gradlew :jobs:perfTest
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-test-reports
+          path: 'jobs/build/reports/tests/perfTest/'
+          retention-days: 14
+
+  qodana:
+    name: Qodana
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+      packages: read
       checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -23,43 +104,37 @@ jobs:
       - name: Setup Dependencies
         uses: ./.github/actions/setup
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - name: Install the JDK the build toolchain expects
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: corretto
 
-      - name: Start valkey
-        run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
-
-      - name: Build and test
-        run: ./gradlew clean test koverXmlReport --info
-
-      - if: (github.event_name == 'pull_request' || github.event_name == 'push') && github.actor != 'dependabot[bot]'
-        name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2026.1.3
+      # The project scans clean: no baseline is needed, a finding fails the job.
+      # Two things the analysis container does not carry and the Gradle import needs: the JDK 21
+      # the build declares as its toolchain, and the token reading the private framework snapshot.
+      # Both are mounted/forwarded here; the step `env` only reaches the CLI, not the container.
+      - name: Qodana Scan
+        if: github.actor != 'dependabot[bot]'
+        uses: JetBrains/qodana-action@v2026.2.0
         with:
           pr-mode: false
           upload-result: true
           args: |
-            --baseline,qodana.sarif.json
+            --volume ${{ env.JAVA_HOME_21_X64 }}:/opt/jdk-21
+            --env JAVA_HOME=/opt/jdk-21
+            --env GITHUB_ACTOR=${{ github.actor }}
+            --env GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
           QODANA_ENDPOINT: 'https://qodana.cloud'
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Dependencies
-        uses: ./.github/actions/setup
-
-      - name: Build and test
-        run: ./gradlew clean test --info
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   test-compose:
     name: Test docker image (${{ matrix.platform }})
     runs-on: ${{ matrix.platform }}
-    needs: [test_with_valkey, test]
+    needs: [unit-tests, integration-tests]
     strategy:
       fail-fast: false
       matrix:
@@ -73,20 +148,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build
-        run: gradle clean installDist -x test
-
-      - name: Start services
-        run: docker compose up -d --build --wait
-
-      - name: Show logs on failure
-        if: failure()
-        run: |
-          echo "=== CONTAINER STATUS ==="
-          docker compose ps -a
-          echo "=== CONTAINER LOGS ==="
-          docker compose logs
-
-      - name: Stop services
-        if: always()
-        run: docker compose down
+      # Every module image is built, on both architectures. The stack is not started: `jobs` is a
+      # one-shot harvest and `site` starts its server without waiting, so `up --wait` cannot
+      # observe them.
+      - name: Build every module image
+        run: docker compose build
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
