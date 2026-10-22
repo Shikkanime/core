@@ -1,0 +1,14 @@
+####################################################################################################################
+# WARNING: Do not store sensitive information in this file, as its contents will be included in the Qodana report. #
+####################################################################################################################
+version: "1.0"
+linter: qodana-jvm-community
+profile:
+  name: qodana.recommended
+exclude:
+  # `:models` is the shared vocabulary of the applications: its declarations are consumed by the
+  # modules and by the serialized payloads, never only inside the module, so an unused entry there
+  # is not dead code.
+  - name: UnusedSymbol
+    paths:
+      - models/src/main/kotlin

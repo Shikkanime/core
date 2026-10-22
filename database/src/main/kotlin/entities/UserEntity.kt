@@ -9,7 +9,6 @@ import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import kotlin.uuid.Uuid
 
 const val USER_TABLE_NAME = "user"
-const val USER_TABLE_ID = USER_TABLE_NAME + ID
 
 object UserTable : ShikkTable(USER_TABLE_NAME) {
     val identifier = binary("identifier").uniqueIndex("identifier$UQ").nullable()

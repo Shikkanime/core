@@ -2,14 +2,9 @@ package fr.shikkanime.admin.usecases.impl
 
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.repositories.UserRepository
-import fr.shikkanime.database.services.UserService
-import fr.shikkanime.admin.usecases.CreateAdminUserUseCase
 import fr.shikkanime.admin.usecases.LoginAdminUserUseCase
-import fr.shikkanime.core.StringUtils
 import fr.shikkanime.models.UserRole
 import org.koin.core.annotation.Single
-import java.security.SecureRandom
-import kotlin.random.asKotlinRandom
 
 @Suppress("unused")
 @Single

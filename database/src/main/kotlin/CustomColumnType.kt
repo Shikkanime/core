@@ -21,9 +21,10 @@ class SetEnumColumnTransformer<T : Enum<T>>(
             ?: error("'$name' can't be associated with any value from ${enumClass.qualifiedName}")
 
     override fun wrap(value: String): Set<T> =
-        value.takeUnless { it.isBlank() }
-            ?.let { it.split(",").map(::toEnumConstant).toSet() }
-            ?: emptySet()
+        if (value.isBlank())
+            emptySet()
+        else
+            value.split(",").map(::toEnumConstant).toSet()
 }
 
 inline fun <reified T : Enum<T>> Table.enumSet(name: String): Column<Set<T>> =
