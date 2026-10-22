@@ -7,7 +7,7 @@ private const val ANIME_STRING = "Anime "
 private const val SPACE_STRING = " "
 private const val COMMA_STRING = ","
 
-private val romansRegex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| (VI+$)".toRegex()
+private val romansRegex = "( [-!~].*[-!~](?: |$))|( Saison \\d*)|(?:: )?\\(\\d*\\)| ([VI]+$)".toRegex()
 private val separators = listOf(":", COMMA_STRING, "!", "–", " so ", " - ")
 private val secondarySeparators = listOf("?")
 private val secondarySeparatorsArray = secondarySeparators.toTypedArray()
