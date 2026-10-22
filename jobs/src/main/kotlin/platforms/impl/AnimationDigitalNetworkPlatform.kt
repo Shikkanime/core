@@ -2,6 +2,7 @@ package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.jobs.SmartHttpClient
+import fr.shikkanime.jobs.SmartResponse
 import fr.shikkanime.jobs.ZonedDateTimeSerializer
 import fr.shikkanime.jobs.platforms.PlatformAnime
 import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
@@ -113,9 +114,7 @@ private fun isMovie(
     videoType: AdnType,
     showType: AdnType
 ): Boolean =
-    movieMatch != null
-        || videoType == AdnType.MOV
-        || showType == AdnType.MOV
+    movieMatch != null || videoType == AdnType.MOV || showType == AdnType.MOV
 
 /**
  * Evaluates whether a video entry represents a special episode, OVA, or recap release.
@@ -141,6 +140,18 @@ private fun isSpecial(
         || videoType == AdnType.OAV
         || showType == AdnType.OAV
         || rawEpisodeString?.contains(".") == true
+
+/**
+ * Checks whether an ADN title announces an uncensored release.
+ *
+ * Recognizes the `(NC)` suffix and the French `Non censuré` label alike.
+ *
+ * @param title title of the video, as published by ADN.
+ * @return `true` when the title announces an uncensored release, `false` otherwise.
+ * @see [AdnVideo.isUncensored]
+ */
+private fun hasUncensoredMarker(title: String): Boolean =
+    title.contains("(NC)", ignoreCase = true) || title.contains("Non censuré", ignoreCase = true)
 
 /**
  * Analyzes the raw episode identifier string and platform types to determine the numerical sequence
@@ -236,14 +247,16 @@ class AnimationDigitalNetworkPlatform(
      *
      * In-memory cache is returned if [SmartHttpClient] reports that the remote payload has not changed.
      *
-     * @return A [List] of normalized [PlatformEpisode] objects representing today's releases.
+     * @return A [SmartResponse] carrying the normalized [PlatformEpisode] objects representing
+     * today's releases and the change flag of the ADN payload.
      * @throws io.ktor.client.plugins.ResponseException If the ADN API responds with an unhandled HTTP error.
+     * @see [SmartResponse]
      * @see [PlatformEpisode]
      * @see [AdnVideo.toPlatformEpisode]
      */
-    override suspend fun fetchLatestEpisodes(): List<PlatformEpisode> {
+    override suspend fun fetchLatestEpisodes(): SmartResponse<List<PlatformEpisode>> {
         if (countries.isEmpty())
-            return emptyList()
+            return SmartResponse(emptyList(), hasChanged = false)
 
         val now = Clock.System.now()
             .toLocalDateTime(TimeZone.UTC)
@@ -274,7 +287,7 @@ class AnimationDigitalNetworkPlatform(
                 }
         }
 
-        return cachedEpisodes
+        return SmartResponse(cachedEpisodes, hasChanged)
     }
 
     /**
@@ -345,10 +358,12 @@ class AnimationDigitalNetworkPlatform(
             ),
         )
 
-        if (response.hasChanged || country !in cachedEpisodesByCountry)
+        val hasChanged = response.hasChanged || country !in cachedEpisodesByCountry
+
+        if (hasChanged)
             cachedEpisodesByCountry[country] = convertVideos(response.data.videos, country)
 
-        return cachedEpisodesByCountry[country].orEmpty() to response.hasChanged
+        return cachedEpisodesByCountry[country].orEmpty() to hasChanged
     }
 
     /**
@@ -429,15 +444,11 @@ internal data class AdnVideo(
 
     val isValid: Boolean
         get() =
-            type !in SPECIAL_SHOW_TYPES
-                && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
+            type !in SPECIAL_SHOW_TYPES && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
 
     val isUncensored: Boolean
         get() =
-            title?.let {
-                it.contains("(NC)", ignoreCase = true)
-                    || it.contains("Non censuré", ignoreCase = true)
-            } ?: false
+            title?.let(::hasUncensoredMarker) ?: false
 
     val parsedSeason: Int
         get() =

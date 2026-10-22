@@ -4,9 +4,9 @@ import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeWithChildrenMockKBuilder
 import fr.shikkanime.database.services.AnimeService
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeLocalizationMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformImageMockKBuilder
+import fr.shikkanime.jobs.builders.harvest
+import fr.shikkanime.jobs.builders.harvestedAnime
+import fr.shikkanime.jobs.builders.harvestedEpisode
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.ImageType
@@ -31,26 +31,6 @@ class AnimeIngestionServiceTest {
 
     @InjectMockKs private lateinit var ingestionService: AnimeIngestionService
 
-    private val platformAnime = PlatformAnimeMockKBuilder {
-        id = "123"
-        platform = Platform.ANIMATION_DIGITAL_NETWORK
-        normalizedTitle = "Title"
-        images = listOf(
-            PlatformImageMockKBuilder {
-                type = ImageType.BANNER
-                url = "https://example.test/banner.png"
-            }.build()
-        )
-        localizations = listOf(
-            PlatformAnimeLocalizationMockKBuilder {
-                country = Country.FR
-                locale = Country.FR.defaultLocale
-                title = "Title"
-                description = "Description"
-            }.build()
-        )
-    }.build()
-
     @Nested
     @DisplayName("tests for the 'saveAll' method")
     inner class SaveAllTests {
@@ -63,7 +43,7 @@ class AnimeIngestionServiceTest {
             every { animeService.save(capture(saved)) } returnsArgument 0
 
             // When
-            ingestionService.saveAll(listOf(platformAnime))
+            ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime()))))
 
             // Then
             assertEquals("123", saved.captured.platforms.single().platformId)
@@ -84,7 +64,7 @@ class AnimeIngestionServiceTest {
             every { animeService.save(capture(saved)) } returnsArgument 0
 
             // When
-            ingestionService.saveAll(listOf(platformAnime))
+            ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime()))))
 
             // Then
             assertEquals(existing.anime.id, saved.captured.anime.id)
@@ -103,13 +83,10 @@ class AnimeIngestionServiceTest {
             every { animeService.findAllByNormalizedTitles(any()) } returns mapOf("Title" to existing)
             every { animeService.save(any()) } returnsArgument 0
 
-            val lowerPriority = PlatformAnimeMockKBuilder {
-                platform = Platform.CRUNCHYROLL
-                normalizedTitle = "Title"
-            }.build()
+            val lowerPriority = harvestedAnime(platform = Platform.CRUNCHYROLL)
 
             // When
-            ingestionService.saveAll(listOf(lowerPriority))
+            ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(lowerPriority))))
 
             // Then: nothing is saved, the higher priority source keeps the data
             verify(exactly = 0) { animeService.save(any()) }
@@ -124,7 +101,7 @@ class AnimeIngestionServiceTest {
             every { animeService.save(capture(saved)) } returnsArgument 0
 
             // When
-            ingestionService.saveAll(listOf(platformAnime))
+            ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime()))))
 
             // Then
             val anime = saved.captured
@@ -134,6 +111,96 @@ class AnimeIngestionServiceTest {
             assertEquals("Description", localization.description)
             assertEquals(ImageType.BANNER, anime.images.single().type)
             assertEquals(Platform.ANIMATION_DIGITAL_NETWORK, anime.platforms.single().platform)
+        }
+
+        @Test
+        @DisplayName("should skip the save workflow when no platform reports a change")
+        fun `should skip the save workflow when no platform reports a change`() {
+            // Given
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } returnsArgument 0
+
+            // When
+            val saved = ingestionService.saveAll(listOf(harvest(false, harvestedEpisode(harvestedAnime()))))
+
+            // Then: the workflow enters no read and no write
+            assertEquals(0, saved)
+            verify(exactly = 0) { animeService.findAllByNormalizedTitles(any()) }
+            verify(exactly = 0) { animeService.save(any()) }
+        }
+
+        @Test
+        @DisplayName("should run the save workflow when one platform reports a change")
+        fun `should run the save workflow when one platform reports a change`() {
+            // Given
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } returnsArgument 0
+            val quiet = harvest(false, harvestedEpisode(harvestedAnime()))
+            val changed = harvest(
+                true,
+                harvestedEpisode(anime = harvestedAnime(id = "456", title = "Other"), id = "1002")
+            )
+
+            // When
+            val saved = ingestionService.saveAll(listOf(quiet, changed))
+
+            // Then: one changed platform is enough, and the whole pooled harvest goes through
+            assertEquals(2, saved)
+            verify(exactly = 1) { animeService.findAllByNormalizedTitles(any()) }
+            verify(exactly = 2) { animeService.save(any()) }
+        }
+
+        @Test
+        @DisplayName("should run the save workflow on every reported change")
+        fun `should run the save workflow on every reported change`() {
+            // Given
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } returnsArgument 0
+
+            // When: every platform of the pooled harvest reports a change
+            val saved = ingestionService.saveAll(
+                listOf(
+                    harvest(true, harvestedEpisode(harvestedAnime())),
+                    harvest(true, harvestedEpisode(harvestedAnime(id = "456", title = "Other"), id = "1002")),
+                    harvest(true, harvestedEpisode(harvestedAnime(id = "789", title = "Third"), id = "1003"))
+                )
+            )
+
+            // Then: every reported change is honored
+            assertEquals(3, saved)
+            verify(exactly = 3) { animeService.save(any()) }
+        }
+
+        @Test
+        @DisplayName("should skip a harvest that reports a change but carries no episode")
+        fun `should skip a harvest that reports a change but carries no episode`() {
+            // Given
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } returnsArgument 0
+
+            // When
+            val saved = ingestionService.saveAll(listOf(harvest(true)))
+
+            // Then: an emptied payload has nothing to persist, the persistence is not even read
+            assertEquals(0, saved)
+            verify(exactly = 0) { animeService.findAllByNormalizedTitles(any()) }
+            verify(exactly = 0) { animeService.save(any()) }
+        }
+
+        @Test
+        @DisplayName("should skip an empty harvest without touching the persistence")
+        fun `should skip an empty harvest without touching the persistence`() {
+            // Given
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } returnsArgument 0
+
+            // When
+            val saved = ingestionService.saveAll(emptyList())
+
+            // Then: nothing to persist, the persistence is not even read
+            assertEquals(0, saved)
+            verify(exactly = 0) { animeService.findAllByNormalizedTitles(any()) }
+            verify(exactly = 0) { animeService.save(any()) }
         }
     }
 }

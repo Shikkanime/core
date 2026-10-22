@@ -9,6 +9,15 @@ All AI agents and developers must adhere to these directives when implementing o
 
 - **Avoid redundant external calls**: Always check and leverage fresh cached data before querying remote APIs.
 - **Deduplicate input eagerly**: Group and normalize raw items before initiating expensive downstream processing.
+- **Skip unchanged harvests in periodic jobs**: A scheduled ingestion workflow must not re-enter its
+  save part when no streaming platform reports a change. The platform fetches expose the change flag
+  of their payload (the shared `SmartResponse.hasChanged`, the detection the cached HTTP responses
+  already use) and the workflow runs only when at least one platform reports a change; a quiet tick
+  touches nothing, not even a database read. The flag must be true whenever the harvest the platform
+  RETURNS may differ from the previous one, not only when the HTTP payload changed: a cold
+  process-local derived cache (the first harvest of the process, or a recovery after a failed fetch)
+  also reports a change, otherwise the skip would drop episodes that were never persisted. A quiet
+  tick is therefore one where every platform returns exactly what it returned before.
 - **Precompile static patterns**: Never dynamically compile regular expressions inside hot loops or mapping methods.
   Extract static patterns to top-level `Regex` constants.
 - **Minimize heap allocations in hot paths**: Favor primitive types, direct string manipulation (e.g. `removeSuffix`),

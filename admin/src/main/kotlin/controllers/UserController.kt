@@ -17,6 +17,7 @@ import fr.shikkanime.ktor.dtos.MessageDto
 import org.koin.core.annotation.Single
 import java.util.logging.Level
 
+@Suppress("unused") // Bound by Koin and routed from its annotations
 @Single(binds = [IController::class])
 @RestController("/v1/users")
 class UserController(

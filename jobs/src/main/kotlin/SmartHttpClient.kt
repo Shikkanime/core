@@ -31,11 +31,6 @@ class SmartHttpClient(
     val maxCacheCapacity: Int = 1000,
     val maxStaleRetention: Duration = 24.hours
 ) {
-    data class SmartResponse<T>(
-        val data: T,
-        val hasChanged: Boolean
-    )
-
     data class HttpCacheEntry(
         val data: Any,
         val contentHash: Int,
@@ -75,11 +70,28 @@ class SmartHttpClient(
             map[key] = value
         }
 
+        /**
+         * Removes the entry stored for the given key.
+         *
+         * @param key the cache key to remove.
+         * @return the removed entry, or null when the key is absent.
+         * @see [HttpCacheEntry]
+         */
+        @Suppress("unused")
         @Synchronized
-        fun remove(key: String): HttpCacheEntry? = map.remove(key)
+        fun remove(key: String): HttpCacheEntry? =
+            map.remove(key)
 
+        /**
+         * Removes every entry from the cache.
+         *
+         * @return nothing.
+         * @see [HttpCacheEntry]
+         */
+        @Suppress("unused")
         @Synchronized
-        fun clear() = map.clear()
+        fun clear(): Unit =
+            map.clear()
 
         @Synchronized
         fun cleanUpExpired(nowMillis: Long = Clock.System.now().toEpochMilliseconds()) {

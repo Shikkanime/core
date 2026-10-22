@@ -151,19 +151,4 @@ object PerfProfiler {
         block()
         return buildMeasurement(baseline, itemCount)
     }
-
-    /**
-     * Executes the given suspending [block] and records comprehensive execution metrics.
-     *
-     * @param itemCount The workload size representing the number of processed elements.
-     * @param block The suspending benchmark execution lambda to profile.
-     * @return The resulting [PerfMeasurement] snapshot.
-     * @see [PerfMeasurement]
-     * @see [BasePlatformPerformanceTest]
-     */
-    suspend fun measureSuspend(itemCount: Int = 1, block: suspend () -> Unit): PerfMeasurement {
-        val baseline = captureBaseline()
-        block()
-        return buildMeasurement(baseline, itemCount)
-    }
 }

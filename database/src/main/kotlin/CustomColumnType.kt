@@ -16,10 +16,15 @@ class SetEnumColumnTransformer<T : Enum<T>>(
     override fun unwrap(value: Set<T>): String =
         value.joinToString(separator = ",") { it.name }
 
+    private fun toEnumConstant(name: String): T =
+        enumConstants[name]
+            ?: error("'$name' can't be associated with any value from ${enumClass.qualifiedName}")
+
     override fun wrap(value: String): Set<T> =
-        value.takeUnless { it.isBlank() }
-            ?.let { it.split(",").map { enumConstants[it] ?: error("$it can't be associated with any value from ${enumClass.qualifiedName}") }.toSet() }
-            ?: emptySet()
+        if (value.isBlank())
+            emptySet()
+        else
+            value.split(",").map(::toEnumConstant).toSet()
 }
 
 inline fun <reified T : Enum<T>> Table.enumSet(name: String): Column<Set<T>> =

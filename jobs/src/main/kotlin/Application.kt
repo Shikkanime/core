@@ -4,7 +4,6 @@ import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.DatabaseModule
 
-import fr.shikkanime.jobs.platforms.PlatformEpisode
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -34,6 +33,7 @@ internal class AppModule
 @KoinApplication(modules = [AppModule::class, DatabaseModule::class])
 internal class MyApp
 
+@Suppress("unused")
 internal class KoinJobFactory(private val koin: Koin) : JobFactory {
     override fun newJob(bundle: TriggerFiredBundle, scheduler: Scheduler): Job =
         koin.get(bundle.jobDetail.jobClass.kotlin)
@@ -55,7 +55,8 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
  * Runs one full harvest pass of every streaming platform.
  *
  * Boots the application graph with its transactional proxies and connects to the database, harvests
- * the latest episodes of every platform, then persists the result before exiting the process.
+ * the latest episodes of every platform, then persists the animes they carry before exiting the
+ * process.
  *
  * @return nothing; the process exits once the harvest is persisted.
  * @see [StreamingPlatform]
@@ -70,14 +71,13 @@ suspend fun main() {
     // Every platform is harvested first, then one global pass: the platforms are sorted by their
     // source priority and the first anime of a given normalized title wins, so a lower priority
     // platform never overwrites the data of a higher one.
-    val animes = koin.getAll<StreamingPlatform>()
-        .flatMap {
-            it.fetchLatestEpisodes()
-                .map(PlatformEpisode::anime)
-        }
+    val harvest = koin.getAll<StreamingPlatform>()
+        // The lambda is required: a suspend function reference is not a valid map candidate
+        .map { it.fetchLatestEpisodes() }
 
+    // Persist the pooled harvest before the process exits
     val saved = koin.get<AnimeIngestionService>()
-        .saveAll(animes)
+        .saveAll(harvest)
     logger.info("Saved $saved animes")
 
     exitProcess(0)
@@ -100,6 +100,7 @@ suspend fun main() {
  * @see [Expression]
  * @see [TriggerBuilder]
  */
+@Suppress("unused")
 private fun Scheduler.schedule(jobs: List<Job>) {
     jobs.forEach { job ->
         val expression = job::class.findAnnotation<Expression>()?.value

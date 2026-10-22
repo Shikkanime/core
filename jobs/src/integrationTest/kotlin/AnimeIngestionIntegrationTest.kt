@@ -3,14 +3,10 @@ package fr.shikkanime.jobs
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.database.services.AnimeService
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeLocalizationMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformImageMockKBuilder
-import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.ImageType
+import fr.shikkanime.jobs.builders.harvest
+import fr.shikkanime.jobs.builders.harvestedAnime
+import fr.shikkanime.jobs.builders.harvestedEpisode
 import fr.shikkanime.models.Platform
-import fr.shikkanime.models.canonicalTitle
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.koin.plugin.module.dsl.startKoin
@@ -48,7 +44,7 @@ class AnimeIngestionIntegrationTest {
 
             // When
             val saved = koin.get<AnimeIngestionService>()
-                .saveAll(listOf(harvestedAnime()))
+                .saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime(id = "123"), id = "3001"))))
 
             // Then
             assertEquals(1, saved)
@@ -57,25 +53,34 @@ class AnimeIngestionIntegrationTest {
 
             assertNotNull(found)
             assertEquals("Title", found.localizations.single().title)
-            assertEquals("https://cdn.example/thumbnail.jpg", found.images.single().url)
+            assertEquals("https://example.test/banner.png", found.images.single().url)
         }
 
         @Test
         @DisplayName("should update the stored anime when the same platform link is harvested again")
         fun shouldUpdateTheStoredAnimeWhenTheSamePlatformLinkIsHarvestedAgain() {
-            // Given
+            // Given: the platform link is already stored from a previous harvest
             freshDatabase()
+            koin.get<AnimeService>()
+                .save(harvestedAnime(id = "456").toModel())
             val ingestion = koin.get<AnimeIngestionService>()
 
             // When
-            ingestion.saveAll(listOf(harvestedAnime()))
             ingestion.saveAll(
-                listOf(harvestedAnime(localizationTitle = "Title (2024)"))
+                listOf(
+                    harvest(
+                        true,
+                        harvestedEpisode(
+                            harvestedAnime(title = "Title (2024)", id = "456"),
+                            id = "5001"
+                        )
+                    )
+                )
             )
 
             // Then
             val found = koin.get<AnimeService>()
-                .findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "123")
+                .findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "456")
 
             assertNotNull(found)
             // The rules absorb a year in parentheses: same normalized title, so the row is updated
@@ -88,14 +93,23 @@ class AnimeIngestionIntegrationTest {
         @Test
         @DisplayName("should create a second anime when the identity name changes")
         fun shouldCreateASecondAnimeWhenTheIdentityNameChanges() {
-            // Given
+            // Given: the platform link is already stored under its identity name
             freshDatabase()
+            koin.get<AnimeService>()
+                .save(harvestedAnime(id = "789").toModel())
             val ingestion = koin.get<AnimeIngestionService>()
 
             // When
-            ingestion.saveAll(listOf(harvestedAnime()))
             ingestion.saveAll(
-                listOf(harvestedAnime(localizationTitle = "Renamed"))
+                listOf(
+                    harvest(
+                        true,
+                        harvestedEpisode(
+                            harvestedAnime(title = "Renamed", id = "789"),
+                            id = "7001"
+                        )
+                    )
+                )
             )
 
             // Then: a rename is a new identity name, so a new anime - both are kept and may be merged
@@ -116,31 +130,4 @@ class AnimeIngestionIntegrationTest {
             databaseWrapper.connect()
             databaseWrapper.initializeSchema()
         }
-
-    /**
-     * Builds one harvested anime exactly as a streaming platform produces it.
-     *
-     * @param localizationTitle title carried by the harvested localization.
-     * @return the normalized harvest to persist.
-     */
-    private fun harvestedAnime(localizationTitle: String = "Title"): PlatformAnime =
-        PlatformAnimeMockKBuilder {
-            id = "123"
-            platform = Platform.ANIMATION_DIGITAL_NETWORK
-            normalizedTitle = canonicalTitle(mapOf(Country.FR.defaultLocale to localizationTitle))
-            images = listOf(
-                PlatformImageMockKBuilder {
-                    type = ImageType.THUMBNAIL
-                    url = "https://cdn.example/thumbnail.jpg"
-                }.build()
-            )
-            localizations = listOf(
-                PlatformAnimeLocalizationMockKBuilder {
-                    country = Country.FR
-                    locale = Country.FR.defaultLocale
-                    title = localizationTitle
-                    description = "Description"
-                }.build()
-            )
-        }.build()
 }

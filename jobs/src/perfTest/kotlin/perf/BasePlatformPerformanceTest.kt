@@ -49,40 +49,6 @@ abstract class BasePlatformPerformanceTest {
     }
 
     /**
-     * Measures suspending execution of [block] and asserts that throughput and memory stay within budget.
-     *
-     * @param label A descriptive identifier for the benchmark.
-     * @param itemCount The number of items processed during this benchmark run.
-     * @param expectedOutputSize Optional expected collection size to verify output correctness.
-     * @param throughputFloor Minimum allowed items per second.
-     * @param allocationCeiling Maximum allowed allocated bytes.
-     * @param block The suspending benchmark execution lambda.
-     * @return A [Pair] containing the benchmark result and the recorded [PerfMeasurement].
-     * @see [PerfProfiler]
-     * @see [PerfBudget]
-     * @see [PerfMeasurement]
-     */
-    protected suspend fun <T> measureAndAssertSuspend(
-        label: String,
-        itemCount: Int,
-        expectedOutputSize: Int? = null,
-        throughputFloor: Double = PerfBudget.throughputFloor(),
-        allocationCeiling: Long = PerfBudget.allocationCeiling(itemCount),
-        block: suspend () -> T
-    ): Pair<T, PerfMeasurement> {
-        var output: T? = null
-        val measurement = PerfProfiler.measureSuspend(itemCount) {
-            output = block()
-        }
-
-        println(PerfReporter.formatReport(label, measurement, allocationCeiling))
-        assertMeasurement(label, measurement, throughputFloor, allocationCeiling, expectedOutputSize, output)
-
-        @Suppress("UNCHECKED_CAST")
-        return (output as T) to measurement
-    }
-
-    /**
      * Validates that the recorded [measurement] satisfies the throughput floor and allocation ceiling.
      *
      * @param label Benchmark identifier for error messages.

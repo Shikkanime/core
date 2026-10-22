@@ -7,6 +7,7 @@ import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 
+@Suppress("unused") // Instantiated by the Quartz scheduler through Koin
 @DisallowConcurrentExecution
 @Single(binds = [Job::class])
 @Expression("*/20 * * * * ?")

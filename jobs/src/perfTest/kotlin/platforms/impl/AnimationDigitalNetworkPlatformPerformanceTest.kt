@@ -29,7 +29,7 @@ class AnimationDigitalNetworkPlatformPerformanceTest : BasePlatformPerformanceTe
 
     @Test
     @DisplayName("should convert one million episodes of a realistic catalog within budget")
-    fun `should convert one million episodes of a realistic catalog within budget`() {
+    fun shouldConvertOneMillionEpisodesOfARealisticCatalogWithinBudget() {
         // Given
         val shows = Array(1000) { i ->
             val isLiveAction = (i % 10 == 0)
