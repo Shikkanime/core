@@ -2,7 +2,7 @@
 
 # One build for every module: the application images differ only by the distribution they copy, so
 # a change to one module rebuilds only the cheap final stages of the others.
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine AS builder
 
 WORKDIR /src
 
@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/root/.gradle \
 
 # Runtime image: a jlink-trimmed JRE carrying only the JDK modules the applications reach, instead
 # of a full distribution.
-FROM eclipse-temurin:21-jdk-alpine AS jre
+FROM eclipse-temurin:25-jdk-alpine AS jre
 RUN jlink \
         --add-modules java.base,java.instrument,java.logging,java.management,java.naming,\
 java.net.http,java.security.jgss,java.sql,java.xml,jdk.crypto.ec,jdk.management,jdk.unsupported,\
