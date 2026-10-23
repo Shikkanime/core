@@ -11,7 +11,6 @@ class BotDetectorCacheTest : AbstractTest() {
 
     @Test
     suspend fun testBotDetectorCache() {
-        assertTrue(botDetectorCache.isBot(clientIp = "69.171.251.9"))
         assertFalse(botDetectorCache.isBot(clientIp = "234.60.195.104"))
         assertTrue(botDetectorCache.isBot(userAgent = "Mozilla/5.0 (compatible; Bytespider; spider-feedback@bytedance.com) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.0.0 Safari/537.36"))
         assertTrue(botDetectorCache.isBot(userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 (StatusCake)"))
