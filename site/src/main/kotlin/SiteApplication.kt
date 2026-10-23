@@ -10,15 +10,14 @@ private val logger = LoggerFactory.getLogger("SiteApplication")
 
 fun main() {
     logger.info("Starting Site Application...")
-    val dbManager = DatabaseManager()
-    dbManager.init()
+    DatabaseManager.connect()
 
     val port = System.getenv("PORT")?.toIntOrNull() ?: 8082
     logger.info("Starting Site HTTP Server on port $port...")
 
+    // The process serves until it is stopped, like the other applications: returning here would
+    // end the JVM as soon as the server starts.
     embeddedServer(CIO, port = port) {
         configureDefaultModules()
-    }.start(wait = false)
-
-    logger.info("Site Application started successfully.")
+    }.start(wait = true)
 }
