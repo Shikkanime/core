@@ -12,132 +12,148 @@ on:
         default: false
         type: boolean
 
+# The release publishes one image per executable module: `shikkanime-core-<module>`. A deployment
+# can then update a single module, `jobs` for instance, without pulling the others.
 env:
-  REGISTRY_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/shikkanime-core
-  V-VERSION: v${{ github.event.inputs.version }}
+  REGISTRY: ${{ vars.DOCKERHUB_USERNAME }}
   VERSION: ${{ github.event.inputs.version }}
+  TAG: v${{ github.event.inputs.version }}
+  MODULES: api site admin jobs database
 
 jobs:
   test:
     name: Test release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v7
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+      - name: Set the version
+        run: sed -i "s/^version=.*/version=$VERSION/" gradle.properties
 
-      - name: Start valkey
-        run: docker run -d --name valkey -p 6379:6379 valkey/valkey:8.1-alpine
-
-      - name: Build and test
-        run: ./gradlew clean test --info
+      - name: Run the test suites
+        run: ./gradlew test :jobs:integrationTest :jobs:perfTest
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: ${{ github.event.inputs.bypass_tests == 'true' }}
 
-  docker:
-    name: Build and push Docker image
-    runs-on: ubuntu-latest
+  images:
+    name: Images (${{ matrix.arch }})
+    runs-on: ${{ matrix.platform }}
     needs: [ test ]
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each architecture is built on its own runner: emulating arm64 would cost more than the
+        # whole build. The manifests job merges both into a multi-architecture tag.
+        include:
+          - platform: ubuntu-latest
+            arch: amd64
+          - platform: ubuntu-24.04-arm
+            arch: arm64
     steps:
       - uses: actions/checkout@v7
-
-      - name: Pull latest commits
-        run: git pull
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v6
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          tags: |
-            type=raw,value=${{ env.V-VERSION }}
-            type=raw,value=latest
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+      - name: Set the version
+        run: sed -i "s/^version=.*/version=$VERSION/" gradle.properties
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to GitHub Container Registry
+      - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Update build.gradle.kts
+      # The Gradle build runs once per runner and its distributions are shared by the five final
+      # stages, so this loop costs one build plus five cheap copies.
+      - name: Build and push every module image
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sed -i "s|$(grep -oP 'version = "\K[^"]*' build.gradle.kts)|${{ env.VERSION }}|g" build.gradle.kts
-          sed -i 's|osdetector.classifier|"linux-aarch_64"|g' build.gradle.kts
+          for module in $MODULES; do
+            echo "::group::$module"
+            docker buildx build \
+              --target "$module" \
+              --tag "$REGISTRY/shikkanime-core-$module:$VERSION-${{ matrix.arch }}" \
+              --build-arg GITHUB_ACTOR \
+              --build-arg GITHUB_TOKEN \
+              --cache-from "type=registry,ref=$REGISTRY/shikkanime-core-$module:buildcache-${{ matrix.arch }}" \
+              --cache-to "type=registry,ref=$REGISTRY/shikkanime-core-$module:buildcache-${{ matrix.arch }},mode=max" \
+              --push \
+              .
+            echo "::endgroup::"
+          done
 
-      - name: Build
-        run: gradle clean installDist
-
-      - name: Build docker file
-        uses: docker/build-push-action@v7
+  manifests:
+    name: Publish the multi-architecture tags
+    runs-on: ubuntu-latest
+    needs: [ images ]
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
         with:
-          context: .
-          file: Dockerfile
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache,mode=max
-          push: true
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Merge the architecture images
+        run: |
+          for module in $MODULES; do
+            image="$REGISTRY/shikkanime-core-$module"
+            docker buildx imagetools create \
+              --tag "$image:$VERSION" \
+              --tag "$image:latest" \
+              "$image:$VERSION-amd64" \
+              "$image:$VERSION-arm64"
+          done
 
   push-commit:
     name: Push version commit
     runs-on: ubuntu-latest
-    needs: [ docker ]
+    needs: [ manifests ]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false
           fetch-depth: 0
 
-      - name: Update version in build.gradle.kts
+      - name: Commit the version
         run: |
-          #!/bin/bash
-          PROJECT_VERSION=$(cat 'build.gradle.kts'  | grep -oP 'version = "\K[^\\"]*' | head -n 1)
-
-          # Update the file
-          sed -i "s|$PROJECT_VERSION|${{ env.VERSION }}|g" build.gradle.kts
-
-          # Set up Git
-          git config user.name Ziedelth
-          git config user.email ${{ secrets.USER_EMAIL }}
-
-          # Commit the changes
-          git add build.gradle.kts
-          git commit -m "Update version to ${{ env.VERSION }}"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@v1.3.0
-        with:
-          github_token: ${{ secrets.USER_TOKEN }}
-          branch: ${{ github.ref }}
-          force: true
+          sed -i "s/^version=.*/version=$VERSION/" gradle.properties
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git commit -am "Update version to $VERSION"
+          git push origin "HEAD:${{ github.ref_name }}"
 
   push-tag:
     name: Push Git Tag
     runs-on: ubuntu-latest
     needs: [ push-commit ]
-
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
 
-      - name: Pull latest commits
-        run: git pull
-
-      - name: Push Git Tag
+      - name: Push the tag
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ env.V-VERSION }}
-          git push origin ${{ env.V-VERSION }}
+          git tag "$TAG"
+          git push origin "$TAG"
