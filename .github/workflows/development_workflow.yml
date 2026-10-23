@@ -107,11 +107,11 @@ jobs:
       - name: Install the JDK the build toolchain expects
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
+          java-version: '25'
           distribution: corretto
 
       # The project scans clean: no baseline is needed, a finding fails the job.
-      # Two things the analysis container does not carry and the Gradle import needs: the JDK 21
+      # Two things the analysis container does not carry and the Gradle import needs: the JDK 25
       # the build declares as its toolchain, and the token reading the private framework snapshot.
       # Both are mounted/forwarded here; the step `env` only reaches the CLI, not the container.
       - name: Qodana Scan
@@ -121,8 +121,8 @@ jobs:
           pr-mode: false
           upload-result: true
           args: |
-            --volume ${{ env.JAVA_HOME_21_X64 }}:/opt/jdk-21
-            --env JAVA_HOME=/opt/jdk-21
+            --volume ${{ env.JAVA_HOME_25_X64 }}:/opt/jdk-25
+            --env JAVA_HOME=/opt/jdk-25
             --env GITHUB_ACTOR=${{ github.actor }}
             --env GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
         env:
@@ -164,18 +164,18 @@ jobs:
       - name: Provision a schema from the database image
         run: docker run --rm shikkanime/core-database:local
 
-      # The trimmed JRE must carry every module the applications reach: an image that starts and
-      # answers proves it, where a static module list alone would not.
-      - name: Start the api image and query it
+      # Every application built on `configureDefaultModules` exposes `GET /health`. Waiting for it
+      # proves the trimmed JRE carries everything each module reaches, and that the service really
+      # serves, where a static module list alone would prove nothing.
+      - name: Start the http services and wait for their health endpoint
+        run: docker compose up -d --wait api site admin
+
+      - name: Show the services on failure
+        if: failure()
         run: |
-          docker run -d --name api -p 8080:8080 shikkanime/core-api:local
-          for attempt in $(seq 1 30); do
-            if curl -fsS -o /dev/null "http://127.0.0.1:8080/v1/animes"; then
-              echo "The api answered on attempt $attempt"
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "The api did not answer"
-          docker logs api
-          exit 1
+          docker compose ps -a
+          docker compose logs
+
+      - name: Stop the services
+        if: always()
+        run: docker compose down
