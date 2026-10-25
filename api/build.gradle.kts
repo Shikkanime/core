@@ -6,7 +6,7 @@ plugins {
 }
 
 application {
-    mainClass.set("fr.shikkanime.api.ApiApplicationKt")
+    mainClass.set("fr.shikkanime.api.ApplicationKt")
 }
 
 dependencies {

@@ -51,6 +51,10 @@ tasks.register<Test>("perfTest") {
     // Benchmarks build multi-hundred-megabyte payloads, so the default heap is not enough.
     maxHeapSize = "4g"
     shouldRunAfter(tasks.test)
+    // A benchmark measures the machine it runs on: replaying a cached or up-to-date result would
+    // report the throughput of another run instead of this one.
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
     testLogging {
         events("passed", "failed", "skipped")
         showStandardStreams = true

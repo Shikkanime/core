@@ -1,12 +1,16 @@
 name: Performance Benchmarks
 
-# Benchmarks are excluded from `test` (see jobs/build.gradle.kts perfTest source set)
-# so they only run here, on demand or on a schedule.
+# The benchmarks also run on every pull request (see development_workflow.yml); this run keeps a
+# weekly reference on a quiet machine, and allows measuring on demand.
 on:
   workflow_dispatch:
   schedule:
     # Sunday at 04:00 UTC
     - cron: '0 4 * * 0'
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   benchmarks:
@@ -21,6 +25,9 @@ jobs:
 
       - name: Run performance benchmarks
         run: ./gradlew :jobs:perfTest --info
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload test reports
         if: always()
