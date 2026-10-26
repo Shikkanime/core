@@ -3,7 +3,6 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.models.ImageType
-import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.junit5.MockKExtension
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
@@ -20,13 +19,14 @@ import kotlin.uuid.Uuid
 @ExtendWith(MockKExtension::class)
 @DisplayName("tests for the image repository")
 class ImageRepositoryImplTest {
-    @InjectMockKs private lateinit var imageRepository: ImageRepositoryImpl
+    private lateinit var imageRepository: ImageRepositoryImpl
 
     @BeforeEach
     fun setUp() {
         val databaseManager = DatabaseManager("jdbc:h2:mem:${Uuid.random()};DB_CLOSE_DELAY=-1")
         databaseManager.databaseWrapper.connect()
         databaseManager.databaseWrapper.initializeSchema()
+        imageRepository = ImageRepositoryImpl(ImagePayloadRepositoryImpl())
     }
 
     @Nested
