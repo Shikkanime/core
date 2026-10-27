@@ -10,6 +10,7 @@ COPY gradlew gradle.properties settings.gradle.kts ./
 COPY gradle ./gradle
 COPY buildSrc ./buildSrc
 COPY models ./models
+COPY media ./media
 COPY database ./database
 COPY api ./api
 COPY site ./site

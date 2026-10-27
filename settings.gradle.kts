@@ -36,6 +36,7 @@ rootProject.name = "shikkanime"
 
 include(
     ":models",
+    ":media",
     ":database",
     ":jobs",
     ":api",
