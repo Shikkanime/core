@@ -12,6 +12,7 @@ application {
 dependencies {
     implementation(project(":models"))
     implementation(project(":database"))
+    implementation(project(":media"))
     implementation(libs.shikkanimeFrameworkCore)
     implementation(libs.shikkanimeFrameworkKoin)
     implementation(libs.shikkanimeFrameworkKtor)
