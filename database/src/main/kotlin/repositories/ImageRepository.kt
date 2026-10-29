@@ -37,6 +37,16 @@ internal abstract class ImageRepository :
     abstract fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid?, List<Image>>
 
     /**
+     * Loads the image of an entity for one type.
+     *
+     * @param entityId identifier of the owning entity.
+     * @param type type of the image to load.
+     * @return the stored image, or `null` when this type is not set yet.
+     * @see [Image]
+     */
+    abstract fun findByEntityIdAndType(entityId: Uuid, type: ImageType): Image?
+
+    /**
      * Upserts one image, overwriting the URL when the owner already has this image type.
      *
      * @param image image to persist; its identifier is only used for the creation.
