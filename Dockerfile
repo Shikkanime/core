@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.gradle \
 # of a full distribution.
 FROM eclipse-temurin:25-jdk-alpine AS jre
 RUN jlink \
-        --add-modules java.base,java.instrument,java.logging,java.management,java.naming,\
+        --add-modules java.base,java.desktop,java.instrument,java.logging,java.management,java.naming,\
 java.net.http,java.security.jgss,java.sql,java.xml,jdk.crypto.ec,jdk.management,jdk.unsupported,\
 jdk.zipfs \
         --strip-debug --no-header-files --no-man-pages --compress=zip-6 \
@@ -49,7 +49,8 @@ WORKDIR /app
 
 COPY --from=builder /src/database/build/install/database ./database
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN addgroup -S app \
+RUN apk add --no-cache libwebp \
+    && addgroup -S app \
     && adduser -S -G app app \
     && chmod +x /usr/local/bin/entrypoint.sh \
     && mkdir -p /app/data \

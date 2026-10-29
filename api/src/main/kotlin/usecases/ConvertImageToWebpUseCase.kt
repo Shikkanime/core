@@ -6,8 +6,11 @@ import fr.shikkanime.ktor.InvalidParameterException
 /**
  * Reads a picture from an address and encodes it to WebP.
  *
- * No storage and no cache: the picture is fetched, converted in memory and handed back. This is the
- * smallest workflow that proves the WebP plugin works against real addresses.
+ * This is the low-level converter used by the attachment endpoint: it reads the source picture
+ * with the framework's Ktor client, decodes it with ImageIO, and encodes the resulting image with
+ * the media module's WebP writer.
+ *
+ * @see [GetAttachmentUseCase]
  */
 interface ConvertImageToWebpUseCase {
     /**
