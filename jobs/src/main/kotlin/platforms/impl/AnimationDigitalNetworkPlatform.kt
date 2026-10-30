@@ -499,8 +499,10 @@ internal data class AdnVideo(
             localizations = listOf(
                 PlatformEpisodeLocalization(
                     country = country,
-                    title = name,
-                    description = summary
+                    // The video name is empty until the episode is published; the title always is
+                    title = name.takeIf(String::isNotBlank)
+                        ?: title?.takeIf(String::isNotBlank),
+                    description = summary?.takeIf(String::isNotBlank)
                 )
             )
         )
@@ -537,7 +539,7 @@ internal data class AdnShow(
 
     val isAnimation: Boolean
         get() =
-            genres.any { it.contains("Animation ") }
+            genres.any { it.contains("Animation") }
 
     /**
      * Maps an ADN show into the platform anime domain entity.
@@ -553,7 +555,7 @@ internal data class AdnShow(
      * @see [cleanAnimeName]
      */
     fun toPlatformAnime(season: Int, country: Country): PlatformAnime {
-        val rawTitle = shortTitle?.takeIf { it.isNotBlank() } ?: title
+        val rawTitle = shortTitle?.takeIf(String::isNotBlank) ?: title
         val cleanedTitle = cleanAnimeName(rawTitle, season)
 
         return PlatformAnime(
