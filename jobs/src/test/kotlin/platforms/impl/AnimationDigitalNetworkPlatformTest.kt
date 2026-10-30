@@ -482,6 +482,28 @@ class AnimationDigitalNetworkPlatformTest {
         }
 
         @Test
+        @DisplayName("should fall back to the video title when the name is blank")
+        fun `should fall back to the video title when the name is blank`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    calendar(video(1, name = "", title = "TOUGEN ANKI - Épisode 5"))
+                )
+            )
+
+            // When
+            val title = platform
+                .episodes()
+                .single()
+                .localizations
+                .single()
+                .title
+
+            // Then
+            assertEquals("TOUGEN ANKI - Épisode 5", title)
+        }
+
+        @Test
         @DisplayName("should map the show as the platform anime of the episode")
         fun `should map the show as the platform anime of the episode`() = runTest {
             // Given
@@ -742,6 +764,21 @@ class AnimationDigitalNetworkPlatformTest {
 
             // Then
             assertEquals(0, episodes.size)
+        }
+
+        @Test
+        @DisplayName("should keep a show whose animation genre has no suffix")
+        fun `should keep a show whose animation genre has no suffix`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(calendar(video(1, showGenres = listOf("Animation"))))
+            )
+
+            // When
+            val episodes = platform.episodes()
+
+            // Then
+            assertEquals(listOf("1"), episodes.map { it.id })
         }
 
         @Test
