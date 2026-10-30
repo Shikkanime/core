@@ -28,6 +28,7 @@ class PlatformAnimeMockKBuilder(
         images?.let { every { mockK.images } returns it }
         localizations?.let { every { mockK.localizations } returns it }
 
+        every { mockK.toPlatformModel() } answers { callOriginal() }
         every { mockK.toModel() } answers { callOriginal() }
 
         normalizedTitle?.let { every { mockK.normalizedTitle } returns it }

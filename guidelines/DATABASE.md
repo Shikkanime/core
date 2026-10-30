@@ -81,3 +81,13 @@ computed by `canonicalTitle`: the title shared by the most localizations, ties b
 A harvest looks the anime up on that column: one title, one anime, across platforms. A rename is a new title
 hence a new anime (both may be merged later), and a title really shared by two animes is reported as an
 anomaly. The title is derived from the localized ones - never entered by hand.
+
+## Episode identity
+An episode is identified by **`(anime, season, episode_type, number)`**, unique: a release harvested from two
+platforms lands on the same row. A harvest resolves the platform release first (`episode_platform`, unique on
+`(episode, platform, platform_id)`), so a video whose numbering changed on its platform keeps pointing at the
+same episode, and falls back to the identity for a release seen for the first time. The localized text lives
+in `episode_localization` (one row per locale), the release - URL, audio tracks, censorship, release date - in
+`episode_platform` (one row per platform video). The metadata of the row - localized text, artwork, season,
+number, type, release date and duration - belongs to the platform with the best `Platform.sortIndex`; every
+source still stores its own platform release.

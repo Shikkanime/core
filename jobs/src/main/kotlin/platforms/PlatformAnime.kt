@@ -24,6 +24,25 @@ data class PlatformAnime(
     val normalizedTitle: String by lazy { canonicalTitle(localizations.associate { it.locale to it.title }) }
 
     /**
+     * Maps this harvested show to its platform source link.
+     *
+     * The link is persisted whatever source owns the anime's metadata: a lower priority platform
+     * still publishes its own identifier and must be stored.
+     *
+     * @return the [AnimePlatform] to pass to the persistence.
+     * @see [AnimePlatform]
+     */
+    fun toPlatformModel(): AnimePlatform =
+        AnimePlatform(
+            id = null,
+            createdAt = null,
+            updatedAt = null,
+            animeId = null,
+            platform = platform,
+            platformId = id
+        )
+
+    /**
      * Maps this harvested show to the canonical aggregate to persist.
      *
      * The mapping is a total function of this harvest: it reads only the constructor state and
@@ -44,15 +63,6 @@ data class PlatformAnime(
             ),
             images = images.map(PlatformImage::toModel),
             localizations = localizations.map(PlatformAnimeLocalization::toModel),
-            platforms = listOf(
-                AnimePlatform(
-                    id = null,
-                    createdAt = null,
-                    updatedAt = null,
-                    animeId = null,
-                    platform = platform,
-                    platformId = this.id
-                )
-            )
+            platforms = listOf(toPlatformModel())
         )
 }

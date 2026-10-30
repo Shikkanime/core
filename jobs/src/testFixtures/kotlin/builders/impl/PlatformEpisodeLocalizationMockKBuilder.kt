@@ -23,6 +23,8 @@ class PlatformEpisodeLocalizationMockKBuilder(
         title?.let { every { mockK.title } returns it }
         description?.let { every { mockK.description } returns it }
 
+        every { mockK.toModel() } answers { callOriginal() }
+
         return mockK
     }
 }
