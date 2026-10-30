@@ -32,9 +32,10 @@ class AnimeWithChildrenMockKBuilder(
         every { mockK.copy(any(), any(), any(), any()) } answers {
             AnimeWithChildren(
                 anime = firstArg(),
-                images = secondArg(),
-                localizations = thirdArg(),
-                platforms = arg(3)
+                // A named `copy(anime = …)` leaves the other arguments unresolved on a mock
+                images = mockK.images,
+                localizations = mockK.localizations,
+                platforms = mockK.platforms
             )
         }
 
