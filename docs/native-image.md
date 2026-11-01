@@ -38,12 +38,13 @@ export GRAALVM_HOME=~/.local/graalvm
   asked for "the latest JDK 25" resolved to GraalVM 25.0.2, which rejects the flag outright. The
   workflow now pins GraalVM 25.4.4.1.1, the same build as the development host.
 - **`x86-64-v3` tuning**: the development host reports `The host machine does not support all
-  features of 'x86-64-v3'. Falling back to '-march=compatibility'`. The CI runner does support v3
-  and targets it by default, so the artifact it produces refuses to start on an older host with
-  `CPU ISA level is lower than required`. `-march=compatibility` alone is not enough: it only drives
-  the Java code generation, while the C compiler of the runner (gcc 15 on Ubuntu 26) still defaults
-  to v3 and stamps the ELF note. Every binary also passes `-H:CCompilerOption=-march=x86-64`, and
-  `readelf -n` on the artifact must report `x86 ISA needed: x86-64-baseline` only.
+  features of 'x86-64-v3'. Falling back to '-march=compatibility'`. A runner that supports v3
+  produces an image that refuses to start on an older host with
+  `CPU ISA level is lower than required`. `-march=compatibility` alone is not enough (it only drives
+  the Java code generation) and neither is `-H:CCompilerOption=-march=x86-64` when the runner's own
+  `crt1.o`/glibc is built for v3. Ubuntu 26.04 (`ubuntu-latest` at the time of writing) does exactly
+  that; the native matrix is pinned to `ubuntu-24.04`, and `readelf -n` on the artifact must report
+  `x86 ISA needed: x86-64-baseline` only.
 - **`--enable-url-protocols` / `--no-fallback`**: GraalVM 25 reports both as deprecated (the URL
   protocols come from the reachability metadata, the fallback threshold no longer exists). They
   are kept for older GraalVM compatibility, but they do not change the result on 25.

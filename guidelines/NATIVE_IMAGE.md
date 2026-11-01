@@ -40,8 +40,11 @@ The build args live in each application's `build.gradle.kts`:
   advertises `x86-64-v3` builds an image that dies at startup on an older CPU with
   `CPU ISA level is lower than required`.
 - `-H:CCompilerOption=-march=x86-64` is required with it: `-march=compatibility` only covers the
-  Java code generation, and the runner's gcc (15 on Ubuntu 26) still targets v3 for the C parts.
-  Check the artifact with `readelf -n`: the note must list `x86-64-baseline` only.
+  Java code generation, and the C compiler still targets its default for the C parts. Check the
+  artifact with `readelf -n`: the note must list `x86-64-baseline` only.
+- Build on a runner whose libc is baseline. Ubuntu 26.04 ships a v3 `crt1.o`/glibc, so even a
+  baseline C compile inherits the v3 note; the native matrix stays on `ubuntu-24.04` for that
+  reason.
 - `-Dorg.gradle.java.home` must not be used; the task already runs on the GraalVM JDK.
 
 The native build is memory hungry. The builder heap defaults to 3 GiB, which fits the `api` and

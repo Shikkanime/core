@@ -89,7 +89,9 @@ jobs:
 
   native-images:
     name: Native image (${{ matrix.module }})
-    runs-on: ubuntu-latest
+    # Pin the image: ubuntu-latest now resolves to Ubuntu 26.04, whose gcc/glibc target
+    # x86-64-v3, so the artifact refuses to start on a v2 host. 24.04 keeps the baseline ISA.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
       fail-fast: false
