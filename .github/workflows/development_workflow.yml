@@ -87,6 +87,40 @@ jobs:
           path: 'jobs/build/reports/tests/perfTest/'
           retention-days: 14
 
+  native-images:
+    name: Native image (${{ matrix.module }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [api, admin, site, jobs, database]
+    steps:
+      - uses: actions/checkout@v7
+
+      # The native build needs GraalVM itself, not the Corretto JDK the JVM jobs use. The action
+      # installs the matching GraalVM for JDK 25 and caches the Gradle wrapper.
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: gradle
+
+      - name: Build the native image
+        run: ./gradlew --no-daemon :${{ matrix.module }}:nativeCompile
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload the native image
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.module }}
+          path: ${{ matrix.module }}/build/native/nativeCompile/
+          retention-days: 14
+
   qodana:
     name: Qodana
     runs-on: ubuntu-latest

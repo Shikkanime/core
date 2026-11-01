@@ -1,10 +1,29 @@
 plugins {
     id("buildsrc.convention.kotlin-jvm")
     application
+    alias(libs.plugins.graalvmNative)
 }
 
 application {
     mainClass.set("fr.shikkanime.site.SiteApplicationKt")
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("shikkanime-site")
+            mainClass.set("fr.shikkanime.site.SiteApplicationKt")
+            sharedLibrary.set(false)
+            jvmArgs.add("-Xmx3g")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-O0",
+                "-H:+EnableFallbackCompilation",
+                "-H:+ReportExceptionStackTraces",
+                "--enable-url-protocols=http,https"
+            )
+        }
+    }
 }
 
 dependencies {
