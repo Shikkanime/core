@@ -113,6 +113,8 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The admin image needs more than 3 GiB of builder heap; the runner has 16 GiB.
+          NATIVE_IMAGE_HEAP: 8g
 
       - name: Upload the native image
         uses: actions/upload-artifact@v4

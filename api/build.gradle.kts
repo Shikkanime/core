@@ -16,7 +16,7 @@ graalvmNative {
             imageName.set("shikkanime-api")
             mainClass.set("fr.shikkanime.api.ApplicationKt")
             sharedLibrary.set(false)
-            jvmArgs.add("-Xmx3g")
+            jvmArgs.add("-Xmx${System.getenv("NATIVE_IMAGE_HEAP") ?: "3g"}")
             buildArgs.addAll(
                 "--no-fallback",
                 "-O1",
