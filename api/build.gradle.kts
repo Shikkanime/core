@@ -21,6 +21,7 @@ graalvmNative {
                 "--no-fallback",
                 "-O1",
                 "-march=compatibility",
+                "-H:CCompilerOption=-march=x86-64",
                 "-H:+ReportExceptionStackTraces",
                 "--enable-url-protocols=http,https"
             )

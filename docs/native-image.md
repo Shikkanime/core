@@ -39,8 +39,10 @@ export GRAALVM_HOME=~/.local/graalvm
 - **`x86-64-v3` tuning**: the development host reports `The host machine does not support all
   features of 'x86-64-v3'. Falling back to '-march=compatibility'`. The CI runner does support v3
   and targets it by default, so the artifact it produces refuses to start on an older host with
-  `CPU ISA level is lower than required`. Every binary now passes `-march=compatibility`: the
-  artifact runs on any x86-64 machine, and the CPU-specific optimisations are dropped.
+  `CPU ISA level is lower than required`. `-march=compatibility` alone is not enough: it only drives
+  the Java code generation, while the C compiler of the runner (gcc 15 on Ubuntu 26) still defaults
+  to v3 and stamps the ELF note. Every binary also passes `-H:CCompilerOption=-march=x86-64`, and
+  `readelf -n` on the artifact must report `x86 ISA needed: x86-64-baseline` only.
 - **`--enable-url-protocols` / `--no-fallback`**: GraalVM 25 reports both as deprecated (the URL
   protocols come from the reachability metadata, the fallback threshold no longer exists). They
   are kept for older GraalVM compatibility, but they do not change the result on 25.
