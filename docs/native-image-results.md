@@ -1,37 +1,75 @@
 # Native image results
 
-Host for the local runs: Linux x86-64, 2 vCPU, 3.7 GiB RAM, 4 GiB swap. GraalVM Community CE
-25.4.4.1.1, Native Build Tools 1.1.18.
+Host for the local runs: Linux x86-64, 2 vCPU, 3.7 GiB RAM, 4 GiB swap, Debian 13 (glibc 2.41).
+Toolchain: GraalVM Community CE **25.4.4.1.1** (JDK 25), Native Build Tools 1.1.18. The CI native
+matrix uses the same GraalVM build on `ubuntu-24.04`.
 
-## `api` — built and verified
+Every application is compared against its JVM distribution on the same prepared database. The probe
+script is `native-compare.py` (profiles `api`, `admin`, `site`): it copies a provisioned H2
+directory, starts the process on its own port, waits for `/health`, records status, `Content-Type`
+and body, then stops it. UUIDs are normalised before the diff.
 
-- `./gradlew :api:nativeCompile` with `-Xmx3g`, `-O1`: success in 10m39s, 74 MB executable,
-  plus the AWT shared libraries next to it.
-- JVM and native started on ports 18080 and 18081 against the same H2 database (schema provisioned
-  by `:database`, five animes seeded by `:jobs`).
+## `api` — 0 difference
+
+JVM and native started on ports 18080 and 18090 against the same seeded database (five animes).
 
 | Request | JVM | native | verdict |
 | --- | --- | --- | --- |
-| `GET /health` | `200`, 2 B | `200`, 2 B | identical |
-| `GET /v1/animes` | `200`, 4831 B JSON | `200`, 4831 B JSON | identical |
-| `GET /v1/animes/{id}` | `200`, 510 B JSON | `200`, 510 B JSON | identical |
-| `GET /v1/animes/{unknown}` | `404`, 92 B JSON | `404`, 92 B JSON | identical |
+| `GET /health` | `200`, `OK` | `200`, `OK` | identical |
+| `GET /v1/animes` | `200`, 5 animes | `200`, 5 animes | identical |
+| `GET /v1/animes/{id}` | `200` | `200` | identical |
+| `GET /v1/animes/{unknown}` | `404`, error JSON | `404`, error JSON | identical |
 | `GET /swagger` | `200`, 996 B HTML | `200`, 996 B HTML | identical |
+| `GET /swagger/documentation.yaml` | `200`, OpenAPI | `200`, OpenAPI | identical |
 
-`native-compare.py` reported `0 difference(s)`.
+`0 difference(s)` after UUID normalisation. Without the tracing-agent configuration the native
+binary starts and then dies on the first request with `ClassNotFoundException:
+org.bouncycastle.crypto.generators.Argon2BytesGenerator` in `UserTable.<clinit>`; the committed
+`reachability-metadata.json` is what makes the comparison pass.
 
-Without the tracing-agent configuration the native binary starts and then dies on the first request
-with `ClassNotFoundException: org.bouncycastle.crypto.generators.Argon2BytesGenerator` in
-`UserTable.<clinit>`. The committed `reachability-metadata.json` is what makes the comparison pass.
+## `admin` — 0 difference
 
-## `admin`, `site`, `jobs`, `database`
+| Request | JVM | native | verdict |
+| --- | --- | --- | --- |
+| `GET /health` | `200`, `OK` | `200`, `OK` | identical |
+| `GET /swagger` | `200` | `200` | identical |
+| `GET /swagger/documentation.yaml` | `200`, OpenAPI | `200`, OpenAPI | identical |
+| `POST /v1/users/login` (bad credentials) | `400`, `Invalid username or password` | `400`, same body | identical |
 
-The local 2 vCPU / 3.7 GiB host cannot finish their optimization phase:
+The login route exercises Argon2, the reflective path that needs the committed reachability
+metadata.
 
-- `admin` at `-O1`: `Compilation exceeded 300.000 seconds` after 14m50s (344 s of GC for one method).
-  The fallback compilation at `-O0` was killed after 18 minutes of swapping.
-- `site` at `-O0`: analysis completed in 178 s, then the compile phase was killed after ten minutes
-  with 3.0 GiB of swap in use.
+## `site` — 0 difference
 
-The `native-images` CI job builds the five modules in parallel on `ubuntu-latest` (16 GiB) and
-uploads one artifact per module; the artifacts are the reference binaries for these applications.
+| Request | JVM | native | verdict |
+| --- | --- | --- | --- |
+| `GET /health` | `200`, `OK` | `200`, `OK` | identical |
+| `GET /` | `404`, empty | `404`, empty | identical |
+| `GET /v1/animes` | `404`, empty | `404`, empty | identical |
+| `GET /swagger` | `404`, empty | `404`, empty | identical |
+
+## `database` — identical schema
+
+Both binaries ran on an empty directory and exited `0`. `org.h2.tools.Script` dumps of the two
+databases are byte-identical (85 lines): same tables, columns, foreign keys, unique constraints and
+indexes.
+
+## `jobs` — same persistence
+
+Both binaries ran one full harvest on a fresh schema and exited `0` with `Saved 4 animes`. The
+resulting tables hold the same counts: 4 animes, 4 localizations, 4 platforms, 8 images. The harvest
+itself is live data, so the comparison is on the exit code and the row counts, not on the titles.
+
+## Artifact portability
+
+`readelf -n` on the five CI artifacts reports `x86 ISA needed: x86-64-baseline` only. The native
+matrix is pinned to `ubuntu-24.04` and to GraalVM 25.4.4.1.1: `ubuntu-latest` now resolves to Ubuntu
+26.04, whose glibc/`crt1.o` is built for x86-64-v3, and a floating `java-version: 25` resolved to
+GraalVM 25.0.2, whose runtime objects also require v3. Both produced images that refused to start on
+a v2 host with `CPU ISA level is lower than required`.
+
+## CI
+
+The `native-images` job builds the five modules in parallel on `ubuntu-24.04` with
+`NATIVE_IMAGE_HEAP=8g` and uploads one artifact per module. The run for `80a03f22` is green on all
+five.
