@@ -36,9 +36,11 @@ export GRAALVM_HOME=~/.local/graalvm
   The module now builds at `-O0`, which stays under the budget. Do not add
   `-H:+EnableFallbackCompilation`: the CI toolchain (GraalVM 25.0.2) rejects it as an unknown
   option, and the `-O0` builds do not need it.
-- **`x86-64-v3` tuning**: the host reports `The host machine does not support all features of
-  'x86-64-v3'. Falling back to '-march=compatibility'`. This is a warning, not an error; the
-  image runs, only the CPU-specific optimisations are dropped.
+- **`x86-64-v3` tuning**: the development host reports `The host machine does not support all
+  features of 'x86-64-v3'. Falling back to '-march=compatibility'`. The CI runner does support v3
+  and targets it by default, so the artifact it produces refuses to start on an older host with
+  `CPU ISA level is lower than required`. Every binary now passes `-march=compatibility`: the
+  artifact runs on any x86-64 machine, and the CPU-specific optimisations are dropped.
 - **`--enable-url-protocols` / `--no-fallback`**: GraalVM 25 reports both as deprecated (the URL
   protocols come from the reachability metadata, the fallback threshold no longer exists). They
   are kept for older GraalVM compatibility, but they do not change the result on 25.

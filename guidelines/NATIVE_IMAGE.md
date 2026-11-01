@@ -33,10 +33,15 @@ The build args live in each application's `build.gradle.kts`:
   unknown option, and the `-O0` builds do not need it. It only exists in later GraalVM builds, where
   it is still experimental.
 - `-H:+ReportExceptionStackTraces` turns a startup failure into a stack trace instead of a bare exit.
+- `-march=compatibility` keeps the artifact runnable on any x86-64 host. Without it, a runner that
+  advertises `x86-64-v3` builds an image that dies at startup on an older CPU with
+  `CPU ISA level is lower than required`.
 - `-Dorg.gradle.java.home` must not be used; the task already runs on the GraalVM JDK.
 
-The native build is memory hungry: three gigabytes of heap (`-Xmx3g`) and two vCPU compile the `api`
-image in roughly ten minutes. A 2 GiB heap fails in the inlining phase with an
+The native build is memory hungry. The builder heap defaults to 3 GiB, which fits the `api` and
+`database` images on the 3.7 GiB development host but not the `admin` image: it asks for more than
+3.87 GiB and dies with `GC overhead limit exceeded`. Set `NATIVE_IMAGE_HEAP=8g` on a 16 GiB CI
+runner, as the native-images workflow does. A 2 GiB heap fails in the inlining phase with an
 `OutOfMemoryError`.
 
 ## Reflection, resources and services

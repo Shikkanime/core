@@ -21,6 +21,7 @@ graalvmNative {
             buildArgs.addAll(
                 "--no-fallback",
                 "-O0",
+                "-march=compatibility",
                 "-H:+ReportExceptionStackTraces",
                 "--enable-url-protocols=http,https"
             )
