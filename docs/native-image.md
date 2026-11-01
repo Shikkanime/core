@@ -33,8 +33,9 @@ export GRAALVM_HOME=~/.local/graalvm
   tracing agent that produced `reachability-metadata.json` is mandatory, not optional.
 - **A 300 s compilation alarm on the `admin` image**: with `-O1` and a 3 GiB heap, the compiler
   spent 344 s in GC for one method and bailed out with `Compilation exceeded 300.000 seconds`.
-  `-H:+EnableFallbackCompilation` retries that method with fewer optimizations and lets the build
-  finish; it is now part of every binary.
+  The module now builds at `-O0`, which stays under the budget. Do not add
+  `-H:+EnableFallbackCompilation`: the CI toolchain (GraalVM 25.0.2) rejects it as an unknown
+  option, and the `-O0` builds do not need it.
 - **`x86-64-v3` tuning**: the host reports `The host machine does not support all features of
   'x86-64-v3'. Falling back to '-march=compatibility'`. This is a warning, not an error; the
   image runs, only the CPU-specific optimisations are dropped.

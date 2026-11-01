@@ -27,11 +27,11 @@ The executable lands in `<module>/build/native/nativeCompile/<name>`, named afte
 The build args live in each application's `build.gradle.kts`:
 
 - `--no-fallback` fails the build instead of producing an image that silently needs a JVM.
-- `-O2` optimises for production; the constrained development host uses `-O0` to keep the compile
-  under the compiler's per-method budget.
-- `-H:+EnableFallbackCompilation` keeps an edge method the analyser cannot prove reachable from
-  failing the whole build. It prints the method, and it stays off when `--no-fallback` already covers
-  the case.
+- `-O1` optimises the `api` image; the constrained development host uses `-O0` for the other modules
+  to keep the compile under the compiler's per-method budget.
+- Do **not** pass `-H:+EnableFallbackCompilation`: GraalVM 25.0.2 (the CI toolchain) rejects it as an
+  unknown option, and the `-O0` builds do not need it. It only exists in later GraalVM builds, where
+  it is still experimental.
 - `-H:+ReportExceptionStackTraces` turns a startup failure into a stack trace instead of a bare exit.
 - `-Dorg.gradle.java.home` must not be used; the task already runs on the GraalVM JDK.
 
