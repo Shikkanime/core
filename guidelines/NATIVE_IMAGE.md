@@ -8,6 +8,9 @@ runtime image and a fast start.
 ## Toolchain
 
 - GraalVM **25** (the same major version as the JVM toolchain), installed outside the repository.
+  Pin the exact build — **25.4.4.1.1** — on the development host and in CI: a floating "latest 25"
+  resolves to 25.0.2, whose runtime objects require x86-64-v3 and which rejects options the 25.4
+  build accepts.
 - `JAVA_HOME` and `GRAALVM_HOME` point at the GraalVM installation when the native task runs.
 - The Gradle build resolves the private framework snapshot from GitHub Packages, so `GITHUB_ACTOR`
   and `GITHUB_TOKEN` must be exported exactly as for a JVM build.

@@ -34,8 +34,9 @@ export GRAALVM_HOME=~/.local/graalvm
 - **A 300 s compilation alarm on the `admin` image**: with `-O1` and a 3 GiB heap, the compiler
   spent 344 s in GC for one method and bailed out with `Compilation exceeded 300.000 seconds`.
   The module now builds at `-O0`, which stays under the budget. Do not add
-  `-H:+EnableFallbackCompilation`: the CI toolchain (GraalVM 25.0.2) rejects it as an unknown
-  option, and the `-O0` builds do not need it.
+  `-H:+EnableFallbackCompilation`: the `-O0` builds do not need it, and an earlier CI setup that
+  asked for "the latest JDK 25" resolved to GraalVM 25.0.2, which rejects the flag outright. The
+  workflow now pins GraalVM 25.4.4.1.1, the same build as the development host.
 - **`x86-64-v3` tuning**: the development host reports `The host machine does not support all
   features of 'x86-64-v3'. Falling back to '-march=compatibility'`. The CI runner does support v3
   and targets it by default, so the artifact it produces refuses to start on an older host with

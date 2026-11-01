@@ -98,15 +98,28 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # The native build needs GraalVM itself, not the Corretto JDK the JVM jobs use. The action
-      # installs the matching GraalVM for JDK 25 and caches the Gradle wrapper.
+      # Pin the toolchain instead of asking for "the latest JDK 25": that resolved to GraalVM
+      # 25.0.2, whose runtime objects require x86-64-v3 and which rejects options the 25.4 build
+      # accepts. The CI and local images must come from the same GraalVM build.
       - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
+        run: |
+          curl -fL --retry 3 -o "$RUNNER_TEMP/graalvm.tar.gz" \
+            "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-25.4.4.1.1/graalvm-community-jdk-25i4-25.0.4.1.1_linux-x64_bin.tar.gz"
+          mkdir -p "$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1"
+          tar xzf "$RUNNER_TEMP/graalvm.tar.gz" \
+            -C "$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1" --strip-components=1
+          echo "JAVA_HOME=$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1" >> "$GITHUB_ENV"
+          echo "GRAALVM_HOME=$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1" >> "$GITHUB_ENV"
+          echo "$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
         with:
-          java-version: '25'
-          distribution: 'graalvm-community'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          cache: gradle
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-native-${{ hashFiles('**/*.gradle*', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-native-
 
       - name: Build the native image
         run: ./gradlew --no-daemon :${{ matrix.module }}:nativeCompile
