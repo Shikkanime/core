@@ -78,10 +78,9 @@ internal abstract class AnimeRepository : EntityRepository<Uuid, AnimeEntity>(An
      * children are upserted right after by the caller, which composes the aggregate from those
      * fresh rows: composing them here would query what the caller immediately replaces.
      *
-     * @param anime aggregate root to persist; its children are not written here.
+     * @param anime anime row to persist; its children are not written here.
      * @return the stored anime row.
      * @see [Anime]
-     * @see [AnimeWithChildren]
      */
-    abstract fun save(anime: AnimeWithChildren): Anime
+    abstract fun save(anime: Anime): Anime
 }

@@ -89,17 +89,17 @@ internal class EpisodeRepositoryImpl(
         findById(id)
             ?.let(::composeOne)
 
-    override fun findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+    override fun findByAnimeIdSeasonEpisodeTypeAndNumber(
         animeId: Uuid,
         season: Int,
-        number: Int,
-        episodeType: EpisodeType
+        episodeType: EpisodeType,
+        number: Int
     ): EpisodeWithChildren? =
         EpisodeEntity.find {
             (EpisodeTable.anime eq animeId) and
                 (EpisodeTable.season eq season) and
-                (EpisodeTable.number eq number) and
-                (EpisodeTable.episodeType eq episodeType)
+                (EpisodeTable.episodeType eq episodeType) and
+                (EpisodeTable.number eq number)
         }
             .limit(1)
             .firstOrNull()
@@ -131,30 +131,30 @@ internal class EpisodeRepositoryImpl(
      */
     private fun hasChanged(stored: EpisodeEntity, candidate: Episode): Boolean =
         stored.season != candidate.season
-            || stored.number != candidate.number
             || stored.episodeType != candidate.episodeType
+            || stored.number != candidate.number
             || stored.releaseDateTime != candidate.releaseDateTime
             || stored.duration != candidate.duration
 
-    override fun save(episode: EpisodeWithChildren): Episode =
-        episode.episode.id?.let(::findById)
+    override fun save(episode: Episode): Episode =
+        episode.id?.let(::findById)
             .ifExists {
-                if (hasChanged(this, episode.episode)) {
-                    season = episode.episode.season
-                    number = episode.episode.number
-                    episodeType = episode.episode.episodeType
-                    releaseDateTime = episode.episode.releaseDateTime
-                    duration = episode.episode.duration
+                if (hasChanged(this, episode)) {
+                    season = episode.season
+                    episodeType = episode.episodeType
+                    number = episode.number
+                    releaseDateTime = episode.releaseDateTime
+                    duration = episode.duration
                     updatedAt = TimeUtils.now()
                 }
             }
-            .newIfNotExists(episode.episode.id) {
-                anime = animeRepository.getReference(requireNotNull(episode.episode.animeId))
-                season = episode.episode.season
-                number = episode.episode.number
-                episodeType = episode.episode.episodeType
-                releaseDateTime = episode.episode.releaseDateTime
-                duration = episode.episode.duration
+            .newIfNotExists(episode.id) {
+                anime = animeRepository.getReference(requireNotNull(episode.animeId))
+                season = episode.season
+                episodeType = episode.episodeType
+                number = episode.number
+                releaseDateTime = episode.releaseDateTime
+                duration = episode.duration
             }
             .applyFlush()
             .toModel()

@@ -91,7 +91,7 @@ localized text lives in `episode_localization` (one row per locale), the release
 censorship, release date - in `episode_release` (one row per platform video and audio track). A row carries
 exactly one audio locale: a dubbed release and a subtitled one do not share their identifier, their release
 date or their URL, and a viewer follows one locale - a video published with several tracks is therefore
-stored as one row per track. The metadata of the episode - localized text, artwork, season, number, type,
+stored as one row per track. The metadata of the episode - localized text, artwork, season, type, number,
 release date and duration - belongs to the platform with the best `Platform.sortIndex`; every source still
 stores its own releases.
 

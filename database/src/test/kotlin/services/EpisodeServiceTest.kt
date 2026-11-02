@@ -114,7 +114,7 @@ class EpisodeServiceTest {
             }
             val root = episode.episode
 
-            every { episodeRepository.save(episode) } returns root
+            every { episodeRepository.save(root) } returns root
             every { localizationRepository.save(any()) } returns episode.localizations.single()
             every { releaseRepository.save(any()) } returns episode.releases.single()
             every { imageRepository.save(any()) } returns episode.images.single()
@@ -123,11 +123,11 @@ class EpisodeServiceTest {
             val saved = episodeService.save(episode)
 
             // Then
-            verify(exactly = 1) { episodeRepository.save(episode) }
+            verify(exactly = 1) { episodeRepository.save(root) }
             verify(exactly = 1) { localizationRepository.save(any()) }
             verify(exactly = 1) { releaseRepository.save(any()) }
             verify(exactly = 1) { imageRepository.save(any()) }
-            assertEquals(episode.episode.id, saved.episode.id)
+            assertEquals(root.id, saved.episode.id)
         }
 
         @Test
@@ -148,16 +148,17 @@ class EpisodeServiceTest {
                     }.build()
                 )
             }
+            val root = episode.episode
             val stored = slot<Image>()
 
-            every { episodeRepository.save(episode) } returns episode.episode
+            every { episodeRepository.save(root) } returns root
             every { imageRepository.save(capture(stored)) } returns episode.images.single()
 
             // When
             episodeService.save(episode)
 
             // Then
-            assertEquals(episode.episode.id, stored.captured.entityId)
+            assertEquals(root.id, stored.captured.entityId)
         }
 
         @Test
@@ -188,10 +189,11 @@ class EpisodeServiceTest {
                 )
                 images = emptyList()
             }
+            val root = episode.episode
             val storedLocalization = slot<EpisodeLocalization>()
             val storedPlatform = slot<EpisodeRelease>()
 
-            every { episodeRepository.save(episode) } returns episode.episode
+            every { episodeRepository.save(root) } returns root
             every { localizationRepository.save(capture(storedLocalization)) } returns episode.localizations.single()
             every { releaseRepository.save(capture(storedPlatform)) } returns episode.releases.single()
 
@@ -199,8 +201,8 @@ class EpisodeServiceTest {
             episodeService.save(episode)
 
             // Then
-            assertEquals(episode.episode.id, storedLocalization.captured.episodeId)
-            assertEquals(episode.episode.id, storedPlatform.captured.episodeId)
+            assertEquals(root.id, storedLocalization.captured.episodeId)
+            assertEquals(root.id, storedPlatform.captured.episodeId)
         }
 
     }
@@ -240,17 +242,17 @@ class EpisodeServiceTest {
             every { episodeRepository.findModelById(any()) } returns episode
             every { episodeRepository.findAllByAnimeId(any()) } returns listOf(episode)
             every {
-                episodeRepository.findByAnimeIdAndSeasonAndNumberAndEpisodeType(any(), any(), any(), any())
+                episodeRepository.findByAnimeIdSeasonEpisodeTypeAndNumber(any(), any(), any(), any())
             } returns episode
 
             // When
             val found = episodeService.findById(requireNotNull(episode.episode.id))
             val foundByAnime = episodeService.findAllByAnimeId(requireNotNull(episode.episode.animeId))
-            val foundByIdentity = episodeService.findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+            val foundByIdentity = episodeService.findByAnimeIdSeasonEpisodeTypeAndNumber(
                 requireNotNull(episode.episode.animeId),
                 episode.episode.season,
-                episode.episode.number,
-                episode.episode.episodeType
+                episode.episode.episodeType,
+                episode.episode.number
             )
 
             // Then

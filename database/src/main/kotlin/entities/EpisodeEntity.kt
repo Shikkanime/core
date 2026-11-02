@@ -18,8 +18,8 @@ internal object EpisodeTable : ShikkTable(EPISODE_TABLE_NAME) {
         fkName = EPISODE_TABLE_NAME + "_" + ANIME_TABLE_NAME + FK
     )
     val season = integer("season")
-    val number = integer("number")
     val episodeType = enumerationByName<EpisodeType>("episode_type", 20)
+    val number = integer("number")
     val releaseDateTime = datetime("release_date_time")
     val duration = long("duration")
 
@@ -43,8 +43,8 @@ internal class EpisodeEntity(id: EntityID<Uuid>) :
 
     var anime by EpisodeTable.anime
     var season by EpisodeTable.season
-    var number by EpisodeTable.number
     var episodeType by EpisodeTable.episodeType
+    var number by EpisodeTable.number
     var releaseDateTime by EpisodeTable.releaseDateTime
     var duration by EpisodeTable.duration
 
@@ -65,8 +65,8 @@ internal class EpisodeEntity(id: EntityID<Uuid>) :
             updatedAt = updatedAt,
             animeId = anime.value,
             season = season,
-            number = number,
             episodeType = episodeType,
+            number = number,
             releaseDateTime = releaseDateTime,
             duration = duration
         )

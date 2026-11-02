@@ -41,7 +41,7 @@ internal class AnimeServiceImpl(
 
     override fun save(anime: AnimeWithChildren): AnimeWithChildren {
         // Persist the identity first so every child row can reference the anime
-        val saved = animeRepository.save(anime)
+        val saved = animeRepository.save(anime.anime)
 
         return AnimeWithChildren(
             anime = saved,

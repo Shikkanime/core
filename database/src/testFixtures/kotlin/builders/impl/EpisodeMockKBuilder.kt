@@ -48,8 +48,8 @@ class EpisodeMockKBuilder(
                 updatedAt = thirdArg(),
                 animeId = arg(3),
                 season = arg(4),
-                number = arg(5),
-                episodeType = arg(6),
+                episodeType = arg(5),
+                number = arg(6),
                 releaseDateTime = arg(7),
                 duration = arg(8)
             )

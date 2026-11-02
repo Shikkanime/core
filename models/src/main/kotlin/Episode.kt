@@ -21,8 +21,8 @@ data class Episode(
     override val updatedAt: LocalDateTime?,
     val animeId: Uuid?,
     val season: Int,
-    val number: Int,
     val episodeType: EpisodeType,
+    val number: Int,
     val releaseDateTime: LocalDateTime,
     val duration: Long
 ) : ShikkModel(id, createdAt, updatedAt)

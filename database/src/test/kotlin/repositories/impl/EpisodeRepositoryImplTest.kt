@@ -99,7 +99,7 @@ class EpisodeRepositoryImplTest {
             val episode = episodeFixture(requireNotNull(anime.id))
 
             // When
-            val saved = transaction { episodeRepository.save(episode) }
+            val saved = transaction { episodeRepository.save(episode.episode) }
 
             // Then
             val found = transaction { episodeRepository.findModelById(requireNotNull(saved.id)) }
@@ -112,10 +112,10 @@ class EpisodeRepositoryImplTest {
             // Given
             val anime = savedAnime()
             val episode = episodeFixture(requireNotNull(anime.id))
-            val first = transaction { episodeRepository.save(episode) }
+            val first = transaction { episodeRepository.save(episode.episode) }
 
             // When
-            val second = transaction { episodeRepository.save(episode) }
+            val second = transaction { episodeRepository.save(episode.episode) }
 
             // Then
             assertEquals(first.id, second.id)
@@ -128,7 +128,7 @@ class EpisodeRepositoryImplTest {
             // Given
             val anime = savedAnime()
             val episode = episodeFixture(requireNotNull(anime.id))
-            transaction { episodeRepository.save(episode) }
+            transaction { episodeRepository.save(episode.episode) }
             val changed = EpisodeWithChildrenMockKBuilder {
                 this.episode = EpisodeMockKBuilder {
                     id = episode.episode.id
@@ -142,7 +142,7 @@ class EpisodeRepositoryImplTest {
             }.build()
 
             // When
-            val saved = transaction { episodeRepository.save(changed) }
+            val saved = transaction { episodeRepository.save(changed.episode) }
 
             // Then
             assertEquals(2, saved.number)
@@ -202,7 +202,7 @@ class EpisodeRepositoryImplTest {
             every { releaseRepository.findAllByEpisodeIds(any()) } returns mapOf(ownerId to releases)
 
             transaction {
-                episodeRepository.save(episode)
+                episodeRepository.save(episode.episode)
             }
 
             // When
@@ -222,7 +222,7 @@ class EpisodeRepositoryImplTest {
             // Given
             val anime = savedAnime()
             val episode = episodeFixture(requireNotNull(anime.id))
-            transaction { episodeRepository.save(episode) }
+            transaction { episodeRepository.save(episode.episode) }
 
             // When
             val found = assertNotNull(
@@ -261,8 +261,8 @@ class EpisodeRepositoryImplTest {
             val second = episodeFixture(animeId, number = 2)
             val first = episodeFixture(animeId, number = 1)
             transaction {
-                episodeRepository.save(second)
-                episodeRepository.save(first)
+                episodeRepository.save(second.episode)
+                episodeRepository.save(first.episode)
             }
 
             // When
@@ -274,7 +274,7 @@ class EpisodeRepositoryImplTest {
     }
 
     @Nested
-    @DisplayName("tests for the 'findByAnimeIdAndSeasonAndNumberAndEpisodeType' method")
+    @DisplayName("tests for the 'findByAnimeIdSeasonEpisodeTypeAndNumber' method")
     inner class FindByAnimeIdAndSeasonAndNumberAndEpisodeTypeTests {
         @Test
         @DisplayName("should return null when no episode carries the identity")
@@ -284,11 +284,11 @@ class EpisodeRepositoryImplTest {
 
             // When
             val found = transaction {
-                episodeRepository.findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+                episodeRepository.findByAnimeIdSeasonEpisodeTypeAndNumber(
                     requireNotNull(anime.id),
                     1,
-                    1,
-                    EpisodeType.EPISODE
+                    EpisodeType.EPISODE,
+                    1
                 )
             }
 
@@ -302,15 +302,15 @@ class EpisodeRepositoryImplTest {
             // Given
             val anime = savedAnime()
             val episode = episodeFixture(requireNotNull(anime.id))
-            transaction { episodeRepository.save(episode) }
+            transaction { episodeRepository.save(episode.episode) }
 
             // When
             val found = transaction {
-                episodeRepository.findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+                episodeRepository.findByAnimeIdSeasonEpisodeTypeAndNumber(
                     requireNotNull(anime.id),
                     1,
-                    1,
-                    EpisodeType.EPISODE
+                    EpisodeType.EPISODE,
+                    1
                 )
             }
 
@@ -342,7 +342,7 @@ class EpisodeRepositoryImplTest {
             val anime = savedAnime()
             val episode = episodeFixture(requireNotNull(anime.id))
             transaction {
-                episodeRepository.save(episode)
+                episodeRepository.save(episode.episode)
                 EpisodeReleaseRepositoryImpl(referencedEpisodeRepository)
                     .save(
                         EpisodeReleaseMockKBuilder {

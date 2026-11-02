@@ -138,11 +138,11 @@ internal class HarvestIngestionService(
         val stored = episodeService.findByPlatformAndPlatformId(episode.anime.platform, episode.id)
             // A release stored under another anime is ignored: a renamed anime is a new identity
             ?.takeIf { it.episode.animeId == animeId }
-            ?: episodeService.findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+            ?: episodeService.findByAnimeIdSeasonEpisodeTypeAndNumber(
                 animeId,
                 model.episode.season,
-                model.episode.number,
-                model.episode.episodeType
+                model.episode.episodeType,
+                model.episode.number
             )
         val storedSortIndex = stored?.releases?.minOfOrNull { it.platform.sortIndex }
         val keepsStoredMetadata = storedSortIndex != null &&

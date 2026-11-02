@@ -46,17 +46,17 @@ interface EpisodeService {
      *
      * @param animeId identifier of the anime owning the episode.
      * @param season season of the episode.
-     * @param number number of the episode in its season.
      * @param episodeType editorial category of the episode.
+     * @param number number of the episode in its season.
      * @return the matching episode aggregate, or `null` when it does not exist.
      * @see [EpisodeWithChildren]
      */
     @Transactional
-    fun findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+    fun findByAnimeIdSeasonEpisodeTypeAndNumber(
         animeId: Uuid,
         season: Int,
-        number: Int,
-        episodeType: EpisodeType
+        episodeType: EpisodeType,
+        number: Int
     ): EpisodeWithChildren?
 
     /**

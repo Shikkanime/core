@@ -28,18 +28,18 @@ internal class EpisodeServiceImpl(
         // Load the aggregate with its localized texts, releases and artwork
         episodeRepository.findModelById(id)
 
-    override fun findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+    override fun findByAnimeIdSeasonEpisodeTypeAndNumber(
         animeId: Uuid,
         season: Int,
-        number: Int,
-        episodeType: EpisodeType
+        episodeType: EpisodeType,
+        number: Int
     ): EpisodeWithChildren? =
         // Resolve the episode carrying an identity under its anime
-        episodeRepository.findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+        episodeRepository.findByAnimeIdSeasonEpisodeTypeAndNumber(
             animeId,
             season,
-            number,
-            episodeType
+            episodeType,
+            number
         )
 
     override fun findByPlatformAndPlatformId(
@@ -51,7 +51,7 @@ internal class EpisodeServiceImpl(
 
     override fun save(episode: EpisodeWithChildren): EpisodeWithChildren {
         // The caller resolved the identity: a null identifier inserts a new episode, never duplicates
-        val saved = episodeRepository.save(episode)
+        val saved = episodeRepository.save(episode.episode)
 
         return EpisodeWithChildren(
             episode = saved,

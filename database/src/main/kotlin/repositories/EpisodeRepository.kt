@@ -47,16 +47,16 @@ internal abstract class EpisodeRepository : EntityRepository<Uuid, EpisodeEntity
      *
      * @param animeId identifier of the anime owning the episode.
      * @param season season of the episode.
-     * @param number number of the episode in its season.
      * @param episodeType editorial category of the episode.
+     * @param number number of the episode in its season.
      * @return the matching episode with its children, or `null` when it does not exist.
      * @see [EpisodeWithChildren]
      */
-    abstract fun findByAnimeIdAndSeasonAndNumberAndEpisodeType(
+    abstract fun findByAnimeIdSeasonEpisodeTypeAndNumber(
         animeId: Uuid,
         season: Int,
-        number: Int,
-        episodeType: EpisodeType
+        episodeType: EpisodeType,
+        number: Int
     ): EpisodeWithChildren?
 
     /**
@@ -75,14 +75,13 @@ internal abstract class EpisodeRepository : EntityRepository<Uuid, EpisodeEntity
     /**
      * Persists the episode identity row and returns that row.
      *
-     * A known episode takes the metadata of the given aggregate - season, number, type, release
-     * date and duration - because the caller decides which source owns them. The children are
-     * upserted right after by the caller, which composes the aggregate from those fresh rows.
+     * A known episode takes the metadata of the given row - season, type, number, release date and
+     * duration - because the caller decides which source owns them. The children are upserted right
+     * after by the caller, which composes the aggregate from those fresh rows.
      *
-     * @param episode aggregate root to persist; its children are not written here.
+     * @param episode episode row to persist; its children are not written here.
      * @return the stored episode row.
      * @see [Episode]
-     * @see [EpisodeWithChildren]
      */
-    abstract fun save(episode: EpisodeWithChildren): Episode
+    abstract fun save(episode: Episode): Episode
 }

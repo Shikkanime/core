@@ -49,7 +49,7 @@ class HarvestIngestionServiceTest {
         // By default the harvested episode is unknown to the persistence
         every { episodeService.findByPlatformAndPlatformId(any(), any()) } returns null
         every {
-            episodeService.findByAnimeIdAndSeasonAndNumberAndEpisodeType(any(), any(), any(), any())
+            episodeService.findByAnimeIdSeasonEpisodeTypeAndNumber(any(), any(), any(), any())
         } returns null
     }
 
@@ -272,7 +272,7 @@ class HarvestIngestionServiceTest {
             every { animeService.save(any()) } answers { stored(firstArg()) }
             val storedEpisode = storedEpisode(Platform.ANIMATION_DIGITAL_NETWORK)
             every {
-                episodeService.findByAnimeIdAndSeasonAndNumberAndEpisodeType(any(), any(), any(), any())
+                episodeService.findByAnimeIdSeasonEpisodeTypeAndNumber(any(), any(), any(), any())
             } returns storedEpisode
             val saved = slot<EpisodeWithChildren>()
             every { episodeService.save(capture(saved)) } returns EpisodeWithChildrenMockKBuilder().build()
@@ -304,7 +304,7 @@ class HarvestIngestionServiceTest {
             every { animeService.save(any()) } answers { stored(firstArg()) }
             val storedEpisode = storedEpisode(Platform.CRUNCHYROLL)
             every {
-                episodeService.findByAnimeIdAndSeasonAndNumberAndEpisodeType(any(), any(), any(), any())
+                episodeService.findByAnimeIdSeasonEpisodeTypeAndNumber(any(), any(), any(), any())
             } returns storedEpisode
             val saved = slot<EpisodeWithChildren>()
             every { episodeService.save(capture(saved)) } returns EpisodeWithChildrenMockKBuilder().build()

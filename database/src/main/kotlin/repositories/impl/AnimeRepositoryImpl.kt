@@ -110,10 +110,10 @@ internal class AnimeRepositoryImpl(
             .firstOrNull()
             ?.let(::composeOne)
 
-    override fun save(anime: AnimeWithChildren): Anime =
-        anime.anime.id?.let(::findById)
-            .newIfNotExists(anime.anime.id) {
-                normalizedTitle = anime.anime.normalizedTitle
+    override fun save(anime: Anime): Anime =
+        anime.id?.let(::findById)
+            .newIfNotExists(anime.id) {
+                normalizedTitle = anime.normalizedTitle
             }
             .applyFlush()
             .toModel()
