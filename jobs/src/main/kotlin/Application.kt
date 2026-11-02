@@ -60,7 +60,7 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
  *
  * @return nothing; the process exits once the harvest is persisted.
  * @see [StreamingPlatform]
- * @see [AnimeIngestionService]
+ * @see [HarvestIngestionService]
  */
 suspend fun main() {
     val koin = startKoin<MyApp>().koin
@@ -76,7 +76,7 @@ suspend fun main() {
         .map { it.fetchLatestEpisodes() }
 
     // Persist the pooled harvest before the process exits
-    val saved = koin.get<AnimeIngestionService>()
+    val saved = koin.get<HarvestIngestionService>()
         .saveAll(harvest)
     logger.info("Saved $saved animes")
 

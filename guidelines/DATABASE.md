@@ -81,3 +81,28 @@ computed by `canonicalTitle`: the title shared by the most localizations, ties b
 A harvest looks the anime up on that column: one title, one anime, across platforms. A rename is a new title
 hence a new anime (both may be merged later), and a title really shared by two animes is reported as an
 anomaly. The title is derived from the localized ones - never entered by hand.
+
+## Episode identity
+An episode is identified by **`(anime, season, episode_type, number)`**, unique: a release harvested from two
+platforms lands on the same row. A harvest resolves the release first (`episode_release`, unique on
+`(episode, platform, platform_id, audio_locale)`), so a video whose numbering changed on its platform keeps
+pointing at the same episode, and falls back to the identity for a release seen for the first time. The
+localized text lives in `episode_localization` (one row per locale), the release - URL, audio locale,
+censorship, release date - in `episode_release` (one row per platform video and audio track). A row carries
+exactly one audio locale: a dubbed release and a subtitled one do not share their identifier, their release
+date or their URL, and a viewer follows one locale - a video published with several tracks is therefore
+stored as one row per track. The metadata of the episode - localized text, artwork, season, type, number,
+release date and duration - belongs to the platform with the best `Platform.sortIndex`; every source still
+stores its own releases.
+
+## Statement cost
+Exposed keeps no read cache: every lookup reaches the database, so a save path pays for what it
+re-reads. Two rules follow, and the integration suite counts the statements of a creation and of an
+update to keep them:
+
+- **The audit columns are computed client-side** (`clientDefault`, never `defaultExpression`). A
+  database default makes Exposed re-read the row it has just inserted, which costs one `SELECT` per
+  insert.
+- **An identity resolved by the caller is not resolved again by the service.** The aggregate
+  carries the stored identifier when it updates a known row, and none when it inserts a new one; a
+  service that looks the identity up again replays the same reads and can disagree with the caller.

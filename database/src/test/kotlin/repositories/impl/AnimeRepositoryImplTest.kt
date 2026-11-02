@@ -73,7 +73,7 @@ class AnimeRepositoryImplTest {
             val anime = savedAnime()
 
             // When
-            val saved = transaction { animeRepository.save(anime) }
+            val saved = transaction { animeRepository.save(anime.anime) }
 
             // Then
             val found = transaction { animeRepository.findModelById(requireNotNull(saved.id)) }
@@ -85,10 +85,10 @@ class AnimeRepositoryImplTest {
         fun `should return the existing anime untouched when the same identifier is saved twice`() {
             // Given
             val anime = savedAnime()
-            val first = transaction { animeRepository.save(anime) }
+            val first = transaction { animeRepository.save(anime.anime) }
 
             // When
-            val second = transaction { animeRepository.save(anime) }
+            val second = transaction { animeRepository.save(anime.anime) }
 
             // Then
             assertEquals(first.id, second.id)
@@ -147,7 +147,7 @@ class AnimeRepositoryImplTest {
             every { platformRepository.findAllByAnimeIds(any()) } returns mapOf(ownerId to platforms)
 
             transaction {
-                animeRepository.save(anime)
+                animeRepository.save(anime.anime)
             }
 
             // When
@@ -166,7 +166,7 @@ class AnimeRepositoryImplTest {
         fun `should return an anime without child when it has none`() {
             // Given
             val anime = savedAnime()
-            transaction { animeRepository.save(anime) }
+            transaction { animeRepository.save(anime.anime) }
 
             // When
             val found = assertNotNull(
@@ -207,8 +207,8 @@ class AnimeRepositoryImplTest {
             }.build()
 
             transaction {
-                animeRepository.save(first)
-                animeRepository.save(second)
+                animeRepository.save(first.anime)
+                animeRepository.save(second.anime)
             }
 
             // When
@@ -241,7 +241,7 @@ class AnimeRepositoryImplTest {
             // Given
             val anime = savedAnime()
             transaction {
-                animeRepository.save(anime)
+                animeRepository.save(anime.anime)
                 AnimePlatformRepositoryImpl(animeRepository)
             .save(
                     AnimePlatformMockKBuilder {

@@ -103,7 +103,7 @@ class AnimeServiceTest {
             }
             val root = anime.anime
 
-            every { animeRepository.save(anime) } returns root
+            every { animeRepository.save(root) } returns root
             every { localizationRepository.save(any()) } returns anime.localizations.single()
             every { platformRepository.save(any()) } returns anime.platforms.single()
             every { imageRepository.save(any()) } returns anime.images.single()
@@ -112,11 +112,11 @@ class AnimeServiceTest {
             val saved = animeService.save(anime)
 
             // Then
-            verify(exactly = 1) { animeRepository.save(anime) }
+            verify(exactly = 1) { animeRepository.save(root) }
             verify(exactly = 1) { localizationRepository.save(any()) }
             verify(exactly = 1) { platformRepository.save(any()) }
             verify(exactly = 1) { imageRepository.save(any()) }
-            assertEquals(anime.anime.id, saved.anime.id)
+            assertEquals(root.id, saved.anime.id)
         }
 
         @Test
@@ -140,14 +140,14 @@ class AnimeServiceTest {
             val root = anime.anime
             val stored = slot<Image>()
 
-            every { animeRepository.save(anime) } returns root
+            every { animeRepository.save(root) } returns root
             every { imageRepository.save(capture(stored)) } returns anime.images.single()
 
             // When
             animeService.save(anime)
 
             // Then
-            assertEquals(anime.anime.id, stored.captured.entityId)
+            assertEquals(root.id, stored.captured.entityId)
         }
 
         @Test
@@ -184,7 +184,7 @@ class AnimeServiceTest {
             val storedLocalization = slot<AnimeLocalization>()
             val storedPlatform = slot<AnimePlatform>()
 
-            every { animeRepository.save(anime) } returns root
+            every { animeRepository.save(root) } returns root
             every { localizationRepository.save(capture(storedLocalization)) } returns localization
             every { platformRepository.save(capture(storedPlatform)) } returns animePlatform
 
@@ -192,8 +192,8 @@ class AnimeServiceTest {
             animeService.save(anime)
 
             // Then
-            assertEquals(anime.anime.id, storedLocalization.captured.animeId)
-            assertEquals(anime.anime.id, storedPlatform.captured.animeId)
+            assertEquals(root.id, storedLocalization.captured.animeId)
+            assertEquals(root.id, storedPlatform.captured.animeId)
         }
     }
 

@@ -49,6 +49,9 @@ internal class AnimeRepositoryImpl(
      * @see [AnimeWithChildren]
      */
     private fun compose(animes: List<AnimeEntity>): List<AnimeWithChildren> {
+        // Nothing to compose: skip the relation reads instead of querying empty id lists
+        if (animes.isEmpty()) return emptyList()
+
         val ids = animes.map { it.id.value }
 
         // Resolve the artwork of the whole page in one grouped read
@@ -107,10 +110,10 @@ internal class AnimeRepositoryImpl(
             .firstOrNull()
             ?.let(::composeOne)
 
-    override fun save(anime: AnimeWithChildren): Anime =
-        anime.anime.id?.let(::findById)
-            .newIfNotExists(anime.anime.id) {
-                normalizedTitle = anime.anime.normalizedTitle
+    override fun save(anime: Anime): Anime =
+        anime.id?.let(::findById)
+            .newIfNotExists(anime.id) {
+                normalizedTitle = anime.normalizedTitle
             }
             .applyFlush()
             .toModel()
