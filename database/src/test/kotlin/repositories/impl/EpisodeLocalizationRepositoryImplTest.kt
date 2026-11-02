@@ -3,7 +3,12 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.EpisodeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.savedEpisode
+import fr.shikkanime.database.entities.EpisodeTable
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.models.Locale
+import io.mockk.every
+import io.mockk.mockk
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -16,13 +21,16 @@ import kotlin.uuid.Uuid
 
 @DisplayName("tests for the episode localization repository")
 class EpisodeLocalizationRepositoryImplTest {
-    private val localizationRepository = EpisodeLocalizationRepositoryImpl()
+    private val episodeRepository = mockk<EpisodeRepository>()
+    private val localizationRepository = EpisodeLocalizationRepositoryImpl(episodeRepository)
 
     @BeforeEach
     fun setUp() {
         val databaseManager = DatabaseManager("jdbc:h2:mem:${Uuid.random()};DB_CLOSE_DELAY=-1")
         databaseManager.databaseWrapper.connect()
         databaseManager.databaseWrapper.initializeSchema()
+
+        every { episodeRepository.getReference(any()) } answers { EntityID(firstArg(), EpisodeTable) }
     }
 
     @Nested

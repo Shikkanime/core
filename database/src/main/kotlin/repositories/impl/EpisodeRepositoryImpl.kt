@@ -24,8 +24,9 @@ import kotlin.uuid.Uuid
 internal class EpisodeRepositoryImpl(
     private val animeRepository: AnimeRepository,
     private val imageRepository: ImageRepository,
-    private val localizationRepository: EpisodeLocalizationRepository,
-    private val releaseRepository: EpisodeReleaseRepository
+    // The children are injected lazily: they reference this repository to mint their foreign keys
+    private val localizationRepository: Lazy<EpisodeLocalizationRepository>,
+    private val releaseRepository: Lazy<EpisodeReleaseRepository>
 ) : EpisodeRepository() {
 
     override fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren> =
@@ -49,16 +50,19 @@ internal class EpisodeRepositoryImpl(
      * @see [EpisodeWithChildren]
      */
     private fun compose(episodes: List<EpisodeEntity>): List<EpisodeWithChildren> {
+        // Nothing to compose: skip the relation reads instead of querying empty id lists
+        if (episodes.isEmpty()) return emptyList()
+
         val ids = episodes.map { it.id.value }
 
         // Resolve the artwork of the whole page in one grouped read
         val images = imageRepository.findAllByEntityIds(ids)
 
         // Resolve the localized texts of the whole page in one grouped read
-        val localizations = localizationRepository.findAllByEpisodeIds(ids)
+        val localizations = localizationRepository.value.findAllByEpisodeIds(ids)
 
         // Resolve the releases of the whole page in one grouped read
-        val releases = releaseRepository.findAllByEpisodeIds(ids)
+        val releases = releaseRepository.value.findAllByEpisodeIds(ids)
 
         return episodes.map {
             EpisodeWithChildren(

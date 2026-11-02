@@ -3,13 +3,12 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.entities.EpisodeReleaseEntity
 import fr.shikkanime.database.entities.EpisodeReleaseTable
-import fr.shikkanime.database.entities.EpisodeTable
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.koin.core.annotation.Single
@@ -17,7 +16,9 @@ import kotlin.uuid.Uuid
 
 @Suppress("unused")
 @Single(binds = [EpisodeReleaseRepository::class])
-internal class EpisodeReleaseRepositoryImpl : EpisodeReleaseRepository() {
+internal class EpisodeReleaseRepositoryImpl(
+    private val episodeRepository: EpisodeRepository
+) : EpisodeReleaseRepository() {
 
     override fun findAllByEpisodeIds(episodeIds: List<Uuid>): Map<Uuid?, List<EpisodeRelease>> =
         EpisodeReleaseEntity.find { EpisodeReleaseTable.episode inList episodeIds }
@@ -79,7 +80,7 @@ internal class EpisodeReleaseRepositoryImpl : EpisodeReleaseRepository() {
             }
             .newIfNotExists(release.id) {
                 // The row belongs to the episode its release already references
-                episode = EntityID(requireNotNull(release.episodeId), EpisodeTable)
+                episode = episodeRepository.getReference(requireNotNull(release.episodeId))
                 platform = release.platform
                 platformId = release.platformId
                 url = release.url

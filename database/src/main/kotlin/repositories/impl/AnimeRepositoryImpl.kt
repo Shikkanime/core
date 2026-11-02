@@ -49,6 +49,9 @@ internal class AnimeRepositoryImpl(
      * @see [AnimeWithChildren]
      */
     private fun compose(animes: List<AnimeEntity>): List<AnimeWithChildren> {
+        // Nothing to compose: skip the relation reads instead of querying empty id lists
+        if (animes.isEmpty()) return emptyList()
+
         val ids = animes.map { it.id.value }
 
         // Resolve the artwork of the whole page in one grouped read

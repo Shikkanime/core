@@ -9,8 +9,10 @@ import fr.shikkanime.database.builders.impl.EpisodeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.database.builders.impl.savedAnime
 import fr.shikkanime.database.entities.AnimeTable
+import fr.shikkanime.database.entities.EpisodeTable
 import fr.shikkanime.database.repositories.AnimeRepository
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.EpisodeType
@@ -42,6 +44,7 @@ class EpisodeRepositoryImplTest {
     @MockK private lateinit var imageRepository: ImageRepository
     @MockK private lateinit var localizationRepository: EpisodeLocalizationRepository
     @MockK private lateinit var releaseRepository: EpisodeReleaseRepository
+    @MockK private lateinit var referencedEpisodeRepository: EpisodeRepository
 
     private lateinit var episodeRepository: EpisodeRepositoryImpl
 
@@ -55,13 +58,16 @@ class EpisodeRepositoryImplTest {
         every { imageRepository.findAllByEntityIds(any()) } returns emptyMap()
         every { localizationRepository.findAllByEpisodeIds(any()) } returns emptyMap()
         every { releaseRepository.findAllByEpisodeIds(any()) } returns emptyMap()
+        every { referencedEpisodeRepository.getReference(any()) } answers {
+            EntityID(firstArg(), EpisodeTable)
+        }
 
         // The children are injected directly: they resolve the episode reference from the model
         episodeRepository = EpisodeRepositoryImpl(
             animeRepository,
             imageRepository,
-            localizationRepository,
-            releaseRepository
+            lazyOf(localizationRepository),
+            lazyOf(releaseRepository)
         )
     }
 
@@ -337,7 +343,7 @@ class EpisodeRepositoryImplTest {
             val episode = episodeFixture(requireNotNull(anime.id))
             transaction {
                 episodeRepository.save(episode)
-                EpisodeReleaseRepositoryImpl()
+                EpisodeReleaseRepositoryImpl(referencedEpisodeRepository)
                     .save(
                         EpisodeReleaseMockKBuilder {
                             id = Uuid.random()

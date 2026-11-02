@@ -49,48 +49,9 @@ internal class EpisodeServiceImpl(
         // Resolve the aggregate owning a platform release
         episodeRepository.findByPlatformAndPlatformId(platform, platformId)
 
-    /**
-     * Resolves the stored episode an incoming aggregate belongs to.
-     *
-     * The platform release is the strongest identity: a video renumbered on its platform keeps
-     * pointing at the same episode. The identity `(anime, season, type, number)` is the fallback of
-     * a release seen for the first time.
-     *
-     * @param episode aggregate about to be persisted.
-     * @return the identifier of the stored episode, or `null` when it is a new one.
-     * @see [findEpisodeOfPlatform]
-     */
-    private fun findStoredEpisodeId(episode: EpisodeWithChildren): Uuid? =
-        findEpisodeOfPlatform(episode)?.episode?.id
-            ?: episodeRepository.findByAnimeIdAndSeasonAndNumberAndEpisodeType(
-                requireNotNull(episode.episode.animeId),
-                episode.episode.season,
-                episode.episode.number,
-                episode.episode.episodeType
-            )?.episode?.id
-
-    /**
-     * Finds the stored episode carrying one of the releases of an aggregate.
-     *
-     * A release stored under another anime is ignored: a renamed anime is a new identity, so its
-     * episodes are attached to it rather than reusing the row of the previous one.
-     *
-     * @param episode aggregate about to be persisted.
-     * @return the stored episode carrying one of these releases, or `null` when none does.
-     * @see [EpisodeWithChildren]
-     */
-    private fun findEpisodeOfPlatform(episode: EpisodeWithChildren): EpisodeWithChildren? =
-        // The audio tracks of one video resolve to the same episode: one lookup per video
-        episode.releases.distinctBy { it.platform to it.platformId }
-            .firstNotNullOfOrNull { release ->
-                episodeRepository.findByPlatformAndPlatformId(release.platform, release.platformId)
-                    ?.takeIf { it.episode.animeId == episode.episode.animeId }
-            }
-
     override fun save(episode: EpisodeWithChildren): EpisodeWithChildren {
-        // Re-apply the stored identity so a re-harvest updates the episode instead of duplicating it
-        val identity = episode.episode.id ?: findStoredEpisodeId(episode)
-        val saved = episodeRepository.save(episode.copy(episode = episode.episode.copy(id = identity)))
+        // The caller resolved the identity: a null identifier inserts a new episode, never duplicates
+        val saved = episodeRepository.save(episode)
 
         return EpisodeWithChildren(
             episode = saved,

@@ -76,12 +76,13 @@ interface EpisodeService {
     /**
      * Upserts an episode with its images, localizations and releases.
      *
-     * The episode is resolved before any write: a known release owns the stored episode,
-     * otherwise the identity `(anime, season, type, number)` does. The saved episode owns its
-     * children: their owner identifier is written here, exactly once, whatever owner the given
-     * [Image], [EpisodeLocalization] and [EpisodeRelease] instances carry. Known localizations and
-     * releases are refreshed in place and new ones are appended; nothing is deleted and nothing is
-     * recomputed.
+     * The identity is resolved by the caller, never recomputed here: the aggregate carries the
+     * stored episode identifier when it updates a known row, and no identifier when it inserts a new
+     * one. Resolving it twice would replay the same lookups, and Exposed has no read cache to absorb
+     * them. The saved episode owns its children: their owner identifier is written here, exactly
+     * once, whatever owner the given [Image], [EpisodeLocalization] and [EpisodeRelease] instances
+     * carry. Known localizations and releases are refreshed in place and new ones are appended;
+     * nothing is deleted and nothing is recomputed.
      *
      * @param episode aggregate to persist.
      * @return the episode with the images, localizations and releases persisted by this call.

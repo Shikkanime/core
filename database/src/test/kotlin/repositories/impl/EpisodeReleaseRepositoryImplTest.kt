@@ -4,7 +4,12 @@ import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
 import fr.shikkanime.database.builders.impl.savedEpisode
+import fr.shikkanime.database.entities.EpisodeTable
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.models.Locale
+import io.mockk.every
+import io.mockk.mockk
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import fr.shikkanime.models.Platform
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -19,13 +24,16 @@ import kotlin.uuid.Uuid
 
 @DisplayName("tests for the episode release repository")
 class EpisodeReleaseRepositoryImplTest {
-    private val releaseRepository = EpisodeReleaseRepositoryImpl()
+    private val episodeRepository = mockk<EpisodeRepository>()
+    private val releaseRepository = EpisodeReleaseRepositoryImpl(episodeRepository)
 
     @BeforeEach
     fun setUp() {
         val databaseManager = DatabaseManager("jdbc:h2:mem:${Uuid.random()};DB_CLOSE_DELAY=-1")
         databaseManager.databaseWrapper.connect()
         databaseManager.databaseWrapper.initializeSchema()
+
+        every { episodeRepository.getReference(any()) } answers { EntityID(firstArg(), EpisodeTable) }
     }
 
     @Nested

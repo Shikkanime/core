@@ -3,12 +3,11 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.entities.EpisodeLocalizationEntity
 import fr.shikkanime.database.entities.EpisodeLocalizationTable
-import fr.shikkanime.database.entities.EpisodeTable
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
 import fr.shikkanime.models.EpisodeLocalization
 import fr.shikkanime.models.Locale
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.koin.core.annotation.Single
@@ -16,7 +15,9 @@ import kotlin.uuid.Uuid
 
 @Suppress("unused")
 @Single(binds = [EpisodeLocalizationRepository::class])
-internal class EpisodeLocalizationRepositoryImpl : EpisodeLocalizationRepository() {
+internal class EpisodeLocalizationRepositoryImpl(
+    private val episodeRepository: EpisodeRepository
+) : EpisodeLocalizationRepository() {
 
     override fun findAllByEpisodeIds(episodeIds: List<Uuid>): Map<Uuid?, List<EpisodeLocalization>> =
         EpisodeLocalizationEntity.find { EpisodeLocalizationTable.episode inList episodeIds }
@@ -50,7 +51,7 @@ internal class EpisodeLocalizationRepositoryImpl : EpisodeLocalizationRepository
             }
             .newIfNotExists(localization.id) {
                 // The row belongs to the episode its localization already references
-                episode = EntityID(requireNotNull(localization.episodeId), EpisodeTable)
+                episode = episodeRepository.getReference(requireNotNull(localization.episodeId))
                 locale = localization.locale
                 title = localization.title
                 description = localization.description

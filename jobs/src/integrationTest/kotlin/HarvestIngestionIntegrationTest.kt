@@ -1,5 +1,6 @@
 package fr.shikkanime.jobs
 
+import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.database.services.AnimeService
@@ -18,10 +19,20 @@ import org.junit.jupiter.api.Nested
 import org.koin.plugin.module.dsl.startKoin
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.util.logging.Handler
+import java.util.logging.Level
+import java.util.logging.LogRecord
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
+
+private const val SQL_LOGGER_NAME = "org.jetbrains.exposed.SQL"
+// Statement ceilings of one ingestion of a new / an already stored episode. They are a cost gate,
+// not a description: any write path that adds a query without a reason fails here.
+private const val CREATE_BUDGET = 17
+private const val UPDATE_BUDGET = 17
 
 /**
  * End-to-end runs of the harvest persistence against a real database.
@@ -336,6 +347,47 @@ class HarvestIngestionIntegrationTest {
         }
     }
 
+    @Nested
+    @DisplayName("tests for the number of statements of one ingestion")
+    inner class StatementCountTests {
+        @Test
+        @DisplayName("should create an anime and its episode within the statement budget")
+        fun shouldCreateAnAnimeAndItsEpisodeWithinTheStatementBudget() {
+            // Given
+            freshDatabase()
+
+            // When
+            val statements = countStatements {
+                koin.get<HarvestIngestionService>()
+                    .saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime(), id = "3001"))))
+            }
+
+            // Then
+            assertTrue(statements <= CREATE_BUDGET)
+        }
+
+        @Test
+        @DisplayName("should update an anime and its episode within the statement budget")
+        fun shouldUpdateAnAnimeAndItsEpisodeWithinTheStatementBudget() {
+            // Given: the anime and its episode are stored
+            freshDatabase()
+            val ingestion = koin.get<HarvestIngestionService>()
+            ingestion.saveAll(
+                listOf(harvest(true, harvestedEpisode(harvestedAnime(), id = "3001", duration = 1200)))
+            )
+
+            // When: the same release is harvested again with a new duration
+            val statements = countStatements {
+                ingestion.saveAll(
+                    listOf(harvest(true, harvestedEpisode(harvestedAnime(), id = "3001", duration = 1500)))
+                )
+            }
+
+            // Then
+            assertTrue(statements <= UPDATE_BUDGET)
+        }
+    }
+
     /**
      * Boots one fresh in-memory database for a single test.
      *
@@ -347,4 +399,39 @@ class HarvestIngestionIntegrationTest {
             databaseWrapper.connect()
             databaseWrapper.initializeSchema()
         }
+
+    /**
+     * Counts the SQL statements Exposed executes inside [block].
+     *
+     * The count is read from the `org.jetbrains.exposed.SQL` logger the framework already uses to
+     * trace statements, so it measures what the database really receives, not what the code calls.
+     *
+     * @param block operation whose statements are counted.
+     * @return the number of statements executed by the block.
+     * @see [LoggerFactory]
+     */
+    private fun countStatements(block: () -> Unit): Int {
+        val logger = LoggerFactory.getLogger(SQL_LOGGER_NAME)
+        val handler = object : Handler() {
+            var statements = 0
+
+            override fun publish(record: LogRecord) {
+                statements++
+            }
+
+            override fun flush() = Unit
+
+            override fun close() = Unit
+        }
+        handler.level = Level.ALL
+        logger.addHandler(handler)
+
+        try {
+            block()
+        } finally {
+            logger.removeHandler(handler)
+        }
+
+        return handler.statements
+    }
 }

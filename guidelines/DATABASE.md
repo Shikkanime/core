@@ -94,3 +94,15 @@ date or their URL, and a viewer follows one locale - a video published with seve
 stored as one row per track. The metadata of the episode - localized text, artwork, season, number, type,
 release date and duration - belongs to the platform with the best `Platform.sortIndex`; every source still
 stores its own releases.
+
+## Statement cost
+Exposed keeps no read cache: every lookup reaches the database, so a save path pays for what it
+re-reads. Two rules follow, and the integration suite counts the statements of a creation and of an
+update to keep them:
+
+- **The audit columns are computed client-side** (`clientDefault`, never `defaultExpression`). A
+  database default makes Exposed re-read the row it has just inserted, which costs one `SELECT` per
+  insert.
+- **An identity resolved by the caller is not resolved again by the service.** The aggregate
+  carries the stored identifier when it updates a known row, and none when it inserts a new one; a
+  service that looks the identity up again replays the same reads and can disagree with the caller.
