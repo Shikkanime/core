@@ -39,7 +39,7 @@ class MissingAudioLocaleException(
             languages: List<String>,
             country: Country
         ): String {
-            val titlePart = episodeName?.takeIf { it.isNotBlank() }
+            val titlePart = episodeName?.takeIf(String::isNotBlank)
                 ?.let { " (name=\"$it\")" }
                 .orEmpty()
 

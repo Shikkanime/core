@@ -11,6 +11,7 @@ import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
 import fr.shikkanime.jobs.platforms.PlatformImage
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
+import fr.shikkanime.jobs.platforms.sanitizeText
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.ImageType
@@ -499,8 +500,10 @@ internal data class AdnVideo(
             localizations = listOf(
                 PlatformEpisodeLocalization(
                     country = country,
-                    title = name,
-                    description = summary
+                    // The video name is empty until the episode is published; the title always is
+                    title = name.sanitizeText()
+                        ?: title.sanitizeText(),
+                    description = summary.sanitizeText()
                 )
             )
         )
@@ -537,13 +540,13 @@ internal data class AdnShow(
 
     val isAnimation: Boolean
         get() =
-            genres.any { it.contains("Animation ") }
+            genres.any { it.contains("Animation") }
 
     /**
      * Maps an ADN show into the platform anime domain entity.
      *
-     * Cleans redundant season suffixes and part labels from the title using [cleanAnimeName],
-     * strips newlines from the description, resolves high-resolution artwork, and keys the
+     * Sanitizes the harvested texts with [sanitizeText], cleans redundant season suffixes and part
+     * labels from the title using [cleanAnimeName], resolves high-resolution artwork, and keys the
      * localized texts by the target [country].
      *
      * @param season The broadcast season index used to clean trailing season numbers from the title.
@@ -553,7 +556,7 @@ internal data class AdnShow(
      * @see [cleanAnimeName]
      */
     fun toPlatformAnime(season: Int, country: Country): PlatformAnime {
-        val rawTitle = shortTitle?.takeIf { it.isNotBlank() } ?: title
+        val rawTitle = shortTitle.sanitizeText() ?: title.sanitizeText().orEmpty()
         val cleanedTitle = cleanAnimeName(rawTitle, season)
 
         return PlatformAnime(
@@ -568,8 +571,7 @@ internal data class AdnShow(
                     country = country,
                     locale = country.defaultLocale,
                     title = cleanedTitle,
-                    description = summary?.replace("\n", "")
-                        ?.replace(" ", " ")
+                    description = summary.sanitizeText()
                 )
             )
         )
