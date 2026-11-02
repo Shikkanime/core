@@ -10,10 +10,14 @@ import fr.shikkanime.jobs.builders.harvestedEpisode
 import fr.shikkanime.jobs.builders.impl.PlatformEpisodeLocalizationMockKBuilder
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
+import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.koin.plugin.module.dsl.startKoin
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -84,6 +88,46 @@ class HarvestIngestionIntegrationTest {
             assertEquals(EpisodeType.EPISODE, episode.episode.episodeType)
             assertEquals("Episode", episode.localizations.single().title)
             assertEquals("https://example.test/episode.png", episode.images.single().url)
+        }
+
+        @Test
+        @DisplayName("should persist the dubbed and the subtitled releases of an episode with their own date")
+        fun shouldPersistTheDubbedAndTheSubtitledReleasesOfAnEpisodeWithTheirOwnDate() {
+            // Given: one episode published as a subtitled video, then as a dubbed one a week later
+            freshDatabase()
+            val subtitled = harvestedEpisode(
+                harvestedAnime(id = "123"),
+                id = "3001",
+                releaseDateTime = ZonedDateTime.of(2026, 1, 1, 12, 0, 0, 0, ZoneOffset.UTC),
+                audioLocales = listOf(Locale.JA_JP)
+            )
+            val dubbed = harvestedEpisode(
+                harvestedAnime(id = "123"),
+                id = "3002",
+                releaseDateTime = ZonedDateTime.of(2026, 1, 8, 12, 0, 0, 0, ZoneOffset.UTC),
+                audioLocales = listOf(Locale.FR_FR)
+            )
+
+            // When
+            koin.get<HarvestIngestionService>()
+                .saveAll(listOf(harvest(true, subtitled, dubbed)))
+
+            // Then: one episode carries both releases, each one with its own identifier and date
+            val episode = assertNotNull(
+                koin.get<EpisodeService>()
+                    .findByPlatformAndPlatformId(Platform.ANIMATION_DIGITAL_NETWORK, "3001")
+            )
+            val episodes = koin.get<EpisodeService>()
+                .findAllByAnimeId(requireNotNull(episode.episode.animeId))
+
+            assertEquals(1, episodes.size)
+            assertEquals(
+                mapOf(
+                    Locale.JA_JP to LocalDateTime(2026, 1, 1, 12, 0),
+                    Locale.FR_FR to LocalDateTime(2026, 1, 8, 12, 0)
+                ),
+                episodes.single().releases.associate { it.audioLocale to it.releaseDateTime }
+            )
         }
 
         @Test
@@ -167,7 +211,7 @@ class HarvestIngestionIntegrationTest {
             assertEquals("https://example.test/episode.png", episode.images.single().url)
             assertEquals(
                 setOf(Platform.ANIMATION_DIGITAL_NETWORK, Platform.CRUNCHYROLL),
-                episode.platforms.map { it.platform }.toSet()
+                episode.releases.map { it.platform }.toSet()
             )
         }
 
@@ -216,7 +260,7 @@ class HarvestIngestionIntegrationTest {
             assertEquals("https://example.test/episode.png", episode.images.single().url)
             assertEquals(
                 setOf(Platform.ANIMATION_DIGITAL_NETWORK, Platform.CRUNCHYROLL),
-                episode.platforms.map { it.platform }.toSet()
+                episode.releases.map { it.platform }.toSet()
             )
             val anime = assertNotNull(
                 koin.get<AnimeService>()
