@@ -2,11 +2,11 @@ package fr.shikkanime.database.repositories.impl
 
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.entities.EpisodeEntity
-import fr.shikkanime.database.entities.EpisodePlatformTable
+import fr.shikkanime.database.entities.EpisodeReleaseTable
 import fr.shikkanime.database.entities.EpisodeTable
 import fr.shikkanime.database.repositories.AnimeRepository
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
-import fr.shikkanime.database.repositories.EpisodePlatformRepository
+import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.Episode
@@ -25,7 +25,7 @@ internal class EpisodeRepositoryImpl(
     private val animeRepository: AnimeRepository,
     private val imageRepository: ImageRepository,
     private val localizationRepository: EpisodeLocalizationRepository,
-    private val platformRepository: EpisodePlatformRepository
+    private val releaseRepository: EpisodeReleaseRepository
 ) : EpisodeRepository() {
 
     override fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren> =
@@ -57,15 +57,15 @@ internal class EpisodeRepositoryImpl(
         // Resolve the localized texts of the whole page in one grouped read
         val localizations = localizationRepository.findAllByEpisodeIds(ids)
 
-        // Resolve the platform releases of the whole page in one grouped read
-        val platforms = platformRepository.findAllByEpisodeIds(ids)
+        // Resolve the releases of the whole page in one grouped read
+        val releases = releaseRepository.findAllByEpisodeIds(ids)
 
         return episodes.map {
             EpisodeWithChildren(
                 episode = it.toModel(),
                 images = images[it.id.value].orEmpty(),
                 localizations = localizations[it.id.value].orEmpty(),
-                platforms = platforms[it.id.value].orEmpty()
+                releases = releases[it.id.value].orEmpty()
             )
         }
     }
@@ -106,11 +106,11 @@ internal class EpisodeRepositoryImpl(
         platformId: String
     ): EpisodeWithChildren? =
         EpisodeEntity.wrapRows(
-            EpisodeTable.innerJoin(EpisodePlatformTable)
+            EpisodeTable.innerJoin(EpisodeReleaseTable)
                 .selectAll()
                 .where {
-                    (EpisodePlatformTable.platform eq platform) and
-                        (EpisodePlatformTable.platformId eq platformId)
+                    (EpisodeReleaseTable.platform eq platform) and
+                        (EpisodeReleaseTable.platformId eq platformId)
                 }
                 .limit(1)
         )

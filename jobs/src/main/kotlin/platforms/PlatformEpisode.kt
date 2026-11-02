@@ -1,7 +1,7 @@
 package fr.shikkanime.jobs.platforms
 
 import fr.shikkanime.models.Episode
-import fr.shikkanime.models.EpisodePlatform
+import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
 import fr.shikkanime.models.Image
@@ -31,27 +31,35 @@ data class PlatformEpisode(
     val localizations: List<PlatformEpisodeLocalization>
 ) {
     /**
-     * Maps this harvested episode to its platform release.
+     * Maps this harvested episode to the releases to persist, one per audio track.
      *
-     * The release is persisted whatever source owns the episode's metadata: a lower priority
-     * platform still publishes its own video and must be stored.
+     * A platform video may carry several audio tracks, and the persistence stores one row per
+     * track: the identifier, the release date and the URL of a dubbed release differ from those of
+     * a subtitled one, and a viewer follows one locale. The release is persisted whatever source
+     * owns the episode's metadata: a lower priority platform still publishes its own video and must
+     * be stored.
      *
-     * @return the [EpisodePlatform] to pass to the persistence.
-     * @see [EpisodePlatform]
+     * @return the [EpisodeRelease] rows to pass to the persistence.
+     * @see [EpisodeRelease]
      */
-    fun toPlatformModel(): EpisodePlatform =
-        EpisodePlatform(
-            id = null,
-            createdAt = null,
-            updatedAt = null,
-            episodeId = null,
-            platform = anime.platform,
-            platformId = id,
-            url = url,
-            audioLocales = audioLocales.toSet(),
-            uncensored = uncensored,
-            releaseDateTime = releaseDateTime.toUtcLocalDateTime()
-        )
+    fun toReleaseModels(): List<EpisodeRelease> {
+        val utcReleaseDateTime = releaseDateTime.toUtcLocalDateTime()
+
+        return audioLocales.distinct().map { audioLocale ->
+            EpisodeRelease(
+                id = null,
+                createdAt = null,
+                updatedAt = null,
+                episodeId = null,
+                platform = anime.platform,
+                platformId = id,
+                url = url,
+                audioLocale = audioLocale,
+                uncensored = uncensored,
+                releaseDateTime = utcReleaseDateTime
+            )
+        }
+    }
 
     /**
      * Maps this harvested episode to the canonical aggregate to persist.
@@ -89,7 +97,7 @@ data class PlatformEpisode(
                 )
             ),
             localizations = localizations.map(PlatformEpisodeLocalization::toModel),
-            platforms = listOf(toPlatformModel())
+            releases = toReleaseModels()
         )
 }
 

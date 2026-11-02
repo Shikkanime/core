@@ -12,7 +12,7 @@ import kotlin.uuid.Uuid
  * Persistence port of the episode aggregate, read as [EpisodeWithChildren].
  *
  * Only the identity row is written here and [save] returns that flat [Episode] row: children are
- * persisted by [EpisodeLocalizationRepository], [EpisodePlatformRepository] and [ImageRepository],
+ * persisted by [EpisodeLocalizationRepository], [EpisodeReleaseRepository] and [ImageRepository],
  * and the caller composes the aggregate from those fresh rows. Every read is composed with one
  * batch read per relation, never with a lazy walk.
  *
@@ -60,10 +60,13 @@ internal abstract class EpisodeRepository : EntityRepository<Uuid, EpisodeEntity
     ): EpisodeWithChildren?
 
     /**
-     * Loads the episode aggregate carrying a platform release.
+     * Loads the episode aggregate carrying a release.
+     *
+     * A video published in several audio locales carries several releases, all owned by the same
+     * episode: the first one answers.
      *
      * @param platform streaming platform owning the release.
-     * @param platformId identifier of the episode on the streaming platform.
+     * @param platformId identifier of the video on the streaming platform.
      * @return the episode released under this platform identifier, or `null` when none carries it.
      * @see [EpisodeWithChildren]
      */

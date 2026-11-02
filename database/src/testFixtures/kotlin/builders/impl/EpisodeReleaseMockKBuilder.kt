@@ -1,7 +1,7 @@
 package fr.shikkanime.database.builders.impl
 
 import fr.shikkanime.database.builders.TestBuilder
-import fr.shikkanime.models.EpisodePlatform
+import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.mockk.every
@@ -9,9 +9,9 @@ import io.mockk.mockk
 import kotlinx.datetime.LocalDateTime
 import kotlin.uuid.Uuid
 
-class EpisodePlatformMockKBuilder(
-    configuration: EpisodePlatformMockKBuilder.() -> Unit = {}
-) : TestBuilder<EpisodePlatform> {
+class EpisodeReleaseMockKBuilder(
+    configuration: EpisodeReleaseMockKBuilder.() -> Unit = {}
+) : TestBuilder<EpisodeRelease> {
     var id: Uuid? = null
     var createdAt: LocalDateTime? = null
     var updatedAt: LocalDateTime? = null
@@ -19,7 +19,7 @@ class EpisodePlatformMockKBuilder(
     var platform: Platform? = null
     var platformId: String? = null
     var url: String? = null
-    var audioLocales: Set<Locale>? = null
+    var audioLocale: Locale? = null
     var uncensored: Boolean? = null
     var releaseDateTime: LocalDateTime? = null
 
@@ -27,8 +27,8 @@ class EpisodePlatformMockKBuilder(
         configuration(this)
     }
 
-    override fun build(): EpisodePlatform {
-        val mockK = mockk<EpisodePlatform>(relaxed = true)
+    override fun build(): EpisodeRelease {
+        val mockK = mockk<EpisodeRelease>(relaxed = true)
 
         id?.let { every { mockK.id } returns it }
         createdAt?.let { every { mockK.createdAt } returns it }
@@ -37,14 +37,14 @@ class EpisodePlatformMockKBuilder(
         platform?.let { every { mockK.platform } returns it }
         platformId?.let { every { mockK.platformId } returns it }
         url?.let { every { mockK.url } returns it }
-        audioLocales?.let { every { mockK.audioLocales } returns it }
+        audioLocale?.let { every { mockK.audioLocale } returns it }
         uncensored?.let { every { mockK.uncensored } returns it }
         releaseDateTime?.let { every { mockK.releaseDateTime } returns it }
 
         every {
             mockK.copy(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
         } answers {
-            EpisodePlatform(
+            EpisodeRelease(
                 id = firstArg(),
                 createdAt = secondArg(),
                 updatedAt = thirdArg(),
@@ -52,7 +52,7 @@ class EpisodePlatformMockKBuilder(
                 platform = arg(4),
                 platformId = arg(5),
                 url = arg(6),
-                audioLocales = arg(7),
+                audioLocale = arg(7),
                 uncensored = arg(8),
                 releaseDateTime = arg(9)
             )

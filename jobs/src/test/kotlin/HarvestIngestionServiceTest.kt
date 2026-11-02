@@ -5,7 +5,7 @@ import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodePlatformMockKBuilder
+import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeWithChildrenMockKBuilder
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.database.services.EpisodeService
@@ -17,6 +17,7 @@ import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
 import fr.shikkanime.models.ImageType
+import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.mockk.every
 import io.mockk.verify
@@ -80,8 +81,8 @@ class HarvestIngestionServiceTest {
                 releaseDateTime = TimeUtils.now()
                 duration = 1200
             }.build()
-            platforms = listOf(
-                EpisodePlatformMockKBuilder {
+            releases = listOf(
+                EpisodeReleaseMockKBuilder {
                     platform = sourcePlatform
                     platformId = "stored-${sourcePlatform.name}"
                 }.build()
@@ -156,7 +157,7 @@ class HarvestIngestionServiceTest {
             assertTrue(savedAnime.captured.images.isEmpty())
             assertEquals("456", savedAnime.captured.platforms.single().platformId)
             assertEquals(existing.anime.id, savedEpisode.captured.episode.animeId)
-            assertEquals("4001", savedEpisode.captured.platforms.single().platformId)
+            assertEquals("4001", savedEpisode.captured.releases.single().platformId)
         }
 
         @Test
@@ -199,9 +200,32 @@ class HarvestIngestionServiceTest {
             assertEquals(1, episode.episode.season)
             assertEquals(1, episode.episode.number)
             assertEquals(EpisodeType.EPISODE, episode.episode.episodeType)
-            assertEquals("3001", episode.platforms.single().platformId)
+            assertEquals("3001", episode.releases.single().platformId)
             assertEquals(Country.FR.defaultLocale, episode.localizations.single().locale)
             assertEquals(ImageType.BANNER, episode.images.single().type)
+        }
+
+        @Test
+        @DisplayName("should persist one release per audio track of a video")
+        fun `should persist one release per audio track of a video`() {
+            // Given: a video published with a subtitled and a dubbed track
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } answers { stored(firstArg()) }
+            val saved = slot<EpisodeWithChildren>()
+            every { episodeService.save(capture(saved)) } returns EpisodeWithChildrenMockKBuilder().build()
+            val episode = harvestedEpisode(
+                harvestedAnime(),
+                id = "3001",
+                audioLocales = listOf(Locale.JA_JP, Locale.FR_FR)
+            )
+
+            // When
+            ingestionService.saveAll(listOf(harvest(true, episode)))
+
+            // Then: one row per track, all pointing at the same video of the same episode
+            val releases = saved.captured.releases
+            assertEquals(setOf(Locale.JA_JP, Locale.FR_FR), releases.map { it.audioLocale }.toSet())
+            assertEquals(setOf("3001"), releases.map { it.platformId }.toSet())
         }
 
         @Test
@@ -230,7 +254,7 @@ class HarvestIngestionServiceTest {
             )
             assertEquals(
                 listOf("3001", "4001"),
-                savedEpisodes.map { it.platforms.single().platformId }
+                savedEpisodes.map { it.releases.single().platformId }
             )
         }
 
@@ -263,7 +287,7 @@ class HarvestIngestionServiceTest {
             assertEquals(1200, saved.captured.episode.duration)
             assertTrue(saved.captured.localizations.isEmpty())
             assertTrue(saved.captured.images.isEmpty())
-            assertEquals("4001", saved.captured.platforms.single().platformId)
+            assertEquals("4001", saved.captured.releases.single().platformId)
         }
 
         @Test
@@ -292,7 +316,7 @@ class HarvestIngestionServiceTest {
             assertEquals(storedEpisode.episode.id, saved.captured.episode.id)
             assertEquals(1440, saved.captured.episode.duration)
             assertEquals("Episode", saved.captured.localizations.single().title)
-            assertEquals("3001", saved.captured.platforms.single().platformId)
+            assertEquals("3001", saved.captured.releases.single().platformId)
         }
 
         @Test

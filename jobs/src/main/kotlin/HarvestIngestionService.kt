@@ -144,7 +144,7 @@ internal class HarvestIngestionService(
                 model.episode.number,
                 model.episode.episodeType
             )
-        val storedSortIndex = stored?.platforms?.minOfOrNull { it.platform.sortIndex }
+        val storedSortIndex = stored?.releases?.minOfOrNull { it.platform.sortIndex }
         val keepsStoredMetadata = storedSortIndex != null &&
             storedSortIndex < episode.anime.platform.sortIndex
         val metadata = if (stored != null && keepsStoredMetadata) stored.episode else model.episode

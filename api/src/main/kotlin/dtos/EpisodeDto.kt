@@ -1,7 +1,7 @@
 package fr.shikkanime.api.dtos
 
 import fr.shikkanime.models.EpisodeLocalization
-import fr.shikkanime.models.EpisodePlatform
+import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
 import fr.shikkanime.models.Image
@@ -25,7 +25,7 @@ data class EpisodeDto(
     val releaseDateTime: LocalDateTime,
     val duration: Long,
     val localizations: List<EpisodeLocalizationDto>,
-    val platforms: List<EpisodePlatformDto>,
+    val releases: List<EpisodeReleaseDto>,
     val images: List<ImageDto>
 )
 
@@ -49,6 +49,6 @@ fun EpisodeWithChildren.toDto(): EpisodeDto =
         releaseDateTime = episode.releaseDateTime,
         duration = episode.duration,
         localizations = localizations.map(EpisodeLocalization::toDto),
-        platforms = platforms.map(EpisodePlatform::toDto),
+        releases = releases.map(EpisodeRelease::toDto),
         images = images.map(Image::toDto)
     )

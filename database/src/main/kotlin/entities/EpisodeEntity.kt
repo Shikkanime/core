@@ -51,7 +51,7 @@ internal class EpisodeEntity(id: EntityID<Uuid>) :
     /**
      * Maps this row to the flat episode identity.
      *
-     * The rows owned by an episode are never walked here: localizations, platforms and images are
+     * The rows owned by an episode are never walked here: localizations, releases and images are
      * composed into [fr.shikkanime.models.EpisodeWithChildren] by the repository, with one batch
      * read per relation, so this conversion stays a total function of this row.
      *

@@ -3,7 +3,7 @@ package fr.shikkanime.api.controllers
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.builders.impl.EpisodeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodePlatformMockKBuilder
+import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.database.services.EpisodeService
@@ -74,13 +74,13 @@ class EpisodeControllerTest {
                 description = "Description"
             }.build()
         )
-        platforms = listOf(
-            EpisodePlatformMockKBuilder {
+        releases = listOf(
+            EpisodeReleaseMockKBuilder {
                 id = Uuid.random()
                 platform = Platform.ANIMATION_DIGITAL_NETWORK
                 platformId = "3001"
                 url = "https://example.test/episodes/3001"
-                audioLocales = setOf(Locale.FR_FR)
+                audioLocale = Locale.FR_FR
                 uncensored = false
                 releaseDateTime = TimeUtils.now()
             }.build()

@@ -1,7 +1,7 @@
 package fr.shikkanime.database.services.impl
 
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
-import fr.shikkanime.database.repositories.EpisodePlatformRepository
+import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.database.services.EpisodeService
@@ -16,7 +16,7 @@ import kotlin.uuid.Uuid
 internal class EpisodeServiceImpl(
     private val episodeRepository: EpisodeRepository,
     private val localizationRepository: EpisodeLocalizationRepository,
-    private val platformRepository: EpisodePlatformRepository,
+    private val releaseRepository: EpisodeReleaseRepository,
     private val imageRepository: ImageRepository
 ) : EpisodeService {
 
@@ -70,7 +70,7 @@ internal class EpisodeServiceImpl(
             )?.episode?.id
 
     /**
-     * Finds the stored episode carrying one of the platform releases of an aggregate.
+     * Finds the stored episode carrying one of the releases of an aggregate.
      *
      * A release stored under another anime is ignored: a renamed anime is a new identity, so its
      * episodes are attached to it rather than reusing the row of the previous one.
@@ -80,10 +80,12 @@ internal class EpisodeServiceImpl(
      * @see [EpisodeWithChildren]
      */
     private fun findEpisodeOfPlatform(episode: EpisodeWithChildren): EpisodeWithChildren? =
-        episode.platforms.firstNotNullOfOrNull { platform ->
-            episodeRepository.findByPlatformAndPlatformId(platform.platform, platform.platformId)
-                ?.takeIf { it.episode.animeId == episode.episode.animeId }
-        }
+        // The audio tracks of one video resolve to the same episode: one lookup per video
+        episode.releases.distinctBy { it.platform to it.platformId }
+            .firstNotNullOfOrNull { release ->
+                episodeRepository.findByPlatformAndPlatformId(release.platform, release.platformId)
+                    ?.takeIf { it.episode.animeId == episode.episode.animeId }
+            }
 
     override fun save(episode: EpisodeWithChildren): EpisodeWithChildren {
         // Re-apply the stored identity so a re-harvest updates the episode instead of duplicating it
@@ -98,9 +100,9 @@ internal class EpisodeServiceImpl(
             localizations = episode.localizations.map {
                 localizationRepository.save(it.copy(episodeId = saved.id))
             },
-            // Keep the platform releases in sync with the aggregate
-            platforms = episode.platforms.map {
-                platformRepository.save(it.copy(episodeId = saved.id))
+            // Keep the releases in sync with the aggregate
+            releases = episode.releases.map {
+                releaseRepository.save(it.copy(episodeId = saved.id))
             }
         )
     }

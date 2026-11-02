@@ -4,14 +4,14 @@ import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.EpisodeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodePlatformMockKBuilder
+import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.database.builders.impl.savedAnime
 import fr.shikkanime.database.entities.AnimeTable
 import fr.shikkanime.database.repositories.AnimeRepository
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
-import fr.shikkanime.database.repositories.EpisodePlatformRepository
+import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
@@ -41,7 +41,7 @@ class EpisodeRepositoryImplTest {
     @MockK private lateinit var animeRepository: AnimeRepository
     @MockK private lateinit var imageRepository: ImageRepository
     @MockK private lateinit var localizationRepository: EpisodeLocalizationRepository
-    @MockK private lateinit var platformRepository: EpisodePlatformRepository
+    @MockK private lateinit var releaseRepository: EpisodeReleaseRepository
 
     private lateinit var episodeRepository: EpisodeRepositoryImpl
 
@@ -54,14 +54,14 @@ class EpisodeRepositoryImplTest {
         every { animeRepository.getReference(any()) } answers { EntityID(firstArg(), AnimeTable) }
         every { imageRepository.findAllByEntityIds(any()) } returns emptyMap()
         every { localizationRepository.findAllByEpisodeIds(any()) } returns emptyMap()
-        every { platformRepository.findAllByEpisodeIds(any()) } returns emptyMap()
+        every { releaseRepository.findAllByEpisodeIds(any()) } returns emptyMap()
 
         // The children are injected directly: they resolve the episode reference from the model
         episodeRepository = EpisodeRepositoryImpl(
             animeRepository,
             imageRepository,
             localizationRepository,
-            platformRepository
+            releaseRepository
         )
     }
 
@@ -183,8 +183,8 @@ class EpisodeRepositoryImplTest {
                     description = "Description"
                 }.build()
             )
-            val platforms = listOf(
-                EpisodePlatformMockKBuilder {
+            val releases = listOf(
+                EpisodeReleaseMockKBuilder {
                     id = Uuid.random()
                     episodeId = ownerId
                     platform = Platform.ANIMATION_DIGITAL_NETWORK
@@ -193,7 +193,7 @@ class EpisodeRepositoryImplTest {
             )
             every { imageRepository.findAllByEntityIds(any()) } returns mapOf(ownerId to images)
             every { localizationRepository.findAllByEpisodeIds(any()) } returns mapOf(ownerId to localizations)
-            every { platformRepository.findAllByEpisodeIds(any()) } returns mapOf(ownerId to platforms)
+            every { releaseRepository.findAllByEpisodeIds(any()) } returns mapOf(ownerId to releases)
 
             transaction {
                 episodeRepository.save(episode)
@@ -207,7 +207,7 @@ class EpisodeRepositoryImplTest {
             // Then
             assertEquals(ImageType.BANNER, found.images.single().type)
             assertEquals("Episode", found.localizations.single().title)
-            assertEquals("3001", found.platforms.single().platformId)
+            assertEquals("3001", found.releases.single().platformId)
         }
 
         @Test
@@ -225,7 +225,7 @@ class EpisodeRepositoryImplTest {
 
             // Then
             assertTrue(found.localizations.isEmpty())
-            assertTrue(found.platforms.isEmpty())
+            assertTrue(found.releases.isEmpty())
             assertTrue(found.images.isEmpty())
         }
     }
@@ -337,15 +337,15 @@ class EpisodeRepositoryImplTest {
             val episode = episodeFixture(requireNotNull(anime.id))
             transaction {
                 episodeRepository.save(episode)
-                EpisodePlatformRepositoryImpl()
+                EpisodeReleaseRepositoryImpl()
                     .save(
-                        EpisodePlatformMockKBuilder {
+                        EpisodeReleaseMockKBuilder {
                             id = Uuid.random()
                             episodeId = episode.episode.id
                             platform = Platform.ANIMATION_DIGITAL_NETWORK
                             platformId = "3001"
                             url = "https://example.test/episodes/3001"
-                            audioLocales = setOf(Locale.FR_FR)
+                            audioLocale = Locale.FR_FR
                             uncensored = false
                             releaseDateTime = TimeUtils.now()
                         }.build()

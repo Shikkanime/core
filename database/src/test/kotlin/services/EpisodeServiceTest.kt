@@ -3,16 +3,16 @@ package fr.shikkanime.database.services
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.builders.impl.EpisodeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodePlatformMockKBuilder
+import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
-import fr.shikkanime.database.repositories.EpisodePlatformRepository
+import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.database.services.impl.EpisodeServiceImpl
 import fr.shikkanime.models.EpisodeLocalization
-import fr.shikkanime.models.EpisodePlatform
+import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
 import fr.shikkanime.models.Image
@@ -39,7 +39,7 @@ import kotlin.uuid.Uuid
 class EpisodeServiceTest {
     @MockK private lateinit var episodeRepository: EpisodeRepository
     @MockK private lateinit var localizationRepository: EpisodeLocalizationRepository
-    @MockK private lateinit var platformRepository: EpisodePlatformRepository
+    @MockK private lateinit var releaseRepository: EpisodeReleaseRepository
     @MockK private lateinit var imageRepository: ImageRepository
 
     @InjectMockKs private lateinit var episodeService: EpisodeServiceImpl
@@ -99,15 +99,15 @@ class EpisodeServiceTest {
                         description = "Description"
                     }.build()
                 )
-                platforms = listOf(
-                    EpisodePlatformMockKBuilder {
+                releases = listOf(
+                    EpisodeReleaseMockKBuilder {
                         id = Uuid.random()
                         createdAt = TimeUtils.now()
                         updatedAt = TimeUtils.now()
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "3001"
                         url = "https://example.test/episodes/3001"
-                        audioLocales = setOf(Locale.FR_FR)
+                        audioLocale = Locale.FR_FR
                         uncensored = false
                         releaseDateTime = TimeUtils.now()
                     }.build()
@@ -127,7 +127,7 @@ class EpisodeServiceTest {
 
             every { episodeRepository.save(episode) } returns root
             every { localizationRepository.save(any()) } returns episode.localizations.single()
-            every { platformRepository.save(any()) } returns episode.platforms.single()
+            every { releaseRepository.save(any()) } returns episode.releases.single()
             every { imageRepository.save(any()) } returns episode.images.single()
 
             // When
@@ -136,7 +136,7 @@ class EpisodeServiceTest {
             // Then
             verify(exactly = 1) { episodeRepository.save(episode) }
             verify(exactly = 1) { localizationRepository.save(any()) }
-            verify(exactly = 1) { platformRepository.save(any()) }
+            verify(exactly = 1) { releaseRepository.save(any()) }
             verify(exactly = 1) { imageRepository.save(any()) }
             assertEquals(episode.episode.id, saved.episode.id)
         }
@@ -147,7 +147,7 @@ class EpisodeServiceTest {
             // Given
             val episode = episodeWithChildrenFixture {
                 localizations = emptyList()
-                platforms = emptyList()
+                releases = emptyList()
                 images = listOf(
                     ImageMockKBuilder {
                         id = Uuid.random()
@@ -185,14 +185,14 @@ class EpisodeServiceTest {
                         description = "Description"
                     }.build()
                 )
-                platforms = listOf(
-                    EpisodePlatformMockKBuilder {
+                releases = listOf(
+                    EpisodeReleaseMockKBuilder {
                         id = Uuid.random()
                         episodeId = Uuid.random()
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "3001"
                         url = "https://example.test/episodes/3001"
-                        audioLocales = setOf(Locale.FR_FR)
+                        audioLocale = Locale.FR_FR
                         uncensored = false
                         releaseDateTime = TimeUtils.now()
                     }.build()
@@ -200,11 +200,11 @@ class EpisodeServiceTest {
                 images = emptyList()
             }
             val storedLocalization = slot<EpisodeLocalization>()
-            val storedPlatform = slot<EpisodePlatform>()
+            val storedPlatform = slot<EpisodeRelease>()
 
             every { episodeRepository.save(episode) } returns episode.episode
             every { localizationRepository.save(capture(storedLocalization)) } returns episode.localizations.single()
-            every { platformRepository.save(capture(storedPlatform)) } returns episode.platforms.single()
+            every { releaseRepository.save(capture(storedPlatform)) } returns episode.releases.single()
 
             // When
             episodeService.save(episode)
@@ -220,7 +220,7 @@ class EpisodeServiceTest {
             // Given
             val stored = episodeWithChildrenFixture {
                 localizations = emptyList()
-                platforms = emptyList()
+                releases = emptyList()
                 images = emptyList()
             }
             val incoming = EpisodeWithChildrenMockKBuilder {
@@ -233,12 +233,12 @@ class EpisodeServiceTest {
                     duration = 1440
                 }.build()
                 localizations = emptyList()
-                platforms = listOf(
-                    EpisodePlatformMockKBuilder {
+                releases = listOf(
+                    EpisodeReleaseMockKBuilder {
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "3001"
                         url = "https://example.test/episodes/3001"
-                        audioLocales = setOf(Locale.FR_FR)
+                        audioLocale = Locale.FR_FR
                         uncensored = false
                         releaseDateTime = TimeUtils.now()
                     }.build()
@@ -251,7 +251,7 @@ class EpisodeServiceTest {
                 episodeRepository.findByPlatformAndPlatformId(any(), "3001")
             } returns stored
             every { episodeRepository.save(capture(slot)) } returns stored.episode
-            every { platformRepository.save(any()) } returns incoming.platforms.single()
+            every { releaseRepository.save(any()) } returns incoming.releases.single()
 
             // When
             episodeService.save(incoming)
@@ -266,7 +266,7 @@ class EpisodeServiceTest {
             // Given
             val stored = episodeWithChildrenFixture {
                 localizations = emptyList()
-                platforms = emptyList()
+                releases = emptyList()
                 images = emptyList()
             }
             val incoming = EpisodeWithChildrenMockKBuilder {
@@ -279,7 +279,7 @@ class EpisodeServiceTest {
                     duration = 1440
                 }.build()
                 localizations = emptyList()
-                platforms = emptyList()
+                releases = emptyList()
                 images = emptyList()
             }.build()
             val slot = slot<EpisodeWithChildren>()
@@ -303,7 +303,7 @@ class EpisodeServiceTest {
             // Given
             val otherAnime = episodeWithChildrenFixture {
                 localizations = emptyList()
-                platforms = emptyList()
+                releases = emptyList()
                 images = emptyList()
             }
             val incoming = EpisodeWithChildrenMockKBuilder {
@@ -316,12 +316,12 @@ class EpisodeServiceTest {
                     duration = 1440
                 }.build()
                 localizations = emptyList()
-                platforms = listOf(
-                    EpisodePlatformMockKBuilder {
+                releases = listOf(
+                    EpisodeReleaseMockKBuilder {
                         platform = Platform.ANIMATION_DIGITAL_NETWORK
                         platformId = "3001"
                         url = "https://example.test/episodes/3001"
-                        audioLocales = setOf(Locale.FR_FR)
+                        audioLocale = Locale.FR_FR
                         uncensored = false
                         releaseDateTime = TimeUtils.now()
                     }.build()
@@ -333,7 +333,7 @@ class EpisodeServiceTest {
             stubNoStoredEpisode()
             every { episodeRepository.findByPlatformAndPlatformId(any(), "3001") } returns otherAnime
             every { episodeRepository.save(capture(slot)) } returns otherAnime.episode
-            every { platformRepository.save(any()) } returns incoming.platforms.single()
+            every { releaseRepository.save(any()) } returns incoming.releases.single()
 
             // When
             episodeService.save(incoming)
@@ -372,7 +372,7 @@ class EpisodeServiceTest {
                         title = "Episode"
                     }.build()
                 )
-                platforms = emptyList()
+                releases = emptyList()
                 images = emptyList()
             }
             every { episodeRepository.findModelById(any()) } returns episode

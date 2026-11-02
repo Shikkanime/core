@@ -4,7 +4,7 @@ import fr.shikkanime.database.entities.AnimeLocalizationTable
 import fr.shikkanime.database.entities.AnimePlatformTable
 import fr.shikkanime.database.entities.AnimeTable
 import fr.shikkanime.database.entities.EpisodeLocalizationTable
-import fr.shikkanime.database.entities.EpisodePlatformTable
+import fr.shikkanime.database.entities.EpisodeReleaseTable
 import fr.shikkanime.database.entities.EpisodeTable
 import fr.shikkanime.database.entities.ImageTable
 import fr.shikkanime.database.entities.JoinAnimeSimulcastTable
@@ -29,7 +29,7 @@ class DatabaseManager(
             ImageTable,
             EpisodeTable,
             EpisodeLocalizationTable,
-            EpisodePlatformTable,
+            EpisodeReleaseTable,
             SimulcastTable,
 
             JoinAnimeSimulcastTable

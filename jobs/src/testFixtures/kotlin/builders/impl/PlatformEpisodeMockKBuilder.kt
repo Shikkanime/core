@@ -45,7 +45,7 @@ class PlatformEpisodeMockKBuilder(
         uncensored?.let { every { mockK.uncensored } returns it }
         localizations?.let { every { mockK.localizations } returns it }
 
-        every { mockK.toPlatformModel() } answers { callOriginal() }
+        every { mockK.toReleaseModels() } answers { callOriginal() }
         every { mockK.toModel() } answers { callOriginal() }
 
         return mockK

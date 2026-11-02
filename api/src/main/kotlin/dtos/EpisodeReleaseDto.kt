@@ -1,37 +1,37 @@
 package fr.shikkanime.api.dtos
 
-import fr.shikkanime.models.EpisodePlatform
+import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 /**
- * API view of a platform release of an episode.
+ * API view of a release of an episode on a streaming platform, in a single audio locale.
  */
 @Serializable
-data class EpisodePlatformDto(
+data class EpisodeReleaseDto(
     val platform: Platform,
     val platformId: String,
     val url: String,
-    val audioLocales: Set<Locale>,
+    val audioLocale: Locale,
     val uncensored: Boolean,
     val releaseDateTime: LocalDateTime
 )
 
 /**
- * Maps a stored platform release to its API view.
+ * Maps a stored release to its API view.
  *
- * @receiver stored platform release.
+ * @receiver stored release.
  * @return the API view of this release.
- * @see [EpisodePlatformDto]
+ * @see [EpisodeReleaseDto]
  */
-fun EpisodePlatform.toDto(): EpisodePlatformDto =
-    EpisodePlatformDto(
+fun EpisodeRelease.toDto(): EpisodeReleaseDto =
+    EpisodeReleaseDto(
         platform = platform,
         platformId = platformId,
         url = url,
-        audioLocales = audioLocales,
+        audioLocale = audioLocale,
         uncensored = uncensored,
         releaseDateTime = releaseDateTime
     )

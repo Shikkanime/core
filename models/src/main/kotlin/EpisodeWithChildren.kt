@@ -13,5 +13,5 @@ data class EpisodeWithChildren(
     val episode: Episode,
     val images: List<Image>,
     val localizations: List<EpisodeLocalization>,
-    val platforms: List<EpisodePlatform>
+    val releases: List<EpisodeRelease>
 )

@@ -4,7 +4,7 @@ import fr.shikkanime.exposed.Transactional
 import fr.shikkanime.exposed.TransactionalProxy
 import fr.shikkanime.models.Episode
 import fr.shikkanime.models.EpisodeLocalization
-import fr.shikkanime.models.EpisodePlatform
+import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
 import fr.shikkanime.models.Image
@@ -22,7 +22,7 @@ import kotlin.uuid.Uuid
  */
 interface EpisodeService {
     /**
-     * Loads every episode of an anime with its images, localizations and platforms.
+     * Loads every episode of an anime with its images, localizations and releases.
      *
      * @param animeId identifier of the anime owning the episodes.
      * @return the episodes of the anime with their children, in broadcast order.
@@ -32,7 +32,7 @@ interface EpisodeService {
     fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren>
 
     /**
-     * Loads an episode with its images, localizations and platforms.
+     * Loads an episode with its images, localizations and releases.
      *
      * @param id identifier of the episode to load.
      * @return the episode aggregate, or `null` when no episode has this identifier.
@@ -62,8 +62,11 @@ interface EpisodeService {
     /**
      * Loads the episode released under a platform identifier.
      *
+     * A video published in several audio locales carries several releases, all owned by the same
+     * episode: the first one answers.
+     *
      * @param platform streaming platform owning the release.
-     * @param platformId identifier of the episode on the streaming platform.
+     * @param platformId identifier of the video on the streaming platform.
      * @return the episode released under this identifier, or `null` when none carries it.
      * @see [EpisodeWithChildren]
      */
@@ -71,17 +74,17 @@ interface EpisodeService {
     fun findByPlatformAndPlatformId(platform: Platform, platformId: String): EpisodeWithChildren?
 
     /**
-     * Upserts an episode with its images, localizations and platforms.
+     * Upserts an episode with its images, localizations and releases.
      *
-     * The episode is resolved before any write: a known platform release owns the stored episode,
+     * The episode is resolved before any write: a known release owns the stored episode,
      * otherwise the identity `(anime, season, type, number)` does. The saved episode owns its
      * children: their owner identifier is written here, exactly once, whatever owner the given
-     * [Image], [EpisodeLocalization] and [EpisodePlatform] instances carry. Known localizations and
+     * [Image], [EpisodeLocalization] and [EpisodeRelease] instances carry. Known localizations and
      * releases are refreshed in place and new ones are appended; nothing is deleted and nothing is
      * recomputed.
      *
      * @param episode aggregate to persist.
-     * @return the episode with the images, localizations and platforms persisted by this call.
+     * @return the episode with the images, localizations and releases persisted by this call.
      * @see [Episode]
      * @see [EpisodeWithChildren]
      */
