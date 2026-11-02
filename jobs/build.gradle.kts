@@ -2,12 +2,32 @@ plugins {
     id("buildsrc.convention.kotlin-jvm")
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.shikkanimeFrameworkKoin)
+    alias(libs.plugins.graalvmNative)
     `java-test-fixtures`
     application
 }
 
 application {
     mainClass.set("fr.shikkanime.jobs.ApplicationKt")
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("shikkanime-jobs")
+            mainClass.set("fr.shikkanime.jobs.ApplicationKt")
+            sharedLibrary.set(false)
+            jvmArgs.add("-Xmx${System.getenv("NATIVE_IMAGE_HEAP") ?: "3g"}")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-O0",
+                "-march=compatibility",
+                "-H:CCompilerOption=-march=x86-64",
+                "-H:+ReportExceptionStackTraces",
+                "--enable-url-protocols=http,https"
+            )
+        }
+    }
 }
 
 dependencies {

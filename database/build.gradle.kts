@@ -1,6 +1,7 @@
 plugins {
     id("buildsrc.convention.kotlin-jvm")
     alias(libs.plugins.shikkanimeFrameworkKoin)
+    alias(libs.plugins.graalvmNative)
     `java-test-fixtures`
     application
 }
@@ -8,6 +9,25 @@ plugins {
 // Ships as its own distribution: every application image provisions the schema before it starts.
 application {
     mainClass.set("fr.shikkanime.database.ApplicationKt")
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("shikkanime-database")
+            mainClass.set("fr.shikkanime.database.ApplicationKt")
+            sharedLibrary.set(false)
+            jvmArgs.add("-Xmx${System.getenv("NATIVE_IMAGE_HEAP") ?: "3g"}")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-O0",
+                "-march=compatibility",
+                "-H:CCompilerOption=-march=x86-64",
+                "-H:+ReportExceptionStackTraces",
+                "--enable-url-protocols=http,https"
+            )
+        }
+    }
 }
 
 dependencies {

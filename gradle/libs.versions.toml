@@ -1,5 +1,6 @@
 [versions]
 kotlin = "2.4.10"
+graalvmNative = "1.1.18"
 shikkanimeFramework = "0.0.25-SNAPSHOT"
 kotlinxDateTime = "0.8.0"
 quartz = "2.5.2"
@@ -30,5 +31,6 @@ testEcosystem = ["junitJupiterApi", "junitJupiterEngine", "mockk"]
 
 [plugins]
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+graalvmNative = { id = "org.graalvm.buildtools.native", version.ref = "graalvmNative" }
 shikkanimeFrameworkKtor = { id = "fr.shikkanime.framework.ktor", version.ref = "shikkanimeFramework" }
 shikkanimeFrameworkKoin = { id = "fr.shikkanime.framework.koin", version.ref = "shikkanimeFramework" }

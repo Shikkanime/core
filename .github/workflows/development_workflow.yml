@@ -87,6 +87,57 @@ jobs:
           path: 'jobs/build/reports/tests/perfTest/'
           retention-days: 14
 
+  native-images:
+    name: Native image (${{ matrix.module }})
+    # Pin the image: ubuntu-latest now resolves to Ubuntu 26.04, whose gcc/glibc target
+    # x86-64-v3, so the artifact refuses to start on a v2 host. 24.04 keeps the baseline ISA.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [api, admin, site, jobs, database]
+    steps:
+      - uses: actions/checkout@v7
+
+      # Pin the toolchain instead of asking for "the latest JDK 25": that resolved to GraalVM
+      # 25.0.2, whose runtime objects require x86-64-v3 and which rejects options the 25.4 build
+      # accepts. The CI and local images must come from the same GraalVM build.
+      - name: Set up GraalVM
+        run: |
+          curl -fL --retry 3 -o "$RUNNER_TEMP/graalvm.tar.gz" \
+            "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-25.4.4.1.1/graalvm-community-jdk-25i4-25.0.4.1.1_linux-x64_bin.tar.gz"
+          mkdir -p "$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1"
+          tar xzf "$RUNNER_TEMP/graalvm.tar.gz" \
+            -C "$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1" --strip-components=1
+          echo "JAVA_HOME=$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1" >> "$GITHUB_ENV"
+          echo "GRAALVM_HOME=$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1" >> "$GITHUB_ENV"
+          echo "$RUNNER_TOOL_CACHE/graalvm-25.4.4.1.1/bin" >> "$GITHUB_PATH"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-native-${{ hashFiles('**/*.gradle*', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-native-
+
+      - name: Build the native image
+        run: ./gradlew --no-daemon :${{ matrix.module }}:nativeCompile
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The admin image needs more than 3 GiB of builder heap; the runner has 16 GiB.
+          NATIVE_IMAGE_HEAP: 8g
+
+      - name: Upload the native image
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.module }}
+          path: ${{ matrix.module }}/build/native/nativeCompile/
+          retention-days: 14
+
   qodana:
     name: Qodana
     runs-on: ubuntu-latest

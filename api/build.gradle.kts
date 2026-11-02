@@ -2,11 +2,31 @@ plugins {
     id("buildsrc.convention.kotlin-jvm")
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.shikkanimeFrameworkKoin)
+    alias(libs.plugins.graalvmNative)
     application
 }
 
 application {
     mainClass.set("fr.shikkanime.api.ApplicationKt")
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("shikkanime-api")
+            mainClass.set("fr.shikkanime.api.ApplicationKt")
+            sharedLibrary.set(false)
+            jvmArgs.add("-Xmx${System.getenv("NATIVE_IMAGE_HEAP") ?: "3g"}")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-O1",
+                "-march=compatibility",
+                "-H:CCompilerOption=-march=x86-64",
+                "-H:+ReportExceptionStackTraces",
+                "--enable-url-protocols=http,https"
+            )
+        }
+    }
 }
 
 dependencies {
