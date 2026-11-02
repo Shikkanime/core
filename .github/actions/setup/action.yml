@@ -15,4 +15,5 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install -y webp
+        # libwebp: the image codec encodes and decodes WebP through the system library
+        sudo apt-get install -y webp libwebp-dev

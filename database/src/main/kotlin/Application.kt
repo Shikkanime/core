@@ -22,8 +22,11 @@ fun main() {
     val databaseManager = DatabaseManager.connect()
     val changelog = System.getenv("LIQUIBASE_CHANGELOG")
 
-    if (changelog.isNullOrBlank())
+    if (changelog.isNullOrBlank()) {
         databaseManager.databaseWrapper.initializeSchema()
-    else
+        // The framework call only creates missing tables: existing ones keep their old columns
+        databaseManager.migrate()
+    } else {
         databaseManager.databaseWrapper.migrateSchema(changelog)
+    }
 }

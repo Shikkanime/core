@@ -17,6 +17,12 @@ class ImageMockKBuilder(
     var entityId: Uuid? = null
     var type: ImageType? = null
     var url: String? = null
+    var version: String? = null
+    var fetchedAt: LocalDateTime? = null
+    var sourceEtag: String? = null
+    var sourceLastModified: String? = null
+    var width: Int? = null
+    var height: Int? = null
 
     init {
         configuration(this)
@@ -31,15 +37,32 @@ class ImageMockKBuilder(
         entityId?.let { every { mockK.entityId } returns it }
         type?.let { every { mockK.type } returns it }
         url?.let { every { mockK.url } returns it }
+        version?.let { every { mockK.version } returns it }
+        fetchedAt?.let { every { mockK.fetchedAt } returns it }
+        sourceEtag?.let { every { mockK.sourceEtag } returns it }
+        sourceLastModified?.let { every { mockK.sourceLastModified } returns it }
+        width?.let { every { mockK.width } returns it }
+        height?.let { every { mockK.height } returns it }
 
-        every { mockK.copy(any(), any(), any(), any(), any(), any()) } answers {
+        every {
+            mockK.copy(
+                any(), any(), any(), any(), any(), any(),
+                any(), any(), any(), any(), any(), any()
+            )
+        } answers {
             Image(
                 id = firstArg(),
                 createdAt = secondArg(),
                 updatedAt = thirdArg(),
                 entityId = arg(3),
                 type = arg(4),
-                url = arg(5)
+                url = arg(5),
+                version = arg(6),
+                fetchedAt = arg(7),
+                sourceEtag = arg(8),
+                sourceLastModified = arg(9),
+                width = arg(10),
+                height = arg(11)
             )
         }
 
