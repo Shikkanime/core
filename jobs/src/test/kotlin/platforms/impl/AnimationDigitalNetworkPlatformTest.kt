@@ -504,6 +504,32 @@ class AnimationDigitalNetworkPlatformTest {
         }
 
         @Test
+        @DisplayName("should sanitize the harvested titles and descriptions")
+        fun `should sanitize the harvested titles and descriptions`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    calendar(
+                        video(
+                            1,
+                            name = "Épisode\u00A05",
+                            summary = "Un\u00A0résumé",
+                            showTitle = "One\u00A0Piece"
+                        )
+                    )
+                )
+            )
+
+            // When
+            val episode = platform.episodes().single()
+
+            // Then
+            assertEquals("Épisode 5", episode.localizations.single().title)
+            assertEquals("Un résumé", episode.localizations.single().description)
+            assertEquals("One Piece", episode.anime.localizations.single().title)
+        }
+
+        @Test
         @DisplayName("should map the show as the platform anime of the episode")
         fun `should map the show as the platform anime of the episode`() = runTest {
             // Given
