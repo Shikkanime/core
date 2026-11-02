@@ -79,6 +79,67 @@ class ImageRepositoryImplTest {
     }
 
     @Nested
+    @DisplayName("tests for the 'findByEntityIdAndType' method")
+    inner class FindByEntityIdAndTypeTests {
+        @Test
+        @DisplayName("should return the image of the requested owner and type")
+        fun `should return the image of the requested owner and type`() {
+            // Given
+            val owner = Uuid.random()
+            val other = Uuid.random()
+            transaction {
+                imageRepository.save(
+                    ImageMockKBuilder {
+                        id = Uuid.random()
+                        entityId = owner
+                        type = ImageType.THUMBNAIL
+                        url = "https://a"
+                    }.build()
+                )
+                imageRepository.save(
+                    ImageMockKBuilder {
+                        id = Uuid.random()
+                        entityId = owner
+                        type = ImageType.BANNER
+                        url = "https://b"
+                    }.build()
+                )
+                imageRepository.save(
+                    ImageMockKBuilder {
+                        id = Uuid.random()
+                        entityId = other
+                        type = ImageType.THUMBNAIL
+                        url = "https://c"
+                    }.build()
+                )
+            }
+
+            // When
+            val found = transaction {
+                imageRepository.findByEntityIdAndType(owner, ImageType.BANNER)
+            }
+
+            // Then
+            assertEquals("https://b", found?.url)
+        }
+
+        @Test
+        @DisplayName("should return null when the owner has no image of this type")
+        fun `should return null when the owner has no image of this type`() {
+            // Given
+            val owner = Uuid.random()
+
+            // When
+            val found = transaction {
+                imageRepository.findByEntityIdAndType(owner, ImageType.TITLE)
+            }
+
+            // Then
+            assertNull(found)
+        }
+    }
+
+    @Nested
     @DisplayName("tests for the 'save' method")
     inner class SaveTests {
         @Test

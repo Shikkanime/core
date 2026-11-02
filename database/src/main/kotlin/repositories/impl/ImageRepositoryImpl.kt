@@ -33,7 +33,7 @@ internal class ImageRepositoryImpl : ImageRepository() {
      * @return the matching entity, or `null` when this image type is not set yet.
      * @see [Image]
      */
-    private fun findByIdAndType(entityId: Uuid, type: ImageType): ImageEntity? =
+    private fun findEntityByEntityIdAndType(entityId: Uuid, type: ImageType): ImageEntity? =
         ImageEntity.find {
             (ImageTable.entityId eq entityId) and
                 (ImageTable.type eq type)
@@ -41,8 +41,11 @@ internal class ImageRepositoryImpl : ImageRepository() {
             .limit(1)
             .firstOrNull()
 
+    override fun findByEntityIdAndType(entityId: Uuid, type: ImageType): Image? =
+        findEntityByEntityIdAndType(entityId, type)?.toModel()
+
     override fun save(image: Image): Image =
-        findByIdAndType(requireNotNull(image.entityId), image.type)
+        findEntityByEntityIdAndType(requireNotNull(image.entityId), image.type)
             .ifExists {
                 if (url != image.url) {
                     url = image.url

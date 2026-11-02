@@ -10,6 +10,12 @@
   line instead of leaving it long. The exact rule and its limits — documentation is out of scope — live
   in the [Kotlin Conventions](KOTLIN_CONVENTIONS.md) and are enforced by `tools/check_line_length.py`.
 - **Reuse existing project patterns** instead of introducing new ones without need.
+- **Source files live directly under `src/main/kotlin`, without the `fr/shikkanime/<module>/` prefix.**
+  The package declaration already carries the module path, so the directory does not repeat it:
+  `media/src/main/kotlin/webp/LibWebp.kt` declares `package fr.shikkanime.media.webp`. A package
+  folder under `kotlin/` is a review comment.
+- **Everything written in code is English**: KDoc, comments, exception messages, log lines and
+  `ImageIO` descriptions alike. A French message is a review comment, even in a `throw`.
 
 ## Comments and KDoc
 
