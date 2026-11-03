@@ -51,7 +51,7 @@ suspend fun main(args: Array<String>) {
         // Every 10 minutes
         JobManager.scheduleJob(
             "0 */10 * * * ?",
-            UpdateEpisodeJob::class.java, UpdateAttachmentJob::class.java, AniListMatchingJob::class.java
+            UpdateEpisodeJob::class.java, UpdateAttachmentJob::class.java
         )
         // Every hour
         JobManager.scheduleJob("0 0 * * * ?", UpdateAnimeJob::class.java)
