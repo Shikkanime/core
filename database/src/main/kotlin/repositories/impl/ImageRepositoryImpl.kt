@@ -16,15 +16,6 @@ import kotlin.uuid.Uuid
 @Single(binds = [ImageRepository::class])
 internal class ImageRepositoryImpl : ImageRepository() {
 
-    override fun findAllByEntityId(entityId: Uuid): List<Image> =
-        ImageEntity.find { ImageTable.entityId eq entityId }
-            .map(ImageEntity::toModel)
-
-    override fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid?, List<Image>> =
-        ImageEntity.find { ImageTable.entityId inList entityIds }
-            .map(ImageEntity::toModel)
-            .groupBy(Image::entityId)
-
     /**
      * Finds one image row of an entity by its type.
      *
@@ -40,6 +31,15 @@ internal class ImageRepositoryImpl : ImageRepository() {
         }
             .limit(1)
             .firstOrNull()
+
+    override fun findAllByEntityId(entityId: Uuid): List<Image> =
+        ImageEntity.find { ImageTable.entityId eq entityId }
+            .map(ImageEntity::toModel)
+
+    override fun findAllByEntityIds(entityIds: List<Uuid>): Map<Uuid?, List<Image>> =
+        ImageEntity.find { ImageTable.entityId inList entityIds }
+            .map(ImageEntity::toModel)
+            .groupBy(Image::entityId)
 
     override fun save(image: Image): Image =
         findByIdAndType(requireNotNull(image.entityId), image.type)

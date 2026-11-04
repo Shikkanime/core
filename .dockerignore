@@ -1,0 +1,9 @@
+# Build outputs, caches and version control metadata are rebuilt inside the image or fetched by
+# Gradle and Flutter themselves; sending them only slows the context upload down.
+**/build/
+**/build
+**/.gradle/
+**/.dart_tool/
+**/.idea/
+**/.git/
+**/logs/

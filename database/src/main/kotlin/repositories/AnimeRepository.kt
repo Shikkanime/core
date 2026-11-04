@@ -1,5 +1,7 @@
 package fr.shikkanime.database.repositories
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.entities.AnimeEntity
 import fr.shikkanime.exposed.repositories.EntityRepository
 import fr.shikkanime.models.Anime
@@ -19,13 +21,71 @@ internal abstract class AnimeRepository : EntityRepository<Uuid, AnimeEntity>(An
     /**
      * Loads every anime of the database with its children.
      *
-     * The entity-level read comes from the framework's `EntityRepository.findAll()`, called through
-     * `super.findAll()`: the repository layer owns every query.
+     * The public API still serves the whole catalog; the administration reads it page by page
+     * through [findPage]. Keeping the unbounded read here avoids changing the public contract in a
+     * change scoped to the administration.
      *
      * @return every stored anime aggregate, in no particular order.
      * @see [AnimeWithChildren]
      */
     abstract fun findAllModels(): List<AnimeWithChildren>
+
+    /**
+     * Loads one page of the anime catalog with its children.
+     *
+     * The page is read in broadcast order, by normalized title, and composed with one batch read
+     * per relation: the database only returns the rows the administration displays.
+     *
+     * @param request page and size to read.
+     * @return the requested page of anime aggregates.
+     * @see [AnimeWithChildren]
+     */
+    abstract fun findPage(request: PageRequest): Page<AnimeWithChildren>
+
+    /**
+     * Loads one page of the anime aggregates matching a search term.
+     *
+     * The match runs in the database, never in the client: the identity title and every localized
+     * title are compared case-insensitively, and a term that is a UUID also matches the identifier.
+     * Filtering in memory would read the whole catalog to answer one query.
+     *
+     * @param search term typed by the administrator, matched as a substring.
+     * @param request page and size to read.
+     * @return the requested page of matching anime aggregates.
+     * @see [AnimeWithChildren]
+     */
+    abstract fun findPageBySearch(search: String, request: PageRequest): Page<AnimeWithChildren>
+
+    /**
+     * Loads one page of the anime aggregates linked to a streaming platform.
+     *
+     * The platform is applied by the database, alongside the optional search term: a platform page
+     * never reads the whole catalog to filter it in memory, and a platform without any anime simply
+     * answers an empty page.
+     *
+     * @param platform streaming platform the anime must be linked to.
+     * @param search optional term matched like [findPageBySearch], or `null` to keep every row.
+     * @param request page and size to read.
+     * @return the requested page of matching anime aggregates.
+     * @see [AnimeWithChildren]
+     */
+    abstract fun findPageByPlatform(
+        platform: Platform,
+        search: String?,
+        request: PageRequest
+    ): Page<AnimeWithChildren>
+
+    /**
+     * Loads the anime rows carrying these identifiers.
+     *
+     * One grouped read answers a whole page of display rows, which is what keeps a list of episodes
+     * from resolving its anime one row at a time.
+     *
+     * @param ids identifiers of the animes to read.
+     * @return the matching anime rows indexed by identifier, empty when [ids] is empty.
+     * @see [Anime]
+     */
+    abstract fun findModelsByIds(ids: List<Uuid>): Map<Uuid, Anime>
 
     /**
      * Loads the anime aggregates carrying these normalized titles.

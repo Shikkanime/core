@@ -1,6 +1,8 @@
 package fr.shikkanime.database.services
 
 import fr.shikkanime.core.TimeUtils
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.builders.impl.EpisodeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
@@ -259,6 +261,31 @@ class EpisodeServiceTest {
             assertEquals("Episode", found?.localizations?.single()?.title)
             assertEquals(listOf(episode), foundByAnime)
             assertSame(episode, foundByIdentity)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the paged read")
+    inner class FindPageTests {
+        @Test
+        @DisplayName("should delegate the requested page to the repository")
+        fun `should delegate the requested page to the repository`() {
+            // Given
+            val animeId = Uuid.random()
+            val request = PageRequest(page = 1, size = 20)
+            val page = Page(
+                data = emptyList<EpisodeWithChildren>(),
+                page = 1,
+                size = 20,
+                totalElements = 0
+            )
+            every { episodeRepository.findPageByAnimeId(animeId, request) } returns page
+
+            // When
+            val found = episodeService.findPageByAnimeId(animeId, request)
+
+            // Then
+            assertEquals(page, found)
         }
     }
 }

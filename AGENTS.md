@@ -51,6 +51,8 @@ Before concluding your task, perform a final check to ensure you have followed a
 - Are database entities kept strictly internal to `:database`?
 - Are domain models in `:models` pure with no framework dependencies?
 - Have you reused existing patterns (e.g., `AbstractRepository` DSL)?
+- Are the repository helpers declared before the overrides, and are the API DTOs grouped by the
+  entity they describe?
 - Is all external data handled securely?
 - Do all unit and integration tests pass?
 

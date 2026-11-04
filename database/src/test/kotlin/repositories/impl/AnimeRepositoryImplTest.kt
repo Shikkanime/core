@@ -1,11 +1,16 @@
 package fr.shikkanime.database.repositories.impl
 
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.AnimeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
+import fr.shikkanime.database.entities.AnimeEntity
+import fr.shikkanime.database.entities.AnimeLocalizationEntity
+import fr.shikkanime.database.entities.AnimePlatformEntity
+import fr.shikkanime.database.entities.AnimeTable
 import fr.shikkanime.database.repositories.AnimeLocalizationRepository
 import fr.shikkanime.database.repositories.AnimePlatformRepository
 import fr.shikkanime.database.repositories.ImageRepository
@@ -16,6 +21,7 @@ import fr.shikkanime.models.Platform
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -62,6 +68,146 @@ class AnimeRepositoryImplTest {
                 normalizedTitle = "One Piece"
             }.build()
         }.build()
+
+    @Nested
+    @DisplayName("tests for the 'findPageBySearch' method")
+    inner class FindPageBySearchTests {
+        @Test
+        @DisplayName("should match the identity title, ignoring case and position")
+        fun `should match the identity title, ignoring case and position`() {
+            // Given
+            val anime = savedAnime()
+            transaction { animeRepository.save(anime.anime) }
+
+            // When
+            val found = transaction { animeRepository.findPageBySearch("PIECE", PageRequest(size = 20)) }
+
+            // Then
+            assertEquals(listOf(anime.anime.id), found.data.map { it.anime.id })
+        }
+
+        @Test
+        @DisplayName("should match a localized title")
+        fun `should match a localized title`() {
+            // Given
+            val anime = savedAnime()
+            transaction {
+                animeRepository.save(anime.anime)
+                AnimeLocalizationEntity.new(Uuid.random()) {
+                    this.anime = EntityID(requireNotNull(anime.anime.id), AnimeTable)
+                    locale = Locale.FR_FR
+                    title = "Le Pirate au chapeau de paille"
+                    description = null
+                }
+            }
+
+            // When
+            val found = transaction { animeRepository.findPageBySearch("chapeau", PageRequest(size = 20)) }
+
+            // Then
+            assertEquals(listOf(anime.anime.id), found.data.map { it.anime.id })
+        }
+
+        @Test
+        @DisplayName("should match the identifier")
+        fun `should match the identifier`() {
+            // Given
+            val anime = savedAnime()
+            transaction { animeRepository.save(anime.anime) }
+
+            // When
+            val found = transaction {
+                animeRepository.findPageBySearch(
+                    requireNotNull(anime.anime.id).toString(),
+                    PageRequest(size = 20)
+                )
+            }
+
+            // Then
+            assertEquals(listOf(anime.anime.id), found.data.map { it.anime.id })
+        }
+
+        @Test
+        @DisplayName("should return nothing when the term matches no anime")
+        fun `should return nothing when the term matches no anime`() {
+            // Given
+            val anime = savedAnime()
+            transaction { animeRepository.save(anime.anime) }
+
+            // When
+            val found = transaction {
+                animeRepository.findPageBySearch("nothing matches this", PageRequest(size = 20))
+            }
+
+            // Then
+            assertTrue(found.data.isEmpty())
+        }
+
+        @Test
+        @DisplayName("should not duplicate an anime whose several localizations match")
+        fun `should not duplicate an anime whose several localizations match`() {
+            // Given
+            val anime = savedAnime()
+            transaction {
+                animeRepository.save(anime.anime)
+                listOf(Locale.FR_FR, Locale.EN_US).forEach { locale ->
+                    AnimeLocalizationEntity.new(Uuid.random()) {
+                        this.anime = EntityID(requireNotNull(anime.anime.id), AnimeTable)
+                        this.locale = locale
+                        title = "One Piece"
+                        description = null
+                    }
+                }
+            }
+
+            // When
+            val found = transaction {
+                animeRepository.findPageBySearch("one piece", PageRequest(size = 20))
+            }
+
+            // Then
+            assertEquals(1, found.data.size)
+            assertEquals(1L, found.totalElements)
+            assertEquals(anime.anime.id, found.data.single().anime.id)
+        }
+
+        @Test
+        @DisplayName("should return the requested page and the total number of matches")
+        fun `should return the requested page and the total number of matches`() {
+            // Given
+            val first = savedAnime()
+            val second = AnimeWithChildrenMockKBuilder {
+                anime = AnimeMockKBuilder {
+                    id = Uuid.random()
+                    normalizedTitle = "One Piece Film"
+                }.build()
+            }.build()
+            val third = AnimeWithChildrenMockKBuilder {
+                anime = AnimeMockKBuilder {
+                    id = Uuid.random()
+                    normalizedTitle = "One Piece Special"
+                }.build()
+            }.build()
+
+            transaction {
+                animeRepository.save(first.anime)
+                animeRepository.save(second.anime)
+                animeRepository.save(third.anime)
+            }
+
+            // When
+            val found = transaction {
+                animeRepository.findPageBySearch("One Piece", PageRequest(page = 2, size = 2))
+            }
+
+            // Then
+            assertEquals(1, found.data.size)
+            assertEquals(2, found.page)
+            assertEquals(2, found.size)
+            assertEquals(3L, found.totalElements)
+            assertEquals(2, found.totalPages)
+        }
+    }
 
     @Nested
     @DisplayName("tests for the 'save' method")
@@ -181,17 +327,17 @@ class AnimeRepositoryImplTest {
     }
 
     @Nested
-    @DisplayName("tests for the 'findAllModels' method")
-    inner class FindAllTests {
+    @DisplayName("tests for the 'findPage' method")
+    inner class FindPageTests {
         @Test
-        @DisplayName("should return an empty list when the database holds no anime")
-        fun `should return an empty list when the database holds no anime`() {
+        @DisplayName("should return an empty page when the database holds no anime")
+        fun `should return an empty page when the database holds no anime`() {
             // Given
             // When
-            val found = transaction { animeRepository.findAllModels() }
+            val found = transaction { animeRepository.findPage(PageRequest(size = 20)) }
 
             // Then
-            assertTrue(found.isEmpty())
+            assertTrue(found.data.isEmpty())
         }
 
         @Test
@@ -212,10 +358,10 @@ class AnimeRepositoryImplTest {
             }
 
             // When
-            val found = transaction { animeRepository.findAllModels() }
+            val found = transaction { animeRepository.findPage(PageRequest(size = 20)) }
 
             // Then
-            assertEquals(2, found.size)
+            assertEquals(2, found.data.size)
         }
     }
 
@@ -260,6 +406,47 @@ class AnimeRepositoryImplTest {
 
             // Then
             assertEquals(anime.anime.id, assertNotNull(found).anime.id)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'findPageByPlatform' method")
+    inner class FindPageByPlatformTests {
+        @Test
+        @DisplayName("should keep only the animes linked to the platform")
+        fun `should keep only the animes linked to the platform`() {
+            // Given
+            val crunchyrollAnime = savedAnime()
+            val netflixAnime = AnimeWithChildrenMockKBuilder {
+                anime = AnimeMockKBuilder {
+                    id = Uuid.random()
+                    normalizedTitle = "Frieren"
+                }.build()
+            }.build()
+
+            transaction {
+                animeRepository.save(crunchyrollAnime.anime)
+                animeRepository.save(netflixAnime.anime)
+                AnimePlatformEntity.new {
+                    anime = EntityID(requireNotNull(crunchyrollAnime.anime.id), AnimeTable)
+                    platform = Platform.CRUNCHYROLL
+                    platformId = "one-piece"
+                }
+                AnimePlatformEntity.new {
+                    anime = EntityID(requireNotNull(netflixAnime.anime.id), AnimeTable)
+                    platform = Platform.NETFLIX
+                    platformId = "frieren"
+                }
+            }
+
+            // When
+            val page = transaction {
+                animeRepository.findPageByPlatform(Platform.CRUNCHYROLL, null, PageRequest(1, 20))
+            }
+
+            // Then
+            assertEquals(1, page.data.size)
+            assertEquals("One Piece", page.data.single().anime.normalizedTitle)
         }
     }
 }

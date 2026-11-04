@@ -1,19 +1,28 @@
 package fr.shikkanime.database.repositories.impl
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.entities.AnimeEntity
+import fr.shikkanime.database.entities.AnimeLocalizationTable
 import fr.shikkanime.database.entities.AnimePlatformTable
 import fr.shikkanime.database.entities.AnimeTable
 import fr.shikkanime.database.repositories.AnimeLocalizationRepository
 import fr.shikkanime.database.repositories.AnimePlatformRepository
 import fr.shikkanime.database.repositories.AnimeRepository
 import fr.shikkanime.database.repositories.ImageRepository
+import fr.shikkanime.exposed.pagination.paginate
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Platform
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.select
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -25,18 +34,14 @@ internal class AnimeRepositoryImpl(
     private val platformRepository: Lazy<AnimePlatformRepository>
 ) : AnimeRepository() {
 
-    override fun findAllModels(): List<AnimeWithChildren> =
-        compose(
-        super.findAll()
-            .toList()
-    )
-
-    override fun findAllByNormalizedTitles(titles: List<String>): Map<String, AnimeWithChildren> =
-        compose(
-            AnimeEntity.find { AnimeTable.normalizedTitle inList titles }
-                .toList()
-        )
-            .associateBy { it.anime.normalizedTitle }
+    /**
+     * Replaces the entities of a page with their aggregates, keeping its bounds.
+     *
+     * @param aggregates aggregates composed from the entities of this page.
+     * @return the same page holding the aggregates.
+     */
+    private fun Page<AnimeEntity>.withAggregates(aggregates: List<AnimeWithChildren>): Page<AnimeWithChildren> =
+        Page(aggregates, page, size, totalElements)
 
     /**
      * Composes the aggregate view of the given rows from one batch read per relation.
@@ -87,6 +92,95 @@ internal class AnimeRepositoryImpl(
         compose(listOf(entity))
             .single()
 
+    override fun findAllModels(): List<AnimeWithChildren> =
+        compose(
+            super.findAll()
+                .toList()
+        )
+
+    override fun findPage(request: PageRequest): Page<AnimeWithChildren> {
+        val page = findAll()
+            .orderBy(AnimeTable.normalizedTitle.lowerCase() to SortOrder.ASC)
+            .paginate(request)
+
+        return page.withAggregates(compose(page.data))
+    }
+
+    /**
+     * Builds the predicate matching a free search term.
+     *
+     * The term is compared to the identity title and to every localized title, case-insensitively;
+     * a term that parses as an identifier also matches the row identifier.
+     *
+     * @param search term typed by the administrator, matched as a substring.
+     * @return the predicate a query applies to keep the matching rows.
+     */
+    private fun searchCondition(search: String): Op<Boolean> {
+        val term = "%${search.trim().lowercase()}%"
+        val identifier = runCatching { Uuid.parse(search.trim()) }.getOrNull()
+
+        val conditions: MutableList<Op<Boolean>> = mutableListOf(
+            AnimeTable.normalizedTitle.lowerCase() like term,
+            AnimeLocalizationTable.title.lowerCase() like term
+        )
+
+        if (identifier != null) {
+            conditions += AnimeTable.id eq identifier
+        }
+
+        return conditions.reduce { left, right -> left or right }
+    }
+
+    override fun findPageBySearch(search: String, request: PageRequest): Page<AnimeWithChildren> =
+        AnimeEntity.wrapRows(
+            AnimeTable.leftJoin(AnimeLocalizationTable)
+                .select(AnimeTable.columns)
+                .withDistinct(true)
+                .where { searchCondition(search) }
+        )
+            .orderBy(AnimeTable.normalizedTitle.lowerCase() to SortOrder.ASC)
+            .paginate(request)
+            .let { page -> page.withAggregates(compose(page.data)) }
+
+    override fun findPageByPlatform(
+        platform: Platform,
+        search: String?,
+        request: PageRequest
+    ): Page<AnimeWithChildren> =
+        AnimeEntity.wrapRows(
+            AnimeTable.innerJoin(AnimePlatformTable)
+                .leftJoin(AnimeLocalizationTable)
+                .select(AnimeTable.columns)
+                .withDistinct(true)
+                .where {
+                    val platformCondition = AnimePlatformTable.platform eq platform
+
+                    if (search.isNullOrBlank()) {
+                        platformCondition
+                    } else {
+                        platformCondition and searchCondition(search)
+                    }
+                }
+        )
+            .orderBy(AnimeTable.normalizedTitle.lowerCase() to SortOrder.ASC)
+            .paginate(request)
+            .let { page -> page.withAggregates(compose(page.data)) }
+
+    override fun findModelsByIds(ids: List<Uuid>): Map<Uuid, Anime> =
+        if (ids.isEmpty()) {
+            emptyMap()
+        } else {
+            AnimeEntity.find { AnimeTable.id inList ids }
+                .associate { it.id.value to it.toModel() }
+        }
+
+    override fun findAllByNormalizedTitles(titles: List<String>): Map<String, AnimeWithChildren> =
+        compose(
+            AnimeEntity.find { AnimeTable.normalizedTitle inList titles }
+                .toList()
+        )
+            .associateBy { it.anime.normalizedTitle }
+
     override fun findModelById(id: Uuid): AnimeWithChildren? =
         findById(id)
             ?.let(::composeOne)
@@ -100,7 +194,7 @@ internal class AnimeRepositoryImpl(
     override fun findByPlatformAndPlatformId(platform: Platform, platformId: String): AnimeWithChildren? =
         AnimeEntity.wrapRows(
             AnimeTable.innerJoin(AnimePlatformTable)
-                .selectAll()
+                .select(AnimeTable.columns)
                 .where {
                     (AnimePlatformTable.platform eq platform) and
                         (AnimePlatformTable.platformId eq platformId)

@@ -5,6 +5,8 @@ on:
     types: [opened, synchronize, reopened, edited]
   push:
     branches: [master]
+  # The image matrix only runs outside pull requests: this trigger is how to build it on demand.
+  workflow_dispatch:
 
 # A superseded run of the same ref has no value: stop it before it burns minutes.
 concurrency:
@@ -38,6 +40,44 @@ jobs:
         with:
           name: unit-test-reports
           path: '*/build/reports/tests/test/'
+          retention-days: 14
+
+  admin-web:
+    name: Admin web app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The interface is a Flutter web app compiled into the admin module. It follows the stable
+      # channel, the one a developer installs; the pubspec keeps the minimum it supports.
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install the admin web dependencies
+        working-directory: admin/webapp
+        run: flutter pub get
+
+      - name: Analyze the admin web app
+        working-directory: admin/webapp
+        run: flutter analyze
+
+      - name: Test the admin web app
+        working-directory: admin/webapp
+        run: flutter test
+
+      - name: Build the admin web app
+        working-directory: admin/webapp
+        run: flutter build web --release --base-href /
+
+      # Architecture-independent output, reused by both platform image builds.
+      - name: Upload the compiled interface
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-web
+          path: admin/webapp/build/web
           retention-days: 14
 
   integration-tests:
@@ -118,7 +158,7 @@ jobs:
         if: github.actor != 'dependabot[bot]'
         uses: JetBrains/qodana-action@v2026.2.0
         with:
-          pr-mode: false
+          pr-mode: ${{ github.event_name == 'pull_request' }}
           upload-result: true
           args: |
             --volume ${{ env.JAVA_HOME_25_X64 }}:/opt/jdk-25
@@ -133,8 +173,10 @@ jobs:
 
   docker-images:
     name: Docker images (${{ matrix.platform }})
+    # Packaging, not a review gate: a pull request proves the code, master proves the images.
+    if: github.event_name != 'pull_request'
     runs-on: ${{ matrix.platform }}
-    needs: [unit-tests, integration-tests]
+    needs: [unit-tests, integration-tests, admin-web]
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +186,14 @@ jobs:
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup
+
+      # The image copies the compiled interface from `admin/webapp-dist`; it is the same artifact
+      # for both architectures, since the Flutter output is JavaScript.
+      - name: Download the compiled interface
+        uses: actions/download-artifact@v4
+        with:
+          name: admin-web
+          path: admin/webapp-dist
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -169,6 +219,11 @@ jobs:
       # serves, where a static module list alone would prove nothing.
       - name: Start the http services and wait for their health endpoint
         run: docker compose up -d --wait api site admin
+
+      # The admin image carries the compiled Flutter interface: serving its HTML proves the web
+      # build reached the distribution, which a healthy JVM alone does not.
+      - name: Check the admin serves its interface
+        run: curl -fsS http://localhost:8081/ | grep -q '<title>Shikkanime'
 
       - name: Show the services on failure
         if: failure()

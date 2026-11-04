@@ -19,11 +19,6 @@ internal class AnimeLocalizationRepositoryImpl(
     private val animeRepository: AnimeRepository
 ) : AnimeLocalizationRepository() {
 
-    override fun findAllByAnimeIds(animeIds: List<Uuid>): Map<Uuid?, List<AnimeLocalization>> =
-        AnimeLocalizationEntity.find { AnimeLocalizationTable.anime inList animeIds }
-            .map(AnimeLocalizationEntity::toModel)
-            .groupBy(AnimeLocalization::animeId)
-
     /**
      * Finds one localization row of an anime by its locale.
      *
@@ -39,6 +34,11 @@ internal class AnimeLocalizationRepositoryImpl(
         }
             .limit(1)
             .firstOrNull()
+
+    override fun findAllByAnimeIds(animeIds: List<Uuid>): Map<Uuid?, List<AnimeLocalization>> =
+        AnimeLocalizationEntity.find { AnimeLocalizationTable.anime inList animeIds }
+            .map(AnimeLocalizationEntity::toModel)
+            .groupBy(AnimeLocalization::animeId)
 
     override fun save(localization: AnimeLocalization): AnimeLocalization =
         findByIdAndLocale(requireNotNull(localization.animeId), localization.locale)

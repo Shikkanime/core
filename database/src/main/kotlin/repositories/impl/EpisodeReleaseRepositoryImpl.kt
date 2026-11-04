@@ -3,8 +3,8 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.entities.EpisodeReleaseEntity
 import fr.shikkanime.database.entities.EpisodeReleaseTable
-import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.EpisodeReleaseRepository
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.models.EpisodeRelease
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
@@ -19,11 +19,6 @@ import kotlin.uuid.Uuid
 internal class EpisodeReleaseRepositoryImpl(
     private val episodeRepository: EpisodeRepository
 ) : EpisodeReleaseRepository() {
-
-    override fun findAllByEpisodeIds(episodeIds: List<Uuid>): Map<Uuid?, List<EpisodeRelease>> =
-        EpisodeReleaseEntity.find { EpisodeReleaseTable.episode inList episodeIds }
-            .map(EpisodeReleaseEntity::toModel)
-            .groupBy(EpisodeRelease::episodeId)
 
     /**
      * Finds the release of an episode playing one audio locale of a platform video.
@@ -62,6 +57,11 @@ internal class EpisodeReleaseRepositoryImpl(
         stored.url != candidate.url
             || stored.uncensored != candidate.uncensored
             || stored.releaseDateTime != candidate.releaseDateTime
+
+    override fun findAllByEpisodeIds(episodeIds: List<Uuid>): Map<Uuid?, List<EpisodeRelease>> =
+        EpisodeReleaseEntity.find { EpisodeReleaseTable.episode inList episodeIds }
+            .map(EpisodeReleaseEntity::toModel)
+            .groupBy(EpisodeRelease::episodeId)
 
     override fun save(release: EpisodeRelease): EpisodeRelease =
         findByKey(
