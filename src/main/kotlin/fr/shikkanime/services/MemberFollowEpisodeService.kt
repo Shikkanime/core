@@ -22,6 +22,8 @@ class MemberFollowEpisodeService : AbstractService<MemberFollowEpisode, MemberFo
 
     suspend fun findAllFollowedEpisodesUUID(memberUuid: UUID) = repository.findAllFollowedEpisodesUUID(memberUuid)
 
+    suspend fun filterFollowedEpisodeUUIDs(memberUuid: UUID, list: List<UUID>) = repository.filterFollowedEpisodeUUIDs(memberUuid, list)
+
     suspend fun findAllByEpisode(episodeMapping: EpisodeMapping) =
         repository.findAllByEpisode(episodeMapping)
 
