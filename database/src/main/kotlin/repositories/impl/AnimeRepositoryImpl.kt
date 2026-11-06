@@ -92,20 +92,6 @@ internal class AnimeRepositoryImpl(
         compose(listOf(entity))
             .single()
 
-    override fun findAllModels(): List<AnimeWithChildren> =
-        compose(
-            super.findAll()
-                .toList()
-        )
-
-    override fun findPage(request: PageRequest): Page<AnimeWithChildren> {
-        val page = findAll()
-            .orderBy(AnimeTable.normalizedTitle.lowerCase() to SortOrder.ASC)
-            .paginate(request)
-
-        return page.withAggregates(compose(page.data))
-    }
-
     /**
      * Builds the predicate matching a free search term.
      *
@@ -131,40 +117,26 @@ internal class AnimeRepositoryImpl(
         return conditions.reduce { left, right -> left or right }
     }
 
-    override fun findPageBySearch(search: String, request: PageRequest): Page<AnimeWithChildren> =
-        AnimeEntity.wrapRows(
-            AnimeTable.leftJoin(AnimeLocalizationTable)
-                .select(AnimeTable.columns)
-                .withDistinct(true)
-                .where { searchCondition(search) }
+    override fun findAllModels(): List<AnimeWithChildren> =
+        compose(
+            super.findAll()
+                .toList()
         )
+
+    override fun findPage(request: PageRequest, search: String?): Page<AnimeWithChildren> {
+        val query = AnimeTable.leftJoin(AnimeLocalizationTable)
+            .select(AnimeTable.columns)
+            .withDistinct(true)
+
+        if (!search.isNullOrBlank())
+            query.where { searchCondition(search) }
+
+        val page = AnimeEntity.wrapRows(query)
             .orderBy(AnimeTable.normalizedTitle.lowerCase() to SortOrder.ASC)
             .paginate(request)
-            .let { page -> page.withAggregates(compose(page.data)) }
 
-    override fun findPageByPlatform(
-        platform: Platform,
-        search: String?,
-        request: PageRequest
-    ): Page<AnimeWithChildren> =
-        AnimeEntity.wrapRows(
-            AnimeTable.innerJoin(AnimePlatformTable)
-                .leftJoin(AnimeLocalizationTable)
-                .select(AnimeTable.columns)
-                .withDistinct(true)
-                .where {
-                    val platformCondition = AnimePlatformTable.platform eq platform
-
-                    if (search.isNullOrBlank()) {
-                        platformCondition
-                    } else {
-                        platformCondition and searchCondition(search)
-                    }
-                }
-        )
-            .orderBy(AnimeTable.normalizedTitle.lowerCase() to SortOrder.ASC)
-            .paginate(request)
-            .let { page -> page.withAggregates(compose(page.data)) }
+        return page.withAggregates(compose(page.data))
+    }
 
     override fun findModelsByIds(ids: List<Uuid>): Map<Uuid, Anime> =
         if (ids.isEmpty()) {

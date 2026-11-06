@@ -36,41 +36,12 @@ interface AnimeService {
      * Loads one page of the anime catalog with its images, localizations and platforms.
      *
      * @param request page and size to read.
+     * @param search optional title or identifier; null, empty and blank terms keep every row.
      * @return the requested page of anime aggregates.
      * @see [AnimeWithChildren]
      */
     @Transactional
-    fun findPage(request: PageRequest): Page<AnimeWithChildren>
-
-    /**
-     * Loads one page of the anime aggregates matching a search term.
-     *
-     * The match runs in the database: identity title, localized titles and identifier. An
-     * administration search never reads the catalog to filter it in memory.
-     *
-     * @param search term typed by the administrator.
-     * @param request page and size to read.
-     * @return the requested page of matching anime aggregates.
-     * @see [AnimeWithChildren]
-     */
-    @Transactional
-    fun findPageBySearch(search: String, request: PageRequest): Page<AnimeWithChildren>
-
-    /**
-     * Loads one page of the anime aggregates linked to a streaming platform.
-     *
-     * @param platform streaming platform the anime must be linked to.
-     * @param search optional term matched in the identity and the localized titles.
-     * @param request page and size to read.
-     * @return the requested page of matching anime aggregates.
-     * @see [AnimeWithChildren]
-     */
-    @Transactional
-    fun findPageByPlatform(
-        platform: Platform,
-        search: String?,
-        request: PageRequest
-    ): Page<AnimeWithChildren>
+    fun findPage(request: PageRequest, search: String? = null): Page<AnimeWithChildren>
 
     /**
      * Loads the anime rows carrying these identifiers.

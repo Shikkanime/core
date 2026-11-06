@@ -115,14 +115,6 @@
   "formatAppliedOnNextRequest": "The format applies to the next request. Refresh the list to reload the current data with it.",
   "appShortTitle": "Shikkanime",
   "navigationAnimes": "Animes",
-  "platformAnimes": "Animes on {platform}",
-  "@platformAnimes": {
-    "placeholders": {
-      "platform": {
-        "type": "String"
-      }
-    }
-  },
   "navigationEpisodes": "Episodes",
   "noEpisodeStored": "No episode stored",
   "episodeTypeName": "{value, select, EPISODE{Episode} FILM{Film} SPECIAL{Special} SUMMARY{Recap} SPIN_OFF{Spin-off} other{{value}}}",

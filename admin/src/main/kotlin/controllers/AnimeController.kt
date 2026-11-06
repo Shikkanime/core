@@ -22,7 +22,6 @@ import fr.shikkanime.ktor.pagination.PageDto
 import fr.shikkanime.ktor.pagination.PageQuery
 import fr.shikkanime.ktor.pagination.toDto
 import fr.shikkanime.models.AnimeWithChildren
-import fr.shikkanime.models.Platform
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -45,18 +44,14 @@ class AnimeController(
      *
      * @param query requested page and size, validated before the endpoint runs.
      * @param search optional term to filter the catalog with.
-     * @param platform optional streaming platform the animes must be linked to.
      * @return one page of compact anime rows, with its pagination bounds.
      * @see [AnimeService.findPage]
-     * @see [AnimeService.findPageBySearch]
-     * @see [AnimeService.findPageByPlatform]
      */
     @GetMapping
     @Operation(
         "List stored animes",
         description = "Returns one page of the stored animes with their display title, platforms and " +
-            "translation count, optionally filtered by a search term or a streaming platform, both " +
-            "matched in the database.",
+            "translation count, optionally filtered by a search term matched in the database.",
         tags = ["Animes"]
     )
     @ApiResponses([
@@ -64,15 +59,10 @@ class AnimeController(
     ])
     fun findAll(
         @Valid @ModelAttribute query: PageQuery,
-        @QueryParam(name = "search", required = false) search: String?,
-        @QueryParam(name = "platform", required = false) platform: Platform?
+        @QueryParam(name = "search", required = false) search: String?
     ): PageDto<AdminAnimeSummaryDto> {
-        val request = query.toPageRequest()
-        val animes = when {
-            platform != null -> animeService.findPageByPlatform(platform, search, request)
-            !search.isNullOrBlank() -> animeService.findPageBySearch(search, request)
-            else -> animeService.findPage(request)
-        }
+        // Keep list and search on the same paged database query
+        val animes = animeService.findPage(query.toPageRequest(), search)
 
         return animes.toDto(AnimeWithChildren::toAdminSummaryDto)
     }

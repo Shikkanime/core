@@ -223,10 +223,10 @@ class AnimeServiceTest {
             // Given
             val request = PageRequest(page = 1, size = 20)
             val page = Page(data = emptyList<AnimeWithChildren>(), page = 1, size = 20, totalElements = 0)
-            every { animeRepository.findPageBySearch("One Piece", request) } returns page
+            every { animeRepository.findPage(request, "One Piece") } returns page
 
             // When
-            val found = animeService.findPageBySearch("One Piece", request)
+            val found = animeService.findPage(request, "One Piece")
 
             // Then
             assertEquals(page, found)

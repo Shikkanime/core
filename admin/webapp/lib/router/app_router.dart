@@ -17,8 +17,7 @@ import 'package:shikkanime_admin/views/shell/admin_shell.dart';
 /// Address of the administration screens.
 ///
 /// Every screen owns a URL, so the browser history, a reload and a shared link all reach the same
-/// view: an anime is `/animes/<id>`, its episodes live under it, and a platform catalog is
-/// `/platforms/<platform>`.
+/// view: an anime is `/animes/<id>` and its episodes live under it.
 abstract final class Routes {
   static const animes = '/animes';
   static const episodes = '/episodes';
@@ -28,8 +27,6 @@ abstract final class Routes {
 
   static String episode(String animeId, String episodeId) =>
       '${anime(animeId)}/episodes/$episodeId';
-
-  static String platform(String platform) => '/platforms/$platform';
 }
 
 /// Builds the router of the administration.
@@ -83,18 +80,6 @@ GoRouter createRouter() => GoRouter(
               ],
             ),
           ],
-        ),
-        GoRoute(
-          path: '/platforms/:platform',
-          builder: (context, state) => ChangeNotifierProvider(
-            create: (context) => AnimeListViewModel(
-              context.read<AnimeRepository>(),
-              platform: state.pathParameters['platform'],
-              search: state.uri.queryParameters['search'],
-              page: int.tryParse(state.uri.queryParameters['page'] ?? '') ?? 1,
-            ),
-            child: AnimeListView(platform: state.pathParameters['platform']),
-          ),
         ),
         GoRoute(
           path: Routes.episodes,

@@ -37,43 +37,11 @@ internal abstract class AnimeRepository : EntityRepository<Uuid, AnimeEntity>(An
      * per relation: the database only returns the rows the administration displays.
      *
      * @param request page and size to read.
+     * @param search optional title or identifier; null, empty and blank terms keep every row.
      * @return the requested page of anime aggregates.
      * @see [AnimeWithChildren]
      */
-    abstract fun findPage(request: PageRequest): Page<AnimeWithChildren>
-
-    /**
-     * Loads one page of the anime aggregates matching a search term.
-     *
-     * The match runs in the database, never in the client: the identity title and every localized
-     * title are compared case-insensitively, and a term that is a UUID also matches the identifier.
-     * Filtering in memory would read the whole catalog to answer one query.
-     *
-     * @param search term typed by the administrator, matched as a substring.
-     * @param request page and size to read.
-     * @return the requested page of matching anime aggregates.
-     * @see [AnimeWithChildren]
-     */
-    abstract fun findPageBySearch(search: String, request: PageRequest): Page<AnimeWithChildren>
-
-    /**
-     * Loads one page of the anime aggregates linked to a streaming platform.
-     *
-     * The platform is applied by the database, alongside the optional search term: a platform page
-     * never reads the whole catalog to filter it in memory, and a platform without any anime simply
-     * answers an empty page.
-     *
-     * @param platform streaming platform the anime must be linked to.
-     * @param search optional term matched like [findPageBySearch], or `null` to keep every row.
-     * @param request page and size to read.
-     * @return the requested page of matching anime aggregates.
-     * @see [AnimeWithChildren]
-     */
-    abstract fun findPageByPlatform(
-        platform: Platform,
-        search: String?,
-        request: PageRequest
-    ): Page<AnimeWithChildren>
+    abstract fun findPage(request: PageRequest, search: String? = null): Page<AnimeWithChildren>
 
     /**
      * Loads the anime rows carrying these identifiers.

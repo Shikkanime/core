@@ -454,12 +454,6 @@ abstract class AppLocalizations {
   /// **'Animes'**
   String get navigationAnimes;
 
-  /// No description provided for @platformAnimes.
-  ///
-  /// In en, this message translates to:
-  /// **'Animes on {platform}'**
-  String platformAnimes(String platform);
-
   /// No description provided for @navigationEpisodes.
   ///
   /// In en, this message translates to:

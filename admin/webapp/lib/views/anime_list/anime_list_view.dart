@@ -9,13 +9,8 @@ import 'package:shikkanime_admin/viewmodels/anime_list_view_model.dart';
 import 'package:shikkanime_admin/views/anime_list/widgets/anime_list_body.dart';
 
 /// Catalog screen: the stored animes, one page at a time, searchable by title.
-///
-/// The same screen serves the whole catalog and one platform: [platform] only changes the title
-/// and the filter the ViewModel sends, the rows and the paginator are identical.
 class AnimeListView extends StatefulWidget {
-  const AnimeListView({super.key, this.platform});
-
-  final String? platform;
+  const AnimeListView({super.key});
 
   @override
   State<AnimeListView> createState() => _AnimeListViewState();
@@ -51,13 +46,7 @@ class _AnimeListViewState extends State<AnimeListView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.platform == null
-              ? localizations.appTitle
-              : localizations.platformAnimes(
-                  localizations.platformName(widget.platform!),
-                ),
-        ),
+        title: Text(localizations.appTitle),
         actions: [
           IconButton(
             onPressed: viewModel.isLoading ? null : viewModel.load,

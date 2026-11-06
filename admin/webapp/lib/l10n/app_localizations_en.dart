@@ -238,11 +238,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navigationAnimes => 'Animes';
 
   @override
-  String platformAnimes(String platform) {
-    return 'Animes on $platform';
-  }
-
-  @override
   String get navigationEpisodes => 'Episodes';
 
   @override

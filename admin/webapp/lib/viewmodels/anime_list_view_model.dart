@@ -8,18 +8,13 @@ import 'package:shikkanime_admin/viewmodels/paged_view_model.dart';
 
 /// State of the catalog screen: the page displayed and the filters it is read with.
 class AnimeListViewModel extends PagedViewModel<AnimeSummaryModel> {
-  AnimeListViewModel(
-    this._repository, {
-    this.platform,
-    String? search,
-    int page = 1,
-  }) : _query = search?.trim() ?? '',
-       super(initialPage: page);
+  AnimeListViewModel(this._repository, {String? search, int page = 1})
+    : _query = search?.trim() ?? '',
+      super(initialPage: page);
 
   static const _searchDebounce = Duration(milliseconds: 300);
 
   final AnimeRepository _repository;
-  final String? platform;
 
   Timer? _debounce;
   String _query;
@@ -47,7 +42,6 @@ class AnimeListViewModel extends PagedViewModel<AnimeSummaryModel> {
       page: page,
       size: pageSize,
       search: _query.isEmpty ? null : _query,
-      platform: platform,
     );
   }
 

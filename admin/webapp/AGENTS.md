@@ -76,6 +76,8 @@ singleton, no `setState` in a screen that has a ViewModel.
   silently misses every row the list does not hold yet.
 - The search box is therefore debounced and calls the repository again; it does not narrow a local
   copy of the previous result.
+- Streaming platforms remain displayed as source data, not as catalog search filters or navigation
+  actions. List and search use the same paged endpoint with an optional search term.
 
 ## 5. Security and data
 

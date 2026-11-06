@@ -26,21 +26,9 @@ internal class AnimeServiceImpl(
         // The public API asks the whole catalog in one read
         animeRepository.findAllModels()
 
-    override fun findPage(request: PageRequest): Page<AnimeWithChildren> =
-        // Read one page and compose its children, never the whole catalog
-        animeRepository.findPage(request)
-
-    override fun findPageBySearch(search: String, request: PageRequest): Page<AnimeWithChildren> =
-        // Let the database filter and paginate in one pass
-        animeRepository.findPageBySearch(search, request)
-
-    override fun findPageByPlatform(
-        platform: Platform,
-        search: String?,
-        request: PageRequest
-    ): Page<AnimeWithChildren> =
-        // Keep the platform filter in SQL: a platform page is a paged read, not a filtered catalog
-        animeRepository.findPageByPlatform(platform, search, request)
+    override fun findPage(request: PageRequest, search: String?): Page<AnimeWithChildren> =
+        // Filter and compose only the requested page, never the whole catalog
+        animeRepository.findPage(request, search)
 
     override fun findAllByIds(ids: List<Uuid>): Map<Uuid, Anime> =
         // Resolve a whole page of display rows in one grouped read

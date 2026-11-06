@@ -124,8 +124,8 @@ abstract class PagedViewModel<T> extends ChangeNotifier {
 }
 ```
 
-- `AnimeListViewModel extends PagedViewModel<AnimeSummary>` implements `fetch` and adds `search`
-  (debounced) and `platform`; `LatestEpisodesViewModel extends PagedViewModel<LatestEpisode>`
+- `AnimeListViewModel extends PagedViewModel<AnimeSummary>` implements `fetch` and adds a debounced
+  `search`; `LatestEpisodesViewModel extends PagedViewModel<LatestEpisode>`
   implements `fetch` and adds nothing else.
 - The base notifies once per load and owns the request token: a screen never re-implements the
   "stale answer" guard.

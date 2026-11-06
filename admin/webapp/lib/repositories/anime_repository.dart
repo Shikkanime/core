@@ -19,7 +19,6 @@ class AnimeRepository {
     int page = 1,
     int size = 20,
     String? search,
-    String? platform,
   }) async {
     final response = await _httpClient.get<Map<String, dynamic>>(
       'v1/animes',
@@ -28,7 +27,6 @@ class AnimeRepository {
         'page': page,
         'size': size,
         if (search != null && search.isNotEmpty) 'search': search,
-        if (platform != null && platform.isNotEmpty) 'platform': platform,
       },
     );
 

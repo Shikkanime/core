@@ -70,8 +70,29 @@ class AnimeRepositoryImplTest {
         }.build()
 
     @Nested
-    @DisplayName("tests for the 'findPageBySearch' method")
-    inner class FindPageBySearchTests {
+    @DisplayName("tests for the unified catalog page")
+    inner class UnifiedPageTests {
+        @Test
+        @DisplayName("should list and search through the same nullable search operation")
+        fun `should list and search through the same nullable search operation`() {
+            // Given
+            val anime = savedAnime()
+            transaction { animeRepository.save(anime.anime) }
+            // When
+            val pages = transaction {
+                listOf(null, "", "  \t ", "PIECE", "unknown title").map { search ->
+                    animeRepository.findPage(PageRequest(size = 20), search)
+                }
+            }
+
+            // Then
+            assertEquals(listOf(1L, 1L, 1L, 1L, 0L), pages.map { it.totalElements })
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the searched catalog page")
+    inner class SearchPageTests {
         @Test
         @DisplayName("should match the identity title, ignoring case and position")
         fun `should match the identity title, ignoring case and position`() {
@@ -80,7 +101,7 @@ class AnimeRepositoryImplTest {
             transaction { animeRepository.save(anime.anime) }
 
             // When
-            val found = transaction { animeRepository.findPageBySearch("PIECE", PageRequest(size = 20)) }
+            val found = transaction { animeRepository.findPage(PageRequest(size = 20), "PIECE") }
 
             // Then
             assertEquals(listOf(anime.anime.id), found.data.map { it.anime.id })
@@ -102,7 +123,7 @@ class AnimeRepositoryImplTest {
             }
 
             // When
-            val found = transaction { animeRepository.findPageBySearch("chapeau", PageRequest(size = 20)) }
+            val found = transaction { animeRepository.findPage(PageRequest(size = 20), "chapeau") }
 
             // Then
             assertEquals(listOf(anime.anime.id), found.data.map { it.anime.id })
@@ -117,9 +138,9 @@ class AnimeRepositoryImplTest {
 
             // When
             val found = transaction {
-                animeRepository.findPageBySearch(
-                    requireNotNull(anime.anime.id).toString(),
-                    PageRequest(size = 20)
+                animeRepository.findPage(
+                    PageRequest(size = 20),
+                    requireNotNull(anime.anime.id).toString()
                 )
             }
 
@@ -136,7 +157,7 @@ class AnimeRepositoryImplTest {
 
             // When
             val found = transaction {
-                animeRepository.findPageBySearch("nothing matches this", PageRequest(size = 20))
+                animeRepository.findPage(PageRequest(size = 20), "nothing matches this")
             }
 
             // Then
@@ -162,7 +183,7 @@ class AnimeRepositoryImplTest {
 
             // When
             val found = transaction {
-                animeRepository.findPageBySearch("one piece", PageRequest(size = 20))
+                animeRepository.findPage(PageRequest(size = 20), "one piece")
             }
 
             // Then
@@ -197,7 +218,7 @@ class AnimeRepositoryImplTest {
 
             // When
             val found = transaction {
-                animeRepository.findPageBySearch("One Piece", PageRequest(page = 2, size = 2))
+                animeRepository.findPage(PageRequest(page = 2, size = 2), "One Piece")
             }
 
             // Then
@@ -410,11 +431,11 @@ class AnimeRepositoryImplTest {
     }
 
     @Nested
-    @DisplayName("tests for the 'findPageByPlatform' method")
-    inner class FindPageByPlatformTests {
+    @DisplayName("tests for the catalog across platforms")
+    inner class CatalogPlatformsTests {
         @Test
-        @DisplayName("should keep only the animes linked to the platform")
-        fun `should keep only the animes linked to the platform`() {
+        @DisplayName("should list animes from every platform")
+        fun `should list animes from every platform`() {
             // Given
             val crunchyrollAnime = savedAnime()
             val netflixAnime = AnimeWithChildrenMockKBuilder {
@@ -441,12 +462,12 @@ class AnimeRepositoryImplTest {
 
             // When
             val page = transaction {
-                animeRepository.findPageByPlatform(Platform.CRUNCHYROLL, null, PageRequest(1, 20))
+                animeRepository.findPage(PageRequest(1, 20))
             }
 
             // Then
-            assertEquals(1, page.data.size)
-            assertEquals("One Piece", page.data.single().anime.normalizedTitle)
+            assertEquals(2, page.data.size)
+            assertEquals(listOf("Frieren", "One Piece"), page.data.map { it.anime.normalizedTitle })
         }
     }
 }

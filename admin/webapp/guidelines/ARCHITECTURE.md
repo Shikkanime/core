@@ -43,7 +43,7 @@ lib/
 ## Navigation
 
 `go_router` owns the URL: `/animes`, `/animes/<id>`, `/animes/<id>/episodes/<id>`,
-`/platforms/<platform>`, `/episodes`, `/settings`. Screens navigate with `context.go(...)`, never
+`/episodes`, `/settings`. Screens navigate with `context.go(...)`, never
 `Navigator.push`, so the browser history, a reload and a shared link reach the same view. The list
 screens read their filters from the query string; the detail screens take their identifier from the
 path and use `extra` only as a placeholder title while the data loads.
