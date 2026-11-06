@@ -15,6 +15,11 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
+      - VALKEY_HOST=valkey
+      - VALKEY_PORT=6379
+    depends_on:
+      valkey:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
       interval: 10s
@@ -68,6 +73,23 @@ services:
       args:
         GITHUB_ACTOR: ${GITHUB_ACTOR:-}
         GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    environment:
+      - VALKEY_HOST=valkey
+      - VALKEY_PORT=6379
+    depends_on:
+      valkey:
+        condition: service_healthy
+
+  # Cache shared by the API readers and the job writers: a bucket version increments here, so a
+  # write made by one process is visible to all of them without a wildcard scan.
+  valkey:
+    image: valkey/valkey:8-alpine
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   # Schema provisioner on its own, for a deployment that migrates before rolling out an
   # application image: `docker compose run --rm database`.

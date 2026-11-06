@@ -8,6 +8,7 @@ import fr.shikkanime.jobs.platforms.PlatformEpisode
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Platform
 import fr.shikkanime.models.canonicalTitle
+import kotlinx.coroutines.runBlocking
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -32,7 +33,8 @@ import kotlin.uuid.Uuid
 @Single
 internal class HarvestIngestionService(
     private val animeService: AnimeService,
-    private val episodeService: EpisodeService
+    private val episodeService: EpisodeService,
+    private val catalogCacheInvalidator: CatalogCacheInvalidator
 ) {
     private val logger = LoggerFactory.getLogger()
 
@@ -50,6 +52,7 @@ internal class HarvestIngestionService(
      * @see [SmartResponse]
      * @see [AnimeService.save]
      * @see [EpisodeService.save]
+     * @see [CatalogCacheInvalidator]
      */
     fun saveAll(harvest: List<SmartResponse<List<PlatformEpisode>>>): Int {
         // A quiet harvest or one carrying no episode has nothing to persist, so no read either
@@ -79,7 +82,26 @@ internal class HarvestIngestionService(
             savedCount++
         }
 
+        // The writes are committed: the API must not keep serving the previous catalog
+        if (savedCount > 0)
+            invalidateCatalog()
+
         return savedCount
+    }
+
+    /**
+     * Drops the catalog entries served by the API after this harvest wrote the database.
+     *
+     * The invalidation is best-effort: the writes are committed, so a cache failure is logged and
+     * the TTL of the cached entries bounds the staleness.
+     *
+     * @return nothing; the two bucket versions are incremented in Valkey.
+     * @see [CatalogCacheInvalidator.invalidate]
+     */
+    private fun invalidateCatalog() {
+        runCatching {
+            runBlocking { catalogCacheInvalidator.invalidate() }
+        }.onFailure { logger.warning("Could not invalidate the catalog cache: ${it.message}") }
     }
 
     /**

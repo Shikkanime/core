@@ -30,7 +30,7 @@ private val logger = LoggerFactory.getLogger("Application")
 @ComponentScan("fr.shikkanime.jobs")
 internal class AppModule
 
-@KoinApplication(modules = [AppModule::class, DatabaseModule::class])
+@KoinApplication(modules = [AppModule::class, DatabaseModule::class, CacheModule::class])
 internal class MyApp
 
 @Suppress("unused")

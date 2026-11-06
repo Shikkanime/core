@@ -19,7 +19,7 @@ import org.koin.plugin.module.dsl.startKoin
 @ComponentScan("fr.shikkanime.api")
 class AppModule
 
-@KoinApplication(modules = [AppModule::class, DatabaseModule::class])
+@KoinApplication(modules = [AppModule::class, DatabaseModule::class, CacheModule::class])
 class MyApp
 
 /**

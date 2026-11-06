@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.shikkanimeFrameworkCore)
     implementation(libs.shikkanimeFrameworkKoin)
     implementation(libs.shikkanimeFrameworkKtor)
+    implementation(libs.shikkanimeFrameworkCache)
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.testEcosystem)

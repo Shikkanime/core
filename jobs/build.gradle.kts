@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.shikkanimeFrameworkCore)
     implementation(libs.shikkanimeFrameworkKoin)
     implementation(libs.shikkanimeFrameworkKtor)
+    implementation(libs.shikkanimeFrameworkCache)
     implementation(libs.quartz)
     implementation(kotlin("reflect"))
 
