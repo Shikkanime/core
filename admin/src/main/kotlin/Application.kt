@@ -28,6 +28,7 @@ private val logger = LoggerFactory.getLogger()
 
 fun main() {
     logger.info("Starting Admin Application...")
+    requireWebApp()
     DatabaseManager.connect()
 
     val koin = startKoin<MyApp>().koin
@@ -42,6 +43,9 @@ fun main() {
 
         routing {
             configureSwaggerRoute("Admin API", "1.0-SNAPSHOT")
+
+            // The administration interface is served by the same origin as its API
+            webApp()
 
             ControllerBinder.register(
                 this@routing,

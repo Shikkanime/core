@@ -1,5 +1,7 @@
 package fr.shikkanime.database.services
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.exposed.Transactional
 import fr.shikkanime.exposed.TransactionalProxy
 import fr.shikkanime.models.Episode
@@ -30,6 +32,29 @@ interface EpisodeService {
      */
     @Transactional
     fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren>
+
+    /**
+     * Loads one page of the episodes of an anime with their images, localizations and releases.
+     *
+     * @param animeId identifier of the anime owning the episodes.
+     * @param request page and size to read.
+     * @return the requested page of episode aggregates, in broadcast order.
+     * @see [EpisodeWithChildren]
+     */
+    @Transactional
+    fun findPageByAnimeId(animeId: Uuid, request: PageRequest): Page<EpisodeWithChildren>
+
+    /**
+     * Loads one page of every episode, newest release first.
+     *
+     * The order follows the broadcast date of the episode, not the date of its platform releases.
+     *
+     * @param request page and size to read.
+     * @return the requested page of episode aggregates, newest release first.
+     * @see [EpisodeWithChildren]
+     */
+    @Transactional
+    fun findPageByReleaseDate(request: PageRequest): Page<EpisodeWithChildren>
 
     /**
      * Loads an episode with its images, localizations and releases.

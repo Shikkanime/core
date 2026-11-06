@@ -1,6 +1,8 @@
 package fr.shikkanime.database.services
 
 import fr.shikkanime.core.TimeUtils
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.builders.impl.AnimeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
@@ -194,6 +196,40 @@ class AnimeServiceTest {
             // Then
             assertEquals(root.id, storedLocalization.captured.animeId)
             assertEquals(root.id, storedPlatform.captured.animeId)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the paged reads")
+    inner class FindPageTests {
+        @Test
+        @DisplayName("should delegate the requested page to the repository")
+        fun `should delegate the requested page to the repository`() {
+            // Given
+            val request = PageRequest(page = 2, size = 10)
+            val page = Page(data = emptyList<AnimeWithChildren>(), page = 2, size = 10, totalElements = 0)
+            every { animeRepository.findPage(request) } returns page
+
+            // When
+            val found = animeService.findPage(request)
+
+            // Then
+            assertEquals(page, found)
+        }
+
+        @Test
+        @DisplayName("should delegate the searched page to the repository")
+        fun `should delegate the searched page to the repository`() {
+            // Given
+            val request = PageRequest(page = 1, size = 20)
+            val page = Page(data = emptyList<AnimeWithChildren>(), page = 1, size = 20, totalElements = 0)
+            every { animeRepository.findPage(request, "One Piece") } returns page
+
+            // When
+            val found = animeService.findPage(request, "One Piece")
+
+            // Then
+            assertEquals(page, found)
         }
     }
 

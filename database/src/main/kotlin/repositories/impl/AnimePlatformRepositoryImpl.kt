@@ -18,11 +18,6 @@ internal class AnimePlatformRepositoryImpl(
     private val animeRepository: AnimeRepository
 ) : AnimePlatformRepository() {
 
-    override fun findAllByAnimeIds(animeIds: List<Uuid>): Map<Uuid?, List<AnimePlatform>> =
-        AnimePlatformEntity.find { AnimePlatformTable.anime inList animeIds }
-            .map(AnimePlatformEntity::toModel)
-            .groupBy(AnimePlatform::animeId)
-
     /**
      * Finds one platform source link of an anime by its platform and platform identifier.
      *
@@ -44,6 +39,11 @@ internal class AnimePlatformRepositoryImpl(
         }
             .limit(1)
             .firstOrNull()
+
+    override fun findAllByAnimeIds(animeIds: List<Uuid>): Map<Uuid?, List<AnimePlatform>> =
+        AnimePlatformEntity.find { AnimePlatformTable.anime inList animeIds }
+            .map(AnimePlatformEntity::toModel)
+            .groupBy(AnimePlatform::animeId)
 
     override fun save(animePlatform: AnimePlatform): AnimePlatform =
         findByIdPlatformAndPlatformId(

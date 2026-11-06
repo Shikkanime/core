@@ -28,6 +28,14 @@ All AI agents and developers must adhere to these directives when implementing o
   replaced by one query resolving the target directly — joining on a foreign key (`innerJoin`) or
   loading the whole group once through a repository read returning a `Map` of owner to rows
   (`findAllByEntityIds`).
+- **Never read a collection to display one page of it**: an administration list takes a
+  `PageRequest` and calls `SizedIterable.paginate`, which counts the query once and then reads only
+  the requested window. A search is a SQL predicate on the same paged query, never a post-filter of
+  rows already loaded. The response carries `totalPages` and `totalElements` so the client does not
+  count what it did not read.
+- **List and search share one paged operation**: controllers and services forward an optional search
+  term to `findPage`; repositories add the SQL predicate only for a non-blank term. Do not maintain
+  separate list/search methods or filter the catalog by streaming platform.
 - **Keep retry mechanisms bounded**: Exponential backoff with sensible ceilings to prevent thundering herd issues.
 
 ---

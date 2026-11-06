@@ -1,10 +1,13 @@
 package fr.shikkanime.database.services.impl
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.repositories.AnimeLocalizationRepository
 import fr.shikkanime.database.repositories.AnimePlatformRepository
 import fr.shikkanime.database.repositories.AnimeRepository
 import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.database.services.AnimeService
+import fr.shikkanime.models.Anime
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Platform
 import org.koin.core.annotation.Single
@@ -20,8 +23,16 @@ internal class AnimeServiceImpl(
 ) : AnimeService {
 
     override fun findAll(): List<AnimeWithChildren> =
-        // Load every aggregate with its texts, sources and artwork
+        // The public API asks the whole catalog in one read
         animeRepository.findAllModels()
+
+    override fun findPage(request: PageRequest, search: String?): Page<AnimeWithChildren> =
+        // Filter and compose only the requested page, never the whole catalog
+        animeRepository.findPage(request, search)
+
+    override fun findAllByIds(ids: List<Uuid>): Map<Uuid, Anime> =
+        // Resolve a whole page of display rows in one grouped read
+        animeRepository.findModelsByIds(ids)
 
     override fun findAllByNormalizedTitles(titles: List<String>): Map<String, AnimeWithChildren> =
         // Resolve in one read the animes already stored under the given normalized titles

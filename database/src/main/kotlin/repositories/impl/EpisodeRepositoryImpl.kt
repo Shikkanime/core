@@ -1,6 +1,8 @@
 package fr.shikkanime.database.repositories.impl
 
 import fr.shikkanime.core.TimeUtils
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.entities.EpisodeEntity
 import fr.shikkanime.database.entities.EpisodeReleaseTable
 import fr.shikkanime.database.entities.EpisodeTable
@@ -9,6 +11,7 @@ import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
 import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.ImageRepository
+import fr.shikkanime.exposed.pagination.paginate
 import fr.shikkanime.models.Episode
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.EpisodeWithChildren
@@ -16,7 +19,7 @@ import fr.shikkanime.models.Platform
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.select
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -28,16 +31,6 @@ internal class EpisodeRepositoryImpl(
     private val localizationRepository: Lazy<EpisodeLocalizationRepository>,
     private val releaseRepository: Lazy<EpisodeReleaseRepository>
 ) : EpisodeRepository() {
-
-    override fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren> =
-        compose(
-            EpisodeEntity.find { EpisodeTable.anime eq animeId }
-                .orderBy(
-                    EpisodeTable.season to SortOrder.ASC,
-                    EpisodeTable.number to SortOrder.ASC
-                )
-                .toList()
-        )
 
     /**
      * Composes the aggregate view of the given rows from one batch read per relation.
@@ -85,6 +78,55 @@ internal class EpisodeRepositoryImpl(
         compose(listOf(entity))
             .single()
 
+    /**
+     * Tells whether a stored episode carries different metadata than the given one.
+     *
+     * @param stored episode as currently stored in database.
+     * @param candidate episode to persist.
+     * @return `true` when one metadata field of the episode changed.
+     * @see [Episode]
+     */
+    private fun hasChanged(stored: EpisodeEntity, candidate: Episode): Boolean =
+        stored.season != candidate.season
+            || stored.episodeType != candidate.episodeType
+            || stored.number != candidate.number
+            || stored.releaseDateTime != candidate.releaseDateTime
+            || stored.duration != candidate.duration
+
+    override fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren> =
+        compose(
+            EpisodeEntity.find { EpisodeTable.anime eq animeId }
+                .orderBy(
+                    EpisodeTable.season to SortOrder.ASC,
+                    EpisodeTable.episodeType to SortOrder.ASC,
+                    EpisodeTable.number to SortOrder.ASC
+                )
+                .toList()
+        )
+
+    override fun findPageByAnimeId(animeId: Uuid, request: PageRequest): Page<EpisodeWithChildren> {
+        val page = EpisodeEntity.find { EpisodeTable.anime eq animeId }
+            .orderBy(
+                EpisodeTable.season to SortOrder.ASC,
+                EpisodeTable.episodeType to SortOrder.ASC,
+                EpisodeTable.number to SortOrder.ASC
+            )
+            .paginate(request)
+
+        return Page(compose(page.data), page.page, page.size, page.totalElements)
+    }
+
+    override fun findPageByReleaseDate(request: PageRequest): Page<EpisodeWithChildren> {
+        val page = EpisodeEntity.all()
+            .orderBy(
+                EpisodeTable.releaseDateTime to SortOrder.DESC,
+                EpisodeTable.id to SortOrder.ASC
+            )
+            .paginate(request)
+
+        return Page(compose(page.data), page.page, page.size, page.totalElements)
+    }
+
     override fun findModelById(id: Uuid): EpisodeWithChildren? =
         findById(id)
             ?.let(::composeOne)
@@ -111,7 +153,7 @@ internal class EpisodeRepositoryImpl(
     ): EpisodeWithChildren? =
         EpisodeEntity.wrapRows(
             EpisodeTable.innerJoin(EpisodeReleaseTable)
-                .selectAll()
+                .select(EpisodeTable.columns)
                 .where {
                     (EpisodeReleaseTable.platform eq platform) and
                         (EpisodeReleaseTable.platformId eq platformId)
@@ -120,21 +162,6 @@ internal class EpisodeRepositoryImpl(
         )
             .firstOrNull()
             ?.let(::composeOne)
-
-    /**
-     * Tells whether a stored episode carries different metadata than the given one.
-     *
-     * @param stored episode as currently stored in database.
-     * @param candidate episode to persist.
-     * @return `true` when one metadata field of the episode changed.
-     * @see [Episode]
-     */
-    private fun hasChanged(stored: EpisodeEntity, candidate: Episode): Boolean =
-        stored.season != candidate.season
-            || stored.episodeType != candidate.episodeType
-            || stored.number != candidate.number
-            || stored.releaseDateTime != candidate.releaseDateTime
-            || stored.duration != candidate.duration
 
     override fun save(episode: Episode): Episode =
         episode.id?.let(::findById)

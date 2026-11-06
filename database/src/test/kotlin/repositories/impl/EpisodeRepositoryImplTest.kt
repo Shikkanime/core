@@ -1,6 +1,7 @@
 package fr.shikkanime.database.repositories.impl
 
 import fr.shikkanime.core.TimeUtils
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.builders.impl.EpisodeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
@@ -271,6 +272,31 @@ class EpisodeRepositoryImplTest {
             // Then
             assertEquals(listOf(1, 2), found.map { it.episode.number })
         }
+
+        @Test
+        @DisplayName("should return the requested page and the total number of episodes")
+        fun `should return the requested page and the total number of episodes`() {
+            // Given
+            val anime = savedAnime()
+            val animeId = requireNotNull(anime.id)
+            transaction {
+                (1..3).forEach { number ->
+                    episodeRepository.save(episodeFixture(animeId, number = number).episode)
+                }
+            }
+
+            // When
+            val found = transaction {
+                episodeRepository.findPageByAnimeId(animeId, PageRequest(page = 2, size = 2))
+            }
+
+            // Then
+            assertEquals(listOf(3), found.data.map { it.episode.number })
+            assertEquals(2, found.page)
+            assertEquals(2, found.size)
+            assertEquals(3L, found.totalElements)
+            assertEquals(2, found.totalPages)
+        }
     }
 
     @Nested
@@ -365,6 +391,38 @@ class EpisodeRepositoryImplTest {
 
             // Then
             assertEquals(episode.episode.id, assertNotNull(found).episode.id)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'findPageByReleaseDate' method")
+    inner class FindPageByReleaseDateTests {
+        @Test
+        @DisplayName("should order every episode by its own release date, newest first")
+        fun `should order every episode by its own release date, newest first`() {
+            // Given
+            val anime = savedAnime()
+            val animeId = requireNotNull(anime.id)
+            val newest = LocalDateTime(2026, 11, 2, 18, 0)
+            val older = LocalDateTime(2026, 10, 29, 18, 0)
+            val oldest = LocalDateTime(2026, 10, 1, 18, 0)
+
+            transaction {
+                episodeRepository.save(episodeFixture(animeId, number = 1, releaseDateTime = older).episode)
+                episodeRepository.save(episodeFixture(animeId, number = 2, releaseDateTime = newest).episode)
+                episodeRepository.save(episodeFixture(animeId, number = 3, releaseDateTime = oldest).episode)
+            }
+
+            // When
+            val page = transaction { episodeRepository.findPageByReleaseDate(PageRequest(1, 20)) }
+
+            // Then
+            assertEquals(3, page.data.size)
+            assertEquals(3L, page.totalElements)
+            assertEquals(
+                listOf(newest, older, oldest),
+                page.data.map { it.episode.releaseDateTime }
+            )
         }
     }
 }

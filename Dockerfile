@@ -15,6 +15,11 @@ COPY api ./api
 COPY site ./site
 COPY admin ./admin
 COPY jobs ./jobs
+# The compiled interface, packaged as the `webapp` resource of the admin module. The `Admin web app`
+# CI job builds it from the Flutter stable channel: no image carries the SDK, and the artifact is
+# architecture-independent, so both platform builds reuse the same one.
+COPY admin/webapp-dist /opt/webapp
+ENV WEB_APP_DIST=/opt/webapp
 RUN chmod +x gradlew
 
 # The build resolves the private framework snapshot from GitHub Packages.

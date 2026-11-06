@@ -1,5 +1,7 @@
 package fr.shikkanime.database.repositories
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.entities.EpisodeEntity
 import fr.shikkanime.exposed.repositories.EntityRepository
 import fr.shikkanime.models.Episode
@@ -29,6 +31,34 @@ internal abstract class EpisodeRepository : EntityRepository<Uuid, EpisodeEntity
      * @see [EpisodeWithChildren]
      */
     abstract fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren>
+
+    /**
+     * Loads one page of the episodes of an anime with their children.
+     *
+     * The episodes are ordered by season, type then number: the identity of an episode is unique,
+     * so two pages never overlap or skip a row. The page is composed with one batch read per
+     * relation, which keeps a catalog of tens of thousands of episodes cheap to browse.
+     *
+     * @param animeId identifier of the anime owning the episodes.
+     * @param request page and size to read.
+     * @return the requested page of episode aggregates.
+     * @see [EpisodeWithChildren]
+     */
+    abstract fun findPageByAnimeId(animeId: Uuid, request: PageRequest): Page<EpisodeWithChildren>
+
+    /**
+     * Loads one page of every episode, newest release first.
+     *
+     * The sort runs in the database on the broadcast date of the episode itself - never on the
+     * date of its platform releases - so one page is read instead of the table being ordered in
+     * memory. The date and the identifier order the rows: two episodes released at the same
+     * instant never overlap between pages.
+     *
+     * @param request page and size to read.
+     * @return the requested page of episode aggregates, newest release first.
+     * @see [EpisodeWithChildren]
+     */
+    abstract fun findPageByReleaseDate(request: PageRequest): Page<EpisodeWithChildren>
 
     /**
      * Loads one episode aggregate by its identifier.

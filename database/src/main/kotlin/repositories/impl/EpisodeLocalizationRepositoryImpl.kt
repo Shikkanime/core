@@ -3,8 +3,8 @@ package fr.shikkanime.database.repositories.impl
 import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.database.entities.EpisodeLocalizationEntity
 import fr.shikkanime.database.entities.EpisodeLocalizationTable
-import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
+import fr.shikkanime.database.repositories.EpisodeRepository
 import fr.shikkanime.models.EpisodeLocalization
 import fr.shikkanime.models.Locale
 import org.jetbrains.exposed.v1.core.and
@@ -18,11 +18,6 @@ import kotlin.uuid.Uuid
 internal class EpisodeLocalizationRepositoryImpl(
     private val episodeRepository: EpisodeRepository
 ) : EpisodeLocalizationRepository() {
-
-    override fun findAllByEpisodeIds(episodeIds: List<Uuid>): Map<Uuid?, List<EpisodeLocalization>> =
-        EpisodeLocalizationEntity.find { EpisodeLocalizationTable.episode inList episodeIds }
-            .map(EpisodeLocalizationEntity::toModel)
-            .groupBy(EpisodeLocalization::episodeId)
 
     /**
      * Finds one localization row of an episode by its locale.
@@ -39,6 +34,11 @@ internal class EpisodeLocalizationRepositoryImpl(
         }
             .limit(1)
             .firstOrNull()
+
+    override fun findAllByEpisodeIds(episodeIds: List<Uuid>): Map<Uuid?, List<EpisodeLocalization>> =
+        EpisodeLocalizationEntity.find { EpisodeLocalizationTable.episode inList episodeIds }
+            .map(EpisodeLocalizationEntity::toModel)
+            .groupBy(EpisodeLocalization::episodeId)
 
     override fun save(localization: EpisodeLocalization): EpisodeLocalization =
         findByIdAndLocale(requireNotNull(localization.episodeId), localization.locale)

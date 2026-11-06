@@ -29,6 +29,18 @@ internal class AnimeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 
 Repositories encapsulate queries and entity mapping.
 
+- **Order the class by kind: constructor and properties, then every non-override helper, then the
+  overrides.** A reader meets the query/mapping helpers before the public operations that call them;
+  a private helper buried between two overrides hides the shape of the read. This applies to every
+  repository of the project, not only the one being edited.
+- **A filter on a joined child table selects the parent columns, distinct, through `wrapRows`:**
+  `ParentTable.leftJoin(ChildTable).select(ParentTable.columns).withDistinct(true)`. `selectAll()`
+  repeats the child columns in the row, and no `distinct` returns one parent per matching child. Use
+  `leftJoin` when the parent may legitimately have no child row: an `innerJoin` silently drops it
+  even when the parent's own column matches the search.
+- **Order a paged read explicitly.** A page without a deterministic `ORDER BY` can repeat or skip a
+  row between two requests. Order by the identity column, or by `lowerCase()` when the display is
+  case-insensitive, and keep the same order for every page of the same query.
 - **Chain the mapping directly on the lookup:** `findById(id)?.toModel(...)` — never wrap a mapping
   in `?.let { entity -> entity.toModel(...) }` and never hold it in an intermediate variable. The
   lookup and the mapping read as one chain. The single accepted wrapper shape is a mapping that

@@ -22,6 +22,10 @@ A DTO field has the **same type as its model field**: a `Uuid` stays a `Uuid`, a
 DTO with the equivalent types. No identifier is stringified - the transport carries the domain types.
 
 - **One DTO per file.** A file never holds several DTOs: `AnimeDto.kt` carries `AnimeDto` only.
+- **Group the DTO package by entity.** `dtos/` is split into `anime/`, `episode/`, `image/`,
+  `localization/`, `requests/`; a DTO lives in the package of the entity it describes, not in one
+  flat list. Shared children (`AdminImageDto`, `AdminLocalizationDto`) sit in their own package and
+  are imported by the parent DTOs, so the tree tells which aggregate owns which payload.
 - **One DTO for both transports.** REST controllers and GraphQL queries return the very same DTO
   type: a GraphQL-specific duplicate DTO is forbidden. GraphQL queries live in
   `graphql/queries/`, DTOs stay in `dtos/`.

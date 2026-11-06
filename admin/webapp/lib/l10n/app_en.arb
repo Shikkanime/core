@@ -1,0 +1,144 @@
+{
+  "@@locale": "en",
+  "appTitle": "Shikkanime — Administration",
+  "searchAnime": "Search a title or an identifier...",
+  "refresh": "Refresh",
+  "retry": "Retry",
+  "loading": "Loading...",
+  "loadError": "Unable to load the data",
+  "noAnime": "No anime stored",
+  "noResult": "No anime matches this search",
+  "noEpisode": "No episode stored for this anime",
+  "episodes": "Episodes",
+  "platforms": "Platforms",
+  "localizations": "Translations",
+  "details": "Details",
+  "episodeDetails": "Episode details",
+  "identifier": "Identifier",
+  "animeIdentifier": "Anime identifier",
+  "normalizedTitle": "Normalized title",
+  "createdAt": "Created",
+  "updatedAt": "Updated",
+  "artwork": "Artwork",
+  "noArtwork": "No artwork",
+  "artworkNotDisplayed": "Artwork URLs are listed but not displayed: the image host does not allow requests from this origin (CORS).",
+  "releaseDate": "Release date",
+  "duration": "Duration",
+  "season": "Season",
+  "number": "Number",
+  "episodeType": "Type",
+  "audioLocale": "Audio",
+  "uncensored": "Uncensored",
+  "platformId": "Platform identifier",
+  "url": "URL",
+  "language": "Language",
+  "title": "Title",
+  "description": "Description",
+  "noDescription": "No description",
+  "page": "Page",
+  "ofTotal": "of {total}",
+  "@ofTotal": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "goToPage": "Go to page",
+  "firstPage": "First page",
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "lastPage": "Last page",
+  "episodeIdentity": "Season {season} • {type} {number}",
+  "@episodeIdentity": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      },
+      "type": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{minutes} min",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "animeCount": "{count, plural, =0{No anime} =1{1 anime} other{{count} animes}}",
+  "@animeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "episodeCount": "{count, plural, =0{No episode} =1{1 episode} other{{count} episodes}}",
+  "@episodeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "releaseCount": "{count, plural, =0{No release} =1{1 release} other{{count} releases}}",
+  "@releaseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "localizationCount": "{count, plural, =0{No translation} =1{1 translation} other{{count} translations}}",
+  "@localizationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings": "Settings",
+  "requestFormat": "Request format",
+  "requestFormatDescription": "The format used by every administration API request. JSON is the default; Protobuf and CBOR send less data over the network.",
+  "formatJson": "JSON",
+  "formatProtobuf": "Protobuf",
+  "formatCbor": "CBOR",
+  "formatJsonDescription": "Readable text. The default, and the easiest format to inspect.",
+  "formatProtobufDescription": "Compact binary format. The smallest payload of the three.",
+  "formatCborDescription": "Compact binary format. Smaller than JSON and self-describing.",
+  "formatAppliedOnNextRequest": "The format applies to the next request. Refresh the list to reload the current data with it.",
+  "appShortTitle": "Shikkanime",
+  "navigationAnimes": "Animes",
+  "navigationEpisodes": "Episodes",
+  "noEpisodeStored": "No episode stored",
+  "episodeTypeName": "{value, select, EPISODE{Episode} FILM{Film} SPECIAL{Special} SUMMARY{Recap} SPIN_OFF{Spin-off} other{{value}}}",
+  "@episodeTypeName": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "platformName": "{value, select, ANIMATION_DIGITAL_NETWORK{ADN} CRUNCHYROLL{Crunchyroll} DISNEY_PLUS{Disney+} NETFLIX{Netflix} PRIME_VIDEO{Prime Video} other{{value}}}",
+  "@platformName": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "imageTypeName": "{value, select, BANNER{Banner} THUMBNAIL{Thumbnail} TITLE{Title} other{{value}}}",
+  "@imageTypeName": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -33,6 +33,9 @@ internal object EpisodeTable : ShikkTable(EPISODE_TABLE_NAME) {
             episodeType,
             number
         )
+
+        // The recent release list reads the newest rows of the table: keep its sort on an index
+        index("${EPISODE_TABLE_NAME}_release_date_time", false, releaseDateTime)
     }
 }
 

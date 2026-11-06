@@ -1,5 +1,7 @@
 package fr.shikkanime.database.services.impl
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
 import fr.shikkanime.database.repositories.EpisodeReleaseRepository
 import fr.shikkanime.database.repositories.EpisodeRepository
@@ -23,6 +25,14 @@ internal class EpisodeServiceImpl(
     override fun findAllByAnimeId(animeId: Uuid): List<EpisodeWithChildren> =
         // Load every episode of the anime with its texts, releases and artwork
         episodeRepository.findAllByAnimeId(animeId)
+
+    override fun findPageByAnimeId(animeId: Uuid, request: PageRequest): Page<EpisodeWithChildren> =
+        // Read one page in broadcast order, never the whole episode catalog
+        episodeRepository.findPageByAnimeId(animeId, request)
+
+    override fun findPageByReleaseDate(request: PageRequest): Page<EpisodeWithChildren> =
+        // Let the database order the whole table and return one page of it
+        episodeRepository.findPageByReleaseDate(request)
 
     override fun findById(id: Uuid): EpisodeWithChildren? =
         // Load the aggregate with its localized texts, releases and artwork

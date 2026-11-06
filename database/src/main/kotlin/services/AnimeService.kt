@@ -1,5 +1,7 @@
 package fr.shikkanime.database.services
 
+import fr.shikkanime.core.pagination.Page
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.exposed.Transactional
 import fr.shikkanime.exposed.TransactionalProxy
 import fr.shikkanime.models.Anime
@@ -22,11 +24,34 @@ interface AnimeService {
     /**
      * Loads every anime of the database with its images, localizations and platforms.
      *
+     * The public API still serves the whole catalog; the administration uses [findPage].
+     *
      * @return every stored anime aggregate, in no particular order.
      * @see [AnimeWithChildren]
      */
     @Transactional
     fun findAll(): List<AnimeWithChildren>
+
+    /**
+     * Loads one page of the anime catalog with its images, localizations and platforms.
+     *
+     * @param request page and size to read.
+     * @param search optional title or identifier; null, empty and blank terms keep every row.
+     * @return the requested page of anime aggregates.
+     * @see [AnimeWithChildren]
+     */
+    @Transactional
+    fun findPage(request: PageRequest, search: String? = null): Page<AnimeWithChildren>
+
+    /**
+     * Loads the anime rows carrying these identifiers.
+     *
+     * @param ids identifiers of the animes to read.
+     * @return the matching anime rows indexed by identifier.
+     * @see [Anime]
+     */
+    @Transactional
+    fun findAllByIds(ids: List<Uuid>): Map<Uuid, Anime>
 
     /**
      * Loads the anime aggregates carrying these normalized titles.
