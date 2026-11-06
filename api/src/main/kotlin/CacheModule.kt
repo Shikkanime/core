@@ -11,7 +11,8 @@ import org.koin.core.annotation.Single
  * `VALKEY_PORT`.
  *
  * The defaults target a Valkey listening on `localhost:6379`; the Docker Compose stack sets
- * `VALKEY_HOST=valkey` and a deployment overrides both variables.
+ * `VALKEY_HOST=valkey` and a deployment overrides both variables. The API fails fast when Valkey
+ * is unreachable, because the cache is on its read path.
  *
  * @see [Cache]
  */

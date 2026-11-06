@@ -26,8 +26,8 @@ unreachable and expire with their TTL.
   commit, so a writer invalidates once the save call returned. Invalidating before the commit lets a
   reader reload the pre-commit state under the new version, and that stale entry is then served until
   the TTL.
-- **Invalidate once per write workflow**, not per row: the harvest writes every anime and episode,
-  then invalidates the two buckets at the end.
+- **Invalidate once per write workflow**, not per row: `HarvestIngestionService` writes every anime
+  and episode, then invalidates the two buckets at the end.
 - **Bump the schema suffix** of `CacheBuckets` (`anime:v1` → `anime:v2`) when a cached DTO changes
   shape, so a rolling deployment never decodes an entry written by the previous build.
 - **A failing invalidation is logged, not propagated.** The write is already committed; failing the

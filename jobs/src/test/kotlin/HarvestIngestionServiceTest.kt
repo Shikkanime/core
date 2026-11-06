@@ -19,6 +19,7 @@ import fr.shikkanime.models.EpisodeWithChildren
 import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.verify
 import io.mockk.impl.annotations.InjectMockKs
@@ -39,6 +40,7 @@ import kotlin.uuid.Uuid
 class HarvestIngestionServiceTest {
     @MockK private lateinit var animeService: AnimeService
     @MockK private lateinit var episodeService: EpisodeService
+    @MockK private lateinit var catalogCacheInvalidator: CatalogCacheInvalidator
 
     @InjectMockKs private lateinit var ingestionService: HarvestIngestionService
 
@@ -412,6 +414,38 @@ class HarvestIngestionServiceTest {
             assertEquals(0, saved)
             verify(exactly = 0) { animeService.findAllByNormalizedTitles(any()) }
             verify(exactly = 0) { animeService.save(any()) }
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the catalog cache invalidation")
+    inner class CacheInvalidationTests {
+        @Test
+        @DisplayName("should invalidate the catalog buckets when an anime is saved")
+        fun `should invalidate the catalog buckets when an anime is saved`() {
+            // Given
+            every { animeService.findAllByNormalizedTitles(any()) } returns emptyMap()
+            every { animeService.save(any()) } answers { stored(firstArg()) }
+            every { episodeService.save(any()) } returns EpisodeWithChildrenMockKBuilder().build()
+
+            // When
+            ingestionService.saveAll(listOf(harvest(true, harvestedEpisode(harvestedAnime()))))
+
+            // Then
+            coVerify(exactly = 1) { catalogCacheInvalidator.invalidate() }
+        }
+
+        @Test
+        @DisplayName("should not invalidate the catalog when the harvest is quiet")
+        fun `should not invalidate the catalog when the harvest is quiet`() {
+            // When
+            val saved = ingestionService.saveAll(
+                listOf(harvest(false, harvestedEpisode(harvestedAnime())))
+            )
+
+            // Then
+            assertEquals(0, saved)
+            coVerify(exactly = 0) { catalogCacheInvalidator.invalidate() }
         }
     }
 }

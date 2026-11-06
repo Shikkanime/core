@@ -80,11 +80,6 @@ suspend fun main() {
         .saveAll(harvest)
     logger.info("Saved $saved animes")
 
-    // The harvest wrote the catalog: drop the entries the API instances served before this run
-    if (saved > 0)
-        runCatching { koin.get<CatalogCacheInvalidator>().invalidate() }
-            .onFailure { logger.warning("Could not invalidate the catalog cache: ${it.message}") }
-
     exitProcess(0)
 
 //    StdSchedulerFactory().scheduler
