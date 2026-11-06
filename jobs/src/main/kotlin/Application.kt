@@ -30,7 +30,7 @@ private val logger = LoggerFactory.getLogger("Application")
 @ComponentScan("fr.shikkanime.jobs")
 internal class AppModule
 
-@KoinApplication(modules = [AppModule::class, DatabaseModule::class])
+@KoinApplication(modules = [AppModule::class, DatabaseModule::class, CacheModule::class])
 internal class MyApp
 
 @Suppress("unused")
@@ -79,6 +79,11 @@ suspend fun main() {
     val saved = koin.get<HarvestIngestionService>()
         .saveAll(harvest)
     logger.info("Saved $saved animes")
+
+    // The harvest wrote the catalog: drop the entries the API instances served before this run
+    if (saved > 0)
+        runCatching { koin.get<CatalogCacheInvalidator>().invalidate() }
+            .onFailure { logger.warning("Could not invalidate the catalog cache: ${it.message}") }
 
     exitProcess(0)
 

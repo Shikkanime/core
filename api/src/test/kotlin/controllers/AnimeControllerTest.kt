@@ -1,13 +1,16 @@
 package fr.shikkanime.api.controllers
 
+import fr.shikkanime.api.dtos.toDto
+import fr.shikkanime.api.usecases.FindCatalogUseCase
+import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.builders.impl.AnimeLocalizationMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
 import fr.shikkanime.database.builders.impl.AnimeWithChildrenMockKBuilder
 import fr.shikkanime.database.builders.impl.ImageMockKBuilder
-import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.ktor.ControllerBinder
 import fr.shikkanime.ktor.configureDefaultModules
+import fr.shikkanime.ktor.pagination.PageDto
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Platform
@@ -16,10 +19,11 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.slot
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.extension.ExtendWith
@@ -30,7 +34,7 @@ import kotlin.uuid.Uuid
 @ExtendWith(MockKExtension::class)
 @DisplayName("tests for the anime controller")
 class AnimeControllerTest {
-    @MockK private lateinit var animeService: AnimeService
+    @MockK private lateinit var findCatalogUseCase: FindCatalogUseCase
 
     @InjectMockKs private lateinit var animeController: AnimeController
 
@@ -76,25 +80,71 @@ class AnimeControllerTest {
         )
     }.build()
 
+    private val animeDto = anime.toDto()
+
+    private val animePage = PageDto(
+        data = listOf(animeDto),
+        page = 1,
+        size = 20,
+        totalPages = 1,
+        totalElements = 1
+    )
+
     @Nested
     @DisplayName("tests for listing the stored animes")
     inner class FindAllTests {
         @Test
-        @DisplayName("should return 200 with the stored animes")
-        fun `should return 200 with the stored animes`() =
+        @DisplayName("should return 200 with one page of the stored animes")
+        fun `should return 200 with one page of the stored animes`() =
             testApplication {
                 // Given
-                every { animeService.findAll() } returns listOf(anime)
+                coEvery { findCatalogUseCase.findAnimePage(any()) } returns animePage
                 application {
                     configureDefaultModules()
                     registerControllers()
                 }
 
                 // When
-                val response = client.get("/v1/animes")
+                val response = client.get("/v1/animes?page=1&size=20")
 
                 // Then
                 assertEquals(HttpStatusCode.OK, response.status)
+            }
+
+        @Test
+        @DisplayName("should forward the requested page bounds to the use case")
+        fun `should forward the requested page bounds to the use case`() =
+            testApplication {
+                // Given
+                val request = slot<PageRequest>()
+                coEvery { findCatalogUseCase.findAnimePage(capture(request)) } returns animePage
+                application {
+                    configureDefaultModules()
+                    registerControllers()
+                }
+
+                // When
+                client.get("/v1/animes?page=2&size=5")
+
+                // Then
+                assertEquals(PageRequest(2, 5), request.captured)
+            }
+
+        @Test
+        @DisplayName("should return 400 when the requested page is below the minimum")
+        fun `should return 400 when the requested page is below the minimum`() =
+            testApplication {
+                // Given
+                application {
+                    configureDefaultModules()
+                    registerControllers()
+                }
+
+                // When
+                val response = client.get("/v1/animes?page=0")
+
+                // Then
+                assertEquals(HttpStatusCode.BadRequest, response.status)
             }
     }
 
@@ -106,7 +156,7 @@ class AnimeControllerTest {
         fun `should return 200 with the stored anime`() =
             testApplication {
                 // Given
-                every { animeService.findById(any()) } returns anime
+                coEvery { findCatalogUseCase.findAnime(any()) } returns animeDto
                 application {
                     configureDefaultModules()
                     registerControllers()
@@ -124,7 +174,7 @@ class AnimeControllerTest {
         fun `should return 404 when the anime is not stored`() =
             testApplication {
                 // Given
-                every { animeService.findById(any()) } returns null
+                coEvery { findCatalogUseCase.findAnime(any()) } returns null
                 application {
                     configureDefaultModules()
                     registerControllers()

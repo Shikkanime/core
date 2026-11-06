@@ -42,6 +42,7 @@ Refer to the style and testing guides for specifics:
 - [Code Style Guide](guidelines/CODE_STYLE.md)
 - [Kotlin Conventions](guidelines/KOTLIN_CONVENTIONS.md)
 - [API Conventions](guidelines/API_CONVENTIONS.md)
+- [Cache Guide](guidelines/CACHE.md)
 - [Testing Guide](guidelines/TESTING.md)
 
 ## 5. Before Submitting Changes

@@ -1,20 +1,22 @@
 package fr.shikkanime.api.controllers
 
 import fr.shikkanime.api.dtos.EpisodeDto
-import fr.shikkanime.api.dtos.toDto
-import fr.shikkanime.database.services.EpisodeService
-import fr.shikkanime.models.EpisodeWithChildren
+import fr.shikkanime.api.usecases.FindCatalogUseCase
 import fr.shikkanime.ktor.ApiResponse
 import fr.shikkanime.ktor.ApiResponses
 import fr.shikkanime.ktor.GetMapping
 import fr.shikkanime.ktor.IController
+import fr.shikkanime.ktor.ModelAttribute
 import fr.shikkanime.ktor.Operation
 import fr.shikkanime.ktor.PathParam
 import fr.shikkanime.ktor.QueryParam
 import fr.shikkanime.ktor.ResponseEntity
 import fr.shikkanime.ktor.RestController
+import fr.shikkanime.ktor.Valid
 import fr.shikkanime.ktor.dtos.ErrorMessageDto
 import fr.shikkanime.ktor.dtos.MessageDto
+import fr.shikkanime.ktor.pagination.PageDto
+import fr.shikkanime.ktor.pagination.PageQuery
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 
@@ -25,35 +27,38 @@ import kotlin.uuid.Uuid
 @RestController("/v1/episodes")
 @Single(binds = [IController::class])
 class EpisodeController(
-    private val episodeService: EpisodeService
+    private val findCatalogUseCase: FindCatalogUseCase
 ) : IController {
     /**
-     * Lists every episode of an anime with its children.
+     * Lists one page of the episodes of an anime.
      *
      * @param animeId identifier of the anime owning the episodes.
-     * @return the episodes of the anime as DTOs, in broadcast order.
-     * @see [EpisodeService.findAllByAnimeId]
+     * @param query requested page and size, validated before the endpoint runs.
+     * @return one page of episode views with its pagination bounds.
+     * @see [FindCatalogUseCase.findEpisodePage]
      */
     @GetMapping
     @Operation(
         "List the episodes of an anime",
-        description = "Returns every episode of an anime, with its localizations, releases and artwork.",
+        description = "Returns one page of the episodes of an anime, with their localizations, releases " +
+            "and artwork.",
         tags = ["Episodes"]
     )
     @ApiResponses([
-        ApiResponse(200, "The episodes of the anime", List::class, [EpisodeDto::class])
+        ApiResponse(200, "One page of the episodes of the anime", PageDto::class, [EpisodeDto::class])
     ])
-    fun findAllByAnimeId(@QueryParam("animeId") animeId: Uuid): List<EpisodeDto> =
-        // The episodes of the anime are asked in one read, the mapping is only a shape change
-        episodeService.findAllByAnimeId(animeId)
-            .map(EpisodeWithChildren::toDto)
+    suspend fun findAllByAnimeId(
+        @QueryParam("animeId") animeId: Uuid,
+        @Valid @ModelAttribute query: PageQuery
+    ): PageDto<EpisodeDto> =
+        findCatalogUseCase.findEpisodePage(animeId, query.toPageRequest())
 
     /**
      * Loads one episode by its identifier.
      *
      * @param id identifier of the episode to load.
      * @return the episode with its children, or a 404 when it does not exist.
-     * @see [EpisodeService.findById]
+     * @see [FindCatalogUseCase.findEpisode]
      */
     @GetMapping("/{id}")
     @Operation(
@@ -65,9 +70,8 @@ class EpisodeController(
         ApiResponse(200, "The stored episode", EpisodeDto::class),
         ApiResponse(404, "No episode with this identifier", ErrorMessageDto::class)
     ])
-    fun findById(@PathParam("id") id: Uuid): ResponseEntity<*> =
-        // Load the stored aggregate of the requested identifier
-        episodeService.findById(id)
-            ?.let { ResponseEntity.ok(it.toDto()) }
+    suspend fun findById(@PathParam("id") id: Uuid): ResponseEntity<*> =
+        findCatalogUseCase.findEpisode(id)
+            ?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity.notFound(MessageDto.error("No episode with identifier $id"))
 }
