@@ -811,11 +811,7 @@ class CrunchyrollPlatformTest {
             val platform = platform(
                 smartHttpClient(
                     browseObjects = listOf(
-                        episode(
-                            id = "EP1",
-                            versions = """[{"guid":"EP1","audio_locale":"fr-FR","original":true},""" +
-                                """{"guid":"EP2","audio_locale":"en-US","original":false}]"""
-                        )
+                        episode(id = "EP1")
                     ),
                     seriesObjects = listOf(series())
                 )
@@ -1169,7 +1165,6 @@ class CrunchyrollPlatformTest {
          * @param description The description of the episode.
          * @param matureBlocked Whether the episode is mature blocked.
          * @param identifier The Crunchyroll identifier of the episode.
-         * @param versions The JSON block of the episode versions.
          * @param withImages Whether the episode carries its own images.
          * @return The JSON payload of the episode browse object.
          */
@@ -1191,7 +1186,6 @@ class CrunchyrollPlatformTest {
             description: String? = "Episode description",
             matureBlocked: Boolean = false,
             identifier: String? = null,
-            versions: String? = null,
             withImages: Boolean = true
         ): String {
             val episodeImages = if (withImages) "\n      ${imagesJson("ep")}," else ""
@@ -1221,7 +1215,6 @@ class CrunchyrollPlatformTest {
                     "duration_ms": $durationMs,
                     "description": ${description?.let { "\"$it\"" } ?: "null"},
                     "mature_blocked": $matureBlocked,
-                    "versions": ${versions ?: "null"},
                     "identifier": ${identifier?.let { "\"$it\"" } ?: "null"}$metadataImages
                   }
                 }

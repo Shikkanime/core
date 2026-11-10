@@ -4,12 +4,17 @@ import fr.shikkanime.jobs.builders.impl.HttpCacheEntryMockKBuilder
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
+import io.ktor.serialization.kotlinx.json.json
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -158,12 +163,49 @@ class SmartHttpClientTest {
             )
 
             // Then: a single request carried the form body, the second call was a cache hit
+            val request = requireNotNull(captured)
             assertEquals(1, requests)
-            assertEquals(HttpMethod.Post, captured!!.method)
-            assertEquals("grant_type=client_id", (captured!!.body as TextContent).text)
+            assertEquals(HttpMethod.Post, request.method)
+            assertEquals("grant_type=client_id", (request.body as TextContent).text)
+            assertEquals(ContentType.Application.FormUrlEncoded, (request.body as TextContent).contentType)
             assertEquals("pong", first.data)
             assertFalse(second.hasChanged)
             assertTrue(first.hasChanged)
         }
+
+        @Test
+        @DisplayName("should serialize a non string body through the content negotiation")
+        fun `should serialize a non string body through the content negotiation`() = runTest {
+            // Given
+            var captured: HttpRequestData? = null
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine { request ->
+                        captured = request
+                        respond("{}")
+                    }
+                ) {
+                    install(ContentNegotiation) {
+                        json(Json { ignoreUnknownKeys = true })
+                    }
+                }
+            )
+
+            // When
+            client.post<String>(
+                url = "https://example.test/api",
+                body = TokenRequestBody("client_id"),
+                cacheKey = "test:post:json",
+                contentType = ContentType.Application.Json
+            )
+
+            // Then: the body went through the JSON serializer, not the text wrapper
+            val request = requireNotNull(captured)
+            assertTrue(request.body is OutgoingContent.ByteArrayContent)
+            assertEquals(ContentType.Application.Json, request.body.contentType)
+        }
     }
+
+    @Serializable
+    private data class TokenRequestBody(val grantType: String)
 }

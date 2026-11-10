@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
 
 private val SEASON_REGEX = Regex(""" Saison (\d+)""")
-private val TEASER_REGEX = Regex("""(teaser|pv|trailer)(?:-\d)?""", RegexOption.IGNORE_CASE)
+private val TEASER_REGEX = Regex("""\b(?:teaser|pv|trailer)\b""", RegexOption.IGNORE_CASE)
 private val SPECIAL_EPISODE_REGEX = Regex("""SP(\d*)""")
 private val IDENTIFIER_REGEX = Regex("""(.+)\|(.+)\|(.+)""")
 
@@ -158,7 +158,7 @@ class CrunchyrollPlatform(
      * @see [PlatformEpisode]
      * @see [CrunchyrollBrowseObject.toPlatformEpisode]
      */
-    internal suspend fun convertBrowseObjects(
+    private suspend fun convertBrowseObjects(
         browseObjects: List<CrunchyrollBrowseObject>,
         country: Country
     ): List<PlatformEpisode> {
@@ -192,7 +192,7 @@ class CrunchyrollPlatform(
                 series.toPlatformAnime(seriesId, metadata.seriesTitle, country)
             }
 
-            try {
+            val episode = try {
                 browseObject.toPlatformEpisode(metadata, anime, series, country)
             } catch (e: TeaserEpisodeException) {
                 logger.fine(e.message)
@@ -206,6 +206,11 @@ class CrunchyrollPlatform(
                 )
                 null
             }
+
+            if (episode == null)
+                logger.fine("Crunchyroll episode ${browseObject.id} filtered out")
+
+            episode
         }
     }
 
@@ -273,7 +278,7 @@ class CrunchyrollPlatform(
         val token = client.post<CrunchyrollTokenResponse>(
             url = "$BASE_URL/auth/v1/token",
             body = "grant_type=client_id&client_id=offline_access" +
-                "&device_id=$deviceId&device_type=Chrome on Linux",
+                "&device_id=$deviceId&device_type=Chrome+on+Linux",
             cacheKey = "crunchyroll:token",
             ttl = TOKEN_TTL,
             contentType = ContentType.Application.FormUrlEncoded,
@@ -283,8 +288,13 @@ class CrunchyrollPlatform(
             )
         ).data
 
-        val expiresAtMillis = Clock.System.now().toEpochMilliseconds() +
-            (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+        // A revalidated or stale-served response carries the same token: its real expiry is the
+        // one computed at mint time, so only a genuinely new token gets a fresh expiry.
+        val expiresAtMillis = cachedAccessToken
+            ?.takeIf { it.token == token.accessToken }
+            ?.expiresAtMillis
+            ?: Clock.System.now().toEpochMilliseconds() +
+                (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
 
         return CachedAccessToken(token.accessToken, expiresAtMillis)
             .also { cachedAccessToken = it }
@@ -433,6 +443,8 @@ internal data class CrunchyrollBrowseObject(
                 reason = "teaser or promotional video"
             )
 
+        // The dub/subtitle match runs on the language prefix of the country default locale;
+        // countries whose default locale has no Crunchyroll counterpart simply match nothing.
         val countryLanguage = country.defaultLocale.code.substringBefore('-')
         val isDubbed = metadata.audioLocale
             ?.substringBefore('-')
@@ -454,7 +466,9 @@ internal data class CrunchyrollBrowseObject(
 
         val (number, episodeType) = metadata.getNumberAndEpisodeType()
 
-        val (_, forcedSeason) = cleanAnimeTitle(metadata.seriesTitle)
+        val (_, forcedSeason) = cleanAnimeTitle(
+            metadata.seriesTitle ?: series.seriesMetadata?.title ?: series.title
+        )
 
         return PlatformEpisode(
             anime = anime,
@@ -511,6 +525,7 @@ internal data class CrunchyrollBrowseObject(
      *
      * @param description The raw description harvested from the platform.
      * @return The normalized description, or `null` when absent.
+     * @see [CrunchyrollBrowseObject.toPlatformAnime]
      */
     private fun normalizeDescription(description: String?): String? =
         description?.split("\r\n\r\n")?.let { lines ->
