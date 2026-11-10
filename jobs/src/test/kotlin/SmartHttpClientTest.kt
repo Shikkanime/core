@@ -1,13 +1,23 @@
 package fr.shikkanime.jobs
 
 import fr.shikkanime.jobs.builders.impl.HttpCacheEntryMockKBuilder
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.HttpRequestData
+import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
+import io.ktor.http.content.TextContent
 import io.mockk.junit5.MockKExtension
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -108,6 +118,52 @@ class SmartHttpClientTest {
             // Then
             assertEquals(staleEntry, client.cache["staleKey"])
             assertEquals(1, client.cache.size)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the post method")
+    inner class PostTests {
+
+        @Test
+        @DisplayName("should send the body with its content type and cache the response")
+        fun `should send the body with its content type and cache the response`() = runTest {
+            // Given
+            var requests = 0
+            var captured: HttpRequestData? = null
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine { request ->
+                        requests++
+                        captured = request
+                        respond("pong")
+                    }
+                )
+            )
+
+            // When
+            val first = client.post<String>(
+                url = "https://example.test/token",
+                body = "grant_type=client_id",
+                cacheKey = "test:post",
+                ttl = 1.minutes,
+                contentType = ContentType.Application.FormUrlEncoded
+            )
+            val second = client.post<String>(
+                url = "https://example.test/token",
+                body = "grant_type=client_id",
+                cacheKey = "test:post",
+                ttl = 1.minutes,
+                contentType = ContentType.Application.FormUrlEncoded
+            )
+
+            // Then: a single request carried the form body, the second call was a cache hit
+            assertEquals(1, requests)
+            assertEquals(HttpMethod.Post, captured!!.method)
+            assertEquals("grant_type=client_id", (captured!!.body as TextContent).text)
+            assertEquals("pong", first.data)
+            assertFalse(second.hasChanged)
+            assertTrue(first.hasChanged)
         }
     }
 }

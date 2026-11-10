@@ -227,6 +227,38 @@ class CrunchyrollPlatformTest {
         }
 
         @Test
+        @DisplayName("should resolve every series object in a single batched request")
+        fun `should resolve every series object in a single batched request`() = runTest {
+            // Given
+            var objectsRequests = 0
+            var requestedIds: String? = null
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(
+                        episode(id = "EP1"),
+                        episode(id = "EP2", seriesId = "SERIES2", numberString = "2", number = 2)
+                    ),
+                    seriesObjects = listOf(series(), series(id = "SERIES2", title = "Naruto")),
+                    onRequest = { request ->
+                        val url = request.url.toString()
+                        if ("/cms/objects/" in url) {
+                            objectsRequests++
+                            requestedIds = url.substringAfter("/cms/objects/").substringBefore("?")
+                        }
+                    }
+                )
+            )
+
+            // When
+            val episodes = platform.episodes()
+
+            // Then: one request carries every series identifier of the page
+            assertEquals(2, episodes.size)
+            assertEquals(1, objectsRequests)
+            assertEquals("SERIES1,SERIES2", requestedIds)
+        }
+
+        @Test
         @DisplayName("should ignore browse objects without episode metadata")
         fun `should ignore browse objects without episode metadata`() = runTest {
             // Given

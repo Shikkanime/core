@@ -300,6 +300,9 @@ class SmartHttpClient(
                 }
 
                 error("HTTP request failed with status: ${response.status.value} for URL: $url")
+            } catch (e: CancellationException) {
+                deferred.completeExceptionally(e)
+                throw e
             } catch (e: Exception) {
                 if (cached != null && staleOnError) {
                     logger.warning("Request failed for $url (${e.message}), serving stale cache for key: $cacheKey")

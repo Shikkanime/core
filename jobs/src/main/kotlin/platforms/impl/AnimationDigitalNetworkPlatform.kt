@@ -332,6 +332,9 @@ class AnimationDigitalNetworkPlatform(
             } catch (e: MissingAudioLocaleException) {
                 logger.warning(e.message)
                 null
+            } catch (e: Exception) {
+                logger.warning("Skipping ADN video ${video.id}: ${e.message}")
+                null
             }
         }
     }

@@ -30,8 +30,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
 
-private val SEASON_REGEX = Regex(""" Saison (\d)""")
-private val TEASER_REGEX = Regex("""(teaser|pv|trailer)(?:-\d)?""")
+private val SEASON_REGEX = Regex(""" Saison (\d+)""")
+private val TEASER_REGEX = Regex("""(teaser|pv|trailer)(?:-\d)?""", RegexOption.IGNORE_CASE)
 private val SPECIAL_EPISODE_REGEX = Regex("""SP(\d*)""")
 private val IDENTIFIER_REGEX = Regex("""(.+)\|(.+)\|(.+)""")
 
@@ -65,6 +65,11 @@ class CrunchyrollPlatform(
     private val ttl: Duration = 1.minutes,
     override val countries: Set<Country> = setOf(Country.FR)
 ) : StreamingPlatform {
+    private data class CachedAccessToken(
+        val token: String,
+        val expiresAtMillis: Long
+    )
+
     override val platform: Platform = Platform.CRUNCHYROLL
 
     private val logger = LoggerFactory.getLogger()
@@ -279,21 +284,22 @@ class CrunchyrollPlatform(
         ).data
 
         val expiresAtMillis = Clock.System.now().toEpochMilliseconds() +
-            (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS) * 1000
-        cachedAccessToken = CachedAccessToken(token.accessToken, expiresAtMillis)
+            (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
 
-        return cachedAccessToken!!.token
+        return CachedAccessToken(token.accessToken, expiresAtMillis)
+            .also { cachedAccessToken = it }
+            .token
     }
-
-    private data class CachedAccessToken(
-        val token: String,
-        val expiresAtMillis: Long
-    )
 
     private companion object {
         const val BROWSE_PAGE_SIZE = 25
         const val TOKEN_EXPIRY_MARGIN_SECONDS = 60L
         val TOKEN_TTL = 25.minutes
+
+        // Read by the update-credentials GitHub Actions workflow to detect a newer Android TV
+        // APK; the token itself is kept in sync by the same workflow.
+        @Suppress("unused")
+        const val CRUNCHYROLL_APK_VERSION = "3.76.0_22366"
 
         // Same token as AbstractCrunchyrollWrapper.CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT of the
         // legacy implementation, kept in sync by the update-credentials GitHub Actions workflow.
@@ -416,7 +422,8 @@ internal data class CrunchyrollBrowseObject(
     ): PlatformEpisode? {
         val releaseDateTime = metadata.releaseDateTime ?: return null
 
-        val isTeaser = slugTitle?.contains(TEASER_REGEX) == true ||
+        val isTeaser = listOfNotNull(slugTitle, metadata.slugTitle)
+            .any { it.contains(TEASER_REGEX) } ||
             releaseDateTime.toInstant().toEpochMilli() == 0L
 
         if (isTeaser)
@@ -582,7 +589,6 @@ internal data class CrunchyrollEpisode(
     val description: String? = null,
     @SerialName("mature_blocked")
     val matureBlocked: Boolean? = null,
-    val versions: List<CrunchyrollVersion>? = null,
     @SerialName("identifier")
     val identifier: String? = null
 ) {
@@ -602,12 +608,12 @@ internal data class CrunchyrollEpisode(
      * @see [EpisodeType]
      */
     fun getNumberAndEpisodeType(): Pair<Int, EpisodeType> {
-        var episodeNumber = number ?: -1
+        var episodeNumber = number ?: numberString?.toIntOrNull() ?: -1
 
         var episodeType = when {
             seasonSlugTitle?.contains("movie", true) == true ||
                 seriesSlugTitle?.contains("movie", true) == true ||
-                (number == null && (durationMs ?: 0L) > 3_600_000L) ->
+                (episodeNumber == -1 && (durationMs ?: 0L) > 3_600_000L) ->
                 EpisodeType.FILM
             episodeNumber == -1 || seasonSlugTitle?.contains("special", true) == true ->
                 EpisodeType.SPECIAL
@@ -629,11 +635,3 @@ internal data class CrunchyrollEpisode(
         return episodeNumber to episodeType
     }
 }
-
-@Serializable
-internal data class CrunchyrollVersion(
-    val guid: String,
-    @SerialName("audio_locale")
-    val audioLocale: String,
-    val original: Boolean = false
-)
