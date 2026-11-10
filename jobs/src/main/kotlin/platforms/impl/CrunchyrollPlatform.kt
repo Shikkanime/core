@@ -1,0 +1,637 @@
+package fr.shikkanime.jobs.platforms.impl
+
+import fr.shikkanime.core.LoggerFactory
+import fr.shikkanime.jobs.SmartHttpClient
+import fr.shikkanime.jobs.SmartResponse
+import fr.shikkanime.jobs.platforms.PlatformAnime
+import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
+import fr.shikkanime.jobs.platforms.PlatformEpisode
+import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
+import fr.shikkanime.jobs.platforms.PlatformImage
+import fr.shikkanime.jobs.platforms.StreamingPlatform
+import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
+import fr.shikkanime.jobs.platforms.sanitizeText
+import fr.shikkanime.models.Country
+import fr.shikkanime.models.EpisodeType
+import fr.shikkanime.models.ImageType
+import fr.shikkanime.models.Locale
+import fr.shikkanime.models.Platform
+import io.ktor.client.call.body
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import org.koin.core.annotation.Single
+import java.time.ZonedDateTime
+import java.util.UUID
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+
+private val SEASON_REGEX = Regex(""" Saison (\d)""")
+private val TEASER_REGEX = Regex("""(teaser|pv|trailer)(?:-\d)?""")
+private val SPECIAL_EPISODE_REGEX = Regex("""SP(\d*)""")
+private val IDENTIFIER_REGEX = Regex("""(.+)\|(.+)\|(.+)""")
+
+private const val BASE_URL = "https://www.crunchyroll.com/"
+
+/**
+ * Streaming platform connector for Crunchyroll.
+ *
+ * This implementation connects to the Crunchyroll public content API: it mints an anonymous
+ * access token with the Android TV basic auth credentials, browses the latest episode releases
+ * per configured country, resolves the parent series objects for their artwork and editorial
+ * metadata, and normalizes everything into [PlatformEpisode] instances.
+ *
+ * Only the latest published episodes are harvested: the upcoming episode prediction of the
+ * legacy implementation is intentionally not ported.
+ *
+ * @param client The [SmartHttpClient] instance used to execute cached HTTP requests against the
+ * Crunchyroll API and to reach the underlying [io.ktor.client.HttpClient] for the token endpoint.
+ * @param ttl The cache time-to-live [Duration] for browse and series responses (defaults to 1 minute).
+ * @param countries The target countries enabled for this platform connector.
+ * @see [StreamingPlatform]
+ * @see [PlatformEpisode]
+ * @see [PlatformAnime]
+ * @see [Platform.CRUNCHYROLL]
+ */
+@Single(binds = [StreamingPlatform::class])
+class CrunchyrollPlatform(
+    private val client: SmartHttpClient,
+    private val ttl: Duration = 1.minutes,
+    override val countries: Set<Country> = setOf(Country.FR)
+) : StreamingPlatform {
+    override val platform: Platform = Platform.CRUNCHYROLL
+
+    private val logger = LoggerFactory.getLogger()
+    private val tokenMutex = Mutex()
+    private var cachedAccessToken: String? = null
+    private var cachedAccessTokenExpiresAtMillis: Long = 0L
+    private var cachedEpisodes: List<PlatformEpisode> = emptyList()
+    private val cachedEpisodesByCountry = mutableMapOf<Country, List<PlatformEpisode>>()
+
+    /**
+     * Retrieves the latest episodes published on Crunchyroll across configured countries.
+     *
+     * For every country declared in [countries], queries the discover browse endpoint sorted by
+     * newly added episodes, resolves the series of every candidate and maps valid releases into
+     * [PlatformEpisode] instances.
+     *
+     * In-memory cache is returned while [SmartHttpClient] reports that the remote payloads have
+     * not changed; episodes harvested for several countries are merged by identifier so their
+     * audio locales and localizations accumulate on a single entry.
+     *
+     * @return A [SmartResponse] carrying the normalized [PlatformEpisode] objects and the change
+     * flag of the Crunchyroll payloads.
+     * @see [SmartResponse]
+     * @see [PlatformEpisode]
+     * @see [CrunchyrollBrowseObject.toPlatformEpisode]
+     */
+    override suspend fun fetchLatestEpisodes(): SmartResponse<List<PlatformEpisode>> {
+        if (countries.isEmpty())
+            return SmartResponse(emptyList(), hasChanged = false)
+
+        var hasChanged = false
+
+        val episodesByCountry = countries.flatMap { country ->
+            val (episodes, changed) = fetchEpisodesForCountry(country)
+            if (changed)
+                hasChanged = true
+            episodes
+        }
+
+        if (hasChanged) {
+            cachedEpisodes = episodesByCountry
+                .groupBy { it.id }
+                .values
+                .map { group ->
+                    val first = group.first()
+                    first.copy(
+                        audioLocales = group.flatMap { it.audioLocales }.distinct(),
+                        localizations = group.flatMap { it.localizations }.distinct()
+                    )
+                }
+        }
+
+        return SmartResponse(cachedEpisodes, hasChanged)
+    }
+
+    /**
+     * Fetches and maps the latest Crunchyroll episode releases for a specific country.
+     *
+     * @param country Target country distribution.
+     * @return The mapped [PlatformEpisode] list of the country and whether the payload changed.
+     * @see [Country]
+     * @see [PlatformEpisode]
+     */
+    private suspend fun fetchEpisodesForCountry(
+        country: Country
+    ): Pair<List<PlatformEpisode>, Boolean> {
+        val locale = country.defaultLocale.code
+        val response = client.get<CrunchyrollBrowseResponse>(
+            url = "$BASE_URL/content/v2/discover/browse" +
+                "?sort_by=newly_added&type=episode&n=$BROWSE_PAGE_SIZE&start=0&locale=$locale",
+            cacheKey = "crunchyroll:browse:$locale",
+            ttl = ttl,
+            headers = authorizationHeaders()
+        )
+
+        val hasChanged = response.hasChanged || country !in cachedEpisodesByCountry
+
+        if (!hasChanged)
+            return cachedEpisodesByCountry[country].orEmpty() to false
+
+        val episodes = convertBrowseObjects(response.data.data, country)
+        cachedEpisodesByCountry[country] = episodes
+        return episodes to true
+    }
+
+    /**
+     * Converts a page of Crunchyroll browse objects into domain [PlatformEpisode] objects.
+     *
+     * Resolves the series object of every episode in a single chunked request per country,
+     * caches the produced [PlatformAnime] per series so episodes of a same show share the same
+     * instance, and drops teasers, non simulcasted titles and releases without audio or subtitles
+     * for the target country.
+     *
+     * @param browseObjects The raw browse objects of the discover endpoint.
+     * @param country Target country distribution.
+     * @return The normalized [PlatformEpisode] objects of the page.
+     * @see [PlatformEpisode]
+     * @see [CrunchyrollBrowseObject.toPlatformEpisode]
+     */
+    internal suspend fun convertBrowseObjects(
+        browseObjects: List<CrunchyrollBrowseObject>,
+        country: Country
+    ): List<PlatformEpisode> {
+        val episodeEntries = browseObjects.mapNotNull { browseObject ->
+            if (browseObject.id.isBlank())
+                return@mapNotNull null
+            browseObject.episodeMetadata?.let { metadata -> browseObject to metadata }
+        }
+
+        if (episodeEntries.isEmpty())
+            return emptyList()
+
+        val seriesById = fetchSeriesObjects(
+            country,
+            episodeEntries.mapNotNull { it.second.seriesId }.toSet()
+        )
+
+        val animes = mutableMapOf<String, PlatformAnime>()
+
+        return episodeEntries.mapNotNull { (browseObject, metadata) ->
+            val seriesId = metadata.seriesId ?: return@mapNotNull null
+            val series = seriesById[seriesId]
+            if (series == null) {
+                logger.warning(
+                    "Skipping Crunchyroll episode ${browseObject.id}: series $seriesId not found"
+                )
+                return@mapNotNull null
+            }
+
+            val anime = animes.getOrPut(seriesId) {
+                series.toPlatformAnime(seriesId, metadata.seriesTitle, country)
+            }
+
+            try {
+                browseObject.toPlatformEpisode(metadata, anime, series, country)
+            } catch (e: MissingAudioLocaleException) {
+                logger.warning(e.message)
+                null
+            } catch (e: Exception) {
+                logger.warning(
+                    "Skipping Crunchyroll episode ${browseObject.id}: ${e.message}"
+                )
+                null
+            }
+        }
+    }
+
+    /**
+     * Fetches the series browse objects of the given identifiers for a country.
+     *
+     * The CMS objects endpoint accepts several identifiers per call; requests are chunked to
+     * stay under the platform limit and cached like every other payload of this connector.
+     *
+     * @param country Target country distribution.
+     * @param seriesIds The series identifiers to resolve.
+     * @return The fetched browse objects indexed by their identifier.
+     * @see [Country]
+     * @see [CrunchyrollBrowseObject]
+     */
+    private suspend fun fetchSeriesObjects(
+        country: Country,
+        seriesIds: Set<String>
+    ): Map<String, CrunchyrollBrowseObject> {
+        if (seriesIds.isEmpty())
+            return emptyMap()
+
+        val locale = country.defaultLocale.code
+
+        return seriesIds.chunked(OBJECTS_CHUNK_SIZE)
+            .flatMap { chunk ->
+                val ids = chunk.joinToString(",")
+                client.get<CrunchyrollBrowseResponse>(
+                    url = "$BASE_URL/content/v2/cms/objects/$ids?locale=$locale",
+                    cacheKey = "crunchyroll:objects:$locale:$ids",
+                    ttl = ttl,
+                    headers = authorizationHeaders()
+                ).data.data
+            }
+            .filter { it.id.isNotBlank() }
+            .associateBy { it.id }
+    }
+
+    /**
+     * Builds the bearer authorization headers of the Crunchyroll content API.
+     *
+     * @return The authorization headers carrying the current anonymous access token.
+     * @see [accessToken]
+     */
+    private suspend fun authorizationHeaders(): Map<String, String> =
+        mapOf(HttpHeaders.Authorization to "Bearer ${accessToken()}")
+
+    /**
+     * Returns a valid anonymous access token, minting a new one when the cached token expired.
+     *
+     * The token endpoint requires a POST, which [SmartHttpClient] does not cover, so the
+     * underlying [io.ktor.client.HttpClient] is used directly. Minted tokens are kept in memory
+     * until shortly before their expiry so consecutive harvests reuse them.
+     *
+     * @return The anonymous access token of the Crunchyroll API.
+     * @see [SmartHttpClient]
+     */
+    private suspend fun accessToken(): String {
+        val now = Clock.System.now().toEpochMilliseconds()
+        cachedAccessToken?.takeIf { now < cachedAccessTokenExpiresAtMillis }?.let { return it }
+
+        return tokenMutex.withLock {
+            cachedAccessToken?.takeIf { now < cachedAccessTokenExpiresAtMillis }?.let { return it }
+
+            val minted = mintAccessToken()
+            cachedAccessToken = minted.accessToken
+            cachedAccessTokenExpiresAtMillis =
+                now + (minted.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(MIN_TOKEN_TTL_SECONDS) * 1000L
+            minted.accessToken
+        }
+    }
+
+    /**
+     * Mints a new anonymous access token against the Crunchyroll auth endpoint.
+     *
+     * @return The token response carrying the access token and its lifetime.
+     * @see [CrunchyrollTokenResponse]
+     */
+    private suspend fun mintAccessToken(): CrunchyrollTokenResponse {
+        val deviceId = UUID.randomUUID().toString()
+        val response = client.client.post("$BASE_URL/auth/v1/token") {
+            header(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded.toString())
+            header(HttpHeaders.Authorization, "Basic $CRUNCHYROLL_BASIC_AUTH_TOKEN")
+            header("ETP-Anonymous-ID", deviceId)
+            setBody(
+                "grant_type=client_id&client_id=offline_access" +
+                    "&device_id=$deviceId&device_type=Chrome on Linux"
+            )
+        }
+
+        check(response.status == HttpStatusCode.OK) {
+            "Failed to mint the Crunchyroll access token (${response.status.value})"
+        }
+
+        return response.body()
+    }
+
+    private companion object {
+        const val BROWSE_PAGE_SIZE = 25
+        const val OBJECTS_CHUNK_SIZE = 100
+        const val TOKEN_EXPIRY_MARGIN_SECONDS = 60L
+        const val MIN_TOKEN_TTL_SECONDS = 60L
+
+        // Same token as AbstractCrunchyrollWrapper.CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT of the
+        // legacy implementation, kept in sync by the update-credentials GitHub Actions workflow.
+        const val CRUNCHYROLL_BASIC_AUTH_TOKEN =
+            "ZXI5bmdnMmtvNW9oaXJsYTUxaTI6VmwxVDBQbjhRWko2d3o0NnhYRGxIekRGUDV0Wlgxb3E="
+    }
+}
+
+/**
+ * Cleans a Crunchyroll series title and extracts the forced season it carries.
+ *
+ * Series titles may embed a season suffix such as `"Series Saison 2"`; the suffix is removed
+ * from the returned title and reported as the forced season of the episode.
+ *
+ * @param title The raw series title of the episode metadata.
+ * @return A pair of the cleaned title and the forced season, `null` when no suffix is present.
+ * @see [SEASON_REGEX]
+ */
+internal fun cleanAnimeTitle(title: String?): Pair<String, Int?> {
+    val raw = title.orEmpty()
+    val season = SEASON_REGEX.find(raw)?.groupValues?.get(1)?.toIntOrNull()
+    return raw.replace(SEASON_REGEX, "").trim() to season
+}
+
+/**
+ * Resolves the number and the editorial type of a Crunchyroll episode.
+ *
+ * Detection rules prioritize films (movie slugs or unnumbered releases longer than one hour),
+ * then specials (`SP` numbering, `OAD` identifiers or special season slugs), and fall back to
+ * standard episodes.
+ *
+ * @param metadata The episode metadata of the browse object.
+ * @return A pair of the episode number (`-1` when unnumbered) and the [EpisodeType].
+ * @see [EpisodeType]
+ */
+private fun getNumberAndEpisodeType(metadata: CrunchyrollEpisode): Pair<Int, EpisodeType> {
+    var number = metadata.number ?: -1
+
+    var episodeType = when {
+        metadata.seasonSlugTitle?.contains("movie", true) == true ||
+            metadata.seriesSlugTitle?.contains("movie", true) == true ||
+            (metadata.number == null && (metadata.durationMs ?: 0L) > 3_600_000L) ->
+            EpisodeType.FILM
+        number == -1 || metadata.seasonSlugTitle?.contains("special", true) == true ->
+            EpisodeType.SPECIAL
+        else -> EpisodeType.EPISODE
+    }
+
+    SPECIAL_EPISODE_REGEX.find(metadata.numberString.orEmpty())
+        ?.groupValues?.get(1)?.toIntOrNull()?.let {
+            episodeType = EpisodeType.SPECIAL
+            number = it
+        }
+
+    metadata.identifier?.let { identifier ->
+        IDENTIFIER_REGEX.find(identifier)?.groupValues?.get(2)?.let {
+            if (it == "OAD") episodeType = EpisodeType.SPECIAL
+        }
+    }
+
+    return number to episodeType
+}
+
+/**
+ * Maps a Crunchyroll series browse object into the platform anime domain entity.
+ *
+ * Sanitizes the harvested texts with [sanitizeText], cleans redundant season suffixes from the
+ * title with [cleanAnimeTitle], resolves the poster artwork and keys the localized texts by the
+ * target [country].
+ *
+ * @param seriesId The series identifier published as the platform identifier.
+ * @param rawTitle The raw series title carried by the episode metadata.
+ * @param country Target country distribution, used as the key of the produced localization.
+ * @return The normalized [PlatformAnime] domain entity.
+ * @see [PlatformAnime]
+ * @see [cleanAnimeTitle]
+ */
+private fun CrunchyrollBrowseObject.toPlatformAnime(
+    seriesId: String,
+    rawTitle: String?,
+    country: Country
+): PlatformAnime {
+    val (cleanedTitle, _) = cleanAnimeTitle(rawTitle ?: seriesMetadata?.title ?: title)
+    val artwork = images ?: seriesMetadata?.images
+
+    return PlatformAnime(
+        id = seriesId,
+        platform = Platform.CRUNCHYROLL,
+        images = listOfNotNull(
+            artwork?.fullHDImage?.let { PlatformImage(ImageType.THUMBNAIL, it) },
+            artwork?.fullHDBanner?.let { PlatformImage(ImageType.BANNER, it) },
+            fullHDTitle.takeIf { artwork != null }?.let { PlatformImage(ImageType.TITLE, it) }
+        ),
+        localizations = listOf(
+            PlatformAnimeLocalization(
+                country = country,
+                locale = country.defaultLocale,
+                title = cleanedTitle.sanitizeText().orEmpty(),
+                description = normalizeDescription(description ?: seriesMetadata?.description)
+                    .sanitizeText()
+            )
+        )
+    )
+}
+
+/**
+ * Maps a Crunchyroll episode browse object into a platform episode representation.
+ *
+ * Applies the release filters of the platform: teasers and epoch-dated entries are dropped,
+ * releases are kept only when they are dubbed or subtitled in the language of the target
+ * [country], and non simulcasted catalog titles are excluded. The audio locale of the release
+ * must resolve to a known [Locale].
+ *
+ * @param metadata The episode metadata of the browse object.
+ * @param anime The parent [PlatformAnime] instance resolved for this episode.
+ * @param series The series browse object the episode belongs to.
+ * @param country Target country distribution.
+ * @return The normalized [PlatformEpisode], or `null` when the release is filtered out.
+ * @throws MissingAudioLocaleException If the audio locale of the release cannot be mapped.
+ * @see [PlatformEpisode]
+ * @see [Locale]
+ */
+private fun CrunchyrollBrowseObject.toPlatformEpisode(
+    metadata: CrunchyrollEpisode,
+    anime: PlatformAnime,
+    series: CrunchyrollBrowseObject,
+    country: Country
+): PlatformEpisode? {
+    val releaseDateTime = metadata.releaseDateTime ?: return null
+
+    val isTeaser = slugTitle?.contains(TEASER_REGEX) == true ||
+        releaseDateTime.toInstant().toEpochMilli() == 0L
+
+    if (isTeaser)
+        return null
+
+    val countryLanguage = country.defaultLocale.code.substringBefore('-')
+    val isDubbed = metadata.audioLocale
+        ?.substringBefore('-')
+        ?.equals(countryLanguage, ignoreCase = true) == true
+    val hasSubtitle = metadata.subtitleLocales.orEmpty().any {
+        it.substringBefore('-').equals(countryLanguage, ignoreCase = true)
+    }
+
+    if (!isDubbed && !hasSubtitle)
+        return null
+
+    val audioLocale = Locale.fromCode(metadata.audioLocale.orEmpty())
+        ?: throw MissingAudioLocaleException(
+            episodeId = id,
+            episodeName = title ?: metadata.title,
+            languages = listOfNotNull(metadata.audioLocale),
+            country = country
+        )
+
+    val (number, episodeType) = getNumberAndEpisodeType(metadata)
+
+    val isSimulcasted = series.seriesMetadata?.isSimulcast == true ||
+        isDubbed ||
+        episodeType == EpisodeType.FILM
+
+    if (!isSimulcasted)
+        return null
+
+    val (_, forcedSeason) = cleanAnimeTitle(metadata.seriesTitle)
+
+    return PlatformEpisode(
+        anime = anime,
+        id = id,
+        image = episodeImage(metadata, series),
+        releaseDateTime = releaseDateTime,
+        season = forcedSeason ?: (metadata.seasonNumber ?: 1),
+        number = number,
+        episodeType = episodeType,
+        duration = (metadata.durationMs ?: 0L) / 1000L,
+        url = "$BASE_URL${country.code.lowercase()}/watch/$id/${slugTitle.orEmpty()}",
+        audioLocales = listOf(audioLocale),
+        uncensored = metadata.matureBlocked == true,
+        localizations = listOf(
+            PlatformEpisodeLocalization(
+                country = country,
+                title = (title ?: metadata.title).sanitizeText(),
+                description = description.sanitizeText()
+            )
+        )
+    )
+}
+
+/**
+ * Resolves the artwork of an episode, falling back to the series artwork when the episode
+ * carries no thumbnail of its own.
+ *
+ * @param series The series browse object the episode belongs to.
+ * @return The episode image URL.
+ * @see [CrunchyrollImages]
+ */
+private fun CrunchyrollBrowseObject.episodeImage(
+    metadata: CrunchyrollEpisode,
+    series: CrunchyrollBrowseObject
+): String {
+    val episodeImages = images ?: metadata.images
+    val episodeThumbnail = episodeImages?.fullHDThumbnail
+    if (episodeThumbnail != null)
+        return episodeThumbnail
+
+    val seriesImages = series.images ?: series.seriesMetadata?.images
+    return seriesImages?.fullHDImage
+        ?: seriesImages?.fullHDThumbnail
+        ?: seriesImages?.fullHDBanner
+        ?: ""
+}
+
+@Serializable
+internal data class CrunchyrollTokenResponse(
+    @SerialName("access_token") val accessToken: String,
+    @SerialName("expires_in") val expiresIn: Long = 1800L
+)
+
+@Serializable
+internal data class CrunchyrollBrowseResponse(
+    val data: List<CrunchyrollBrowseObject> = emptyList()
+)
+
+@Serializable
+internal data class CrunchyrollBrowseObject(
+    val id: String = "",
+    val title: String? = null,
+    val description: String? = null,
+    @SerialName("slug_title") val slugTitle: String? = null,
+    val images: CrunchyrollImages? = null,
+    @SerialName("series_metadata") val seriesMetadata: CrunchyrollSeries? = null,
+    @SerialName("episode_metadata") val episodeMetadata: CrunchyrollEpisode? = null
+) {
+    val fullHDTitle: String
+        get() = "https://imgsrv.crunchyroll.com/cdn-cgi/image/format=png,quality=100," +
+            "width=1920/keyart/$id-title_logo-en-us"
+}
+
+/**
+ * Extracts the editorial description of a Crunchyroll text.
+ *
+ * Crunchyroll descriptions may embed several paragraphs separated by double line breaks;
+ * the normalized form keeps only the editorial part of the text.
+ *
+ * @param description The raw description harvested from the platform.
+ * @return The normalized description, or `null` when absent.
+ */
+private fun normalizeDescription(description: String?): String? =
+    description?.split("\r\n\r\n")?.let { lines ->
+        when {
+            lines.size == 2 -> lines[1]
+            lines.size > 2 -> lines.subList(1, lines.size - 1).joinToString(" ")
+            else -> lines.firstOrNull()
+        }
+    }
+
+@Serializable
+internal data class CrunchyrollImages(
+    val thumbnail: List<List<CrunchyrollMediaImage>> = emptyList(),
+    @SerialName("poster_tall") val posterTall: List<List<CrunchyrollMediaImage>> = emptyList(),
+    @SerialName("poster_wide") val posterWide: List<List<CrunchyrollMediaImage>> = emptyList()
+) {
+    val fullHDThumbnail: String?
+        get() = thumbnail.firstOrNull()?.maxByOrNull { it.width }?.source
+    val fullHDImage: String?
+        get() = posterTall.firstOrNull()?.maxByOrNull { it.width }?.source
+    val fullHDBanner: String?
+        get() = posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
+}
+
+@Serializable
+internal data class CrunchyrollMediaImage(
+    val source: String,
+    val type: String = "",
+    val width: Int = 0,
+    val height: Int = 0
+)
+
+@Serializable
+internal data class CrunchyrollSeries(
+    val id: String? = null,
+    val title: String? = null,
+    @SerialName("slug_title") val slugTitle: String? = null,
+    val description: String? = null,
+    val images: CrunchyrollImages? = null,
+    @SerialName("is_simulcast") val isSimulcast: Boolean = false
+)
+
+@Serializable
+internal data class CrunchyrollEpisode(
+    @SerialName("series_id") val seriesId: String? = null,
+    @SerialName("series_title") val seriesTitle: String? = null,
+    @SerialName("series_slug_title") val seriesSlugTitle: String? = null,
+    @SerialName("audio_locale") val audioLocale: String? = null,
+    @SerialName("subtitle_locales") val subtitleLocales: List<String>? = null,
+    @SerialName("premium_available_date") val premiumAvailableDate: String? = null,
+    @SerialName("season_id") val seasonId: String? = null,
+    @SerialName("season_number") val seasonNumber: Int? = null,
+    @SerialName("season_slug_title") val seasonSlugTitle: String? = null,
+    @SerialName("episode") val numberString: String? = null,
+    @SerialName("episode_number") val number: Int? = null,
+    val title: String? = null,
+    @SerialName("slug_title") val slugTitle: String? = null,
+    val images: CrunchyrollImages? = null,
+    @SerialName("duration_ms") val durationMs: Long? = null,
+    val description: String? = null,
+    @SerialName("mature_blocked") val matureBlocked: Boolean? = null,
+    val versions: List<CrunchyrollVersion>? = null,
+    @SerialName("identifier") val identifier: String? = null
+) {
+    val releaseDateTime: ZonedDateTime?
+        get() = premiumAvailableDate?.let {
+            runCatching { ZonedDateTime.parse(it) }.getOrNull()
+        }
+}
+
+@Serializable
+internal data class CrunchyrollVersion(
+    val guid: String,
+    @SerialName("audio_locale") val audioLocale: String,
+    val original: Boolean = false
+)
