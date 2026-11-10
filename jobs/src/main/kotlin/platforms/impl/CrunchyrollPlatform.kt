@@ -19,6 +19,7 @@ import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
@@ -214,6 +215,8 @@ class CrunchyrollPlatform(
                 logger.warning(e.message)
                 conversionFailed = true
                 null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.warning(
                     "Skipping Crunchyroll episode ${browseObject.id}: ${e.message}"
@@ -292,7 +295,37 @@ class CrunchyrollPlatform(
             return cached.token
         }
 
-        val response = client.post<CrunchyrollTokenResponse>(
+        var response = mintTokenRequest()
+        var token = response.data
+
+        // The real expiry of the token is derived from the timestamp at which the HTTP layer
+        // fetched it, so cached, revalidated and stale-served responses are all handled the
+        // same way. A cached token already past its expiry is useless: the cache entry is
+        // dropped and the token endpoint is queried once more for a fresh mint.
+        var expiresAtMillis = response.fetchedAtMillis
+            ?.let { it + (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000 }
+
+        if (expiresAtMillis == null || expiresAtMillis <= Clock.System.now().toEpochMilliseconds()) {
+            client.cache.remove("crunchyroll:token:$deviceId")
+            response = mintTokenRequest()
+            token = response.data
+            expiresAtMillis = Clock.System.now().toEpochMilliseconds() +
+                (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+        }
+
+        return CachedAccessToken(token.accessToken, expiresAtMillis)
+            .also { cachedAccessToken = it }
+            .token
+    }
+
+    /**
+     * Queries the Crunchyroll token endpoint through the shared HTTP client.
+     *
+     * @return The [SmartResponse] carrying the minted token payload.
+     * @see [SmartHttpClient]
+     */
+    private suspend fun mintTokenRequest(): SmartResponse<CrunchyrollTokenResponse> =
+        client.post<CrunchyrollTokenResponse>(
             url = "$BASE_URL/auth/v1/token",
             body = "grant_type=client_id&client_id=offline_access" +
                 "&device_id=$deviceId&device_type=Chrome+on+Linux",
@@ -304,23 +337,6 @@ class CrunchyrollPlatform(
                 "ETP-Anonymous-ID" to deviceId
             )
         )
-        val token = response.data
-
-        // A token served from the HTTP cache (revalidation or stale-on-error) may be close to
-        // its real expiry, so it is only trusted for half the cache TTL; a fresh response gets
-        // its real lifetime minus the safety margin.
-        val now = Clock.System.now().toEpochMilliseconds()
-        val expiresAtMillis = now +
-            if (response.hasChanged) {
-                (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
-            } else {
-                TOKEN_TTL.inWholeMilliseconds / 2
-            }
-
-        return CachedAccessToken(token.accessToken, expiresAtMillis)
-            .also { cachedAccessToken = it }
-            .token
-    }
 
     private companion object {
         const val BROWSE_PAGE_SIZE = 25
@@ -506,7 +522,7 @@ internal data class CrunchyrollBrowseObject(
             id = id,
             image = episodeImage(metadata, series),
             releaseDateTime = releaseDateTime,
-            season = forcedSeason ?: (metadata.seasonNumber ?: 1),
+            season = forcedSeason ?: (metadata.seasonNumber?.takeIf { it > 0 } ?: 1),
             number = number,
             episodeType = episodeType,
             duration = (metadata.durationMs ?: 0L) / 1000L,

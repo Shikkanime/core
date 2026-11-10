@@ -37,7 +37,8 @@ class SmartHttpClient(
         val contentHash: Int,
         val etag: String?,
         val lastModified: String?,
-        val expiresAtMillis: Long
+        val expiresAtMillis: Long,
+        val fetchedAtMillis: Long
     )
 
     /**
@@ -229,7 +230,11 @@ class SmartHttpClient(
         val cached = cache[cacheKey]
         if (cached != null && nowMillis < cached.expiresAtMillis) {
             logger.fine("Cache hit (fresh) for key: $cacheKey")
-            return SmartResponse(cached.data as T, hasChanged = false)
+            return SmartResponse(
+                cached.data as T,
+                hasChanged = false,
+                fetchedAtMillis = cached.fetchedAtMillis
+            )
         }
 
         // Coalesce concurrent requests for the same key to avoid duplicate network calls
@@ -272,7 +277,11 @@ class SmartHttpClient(
                     logger.fine("Cache revalidated (304 Not Modified) for key: $cacheKey")
                     val updated = cached.copy(expiresAtMillis = now + ttl.inWholeMilliseconds)
                     cache[cacheKey] = updated
-                    val result = SmartResponse(updated.data as T, hasChanged = false)
+                    val result = SmartResponse(
+                        updated.data as T,
+                        hasChanged = false,
+                        fetchedAtMillis = updated.fetchedAtMillis
+                    )
                     deferred.complete(result)
                     return result
                 }
@@ -292,7 +301,11 @@ class SmartHttpClient(
                             expiresAtMillis = now + ttl.inWholeMilliseconds
                         )
                         cache[cacheKey] = updated
-                        val result = SmartResponse(updated.data as T, hasChanged = false)
+                        val result = SmartResponse(
+                            updated.data as T,
+                            hasChanged = false,
+                            fetchedAtMillis = updated.fetchedAtMillis
+                        )
                         deferred.complete(result)
                         return result
                     }
@@ -308,10 +321,15 @@ class SmartHttpClient(
                         contentHash = contentHash,
                         etag = etag,
                         lastModified = lastModified,
-                        expiresAtMillis = now + ttl.inWholeMilliseconds
+                        expiresAtMillis = now + ttl.inWholeMilliseconds,
+                        fetchedAtMillis = now
                     )
 
-                    val result = SmartResponse(parsedData, hasChanged = true)
+                    val result = SmartResponse(
+                        parsedData,
+                        hasChanged = true,
+                        fetchedAtMillis = now
+                    )
                     deferred.complete(result)
                     return result
                 }
@@ -321,7 +339,11 @@ class SmartHttpClient(
                         "HTTP ${response.status.value} from $url, " +
                             "serving stale cache for key: $cacheKey"
                     )
-                    val result = SmartResponse(cached.data as T, hasChanged = false)
+                    val result = SmartResponse(
+                        cached.data as T,
+                        hasChanged = false,
+                        fetchedAtMillis = cached.fetchedAtMillis
+                    )
                     deferred.complete(result)
                     return result
                 }
@@ -336,7 +358,11 @@ class SmartHttpClient(
                         "Request failed for $url (${e.message}), " +
                             "serving stale cache for key: $cacheKey"
                     )
-                    val result = SmartResponse(cached.data as T, hasChanged = false)
+                    val result = SmartResponse(
+                        cached.data as T,
+                        hasChanged = false,
+                        fetchedAtMillis = cached.fetchedAtMillis
+                    )
                     deferred.complete(result)
                     return result
                 }

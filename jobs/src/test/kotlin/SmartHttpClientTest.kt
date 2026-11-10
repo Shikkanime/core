@@ -7,9 +7,12 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
+import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.test.runTest
@@ -123,6 +126,89 @@ class SmartHttpClientTest {
             // Then
             assertEquals(staleEntry, client.cache["staleKey"])
             assertEquals(1, client.cache.size)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the get method")
+    inner class GetTests {
+
+        @Test
+        @DisplayName("should revalidate an expired entry and report it unchanged")
+        fun `should revalidate an expired entry and report it unchanged`() = runTest {
+            // Given
+            var calls = 0
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine {
+                        calls++
+                        if (calls == 1) {
+                            respond(
+                                "v1",
+                                headers = headersOf(HttpHeaders.ETag, "\"e1\"")
+                            )
+                        } else {
+                            respond("", status = HttpStatusCode.NotModified)
+                        }
+                    }
+                )
+            )
+
+            // When: the zero ttl makes the entry stale immediately, forcing a revalidation
+            val first = client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:etag",
+                ttl = 0.minutes
+            )
+            val second = client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:etag",
+                ttl = 0.minutes
+            )
+
+            // Then: the 304 kept the cached payload and its original fetch timestamp
+            assertEquals(2, calls)
+            assertTrue(first.hasChanged)
+            assertFalse(second.hasChanged)
+            assertEquals("v1", second.data)
+            assertEquals(first.fetchedAtMillis, second.fetchedAtMillis)
+        }
+
+        @Test
+        @DisplayName("should serve the stale entry when the request fails")
+        fun `should serve the stale entry when the request fails`() = runTest {
+            // Given
+            var calls = 0
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine {
+                        calls++
+                        if (calls == 1) {
+                            respond("v1")
+                        } else {
+                            respond("boom", status = HttpStatusCode.InternalServerError)
+                        }
+                    }
+                )
+            )
+
+            // When
+            client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:stale",
+                ttl = 0.minutes
+            )
+            val stale = client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:stale",
+                ttl = 0.minutes
+            )
+
+            // Then
+            assertEquals(2, calls)
+            assertFalse(stale.hasChanged)
+            assertEquals("v1", stale.data)
+            assertTrue(stale.fetchedAtMillis != null)
         }
     }
 
