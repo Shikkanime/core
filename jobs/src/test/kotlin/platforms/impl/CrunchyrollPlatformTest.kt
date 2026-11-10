@@ -259,6 +259,34 @@ class CrunchyrollPlatformTest {
         }
 
         @Test
+        @DisplayName("should exclude blank series identifiers from the batched request")
+        fun `should exclude blank series identifiers from the batched request`() = runTest {
+            // Given
+            var requestedIds: String? = null
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(
+                        episode(id = "EP1", seriesId = ""),
+                        episode(id = "EP2", seriesId = "SERIES2", numberString = "2", number = 2)
+                    ),
+                    seriesObjects = listOf(series(id = "SERIES2", title = "Naruto")),
+                    onRequest = { request ->
+                        val url = request.url.toString()
+                        if ("/cms/objects/" in url)
+                            requestedIds = url.substringAfter("/cms/objects/").substringBefore("?")
+                    }
+                )
+            )
+
+            // When
+            val episodes = platform.episodes()
+
+            // Then: the blank identifier neither poisons the request nor yields an episode
+            assertEquals(listOf("EP2"), episodes.map { it.id })
+            assertEquals("SERIES2", requestedIds)
+        }
+
+        @Test
         @DisplayName("should ignore browse objects without episode metadata")
         fun `should ignore browse objects without episode metadata`() = runTest {
             // Given

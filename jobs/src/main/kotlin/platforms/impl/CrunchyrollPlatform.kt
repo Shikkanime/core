@@ -173,7 +173,7 @@ class CrunchyrollPlatform(
 
         val seriesById = fetchSeriesObjects(
             country,
-            episodeEntries.mapNotNull { it.second.seriesId }.toSet()
+            episodeEntries.mapNotNull { it.second.seriesId?.takeIf(String::isNotBlank) }.toSet()
         )
 
         val animes = mutableMapOf<String, PlatformAnime>()
@@ -284,7 +284,7 @@ class CrunchyrollPlatform(
             url = "$BASE_URL/auth/v1/token",
             body = "grant_type=client_id&client_id=offline_access" +
                 "&device_id=$deviceId&device_type=Chrome+on+Linux",
-            cacheKey = "crunchyroll:token",
+            cacheKey = "crunchyroll:token:$deviceId",
             ttl = TOKEN_TTL,
             contentType = ContentType.Application.FormUrlEncoded,
             headers = mapOf(
@@ -294,20 +294,16 @@ class CrunchyrollPlatform(
         )
         val token = response.data
 
-        // A revalidated or stale-served response carries the same token: its real expiry is the
-        // one computed at mint time, so only a genuinely new token gets a fresh expiry. When the
-        // token is served from the HTTP cache of a fresh platform instance, its remaining life is
-        // unknown, so it is reused for at most half the cache TTL before being minted again.
+        // A token served from the HTTP cache (revalidation or stale-on-error) may be close to
+        // its real expiry, so it is only trusted for half the cache TTL; a fresh response gets
+        // its real lifetime minus the safety margin.
         val now = Clock.System.now().toEpochMilliseconds()
-        val expiresAtMillis = cachedAccessToken
-            ?.takeIf { it.token == token.accessToken && it.expiresAtMillis > now }
-            ?.expiresAtMillis
-            ?: now +
-                if (response.hasChanged) {
-                    (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
-                } else {
-                    TOKEN_TTL.inWholeMilliseconds / 2
-                }
+        val expiresAtMillis = now +
+            if (response.hasChanged) {
+                (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+            } else {
+                TOKEN_TTL.inWholeMilliseconds / 2
+            }
 
         return CachedAccessToken(token.accessToken, expiresAtMillis)
             .also { cachedAccessToken = it }
@@ -405,7 +401,7 @@ internal data class CrunchyrollBrowseObject(
             images = listOfNotNull(
                 artwork?.fullHDImage?.let { PlatformImage(ImageType.THUMBNAIL, it) },
                 artwork?.fullHDBanner?.let { PlatformImage(ImageType.BANNER, it) },
-                fullHDTitle.takeIf { artwork != null }?.let { PlatformImage(ImageType.TITLE, it) }
+                fullHDTitle.takeIf { id.isNotBlank() }?.let { PlatformImage(ImageType.TITLE, it) }
             ),
             localizations = listOf(
                 PlatformAnimeLocalization(
@@ -485,7 +481,8 @@ internal data class CrunchyrollBrowseObject(
 
         val watchSlug = slugTitle?.takeIf { it.isNotBlank() }
             ?: metadata.slugTitle?.takeIf { it.isNotBlank() }
-            ?: metadata.seriesSlugTitle.orEmpty()
+            ?: metadata.seriesSlugTitle?.takeIf { it.isNotBlank() }
+        val watchPath = watchSlug?.let { "/$it" }.orEmpty()
 
         return PlatformEpisode(
             anime = anime,
@@ -496,7 +493,7 @@ internal data class CrunchyrollBrowseObject(
             number = number,
             episodeType = episodeType,
             duration = (metadata.durationMs ?: 0L) / 1000L,
-            url = "$BASE_URL/${country.code.lowercase()}/watch/$id/$watchSlug",
+            url = "$BASE_URL/${country.code.lowercase()}/watch/$id$watchPath",
             audioLocales = listOf(audioLocale),
             uncensored = metadata.matureBlocked == true,
             localizations = listOf(
@@ -620,9 +617,11 @@ internal data class CrunchyrollEpisode(
     val identifier: String? = null
 ) {
     val releaseDateTime: ZonedDateTime?
-        get() = (premiumAvailableDate?.takeIf { it.isNotBlank() }
-            ?: availabilityStarts?.takeIf { it.isNotBlank() })?.let {
-            runCatching { ZonedDateTime.parse(it) }
+        get() = listOfNotNull(
+            premiumAvailableDate?.takeIf { it.isNotBlank() },
+            availabilityStarts?.takeIf { it.isNotBlank() }
+        ).firstNotNullOfOrNull { raw ->
+            runCatching { ZonedDateTime.parse(raw) }
                 .getOrNull()
                 ?.takeIf { parsed -> parsed.year < 9000 }
         }
@@ -631,14 +630,15 @@ internal data class CrunchyrollEpisode(
      * Resolves the number and the editorial type of the episode.
      *
      * Detection rules prioritize films (movie slugs or unnumbered releases longer than one
-     * hour), then specials (`SP` numbering, `OAD` identifiers or special season slugs, and any
-     * unnumbered release), and fall back to standard episodes.
+     * hour), then specials (`SP` numbering, `OAD` identifiers, special season slugs, or any
+     * non-numeric episode label), and fall back to standard episodes.
      *
      * @return A pair of the episode number (`-1` when unnumbered) and the [EpisodeType].
      * @see [EpisodeType]
      */
     fun getNumberAndEpisodeType(): Pair<Int, EpisodeType> {
-        var episodeNumber = number ?: numberString?.toIntOrNull() ?: -1
+        val trimmedNumberString = numberString?.trim()
+        var episodeNumber = number ?: trimmedNumberString?.toIntOrNull() ?: -1
 
         var episodeType = when {
             seasonSlugTitle?.contains("movie", true) == true ||
@@ -650,7 +650,7 @@ internal data class CrunchyrollEpisode(
             else -> EpisodeType.EPISODE
         }
 
-        SPECIAL_EPISODE_REGEX.find(numberString.orEmpty())
+        SPECIAL_EPISODE_REGEX.find(trimmedNumberString.orEmpty())
             ?.groupValues?.get(1)?.toIntOrNull()?.let {
                 episodeType = EpisodeType.SPECIAL
                 episodeNumber = it
@@ -659,8 +659,8 @@ internal data class CrunchyrollEpisode(
         // A non-numeric episode label (recap, OVA...) is never a standard episode: the numeric
         // episode_number field may be recycled, so the label wins over it.
         if (episodeType == EpisodeType.EPISODE &&
-            !numberString.isNullOrBlank() &&
-            numberString.trim().toIntOrNull() == null
+            !trimmedNumberString.isNullOrBlank() &&
+            trimmedNumberString.toIntOrNull() == null
         ) {
             episodeType = EpisodeType.SPECIAL
         }

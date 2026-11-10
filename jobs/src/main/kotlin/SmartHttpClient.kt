@@ -55,6 +55,15 @@ class SmartHttpClient(
             ): Boolean = size > capacity
         }
 
+        /**
+         * Returns the entry stored for the given key, or `null` when it is absent or stale.
+         *
+         * A hit refreshes the recency of the entry in the LRU order.
+         *
+         * @param key the cache key to look up.
+         * @return the stored [HttpCacheEntry], or `null`.
+         * @see [HttpCacheEntry]
+         */
         @Synchronized
         operator fun get(key: String): HttpCacheEntry? {
             val entry = map[key] ?: return null
@@ -66,6 +75,13 @@ class SmartHttpClient(
             return entry
         }
 
+        /**
+         * Stores the entry for the given key after purging the expired entries.
+         *
+         * @param key the cache key to store under.
+         * @param value the [HttpCacheEntry] to store.
+         * @see [HttpCacheEntry]
+         */
         @Synchronized
         operator fun set(key: String, value: HttpCacheEntry) {
             cleanUpExpired(Clock.System.now().toEpochMilliseconds())
@@ -95,6 +111,13 @@ class SmartHttpClient(
         fun clear(): Unit =
             map.clear()
 
+        /**
+         * Removes every entry whose freshness window plus the stale retention has elapsed.
+         *
+         * @param nowMillis the reference timestamp in epoch milliseconds.
+         * @return nothing.
+         * @see [HttpCacheEntry]
+         */
         @Synchronized
         fun cleanUpExpired(nowMillis: Long = Clock.System.now().toEpochMilliseconds()) {
             val iterator = map.entries.iterator()
