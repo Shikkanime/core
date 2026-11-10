@@ -34,6 +34,16 @@ private val SEASON_REGEX = Regex(""" Saison (\d+)""")
 private val TEASER_REGEX = Regex("""\b(?:teaser|pv|trailer)\b""", RegexOption.IGNORE_CASE)
 private val SPECIAL_EPISODE_REGEX = Regex("""^SP(\d+)$""")
 private val IDENTIFIER_REGEX = Regex("""^[^|]+\|([^|]+)\|[^|]+$""")
+private val SERIES_ID_REGEX = Regex("""^[A-Za-z0-9]+$""")
+
+/**
+ * Returns the first candidate that is neither `null` nor blank.
+ *
+ * @param candidates the raw values to pick from, in priority order.
+ * @return the first non-blank candidate, or `null` when every candidate is blank.
+ */
+private fun firstNonBlank(vararg candidates: String?): String? =
+    candidates.firstOrNull { !it.isNullOrBlank() }
 
 private const val BASE_URL = "https://www.crunchyroll.com"
 
@@ -241,7 +251,9 @@ class CrunchyrollPlatform(
             return emptyMap()
 
         val locale = country.defaultLocale.code
-        val ids = seriesIds.sorted().joinToString(",")
+        val ids = seriesIds.filter { SERIES_ID_REGEX.matches(it) }.sorted().joinToString(",")
+        if (ids.isEmpty())
+            return emptyMap()
 
         return client.get<CrunchyrollBrowseResponse>(
             url = "$BASE_URL/content/v2/cms/objects/$ids?images=true&locale=$locale",
@@ -392,7 +404,9 @@ internal data class CrunchyrollBrowseObject(
         rawTitle: String?,
         country: Country
     ): PlatformAnime {
-        val (cleanedTitle, _) = cleanAnimeTitle(rawTitle ?: seriesMetadata?.title ?: title)
+        val (cleanedTitle, _) = cleanAnimeTitle(
+            firstNonBlank(rawTitle, seriesMetadata?.title, title)
+        )
         val artwork = images ?: seriesMetadata?.images
 
         return PlatformAnime(
@@ -407,9 +421,12 @@ internal data class CrunchyrollBrowseObject(
                 PlatformAnimeLocalization(
                     country = country,
                     locale = country.defaultLocale,
-                    title = cleanedTitle.sanitizeText().orEmpty(),
-                    description = normalizeDescription(description ?: seriesMetadata?.description)
-                        .sanitizeText()
+                    title = cleanedTitle.sanitizeText()
+                        ?.takeIf { it.isNotBlank() }
+                        ?: seriesId,
+                    description = normalizeDescription(
+                        firstNonBlank(description, seriesMetadata?.description)
+                    ).sanitizeText()
                 )
             )
         )
@@ -476,7 +493,7 @@ internal data class CrunchyrollBrowseObject(
         val (number, episodeType) = metadata.getNumberAndEpisodeType()
 
         val (_, forcedSeason) = cleanAnimeTitle(
-            metadata.seriesTitle ?: series.seriesMetadata?.title ?: series.title
+            firstNonBlank(metadata.seriesTitle, series.seriesMetadata?.title, series.title)
         )
 
         val watchSlug = slugTitle?.takeIf { it.isNotBlank() }
@@ -499,7 +516,7 @@ internal data class CrunchyrollBrowseObject(
             localizations = listOf(
                 PlatformEpisodeLocalization(
                     country = country,
-                    title = (title ?: metadata.title).sanitizeText(),
+                    title = firstNonBlank(title, metadata.title).sanitizeText(),
                     description = description.sanitizeText()
                 )
             )
@@ -554,18 +571,18 @@ internal data class CrunchyrollBrowseObject(
 
 @Serializable
 internal data class CrunchyrollImages(
-    val thumbnail: List<List<CrunchyrollMediaImage>> = emptyList(),
+    val thumbnail: List<List<CrunchyrollMediaImage>>? = null,
     @SerialName("poster_tall")
-    val posterTall: List<List<CrunchyrollMediaImage>> = emptyList(),
+    val posterTall: List<List<CrunchyrollMediaImage>>? = null,
     @SerialName("poster_wide")
-    val posterWide: List<List<CrunchyrollMediaImage>> = emptyList()
+    val posterWide: List<List<CrunchyrollMediaImage>>? = null
 ) {
     val fullHDThumbnail: String?
-        get() = thumbnail.firstOrNull()?.maxByOrNull { it.width }?.source
+        get() = thumbnail.orEmpty().firstOrNull()?.maxByOrNull { it.width }?.source
     val fullHDImage: String?
-        get() = posterTall.firstOrNull()?.maxByOrNull { it.width }?.source
+        get() = posterTall.orEmpty().firstOrNull()?.maxByOrNull { it.width }?.source
     val fullHDBanner: String?
-        get() = posterWide.firstOrNull()?.maxByOrNull { it.width }?.source
+        get() = posterWide.orEmpty().firstOrNull()?.maxByOrNull { it.width }?.source
 }
 
 @Serializable
@@ -630,8 +647,9 @@ internal data class CrunchyrollEpisode(
      * Resolves the number and the editorial type of the episode.
      *
      * Detection rules prioritize films (movie slugs or unnumbered releases longer than one
-     * hour), then specials (`SP` numbering, `OAD` identifiers, special season slugs, or any
-     * non-numeric episode label), and fall back to standard episodes.
+     * hour), then specials (`SP` numbering, `OAD` identifiers, special season slugs, any
+     * unnumbered release, or any non-numeric episode label overriding a recycled numeric
+     * `episode_number`), and fall back to standard episodes.
      *
      * @return A pair of the episode number (`-1` when unnumbered) and the [EpisodeType].
      * @see [EpisodeType]
