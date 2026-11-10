@@ -33,7 +33,7 @@ import kotlin.uuid.Uuid
 private val SEASON_REGEX = Regex(""" Saison (\d+)""")
 private val TEASER_REGEX = Regex("""\b(?:teaser|pv|trailer)\b""", RegexOption.IGNORE_CASE)
 private val SPECIAL_EPISODE_REGEX = Regex("""SP(\d*)""")
-private val IDENTIFIER_REGEX = Regex("""(.+)\|(.+)\|(.+)""")
+private val IDENTIFIER_REGEX = Regex("""^[^|]+\|([^|]+)\|[^|]+$""")
 
 private const val BASE_URL = "https://www.crunchyroll.com"
 
@@ -50,8 +50,8 @@ private const val BASE_URL = "https://www.crunchyroll.com"
  * Only the latest published episodes are harvested: the upcoming episode prediction of the
  * legacy implementation is intentionally not ported.
  *
- * @param client The [SmartHttpClient] instance used to execute cached HTTP requests against the
- * Crunchyroll API and to reach the underlying [io.ktor.client.HttpClient] for the token endpoint.
+ * @param client The [SmartHttpClient] instance used to execute every cached HTTP request of
+ * the platform, including the token endpoint POST.
  * @param ttl The cache time-to-live [Duration] for browse and series responses (defaults to 1 minute).
  * @param countries The target countries enabled for this platform connector.
  * @see [StreamingPlatform]
@@ -479,7 +479,8 @@ internal data class CrunchyrollBrowseObject(
             number = number,
             episodeType = episodeType,
             duration = (metadata.durationMs ?: 0L) / 1000L,
-            url = "$BASE_URL/${country.code.lowercase()}/watch/$id/${slugTitle.orEmpty()}",
+            url = "$BASE_URL/${country.code.lowercase()}/watch/$id/" +
+                "${slugTitle ?: metadata.slugTitle.orEmpty()}",
             audioLocales = listOf(audioLocale),
             uncensored = metadata.matureBlocked == true,
             localizations = listOf(
@@ -528,7 +529,7 @@ internal data class CrunchyrollBrowseObject(
      * @see [CrunchyrollBrowseObject.toPlatformAnime]
      */
     private fun normalizeDescription(description: String?): String? =
-        description?.split("\r\n\r\n")?.let { lines ->
+        description?.split(Regex("""\r?\n\r?\n"""))?.let { lines ->
             when {
                 lines.size == 2 -> lines[1]
                 lines.size > 2 -> lines.subList(1, lines.size - 1).joinToString(" ")
@@ -556,17 +557,12 @@ internal data class CrunchyrollImages(
 @Serializable
 internal data class CrunchyrollMediaImage(
     val source: String,
-    val type: String = "",
-    val width: Int = 0,
-    val height: Int = 0
+    val width: Int = 0
 )
 
 @Serializable
 internal data class CrunchyrollSeries(
-    val id: String? = null,
     val title: String? = null,
-    @SerialName("slug_title")
-    val slugTitle: String? = null,
     val description: String? = null,
     val images: CrunchyrollImages? = null
 )
@@ -585,8 +581,6 @@ internal data class CrunchyrollEpisode(
     val subtitleLocales: List<String>? = null,
     @SerialName("premium_available_date")
     val premiumAvailableDate: String? = null,
-    @SerialName("season_id")
-    val seasonId: String? = null,
     @SerialName("season_number")
     val seasonNumber: Int? = null,
     @SerialName("season_slug_title")
@@ -601,7 +595,6 @@ internal data class CrunchyrollEpisode(
     val images: CrunchyrollImages? = null,
     @SerialName("duration_ms")
     val durationMs: Long? = null,
-    val description: String? = null,
     @SerialName("mature_blocked")
     val matureBlocked: Boolean? = null,
     @SerialName("identifier")
@@ -642,7 +635,7 @@ internal data class CrunchyrollEpisode(
             }
 
         identifier?.let {
-            IDENTIFIER_REGEX.find(it)?.groupValues?.get(2)?.let { part ->
+            IDENTIFIER_REGEX.find(it)?.groupValues?.get(1)?.let { part ->
                 if (part == "OAD") episodeType = EpisodeType.SPECIAL
             }
         }
