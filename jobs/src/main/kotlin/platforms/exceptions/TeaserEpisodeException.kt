@@ -31,7 +31,7 @@ class TeaserEpisodeException(
          * @return the descriptive failure message.
          * @see [TeaserEpisodeException]
          */
-        private fun buildErrorMessage(
+        fun buildErrorMessage(
             episodeId: String,
             episodeName: String?,
             reason: String?

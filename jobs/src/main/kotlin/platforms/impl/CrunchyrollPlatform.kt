@@ -524,7 +524,7 @@ internal data class CrunchyrollBrowseObject(
         return PlatformEpisode(
             anime = anime,
             id = id,
-            image = episodeImage(metadata, series),
+            image = episodeImage(metadata, series).ifBlank { fullHDTitle },
             releaseDateTime = releaseDateTime,
             season = forcedSeason ?: (metadata.seasonNumber?.takeIf { it > 0 } ?: 1),
             number = number,
