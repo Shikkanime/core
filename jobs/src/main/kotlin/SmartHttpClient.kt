@@ -50,8 +50,9 @@ class SmartHttpClient(
         private val maxStaleMillis: Long
     ) {
         private val map = object : LinkedHashMap<String, HttpCacheEntry>(capacity, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, HttpCacheEntry>?): Boolean =
-                size > capacity
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<String, HttpCacheEntry>?
+            ): Boolean = size > capacity
         }
 
         @Synchronized
@@ -293,7 +294,10 @@ class SmartHttpClient(
                 }
 
                 if (cached != null && staleOnError) {
-                    logger.warning("HTTP ${response.status.value} from $url, serving stale cache for key: $cacheKey")
+                    logger.warning(
+                        "HTTP ${response.status.value} from $url, " +
+                            "serving stale cache for key: $cacheKey"
+                    )
                     val result = SmartResponse(cached.data as T, hasChanged = false)
                     deferred.complete(result)
                     return result
@@ -305,7 +309,10 @@ class SmartHttpClient(
                 throw e
             } catch (e: Exception) {
                 if (cached != null && staleOnError) {
-                    logger.warning("Request failed for $url (${e.message}), serving stale cache for key: $cacheKey")
+                    logger.warning(
+                        "Request failed for $url (${e.message}), " +
+                            "serving stale cache for key: $cacheKey"
+                    )
                     val result = SmartResponse(cached.data as T, hasChanged = false)
                     deferred.complete(result)
                     return result

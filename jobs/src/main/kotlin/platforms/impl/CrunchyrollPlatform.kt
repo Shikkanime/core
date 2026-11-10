@@ -32,7 +32,7 @@ import kotlin.uuid.Uuid
 
 private val SEASON_REGEX = Regex(""" Saison (\d+)""")
 private val TEASER_REGEX = Regex("""\b(?:teaser|pv|trailer)\b""", RegexOption.IGNORE_CASE)
-private val SPECIAL_EPISODE_REGEX = Regex("""SP(\d*)""")
+private val SPECIAL_EPISODE_REGEX = Regex("""^SP(\d+)$""")
 private val IDENTIFIER_REGEX = Regex("""^[^|]+\|([^|]+)\|[^|]+$""")
 
 private const val BASE_URL = "https://www.crunchyroll.com"
@@ -192,22 +192,26 @@ class CrunchyrollPlatform(
                 series.toPlatformAnime(seriesId, metadata.seriesTitle, country)
             }
 
+            var conversionFailed = false
             val episode = try {
                 browseObject.toPlatformEpisode(metadata, anime, series, country)
             } catch (e: TeaserEpisodeException) {
                 logger.fine(e.message)
+                conversionFailed = true
                 null
             } catch (e: MissingAudioLocaleException) {
                 logger.warning(e.message)
+                conversionFailed = true
                 null
             } catch (e: Exception) {
                 logger.warning(
                     "Skipping Crunchyroll episode ${browseObject.id}: ${e.message}"
                 )
+                conversionFailed = true
                 null
             }
 
-            if (episode == null)
+            if (episode == null && !conversionFailed)
                 logger.fine("Crunchyroll episode ${browseObject.id} filtered out")
 
             episode
@@ -239,7 +243,7 @@ class CrunchyrollPlatform(
         val ids = seriesIds.sorted().joinToString(",")
 
         return client.get<CrunchyrollBrowseResponse>(
-            url = "$BASE_URL/content/v2/cms/objects/$ids?locale=$locale",
+            url = "$BASE_URL/content/v2/cms/objects/$ids?images=true&locale=$locale",
             cacheKey = "crunchyroll:objects:$locale:$ids",
             ttl = ttl,
             headers = authorizationHeaders()
@@ -275,7 +279,7 @@ class CrunchyrollPlatform(
             return cached.token
         }
 
-        val token = client.post<CrunchyrollTokenResponse>(
+        val response = client.post<CrunchyrollTokenResponse>(
             url = "$BASE_URL/auth/v1/token",
             body = "grant_type=client_id&client_id=offline_access" +
                 "&device_id=$deviceId&device_type=Chrome+on+Linux",
@@ -286,15 +290,22 @@ class CrunchyrollPlatform(
                 HttpHeaders.Authorization to "Basic $CRUNCHYROLL_BASIC_AUTH_TOKEN",
                 "ETP-Anonymous-ID" to deviceId
             )
-        ).data
+        )
+        val token = response.data
 
         // A revalidated or stale-served response carries the same token: its real expiry is the
-        // one computed at mint time, so only a genuinely new token gets a fresh expiry.
+        // one computed at mint time, so only a genuinely new token gets a fresh expiry. When the
+        // token is served from the HTTP cache of a fresh platform instance, its remaining life is
+        // unknown, so it is reused for at most half the cache TTL before being minted again.
         val expiresAtMillis = cachedAccessToken
             ?.takeIf { it.token == token.accessToken }
             ?.expiresAtMillis
             ?: Clock.System.now().toEpochMilliseconds() +
-                (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+                if (response.hasChanged) {
+                    (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+                } else {
+                    TOKEN_TTL.inWholeMilliseconds / 2
+                }
 
         return CachedAccessToken(token.accessToken, expiresAtMillis)
             .also { cachedAccessToken = it }
@@ -480,7 +491,7 @@ internal data class CrunchyrollBrowseObject(
             episodeType = episodeType,
             duration = (metadata.durationMs ?: 0L) / 1000L,
             url = "$BASE_URL/${country.code.lowercase()}/watch/$id/" +
-                "${slugTitle ?: metadata.slugTitle.orEmpty()}",
+                "${slugTitle ?: metadata.slugTitle ?: metadata.seriesSlugTitle.orEmpty()}",
             audioLocales = listOf(audioLocale),
             uncensored = metadata.matureBlocked == true,
             localizations = listOf(
@@ -506,8 +517,8 @@ internal data class CrunchyrollBrowseObject(
         metadata: CrunchyrollEpisode,
         series: CrunchyrollBrowseObject
     ): String {
-        val episodeImages = images ?: metadata.images
-        val episodeThumbnail = episodeImages?.fullHDThumbnail
+        val episodeThumbnail =
+            images?.fullHDThumbnail ?: metadata.images?.fullHDThumbnail
         if (episodeThumbnail != null)
             return episodeThumbnail
 
@@ -515,6 +526,7 @@ internal data class CrunchyrollBrowseObject(
         return seriesImages?.fullHDImage
             ?: seriesImages?.fullHDThumbnail
             ?: seriesImages?.fullHDBanner
+            ?: series.fullHDTitle.takeIf { series.id.isNotBlank() }
             ?: ""
     }
 
@@ -581,6 +593,8 @@ internal data class CrunchyrollEpisode(
     val subtitleLocales: List<String>? = null,
     @SerialName("premium_available_date")
     val premiumAvailableDate: String? = null,
+    @SerialName("availability_starts")
+    val availabilityStarts: String? = null,
     @SerialName("season_number")
     val seasonNumber: Int? = null,
     @SerialName("season_slug_title")
@@ -601,7 +615,7 @@ internal data class CrunchyrollEpisode(
     val identifier: String? = null
 ) {
     val releaseDateTime: ZonedDateTime?
-        get() = premiumAvailableDate?.let {
+        get() = (premiumAvailableDate ?: availabilityStarts)?.let {
             runCatching { ZonedDateTime.parse(it) }.getOrNull()
         }
 
@@ -609,8 +623,8 @@ internal data class CrunchyrollEpisode(
      * Resolves the number and the editorial type of the episode.
      *
      * Detection rules prioritize films (movie slugs or unnumbered releases longer than one
-     * hour), then specials (`SP` numbering, `OAD` identifiers or special season slugs), and
-     * fall back to standard episodes.
+     * hour), then specials (`SP` numbering, `OAD` identifiers or special season slugs, and any
+     * unnumbered release), and fall back to standard episodes.
      *
      * @return A pair of the episode number (`-1` when unnumbered) and the [EpisodeType].
      * @see [EpisodeType]
