@@ -15,6 +15,7 @@ import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.mockk.junit5.MockKExtension
@@ -90,8 +91,12 @@ class CrunchyrollPlatformTest {
                 request.method == HttpMethod.Post -> TOKEN_RESPONSE
                 "/discover/browse" in url -> browseResponse(*browseObjects.toTypedArray())
                 "/cms/objects/" in url -> {
-                    val seriesId = url.substringAfter("/cms/objects/").substringBefore("?")
-                    val matched = seriesObjects.filter { "\"id\": \"$seriesId\"" in it }
+                    val seriesIds = url.substringAfter("/cms/objects/")
+                        .substringBefore("?")
+                        .split(",")
+                    val matched = seriesObjects.filter { fixture ->
+                        seriesIds.any { id -> "\"id\": \"$id\"" in fixture }
+                    }
                     objectsResponse(*matched.toTypedArray())
                 }
                 else -> EMPTY_RESPONSE
@@ -351,6 +356,42 @@ class CrunchyrollPlatformTest {
         }
 
         @Test
+        @DisplayName("should send the token request as a form urlencoded POST")
+        fun `should send the token request as a form urlencoded POST`() = runTest {
+            // Given
+            var tokenBody: String? = null
+            var tokenContentType: String? = null
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(episode()),
+                    seriesObjects = listOf(series()),
+                    onRequest = { request ->
+                        if (request.method == HttpMethod.Post) {
+                            (request.body as? TextContent)?.let { content ->
+                                tokenBody = content.text
+                                tokenContentType = content.contentType.toString()
+                            }
+                        }
+                    }
+                )
+            )
+
+            // When
+            platform.fetchLatestEpisodes()
+
+            // Then
+            assertTrue(
+                tokenContentType.orEmpty().startsWith("application/x-www-form-urlencoded"),
+                "unexpected content type: $tokenContentType"
+            )
+            assertTrue(
+                tokenBody.orEmpty().contains("grant_type=client_id"),
+                "unexpected body: $tokenBody"
+            )
+            assertTrue(tokenBody.orEmpty().contains("client_id=offline_access"))
+        }
+
+        @Test
         @DisplayName("should harvest the episodes of every configured country")
         fun `should harvest the episodes of every configured country`() = runTest {
             // Given a Crunchyroll identifier is unique to an audio locale, so each country
@@ -547,33 +588,6 @@ class CrunchyrollPlatformTest {
             assertEquals(listOf("EP1"), episodes.map { it.id })
         }
 
-        @Test
-        @DisplayName("should skip episodes of series that are not simulcasted")
-        fun `should skip episodes of series that are not simulcasted`() = runTest {
-            // Given
-            val platform = platform(
-                smartHttpClient(
-                    browseObjects = listOf(
-                        episode(
-                            id = "EP1",
-                            seriesId = "CATALOG",
-                            audioLocale = "ja-JP"
-                        ),
-                        episode(id = "EP2", seriesId = "SIMUL")
-                    ),
-                    seriesObjects = listOf(
-                        series(id = "CATALOG", isSimulcast = false),
-                        series(id = "SIMUL", isSimulcast = true)
-                    )
-                )
-            )
-
-            // When
-            val episodes = platform.episodes()
-
-            // Then the catalog episode is subtitled but not simulcasted, the simulcast one is kept
-            assertEquals(listOf("EP2"), episodes.map { it.id })
-        }
     }
 
     @Nested
@@ -601,7 +615,7 @@ class CrunchyrollPlatformTest {
             // When
             val episodes = platform.episodes()
 
-            // Then a film is kept even when its series is not simulcasted
+            // Then
             val episode = episodes.single()
             assertEquals(EpisodeType.FILM, episode.episodeType)
         }
@@ -620,7 +634,7 @@ class CrunchyrollPlatformTest {
                             durationMs = 7_200_000
                         )
                     ),
-                    seriesObjects = listOf(series(isSimulcast = false))
+                    seriesObjects = listOf(series())
                 )
             )
 
@@ -1188,14 +1202,12 @@ class CrunchyrollPlatformTest {
          * @param id The identifier of the series.
          * @param title The title of the series.
          * @param description The description of the series.
-         * @param isSimulcast Whether the series is flagged as simulcast.
          * @return The JSON payload of the series browse object.
          */
         fun series(
             id: String = "SERIES1",
             title: String = "One Piece",
-            description: String? = "Tagline\\r\\n\\r\\nPirates summary",
-            isSimulcast: Boolean = true
+            description: String? = "Tagline\\r\\n\\r\\nPirates summary"
         ): String = """
             {
               "id": "$id",
@@ -1207,8 +1219,7 @@ class CrunchyrollPlatformTest {
                 "id": "$id",
                 "title": "$title",
                 "slug_title": "one-piece",
-                "description": ${description?.let { "\"$it\"" } ?: "null"},
-                "is_simulcast": $isSimulcast
+                "description": ${description?.let { "\"$it\"" } ?: "null"}
               }
             }
         """.trimIndent()

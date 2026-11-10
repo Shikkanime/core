@@ -138,8 +138,9 @@ class SmartHttpClient(
     /**
      * Performs a cached POST request with content change detection.
      *
-     * The body is sent as [contentType] encoded text, which covers the form urlencoded payloads
-     * of token endpoints.
+     * The body is sent as [contentType] encoded content: [String] bodies are wrapped in a
+     * [TextContent] (covering the form urlencoded payloads of token endpoints), while any other
+     * body is serialized by the client content negotiation, typically as JSON.
      *
      * @param T type of the expected response payload.
      * @param url the remote URL to query.
@@ -155,15 +156,20 @@ class SmartHttpClient(
      */
     suspend inline fun <reified T : Any> post(
         url: String,
-        body: String,
+        body: Any,
         cacheKey: String = url,
         ttl: Duration = Duration.ZERO,
         staleOnError: Boolean = true,
         headers: Map<String, String> = emptyMap(),
-        contentType: ContentType = ContentType.Application.FormUrlEncoded
+        contentType: ContentType = ContentType.Application.Json
     ): SmartResponse<T> =
         cachedRequest(url, HttpMethod.Post, cacheKey, ttl, staleOnError, headers) {
-            setBody(TextContent(body, contentType))
+            if (body is String) {
+                setBody(TextContent(body, contentType))
+            } else {
+                this.contentType(contentType)
+                setBody(body)
+            }
         }
 
     /**

@@ -11,6 +11,7 @@ import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
 import fr.shikkanime.jobs.platforms.PlatformImage
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
+import fr.shikkanime.jobs.platforms.exceptions.TeaserEpisodeException
 import fr.shikkanime.jobs.platforms.sanitizeText
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.EpisodeType
@@ -312,13 +313,22 @@ class AnimationDigitalNetworkPlatform(
         val invalidShowIds = mutableSetOf<Int>()
 
         return videos.mapNotNull { video ->
-            if (!video.isValid)
-                return@mapNotNull null
-            val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason, country)
-                ?: return@mapNotNull null
-
             try {
+                if (video.isTeaser)
+                    throw TeaserEpisodeException(
+                        episodeId = video.id.toString(),
+                        episodeName = video.title ?: video.name,
+                        reason = "promotional video"
+                    )
+                if (!video.isValid)
+                    return@mapNotNull null
+                val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason, country)
+                    ?: return@mapNotNull null
+
                 video.toPlatformEpisode(anime, country)
+            } catch (e: TeaserEpisodeException) {
+                logger.fine(e.message)
+                null
             } catch (e: MissingAudioLocaleException) {
                 logger.warning(e.message)
                 null
@@ -443,9 +453,13 @@ internal data class AdnVideo(
             )
     }
 
+    val isTeaser: Boolean
+        get() =
+            type == AdnType.PV || TRAILER_INDICATORS.any { shortNumber.startsWith(it) }
+
     val isValid: Boolean
         get() =
-            type !in SPECIAL_SHOW_TYPES && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
+            type !in SPECIAL_SHOW_TYPES && !isTeaser
 
     val isUncensored: Boolean
         get() =
