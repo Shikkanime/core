@@ -179,7 +179,8 @@ class CrunchyrollPlatform(
         val animes = mutableMapOf<String, PlatformAnime>()
 
         return episodeEntries.mapNotNull { (browseObject, metadata) ->
-            val seriesId = metadata.seriesId ?: return@mapNotNull null
+            val seriesId = metadata.seriesId?.takeIf { it.isNotBlank() }
+                ?: return@mapNotNull null
             val series = seriesById[seriesId]
             if (series == null) {
                 logger.warning(
@@ -297,10 +298,11 @@ class CrunchyrollPlatform(
         // one computed at mint time, so only a genuinely new token gets a fresh expiry. When the
         // token is served from the HTTP cache of a fresh platform instance, its remaining life is
         // unknown, so it is reused for at most half the cache TTL before being minted again.
+        val now = Clock.System.now().toEpochMilliseconds()
         val expiresAtMillis = cachedAccessToken
-            ?.takeIf { it.token == token.accessToken }
+            ?.takeIf { it.token == token.accessToken && it.expiresAtMillis > now }
             ?.expiresAtMillis
-            ?: Clock.System.now().toEpochMilliseconds() +
+            ?: now +
                 if (response.hasChanged) {
                     (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
                 } else {
@@ -481,6 +483,10 @@ internal data class CrunchyrollBrowseObject(
             metadata.seriesTitle ?: series.seriesMetadata?.title ?: series.title
         )
 
+        val watchSlug = slugTitle?.takeIf { it.isNotBlank() }
+            ?: metadata.slugTitle?.takeIf { it.isNotBlank() }
+            ?: metadata.seriesSlugTitle.orEmpty()
+
         return PlatformEpisode(
             anime = anime,
             id = id,
@@ -490,8 +496,7 @@ internal data class CrunchyrollBrowseObject(
             number = number,
             episodeType = episodeType,
             duration = (metadata.durationMs ?: 0L) / 1000L,
-            url = "$BASE_URL/${country.code.lowercase()}/watch/$id/" +
-                "${slugTitle ?: metadata.slugTitle ?: metadata.seriesSlugTitle.orEmpty()}",
+            url = "$BASE_URL/${country.code.lowercase()}/watch/$id/$watchSlug",
             audioLocales = listOf(audioLocale),
             uncensored = metadata.matureBlocked == true,
             localizations = listOf(
@@ -615,8 +620,11 @@ internal data class CrunchyrollEpisode(
     val identifier: String? = null
 ) {
     val releaseDateTime: ZonedDateTime?
-        get() = (premiumAvailableDate ?: availabilityStarts)?.let {
-            runCatching { ZonedDateTime.parse(it) }.getOrNull()
+        get() = (premiumAvailableDate?.takeIf { it.isNotBlank() }
+            ?: availabilityStarts?.takeIf { it.isNotBlank() })?.let {
+            runCatching { ZonedDateTime.parse(it) }
+                .getOrNull()
+                ?.takeIf { parsed -> parsed.year < 9000 }
         }
 
     /**
@@ -647,6 +655,15 @@ internal data class CrunchyrollEpisode(
                 episodeType = EpisodeType.SPECIAL
                 episodeNumber = it
             }
+
+        // A non-numeric episode label (recap, OVA...) is never a standard episode: the numeric
+        // episode_number field may be recycled, so the label wins over it.
+        if (episodeType == EpisodeType.EPISODE &&
+            !numberString.isNullOrBlank() &&
+            numberString.trim().toIntOrNull() == null
+        ) {
+            episodeType = EpisodeType.SPECIAL
+        }
 
         identifier?.let {
             IDENTIFIER_REGEX.find(it)?.groupValues?.get(1)?.let { part ->

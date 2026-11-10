@@ -5,6 +5,7 @@ import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.jobs.platforms.impl.CrunchyrollPlatform
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.koin.core.context.GlobalContext
@@ -19,6 +20,9 @@ import kotlin.uuid.Uuid
  * the discover browse endpoint, the batched CMS objects requests, the episode mapping and the
  * persistence of the harvested episodes. They require a network connection and a Crunchyroll
  * API that is not blocking the client.
+ *
+ * They are skipped unless the `RUN_CRUNCHYROLL_LIVE_TESTS` environment variable is set, so
+ * that CI builds do not depend on the availability of the external service.
  */
 @DisplayName("live end-to-end tests for the Crunchyroll platform")
 class CrunchyrollPlatformLiveTest {
@@ -28,12 +32,19 @@ class CrunchyrollPlatformLiveTest {
             GlobalContext.getOrNull()
                 ?: startKoin<MyApp>().koin.also(::applyTransactionalProxies)
         }
+
+        private fun assumeLiveTestsEnabled() =
+            assumeTrue(
+                System.getenv("RUN_CRUNCHYROLL_LIVE_TESTS") == "true",
+                "live tests disabled: set RUN_CRUNCHYROLL_LIVE_TESTS=true to run them"
+            )
     }
 
     @Test
     @DisplayName("should harvest the latest episodes from the real Crunchyroll API")
     fun shouldHarvestTheLatestEpisodesFromTheRealCrunchyrollApi() = runTest {
         // Given
+        assumeLiveTestsEnabled()
         val platform = CrunchyrollPlatform(client = SmartHttpClient())
 
         // When
@@ -51,6 +62,7 @@ class CrunchyrollPlatformLiveTest {
     @DisplayName("should persist the harvested episodes through the real application bootstrap")
     fun shouldPersistTheHarvestedEpisodesThroughTheRealApplicationBootstrap() = runTest {
         // Given: a fresh database and the platform resolved by the real dependency injection
+        assumeLiveTestsEnabled()
         freshDatabase()
         val platform = koin.get<CrunchyrollPlatform>()
 

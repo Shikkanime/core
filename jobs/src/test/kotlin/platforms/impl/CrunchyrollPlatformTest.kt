@@ -740,6 +740,26 @@ class CrunchyrollPlatformTest {
         }
 
         @Test
+        @DisplayName("should classify a non-numeric episode label as a special")
+        fun `should classify a non-numeric episode label as a special`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(
+                        episode(id = "SP1", numberString = "Recap", number = 5)
+                    ),
+                    seriesObjects = listOf(series())
+                )
+            )
+
+            // When
+            val episode = platform.episodes().single()
+
+            // Then
+            assertEquals(EpisodeType.SPECIAL, episode.episodeType)
+        }
+
+        @Test
         @DisplayName("should detect a standard episode")
         fun `should detect a standard episode`() = runTest {
             // Given
@@ -983,6 +1003,86 @@ class CrunchyrollPlatformTest {
         }
 
         @Test
+        @DisplayName("should fall back to availability_starts when the premium date is blank")
+        fun `should fall back to availability starts when the premium date is blank`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(
+                        episode(
+                            id = "EP1",
+                            premiumAvailableDate = "",
+                            availabilityStarts = "2026-02-01T10:00:00Z"
+                        )
+                    ),
+                    seriesObjects = listOf(series())
+                )
+            )
+
+            // When
+            val releaseDateTime = platform.episodes().single().releaseDateTime
+
+            // Then
+            assertEquals("2026-02-01T10:00:00Z", releaseDateTime.toInstant().toString())
+        }
+
+        @Test
+        @DisplayName("should filter out episodes with a sentinel availability date")
+        fun `should filter out episodes with a sentinel availability date`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(
+                        episode(id = "EP1", premiumAvailableDate = "9998-11-30T00:00:00Z")
+                    ),
+                    seriesObjects = listOf(series())
+                )
+            )
+
+            // When
+            val episodes = platform.episodes()
+
+            // Then
+            assertTrue(episodes.isEmpty())
+        }
+
+        @Test
+        @DisplayName("should fall back to the series slug when the episode slugs are blank")
+        fun `should fall back to the series slug when the episode slugs are blank`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(episode(id = "EP1", slugTitle = "")),
+                    seriesObjects = listOf(series())
+                )
+            )
+
+            // When
+            val url = platform.episodes().single().url
+
+            // Then
+            assertEquals("https://www.crunchyroll.com/fr/watch/EP1/one-piece", url)
+        }
+
+        @Test
+        @DisplayName("should fall back to the series title logo when no artwork is available")
+        fun `should fall back to the series title logo when no artwork is available`() = runTest {
+            // Given
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(episode(id = "EP1", withImages = false)),
+                    seriesObjects = listOf(series(withImages = false))
+                )
+            )
+
+            // When
+            val image = platform.episodes().single().image
+
+            // Then
+            assertTrue(image.contains("keyart/SERIES1-title_logo"))
+        }
+
+        @Test
         @DisplayName("should strip the season suffix of the series title and force the season")
         fun `should strip the season suffix of the series title and force the season`() = runTest {
             // Given
@@ -1154,6 +1254,7 @@ class CrunchyrollPlatformTest {
          * @param audioLocale The audio locale of the episode.
          * @param subtitleLocales The subtitle locales of the episode.
          * @param premiumAvailableDate The ISO release date of the episode.
+         * @param availabilityStarts The availability start date of the episode.
          * @param seasonNumber The season number of the episode.
          * @param seasonSlugTitle The season slug of the episode.
          * @param seriesSlugTitle The series slug of the episode.
@@ -1175,6 +1276,7 @@ class CrunchyrollPlatformTest {
             audioLocale: String = "fr-FR",
             subtitleLocales: List<String> = listOf("fr-FR", "en-US"),
             premiumAvailableDate: String = "2026-01-10T08:00:00Z",
+            availabilityStarts: String? = null,
             seasonNumber: Int? = 1,
             seasonSlugTitle: String? = "one-piece",
             seriesSlugTitle: String? = "one-piece",
@@ -1205,6 +1307,7 @@ class CrunchyrollPlatformTest {
                     "audio_locale": "$audioLocale",
                     "subtitle_locales": [${subtitleLocales.joinToString(", ") { "\"$it\"" }}],
                     "premium_available_date": "$premiumAvailableDate",
+                    "availability_starts": ${availabilityStarts?.let { "\"$it\"" } ?: "null"},
                     "season_id": "SEASON1",
                     "season_number": ${seasonNumber ?: "null"},
                     "season_slug_title": ${seasonSlugTitle?.let { "\"$it\"" } ?: "null"},
@@ -1227,19 +1330,23 @@ class CrunchyrollPlatformTest {
          * @param id The identifier of the series.
          * @param title The title of the series.
          * @param description The description of the series.
+         * @param withImages Whether the series carries images.
          * @return The JSON payload of the series browse object.
          */
         fun series(
             id: String = "SERIES1",
             title: String = "One Piece",
-            description: String? = "Tagline\\r\\n\\r\\nPirates summary"
-        ): String = """
-            {
-              "id": "$id",
-              "title": "$title",
-              "slug_title": "one-piece",
-              "description": ${description?.let { "\"$it\"" } ?: "null"},
-              ${imagesJson("series-$id")},
+            description: String? = "Tagline\\r\\n\\r\\nPirates summary",
+            withImages: Boolean = true
+        ): String {
+            val images = if (withImages) "${imagesJson("series-$id")}," else ""
+            return """
+                {
+                  "id": "$id",
+                  "title": "$title",
+                  "slug_title": "one-piece",
+                  "description": ${description?.let { "\"$it\"" } ?: "null"},
+                  $images
               "series_metadata": {
                 "id": "$id",
                 "title": "$title",
@@ -1248,5 +1355,6 @@ class CrunchyrollPlatformTest {
               }
             }
         """.trimIndent()
+        }
     }
 }

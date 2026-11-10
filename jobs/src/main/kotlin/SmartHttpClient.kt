@@ -320,6 +320,11 @@ class SmartHttpClient(
 
                 deferred.completeExceptionally(e)
                 throw e
+            } catch (e: Throwable) {
+                // Errors (not only Exceptions) must complete the deferred so that follower
+                // coroutines waiting on the single-flight entry are not left hanging.
+                deferred.completeExceptionally(e)
+                throw e
             } finally {
                 inFlight.remove(cacheKey, deferred)
             }
