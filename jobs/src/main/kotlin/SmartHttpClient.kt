@@ -229,6 +229,7 @@ class SmartHttpClient(
 
             // Leader coroutine performing the actual HTTP call
             try {
+                logger.info("Executing ${httpMethod.value} request to $url (cacheKey: $cacheKey)")
                 val response = client.request(url) {
                     method = httpMethod
                     headers.forEach { (key, value) -> header(key, value) }

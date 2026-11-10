@@ -19,9 +19,6 @@ import fr.shikkanime.models.Locale
 import fr.shikkanime.models.Platform
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
@@ -46,9 +43,9 @@ private const val BASE_URL = "https://www.crunchyroll.com"
  * This implementation connects to the Crunchyroll public content API: it mints an anonymous
  * access token with the Android TV basic auth credentials, browses the latest episode releases
  * per configured country, resolves the parent series objects for their artwork and editorial
- * metadata, and normalizes everything into [PlatformEpisode] instances. Series objects are
- * requested in batches: identifiers are dispatched into a fixed number of hash buckets so every
- * bucket keeps a stable cache key and a new episode only invalidates the bucket it belongs to.
+ * metadata, and normalizes everything into [PlatformEpisode] instances. The series objects of
+ * a browse page are resolved in a single batched request so a harvest costs one browse call and
+ * one objects call per country.
  *
  * Only the latest published episodes are harvested: the upcoming episode prediction of the
  * legacy implementation is intentionally not ported.
@@ -210,10 +207,10 @@ class CrunchyrollPlatform(
     /**
      * Fetches the series browse objects of the given identifiers for a country.
      *
-     * Identifiers are dispatched into [SERIES_BUCKET_COUNT] hash buckets and every bucket is
-     * requested in a single call: the cache key of a bucket only depends on its members, so a
-     * new episode refetches its own bucket instead of the whole catalog, while the request
-     * count stays bounded instead of one request per series.
+     * Every identifier is requested in a single batched call, like the legacy implementation
+     * did with its chunks: the browse page only carries a handful of series, so one request
+     * resolves them all. The cache key is built from the sorted identifiers, so it stays stable
+     * as long as the catalog does not change.
      *
      * @param country Target country distribution.
      * @param seriesIds The series identifiers to resolve.
@@ -229,24 +226,14 @@ class CrunchyrollPlatform(
             return emptyMap()
 
         val locale = country.defaultLocale.code
-        val buckets = seriesIds.groupBy { (it.hashCode() and Int.MAX_VALUE) % SERIES_BUCKET_COUNT }
+        val ids = seriesIds.sorted().joinToString(",")
 
-        return coroutineScope {
-            buckets.values.map { bucketIds ->
-                async {
-                    val ids = bucketIds.sorted().joinToString(",")
-                    val url = "$BASE_URL/content/v2/cms/objects/$ids?locale=$locale"
-                    client.get<CrunchyrollBrowseResponse>(
-                        url = url,
-                        cacheKey = url,
-                        ttl = ttl,
-                        headers = authorizationHeaders()
-                    ).data.data
-                }
-            }.awaitAll()
-        }
-            .flatten()
-            .associateBy { it.id }
+        return client.get<CrunchyrollBrowseResponse>(
+            url = "$BASE_URL/content/v2/cms/objects/$ids?locale=$locale",
+            cacheKey = "crunchyroll:objects:$locale:$ids",
+            ttl = ttl,
+            headers = authorizationHeaders()
+        ).data.data.associateBy { it.id }
     }
 
     /**
@@ -305,7 +292,6 @@ class CrunchyrollPlatform(
 
     private companion object {
         const val BROWSE_PAGE_SIZE = 25
-        const val SERIES_BUCKET_COUNT = 5
         const val TOKEN_EXPIRY_MARGIN_SECONDS = 60L
         val TOKEN_TTL = 25.minutes
 
