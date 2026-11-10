@@ -83,12 +83,13 @@ class CrunchyrollPlatformTest {
     private fun smartHttpClient(
         browseObjects: List<String> = emptyList(),
         seriesObjects: List<String> = emptyList(),
+        tokenResponse: String = TOKEN_RESPONSE,
         onRequest: (HttpRequestData) -> Unit = {}
     ): SmartHttpClient =
         rawSmartHttpClient(onRequest) { request ->
             val url = request.url.toString()
             when {
-                request.method == HttpMethod.Post -> TOKEN_RESPONSE
+                request.method == HttpMethod.Post -> tokenResponse
                 "/discover/browse" in url -> browseResponse(*browseObjects.toTypedArray())
                 "/cms/objects/" in url -> {
                     val seriesIds = url.substringAfter("/cms/objects/")
@@ -413,6 +414,32 @@ class CrunchyrollPlatformTest {
 
             // Then
             assertEquals(1, tokenRequests)
+        }
+
+        @Test
+        @DisplayName("should remint the access token when its lifetime is shorter than the margin")
+        fun `should remint the access token when its lifetime is shorter than the margin`() = runTest {
+            // Given: an expires_in below the safety margin makes every minted token expire
+            // immediately, so each harvest must mint again instead of reusing it
+            var tokenRequests = 0
+            val platform = platform(
+                smartHttpClient(
+                    browseObjects = listOf(episode()),
+                    seriesObjects = listOf(series()),
+                    tokenResponse = """{"access_token":"test-access-token","expires_in":30}""",
+                    onRequest = { request ->
+                        if (request.method == HttpMethod.Post)
+                            tokenRequests++
+                    }
+                )
+            )
+
+            // When
+            platform.fetchLatestEpisodes()
+            platform.fetchLatestEpisodes()
+
+            // Then
+            assertTrue(tokenRequests > 1, "expected token remints, got $tokenRequests")
         }
 
         @Test

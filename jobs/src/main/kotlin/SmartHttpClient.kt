@@ -96,7 +96,6 @@ class SmartHttpClient(
          * @return the removed entry, or null when the key is absent.
          * @see [HttpCacheEntry]
          */
-        @Suppress("unused")
         @Synchronized
         fun remove(key: String): HttpCacheEntry? =
             map.remove(key)

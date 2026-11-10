@@ -149,7 +149,7 @@ class CrunchyrollPlatform(
         val hasChanged = response.hasChanged || country !in cachedEpisodesByCountry
 
         if (!hasChanged)
-            return cachedEpisodesByCountry[country].orEmpty() to false
+            return cachedEpisodesByCountry.getValue(country) to false
 
         val episodes = convertBrowseObjects(response.data.data, country)
         cachedEpisodesByCountry[country] = episodes
@@ -282,7 +282,7 @@ class CrunchyrollPlatform(
      * before its expiry: the [deviceId] identifies this client across the whole lifetime of
      * the token, and the token endpoint is only queried again once the cached token expires.
      * The POST itself goes through [SmartHttpClient], which additionally serves a stale token
-     * when the endpoint is failing.
+     * while it is still valid when the endpoint is failing.
      *
      * @return The anonymous access token of the Crunchyroll API.
      * @see [SmartHttpClient]
@@ -309,8 +309,12 @@ class CrunchyrollPlatform(
             client.cache.remove("crunchyroll:token:$deviceId")
             response = mintTokenRequest()
             token = response.data
-            expiresAtMillis = Clock.System.now().toEpochMilliseconds() +
-                (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+            expiresAtMillis = response.fetchedAtMillis
+                ?.let {
+                    it + (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
+                }
+                ?: Clock.System.now().toEpochMilliseconds() +
+                    (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS).coerceAtLeast(0) * 1000
         }
 
         return CachedAccessToken(token.accessToken, expiresAtMillis)
