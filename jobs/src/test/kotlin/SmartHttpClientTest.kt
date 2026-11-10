@@ -1,13 +1,31 @@
 package fr.shikkanime.jobs
 
 import fr.shikkanime.jobs.builders.impl.HttpCacheEntryMockKBuilder
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.HttpRequestData
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.OutgoingContent
+import io.ktor.http.content.TextContent
+import io.ktor.http.headersOf
+import io.ktor.serialization.kotlinx.json.json
 import io.mockk.junit5.MockKExtension
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -110,4 +128,170 @@ class SmartHttpClientTest {
             assertEquals(1, client.cache.size)
         }
     }
+
+    @Nested
+    @DisplayName("tests for the get method")
+    inner class GetTests {
+
+        @Test
+        @DisplayName("should revalidate an expired entry and report it unchanged")
+        fun `should revalidate an expired entry and report it unchanged`() = runTest {
+            // Given
+            var calls = 0
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine {
+                        calls++
+                        if (calls == 1) {
+                            respond(
+                                "v1",
+                                headers = headersOf(HttpHeaders.ETag, "\"e1\"")
+                            )
+                        } else {
+                            respond("", status = HttpStatusCode.NotModified)
+                        }
+                    }
+                )
+            )
+
+            // When: the zero ttl makes the entry stale immediately, forcing a revalidation
+            val first = client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:etag",
+                ttl = 0.minutes
+            )
+            val second = client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:etag",
+                ttl = 0.minutes
+            )
+
+            // Then: the 304 kept the cached payload and its original fetch timestamp
+            assertEquals(2, calls)
+            assertTrue(first.hasChanged)
+            assertFalse(second.hasChanged)
+            assertEquals("v1", second.data)
+            assertEquals(first.fetchedAtMillis, second.fetchedAtMillis)
+        }
+
+        @Test
+        @DisplayName("should serve the stale entry when the request fails")
+        fun `should serve the stale entry when the request fails`() = runTest {
+            // Given
+            var calls = 0
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine {
+                        calls++
+                        if (calls == 1) {
+                            respond("v1")
+                        } else {
+                            respond("boom", status = HttpStatusCode.InternalServerError)
+                        }
+                    }
+                )
+            )
+
+            // When
+            client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:stale",
+                ttl = 0.minutes
+            )
+            val stale = client.get<String>(
+                url = "https://example.test/data",
+                cacheKey = "test:get:stale",
+                ttl = 0.minutes
+            )
+
+            // Then
+            assertEquals(2, calls)
+            assertFalse(stale.hasChanged)
+            assertEquals("v1", stale.data)
+            assertTrue(stale.fetchedAtMillis != null)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the post method")
+    inner class PostTests {
+
+        @Test
+        @DisplayName("should send the body with its content type and cache the response")
+        fun `should send the body with its content type and cache the response`() = runTest {
+            // Given
+            var requests = 0
+            var captured: HttpRequestData? = null
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine { request ->
+                        requests++
+                        captured = request
+                        respond("pong")
+                    }
+                )
+            )
+
+            // When
+            val first = client.post<String>(
+                url = "https://example.test/token",
+                body = "grant_type=client_id",
+                cacheKey = "test:post",
+                ttl = 1.minutes,
+                contentType = ContentType.Application.FormUrlEncoded
+            )
+            val second = client.post<String>(
+                url = "https://example.test/token",
+                body = "grant_type=client_id",
+                cacheKey = "test:post",
+                ttl = 1.minutes,
+                contentType = ContentType.Application.FormUrlEncoded
+            )
+
+            // Then: a single request carried the form body, the second call was a cache hit
+            val request = requireNotNull(captured)
+            assertEquals(1, requests)
+            assertEquals(HttpMethod.Post, request.method)
+            assertEquals("grant_type=client_id", (request.body as TextContent).text)
+            assertEquals(ContentType.Application.FormUrlEncoded, (request.body as TextContent).contentType)
+            assertEquals("pong", first.data)
+            assertFalse(second.hasChanged)
+            assertTrue(first.hasChanged)
+        }
+
+        @Test
+        @DisplayName("should serialize a non string body through the content negotiation")
+        fun `should serialize a non string body through the content negotiation`() = runTest {
+            // Given
+            var captured: HttpRequestData? = null
+            val client = SmartHttpClient(
+                client = HttpClient(
+                    MockEngine { request ->
+                        captured = request
+                        respond("{}")
+                    }
+                ) {
+                    install(ContentNegotiation) {
+                        json(Json { ignoreUnknownKeys = true })
+                    }
+                }
+            )
+
+            // When
+            client.post<String>(
+                url = "https://example.test/api",
+                body = TokenRequestBody("client_id"),
+                cacheKey = "test:post:json",
+                contentType = ContentType.Application.Json
+            )
+
+            // Then: the body went through the JSON serializer, not the text wrapper
+            val request = requireNotNull(captured)
+            assertTrue(request.body is OutgoingContent.ByteArrayContent)
+            assertEquals(ContentType.Application.Json, request.body.contentType)
+        }
+    }
+
+    @Serializable
+    private data class TokenRequestBody(val grantType: String)
 }
