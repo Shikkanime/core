@@ -16,6 +16,7 @@ import fr.shikkanime.models.Platform
 import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.koin.core.context.GlobalContext
 import org.koin.plugin.module.dsl.startKoin
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -48,7 +49,8 @@ class HarvestIngestionIntegrationTest {
 
     companion object {
         private val koin by lazy {
-            startKoin<MyApp>().koin.also(::applyTransactionalProxies)
+            GlobalContext.getOrNull()
+                ?: startKoin<MyApp>().koin.also(::applyTransactionalProxies)
         }
     }
 

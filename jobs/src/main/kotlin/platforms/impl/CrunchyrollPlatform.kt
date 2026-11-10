@@ -38,7 +38,7 @@ private val TEASER_REGEX = Regex("""(teaser|pv|trailer)(?:-\d)?""")
 private val SPECIAL_EPISODE_REGEX = Regex("""SP(\d*)""")
 private val IDENTIFIER_REGEX = Regex("""(.+)\|(.+)\|(.+)""")
 
-private const val BASE_URL = "https://www.crunchyroll.com/"
+private const val BASE_URL = "https://www.crunchyroll.com"
 
 /**
  * Streaming platform connector for Crunchyroll.
@@ -472,7 +472,7 @@ internal data class CrunchyrollBrowseObject(
             number = number,
             episodeType = episodeType,
             duration = (metadata.durationMs ?: 0L) / 1000L,
-            url = "$BASE_URL${country.code.lowercase()}/watch/$id/${slugTitle.orEmpty()}",
+            url = "$BASE_URL/${country.code.lowercase()}/watch/$id/${slugTitle.orEmpty()}",
             audioLocales = listOf(audioLocale),
             uncensored = metadata.matureBlocked == true,
             localizations = listOf(
