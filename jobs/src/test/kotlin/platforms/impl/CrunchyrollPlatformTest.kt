@@ -68,10 +68,11 @@ class CrunchyrollPlatformTest {
      * Builds a [SmartHttpClient] backed by a mock engine routing the Crunchyroll endpoints.
      *
      * The token endpoint answers with a fixed token, the discover browse endpoint with the given
-     * episode browse objects and the CMS objects endpoint with the given series browse objects.
+     * episode browse objects and the CMS objects endpoint with the series browse objects matching
+     * the requested identifier.
      *
      * @param browseObjects The serialized episode browse objects of the discover response.
-     * @param seriesObjects The serialized series browse objects of the CMS objects response.
+     * @param seriesObjects The serialized series browse objects of the CMS objects responses.
      * @param onRequest Callback observing every outgoing request before the answer is produced.
      * @return The [SmartHttpClient] under test.
      * @see [SmartHttpClient]
@@ -88,7 +89,11 @@ class CrunchyrollPlatformTest {
             when {
                 request.method == HttpMethod.Post -> TOKEN_RESPONSE
                 "/discover/browse" in url -> browseResponse(*browseObjects.toTypedArray())
-                "/cms/objects/" in url -> objectsResponse(*seriesObjects.toTypedArray())
+                "/cms/objects/" in url -> {
+                    val seriesId = url.substringAfter("/cms/objects/").substringBefore("?")
+                    val matched = seriesObjects.filter { "\"id\": \"$seriesId\"" in it }
+                    objectsResponse(*matched.toTypedArray())
+                }
                 else -> EMPTY_RESPONSE
             }
         }
@@ -346,9 +351,10 @@ class CrunchyrollPlatformTest {
         }
 
         @Test
-        @DisplayName("should merge the localizations of a same episode across countries")
-        fun `should merge the localizations of a same episode across countries`() = runTest {
-            // Given
+        @DisplayName("should harvest the episodes of every configured country")
+        fun `should harvest the episodes of every configured country`() = runTest {
+            // Given a Crunchyroll identifier is unique to an audio locale, so each country
+            // harvests its own version of the episode
             val platform = platform(
                 client = rawSmartHttpClient { request ->
                     val url = request.url.toString()
@@ -357,7 +363,7 @@ class CrunchyrollPlatformTest {
                         "/discover/browse" in url -> {
                             if ("locale=de-DE" in url)
                                 browseResponse(
-                                    episode(id = "EP1", audioLocale = "de-DE", subtitleLocales = listOf("de-DE"))
+                                    episode(id = "EP1-DE", audioLocale = "de-DE", subtitleLocales = listOf("de-DE"))
                                 )
                             else
                                 browseResponse(episode(id = "EP1"))
@@ -373,12 +379,13 @@ class CrunchyrollPlatformTest {
             val episodes = platform.episodes()
 
             // Then
-            assertEquals(1, episodes.size)
-            val episode = episodes.single()
-            assertEquals(listOf(Locale.FR_FR, Locale.DE_DE), episode.audioLocales)
-            assertEquals(2, episode.localizations.size)
-            assertTrue(episode.localizations.any { it.country == Country.FR })
-            assertTrue(episode.localizations.any { it.country == Country.DE })
+            assertEquals(2, episodes.size)
+            val french = episodes.single { it.id == "EP1" }
+            val german = episodes.single { it.id == "EP1-DE" }
+            assertEquals(listOf(Locale.FR_FR), french.audioLocales)
+            assertEquals(listOf(Locale.DE_DE), german.audioLocales)
+            assertEquals(Country.FR, french.localizations.single().country)
+            assertEquals(Country.DE, german.localizations.single().country)
         }
     }
 

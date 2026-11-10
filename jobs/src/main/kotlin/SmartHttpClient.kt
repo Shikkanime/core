@@ -7,6 +7,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.content.TextContent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.currentCoroutineContext
@@ -112,12 +113,85 @@ class SmartHttpClient(
     val cache = LruMemoryCache(maxCacheCapacity, maxStaleRetention.inWholeMilliseconds)
     val inFlight = ConcurrentHashMap<String, CompletableDeferred<SmartResponse<*>>>()
 
+    /**
+     * Performs a cached GET request with content change detection.
+     *
+     * @param T type of the expected response payload.
+     * @param url the remote URL to query.
+     * @param cacheKey the cache key identifying this payload.
+     * @param ttl the freshness duration of the cached payload.
+     * @param staleOnError whether a stale cached payload may be served on request failure.
+     * @param headers the request headers sent with the query.
+     * @return the [SmartResponse] carrying the payload and its change flag.
+     * @see [SmartResponse]
+     * @see [cachedRequest]
+     */
     suspend inline fun <reified T : Any> get(
         url: String,
         cacheKey: String = url,
         ttl: Duration = Duration.ZERO,
         staleOnError: Boolean = true,
         headers: Map<String, String> = emptyMap()
+    ): SmartResponse<T> =
+        cachedRequest(url, HttpMethod.Get, cacheKey, ttl, staleOnError, headers)
+
+    /**
+     * Performs a cached POST request with content change detection.
+     *
+     * The body is sent as [contentType] encoded text, which covers the form urlencoded payloads
+     * of token endpoints.
+     *
+     * @param T type of the expected response payload.
+     * @param url the remote URL to query.
+     * @param body the request body sent with the query.
+     * @param cacheKey the cache key identifying this payload.
+     * @param ttl the freshness duration of the cached payload.
+     * @param staleOnError whether a stale cached payload may be served on request failure.
+     * @param headers the request headers sent with the query.
+     * @param contentType the content type of the request body.
+     * @return the [SmartResponse] carrying the payload and its change flag.
+     * @see [SmartResponse]
+     * @see [cachedRequest]
+     */
+    suspend inline fun <reified T : Any> post(
+        url: String,
+        body: String,
+        cacheKey: String = url,
+        ttl: Duration = Duration.ZERO,
+        staleOnError: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
+        contentType: ContentType = ContentType.Application.FormUrlEncoded
+    ): SmartResponse<T> =
+        cachedRequest(url, HttpMethod.Post, cacheKey, ttl, staleOnError, headers) {
+            setBody(TextContent(body, contentType))
+        }
+
+    /**
+     * Shared implementation of the cached requests of this client.
+     *
+     * Applies the memory cache, the single-flight coalescing, the conditional headers and the
+     * stale-on-error fallback to every cached call, whether it is a GET or a POST.
+     *
+     * @param T type of the expected response payload.
+     * @param url the remote URL to query.
+     * @param httpMethod the HTTP method of the request.
+     * @param cacheKey the cache key identifying this payload.
+     * @param ttl the freshness duration of the cached payload.
+     * @param staleOnError whether a stale cached payload may be served on request failure.
+     * @param headers the request headers sent with the query.
+     * @param configure additional configuration of the request builder.
+     * @return the [SmartResponse] carrying the payload and its change flag.
+     * @see [SmartResponse]
+     */
+    @PublishedApi
+    internal suspend inline fun <reified T : Any> cachedRequest(
+        url: String,
+        httpMethod: HttpMethod,
+        cacheKey: String,
+        ttl: Duration,
+        staleOnError: Boolean,
+        headers: Map<String, String>,
+        configure: HttpRequestBuilder.() -> Unit = {}
     ): SmartResponse<T> {
         val nowMillis = Clock.System.now().toEpochMilliseconds()
 
@@ -149,13 +223,16 @@ class SmartHttpClient(
 
             // Leader coroutine performing the actual HTTP call
             try {
-                val response = client.get(url) {
+                val response = client.request(url) {
+                    method = httpMethod
                     headers.forEach { (key, value) -> header(key, value) }
 
                     if (cached != null) {
                         cached.etag?.let { header(HttpHeaders.IfNoneMatch, it) }
                         cached.lastModified?.let { header(HttpHeaders.IfModifiedSince, it) }
                     }
+
+                    configure()
                 }
 
                 val now = Clock.System.now().toEpochMilliseconds()
