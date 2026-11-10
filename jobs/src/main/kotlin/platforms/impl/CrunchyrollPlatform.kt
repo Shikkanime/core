@@ -22,10 +22,13 @@ import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.koin.core.annotation.Single
 import java.time.ZonedDateTime
+import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.Uuid
@@ -70,6 +73,9 @@ class CrunchyrollPlatform(
     private val logger = LoggerFactory.getLogger()
     private var cachedEpisodes: List<PlatformEpisode> = emptyList()
     private val cachedEpisodesByCountry = mutableMapOf<Country, List<PlatformEpisode>>()
+    private val deviceId = Uuid.random().toString()
+    private var cachedAccessToken: CachedAccessToken? = null
+    private val accessTokenMutex = Mutex()
 
     /**
      * Retrieves the latest episodes published on Crunchyroll across configured countries.
@@ -255,17 +261,24 @@ class CrunchyrollPlatform(
     /**
      * Returns a valid anonymous access token for the Crunchyroll content API.
      *
-     * The token endpoint is a POST, which [SmartHttpClient] now covers like any other cached
-     * request: the minted token is cached until shortly before its expiry so consecutive
-     * harvests reuse it, and a stale token is still served when the endpoint is failing.
+     * The token is minted once per [CrunchyrollPlatform] instance and reused until shortly
+     * before its expiry: the [deviceId] identifies this client across the whole lifetime of
+     * the token, and the token endpoint is only queried again once the cached token expires.
+     * The POST itself goes through [SmartHttpClient], which additionally serves a stale token
+     * when the endpoint is failing.
      *
      * @return The anonymous access token of the Crunchyroll API.
      * @see [SmartHttpClient]
      */
-    private suspend fun accessToken(): String {
-        val deviceId = Uuid.random().toString()
+    private suspend fun accessToken(): String = accessTokenMutex.withLock {
+        val cached = cachedAccessToken
+        if (cached != null &&
+            Clock.System.now().toEpochMilliseconds() < cached.expiresAtMillis
+        ) {
+            return cached.token
+        }
 
-        return client.post<CrunchyrollTokenResponse>(
+        val token = client.post<CrunchyrollTokenResponse>(
             url = "$BASE_URL/auth/v1/token",
             body = "grant_type=client_id&client_id=offline_access" +
                 "&device_id=$deviceId&device_type=Chrome on Linux",
@@ -276,12 +289,24 @@ class CrunchyrollPlatform(
                 HttpHeaders.Authorization to "Basic $CRUNCHYROLL_BASIC_AUTH_TOKEN",
                 "ETP-Anonymous-ID" to deviceId
             )
-        ).data.accessToken
+        ).data
+
+        val expiresAtMillis = Clock.System.now().toEpochMilliseconds() +
+            (token.expiresIn - TOKEN_EXPIRY_MARGIN_SECONDS) * 1000
+        cachedAccessToken = CachedAccessToken(token.accessToken, expiresAtMillis)
+
+        return cachedAccessToken!!.token
     }
+
+    private data class CachedAccessToken(
+        val token: String,
+        val expiresAtMillis: Long
+    )
 
     private companion object {
         const val BROWSE_PAGE_SIZE = 25
         const val SERIES_BUCKET_COUNT = 5
+        const val TOKEN_EXPIRY_MARGIN_SECONDS = 60L
         val TOKEN_TTL = 25.minutes
 
         // Same token as AbstractCrunchyrollWrapper.CRUNCHYROLL_BASIC_AUTH_TOKEN_DEFAULT of the
