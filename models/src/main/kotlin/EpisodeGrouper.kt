@@ -33,31 +33,39 @@ object EpisodeGrouper {
     private val utcZone = TimeZone.UTC
 
     // Canonical order of observations before bucketing: by release date then release id.
-    private val observationOrder = compareBy<EpisodeObservation> { it.releaseDateTime }
-        .thenBy { it.releaseId }
+    private val observationOrder = compareBy(
+        EpisodeObservation::releaseDateTime,
+        EpisodeObservation::releaseId
+    )
 
     // Order used to pick the surviving sighting of a duplicated releaseId — total order.
-    private val sightingOrder = compareBy<EpisodeObservation> { it.releaseDateTime }
-        .thenBy { it.audioLocale }
-        .thenBy { it.animeId }
-        .thenBy { it.episodeId }
-        .thenBy { it.season }
-        .thenBy { it.episodeType }
-        .thenBy { it.number }
-        .thenBy { it.animeSlug }
+    private val sightingOrder = compareBy(
+        EpisodeObservation::releaseDateTime,
+        EpisodeObservation::audioLocale,
+        EpisodeObservation::animeId,
+        EpisodeObservation::episodeId,
+        EpisodeObservation::season,
+        EpisodeObservation::episodeType,
+        EpisodeObservation::number,
+        EpisodeObservation::animeSlug
+    )
 
     // Canonical order of releases inside a group.
-    private val releaseOrder = compareBy<EpisodeObservation> { it.releaseDateTime }
-        .thenBy { it.releaseId }
+    private val releaseOrder = compareBy(
+        EpisodeObservation::releaseDateTime,
+        EpisodeObservation::releaseId
+    )
 
     // Canonical order of groups: date, slug, type, season/number range, lang types, release id.
-    private val groupOrder = compareBy<EpisodeGroup> { it.releaseDateTime }
-        .thenBy { it.animeSlug }
-        .thenBy { it.episodeType }
-        .thenBy { it.minSeason }
-        .thenBy { it.minNumber }
+    private val groupOrder = compareBy(
+        EpisodeGroup::releaseDateTime,
+        EpisodeGroup::animeSlug,
+        EpisodeGroup::episodeType,
+        EpisodeGroup::minSeason,
+        EpisodeGroup::minNumber
+    )
         .thenComparator { a, b -> compareLangTypeSets(a.coverage.keys, b.coverage.keys) }
-        .thenBy { group -> group.releases.minOf { it.releaseId } }
+        .thenBy { group -> group.releases.minOf(EpisodeObservation::releaseId) }
 
     /** Identity of an episode inside its anime, used for visibility and coverage. */
     private data class EpisodeKey(
@@ -124,7 +132,7 @@ object EpisodeGrouper {
         val visibleByEpisode = observations
             .groupBy { episodeKey(it) }
             .mapValues { (_, episodeObservations) ->
-                country.visibleAudioLocales(episodeObservations.map { it.audioLocale }.toSet())
+                country.visibleAudioLocales(episodeObservations.map(EpisodeObservation::audioLocale).toSet())
             }
 
         return observations
@@ -205,7 +213,7 @@ object EpisodeGrouper {
         val coordinates = releases
             .map { episodeKey(it).toCoordinate() }
             .distinct()
-            .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
+            .sortedWith(compareBy(EpisodeCoordinate::season, EpisodeCoordinate::episodeType, EpisodeCoordinate::number))
         val firstByCoordinate = releases.groupBy { episodeKey(it).toCoordinate() }
             .mapValues { (_, coordinateReleases) -> coordinateReleases.first() }
         val episodes = coordinates.map { coordinate ->
@@ -215,13 +223,13 @@ object EpisodeGrouper {
         val langTypes = releases.map { langTypeOf.getValue(it.releaseId) }.toSet()
         return EpisodeGroup(
             animeId = bucket.animeId,
-            animeSlug = releases.minOf { it.animeSlug },
+            animeSlug = releases.minOf(EpisodeObservation::animeSlug),
             episodeType = bucket.episodeType,
             releaseDateTime = releases.first().releaseDateTime,
-            minSeason = coordinates.minOf { it.season },
-            maxSeason = coordinates.maxOf { it.season },
-            minNumber = coordinates.minOf { it.number },
-            maxNumber = coordinates.maxOf { it.number },
+            minSeason = coordinates.minOf(EpisodeCoordinate::season),
+            maxSeason = coordinates.maxOf(EpisodeCoordinate::season),
+            minNumber = coordinates.minOf(EpisodeCoordinate::number),
+            maxNumber = coordinates.maxOf(EpisodeCoordinate::number),
             coverage = langTypes.associateWith { coverageByLangType.getValue(it) },
             episodes = episodes,
             releases = releases
@@ -230,8 +238,8 @@ object EpisodeGrouper {
 
     /** Compares two lang-type sets by their sorted ordinals, element by element. */
     private fun compareLangTypeSets(a: Set<LangType>, b: Set<LangType>): Int {
-        val ordinalsA = a.map { it.ordinal }.sorted()
-        val ordinalsB = b.map { it.ordinal }.sorted()
+        val ordinalsA = a.map(LangType::ordinal).sorted()
+        val ordinalsB = b.map(LangType::ordinal).sorted()
         return (0 until maxOf(ordinalsA.size, ordinalsB.size))
             .map { index -> (ordinalsA.getOrNull(index) ?: -1).compareTo(ordinalsB.getOrNull(index) ?: -1) }
             .firstOrNull { it != 0 }

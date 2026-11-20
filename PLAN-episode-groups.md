@@ -151,6 +151,38 @@ appelé à chaud par des endpoints admin → divergence garantie. Données :
 3 336 variants datés < 2000 (erreurs de scrape), un groupe fourre-tout de
 582 entries.
 
+### Équivalence prod nouvelle vs `NewGroupIndexer` (vérifiée)
+
+Dump CSV des 58 200 variants prod injecté dans les deux implémentations
+(`IndexerProbe` legacy vs `EpisodeGrouper.group(FR)`) :
+
+- Legacy `NewGroupIndexer` : **35 847 éléments** ; nouveau `EpisodeGrouper` :
+  **35 813 groupes**.
+- Après application de la règle de visibilité (CJK → fallback EN → voix pays)
+  sur la sortie legacy : **résultat strictement identique** — 35 550 clés de
+  groupe, 58 150 releases membres, 0 différence de clé ou de membre.
+- Écart brut expliqué : 50 releases `en-US` sur des épisodes ayant aussi du
+  CJK sont filtrées par la règle « EN fallback uniquement » (spécification
+  demandée) — legacy indexait toutes les locales sans filtrage. Elles
+  formaient 34 groupes en-US-only qui disparaissent ; les épisodes restent
+  couverts par leurs releases CJK/voix.
+- Le legacy `preIndex()` incluait aussi les 1 950 variants `available=false`
+  (pas de filtre en base) ; le nouveau modèle `EpisodeRelease` n'a pas de
+  flag `available` — décision data à trancher côté `:database`.
+
+### Performance comparative (mêmes 58 200 observations)
+
+| Étape | Legacy `NewGroupIndexer` | Nouveau `EpisodeGrouper` |
+|---|---|---|
+| Indexation complète | ~7,3 s (stream JPA + `addToBucket` ×2 indexeurs, `buckets.find` linéaire par ligne) + `buildIndex` 66 ms | **443 ms** (visibilité + dédup + tri + buckets `ArrayDeque` + split + tri final) |
+| Lecture/pagination | 9–20 ms/page en mémoire | tri inclus dans les 443 ms ; pagination O(page) ensuite |
+| Mémoire | +48 MB heap pour les index persistés | aucune structure persistée (par requête) |
+
+Le nouveau grouper est ~16× plus rapide que la partie indexation legacy à
+volume égal, sans état mutable ni index à invalider. Coût par requête API :
+fetch SQL borné + ~0,5 s pour le catalogue complet non filtré — à réduire
+via la fenêtre par défaut.
+
 ### Suite de tests de non-régression
 
 `models/src/test/kotlin/EpisodeGrouperTest.kt` et `LangTypeTest.kt` sont la
