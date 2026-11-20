@@ -87,7 +87,36 @@ JPA, sémantique ±2h, pagination en mémoire…) et proposer des correctifs dan
 nouvelle architecture. Les résultats sont reportés ci-dessous et arbitrés avant
 implémentation.
 
-<!-- À REMPLIR avec les findings du sous-agent -->
+### Problèmes identifiés dans l'ancienne solution
+
+| # | Sévérité | Problème | Résolution dans la nouvelle archi |
+|---|---|---|---|
+| 1 | Critique | `GroupedIndexer` = `object` singleton, collections mutables plain, séquences lazy sur structures vivantes → `ConcurrentModificationException` pendant que `:jobs` écrit | Pas d'index en mémoire : grouper pur sans état dans `:models`, données lues depuis Exposed |
+| 2 | Critique | Index jamais invalidé (pas de `remove`/`update`) → divergence index/DB permanente ; `preIndex()` non atomique (`clear()` puis refill) → pages vides en cours de route | Vérité en base : `EpisodeRelease` upsertée par `save`, aucune donnée dérivée à maintenir |
+| 3 | Haute | Fenêtre ±2h non transitive et dépendante de l'ordre d'insertion (`firstEntry()` = ancre hasardeuse) ; `group()` et l'index pouvaient diverger | On **conserve** la fenêtre ±2h (choix fonctionnel) mais déterministe : entrées triées par `releaseDateTime` avant bucketing, ancre = première observation, clé `(season, episodeType, number)` au lieu de `season*1000+number` |
+| 4 | Haute | `CompositeKey` sans identité d'épisode (slug copié en String → renommage = orphelins) | Clé `(animeId, episodeType)` + identifiants UUID ; plus de slug dans la clé de groupement |
+| 5 | Haute | Bug double enregistrement dans `countryIndex` (re-save idempotente du même variant) | Sans objet sans index |
+| 6 | Haute | Pagination + tri 100% en mémoire sur tout le dataset (O(N log N) par page, tests JFR à 1M entrées) | Filtres + fenêtre par défaut poussés en SQL (dataset candidat borné) ; tri/pagination des groupes en mémoire sur cet ensemble borné — à mesurer ; `paginate()` SQL reste possible pour les endpoints sans regroupement |
+| 7 | Haute | N+1 JPA (LAZY `mapping.anime`), entités JPA retenues dans le cache | Pattern `compose()` + batch `findAllByEpisodeIds` déjà en place |
+| 8 | Moyenne | `preIndex()` = scan JPA complet au boot, fail-open si absent, pic mémoire | Zéro startup cost ; multi-replica cohérent car état en DB |
+| 9 | Moyenne | `ZonedDateTime` ancien vs `LocalDateTime` nouveau | **Convention à documenter** : `LocalDateTime` = UTC à l'ingestion dans `:jobs` |
+| 10 | Moyenne | `audioLocale: String` libre + `LangType` dépendant du pays | `audioLocale: Locale` typé ; règle de couverture par marché reproduite via `Country.subtitleLocales`/`voiceLocale` — matrice pays×locale à tester |
+| 11 | Moyenne | Cache key avec `Array` dans data class → misses permanents + invalidation tout-ou-rien | Pas de cache dans un premier temps ; si besoin plus tard : clé stable (`Set`/`List`) + TTL ou invalidation sur `EpisodeReleaseRepository.save` |
+| 12 | Moyenne | `sort` chaîne libre → champ inconnu ignoré silencieusement → pagination instable ; DTO avec `season`/`number` en String | Whitelist de champs triables → colonnes SQL ; DTO avec types structurés |
+| 13 | Haute (design) | Index heap = replicas divergentes, scaling horizontal impossible | État en DB uniquement |
+
+### Arbitrages issus de l'analyse
+
+- **La fenêtre ±2h est conservée** (choix fonctionnel) mais rendue déterministe :
+  tri par `releaseDateTime` avant bucketing. L'alternative "date canonique
+  `Episode.releaseDateTime`" reste possible si la fenêtre pose problème en
+  pratique — à réévaluer après les tests.
+- **Volume** : le grouping post-traitement en mémoire suppose un dataset borné.
+  La fenêtre par défaut (−30j/+30j) + index SQL sur `episode_release
+  (release_date_time)` et `audio_locale` doivent suffire ; à mesurer sur données
+  réelles avant d'envisager une table `episode_group` persistée.
+- **`LocalDateTime` = UTC** : vérifier que `:jobs` écrit bien en UTC
+  (`TimeUtils.now()` existe dans le framework) ; documenter dans `:models`.
 
 ## 4. Tests
 
