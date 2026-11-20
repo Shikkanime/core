@@ -1,6 +1,5 @@
 package fr.shikkanime.models
 
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Instant
