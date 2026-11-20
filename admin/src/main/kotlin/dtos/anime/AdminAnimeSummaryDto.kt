@@ -1,5 +1,6 @@
 package fr.shikkanime.admin.dtos.anime
 
+import fr.shikkanime.models.AnimePlatform
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Platform
 import kotlinx.serialization.Serializable
@@ -34,11 +35,11 @@ data class AdminAnimeSummaryDto(
  */
 fun AnimeWithChildren.toAdminSummaryDto(): AdminAnimeSummaryDto =
     AdminAnimeSummaryDto(
-        id = requireNotNull(anime.id),
+        id = requireNotNull(id),
         title = localizations.firstOrNull { it.locale.name.startsWith("FR") }?.title
             ?: localizations.firstOrNull()?.title
-            ?: anime.normalizedTitle,
-        normalizedTitle = anime.normalizedTitle,
-        platforms = platforms.map { it.platform }.distinct(),
+            ?: normalizedTitle,
+        normalizedTitle = normalizedTitle,
+        platforms = platforms.map(AnimePlatform::platform).distinct(),
         localizationCount = localizations.size
     )

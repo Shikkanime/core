@@ -1,5 +1,8 @@
 package fr.shikkanime.jobs.platforms
 
+import fr.shikkanime.jobs.platforms.models.PlatformAnimeLocalization
+import fr.shikkanime.jobs.platforms.models.PlatformEpisodeLocalization
+
 private const val LINE_BREAK = "\n"
 private const val NO_BREAK_SPACE = '\u00A0'
 

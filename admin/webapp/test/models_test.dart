@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
 import 'package:shikkanime_admin/models/anime/anime_summary_model.dart';
+import 'package:shikkanime_admin/models/metadata/metadata_link_model.dart';
 import 'package:shikkanime_admin/models/paged_result.dart';
 
 void main() {
@@ -55,5 +56,53 @@ void main() {
     expect(anime.updatedAt, isNull);
     expect(anime.localizations.single.description, 'Gomu Gomu no Mi');
     expect(anime.images.single.type, 'BANNER');
+    expect(anime.metadataLinks, isEmpty);
+  });
+
+  test('parses metadata links and builds their platform URLs', () {
+    final anime = AnimeDetailModel.fromJson({
+      'id': 'anime-id',
+      'normalizedTitle': 'One Piece',
+      'localizations': <dynamic>[],
+      'platforms': <dynamic>[],
+      'images': <dynamic>[],
+      'metadataLinks': [
+        {'platform': 'ANILIST', 'platformId': '21'},
+        {'platform': 'ANIDB', 'platformId': '69'},
+      ],
+    });
+
+    expect(anime.metadataLinks, hasLength(2));
+    expect(anime.metadataLinks.first.url, 'https://anilist.co/anime/21');
+    expect(anime.metadataLinks.last.url, 'https://anidb.net/anime/69');
+  });
+
+  test('builds episode page URLs for metadata links', () {
+    MetadataLinkModel link(
+      String platform,
+      String platformId,
+      String? animeId,
+    ) => MetadataLinkModel(platform, platformId, animeId);
+
+    // MyAnimeList platformId is the composite "{animeId}/{episodeNumber}".
+    expect(
+      link('MYANIMELIST', '7655/15', '7655').url,
+      'https://myanimelist.net/anime/7655/15',
+    );
+    // AniDB platformId is the episode eid, resolved with its parent anime aid.
+    expect(
+      link('ANIDB', '118925', '7236').url,
+      'https://anidb.net/perl-bin/animedb.pl?show=ep&aid=7236&eid=118925',
+    );
+    // AniList has no episode entries: the parent anime page is the fallback.
+    expect(
+      link('ANILIST', '7655', '7655').url,
+      'https://anilist.co/anime/7655',
+    );
+    // An unparseable MyAnimeList identifier falls back to the anime page too.
+    expect(
+      link('MYANIMELIST', '7655', '7655').url,
+      'https://myanimelist.net/anime/7655',
+    );
   });
 }

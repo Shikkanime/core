@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shikkanime_admin/core/format/formatters.dart';
 import 'package:shikkanime_admin/core/format/labels.dart';
 import 'package:shikkanime_admin/core/widgets/detail_widgets.dart';
+import 'package:shikkanime_admin/core/widgets/metadata_link_chips.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 import 'package:shikkanime_admin/models/episode/episode_detail_model.dart';
 import 'package:shikkanime_admin/views/episode_detail/widgets/release_block.dart';
@@ -132,6 +133,20 @@ class EpisodeContent extends StatelessWidget {
                 else
                   for (final release in episode.releases)
                     ReleaseBlock(release: release),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DetailSectionTitle(title: localizations.metadataLinks),
+                const SizedBox(height: 8),
+                MetadataLinkChips(links: episode.metadataLinks),
               ],
             ),
           ),

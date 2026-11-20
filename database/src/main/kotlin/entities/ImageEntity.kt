@@ -7,8 +7,8 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import kotlin.uuid.Uuid
 
-const val IMAGE_TABLE_NAME = "image"
-const val ENTITY_ID = "entity$ID"
+internal const val IMAGE_TABLE_NAME = "image"
+internal const val ENTITY_ID = "entity$ID"
 
 internal object ImageTable : ShikkTable(IMAGE_TABLE_NAME) {
     val entityId = uuid(ENTITY_ID)

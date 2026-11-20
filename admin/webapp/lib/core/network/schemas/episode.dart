@@ -3,6 +3,7 @@ import 'package:shikkanime_admin/core/network/protobuf_decoder.dart';
 import 'package:shikkanime_admin/core/network/schemas/image.dart';
 import 'package:shikkanime_admin/core/network/schemas/locale.dart';
 import 'package:shikkanime_admin/core/network/schemas/localization.dart';
+import 'package:shikkanime_admin/core/network/schemas/metadata.dart';
 import 'package:shikkanime_admin/core/network/schemas/platform.dart';
 
 /// Episode categories in the order `kotlinx.serialization` numbers them for Protobuf.
@@ -67,6 +68,12 @@ const episodeDetailSchema = ProtoSchema({
     ProtoKind.message,
     repeated: true,
     message: imageSchema,
+  ),
+  13: ProtoField(
+    'metadataLinks',
+    ProtoKind.message,
+    repeated: true,
+    message: episodeMetadataLinkSchema,
   ),
 });
 

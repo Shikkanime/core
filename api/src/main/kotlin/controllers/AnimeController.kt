@@ -1,19 +1,12 @@
 package fr.shikkanime.api.controllers
 
-import fr.shikkanime.api.dtos.AnimeDto
-import fr.shikkanime.api.dtos.toDto
+import fr.shikkanime.api.dtos.anime.AnimeDto
+import fr.shikkanime.api.dtos.anime.toDto
 import fr.shikkanime.database.services.AnimeService
-import fr.shikkanime.models.AnimeWithChildren
-import fr.shikkanime.ktor.ApiResponse
-import fr.shikkanime.ktor.ApiResponses
-import fr.shikkanime.ktor.GetMapping
-import fr.shikkanime.ktor.IController
-import fr.shikkanime.ktor.Operation
-import fr.shikkanime.ktor.PathParam
-import fr.shikkanime.ktor.ResponseEntity
-import fr.shikkanime.ktor.RestController
+import fr.shikkanime.ktor.*
 import fr.shikkanime.ktor.dtos.ErrorMessageDto
 import fr.shikkanime.ktor.dtos.MessageDto
+import fr.shikkanime.models.AnimeWithChildren
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
 

@@ -103,6 +103,15 @@ values the test actually needs. Any field whose value is read back through the m
 `copy`, a mapped property) must be set explicitly, since an unstubbed mock value is not a usable
 default.
 
+**Stub every derived member a mock cannot compute.** A `mockk` intercepts each getter, including
+the projection delegates of an aggregate (`EpisodeWithChildren::animeId` reads `episode.animeId`
+on a real object but returns a relaxed child mock on a stubbed one). The builder must answer each
+delegate explicitly, forwarding to the mocked member:
+
+```kotlin
+every { mockK.animeId } answers { mockK.episode.animeId }
+```
+
 Test builders for database entities must reside in `:database` under `src/testFixtures/` so they can be reused across consumer modules via `testImplementation(testFixtures(project(":database")))`.
 
 ```kotlin

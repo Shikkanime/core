@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Material 3 theme of the administration, sharing the palette of the application v2.
 ///

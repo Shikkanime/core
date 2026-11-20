@@ -39,7 +39,7 @@ class NameNormalizerTest {
             "Missing test resource '$HISTORICAL_SHORT_NAMES'"
         }.readText()
             .lineSequence()
-            .filter { it.isNotBlank() }
+            .filter(String::isNotBlank)
             .map { line ->
                 val (fullTitle, shortName) = line.split("\t", limit = 2)
                 fullTitle to shortName

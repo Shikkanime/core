@@ -2,21 +2,18 @@ package fr.shikkanime.jobs
 
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.DatabaseManager
-import fr.shikkanime.framework.koin.applyTransactionalProxies
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.database.services.EpisodeService
 import fr.shikkanime.jobs.builders.harvest
 import fr.shikkanime.jobs.builders.harvestedAnime
 import fr.shikkanime.jobs.builders.harvestedEpisode
 import fr.shikkanime.jobs.builders.impl.PlatformEpisodeLocalizationMockKBuilder
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.Locale
-import fr.shikkanime.models.Platform
+import fr.shikkanime.jobs.services.HarvestIngestionService
+import fr.shikkanime.models.*
 import kotlinx.datetime.LocalDateTime
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
-import org.koin.plugin.module.dsl.startKoin
+import org.koin.core.context.GlobalContext
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.logging.Handler
@@ -27,6 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
+
 
 private const val SQL_LOGGER_NAME = "org.jetbrains.exposed.SQL"
 // Statement ceilings of one ingestion of a new / an already stored episode. They are a cost gate,
@@ -48,7 +46,7 @@ class HarvestIngestionIntegrationTest {
 
     companion object {
         private val koin by lazy {
-            startKoin<MyApp>().koin.also(::applyTransactionalProxies)
+            GlobalContext.getOrNull() ?: bootstrap()
         }
     }
 
@@ -222,7 +220,7 @@ class HarvestIngestionIntegrationTest {
             assertEquals("https://example.test/episode.png", episode.images.single().url)
             assertEquals(
                 setOf(Platform.ANIMATION_DIGITAL_NETWORK, Platform.CRUNCHYROLL),
-                episode.releases.map { it.platform }.toSet()
+                episode.releases.map(EpisodeRelease::platform).toSet()
             )
         }
 
@@ -271,7 +269,7 @@ class HarvestIngestionIntegrationTest {
             assertEquals("https://example.test/episode.png", episode.images.single().url)
             assertEquals(
                 setOf(Platform.ANIMATION_DIGITAL_NETWORK, Platform.CRUNCHYROLL),
-                episode.releases.map { it.platform }.toSet()
+                episode.releases.map(EpisodeRelease::platform).toSet()
             )
             val anime = assertNotNull(
                 koin.get<AnimeService>()
@@ -279,7 +277,7 @@ class HarvestIngestionIntegrationTest {
             )
             assertEquals(
                 setOf(Platform.ANIMATION_DIGITAL_NETWORK, Platform.CRUNCHYROLL),
-                anime.platforms.map { it.platform }.toSet()
+                anime.platforms.map(AnimePlatform::platform).toSet()
             )
             assertEquals("https://example.test/banner.png", anime.images.single().url)
         }

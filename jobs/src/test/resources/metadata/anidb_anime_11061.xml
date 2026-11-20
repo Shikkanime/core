@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?><anime id="11061" restricted="true">
+    <type>OVA</type>
+    <episodecount>2</episodecount>
+    <startdate>2015-04-17</startdate>
+    <enddate>2015-07-17</enddate>
+    <titles>
+        <title xml:lang="x-jat" type="main">Jun`ai Maniac</title>
+        <title xml:lang="fr" type="synonym">Idylles platoniques</title>
+        <title xml:lang="ko" type="synonym">순애 매니악</title>
+        <title xml:lang="x-jat" type="synonym">Jun Ai Maniac</title>
+        <title xml:lang="ja" type="official">純愛まにあっく Pure Love Maniac</title>
+        <title xml:lang="en" type="official">Pure Love Maniac</title>
+    </titles>
+    <url>http://www.mediabank.co.jp/mediabank/product?page=product&amp;model=QNB-M010</url>
+    <creators>
+        <name id="13236" type="Direction">Kondou Takashi</name>
+        <name id="42476" type="Original Work">Ayuma Sayu</name>
+    </creators>
+    <ratings>
+        <permanent count="143">3.98</permanent>
+        <temporary count="145">5.42</temporary>
+    </ratings>
+    <picture>169009.jpg</picture>
+    <resources>
+        <resource type="2">
+            <externalentity>
+                <identifier>29915</identifier>
+            </externalentity>
+        </resource>
+        <resource type="4">
+            <externalentity>
+                <url>https://www.mediabank.co.jp/product.php?model=QNB-M013</url>
+            </externalentity>
+            <externalentity>
+                <url>http://www.mediabank.co.jp/mediabank/product?page=product&amp;model=QNB-M010</url>
+            </externalentity>
+            <externalentity>
+                <url>http://www.mediabank.co.jp/mediabank/product?page=product&amp;model=QNB-M013</url>
+            </externalentity>
+            <externalentity>
+                <url>https://www.mediabank.co.jp/product.php?model=QNB-M010</url>
+            </externalentity>
+        </resource>
+        <resource type="43">
+            <externalentity>
+                <identifier>tt13145044</identifier>
+            </externalentity>
+        </resource>
+        <resource type="44">
+            <externalentity>
+                <identifier>78379</identifier>
+                <identifier>tv</identifier>
+            </externalentity>
+        </resource>
+    </resources>
+    <tags>
+        <tag id="2604" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2018-11-08">
+            <name>content indicators</name>
+            <description>The content indicators branch is intended to be a less geographically specific tool than the `age rating` used by convention, for warning about things that might cause offence. Obviously there is still a degree of subjectivity involved, but hopefully it will prove useful for parents with delicate children, or children with delicate parents.
+Note: Refer to further guidance on http://wiki.anidb.net/w/Categories:Content_Indicators [the Wiki page] for how to apply tag weights for content indicators.</description>
+        </tag>
+        <tag id="2606" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2018-11-05">
+            <name>target audience</name>
+            <description>Anime, like everything else in the modern world, is targeted towards specific audiences, both implicitly by the creators and overtly by the marketing. While categories are associated with specific sex and age groups, this is not a bar on the anime being enjoyed by people who don`t fit into that band; not only do crossover titles exist, but the categories also have a considerable following outside their main demographic, and a person might as well enjoy anime from all categories. Still, does not invalidate the usefulness of marking a title as one of the categories; the same themes will likely be treated differently in anime geared for different audiences. Only one should not jump the gun and assume that a title will be more or less serious or present content in this or that way due to its target audience, or conversely assume the target audience on the content and its presentation alone. As such, the audience categories help form a broad impression of how a title might work with the announced themes, but offer little to no in-depth information about specific content or its treatment.
+The audience categories originate from manga magazines, which group titles of a same intended audience into a magazine that is advertised as belonging to that category, and so manga-based anime will have the category from their parent work. As for anime based on other works, the audience is often debatable, but comparing information such as time slot to the manga-based anime generally helps figure out the most likely possibility.
+If the parent material was classified under multiple audiences over time (for example, it was originally shounen, but then as the plot changed and became more mature, it was reclassified as seinen), and the anime adapts parent material time periods covering multiple audiences, we tag all audiences covered by the anime adaptation.</description>
+        </tag>
+        <tag id="2608" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2021-07-27">
+            <name>fetishes</name>
+            <description>For non-porn anime, the fetish must be a major element of the show; incidental appearances of the fetish is not sufficient for a fetish tag. Please do not add fetish tags to anime that do not pander to the fetish in question in any meaningful way. For example, there`s some ecchi in http://anidb.net/a22 [Shinseiki Evangelion], but the fact you get to see http://anidb.net/ch39 [Asuka]`s pantsu is not sufficient to warrant applying the http://anidb.net/t2894 [school girl] fetish tag. See also the http://wiki.anidb.net/Tags#Minimum_Relevance_Rule [minimum relevancy rule].
+For porn anime, the application of fetish tags are fairly straightforward, as porn will fully play out most fetishes.</description>
+        </tag>
+        <tag id="2609" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2018-09-01">
+            <name>original work</name>
+            <description>What the anime is based on! This is given as the original work credit in the OP. Mostly of academic interest, but a useful bit of info, hinting at the possible depth of story.</description>
+        </tag>
+        <tag id="2611" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2014-09-08">
+            <name>elements</name>
+            <description>Next to Themes setting the backdrop for the protagonists in anime, there are the more detailed plot Elements that centre on character interactions: "What do characters do to each other or what is done to them?". Is it violent Action, an awe-inspiring Adventure in a foreign place, the gripping life of a Detective, a slapstick Comedy, an Ecchi Harem anime, a SciFi epic, or some Fantasy travelling adventure?</description>
+        </tag>
+        <tag id="2615" parentid="2606" infobox="true" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2019-08-25">
+            <name>18 restricted</name>
+            <description>This isn`t really an "audience".
+While some anime might feature sexual content they still might not be considered pornography. This category is meant only for when the content is clearly *not* intended for minors. The distinction is made by whether the content is sold only to adults.</description>
+            <picurl>67867.png</picurl>
+        </tag>
+        <tag id="2693" parentid="2848" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2021-03-22">
+            <name>handjob</name>
+            <description>A handjob is the manual stimulation of the penis by another person`s hand. The female equivalent is http://anidb.net/t7229 [fingering].</description>
+            <picurl>258693.jpg</picurl>
+        </tag>
+        <tag id="2702" parentid="2848" weight="100" localspoiler="false" globalspoiler="false" verified="true" update="2026-07-17">
+            <name>boobjob</name>
+            <description>Mammary intercourse (boobjob) is a sex act, performed as foreplay or as non-penetrative sex, that involves the stimulation of the male penis by the female breasts. Commonly, this sex act involves the man placing his penis in the woman`s cleavage and thrusting between her breasts, while the breasts are squeezed around the penis for additional stimulation, and fellatio may also be performed in combination. Mammary intercourse is also commonly known as titty-fucking or titfuck in the United States, as well as tit wank or French fuck in the United Kingdom. The Japanese term, paizuri (from oppai, breasts, and the verb suru, used in this context to describe the sexual act), is commonly used in the anime fandom. A variant term is "naizuri" (a pun on nai, the negative of the verb aru, indicating existence/presence), which describes an attempt to do a paizuri, but with insufficient cleavage.</description>
+            <picurl>174692.jpg</picurl>
+        </tag>
+        <tag id="2705" parentid="2848" weight="300" localspoiler="false" globalspoiler="false" verified="true" update="2014-09-20">
+            <name>creampie</name>
+            <description>The act of a man ejaculating inside a girl`s vagina, leaving the semen oozing out of her.</description>
+            <picurl>160720.jpg</picurl>
+        </tag>
+        <tag id="2707" parentid="2848" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2018-02-20">
+            <name>internal shots</name>
+            <description>Internal shots are pictures that display the interior of the body of a living being, either through the skin, kind of as an "x-ray" of sorts, or from the inside, as if the camera was also inside. This is generally used during sex scenes to display the inside of any area being penetrated. Those shots may happen either by making an area of the body transparent or by displaying the same area again, but from the inside; the latter method is shown in the picture.</description>
+            <picurl>213307.jpg</picurl>
+        </tag>
+        <tag id="2713" parentid="2848" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2012-10-07">
+            <name>oral</name>
+            <description>Oral sex is sexual activity involving the stimulation of the genitalia of a sex partner by the use of the mouth, tongue, teeth or throat.</description>
+        </tag>
+        <tag id="2722" parentid="2848" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2014-09-21">
+            <name>doggy style</name>
+            <description>Bang her from behind and use her boobies as a steering wheel!</description>
+            <picurl>161394.jpg</picurl>
+        </tag>
+        <tag id="2748" parentid="2604" infobox="true" weight="600" localspoiler="false" globalspoiler="false" verified="true" update="2018-11-08">
+            <name>sex</name>
+            <description>Sexual intercourse, the ultimate bond of love and the "Origin of the World" (just think of Gustave Courbet`s painting: http://en.wikipedia.org/wiki/L%27Origine_du_monde).
+Note: Refer to further guidance on http://wiki.anidb.net/w/Categories:Content_Indicators [the Wiki page] for how to apply tag weights for content indicators.</description>
+            <picurl>161190.jpg</picurl>
+        </tag>
+        <tag id="2749" parentid="2604" infobox="true" weight="600" localspoiler="false" globalspoiler="false" verified="true" update="2021-04-12">
+            <name>nudity</name>
+            <description>Nudity is the state of wearing no clothing. The wearing of clothing is exclusively a human characteristic. The amount of clothing worn depends on functional considerations (such as a need for warmth or protection from the elements) and social considerations. In some situations the minimum amount of clothing (i.e. covering of a person`s genitals) may be socially acceptable, while in others much more clothing is expected.
+Note: Refer to further guidance on http://wiki.anidb.net/w/Categories:Content_Indicators [the Wiki page] for how to apply tag weights for content indicators. No frontal (visible genitals) = 1.5 stars or less.
+People, as individuals and in groups, have varying attitudes towards their own nudity. Some people are relaxed about appearing less than fully clothed in front of others, while others are uncomfortable or inhibited in that regard. People are nude in a variety of situations, and whether they are prepared to disrobe in front of others depends on the social context in which the issue arises. For example, people need to bathe without clothing, some people also sleep in the nude, some prefer to sunbathe in the nude or at least topless, while others are nude in other situations. Some people adopt naturism as a lifestyle.
+Though the wearing of clothes is the social norm in most cultures, some cultures, groups and individuals are more relaxed about nudity, though attitudes often depend on context. On the other hand, some people feel uncomfortable in the presence of any nudity, and the presence of a nude person in a public place can give rise to controversy, irrespective of the attitude of the person who is nude. Besides meeting social disapproval, in some places public nudity may constitute a crime of indecent exposure. Many people have strong views on nudity, which to them can involve issues and standards of modesty, decency and morality. Some people have an psychological aversion to nudity, called gymnophobia. Many people regard nudity to be inherently sexual and erotic.
+Nudity is to be found in a multitude of media, including art, photography, film and on the Internet. It is a factor in adult entertainment of various types.
+Especially gratuitous fanservice anime shows tend to show their (usually female) characters frequently without any clothes, though often hiding genitals through the means of additions like steam.
+Source: wiki</description>
+            <picurl>60576.jpg</picurl>
+        </tag>
+        <tag id="2798" parentid="2609" infobox="true" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2019-02-14">
+            <name>manga</name>
+            <description>Manga is the lifeblood that drives the anime industry. Everything and its mother is based on manga. However! There are exceptions where the manga was not the basis for the anime.
+It`s common practice to make manga adaptations of many popular anime, there`s a manga based on Evangelion, and two (one shounen and one shoujo) based on each of Escaflowne and Mahou Tsukai Tai. Also it`s quite common to release manga and anime versions of a story in parallel, for instance Nadesico and Shoujo Kakumei Utena. There are also cases where an anime continues in a manga, as in the case of Angel Beats! and Angel Beats: Heaven`s Door, or reverse.
+See also http://anidb.net/t6493 [manhua] and http://anidb.net/t5010 [manhwa].</description>
+            <picurl>215593.jpg</picurl>
+        </tag>
+        <tag id="2848" parentid="2611" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2018-07-15">
+            <name>pornography</name>
+            <description>Anime clearly marked as "Restricted 18" material centring on all variations of adult sex, some of which can be considered as quite perverted. To certain extent, some of the elements can be seen on late night TV animations.</description>
+        </tag>
+        <tag id="2891" parentid="2608" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2026-06-14">
+            <name>breasts</name>
+            <description>The female bust size matters! Or does it? The subcategories spell out the the range of breast sizes.
+From largest to smallest:
+* http://anidb.net/t1774/ [gigantic breasts]
+* http://anidb.net/t7872/ [huge breasts]
+* http://anidb.net/t7905/ [large breasts]
+* http://anidb.net/t7871/ [medium breasts]
+* http://anidb.net/t2008/ [small breasts]</description>
+            <picurl>161015.jpg</picurl>
+        </tag>
+        <tag id="2896" parentid="2608" infobox="true" weight="600" localspoiler="false" globalspoiler="false" verified="true" update="2022-10-22">
+            <name>deflowering</name>
+            <description>Deflowering is the act of breaking the hymen of a female who hadn`t yet had vaginal intercourse. This tag can be applied only to pornographic anime in which a female is seen being deflowered; most often, one knows she had been a virgin because blood is seen coming out of her vagina during sex or after it, but her word on the matter is also considered valid.</description>
+            <picurl>278901.jpg</picurl>
+        </tag>
+        <tag id="4606" parentid="6151" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2022-10-06">
+            <name>slide show animation</name>
+            <description>The entire anime or parts of it show sequences of still images. Sometimes used in low budget animations for action scenes.</description>
+        </tag>
+        <tag id="6083" parentid="2611" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2014-10-21">
+            <name>master-servant relationship</name>
+            <description>To some genres, this would suggest a genuine pairing where one person exists to serve another person, such as in some action/dramas where the pair becomes united by destiny as partners — fighting or battles between different pairs/partners will usually be a dominant part of the story.
+In other genres, this suggests a relationship where one person may be occupied as or even forcefully treated as a servant or slave to the other who designates themself the master — these services usually apply anywhere from tsundere/romantic-comedies to ecchi or to the more extreme in hentai.</description>
+        </tag>
+        <tag id="6151" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2014-09-10">
+            <name>technical aspects</name>
+            <description>It may sometimes be useful to know about technical aspects of a show, such as information about its broadcasting or censorship. Such information can be found here.</description>
+        </tag>
+        <tag id="6173" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2014-09-24">
+            <name>origin</name>
+        </tag>
+        <tag id="6268" parentid="2713" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2014-12-03">
+            <name>fellatio</name>
+            <description>Fellatio is oral sex performed upon the penis. It may be performed to induce male orgasm and ejaculation of semen, or it may be used as foreplay prior to sexual intercourse.</description>
+            <picurl>165408.jpg</picurl>
+        </tag>
+        <tag id="7229" parentid="2848" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2021-03-28">
+            <name>fingering</name>
+            <description>Fingering is the manual stimulation of the vagina by another person`s hand and fingers. The male equivalent is a http://anidb.net/t2693 [handjob]. See also http://anidb.net/t7403 [anal fingering].</description>
+            <picurl>259002.jpg</picurl>
+        </tag>
+        <tag id="7247" parentid="2848" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2020-05-16">
+            <name>sumata</name>
+            <description>Sumata (素股, "bare crotch") or intercrural sex in English translation (sometimes known in the West as a pussyjob) is a Japanese term for a non-penetrative sex act. It is a form of frottage performed by a female upon a male. The female rubs the male`s penis with her vagina (pussyjob) and/or thighs (intercrural sex). The http://anidb.net/t6572 [FFM threesome] version is a http://anidb.net/t2701 [pussy sandwich].</description>
+            <picurl>247501.jpg</picurl>
+        </tag>
+        <tag id="7885" parentid="6173" weight="0" localspoiler="false" globalspoiler="false" verified="true" update="2021-11-07">
+            <name>Japanese production</name>
+        </tag>
+        <tag id="7905" parentid="2891" infobox="true" weight="400" localspoiler="false" globalspoiler="false" verified="true" update="2021-12-30">
+            <name>large breasts</name>
+            <description>Large breasts are breasts a fair notch larger than average, as found in some real life adolescent girls or fully grown women. They are bigger than http://anidb.net/t7871 [medium breasts] and smaller than http://anidb.net/t7872 [huge breasts].</description>
+            <picurl>264330.jpg</picurl>
+        </tag>
+    </tags>
+    <characters>
+        <character id="73485" type="main character in" update="2015-05-03">
+            <rating votes="5">5.51</rating>
+            <name>Himeko</name>
+            <gender>female</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>172902.jpg</picture>
+            <seiyuu id="16108" picture="156343.jpg">Aoba Ringo</seiyuu>
+        </character>
+        <character id="73486" type="main character in" update="2015-05-03">
+            <rating votes="4">4.27</rating>
+            <name>Nadeshiko</name>
+            <gender>female</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>172903.jpg</picture>
+            <seiyuu id="5846" picture="210569.jpg">Oonami Konami</seiyuu>
+        </character>
+        <character id="76442" type="main character in" update="2019-11-24">
+            <rating votes="1">1.57</rating>
+            <name>Onii</name>
+            <gender>male</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>68159.png</picture>
+        </character>
+        <character id="76443" type="main character in" update="2019-11-24">
+            <rating votes="2">3.98</rating>
+            <name>Nacchan</name>
+            <gender>female</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>68158.png</picture>
+            <seiyuu id="30184" picture="79564.jpg">Tamiyasu Tomoe</seiyuu>
+        </character>
+        <character id="76444" type="secondary cast in" update="2015-07-20">
+            <rating votes="3">2.74</rating>
+            <name>Haru</name>
+            <gender>female</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>175638.jpg</picture>
+            <seiyuu id="2325" picture="249020.jpg">Kimura Ayaka</seiyuu>
+        </character>
+        <character id="76445" type="main character in" update="2019-11-24">
+            <rating votes="2">5.23</rating>
+            <name>Rihara Riko</name>
+            <gender>female</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>241470.jpg</picture>
+            <seiyuu id="2325" picture="249020.jpg">Kimura Ayaka</seiyuu>
+        </character>
+        <character id="76446" type="main character in" update="2019-11-24">
+            <rating votes="1">1.57</rating>
+            <name>Senpai</name>
+            <gender>male</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>68160.png</picture>
+            <seiyuu id="43428">Niinami Ikuya</seiyuu>
+        </character>
+        <character id="107118" type="main character in" update="2019-11-24">
+            <rating votes="1">1.57</rating>
+            <name>Keita</name>
+            <gender>male</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>68156.png</picture>
+        </character>
+        <character id="107119" type="main character in" update="2019-11-24">
+            <rating votes="1">1.57</rating>
+            <name>Yamato</name>
+            <gender>male</gender>
+            <charactertype id="1">Character</charactertype>
+            <picture>68157.png</picture>
+        </character>
+    </characters>
+    <episodes>
+        <episode id="165774" update="2015-02-05">
+            <epno type="1">1</epno>
+            <length>20</length>
+            <airdate>2015-04-17</airdate>
+            <rating votes="4">2.80</rating>
+            <title xml:lang="ja">June Princess / ロマンスフィルター</title>
+            <title xml:lang="en">June Princess / Romance Filter</title>
+            <title xml:lang="fr">June Princess | Romance Filte</title>
+            <title xml:lang="x-jat">June Princess / Romance Filter</title>
+        </episode>
+        <episode id="168317" update="2015-05-08">
+            <epno type="1">2</epno>
+            <length>20</length>
+            <airdate>2015-07-17</airdate>
+            <rating votes="3">2.22</rating>
+            <title xml:lang="ja">秘密の恋人つなぎ / 校則違反リボン</title>
+            <title xml:lang="en">Secret Lovers Connected / Ribbons That Are Against the Rules</title>
+            <title xml:lang="fr">Amants secrets au contact | Les rubans contraires au règlement</title>
+            <title xml:lang="x-jat">Himitsu no Koibito Tsunagi / Kousoku Ihan Ribbon</title>
+        </episode>
+    </episodes>
+</anime>
+
+
+
+Exit code: 0
+
+`| tail -10` was parsed out (10 of 294 total lines shown).

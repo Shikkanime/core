@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shikkanime_admin/core/settings/response_format.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';

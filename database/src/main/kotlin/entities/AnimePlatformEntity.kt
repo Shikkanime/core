@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import kotlin.uuid.Uuid
 
-const val ANIME_PLATFORM_TABLE_NAME = "anime_platform"
+internal const val ANIME_PLATFORM_TABLE_NAME = "anime_platform"
 
 internal object AnimePlatformTable : ShikkTable(ANIME_PLATFORM_TABLE_NAME) {
     val anime = reference(

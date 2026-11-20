@@ -7,8 +7,8 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import kotlin.uuid.Uuid
 
-const val ANIME_TABLE_NAME = "anime"
-const val ANIME_TABLE_ID = ANIME_TABLE_NAME + ID
+internal const val ANIME_TABLE_NAME = "anime"
+internal const val ANIME_TABLE_ID = ANIME_TABLE_NAME + ID
 
 internal object AnimeTable : ShikkTable(ANIME_TABLE_NAME) {
     val normalizedTitle = varchar("normalized_title", 255)

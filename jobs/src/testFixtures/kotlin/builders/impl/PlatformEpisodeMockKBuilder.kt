@@ -1,9 +1,9 @@
 package fr.shikkanime.jobs.builders.impl
 
 import fr.shikkanime.database.builders.TestBuilder
-import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.jobs.platforms.PlatformEpisode
-import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
+import fr.shikkanime.jobs.platforms.models.PlatformAnime
+import fr.shikkanime.jobs.platforms.models.PlatformEpisode
+import fr.shikkanime.jobs.platforms.models.PlatformEpisodeLocalization
 import fr.shikkanime.models.EpisodeType
 import fr.shikkanime.models.Locale
 import io.mockk.every
@@ -44,6 +44,10 @@ class PlatformEpisodeMockKBuilder(
         audioLocales?.let { every { mockK.audioLocales } returns it }
         uncensored?.let { every { mockK.uncensored } returns it }
         localizations?.let { every { mockK.localizations } returns it }
+
+        // The projection delegates read the anime member: a mock intercepts them too
+        every { mockK.platform } answers { mockK.anime.platform }
+        every { mockK.animeNormalizedTitle } answers { mockK.anime.normalizedTitle }
 
         every { mockK.toReleaseModels() } answers { callOriginal() }
         every { mockK.toModel() } answers { callOriginal() }

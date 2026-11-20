@@ -26,6 +26,17 @@ class MyApp
 
 private val logger = LoggerFactory.getLogger()
 
+/**
+ * Starts the administration application.
+ *
+ * Connects the database, creates the initial admin account when none exists, then serves the
+ * administration API and the compiled Flutter interface on the `PORT` environment variable
+ * (8081 when unset) until the process is stopped.
+ *
+ * @return nothing; the embedded server blocks the calling thread until it is stopped.
+ * @see [MyApp]
+ * @see [DatabaseManager]
+ */
 fun main() {
     logger.info("Starting Admin Application...")
     requireWebApp()

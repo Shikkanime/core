@@ -12,3 +12,13 @@ exclude:
   - name: UnusedSymbol
     paths:
       - models/src/main/kotlin
+  # Quartz jobs are instantiated by the scheduler through Koin (`koin.getAll<Job>()`), so no
+  # source reference to the job class exists for static analysis to follow.
+  - name: UnusedSymbol
+    paths:
+      - jobs/src/main/kotlin/impl
+  # Admin use case implementations are instantiated by Koin through their interface binding,
+  # so no source reference to the impl class exists for static analysis to follow.
+  - name: UnusedSymbol
+    paths:
+      - admin/src/main/kotlin/usecases/impl

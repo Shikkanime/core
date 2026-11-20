@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shikkanime_admin/core/format/formatters.dart';
 import 'package:shikkanime_admin/core/widgets/detail_widgets.dart';
+import 'package:shikkanime_admin/core/widgets/metadata_link_chips.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
 import 'package:shikkanime_admin/views/anime_detail/widgets/localization_block.dart';
@@ -51,6 +52,10 @@ class AnimeHeader extends StatelessWidget {
                     ),
                 ],
               ),
+            const Divider(height: 24),
+            DetailSectionTitle(title: localizations.metadataLinks),
+            const SizedBox(height: 4),
+            MetadataLinkChips(links: anime.metadataLinks),
             const Divider(height: 24),
             DetailSectionTitle(title: localizations.localizations),
             const SizedBox(height: 4),

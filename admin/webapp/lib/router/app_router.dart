@@ -54,28 +54,38 @@ GoRouter createRouter() => GoRouter(
           routes: [
             GoRoute(
               path: ':id',
-              builder: (context, state) => ChangeNotifierProvider(
-                create: (context) => AnimeDetailViewModel(
-                  context.read<AnimeRepository>(),
-                  context.read<EpisodeRepository>(),
-                  state.pathParameters['id']!,
-                  (state.extra as AnimeSummaryModel?)?.normalizedTitle ?? '',
-                ),
-                child: const AnimeDetailView(),
-              ),
+              builder: (context, state) {
+                // `extra` is shared by every route of the match: a deeper route may carry
+                // another payload, so only an AnimeSummaryModel is used as the title.
+                final extra = state.extra;
+
+                return ChangeNotifierProvider(
+                  create: (context) => AnimeDetailViewModel(
+                    context.read<AnimeRepository>(),
+                    context.read<EpisodeRepository>(),
+                    state.pathParameters['id']!,
+                    extra is AnimeSummaryModel ? extra.normalizedTitle : '',
+                  ),
+                  child: const AnimeDetailView(),
+                );
+              },
               routes: [
                 GoRoute(
                   path: 'episodes/:episodeId',
-                  builder: (context, state) => ChangeNotifierProvider(
-                    create: (context) => EpisodeDetailViewModel(
-                      context.read<EpisodeRepository>(),
-                      state.pathParameters['episodeId']!,
-                    ),
-                    child: EpisodeDetailView(
-                      episodeId: state.pathParameters['episodeId']!,
-                      initialTitle: state.extra as String?,
-                    ),
-                  ),
+                  builder: (context, state) {
+                    final extra = state.extra;
+
+                    return ChangeNotifierProvider(
+                      create: (context) => EpisodeDetailViewModel(
+                        context.read<EpisodeRepository>(),
+                        state.pathParameters['episodeId']!,
+                      ),
+                      child: EpisodeDetailView(
+                        episodeId: state.pathParameters['episodeId']!,
+                        initialTitle: extra is String ? extra : null,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

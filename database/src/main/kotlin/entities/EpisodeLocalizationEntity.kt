@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import kotlin.uuid.Uuid
 
-const val EPISODE_LOCALIZATION_TABLE_NAME = "episode_localization"
+internal const val EPISODE_LOCALIZATION_TABLE_NAME = "episode_localization"
 
 internal object EpisodeLocalizationTable : ShikkTable(EPISODE_LOCALIZATION_TABLE_NAME) {
     val episode = reference(

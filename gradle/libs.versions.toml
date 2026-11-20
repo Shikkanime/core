@@ -3,6 +3,7 @@ kotlin = "2.4.10"
 shikkanimeFramework = "0.0.29-SNAPSHOT"
 kotlinxDateTime = "0.8.0"
 quartz = "2.5.2"
+jsoup = "1.18.3"
 h2 = "2.4.240"
 junitJupiter = "6.1.2"
 mockk = "1.14.11"
@@ -19,6 +20,7 @@ shikkanimeFrameworkKoin = { module = "fr.shikkanime.framework:koin", version.ref
 shikkanimeFrameworkKoinExposed = { module = "fr.shikkanime.framework:koin-exposed", version.ref = "shikkanimeFramework" }
 kotlinxDateTime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTime" }
 quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartz" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 junitJupiterApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }

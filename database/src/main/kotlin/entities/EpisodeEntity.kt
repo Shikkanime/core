@@ -8,8 +8,8 @@ import org.jetbrains.exposed.v1.dao.UuidEntityClass
 import org.jetbrains.exposed.v1.datetime.datetime
 import kotlin.uuid.Uuid
 
-const val EPISODE_TABLE_NAME = "episode"
-const val EPISODE_TABLE_ID = EPISODE_TABLE_NAME + ID
+internal const val EPISODE_TABLE_NAME = "episode"
+internal const val EPISODE_TABLE_ID = EPISODE_TABLE_NAME + ID
 
 internal object EpisodeTable : ShikkTable(EPISODE_TABLE_NAME) {
     val anime = reference(

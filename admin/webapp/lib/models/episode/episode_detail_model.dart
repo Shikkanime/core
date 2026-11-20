@@ -2,6 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/models/episode/episode_localization_model.dart';
 import 'package:shikkanime_admin/models/episode/episode_release_model.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
+import 'package:shikkanime_admin/models/metadata/metadata_link_model.dart';
 import 'package:shikkanime_admin/models/shikk_model.dart';
 
 part 'episode_detail_model.g.dart';
@@ -25,6 +26,10 @@ class EpisodeDetailModel implements ShikkModel {
   final List<EpisodeReleaseModel> releases;
   final List<ImageModel> images;
 
+  /// Links to the external metadata platforms, empty when none was resolved.
+  @JsonKey(defaultValue: <MetadataLinkModel>[])
+  final List<MetadataLinkModel> metadataLinks;
+
   const EpisodeDetailModel(
     this.id,
     this.animeId,
@@ -38,6 +43,7 @@ class EpisodeDetailModel implements ShikkModel {
     this.localizations,
     this.releases,
     this.images,
+    this.metadataLinks,
   );
 
   factory EpisodeDetailModel.fromJson(Map<String, dynamic> json) =>

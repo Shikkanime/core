@@ -1,7 +1,7 @@
 package fr.shikkanime.jobs.builders.impl
 
 import fr.shikkanime.database.builders.TestBuilder
-import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
+import fr.shikkanime.jobs.platforms.models.PlatformEpisodeLocalization
 import fr.shikkanime.models.Country
 import io.mockk.every
 import io.mockk.mockk

@@ -29,19 +29,33 @@ data class AdminLatestEpisodeDto(
 )
 
 /**
- * Maps a stored episode aggregate to its release list view.
+ * An episode of the release list paired with the normalized title of its anime.
+ *
+ * The title comes from another aggregate than the episode, so the mapping receives it composed
+ * here instead of through a parameter.
+ *
+ * @property episode stored episode with the rows it owns.
+ * @property animeTitle normalized title of the anime owning the episode.
+ * @see [AdminLatestEpisodeDto]
+ */
+data class EpisodeWithAnimeTitle(
+    val episode: EpisodeWithChildren,
+    val animeTitle: String
+)
+
+/**
+ * Maps a stored episode and its anime title to the release list view.
  *
  * The displayed title is the first French localization, falling back to the first available
  * translation, and stays `null` when the episode has no localized text - the client then displays
  * the identity of the episode.
  *
- * @receiver stored episode with the rows it owns.
- * @param animeTitle normalized title of the anime owning the episode.
+ * @receiver stored episode with its rows and the title of its anime.
  * @return the administration view of this release.
  * @see [AdminLatestEpisodeDto]
- * @see [EpisodeWithChildren]
+ * @see [EpisodeWithAnimeTitle]
  */
-fun EpisodeWithChildren.toAdminLatestDto(animeTitle: String): AdminLatestEpisodeDto =
+fun EpisodeWithAnimeTitle.toAdminLatestDto(): AdminLatestEpisodeDto =
     AdminLatestEpisodeDto(
         id = requireNotNull(episode.id),
         animeId = requireNotNull(episode.animeId),
@@ -50,8 +64,8 @@ fun EpisodeWithChildren.toAdminLatestDto(animeTitle: String): AdminLatestEpisode
         episodeType = episode.episodeType,
         number = episode.number,
         releaseDateTime = episode.releaseDateTime,
-        title = localizations.firstOrNull { it.locale.name.startsWith("FR") }?.title
-            ?: localizations.firstOrNull()?.title,
-        releaseCount = releases.size,
-        localizationCount = localizations.size
+        title = episode.localizations.firstOrNull { it.locale.name.startsWith("FR") }?.title
+            ?: episode.localizations.firstOrNull()?.title,
+        releaseCount = episode.releases.size,
+        localizationCount = episode.localizations.size
     )

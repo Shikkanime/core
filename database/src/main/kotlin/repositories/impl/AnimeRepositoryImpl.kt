@@ -14,14 +14,7 @@ import fr.shikkanime.exposed.pagination.paginate
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Platform
-import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.like
-import org.jetbrains.exposed.v1.core.lowerCase
-import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.select
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
@@ -55,7 +48,8 @@ internal class AnimeRepositoryImpl(
      */
     private fun compose(animes: List<AnimeEntity>): List<AnimeWithChildren> {
         // Nothing to compose: skip the relation reads instead of querying empty id lists
-        if (animes.isEmpty()) return emptyList()
+        if (animes.isEmpty())
+            return emptyList()
 
         val ids = animes.map { it.id.value }
 
@@ -139,19 +133,18 @@ internal class AnimeRepositoryImpl(
     }
 
     override fun findModelsByIds(ids: List<Uuid>): Map<Uuid, Anime> =
-        if (ids.isEmpty()) {
+        if (ids.isEmpty())
             emptyMap()
-        } else {
+        else
             AnimeEntity.find { AnimeTable.id inList ids }
                 .associate { it.id.value to it.toModel() }
-        }
 
     override fun findAllByNormalizedTitles(titles: List<String>): Map<String, AnimeWithChildren> =
         compose(
             AnimeEntity.find { AnimeTable.normalizedTitle inList titles }
                 .toList()
         )
-            .associateBy { it.anime.normalizedTitle }
+            .associateBy(AnimeWithChildren::normalizedTitle)
 
     override fun findModelById(id: Uuid): AnimeWithChildren? =
         findById(id)

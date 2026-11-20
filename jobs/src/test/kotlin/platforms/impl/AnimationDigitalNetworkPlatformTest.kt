@@ -3,23 +3,15 @@ package fr.shikkanime.jobs.platforms.impl
 import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.builders.impl.AdnShowMockKBuilder
 import fr.shikkanime.jobs.builders.impl.AdnVideoMockKBuilder
-import fr.shikkanime.jobs.platforms.PlatformEpisode
-import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.ImageType
-import fr.shikkanime.models.Locale
-import fr.shikkanime.models.Platform
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.HttpRequestData
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.headersOf
-import io.ktor.serialization.kotlinx.json.json
+import fr.shikkanime.jobs.platforms.models.PlatformEpisode
+import fr.shikkanime.models.*
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -27,13 +19,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import java.io.File
 import java.time.ZonedDateTime
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertSame
-import kotlin.test.assertTrue
+import kotlin.test.*
 import kotlin.time.Duration
 
 @ExtendWith(MockKExtension::class)
@@ -66,7 +54,8 @@ class AnimationDigitalNetworkPlatformTest {
                 install(ContentNegotiation) {
                     json(Json { ignoreUnknownKeys = true })
                 }
-            }
+            },
+            responseDumpDir = File("build/test-http-dumps")
         )
 
     /**
@@ -308,6 +297,23 @@ class AnimationDigitalNetworkPlatformTest {
             // Then
             assertTrue(harvest.hasChanged)
             assertEquals("2002", harvest.data.single().id)
+        }
+
+        @Test
+        @DisplayName("should report no change when the calendar only reshuffles its entries")
+        fun `should report no change when the calendar only reshuffles its entries`() = runTest {
+            // Given
+            var body = calendar(video(1001), video(1002))
+            val platform = platform(smartHttpClient { body })
+            platform.fetchLatestEpisodes()
+
+            // When: the same videos come back in a different order
+            body = calendar(video(1002), video(1001))
+            val harvest = platform.fetchLatestEpisodes()
+
+            // Then: the payload changed but the harvested episodes did not
+            assertFalse(harvest.hasChanged)
+            assertEquals(2, harvest.data.size)
         }
 
         @Test
@@ -729,7 +735,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.episodes()
 
             // Then
-            assertEquals(listOf("1"), episodes.map { it.id })
+            assertEquals(listOf("1"), episodes.map(PlatformEpisode::id))
         }
 
         @Test
@@ -753,7 +759,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.episodes()
 
             // Then
-            assertEquals(listOf("1"), episodes.map { it.id })
+            assertEquals(listOf("1"), episodes.map(PlatformEpisode::id))
         }
 
         @Test
@@ -774,7 +780,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.episodes()
 
             // Then
-            assertEquals(listOf("3"), episodes.map { it.id })
+            assertEquals(listOf("3"), episodes.map(PlatformEpisode::id))
         }
 
         @Test
@@ -804,7 +810,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.episodes()
 
             // Then
-            assertEquals(listOf("1"), episodes.map { it.id })
+            assertEquals(listOf("1"), episodes.map(PlatformEpisode::id))
         }
 
         @Test
@@ -826,7 +832,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.episodes()
 
             // Then only the videos whose short number starts with a trailer keyword are dropped
-            assertEquals(listOf("1", "2"), episodes.map { it.id })
+            assertEquals(listOf("1", "2"), episodes.map(PlatformEpisode::id))
         }
     }
 
@@ -1391,7 +1397,7 @@ class AnimationDigitalNetworkPlatformTest {
             val episodes = platform.episodes()
 
             // Then the platform does not implement the simulcast filter yet, unlike master
-            assertEquals(listOf("1"), episodes.map { it.id })
+            assertEquals(listOf("1"), episodes.map(PlatformEpisode::id))
         }
     }
 }

@@ -1,8 +1,7 @@
 package fr.shikkanime.admin.usecases
 
 import fr.shikkanime.admin.usecases.impl.CreateAdminUserUseCaseImpl
-import fr.shikkanime.database.builders.impl.UserEntityMockKBuilder
-import fr.shikkanime.database.repositories.UserRepository
+import fr.shikkanime.database.builders.impl.UserMockKBuilder
 import fr.shikkanime.database.services.UserService
 import fr.shikkanime.models.UserRole
 import io.mockk.every
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(MockKExtension::class)
 @DisplayName("tests for CreateAdminUserUseCase")
 class CreateAdminUserUseCaseTest {
-    @MockK private lateinit var userRepository: UserRepository
     @MockK private lateinit var userService: UserService
     @InjectMockKs private lateinit var createAdminUserUseCase: CreateAdminUserUseCaseImpl
 
@@ -29,16 +27,16 @@ class CreateAdminUserUseCaseTest {
         @DisplayName("should skip admin creation when an admin user already exists")
         fun `should skip admin creation when an admin user already exists`() {
             // Given
-            val existingAdmin = UserEntityMockKBuilder {
+            val existingAdmin = UserMockKBuilder {
                 roles = setOf(UserRole.ADMIN)
             }.build()
-            every { userRepository.findAllByRoles(UserRole.ADMIN) } returns listOf(existingAdmin)
+            every { userService.findAllByRoles(UserRole.ADMIN) } returns listOf(existingAdmin)
 
             // When
             createAdminUserUseCase.execute()
 
             // Then
-            verify(exactly = 1) { userRepository.findAllByRoles(UserRole.ADMIN) }
+            verify(exactly = 1) { userService.findAllByRoles(UserRole.ADMIN) }
             verify(exactly = 0) { userService.create(any(), any(), any(), any()) }
         }
 
@@ -46,11 +44,11 @@ class CreateAdminUserUseCaseTest {
         @DisplayName("should create admin user when no admin user exists")
         fun `should create admin user when no admin user exists`() {
             // Given
-            val createdUser = UserEntityMockKBuilder {
+            val createdUser = UserMockKBuilder {
                 username = "admin"
                 roles = setOf(UserRole.ADMIN)
             }.build()
-            every { userRepository.findAllByRoles(UserRole.ADMIN) } returns emptyList()
+            every { userService.findAllByRoles(UserRole.ADMIN) } returns emptyList()
             every {
                 userService.create(
                     username = "admin",
@@ -63,7 +61,7 @@ class CreateAdminUserUseCaseTest {
             createAdminUserUseCase.execute()
 
             // Then
-            verify(exactly = 1) { userRepository.findAllByRoles(UserRole.ADMIN) }
+            verify(exactly = 1) { userService.findAllByRoles(UserRole.ADMIN) }
             verify(exactly = 1) {
                 userService.create(
                     username = "admin",

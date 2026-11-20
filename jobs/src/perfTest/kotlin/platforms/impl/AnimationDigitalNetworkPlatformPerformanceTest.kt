@@ -3,11 +3,11 @@ package fr.shikkanime.jobs.platforms.impl
 import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.perf.BasePlatformPerformanceTest
 import fr.shikkanime.models.Country
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.respondOk
+import io.ktor.client.*
+import io.ktor.client.engine.mock.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import java.io.File
 import java.time.ZonedDateTime
 
 @DisplayName("tests for AnimationDigitalNetworkPlatform performance")
@@ -24,7 +24,10 @@ class AnimationDigitalNetworkPlatformPerformanceTest : BasePlatformPerformanceTe
      */
     private fun createMockClient(): SmartHttpClient {
         val mockEngine = MockEngine { respondOk("{}") }
-        return SmartHttpClient(client = HttpClient(mockEngine))
+        return SmartHttpClient(
+            client = HttpClient(mockEngine),
+            responseDumpDir = File("build/test-http-dumps")
+        )
     }
 
     @Test

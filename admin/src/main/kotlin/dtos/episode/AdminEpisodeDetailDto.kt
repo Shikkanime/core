@@ -1,25 +1,22 @@
 package fr.shikkanime.admin.dtos.episode
 
 import fr.shikkanime.admin.dtos.image.AdminImageDto
-import fr.shikkanime.admin.dtos.image.toAdminDto as toImageAdminDto
 import fr.shikkanime.admin.dtos.localization.AdminLocalizationDto
-import fr.shikkanime.admin.dtos.localization.toAdminDto as toLocalizationAdminDto
-import fr.shikkanime.models.EpisodeLocalization
-import fr.shikkanime.models.EpisodeRelease
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.EpisodeWithChildren
-import fr.shikkanime.models.Image
+import fr.shikkanime.models.*
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 import kotlin.uuid.Uuid
+import fr.shikkanime.admin.dtos.image.toAdminDto as toImageAdminDto
+import fr.shikkanime.admin.dtos.localization.toAdminDto as toLocalizationAdminDto
 
 /**
  * Full administration view of one episode.
  *
  * The detail screen shows everything the database stores about the episode: its identity, its
  * audit columns, its localized texts with their full descriptions, every platform release with its
- * URL and audio locale, and its artwork URLs. The episode list uses [AdminEpisodeSummaryDto]
- * instead, so one page of an anime does not carry every release and description.
+ * URL and audio locale, its metadata platform links and its artwork URLs. The episode list uses
+ * [AdminEpisodeSummaryDto] instead, so one page of an anime does not carry every release and
+ * description.
  */
 @Serializable
 data class AdminEpisodeDetailDto(
@@ -34,18 +31,34 @@ data class AdminEpisodeDetailDto(
     val updatedAt: LocalDateTime?,
     val localizations: List<AdminLocalizationDto>,
     val releases: List<AdminReleaseDto>,
-    val images: List<AdminImageDto>
+    val images: List<AdminImageDto>,
+    val metadataLinks: List<AdminEpisodeMetadataLinkDto>
 )
 
 /**
- * Maps a stored episode aggregate to its full administration view.
+ * An episode aggregate paired with its metadata platform links.
  *
- * @receiver stored episode with the rows it owns.
+ * The detail view joins two aggregates the persistence keeps apart, so the mapping receives
+ * them composed here instead of through a parameter.
+ *
+ * @property episode stored episode with the rows it owns.
+ * @property metadataLinks links of the episode to the external metadata platforms.
+ * @see [AdminEpisodeDetailDto]
+ */
+data class EpisodeWithMetadataLinks(
+    val episode: EpisodeWithChildren,
+    val metadataLinks: List<EpisodeMetadataLink>
+)
+
+/**
+ * Maps a stored episode aggregate and its metadata links to the full administration view.
+ *
+ * @receiver stored episode with its rows and metadata links.
  * @return the full administration view of this episode.
  * @see [AdminEpisodeDetailDto]
- * @see [EpisodeWithChildren]
+ * @see [EpisodeWithMetadataLinks]
  */
-fun EpisodeWithChildren.toAdminDetailDto(): AdminEpisodeDetailDto =
+fun EpisodeWithMetadataLinks.toAdminDetailDto(): AdminEpisodeDetailDto =
     AdminEpisodeDetailDto(
         id = requireNotNull(episode.id),
         animeId = episode.animeId,
@@ -56,7 +69,8 @@ fun EpisodeWithChildren.toAdminDetailDto(): AdminEpisodeDetailDto =
         duration = episode.duration,
         createdAt = episode.createdAt,
         updatedAt = episode.updatedAt,
-        localizations = localizations.map(EpisodeLocalization::toLocalizationAdminDto),
-        releases = releases.map(EpisodeRelease::toAdminDto),
-        images = images.map(Image::toImageAdminDto)
+        localizations = episode.localizations.map(EpisodeLocalization::toLocalizationAdminDto),
+        releases = episode.releases.map(EpisodeRelease::toAdminDto),
+        images = episode.images.map(Image::toImageAdminDto),
+        metadataLinks = metadataLinks.map(EpisodeMetadataLink::toAdminDto)
     )

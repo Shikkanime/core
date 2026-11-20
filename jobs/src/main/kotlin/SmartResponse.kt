@@ -7,8 +7,10 @@ package fr.shikkanime.jobs
  * request, and a streaming platform reports it for a whole harvest.
  *
  * @param T type of the fetched data.
+ * @param fetchedAtMillis the timestamp at which the payload was originally fetched, when known.
  */
 data class SmartResponse<T>(
     val data: T,
-    val hasChanged: Boolean
+    val hasChanged: Boolean,
+    val fetchedAtMillis: Long? = null
 )

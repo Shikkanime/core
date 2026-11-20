@@ -2,20 +2,10 @@ package fr.shikkanime.admin.controllers
 
 import fr.shikkanime.admin.dtos.anime.AdminAnimeDetailDto
 import fr.shikkanime.admin.dtos.anime.AdminAnimeSummaryDto
-import fr.shikkanime.admin.dtos.anime.toAdminDetailDto
 import fr.shikkanime.admin.dtos.anime.toAdminSummaryDto
+import fr.shikkanime.admin.usecases.FindAnimeDetailUseCase
 import fr.shikkanime.database.services.AnimeService
-import fr.shikkanime.ktor.ApiResponse
-import fr.shikkanime.ktor.ApiResponses
-import fr.shikkanime.ktor.GetMapping
-import fr.shikkanime.ktor.IController
-import fr.shikkanime.ktor.ModelAttribute
-import fr.shikkanime.ktor.Operation
-import fr.shikkanime.ktor.PathParam
-import fr.shikkanime.ktor.QueryParam
-import fr.shikkanime.ktor.ResponseEntity
-import fr.shikkanime.ktor.RestController
-import fr.shikkanime.ktor.Valid
+import fr.shikkanime.ktor.*
 import fr.shikkanime.ktor.dtos.ErrorMessageDto
 import fr.shikkanime.ktor.dtos.MessageDto
 import fr.shikkanime.ktor.pagination.PageDto
@@ -32,7 +22,8 @@ import kotlin.uuid.Uuid
 @RestController("/v1/animes")
 @Single(binds = [IController::class])
 class AnimeController(
-    private val animeService: AnimeService
+    private val animeService: AnimeService,
+    private val findAnimeDetailUseCase: FindAnimeDetailUseCase
 ) : IController {
     /**
      * Lists one page of the stored animes.
@@ -60,19 +51,17 @@ class AnimeController(
     fun findAll(
         @Valid @ModelAttribute query: PageQuery,
         @QueryParam(name = "search", required = false) search: String?
-    ): PageDto<AdminAnimeSummaryDto> {
+    ): PageDto<AdminAnimeSummaryDto> =
         // Keep list and search on the same paged database query
-        val animes = animeService.findPage(query.toPageRequest(), search)
-
-        return animes.toDto(AnimeWithChildren::toAdminSummaryDto)
-    }
+        animeService.findPage(query.toPageRequest(), search)
+            .toDto(AnimeWithChildren::toAdminSummaryDto)
 
     /**
      * Reads one stored anime with everything the database knows about it.
      *
      * @param id identifier of the anime to read.
      * @return the full anime view, or an error message when no anime carries this identifier.
-     * @see [AnimeService.findById]
+     * @see [FindAnimeDetailUseCase]
      */
     @GetMapping("/{id}")
     @Operation(
@@ -87,8 +76,8 @@ class AnimeController(
     ])
     fun findById(
         @PathParam("id") id: Uuid
-    ): ResponseEntity<Any> =
-        animeService.findById(id)
-            ?.let { ResponseEntity.ok(it.toAdminDetailDto()) }
+    ): ResponseEntity<*> =
+        findAnimeDetailUseCase.findById(id)
+            ?.let(ResponseEntity.Companion::ok)
             ?: ResponseEntity.notFound(MessageDto.error("Anime not found"))
 }

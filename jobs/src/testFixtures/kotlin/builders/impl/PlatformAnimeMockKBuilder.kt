@@ -1,9 +1,9 @@
 package fr.shikkanime.jobs.builders.impl
 
 import fr.shikkanime.database.builders.TestBuilder
-import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
-import fr.shikkanime.jobs.platforms.PlatformImage
+import fr.shikkanime.jobs.platforms.models.PlatformAnime
+import fr.shikkanime.jobs.platforms.models.PlatformAnimeLocalization
+import fr.shikkanime.jobs.platforms.models.PlatformImage
 import fr.shikkanime.models.Platform
 import io.mockk.every
 import io.mockk.mockk

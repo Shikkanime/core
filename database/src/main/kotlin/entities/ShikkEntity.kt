@@ -15,14 +15,19 @@ import kotlin.uuid.Uuid
  * `SELECT` per insert. A client default is written by the same `INSERT`, so the row is complete as
  * soon as it is written.
  */
-open class ShikkTable(name: String) : UuidTable(name) {
+internal open class ShikkTable(name: String) : UuidTable(name) {
     val createdAt = datetime(CREATED_AT)
         .clientDefault { TimeUtils.now() }
     val updatedAt = datetime(UPDATED_AT)
         .clientDefault { TimeUtils.now() }
 }
 
-open class ShikkEntity(
+/**
+ * Base entity carrying the audit columns every persisted row owns.
+ *
+ * @see [ShikkTable]
+ */
+internal open class ShikkEntity(
     id: EntityID<Uuid>,
     table: ShikkTable
 ) : UuidEntity(id) {

@@ -104,4 +104,7 @@ screen, [CODE_STYLE.md](guidelines/CODE_STYLE.md) for widgets and documentation,
 [API_CONVENTIONS.md](guidelines/API_CONVENTIONS.md) for the HTTP contract.
 
 A review comment that reveals a convention is written in these guides in the same change, so the
-next contributor reads the rule instead of rediscovering it.
+next contributor reads the rule instead of rediscovering it. When the comment contradicts a rule
+already written here, change nothing and discuss the contradiction with the user first. Every
+review finding is also logged in the repository-level
+[CODE_REVIEWS.md](../../guidelines/CODE_REVIEWS.md), with a short excerpt pointing to the fix.

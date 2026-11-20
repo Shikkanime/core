@@ -62,6 +62,8 @@ val anime = animeRepository.findAnimeById(animeId)
   The documentation must include a concise description of purpose, explicit `@param` tags for every
   parameter, a `@return` tag describing the result, and `@see` tags referencing relevant classes
   using markdown links (e.g. `[PlatformEpisode]`, `[Country]`).
+- **A function that is hard to read is split into smaller private helpers** named after what each
+  step does, leaving the original function as a readable sequence of calls.
 
 ### Declaration order in repositories and services
 

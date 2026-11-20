@@ -38,6 +38,10 @@
   declared in the file of the type it builds:** `fun Anime.toDto()` lives in `AnimeDto.kt`,
   `PlatformAnime.toModel()` stays a member of `PlatformAnime` (it carries the data and can see its
   target). Never a companion factory, never a wrapper `?.let { entity -> entity.toModel(...) }`.
+- **Read the current time through `TimeUtils.now()`** (`fr.shikkanime.core`), never through
+  `Clock.System.now().toLocalDateTime(TimeZone.UTC)`: the framework helper is the single place the
+  UTC convention lives. Epoch-millisecond reads (`toEpochMilliseconds`) and conversions of an
+  arbitrary instant are different operations and stay as they are.
 - **Every non-test method must have complete KDoc.** Must include a descriptive summary, `@param` for
   each parameter, `@return` explaining the return value, and `@see` referencing related classes.
 - **A code line stays at or under 110 characters, counted from its first non-whitespace character.**

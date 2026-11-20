@@ -483,6 +483,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{value, select, BANNER{Banner} THUMBNAIL{Thumbnail} TITLE{Title} other{{value}}}'**
   String imageTypeName(String value);
+
+  /// No description provided for @metadataLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata links'**
+  String get metadataLinks;
+
+  /// No description provided for @metadataPlatformName.
+  ///
+  /// In en, this message translates to:
+  /// **'{value, select, ANILIST{AniList} MYANIMELIST{MyAnimeList} ANIDB{AniDB} other{{value}}}'**
+  String metadataPlatformName(String value);
 }
 
 class _AppLocalizationsDelegate

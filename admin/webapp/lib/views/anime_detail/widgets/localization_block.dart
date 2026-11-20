@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shikkanime_admin/core/format/labels.dart';
 import 'package:shikkanime_admin/core/widgets/detail_widgets.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';

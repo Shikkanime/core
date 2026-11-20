@@ -1,6 +1,7 @@
 package fr.shikkanime.jobs.platforms
 
 import fr.shikkanime.jobs.SmartResponse
+import fr.shikkanime.jobs.platforms.models.PlatformEpisode
 import fr.shikkanime.models.Country
 import fr.shikkanime.models.Platform
 
@@ -12,7 +13,7 @@ interface StreamingPlatform {
      * Harvests the latest episodes published on this platform.
      *
      * @return the harvested episodes of every supported country, as produced by the platform,
-     * with the change flag of the platform payload.
+     * with the change flag of the harvested episodes.
      * @see [SmartResponse]
      * @see [PlatformEpisode]
      */

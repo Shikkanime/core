@@ -1,11 +1,7 @@
 package fr.shikkanime.database.builders.impl
 
 import fr.shikkanime.database.builders.TestBuilder
-import fr.shikkanime.models.Anime
-import fr.shikkanime.models.AnimeLocalization
-import fr.shikkanime.models.AnimePlatform
-import fr.shikkanime.models.AnimeWithChildren
-import fr.shikkanime.models.Image
+import fr.shikkanime.models.*
 import io.mockk.every
 import io.mockk.mockk
 
@@ -28,6 +24,12 @@ class AnimeWithChildrenMockKBuilder(
         images?.let { every { mockK.images } returns it }
         localizations?.let { every { mockK.localizations } returns it }
         platforms?.let { every { mockK.platforms } returns it }
+
+        // The projection delegates read the anime member: a mock intercepts them too
+        every { mockK.id } answers { mockK.anime.id }
+        every { mockK.createdAt } answers { mockK.anime.createdAt }
+        every { mockK.updatedAt } answers { mockK.anime.updatedAt }
+        every { mockK.normalizedTitle } answers { mockK.anime.normalizedTitle }
 
         every { mockK.copy(any(), any(), any(), any()) } answers {
             AnimeWithChildren(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 
 /// Retryable failure of a screen that could not read the API.

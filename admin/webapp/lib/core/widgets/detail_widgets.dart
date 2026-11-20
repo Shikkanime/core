@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Title of a section inside a detail card.
 class DetailSectionTitle extends StatelessWidget {

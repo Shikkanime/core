@@ -140,5 +140,14 @@
         "type": "String"
       }
     }
+  },
+  "metadataLinks": "Metadata links",
+  "metadataPlatformName": "{value, select, ANILIST{AniList} MYANIMELIST{MyAnimeList} ANIDB{AniDB} other{{value}}}",
+  "@metadataPlatformName": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
   }
 }

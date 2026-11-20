@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shikkanime_admin/core/widgets/state_views.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 import 'package:shikkanime_admin/models/anime/anime_summary_model.dart';

@@ -1,7 +1,7 @@
 package fr.shikkanime.jobs.builders.impl
 
 import fr.shikkanime.database.builders.TestBuilder
-import fr.shikkanime.jobs.platforms.PlatformImage
+import fr.shikkanime.jobs.platforms.models.PlatformImage
 import fr.shikkanime.models.ImageType
 import io.mockk.every
 import io.mockk.mockk

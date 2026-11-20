@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.shikkanimeFrameworkKoin)
     implementation(libs.shikkanimeFrameworkKtor)
     implementation(libs.quartz)
+    implementation(libs.jsoup)
     implementation(kotlin("reflect"))
 
     testFixturesApi(testFixtures(project(":database")))

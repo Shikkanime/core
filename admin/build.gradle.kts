@@ -1,7 +1,4 @@
 import java.io.ByteArrayOutputStream
-import javax.inject.Inject
-import org.gradle.language.jvm.tasks.ProcessResources
-import org.gradle.process.ExecOperations
 
 plugins {
     id("buildsrc.convention.kotlin-jvm")
@@ -129,7 +126,10 @@ abstract class BuildWebApp : DefaultTask() {
         logger.lifecycle("Building the web app with $version")
 
         execOperations.exec {
-            commandLine(executable(), "build", "web", "--release", "--base-href", "/")
+            commandLine(
+                executable(), "build", "web", "--release", "--base-href", "/",
+                "--web-content-hash"
+            )
             workingDir = project
         }
 

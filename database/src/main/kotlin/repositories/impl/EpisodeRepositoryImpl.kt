@@ -6,11 +6,7 @@ import fr.shikkanime.core.pagination.PageRequest
 import fr.shikkanime.database.entities.EpisodeEntity
 import fr.shikkanime.database.entities.EpisodeReleaseTable
 import fr.shikkanime.database.entities.EpisodeTable
-import fr.shikkanime.database.repositories.AnimeRepository
-import fr.shikkanime.database.repositories.EpisodeLocalizationRepository
-import fr.shikkanime.database.repositories.EpisodeReleaseRepository
-import fr.shikkanime.database.repositories.EpisodeRepository
-import fr.shikkanime.database.repositories.ImageRepository
+import fr.shikkanime.database.repositories.*
 import fr.shikkanime.exposed.pagination.paginate
 import fr.shikkanime.models.Episode
 import fr.shikkanime.models.EpisodeType
@@ -44,7 +40,8 @@ internal class EpisodeRepositoryImpl(
      */
     private fun compose(episodes: List<EpisodeEntity>): List<EpisodeWithChildren> {
         // Nothing to compose: skip the relation reads instead of querying empty id lists
-        if (episodes.isEmpty()) return emptyList()
+        if (episodes.isEmpty())
+            return emptyList()
 
         val ids = episodes.map { it.id.value }
 

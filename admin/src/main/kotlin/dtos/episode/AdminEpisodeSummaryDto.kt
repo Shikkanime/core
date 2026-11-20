@@ -40,12 +40,12 @@ data class AdminEpisodeSummaryDto(
  */
 fun EpisodeWithChildren.toAdminSummaryDto(): AdminEpisodeSummaryDto =
     AdminEpisodeSummaryDto(
-        id = requireNotNull(episode.id),
-        season = episode.season,
-        episodeType = episode.episodeType,
-        number = episode.number,
-        releaseDateTime = episode.releaseDateTime,
-        duration = episode.duration,
+        id = requireNotNull(id),
+        season = season,
+        episodeType = episodeType,
+        number = number,
+        releaseDateTime = releaseDateTime,
+        duration = duration,
         title = localizations.firstOrNull { it.locale.name.startsWith("FR") }?.title
             ?: localizations.firstOrNull()?.title,
         releaseCount = releases.size,

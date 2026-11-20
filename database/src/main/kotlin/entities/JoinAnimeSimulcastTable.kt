@@ -2,9 +2,9 @@ package fr.shikkanime.database.entities
 
 import org.jetbrains.exposed.v1.core.Table
 
-const val JOIN_ANIME_SIMULCAST_TABLE_NAME = "join_${ANIME_TABLE_NAME}_${SIMULCAST_TABLE_NAME}"
+internal const val JOIN_ANIME_SIMULCAST_TABLE_NAME = "join_${ANIME_TABLE_NAME}_${SIMULCAST_TABLE_NAME}"
 
-object JoinAnimeSimulcastTable : Table(JOIN_ANIME_SIMULCAST_TABLE_NAME) {
+internal object JoinAnimeSimulcastTable : Table(JOIN_ANIME_SIMULCAST_TABLE_NAME) {
     val anime = reference(
         ANIME_TABLE_ID,
         AnimeTable,

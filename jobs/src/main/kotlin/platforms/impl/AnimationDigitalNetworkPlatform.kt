@@ -1,38 +1,30 @@
 package fr.shikkanime.jobs.platforms.impl
 
 import fr.shikkanime.core.LoggerFactory
+import fr.shikkanime.core.TimeUtils
 import fr.shikkanime.jobs.SmartHttpClient
 import fr.shikkanime.jobs.SmartResponse
 import fr.shikkanime.jobs.ZonedDateTimeSerializer
-import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.jobs.platforms.PlatformAnimeLocalization
-import fr.shikkanime.jobs.platforms.PlatformEpisode
-import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
-import fr.shikkanime.jobs.platforms.PlatformImage
 import fr.shikkanime.jobs.platforms.StreamingPlatform
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
+import fr.shikkanime.jobs.platforms.exceptions.TeaserEpisodeException
+import fr.shikkanime.jobs.platforms.models.*
 import fr.shikkanime.jobs.platforms.sanitizeText
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.ImageType
-import fr.shikkanime.models.Locale
-import fr.shikkanime.models.Platform
-import io.ktor.http.HttpHeaders
+import fr.shikkanime.models.*
+import io.ktor.http.*
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
-
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import org.koin.core.annotation.Single
 import java.time.ZonedDateTime
-import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+
 
 private val DIMENSION_REGEX = Regex("""\d+x\d+""")
 private val VIDEO_EPS_REGEX = Regex("""/eps$""")
 private val LANDSCAPE_WITH_LOGO_REGEX = Regex("""/landscape-with-logo(?:\..*)?$""")
+private val THUMBNAIL_REGEX = Regex("""/thumbnail(?:\..*)?$""")
 private val SHOW_PORTRAIT_LOGO_REGEX = Regex("""/portrait-with-logo$""")
 private val MOVIE_REGEX = Regex("""Film(?: (\d*))?""")
 private val SPECIAL_EPISODE_REGEX = Regex("""(?:Épisode spécial|OAV)(?: (\d*))?""")
@@ -46,6 +38,7 @@ private val TRAILER_INDICATORS = listOf(
     "Making-of"
 )
 private val SPECIAL_SHOW_TYPES = setOf(AdnType.PV, AdnType.BONUS)
+private const val WIDTH_1920_HEIGHT_1080_QUALITY_100 = "width=1920,height=1080,quality=100"
 
 /**
  * Resolves the canonical audio locale for a release given the target country and ADN language code.
@@ -231,7 +224,7 @@ internal fun parseInitialNumber(rawString: String?): Int =
 @Single(binds = [StreamingPlatform::class])
 class AnimationDigitalNetworkPlatform(
     private val client: SmartHttpClient,
-    private val ttl: Duration = 1.minutes,
+    private val ttl: Duration = 5.minutes,
     override val countries: Set<Country> = setOf(Country.FR)
 ) : StreamingPlatform {
     override val platform: Platform = Platform.ANIMATION_DIGITAL_NETWORK
@@ -247,9 +240,11 @@ class AnimationDigitalNetworkPlatform(
      * for each country declared in [countries], and maps valid releases into [PlatformEpisode] instances.
      *
      * In-memory cache is returned if [SmartHttpClient] reports that the remote payload has not changed.
+     * A payload change that leaves the harvested episodes untouched, like a reshuffle of the
+     * calendar entries, is not reported as a change.
      *
      * @return A [SmartResponse] carrying the normalized [PlatformEpisode] objects representing
-     * today's releases and the change flag of the ADN payload.
+     * today's releases and the change flag of the harvested episodes.
      * @throws io.ktor.client.plugins.ResponseException If the ADN API responds with an unhandled HTTP error.
      * @see [SmartResponse]
      * @see [PlatformEpisode]
@@ -259,10 +254,7 @@ class AnimationDigitalNetworkPlatform(
         if (countries.isEmpty())
             return SmartResponse(emptyList(), hasChanged = false)
 
-        val now = Clock.System.now()
-            .toLocalDateTime(TimeZone.UTC)
-            .date
-            .format(LocalDate.Formats.ISO)
+        val now = TimeUtils.now().date.format(LocalDate.Formats.ISO)
 
         var hasChanged = false
 
@@ -275,12 +267,12 @@ class AnimationDigitalNetworkPlatform(
 
         if (hasChanged) {
             cachedEpisodes = episodesByCountry
-                .groupBy { it.id }
+                .groupBy(PlatformEpisode::id)
                 .values
                 .map { group ->
                     val first = group.first()
-                    val allAudioLocales = group.flatMap { it.audioLocales }.distinct()
-                    val allLocalizations = group.flatMap { it.localizations }.distinct()
+                    val allAudioLocales = group.flatMap(PlatformEpisode::audioLocales).distinct()
+                    val allLocalizations = group.flatMap(PlatformEpisode::localizations).distinct()
                     first.copy(
                         audioLocales = allAudioLocales,
                         localizations = allLocalizations
@@ -312,15 +304,27 @@ class AnimationDigitalNetworkPlatform(
         val invalidShowIds = mutableSetOf<Int>()
 
         return videos.mapNotNull { video ->
-            if (!video.isValid)
-                return@mapNotNull null
-            val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason, country)
-                ?: return@mapNotNull null
-
             try {
+                if (video.isTeaser)
+                    throw TeaserEpisodeException(
+                        episodeId = video.id.toString(),
+                        episodeName = video.title ?: video.name,
+                        reason = "promotional video"
+                    )
+                if (!video.isValid)
+                    return@mapNotNull null
+                val anime = resolveAnime(video.show, animes, invalidShowIds, video.parsedSeason, country)
+                    ?: return@mapNotNull null
+
                 video.toPlatformEpisode(anime, country)
+            } catch (e: TeaserEpisodeException) {
+                logger.fine(e.message)
+                null
             } catch (e: MissingAudioLocaleException) {
                 logger.warning(e.message)
+                null
+            } catch (e: Exception) {
+                logger.warning("Skipping ADN video ${video.id}: ${e.message}")
                 null
             }
         }
@@ -359,12 +363,19 @@ class AnimationDigitalNetworkPlatform(
             ),
         )
 
-        val hasChanged = response.hasChanged || country !in cachedEpisodesByCountry
+        val cached = cachedEpisodesByCountry[country]
+        if (!response.hasChanged && cached != null)
+            return cached to false
 
-        if (hasChanged)
-            cachedEpisodesByCountry[country] = convertVideos(response.data.videos, country)
+        val episodes = convertVideos(response.data.videos, country)
 
-        return cachedEpisodesByCountry[country].orEmpty() to hasChanged
+        // The calendar may reshuffle its entries without changing the episodes they carry: the
+        // change flag must reflect the harvested episodes, not the raw payload order.
+        if (cached != null && episodes.hasSameContentAs(cached))
+            return cached to false
+
+        cachedEpisodesByCountry[country] = episodes
+        return episodes to true
     }
 
     /**
@@ -436,16 +447,18 @@ internal data class AdnVideo(
 ) {
     val image: String by lazy(LazyThreadSafetyMode.NONE) {
         image2x.replace(DIMENSION_REGEX, "1920x1080")
-            .replace(VIDEO_EPS_REGEX, "/eps.width=1920,height=1080,quality=100")
-            .replace(
-                LANDSCAPE_WITH_LOGO_REGEX,
-                "/landscape-with-logo.width=1920,height=1080,quality=100"
-            )
+            .replace(VIDEO_EPS_REGEX, "/eps.$WIDTH_1920_HEIGHT_1080_QUALITY_100")
+            .replace(LANDSCAPE_WITH_LOGO_REGEX, "/landscape-with-logo.$WIDTH_1920_HEIGHT_1080_QUALITY_100")
+            .replace(THUMBNAIL_REGEX, "/thumbnail.fr.$WIDTH_1920_HEIGHT_1080_QUALITY_100")
     }
+
+    val isTeaser: Boolean
+        get() =
+            type == AdnType.PV || TRAILER_INDICATORS.any { shortNumber.startsWith(it) }
 
     val isValid: Boolean
         get() =
-            type !in SPECIAL_SHOW_TYPES && TRAILER_INDICATORS.none { shortNumber.startsWith(it) }
+            type !in SPECIAL_SHOW_TYPES && !isTeaser
 
     val isUncensored: Boolean
         get() =
@@ -524,18 +537,12 @@ internal data class AdnShow(
 ) {
     val thumbnail: String by lazy(LazyThreadSafetyMode.NONE) {
         image2x.replace(DIMENSION_REGEX, "1080x1543")
-            .replace(
-                SHOW_PORTRAIT_LOGO_REGEX,
-                "/portrait-with-logo.width=1080,height=1543,quality=100"
-            )
+            .replace(SHOW_PORTRAIT_LOGO_REGEX, "/portrait-with-logo.width=1080,height=1543,quality=100")
     }
 
     val banner: String by lazy(LazyThreadSafetyMode.NONE) {
         imageHorizontal2x.replace(DIMENSION_REGEX, "1920x1080")
-            .replace(
-                LANDSCAPE_WITH_LOGO_REGEX,
-                "/landscape-with-logo.width=1920,height=1080,quality=100"
-            )
+            .replace(LANDSCAPE_WITH_LOGO_REGEX, "/landscape-with-logo.$WIDTH_1920_HEIGHT_1080_QUALITY_100")
     }
 
     val isAnimation: Boolean

@@ -3,28 +3,40 @@ package fr.shikkanime.jobs
 import fr.shikkanime.core.LoggerFactory
 import fr.shikkanime.database.DatabaseManager
 import fr.shikkanime.database.DatabaseModule
-
-import fr.shikkanime.jobs.platforms.StreamingPlatform
+import fr.shikkanime.jobs.services.HarvestIngestionService
+import fr.shikkanime.framework.koin.applyTransactionalProxies
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import fr.shikkanime.framework.koin.applyTransactionalProxies
-import org.quartz.*
 import org.koin.core.Koin
 import org.koin.core.annotation.ComponentScan
 import org.koin.core.annotation.KoinApplication
 import org.koin.core.annotation.Module
 import org.koin.plugin.module.dsl.startKoin
-
+import org.quartz.*
+import org.quartz.impl.StdSchedulerFactory
 import org.quartz.spi.JobFactory
 import org.quartz.spi.TriggerFiredBundle
 import java.time.ZonedDateTime
 import kotlin.reflect.full.findAnnotation
-import kotlin.system.exitProcess
 
 private val logger = LoggerFactory.getLogger("Application")
+
+/**
+ * Boots the application graph shared by the entrypoint and the integration tests.
+ *
+ * @return the started Koin instance, with its transactional proxies applied.
+ * @see [startKoin]
+ * @see [applyTransactionalProxies]
+ */
+internal fun bootstrap(): Koin {
+    val koin = startKoin<MyApp>().koin
+    applyTransactionalProxies(koin)
+    return koin
+}
 
 @Module
 @ComponentScan("fr.shikkanime.jobs")
@@ -33,7 +45,6 @@ internal class AppModule
 @KoinApplication(modules = [AppModule::class, DatabaseModule::class])
 internal class MyApp
 
-@Suppress("unused")
 internal class KoinJobFactory(private val koin: Koin) : JobFactory {
     override fun newJob(bundle: TriggerFiredBundle, scheduler: Scheduler): Job =
         koin.get(bundle.jobDetail.jobClass.kotlin)
@@ -52,41 +63,32 @@ class ZonedDateTimeSerializer : KSerializer<ZonedDateTime> {
 }
 
 /**
- * Runs one full harvest pass of every streaming platform.
+ * Starts the jobs scheduler of the application.
  *
- * Boots the application graph with its transactional proxies and connects to the database, harvests
- * the latest episodes of every platform, then persists the animes they carry before exiting the
- * process.
+ * Boots the application graph with its transactional proxies and connects to the database, then
+ * registers every [Job] bean on a Quartz scheduler through its declared [Expression] cron
+ * schedule. Each job instance is resolved from Koin by the [KoinJobFactory] when its trigger
+ * fires, and the process stays alive until it is stopped.
  *
- * @return nothing; the process exits once the harvest is persisted.
- * @see [StreamingPlatform]
+ * @return nothing; the scheduler runs until the process is stopped.
+ * @see [Job]
+ * @see [Expression]
+ * @see [KoinJobFactory]
  * @see [HarvestIngestionService]
  */
 suspend fun main() {
-    val koin = startKoin<MyApp>().koin
-    applyTransactionalProxies(koin)
+    val koin = bootstrap()
 
     DatabaseManager.connect()
 
-    // Every platform is harvested first, then one global pass: the platforms are sorted by their
-    // source priority and the first anime of a given normalized title wins, so a lower priority
-    // platform never overwrites the data of a higher one.
-    val harvest = koin.getAll<StreamingPlatform>()
-        // The lambda is required: a suspend function reference is not a valid map candidate
-        .map { it.fetchLatestEpisodes() }
+    val jobs = koin.getAll<Job>()
+    val scheduler = StdSchedulerFactory().scheduler
+    scheduler.setJobFactory(KoinJobFactory(koin))
+    val scheduled = scheduler.schedule(jobs)
+    scheduler.start()
+    logger.info("Started the jobs scheduler with $scheduled job(s)")
 
-    // Persist the pooled harvest before the process exits
-    val saved = koin.get<HarvestIngestionService>()
-        .saveAll(harvest)
-    logger.info("Saved $saved animes")
-
-    exitProcess(0)
-
-//    StdSchedulerFactory().scheduler
-//        .apply {
-//            setJobFactory(KoinJobFactory(koin))
-//            schedule(koin.getAll<Job>())
-//        }.start()
+    awaitCancellation()
 }
 
 /**
@@ -96,15 +98,18 @@ suspend fun main() {
  *
  * @receiver scheduler the jobs are registered on.
  * @param jobs jobs to schedule.
- * @return nothing; the jobs are registered with their own trigger.
+ * @return the number of jobs actually registered on this scheduler.
  * @see [Expression]
  * @see [TriggerBuilder]
  */
-@Suppress("unused")
-private fun Scheduler.schedule(jobs: List<Job>) {
+internal fun Scheduler.schedule(jobs: List<Job>): Int {
+    var scheduled = 0
     jobs.forEach { job ->
         val expression = job::class.findAnnotation<Expression>()?.value
-            ?: return@forEach
+        if (expression == null) {
+            logger.warning("Skipping job ${job::class.simpleName}: no @Expression declared")
+            return@forEach
+        }
 
         val detail = JobBuilder.newJob(job::class.java)
             .build()
@@ -115,5 +120,7 @@ private fun Scheduler.schedule(jobs: List<Job>) {
             ).build()
 
         scheduleJob(detail, trigger)
+        scheduled++
     }
+    return scheduled
 }

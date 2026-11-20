@@ -279,4 +279,18 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get metadataLinks => 'Metadata links';
+
+  @override
+  String metadataPlatformName(String value) {
+    String _temp0 = intl.Intl.selectLogic(value, {
+      'ANILIST': 'AniList',
+      'MYANIMELIST': 'MyAnimeList',
+      'ANIDB': 'AniDB',
+      'other': '$value',
+    });
+    return '$_temp0';
+  }
 }

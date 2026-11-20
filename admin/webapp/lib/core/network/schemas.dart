@@ -11,5 +11,6 @@ export 'package:shikkanime_admin/core/network/schemas/episode.dart';
 export 'package:shikkanime_admin/core/network/schemas/image.dart';
 export 'package:shikkanime_admin/core/network/schemas/locale.dart';
 export 'package:shikkanime_admin/core/network/schemas/localization.dart';
+export 'package:shikkanime_admin/core/network/schemas/metadata.dart';
 export 'package:shikkanime_admin/core/network/schemas/page.dart';
 export 'package:shikkanime_admin/core/network/schemas/platform.dart';

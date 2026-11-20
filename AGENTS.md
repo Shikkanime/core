@@ -57,3 +57,17 @@ Before concluding your task, perform a final check to ensure you have followed a
 - Do all unit and integration tests pass?
 
 Consult the other guides for [Performance](guidelines/PERFORMANCE.md) rules as needed.
+
+## 6. Handling Review Feedback
+
+When the user reports a code-review finding:
+
+- **Check the guidelines first.** Look through `guidelines/` (and the module-local guides, such as
+  `admin/webapp/guidelines/`) to see whether the point is already covered.
+- **On contradiction, change nothing.** If the feedback conflicts with an established convention,
+  do not modify any file: report the contradiction and discuss it with the user first.
+- **On a new convention, write it down.** If no guide covers the point, record it in the appropriate
+  guide in the same change, so the next contributor reads the rule instead of rediscovering it.
+- **Log the review.** Add an entry to [guidelines/CODE_REVIEWS.md](guidelines/CODE_REVIEWS.md)
+  describing what was flagged, the fix applied, and a short code excerpt (5-6 lines at most) that
+  points to the pattern.

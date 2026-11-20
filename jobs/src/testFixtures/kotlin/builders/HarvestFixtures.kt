@@ -1,20 +1,11 @@
 package fr.shikkanime.jobs.builders
 
 import fr.shikkanime.jobs.SmartResponse
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeLocalizationMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformAnimeMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformEpisodeLocalizationMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformEpisodeMockKBuilder
-import fr.shikkanime.jobs.builders.impl.PlatformImageMockKBuilder
-import fr.shikkanime.jobs.platforms.PlatformAnime
-import fr.shikkanime.jobs.platforms.PlatformEpisode
-import fr.shikkanime.jobs.platforms.PlatformEpisodeLocalization
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.ImageType
-import fr.shikkanime.models.Locale
-import fr.shikkanime.models.Platform
-import fr.shikkanime.models.canonicalTitle
+import fr.shikkanime.jobs.builders.impl.*
+import fr.shikkanime.jobs.platforms.models.PlatformAnime
+import fr.shikkanime.jobs.platforms.models.PlatformEpisode
+import fr.shikkanime.jobs.platforms.models.PlatformEpisodeLocalization
+import fr.shikkanime.models.*
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 

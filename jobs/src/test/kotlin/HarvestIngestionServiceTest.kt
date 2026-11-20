@@ -1,30 +1,20 @@
 package fr.shikkanime.jobs
 
 import fr.shikkanime.core.TimeUtils
-import fr.shikkanime.database.builders.impl.AnimeMockKBuilder
-import fr.shikkanime.database.builders.impl.AnimePlatformMockKBuilder
-import fr.shikkanime.database.builders.impl.AnimeWithChildrenMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodeMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodeReleaseMockKBuilder
-import fr.shikkanime.database.builders.impl.EpisodeWithChildrenMockKBuilder
+import fr.shikkanime.database.builders.impl.*
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.database.services.EpisodeService
 import fr.shikkanime.jobs.builders.harvest
 import fr.shikkanime.jobs.builders.harvestedAnime
 import fr.shikkanime.jobs.builders.harvestedEpisode
-import fr.shikkanime.models.AnimeWithChildren
-import fr.shikkanime.models.Country
-import fr.shikkanime.models.EpisodeType
-import fr.shikkanime.models.EpisodeWithChildren
-import fr.shikkanime.models.ImageType
-import fr.shikkanime.models.Locale
-import fr.shikkanime.models.Platform
+import fr.shikkanime.jobs.services.HarvestIngestionService
+import fr.shikkanime.models.*
 import io.mockk.every
-import io.mockk.verify
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.slot
+import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -33,6 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
+
 
 @ExtendWith(MockKExtension::class)
 @DisplayName("tests for the harvest ingestion service")
@@ -224,8 +215,8 @@ class HarvestIngestionServiceTest {
 
             // Then: one row per track, all pointing at the same video of the same episode
             val releases = saved.captured.releases
-            assertEquals(setOf(Locale.JA_JP, Locale.FR_FR), releases.map { it.audioLocale }.toSet())
-            assertEquals(setOf("3001"), releases.map { it.platformId }.toSet())
+            assertEquals(setOf(Locale.JA_JP, Locale.FR_FR), releases.map(EpisodeRelease::audioLocale).toSet())
+            assertEquals(setOf("3001"), releases.map(EpisodeRelease::platformId).toSet())
         }
 
         @Test
@@ -250,7 +241,7 @@ class HarvestIngestionServiceTest {
             // Then: the anime carries both source links and each source keeps its release
             assertEquals(
                 setOf("123", "456"),
-                savedAnime.captured.platforms.map { it.platformId }.toSet()
+                savedAnime.captured.platforms.map(AnimePlatform::platformId).toSet()
             )
             assertEquals(
                 listOf("3001", "4001"),

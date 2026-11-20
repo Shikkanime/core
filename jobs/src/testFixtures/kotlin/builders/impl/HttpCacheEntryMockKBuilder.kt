@@ -24,6 +24,7 @@ class HttpCacheEntryMockKBuilder(
     var etag: String? = null
     var lastModified: String? = null
     var expiresAtMillis: Long? = null
+    var fetchedAtMillis: Long? = null
 
     init {
         configuration(this)
@@ -36,6 +37,7 @@ class HttpCacheEntryMockKBuilder(
         etag?.let { every { mockK.etag } returns it }
         lastModified?.let { every { mockK.lastModified } returns it }
         expiresAtMillis?.let { every { mockK.expiresAtMillis } returns it }
+        fetchedAtMillis?.let { every { mockK.fetchedAtMillis } returns it }
 
         return mockK
     }
