@@ -137,14 +137,13 @@ object EpisodeGrouper {
             .groupBy { langTypeOf.getValue(it.releaseId) }
             .mapValues { (_, langObservations) -> langObservations.map { episodeKey(it).toCoordinate() }.toSet() }
 
-        val buckets = mutableListOf<Bucket>()
-        for (observation in observations) {
+        val buckets = observations.fold(mutableListOf<Bucket>()) { buckets, observation ->
             val instant = toInstant(observation)
-            val bucket = buckets.firstOrNull {
-                instant <= it.anchor.plus(WINDOW)
-            } ?: Bucket(observation.animeId, observation.episodeType, instant)
-                .also { buckets += it }
+            val bucket = buckets.firstOrNull { instant <= it.anchor.plus(WINDOW) }
+                ?: Bucket(observation.animeId, observation.episodeType, instant)
+                    .also { buckets += it }
             bucket.observations += observation
+            buckets
         }
 
         return buckets.flatMap { bucket ->
