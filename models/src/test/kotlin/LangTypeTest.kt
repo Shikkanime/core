@@ -33,6 +33,16 @@ class LangTypeTest {
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.EN_US))
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.ZH_CN))
         }
+
+        @Test
+        fun `should map a foreign voice locale to SUBTITLES`() {
+            // fr-BE is the voice of BE, not of FR: for FR it is just another
+            // (invisible) locale — filtering happens upstream, the mapping
+            // itself stays mechanical like the legacy `fromAudioLocale`
+            assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.FR_BE))
+            assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.DE_DE))
+            assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.DE, Locale.FR_FR))
+        }
     }
 
     @Nested
@@ -118,6 +128,73 @@ class LangTypeTest {
         @Test
         fun `should return an empty set when nothing is available`() {
             assertTrue(Country.FR.visibleAudioLocales(emptySet()).isEmpty())
+        }
+
+        @Test
+        fun `should keep english alone as the subtitle fallback`() {
+            // Given: only en-US on the episode
+            val available = setOf(Locale.EN_US)
+
+            // When
+            val visible = Country.FR.visibleAudioLocales(available)
+
+            // Then
+            assertEquals(setOf(Locale.EN_US), visible)
+        }
+
+        @Test
+        fun `should keep a CJK locale without any voice`() {
+            // Given: only ja-JP on the episode
+            val available = setOf(Locale.JA_JP)
+
+            // When
+            val visible = Country.FR.visibleAudioLocales(available)
+
+            // Then: CJK wins, no EN fallback needed
+            assertEquals(setOf(Locale.JA_JP), visible)
+        }
+
+        @Test
+        fun `should drop english when CJK is available even without voice`() {
+            // Given: en-US + ja-JP, no fr-FR voice on the episode
+            val available = setOf(Locale.EN_US, Locale.JA_JP)
+
+            // When
+            val visible = Country.FR.visibleAudioLocales(available)
+
+            // Then
+            assertEquals(setOf(Locale.JA_JP), visible)
+        }
+
+        @Test
+        fun `should reject a sibling market locale`() {
+            // Given: only fr-BE — the voice of BE, meaningless for FR
+            val available = setOf(Locale.FR_BE)
+
+            // When
+            val visible = Country.FR.visibleAudioLocales(available)
+
+            // Then: nothing is visible for FR
+            assertTrue(visible.isEmpty())
+        }
+
+        @Test
+        fun `should not expose another market voice locale`() {
+            // Given: fr-FR + en-US viewed from Germany — fr-FR is not the DE
+            // voice and not a subtitle locale, only the EN fallback survives
+            val visible = Country.DE.visibleAudioLocales(setOf(Locale.FR_FR, Locale.EN_US))
+
+            // Then
+            assertEquals(setOf(Locale.EN_US), visible)
+        }
+
+        @Test
+        fun `should require the exact voice locale of each market`() {
+            // Given: only fr-FR — the voice of FR but not of BE (fr-BE)
+            val visible = Country.BE.visibleAudioLocales(setOf(Locale.FR_FR))
+
+            // Then: nothing is visible for BE
+            assertTrue(visible.isEmpty())
         }
     }
 }
