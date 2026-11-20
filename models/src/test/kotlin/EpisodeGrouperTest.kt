@@ -9,8 +9,14 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+
+/** Test helper: LocalDateTime carries no arithmetic — roundtrip through UTC Instant. */
+private operator fun LocalDateTime.plus(duration: Duration): LocalDateTime =
+    with(TimeZone.UTC) { toInstant().plus(duration).toLocalDateTime() }
 
 /**
  * Regression spec of the episode grouping semantics ported from the legacy
