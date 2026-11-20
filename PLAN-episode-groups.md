@@ -206,9 +206,11 @@ pas d'exposition `:admin`/`:site`.
 
 ## 6. Ordre d'implémentation
 
-1. `LangType` + `Country` + `EpisodeGroup`/`EpisodeGrouper` (`:models`) + tests.
-2. Repository + service (`:database`) + tests.
-3. DTO + controller (`:api`) + tests.
+1. `LangType` + `Country` + `EpisodeGroup`/`EpisodeGrouper` (`:models`) + tests. ✅
+2. Repository + service (`:database`) + tests. ✅
+3. DTO + controller (`:api`) + tests. ✅ (`GET /v1/episode-groups`, fenêtre
+   30 j par défaut, calculé à chaque requête — aucune dépendance à un index
+   reconstruit au démarrage)
 4. Build/tests, revue guidelines.
 
 ## 7. Points ouverts
