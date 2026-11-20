@@ -1,69 +1,88 @@
 # Plan — Groupes d'épisodes (API publique)
 
-Portage de la feature `new-group-indexer` (ancienne archi) vers la multi-module.
-Endpoint `GET /v1/episode-groups` : derniers groupes d'épisodes avec filtres et tris.
+Portage **fidèle** de la feature `new-group-indexer` (ancienne archi) vers la
+multi-module. Endpoint `GET /v1/episode-groups` : derniers groupes d'épisodes
+avec filtres et tris. "Variants" de l'ancien code = "releases" désormais.
 
-## Sémantique de groupement (validée)
+## Sémantique de groupement (identique à l'ancienne branche)
 
-- Bucket par `(animeId, episodeType)` ; une observation (release) rejoint le bucket
-  si `releaseDateTime` ∈ `[bucket.anchor - 2h, bucket.anchor + 2h]` (ancre = 1re observation).
-- Split du bucket par **signature de couverture exacte** : `Map<Locale, Set<(season, number)>>`.
-  Fidèle à `NewGroupIndexer` ; une release VF en plus crée un groupe séparé.
+- Bucket par `(country, animeId, episodeType)` ; une release rejoint le bucket si
+  `release.releaseDateTime` ∈ `[bucket.anchor - 2h, bucket.anchor + 2h]`
+  (ancre = première observation, comme `NewGroupIndexer`).
+- **Split par signature de couverture exacte** `Map<LangType, Set<(season, number)>>`
+  — identique à l'ancien `NewGroupIndexer.buildIndex`.
 - Tri des groupes : `releaseDateTime`, tie-breaks `animeSlug`, `episodeType`.
 
-## Améliorations par rapport à l'ancien indexeur
+## LangType réintroduit (adapté aux pays)
 
-- Grouper **pur et sans état** dans `:models` (`EpisodeGrouper`) — fini le singleton
-  mutable, le `buckets.find` O(n²), le hack `season*1000+number`.
-- Regroupement en post-traitement Kotlin sur des lignes SQL filtrées ; pas de table
-  `episode_group` persistée, pas de cache dans un premier temps.
+Nouveau `LangType { SUBTITLES, VOICE }` dans `:models`, avec :
+
+- `Country` étendu : `subtitleLocales = {JA_JP, ZH_CN, KO_KR}`,
+  `fallbackSubtitleLocale = EN_US`, `voiceLocale = defaultLocale`
+  (fr-FR pour FR, fr-BE pour BE, de-DE pour DE, etc.).
+- **Locales visibles pour un pays** (par épisode, sur l'ensemble de ses releases) :
+  1. `subtitleLocales ∩ disponibles` — si vide → `fallbackSubtitleLocale ∩ dispo`
+  2. `voiceLocale` ajoutée si disponible
+  3. Les releases hors de cet ensemble sont **exclues** de la vue de ce pays
+     (reproduit `LocaleUtils.getAllowedLocales` + le filtrage au harvest).
+- `LangType.fromAudioLocale(country, locale)` : `VOICE` si `locale == country.voiceLocale`,
+  sinon `SUBTITLES`.
+
+## Améliorations vs ancien indexeur (non-fonctionnelles)
+
+- Grouper **pur et sans état** (`:models`) : fini le singleton mutable,
+  le `buckets.find` O(n²), le hack `season*1000+number` (clé data class à la place).
+- Regroupement en post-traitement Kotlin sur lignes SQL filtrées ;
+  pas de table `episode_group`, pas de cache dans un premier temps.
 
 ## Modules
 
 ### `:models`
+- `LangType` + `Country.subtitleLocales`/`fallbackSubtitleLocale`/`voiceLocale`.
 - `EpisodeGroup` : animeId, animeSlug, episodeType, releaseDateTime, signature,
-  membres (episodes + leurs `EpisodeRelease`).
-- `EpisodeGrouper.group(rows): List<EpisodeGroup>` — fonction pure, tri + pagination
-  non inclus (fait par le service).
+  membres (episodes + releases).
+- `EpisodeGrouper.group(rows, country): List<EpisodeGroup>` — fonction pure.
 
 ### `:database`
-- `EpisodeGroupRepository` (Exposed) : jointure `Episode ⋈ Anime ⋈ EpisodeRelease`,
-  `select(EpisodeTable.columns)` + `wrapRows`, `where` sur les filtres.
+- `EpisodeGroupRepository` : `Episode ⋈ Anime ⋈ EpisodeRelease`,
+  `select(EpisodeTable.columns)` + `wrapRows`, `where` sur filtres.
 - `EpisodeGroupService` : fetch → `EpisodeGrouper` → tri → `Page`/`PageRequest`.
-- Filtres : `animeId`, `episodeType`, `platform`, `audioLocales` (multi), `country`
-  (expandé vers ses locales via `Country.defaultLocale`), `from`/`to` sur
-  **`release.releaseDateTime`**, `uncensored`.
+- Filtres : `country` (défaut FR), `searchTypes` (VOICE/SUBTITLES), `animeId`,
+  `episodeType`, `platform`, `audioLocales` (multi), `from`/`to` sur
+  `release.releaseDateTime`, `uncensored`.
 - Défaut sans `from`/`to` : fenêtre bornée (constante, ex. −30j / +30j).
 
 ### `:api`
-- `GET /v1/episode-groups` : `@Valid @ModelAttribute PageQuery` (page/size) +
-  `@QueryParam` filtres ; `sort` whitelisté multi-champs (`releaseDateTime`,
-  `animeSlug`, `episodeType`, `season`, `number`, `localeCount`, `field:asc|desc`).
-- `EpisodeGroupDto` : `anime` (AnimeDto), `releaseDateTime`, `episodeType`,
-  plage seasons/numbers, `episodes` (id, season, number), `releases`
-  (EpisodeReleaseDto existant), `title`/`description`/`duration` nullable.
-- Un DTO par fichier, mapping `toDto()` en extension, OpenAPI documenté.
+- `GET /v1/episode-groups` : `PageQuery` + `@QueryParam` filtres ;
+  `sort` whitelisté (`releaseDateTime`, `animeSlug`, `episodeType`, `season`,
+  `number`, `localeCount` ; format `field:asc|desc` CSV).
+- `EpisodeGroupDto` : `anime` (AnimeDto), `country`, `releaseDateTime`,
+  `episodeType`, plage seasons/numbers, `episodes` (id, season, number),
+  `releases` (EpisodeReleaseDto), `searchTypes` écho ou couverture LangType,
+  `title`/`description`/`duration` nullable.
+- Un DTO par fichier, `toDto()` en extension, OpenAPI documenté.
 
 ## Tests
 
-- `:models` : tests unitaires du grouper (buckets ±2h, split couverture, tri).
-- `:database` : test repository/service sur fixtures (filtres, pagination).
-- `:api` : test controller/DTO si le module en a.
+- `:models` : grouper (buckets ±2h, split couverture LangType, fallback EN,
+  exclusion hors-locales pays, tri).
+- `:database` : repository/service (filtres, pagination, fenêtre par défaut).
+- `:api` : controller/DTO.
 
-## Non-goals
+## Non-goals (pour l'instant)
 
-Pas de persistance du groupe, pas de cache, pas d'exposition `:admin`/`:site`
-(le service `:database` reste réutilisable plus tard).
+Pas de persistance du groupe, pas de cache (`GroupedEpisodeCacheService`
+viendra si perfs), pas de vue weekly, pas d'exposition `:admin`/`:site`.
 
 ## Ordre d'implémentation
 
-1. `EpisodeGroup` + `EpisodeGrouper` dans `:models` + tests.
-2. Repository + service `:database` + tests.
-3. DTO + controller `:api` + tests.
-4. Vérification build/tests, revue guidelines.
+1. `LangType`, extension `Country`, `EpisodeGroup` + `EpisodeGrouper` (`:models`) + tests.
+2. Repository + service (`:database`) + tests.
+3. DTO + controller (`:api`) + tests.
+4. Build/tests, revue guidelines.
 
 ## Points ouverts
 
+- `country` : param optionnel avec défaut FR, ou obligatoire ? (ancien : nullable)
 - Fenêtre par défaut exacte (proposition : −30j / +30j autour de now).
-- `country` → locales : `defaultLocale` seul ou extension multi-locales ?
-- Format du param `sort` (CSV `field:dir` vs paramètres séparés).
+- `searchTypes` : nom du param conservé (`VOICE,SUBTITLES`) comme avant ?
