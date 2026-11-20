@@ -10,7 +10,7 @@ import kotlin.uuid.Uuid
  * Pure, stateless port of the legacy `NewGroupIndexer`: groups flat
  * [EpisodeObservation] rows into [EpisodeGroup]s for one [Country].
  *
- * Algorithm (see [EpisodeGrouperTest] for the executable spec):
+ * Algorithm (see `EpisodeGrouperTest` for the executable spec):
  * 1. resolve the visible audio locales of every episode and drop the
  *    observations whose locale is not visible for [country];
  * 2. filter by [searchTypes] when non-empty;
@@ -26,9 +26,36 @@ import kotlin.uuid.Uuid
  */
 object EpisodeGrouper {
 
+    /** Half-width of the release window around a bucket anchor. */
     private val WINDOW = 2.hours
+
+    /** Time zone used to turn [LocalDateTime] anchors into comparable instants. */
     private val UTC = TimeZone.UTC
 
+    /** Canonical order of observations before bucketing: by release date then release id. */
+    private val OBSERVATION_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
+        .thenBy { it.releaseId }
+
+    /** Order used to pick the surviving sighting of a duplicated `releaseId`. */
+    private val SIGHTING_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
+        .thenBy { it.audioLocale }
+        .thenBy { it.episodeId }
+        .thenBy { it.animeSlug }
+
+    /** Canonical order of releases inside a group. */
+    private val RELEASE_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
+        .thenBy { it.releaseId }
+
+    /** Canonical order of groups: date, slug, type, season/number range, lang types, release id. */
+    private val GROUP_ORDER = compareBy<EpisodeGroup> { it.releaseDateTime }
+        .thenBy { it.animeSlug }
+        .thenBy { it.episodeType }
+        .thenBy { it.minSeason }
+        .thenBy { it.minNumber }
+        .thenBy { group -> group.coverage.keys.map { it.ordinal }.sorted().joinToString(",") }
+        .thenBy { group -> group.releases.minOf { it.releaseId } }
+
+    /** Identity of an episode inside its anime, used for visibility and coverage. */
     private data class EpisodeKey(
         val animeId: Uuid,
         val season: Int,
@@ -38,6 +65,10 @@ object EpisodeGrouper {
         fun toCoordinate() = EpisodeCoordinate(season, episodeType, number)
     }
 
+    /** Bucket key: the `(animeId, episodeType)` pair observations are grouped under. */
+    private data class BucketKey(val animeId: Uuid, val episodeType: EpisodeType)
+
+    /** A ±2h bucket of observations sharing one [BucketKey], anchored on its earliest release. */
     private data class Bucket(
         val animeId: Uuid,
         val episodeType: EpisodeType,
@@ -67,20 +98,24 @@ object EpisodeGrouper {
             .sortedWith(GROUP_ORDER)
     }
 
+    /**
+     * Keeps the observations visible for [country], filtered by [searchTypes],
+     * deduplicated by `releaseId` and sorted by [OBSERVATION_ORDER].
+     */
     private fun visibleObservations(
         observations: List<EpisodeObservation>,
         country: Country,
         searchTypes: Set<LangType>?
     ): List<EpisodeObservation> {
         val visibleByEpisode = observations
-            .groupBy { it.episodeKey() }
+            .groupBy { episodeKey(it) }
             .mapValues { (_, episodeObservations) ->
                 country.visibleAudioLocales(episodeObservations.map { it.audioLocale }.toSet())
             }
 
         return observations
             .filter { observation ->
-                observation.audioLocale in visibleByEpisode.getValue(observation.episodeKey()) &&
+                observation.audioLocale in visibleByEpisode.getValue(episodeKey(observation)) &&
                     (searchTypes.isNullOrEmpty() ||
                         LangType.fromAudioLocale(country, observation.audioLocale) in searchTypes)
             }
@@ -89,6 +124,10 @@ object EpisodeGrouper {
             .sortedWith(OBSERVATION_ORDER)
     }
 
+    /**
+     * Buckets [observations] — already grouped by `(animeId, episodeType)` —
+     * into ±2h windows, then splits each bucket by coverage signature.
+     */
     private fun splitBucket(
         observations: List<EpisodeObservation>,
         country: Country
@@ -96,15 +135,13 @@ object EpisodeGrouper {
         val langTypeOf = observations.associate { it.releaseId to LangType.fromAudioLocale(country, it.audioLocale) }
         val coverageByLangType = observations
             .groupBy { langTypeOf.getValue(it.releaseId) }
-            .mapValues { (_, langObservations) -> langObservations.map { it.episodeKey().toCoordinate() }.toSet() }
+            .mapValues { (_, langObservations) -> langObservations.map { episodeKey(it).toCoordinate() }.toSet() }
 
         val buckets = mutableListOf<Bucket>()
         for (observation in observations) {
-            val instant = observation.toInstant()
+            val instant = toInstant(observation)
             val bucket = buckets.firstOrNull {
-                it.animeId == observation.animeId &&
-                    it.episodeType == observation.episodeType &&
-                    instant <= it.anchor.plus(WINDOW)
+                instant <= it.anchor.plus(WINDOW)
             } ?: Bucket(observation.animeId, observation.episodeType, instant)
                 .also { buckets += it }
             bucket.observations += observation
@@ -113,23 +150,27 @@ object EpisodeGrouper {
         return buckets.flatMap { bucket ->
             bucket.observations
                 .groupBy { coverageByLangType.getValue(langTypeOf.getValue(it.releaseId)) }
-                .map { (signature, members) -> members.toGroup(bucket, signature, coverageByLangType, langTypeOf) }
+                .map { (_, members) -> toGroup(members, bucket, coverageByLangType, langTypeOf) }
         }
     }
 
-    private fun List<EpisodeObservation>.toGroup(
+    /**
+     * Builds the [EpisodeGroup] holding [members], a set of observations
+     * sharing one coverage signature inside [bucket].
+     */
+    private fun toGroup(
+        members: List<EpisodeObservation>,
         bucket: Bucket,
-        signature: Set<EpisodeCoordinate>,
         coverageByLangType: Map<LangType, Set<EpisodeCoordinate>>,
         langTypeOf: Map<Uuid, LangType>
     ): EpisodeGroup {
-        val releases = sortedWith(RELEASE_ORDER)
+        val releases = members.sortedWith(RELEASE_ORDER)
         val coordinates = releases
-            .map { it.episodeKey().toCoordinate() }
+            .map { episodeKey(it).toCoordinate() }
             .distinct()
             .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
         val episodes = coordinates.map { coordinate ->
-            val member = releases.first { it.episodeKey().toCoordinate() == coordinate }
+            val member = releases.first { episodeKey(it).toCoordinate() == coordinate }
             EpisodeGroupEpisode(member.episodeId, coordinate.season, coordinate.episodeType, coordinate.number)
         }
         val langTypes = releases.map { langTypeOf.getValue(it.releaseId) }.toSet()
@@ -148,32 +189,12 @@ object EpisodeGrouper {
         )
     }
 
-    private fun EpisodeObservation.episodeKey() =
-        EpisodeKey(animeId, season, episodeType, number)
+    /** Episode identity of an observation: `(animeId, season, episodeType, number)`. */
+    private fun episodeKey(observation: EpisodeObservation) =
+        EpisodeKey(observation.animeId, observation.season, observation.episodeType, observation.number)
 
     // LocalDateTime carries no arithmetic in this kotlinx-datetime version:
     // the UTC conversion is an exact bijection, so instant comparison is safe.
-    private fun EpisodeObservation.toInstant(): Instant =
-        with(UTC) { releaseDateTime.toInstant() }
-
-    private data class BucketKey(val animeId: Uuid, val episodeType: EpisodeType)
-
-    private val OBSERVATION_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
-        .thenBy { it.releaseId }
-
-    private val SIGHTING_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
-        .thenBy { it.audioLocale }
-        .thenBy { it.episodeId }
-        .thenBy { it.animeSlug }
-
-    private val RELEASE_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
-        .thenBy { it.releaseId }
-
-    private val GROUP_ORDER = compareBy<EpisodeGroup> { it.releaseDateTime }
-        .thenBy { it.animeSlug }
-        .thenBy { it.episodeType }
-        .thenBy { it.minSeason }
-        .thenBy { it.minNumber }
-        .thenBy { group -> group.coverage.keys.map { it.ordinal }.sorted().joinToString(",") }
-        .thenBy { group -> group.releases.minOf { it.releaseId } }
+    private fun toInstant(observation: EpisodeObservation): Instant =
+        with(UTC) { observation.releaseDateTime.toInstant() }
 }

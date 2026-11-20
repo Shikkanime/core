@@ -14,6 +14,4 @@ data class EpisodeGroupEpisode(
     val season: Int,
     val episodeType: EpisodeType,
     val number: Int
-) {
-    fun toCoordinate(): EpisodeCoordinate = EpisodeCoordinate(season, episodeType, number)
-}
+)
