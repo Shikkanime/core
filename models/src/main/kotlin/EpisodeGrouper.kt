@@ -141,7 +141,7 @@ object EpisodeGrouper {
                     (searchTypes.isNullOrEmpty() ||
                         LangType.fromAudioLocale(country, observation.audioLocale) in searchTypes)
             }
-            .groupBy { it.releaseId }
+            .groupBy(EpisodeObservation::releaseId)
             .map { (_, sightings) -> sightings.minWith(sightingOrder) }
             .sortedWith(observationOrder)
     }
