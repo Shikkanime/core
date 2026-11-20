@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.Duration
 import kotlin.uuid.Uuid
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -82,7 +82,7 @@ class EpisodeGrouperTest {
         releaseId: Uuid = Uuid.random(),
         slug: String = animeSlug,
         anime: Uuid = animeId
-    ) = EpisodeObservation(
+    ): EpisodeObservation = EpisodeObservation(
         animeId = anime,
         animeSlug = slug,
         episodeId = episodeId,
@@ -99,6 +99,51 @@ class EpisodeGrouperTest {
         country: Country = Country.FR,
         searchTypes: Set<LangType>? = null
     ): List<EpisodeGroup> = EpisodeGrouper.group(observations.toList(), country, searchTypes)
+
+    @Nested
+    @DisplayName("empty inputs")
+    inner class EmptyTests {
+
+        @Test
+        fun `should return no group for an empty input`() {
+            // When
+            val groups = group()
+
+            // Then
+            assertTrue(groups.isEmpty())
+        }
+
+        @Test
+        fun `should return no group when every release is filtered out`() {
+            // Given: only invisible locales for FR
+            val observations = listOf(
+                obs(number = 1, audioLocale = Locale.DE_DE),
+                obs(number = 2, audioLocale = Locale.PL_PL)
+            )
+
+            // When
+            val groups = group(*observations.toTypedArray())
+
+            // Then
+            assertTrue(groups.isEmpty())
+        }
+
+        @Test
+        fun `should return no group when searchTypes matches nothing`() {
+            // Given: an episode carrying only subtitle releases
+            val episode = Uuid.random()
+            val observations = listOf(
+                obs(episodeId = episode, number = 1, audioLocale = Locale.JA_JP),
+                obs(episodeId = episode, number = 1, audioLocale = Locale.ZH_CN)
+            )
+
+            // When: only VOICE releases are requested
+            val groups = group(*observations.toTypedArray(), searchTypes = setOf(LangType.VOICE))
+
+            // Then
+            assertTrue(groups.isEmpty())
+        }
+    }
 
     @Nested
     @DisplayName("bucket window of plus or minus two hours")
@@ -375,6 +420,25 @@ class EpisodeGrouperTest {
         }
 
         @Test
+        fun `should compute the coverage signature per time bucket`() {
+            // Given: ep1 SUB+VOICE at 0h, ep2 SUB-only at +5h — two separate
+            // windows. Inside bucket 1, SUB and VOICE both cover {1} only,
+            // so they must merge; an anime-wide signature would wrongly
+            // split ep1 (SUB would cover {1,2}, VOICE only {1})
+            val ep1Sub = obs(number = 1, audioLocale = Locale.JA_JP, releaseDateTime = base)
+            val ep1Voice = obs(number = 1, audioLocale = Locale.FR_FR, releaseDateTime = base)
+            val ep2Sub = obs(number = 2, audioLocale = Locale.JA_JP, releaseDateTime = base + 5.hours)
+
+            // When
+            val groups = group(ep1Sub, ep1Voice, ep2Sub)
+
+            // Then: 2 groups — ep1 merged SUB+VOICE, ep2 alone
+            assertEquals(2, groups.size)
+            assertEquals(2, groups.maxOf { it.releases.size })
+            assertEquals(1, groups.minOf { it.releases.size })
+        }
+
+        @Test
         fun `should merge every CJK subtitle locale under the same LangType`() {
             // Given: one episode with ja, zh, ko subtitles and a fr voice —
             // all CJK locales share the SUBTITLES lang type
@@ -553,7 +617,10 @@ class EpisodeGrouperTest {
             // the window — the legacy indexer kept both variants
             val episode = Uuid.random()
             val first = obs(episodeId = episode, number = 1, audioLocale = Locale.FR_FR, releaseDateTime = base)
-            val second = obs(episodeId = episode, number = 1, audioLocale = Locale.FR_FR, releaseDateTime = base + 30.minutes)
+            val second = obs(
+                episodeId = episode, number = 1, audioLocale = Locale.FR_FR,
+                releaseDateTime = base + 30.minutes
+            )
 
             // When
             val groups = group(first, second)

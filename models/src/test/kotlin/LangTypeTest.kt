@@ -22,6 +22,7 @@ class LangTypeTest {
 
         @Test
         fun `should map the country voice locale to VOICE`() {
+            // Given/When/Then: the country's own locale is the voice
             assertEquals(LangType.VOICE, LangType.fromAudioLocale(Country.FR, Locale.FR_FR))
             assertEquals(LangType.VOICE, LangType.fromAudioLocale(Country.DE, Locale.DE_DE))
             assertEquals(LangType.VOICE, LangType.fromAudioLocale(Country.BE, Locale.FR_BE))
@@ -29,6 +30,7 @@ class LangTypeTest {
 
         @Test
         fun `should map any other visible locale to SUBTITLES`() {
+            // Given/When/Then: CJK and fallback locales are subtitles
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.JA_JP))
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.EN_US))
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.ZH_CN))
@@ -36,9 +38,9 @@ class LangTypeTest {
 
         @Test
         fun `should map a foreign voice locale to SUBTITLES`() {
-            // fr-BE is the voice of BE, not of FR: for FR it is just another
-            // (invisible) locale — filtering happens upstream, the mapping
-            // itself stays mechanical like the legacy `fromAudioLocale`
+            // Given/When/Then: the mapping is mechanical — visibility is
+            // resolved upstream, a foreign voice is just another locale
+            // (fr-BE is the voice of BE, not of FR)
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.FR_BE))
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.FR, Locale.DE_DE))
             assertEquals(LangType.SUBTITLES, LangType.fromAudioLocale(Country.DE, Locale.FR_FR))

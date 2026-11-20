@@ -20,6 +20,12 @@ enum class LangType {
         /**
          * Classifies [audioLocale] for [country]: [VOICE] when it is the
          * country's own voice locale, [SUBTITLES] otherwise.
+         *
+         * @param country the market the classification is resolved for.
+         * @param audioLocale the release audio locale to classify.
+         * @return the [LangType] of the release.
+         * @see Country.voiceLocale
+         * @see Country.visibleAudioLocales
          */
         fun fromAudioLocale(country: Country, audioLocale: Locale): LangType =
             if (audioLocale == country.voiceLocale) VOICE else SUBTITLES

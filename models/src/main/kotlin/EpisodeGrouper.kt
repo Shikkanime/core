@@ -12,8 +12,8 @@ import kotlin.uuid.Uuid
  *
  * Algorithm (see `EpisodeGrouperTest` for the executable spec):
  * 1. resolve the visible audio locales of every episode and drop the
- *    observations whose locale is not visible for [country];
- * 2. filter by [searchTypes] when non-empty;
+ *    observations whose locale is not visible for the market;
+ * 2. filter by `searchTypes` when non-empty;
  * 3. deduplicate by `releaseId`, keeping the earliest `releaseDateTime`;
  * 4. bucket by `(animeId, episodeType)` with an inclusive ±2h window anchored
  *    on the bucket's first observation (sorted input, non-transitive);
@@ -26,33 +26,38 @@ import kotlin.uuid.Uuid
  */
 object EpisodeGrouper {
 
-    /** Half-width of the release window around a bucket anchor. */
-    private val WINDOW = 2.hours
+    // Half-width of the release window around a bucket anchor; on sorted
+    // input only the upper bound is tested, the lower one is implicit.
+    private val window = 2.hours
 
-    /** Time zone used to turn [LocalDateTime] anchors into comparable instants. */
-    private val UTC = TimeZone.UTC
+    // Time zone used to turn LocalDateTime anchors into comparable instants.
+    private val utcZone = TimeZone.UTC
 
-    /** Canonical order of observations before bucketing: by release date then release id. */
-    private val OBSERVATION_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
+    // Canonical order of observations before bucketing: by release date then release id.
+    private val observationOrder = compareBy<EpisodeObservation> { it.releaseDateTime }
         .thenBy { it.releaseId }
 
-    /** Order used to pick the surviving sighting of a duplicated `releaseId`. */
-    private val SIGHTING_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
+    // Order used to pick the surviving sighting of a duplicated releaseId — total order.
+    private val sightingOrder = compareBy<EpisodeObservation> { it.releaseDateTime }
         .thenBy { it.audioLocale }
+        .thenBy { it.animeId }
         .thenBy { it.episodeId }
+        .thenBy { it.season }
+        .thenBy { it.episodeType }
+        .thenBy { it.number }
         .thenBy { it.animeSlug }
 
-    /** Canonical order of releases inside a group. */
-    private val RELEASE_ORDER = compareBy<EpisodeObservation> { it.releaseDateTime }
+    // Canonical order of releases inside a group.
+    private val releaseOrder = compareBy<EpisodeObservation> { it.releaseDateTime }
         .thenBy { it.releaseId }
 
-    /** Canonical order of groups: date, slug, type, season/number range, lang types, release id. */
-    private val GROUP_ORDER = compareBy<EpisodeGroup> { it.releaseDateTime }
+    // Canonical order of groups: date, slug, type, season/number range, lang types, release id.
+    private val groupOrder = compareBy<EpisodeGroup> { it.releaseDateTime }
         .thenBy { it.animeSlug }
         .thenBy { it.episodeType }
         .thenBy { it.minSeason }
         .thenBy { it.minNumber }
-        .thenBy { group -> group.coverage.keys.map { it.ordinal }.sorted().joinToString(",") }
+        .thenComparator { a, b -> compareLangTypeSets(a.coverage.keys, b.coverage.keys) }
         .thenBy { group -> group.releases.minOf { it.releaseId } }
 
     /** Identity of an episode inside its anime, used for visibility and coverage. */
@@ -62,7 +67,7 @@ object EpisodeGrouper {
         val episodeType: EpisodeType,
         val number: Int
     ) {
-        fun toCoordinate() = EpisodeCoordinate(season, episodeType, number)
+        fun toCoordinate(): EpisodeCoordinate = EpisodeCoordinate(season, episodeType, number)
     }
 
     /** Bucket key: the `(animeId, episodeType)` pair observations are grouped under. */
@@ -80,9 +85,14 @@ object EpisodeGrouper {
      * Groups [observations] for [country]. The input order does not matter:
      * the output is fully deterministic.
      *
+     * @param observations flat release rows, one per episode release.
+     * @param country the market the locales are resolved for.
      * @param searchTypes when non-empty, keeps only releases whose
      *   [LangType] is listed and drops the groups left empty; `null` or an
      *   empty set means no filter.
+     * @return the groups sorted by [groupOrder].
+     * @see EpisodeGroup
+     * @see Country.visibleAudioLocales
      */
     fun group(
         observations: List<EpisodeObservation>,
@@ -95,12 +105,17 @@ object EpisodeGrouper {
         return visible
             .groupBy { BucketKey(it.animeId, it.episodeType) }
             .flatMap { (_, bucketObservations) -> splitBucket(bucketObservations, country) }
-            .sortedWith(GROUP_ORDER)
+            .sortedWith(groupOrder)
     }
 
     /**
      * Keeps the observations visible for [country], filtered by [searchTypes],
-     * deduplicated by `releaseId` and sorted by [OBSERVATION_ORDER].
+     * deduplicated by `releaseId` and sorted by [observationOrder].
+     *
+     * @param observations the raw release rows.
+     * @param country the market the locales are resolved for.
+     * @param searchTypes optional [LangType] filter; `null`/empty means none.
+     * @return the sorted, deduplicated, visible observations.
      */
     private fun visibleObservations(
         observations: List<EpisodeObservation>,
@@ -120,33 +135,51 @@ object EpisodeGrouper {
                         LangType.fromAudioLocale(country, observation.audioLocale) in searchTypes)
             }
             .groupBy { it.releaseId }
-            .map { (_, sightings) -> sightings.minWith(SIGHTING_ORDER) }
-            .sortedWith(OBSERVATION_ORDER)
+            .map { (_, sightings) -> sightings.minWith(sightingOrder) }
+            .sortedWith(observationOrder)
     }
 
     /**
-     * Buckets [observations] — already grouped by `(animeId, episodeType)` —
-     * into ±2h windows, then splits each bucket by coverage signature.
+     * Buckets [observations] — already grouped by `(animeId, episodeType)` and
+     * sorted by [observationOrder] — into ±2h windows, then splits each bucket
+     * by coverage signature.
+     *
+     * @param observations visible observations of a single `(animeId, episodeType)`.
+     * @param country the market the [LangType]s are resolved for.
+     * @return the groups of this bucket key.
      */
     private fun splitBucket(
         observations: List<EpisodeObservation>,
         country: Country
     ): List<EpisodeGroup> {
         val langTypeOf = observations.associate { it.releaseId to LangType.fromAudioLocale(country, it.audioLocale) }
-        val coverageByLangType = observations
-            .groupBy { langTypeOf.getValue(it.releaseId) }
-            .mapValues { (_, langObservations) -> langObservations.map { episodeKey(it).toCoordinate() }.toSet() }
 
-        val buckets = observations.fold(mutableListOf<Bucket>()) { buckets, observation ->
+        // Anchors are ascending and expired buckets form a prefix of the deque,
+        // so the front is always the first bucket the observation can join.
+        // Expired buckets are archived, never dropped: they still emit groups.
+        val expired = mutableListOf<Bucket>()
+        val active = observations.fold(ArrayDeque<Bucket>()) { deque, observation ->
             val instant = toInstant(observation)
-            val bucket = buckets.firstOrNull { instant <= it.anchor.plus(WINDOW) }
+            while (deque.firstOrNull()?.let { instant > it.anchor.plus(window) } == true) {
+                expired += deque.removeFirst()
+            }
+            val bucket = deque.firstOrNull()
                 ?: Bucket(observation.animeId, observation.episodeType, instant)
-                    .also { buckets += it }
+                    .also { deque.addLast(it) }
             bucket.observations += observation
-            buckets
+            deque
         }
+        val buckets = expired + active
 
         return buckets.flatMap { bucket ->
+            // The coverage signature is computed per bucket, like the legacy
+            // NewGroupIndexer: episodes outside this ±2h window must not leak
+            // into the signature.
+            val coverageByLangType = bucket.observations
+                .groupBy { langTypeOf.getValue(it.releaseId) }
+                .mapValues { (_, langObservations) ->
+                    langObservations.map { episodeKey(it).toCoordinate() }.toSet()
+                }
             bucket.observations
                 .groupBy { coverageByLangType.getValue(langTypeOf.getValue(it.releaseId)) }
                 .map { (_, members) -> toGroup(members, bucket, coverageByLangType, langTypeOf) }
@@ -156,6 +189,12 @@ object EpisodeGrouper {
     /**
      * Builds the [EpisodeGroup] holding [members], a set of observations
      * sharing one coverage signature inside [bucket].
+     *
+     * @param members observations sharing the same coverage signature.
+     * @param bucket the ±2h bucket [members] belong to.
+     * @param coverageByLangType per-lang-type covered coordinates of the bucket.
+     * @param langTypeOf [LangType] of each release, indexed by `releaseId`.
+     * @return the populated group.
      */
     private fun toGroup(
         members: List<EpisodeObservation>,
@@ -163,13 +202,15 @@ object EpisodeGrouper {
         coverageByLangType: Map<LangType, Set<EpisodeCoordinate>>,
         langTypeOf: Map<Uuid, LangType>
     ): EpisodeGroup {
-        val releases = members.sortedWith(RELEASE_ORDER)
+        val releases = members.sortedWith(releaseOrder)
         val coordinates = releases
             .map { episodeKey(it).toCoordinate() }
             .distinct()
             .sortedWith(compareBy({ it.season }, { it.episodeType }, { it.number }))
+        val firstByCoordinate = releases.groupBy { episodeKey(it).toCoordinate() }
+            .mapValues { (_, coordinateReleases) -> coordinateReleases.first() }
         val episodes = coordinates.map { coordinate ->
-            val member = releases.first { episodeKey(it).toCoordinate() == coordinate }
+            val member = firstByCoordinate.getValue(coordinate)
             EpisodeGroupEpisode(member.episodeId, coordinate.season, coordinate.episodeType, coordinate.number)
         }
         val langTypes = releases.map { langTypeOf.getValue(it.releaseId) }.toSet()
@@ -188,12 +229,22 @@ object EpisodeGrouper {
         )
     }
 
+    /** Compares two lang-type sets by their sorted ordinals, element by element. */
+    private fun compareLangTypeSets(a: Set<LangType>, b: Set<LangType>): Int {
+        val ordinalsA = a.map { it.ordinal }.sorted()
+        val ordinalsB = b.map { it.ordinal }.sorted()
+        return (0 until maxOf(ordinalsA.size, ordinalsB.size))
+            .map { index -> (ordinalsA.getOrNull(index) ?: -1).compareTo(ordinalsB.getOrNull(index) ?: -1) }
+            .firstOrNull { it != 0 }
+            ?: 0
+    }
+
     /** Episode identity of an observation: `(animeId, season, episodeType, number)`. */
-    private fun episodeKey(observation: EpisodeObservation) =
+    private fun episodeKey(observation: EpisodeObservation): EpisodeKey =
         EpisodeKey(observation.animeId, observation.season, observation.episodeType, observation.number)
 
     // LocalDateTime carries no arithmetic in this kotlinx-datetime version:
     // the UTC conversion is an exact bijection, so instant comparison is safe.
     private fun toInstant(observation: EpisodeObservation): Instant =
-        with(UTC) { observation.releaseDateTime.toInstant() }
+        with(utcZone) { observation.releaseDateTime.toInstant() }
 }

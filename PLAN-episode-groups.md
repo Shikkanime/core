@@ -72,6 +72,23 @@ le cache (`GroupedEpisodeCacheService` + invalidation par entité) est reporté.
   fenêtre par défaut bornée quand `from`/`to` absents (proposition : −30j/+30j).
 - `EpisodeGroupService` : fetch → `EpisodeGrouper` → tri → `Page`/`PageRequest`.
 
+#### Points contractuels issus de la revue `:models` (à respecter à l'implémentation)
+
+- **Visibilité** : `Country.visibleAudioLocales` est résolue par épisode sur
+  **toutes** ses releases. Le repository doit donc fetcher toutes les locales
+  des épisodes candidats (pas seulement celles passant les filtres SQL
+  `audioLocales`/`platform`/`uncensored`/`from`/`to`), sinon le fallback EN/CJK
+  sera calculé sur un ensemble tronqué. → fetch en deux temps : épisodes
+  candidats filtrés, puis toutes leurs releases.
+- **DTO** : `EpisodeObservation`/`EpisodeGroup` ne portent pas les champs du
+  DTO final (`platform`, `url`, `uncensored`, `title`/`description`/`duration`,
+  `lastUpdateDateTime`, `internalUrl`). Prévoir un second batch fetch par
+  `releaseId`/`episodeId` dans le service (pattern `compose()` existant), ou
+  enrichir le modèle — à trancher avant `:database`.
+- **`searchTypes`** : filtré avant le bucketing ±2h (spec figée par les tests
+  `:models`). Divergence possible vs un filtrage post-groupement — à valider
+  contre le legacy lors de l'implémentation du service.
+
 ### `:api`
 
 - `GET /v1/episode-groups` : `@Valid @ModelAttribute PageQuery` + `@QueryParam`
