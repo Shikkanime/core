@@ -111,12 +111,37 @@ implémentation.
   tri par `releaseDateTime` avant bucketing. L'alternative "date canonique
   `Episode.releaseDateTime`" reste possible si la fenêtre pose problème en
   pratique — à réévaluer après les tests.
-- **Volume** : le grouping post-traitement en mémoire suppose un dataset borné.
-  La fenêtre par défaut (−30j/+30j) + index SQL sur `episode_release
-  (release_date_time)` et `audio_locale` doivent suffire ; à mesurer sur données
-  réelles avant d'envisager une table `episode_group` persistée.
 - **`LocalDateTime` = UTC** : vérifier que `:jobs` écrit bien en UTC
   (`TimeUtils.now()` existe dans le framework) ; documenter dans `:models`.
+
+### Mesures sur données de production (copie `shikkanime_bench`)
+
+Ancien indexer exécuté tel quel (`preIndex` + `GroupedIndexer` +
+`NewGroupIndexer` + `GroupedEpisodeService.findAllBy`) — 58 200 variants,
+33 381 mappings, 1 377 animes :
+
+| Mesure | Résultat |
+|---|---|
+| `preIndex()` | 5,7 s, heap 42 → 90 MB (+48 MB) |
+| Groupes `GroupedIndexer` / `NewGroupIndexer` | 35 403 / 35 847 (split couverture ≈ +1,3 %) |
+| Pagination en mémoire | 4–20 ms/page, tri complet 21 ms |
+| Chemin complet `findAllBy` | ~15–90 ms/page |
+
+Constats : à ce volume la perf n'est **pas** le problème (les tests JFR à
+1M entrées étaient synthétiques) — les vrais problèmes restent la correction
+(staleness, concurrence). `preIndex()` ne clear jamais les indexeurs et est
+appelé à chaud par des endpoints admin → divergence garantie. Données :
+3 336 variants datés < 2000 (erreurs de scrape), un groupe fourre-tout de
+582 entries.
+
+### Suite de tests de non-régression
+
+`models/src/test/kotlin/EpisodeGrouperTest.kt` et `LangTypeTest.kt` sont la
+spec exécutable de tout l'indexer (fenêtre ±2h ancrée, split couverture
+LangType, fallback EN, exclusion hors-locales pays, dédup, tri). Écrits
+test-first : ils ne compilent qu'une fois `EpisodeGrouper`/`LangType`/
+`visibleAudioLocales` implémentés dans `:models` — ils font office de filet
+de non-régression pour le portage.
 
 ## 4. Tests
 
