@@ -84,7 +84,7 @@ void main() {
       final page = PagedResult.fromJson(
         decodeProtobuf(
           _bytes(_animesPageProtobuf),
-          pageSchema(animeSummarySchema),
+          pageSchema(animeSummaryModelProtoSchema),
         ),
         AnimeSummaryModel.fromJson,
       );
@@ -101,7 +101,10 @@ void main() {
 
     test('decodes the anime detail', () {
       final anime = AnimeDetailModel.fromJson(
-        decodeProtobuf(_bytes(_animeDetailProtobuf), animeDetailSchema),
+        decodeProtobuf(
+          _bytes(_animeDetailProtobuf),
+          animeDetailModelProtoSchema,
+        ),
       );
 
       expect(
@@ -118,7 +121,7 @@ void main() {
       final page = PagedResult.fromJson(
         decodeProtobuf(
           _bytes(_episodesPageProtobuf),
-          pageSchema(episodeSummarySchema),
+          pageSchema(episodeSummaryModelProtoSchema),
         ),
         EpisodeSummaryModel.fromJson,
       );
@@ -131,7 +134,10 @@ void main() {
 
     test('decodes the episode detail', () {
       final episode = EpisodeDetailModel.fromJson(
-        decodeProtobuf(_bytes(_episodeDetailProtobuf), episodeDetailSchema),
+        decodeProtobuf(
+          _bytes(_episodeDetailProtobuf),
+          episodeDetailModelProtoSchema,
+        ),
       );
 
       expect(episode.animeId, '00000001-1111-1111-1111-111111111111');
@@ -241,7 +247,7 @@ void main() {
 
       final result = await httpClient.get<Map<String, dynamic>>(
         'v1/animes',
-        protoSchema: pageSchema(animeSummarySchema),
+        protoSchema: pageSchema(animeSummaryModelProtoSchema),
       );
 
       expect(result, isA<ApiSuccess<Map<String, dynamic>>>());

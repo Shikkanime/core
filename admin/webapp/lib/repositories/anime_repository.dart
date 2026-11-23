@@ -23,7 +23,7 @@ class AnimeRepository {
   }) async {
     final response = await _httpClient.get<Map<String, dynamic>>(
       'v1/animes',
-      protoSchema: pageSchema(animeSummarySchema),
+      protoSchema: pageSchema(animeSummaryModelProtoSchema),
       queryParameters: {
         'page': page,
         'size': size,
@@ -46,7 +46,7 @@ class AnimeRepository {
   Future<ApiResult<AnimeDetailModel>> findById(String id) async {
     final response = await _httpClient.get<Map<String, dynamic>>(
       'v1/animes/$id',
-      protoSchema: animeDetailSchema,
+      protoSchema: animeDetailModelProtoSchema,
     );
 
     return switch (response) {
@@ -70,7 +70,7 @@ class AnimeRepository {
     final response = await _httpClient.patch<Map<String, dynamic>>(
       'v1/animes/$animeId/images/$type',
       body: {'url': url},
-      protoSchema: imageSchema,
+      protoSchema: imageModelProtoSchema,
     );
 
     return switch (response) {
@@ -90,7 +90,7 @@ class AnimeRepository {
   Future<ApiResult<ImageModel>> resetImage(String animeId, String type) async {
     final response = await _httpClient.post<Map<String, dynamic>>(
       'v1/animes/$animeId/images/$type/reset',
-      protoSchema: imageSchema,
+      protoSchema: imageModelProtoSchema,
     );
 
     return switch (response) {

@@ -91,9 +91,10 @@ is stored in `shared_preferences`. `HttpClient` sends the matching `Accept` head
 same JSON-like `Map<String, dynamic>` shape, so repositories and models do not know the transport.
 
 - JSON: `application/json`, decoded with `jsonDecode`.
-- Protobuf: `application/protobuf`, decoded with `decodeProtobuf` and the schema of
-  `lib/core/network/admin_protobuf_schemas.dart`. Kotlinx serialization numbers fields in declaration
-  order; a DTO field added or reordered on the server must update the schema in the same change.
+- Protobuf: `application/protobuf`, decoded with `decodeProtobuf` and the schema generated for the
+  model (`<model>.proto.dart`, see MODELS.md). Kotlinx serialization numbers fields in declaration
+  order; a DTO field added, removed or reordered on the server must be mirrored by the Dart model
+  field order in the same change.
 - CBOR: `application/cbor`, decoded with the `cbor` package and normalized to string keys.
 
 `flutter test test/response_formats_test.dart` decodes captured responses of the three formats for

@@ -1,12 +1,16 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shikkanime_admin/core/network/proto/annotations.dart';
+import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
 
 part 'image_model.g.dart';
 
+@ProtoMessage()
 @JsonSerializable(createToJson: false)
 /// One artwork row of an aggregate, as the administration reads it.
 ///
 /// A [manual] image was set by an administrator and is never replaced by a platform harvest.
 class ImageModel {
+  @ProtoEnum(imageTypeValues)
   final String type;
   final String url;
 

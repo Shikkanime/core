@@ -1,13 +1,17 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shikkanime_admin/core/network/proto/annotations.dart';
+import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
 
 part 'anime_summary_model.g.dart';
 
 /// Compact view of one anime in the catalog list.
+@ProtoMessage()
 @JsonSerializable(createToJson: false)
 class AnimeSummaryModel {
   final String id;
   final String title;
   final String normalizedTitle;
+  @ProtoEnum(platformValues)
   final List<String> platforms;
   final int localizationCount;
 

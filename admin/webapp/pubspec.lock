@@ -10,7 +10,7 @@ packages:
     source: hosted
     version: "111.0.0"
   analyzer:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: analyzer
       sha256: "6c39bd5486a310e56217bed7cb1691377959f31be4227e41750107db7e6dd55c"
@@ -42,7 +42,7 @@ packages:
     source: hosted
     version: "2.1.2"
   build:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: build
       sha256: "50df3d1558953a0d936401c1687cc41dbc039f9132f538c7bcb2aac2a580ae7f"
@@ -627,7 +627,7 @@ packages:
     source: sdk
     version: "0.0.0"
   source_gen:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: source_gen
       sha256: "833ea7d15b5be79949d3d6c077da0267a0bd93c16897b36a771395a91e63086e"

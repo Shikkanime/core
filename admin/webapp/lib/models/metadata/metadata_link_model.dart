@@ -1,12 +1,16 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shikkanime_admin/core/network/proto/annotations.dart';
+import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
 
 part 'metadata_link_model.g.dart';
 
 /// Link of a stored anime or episode to its entry on an external metadata platform
 /// (AniList, MyAnimeList, AniDB).
+@ProtoMessage()
 @JsonSerializable(createToJson: false)
 class MetadataLinkModel {
   /// Metadata platform owning the entry, as the Kotlin enum name.
+  @ProtoEnum(metadataPlatformValues)
   final String platform;
 
   /// Identifier of the entry on the platform.

@@ -20,7 +20,7 @@ class EpisodeRepository {
   }) async {
     final response = await _httpClient.get<Map<String, dynamic>>(
       'v1/episodes',
-      protoSchema: pageSchema(episodeSummarySchema),
+      protoSchema: pageSchema(episodeSummaryModelProtoSchema),
       queryParameters: {'animeId': animeId, 'page': page, 'size': size},
     );
 
@@ -44,7 +44,7 @@ class EpisodeRepository {
   }) async {
     final response = await _httpClient.get<Map<String, dynamic>>(
       'v1/episodes/latest',
-      protoSchema: pageSchema(latestEpisodeSchema),
+      protoSchema: pageSchema(latestEpisodeModelProtoSchema),
       queryParameters: {'page': page, 'size': size},
     );
 
@@ -63,7 +63,7 @@ class EpisodeRepository {
   Future<ApiResult<EpisodeDetailModel>> findById(String id) async {
     final response = await _httpClient.get<Map<String, dynamic>>(
       'v1/episodes/$id',
-      protoSchema: episodeDetailSchema,
+      protoSchema: episodeDetailModelProtoSchema,
     );
 
     return switch (response) {

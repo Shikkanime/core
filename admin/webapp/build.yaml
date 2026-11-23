@@ -1,0 +1,14 @@
+builders:
+  proto_schemas:
+    import: "package:shikkanime_admin/core/network/proto/builder.dart"
+    builder_factories: ["protoSchemaBuilder"]
+    build_extensions:
+      ".dart": [".proto.dart"]
+    auto_apply: none
+    build_to: source
+    required_inputs: [".dart"]
+
+targets:
+  $default:
+    builders:
+      shikkanime_admin:proto_schemas: {}

@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shikkanime_admin/core/network/proto/annotations.dart';
+import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
 import 'package:shikkanime_admin/models/episode/episode_localization_model.dart';
 import 'package:shikkanime_admin/models/episode/episode_release_model.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
@@ -8,12 +10,15 @@ import 'package:shikkanime_admin/models/shikk_model.dart';
 part 'episode_detail_model.g.dart';
 
 /// Full administration view of one episode.
+@ProtoMessage()
 @JsonSerializable(createToJson: false)
 class EpisodeDetailModel implements ShikkModel {
   @override
   final String id;
   final String? animeId;
   final int season;
+
+  @ProtoEnum(episodeTypeValues)
   final String episodeType;
   final int number;
   final DateTime releaseDateTime;

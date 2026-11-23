@@ -1,16 +1,36 @@
-/// Protobuf schemas of the administration DTOs, one file per aggregate.
+/// Protobuf schemas of the administration DTOs, generated from the annotated models.
 ///
-/// `kotlinx.serialization` numbers a message field by its declaration order, starting at 1. These
-/// schemas mirror the Kotlin DTOs (`AdminAnimeSummaryDto`, `AdminEpisodeDetailDto`, ...); when a
-/// field is added, removed or reordered on the server, the matching schema changes in the same
-/// commit. The enum lists repeat the Kotlin declaration order, because Protobuf carries the ordinal.
+/// `kotlinx.serialization` numbers a message field by its declaration order, starting at 1. Each
+/// `@ProtoMessage` model generates its `*.proto.dart` schema at build time; the field order of the
+/// Dart model must mirror the Kotlin DTO declaration order. Models carrying a Kotlin enum mark the
+/// field with `@ProtoEnum`, whose values list the enum constants in their Kotlin order.
 library;
 
-export 'package:shikkanime_admin/core/network/schemas/anime.dart';
-export 'package:shikkanime_admin/core/network/schemas/episode.dart';
-export 'package:shikkanime_admin/core/network/schemas/image.dart';
-export 'package:shikkanime_admin/core/network/schemas/locale.dart';
-export 'package:shikkanime_admin/core/network/schemas/localization.dart';
-export 'package:shikkanime_admin/core/network/schemas/metadata.dart';
-export 'package:shikkanime_admin/core/network/schemas/page.dart';
-export 'package:shikkanime_admin/core/network/schemas/platform.dart';
+import 'package:shikkanime_admin/core/network/protobuf_decoder.dart';
+
+export 'package:shikkanime_admin/models/anime/anime_detail_model.proto.dart';
+export 'package:shikkanime_admin/models/anime/anime_localization_model.proto.dart';
+export 'package:shikkanime_admin/models/anime/anime_platform_model.proto.dart';
+export 'package:shikkanime_admin/models/anime/anime_summary_model.proto.dart';
+export 'package:shikkanime_admin/models/episode/episode_detail_model.proto.dart';
+export 'package:shikkanime_admin/models/episode/episode_localization_model.proto.dart';
+export 'package:shikkanime_admin/models/episode/episode_release_model.proto.dart';
+export 'package:shikkanime_admin/models/episode/episode_summary_model.proto.dart';
+export 'package:shikkanime_admin/models/episode/latest_episode_model.proto.dart';
+export 'package:shikkanime_admin/models/image/image_model.proto.dart';
+export 'package:shikkanime_admin/models/metadata/metadata_link_model.proto.dart';
+
+/// Page envelope shared by every paged endpoint.
+///
+/// The four pagination fields are written once, exactly like the Kotlin `PageDto`; an endpoint
+/// only declares the schema of its rows.
+///
+/// @param element schema of one row of the page.
+/// @return the schema of a page carrying these rows.
+ProtoSchema pageSchema(ProtoSchema element) => ProtoSchema({
+  1: ProtoField('data', ProtoKind.message, repeated: true, message: element),
+  2: ProtoField('page', ProtoKind.integer),
+  3: ProtoField('size', ProtoKind.integer),
+  4: ProtoField('totalPages', ProtoKind.integer),
+  5: ProtoField('totalElements', ProtoKind.integer),
+});

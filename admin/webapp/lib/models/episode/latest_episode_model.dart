@@ -1,4 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shikkanime_admin/core/network/proto/annotations.dart';
+import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
 
 part 'latest_episode_model.g.dart';
 
@@ -7,12 +9,15 @@ part 'latest_episode_model.g.dart';
 /// The row is the release list view of the API: [animeTitle] is the normalized title of the anime,
 /// [title] the main title of the episode. The episode identity - season, type and number - is what
 /// identifies it when it has no localized text yet.
+@ProtoMessage()
 @JsonSerializable(createToJson: false)
 class LatestEpisodeModel {
   final String id;
   final String animeId;
   final String animeTitle;
   final int season;
+
+  @ProtoEnum(episodeTypeValues)
   final String episodeType;
   final int number;
   final DateTime releaseDateTime;

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shikkanime_admin/core/network/proto/annotations.dart';
 import 'package:shikkanime_admin/models/anime/anime_localization_model.dart';
 import 'package:shikkanime_admin/models/anime/anime_platform_model.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
@@ -8,6 +9,7 @@ import 'package:shikkanime_admin/models/shikk_model.dart';
 part 'anime_detail_model.g.dart';
 
 /// Full administration view of one anime.
+@ProtoMessage()
 @JsonSerializable(createToJson: false)
 class AnimeDetailModel implements ShikkModel {
   @override

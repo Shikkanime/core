@@ -12,7 +12,7 @@ lib/
   core/
     config/env_config.dart      # API base URL (same origin by default)
     network/                    # HttpClient, ApiResult<T>, JSON/CBOR/Protobuf decoders
-    network/schemas/            # Protobuf schemas, one file per aggregate
+    network/proto/              # ProtoMessage/ProtoEnum annotations, Kotlin enum orders, schema builder
     settings/                   # ResponseFormat selected in Settings
     format/                     # Date and duration formatters
     theme/                      # Material 3 theme

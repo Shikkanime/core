@@ -71,15 +71,21 @@ class PagedResult<T> {
   decodes its answer into `PagedResult<AnimeSummaryModel>` with a single `PagedResult.fromJson(data,
   AnimeSummaryModel.fromJson)`, and a `PagedViewModel` consumes it as is.
 
-## Protobuf schemas, one file per aggregate
+## Protobuf schemas, generated from the models
 
-`lib/core/network/schemas/` mirrors `models/`:
+Every model mirroring a Kotlin DTO carries `@ProtoMessage()`; `protoSchemaBuilder`
+(`lib/core/network/proto/builder.dart`, registered in `build.yaml`) then generates
+`<model>.proto.dart` next to the model, holding a `const <model>ProtoSchema` for `decodeProtobuf`.
+`dart run build_runner build` regenerates them with the `*.g.dart` files.
 
-- `anime.dart` holds `animeSummarySchema`, `animeDetailSchema`, `animeLocalizationSchema`,
-  `animePlatformSchema`;
-- `episode.dart` holds the episode and release schemas;
-- `image.dart`, `locale.dart` hold the shared enumerations;
-- `page.dart` (schemas) holds **one** `pageSchema(ProtoSchema element)` builder, used by every paged endpoint:
+- Field numbers follow the `kotlinx.serialization` convention: declaration order, starting at 1.
+  The Dart model must declare its fields in the same order as the Kotlin DTO.
+- A String field carrying a Kotlin enum is marked `@ProtoEnum(values)`; `values` lists the enum
+  constants in their Kotlin declaration order (Protobuf carries the ordinal). The lists live in
+  `lib/core/network/proto/enum_values.dart`.
+- Nested models become `ProtoKind.message` automatically; the generated file imports their schema.
+- `lib/core/network/schemas.dart` exports every generated schema and holds **one**
+  `pageSchema(ProtoSchema element)` builder, used by every paged endpoint:
 
 ```dart
 ProtoSchema pageSchema(ProtoSchema element) => ProtoSchema({
@@ -91,9 +97,8 @@ ProtoSchema pageSchema(ProtoSchema element) => ProtoSchema({
 });
 ```
 
-  A new endpoint declares its element schema and reuses `pageSchema`; the four pagination fields are
-  written once, exactly like the Kotlin `PageDto`. The field numbers must match the declaration
-  order of the Kotlin DTO, which is what Protobuf uses.
+  A new endpoint annotates its model and reuses `pageSchema`; the four pagination fields are
+  written once, exactly like the Kotlin `PageDto`.
 
 ## Paged view models
 
