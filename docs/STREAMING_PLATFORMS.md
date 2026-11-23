@@ -80,13 +80,13 @@ client.get<PrimeVideoPageResponse>(
 Always pass a deterministic `cacheKey` scoped by language/region when the same URL serves
 different payloads per country.
 
-**Bot checks and redirect loops.** Some endpoints reject the shared Ktor/OkHttp client
-fingerprint and answer with redirect loops that exhaust `HttpSend.maxSendCount`. When that
-happens, either negotiate different request headers first, or — as `PrimeVideoPlatform` does
-for `getDetailWidgets` — query the endpoint through a dedicated `java.net.http.HttpClient`
-with `followRedirects(NEVER)`, on `Dispatchers.IO`, and parse the body with kotlinx.serialization.
-Such requests carry no change detection: treat every fetched page as changed and let the
-in-memory episode comparison decide (see §6). Keep the bypass minimal and document why.
+**Bot checks and redirect loops.** Some endpoints answer the shared Ktor client with a
+redirect loop that exhausts `HttpSend.maxSendCount` once their bot check challenges the
+request. When headers alone do not fix it, give the endpoint a dedicated
+`SmartHttpClient` wrapping a Ktor `HttpClient(OkHttp)` built like `createHttpClient()` but
+with `followRedirects = false` — `PrimeVideoPlatform.widgetClient` shows the pattern. This
+keeps caching, change detection and stale fallback while the redirect-free client negotiates
+the JSON payload. Keep the bypass minimal and document why.
 
 ## 5. Harvesting strategy
 
@@ -123,8 +123,7 @@ Structure the harvest in three stages, like the existing connectors:
   embed per-request tokens, so the HTTP layer almost always reports a change. Keep a per-country
   cache of the previous `List<PlatformEpisode>` and compare with
   `List<PlatformEpisode>.hasSameContentAs` — report a change only when the normalized episodes
-  actually differ. When a fetch bypasses `SmartHttpClient`, mark its contribution as changed so
-  the comparison still runs.
+  actually differ.
 - **Partial failures**: wrap each show/page fetch so one broken entry logs a warning and is
   skipped instead of failing the whole platform. Re-throw `CancellationException`.
 
@@ -133,8 +132,9 @@ Structure the harvest in three stages, like the existing connectors:
 - **Unit tests** (`jobs/src/test/kotlin/platforms/impl/`): back `SmartHttpClient` with a Ktor
   `MockEngine` routing the platform URLs to JSON fixtures, and cover mapping, filters, locales,
   pagination, movies/films, and the `hasChanged == false` case on identical payloads. When a
-  fetch bypasses `SmartHttpClient`, expose an `internal` test hook (see
-  `PrimeVideoPlatform.widgetFetcher`) instead of hitting the network.
+  fetch goes through a dedicated client, expose an `internal` override (see
+  `PrimeVideoPlatform.widgetClient`) so tests can substitute a mock-backed `SmartHttpClient`
+  instead of hitting the network.
 - **Live tests** (`jobs/src/integrationTest/kotlin/`): gate them behind an environment variable
   (e.g. `RUN_PRIME_VIDEO_LIVE_TESTS=true`), like `CrunchyrollPlatformLiveTest`, so CI never
   depends on the external service. Exercise the real bootstrap (`GlobalContext`/`bootstrap()`)

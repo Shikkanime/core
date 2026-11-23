@@ -7,26 +7,25 @@ import fr.shikkanime.jobs.platforms.StreamingPlatform
 import fr.shikkanime.jobs.platforms.exceptions.MissingAudioLocaleException
 import fr.shikkanime.jobs.platforms.models.*
 import fr.shikkanime.jobs.platforms.sanitizeText
+import fr.shikkanime.ktor.defaultJson
 import fr.shikkanime.models.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.*
 import org.koin.core.annotation.Single
-import java.io.IOException
-import java.net.URI
 import java.net.URLEncoder
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.text.Normalizer
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import java.time.Duration as JDuration
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
@@ -97,8 +96,9 @@ private val DEFAULT_SHOW_IDS = setOf(
  *
  * @param client The [SmartHttpClient] instance used to execute the cached HTTP requests of
  * the platform, the detail pages included. The widget pagination calls go through a dedicated
- * JDK HTTP client because the endpoint's bot check loops the shared Ktor client.
- * @param ttl The cache time-to-live [Duration] for detail responses. It defaults to
+ * [SmartHttpClient] whose Ktor client never follows redirects: the endpoint's bot check sends
+ * the shared client into a redirect loop.
+ * @param ttl The cache time-to-live [Duration] for detail and widget responses. It defaults to
  * one hour: Prime Video detail pages embed per-request tokens, so the HTTP change detection
  * almost always reports a change and the in-memory episode comparison is what actually gates
  * the harvest.
@@ -124,20 +124,21 @@ class PrimeVideoPlatform(
     private val releaseDateFormatters = ConcurrentHashMap<String, List<DateTimeFormatter>>()
 
     // The widget endpoint sits behind a bot check that redirects the shared Ktor client into a
-    // redirect loop; the JDK client negotiates the endpoint reliably, and its redirects are
-    // disabled so a challenged response fails fast instead of looping.
-    private val widgetHttpClient: HttpClient = HttpClient.newBuilder()
-        .connectTimeout(JDuration.ofSeconds(10))
-        .followRedirects(HttpClient.Redirect.NEVER)
-        .build()
-
-    /**
-     * Test hook replacing the widget pagination fetch, which bypasses [SmartHttpClient] and
-     * therefore cannot be served by a mock engine.
-     */
-    internal var widgetFetcher:
-        (suspend (language: String, pageTitleId: String, token: String) -> PrimeVideoWidgetsResponse)? =
-        null
+    // redirect loop; disabling redirect following negotiates the JSON payload directly, and the
+    // SmartHttpClient wrapper keeps the caching, change detection and stale fallback.
+    internal var widgetClient: SmartHttpClient = SmartHttpClient(
+        client = HttpClient(OkHttp) {
+            followRedirects = false
+            install(HttpTimeout) {
+                requestTimeoutMillis = 30_000
+                connectTimeoutMillis = 10_000
+                socketTimeoutMillis = 30_000
+            }
+            install(ContentNegotiation) {
+                json(defaultJson)
+            }
+        }
+    )
 
     /**
      * Retrieves the episodes of the tracked Prime Video catalog across configured countries.
@@ -240,44 +241,42 @@ class PrimeVideoPlatform(
         val entry = fetchPage(language, showId)
         var changed = entry.hasChanged
 
-        val atf = entry.data.body.obj("atf")?.obj("state")
-        val btf = entry.data.body.obj("btf")?.obj("state")
+        val atf = entry.data.body.atf.state
+        val btf = entry.data.body.btf.state
         if (atf == null || btf == null) {
             logger.warning("Prime Video page $showId ($language) carries no state")
             return null to changed
         }
 
-        val pageTitleId = atf.str("pageTitleId") ?: return null to changed
-        val header = atf.obj("detail")?.obj("headerDetail")?.obj(pageTitleId)
+        val pageTitleId = atf.pageTitleId ?: return null to changed
+        val header = atf.detail.headerDetail[pageTitleId]
             ?: return null to changed
 
-        val showImages = header.obj("images")
+        val showImages = header.images
         val baseShow = PvShowData(
             compactId = showId,
-            title = header.str("title"),
-            parentTitle = header.str("parentTitle"),
-            synopsis = header.str("synopsis"),
-            bannerImage = showImages?.str("covershot")?.takeIf(String::isNotBlank),
-            thumbnailImage = (showImages?.str("packshot") ?: showImages?.str("titleshot"))
+            title = header.title,
+            parentTitle = header.parentTitle,
+            synopsis = header.synopsis,
+            bannerImage = showImages?.covershot?.takeIf(String::isNotBlank),
+            thumbnailImage = (showImages?.packshot ?: showImages?.titleshot)
                 ?.takeIf(String::isNotBlank),
-            logoImage = showImages?.str("titleLogo")?.takeIf(String::isNotBlank),
-            isMovie = header.str("entityType") == "Movie" || header.str("titleType") == "movie"
+            logoImage = showImages?.titleLogo?.takeIf(String::isNotBlank),
+            isMovie = header.entityType == "Movie" || header.titleType == "movie"
         )
 
         if (baseShow.isMovie) {
             val card = header.toEpisodeCard(
                 language = language,
                 gti = pageTitleId,
-                self = null,
-                metadata = null,
+                compactGti = showId,
                 fallbackUrl = "$BASE_URL/-/$language/detail/$showId?autoplay=1&t=0"
-            ).copy(compactGti = showId)
+            )
             return baseShow.copy(seasons = listOf(PvSeasonData(1, listOf(card)))) to changed
         }
 
-        val seasonEntries = atf.obj("seasons")?.values.orEmpty()
-            .flatMap { (it as? JsonArray).orEmpty().filterIsInstance<JsonObject>() }
-            .sortedBy { it.int("sequenceNumber") ?: Int.MAX_VALUE }
+        val seasonEntries = atf.seasons.values.flatten()
+            .sortedBy { it.sequenceNumber ?: Int.MAX_VALUE }
 
         if (seasonEntries.isEmpty()) {
             val (cards, seasonChanged) = harvestSeasonEpisodes(language, pageTitleId, btf)
@@ -289,25 +288,24 @@ class PrimeVideoPlatform(
 
         var entryPageConsumed = false
         val seasons = seasonEntries.mapNotNull { seasonEntry ->
-            val seasonId = seasonEntry.str("seasonId") ?: return@mapNotNull null
-            val seasonNumber = seasonEntry.int("sequenceNumber") ?: 1
-            val seasonBtf: JsonObject
+            val seasonId = seasonEntry.seasonId ?: return@mapNotNull null
+            val seasonNumber = seasonEntry.sequenceNumber ?: 1
+            val seasonBtf: PrimeVideoState
             val seasonPageTitleId: String
 
-            if (seasonId == pageTitleId || seasonEntry.bool("isSelected") == true) {
+            if (seasonId == pageTitleId || seasonEntry.isSelected == true) {
                 seasonBtf = btf
                 seasonPageTitleId = pageTitleId
                 entryPageConsumed = true
             } else {
-                val link = seasonEntry.str("seasonLink") ?: return@mapNotNull null
+                val link = seasonEntry.seasonLink ?: return@mapNotNull null
                 val compactId = link.substringAfter("/detail/").substringBefore("?")
                 val seasonPage = fetchPage(language, compactId)
                 changed = changed || seasonPage.hasChanged
-                val seasonBtfState = seasonPage.data.body.obj("btf")?.obj("state")
+                seasonBtf = seasonPage.data.body.btf.state
                     ?: return@mapNotNull null
-                seasonBtf = seasonBtfState
-                seasonPageTitleId = seasonPage.data.body.obj("atf")?.obj("state")
-                    ?.str("pageTitleId") ?: seasonId
+                seasonPageTitleId = seasonPage.data.body.atf.state?.pageTitleId
+                    ?: seasonId
             }
 
             val (cards, seasonChanged) = harvestSeasonEpisodes(
@@ -324,7 +322,7 @@ class PrimeVideoPlatform(
         } else {
             val (cards, seasonChanged) = harvestSeasonEpisodes(language, pageTitleId, btf)
             changed = changed || seasonChanged
-            val fallbackNumber = header.int("seasonNumber") ?: 1
+            val fallbackNumber = header.seasonNumber ?: 1
             listOf(PvSeasonData(fallbackNumber, cards)) + seasons
         }
 
@@ -336,7 +334,7 @@ class PrimeVideoPlatform(
      *
      * @param language The page language of the country.
      * @param pageTitleId The GTI of the season page, sent as `titleID` of the widget requests.
-     * @param btf The `btf.state` object of the season page.
+     * @param btf The state of the season page.
      * @return The harvested [PvEpisodeCard] list and whether any fetched payload changed.
      * @see [PvEpisodeCard]
      * @see [fetchWidgets]
@@ -344,19 +342,20 @@ class PrimeVideoPlatform(
     private suspend fun harvestSeasonEpisodes(
         language: String,
         pageTitleId: String,
-        btf: JsonObject
+        btf: PrimeVideoState
     ): Pair<List<PvEpisodeCard>, Boolean> {
         val cards = LinkedHashMap<String, PvEpisodeCard>()
         var changed = false
 
         extractInlineEpisodes(language, btf).forEach { cards[it.gti] = it }
 
-        val fetcher = widgetFetcher ?: this::fetchWidgets
-        var token = nextPageToken(btf.obj("episodeList")?.obj("actions"))
+        var token = nextPageToken(btf.episodeList.actions)
         var pages = 0
         while (token != null && pages < MAX_WIDGET_PAGES) {
             val episodeList = try {
-                fetcher(language, pageTitleId, token).widgets.obj("episodeList")
+                val response = fetchWidgets(language, pageTitleId, pages, token)
+                changed = changed || response.hasChanged
+                response.data.widgets?.episodeList
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -366,11 +365,8 @@ class PrimeVideoPlatform(
                 )
                 break
             } ?: break
-            // Widget payloads carry no HTTP change signal: a fetched page forces the episode
-            // comparison that decides whether the harvest actually changed.
-            changed = true
             extractWidgetEpisodes(language, episodeList).forEach { cards[it.gti] = it }
-            token = nextPageToken(episodeList.obj("actions"))
+            token = nextPageToken(episodeList.actions)
             pages++
         }
 
@@ -378,33 +374,28 @@ class PrimeVideoPlatform(
     }
 
     /**
-     * Extracts the episode cards embedded in the `detail` and `self` maps of a season page.
+     * Extracts the episode cards embedded in the `detail`, `self` and `metadata` maps of a
+     * season page.
      *
      * @param language The page language of the country.
-     * @param btf The `btf.state` object of the season page.
+     * @param btf The state of the season page.
      * @return The harvested [PvEpisodeCard] list of the page.
      * @see [PvEpisodeCard]
      */
     private fun extractInlineEpisodes(
         language: String,
-        btf: JsonObject
-    ): List<PvEpisodeCard> {
-        val details = btf.obj("detail")?.obj("detail") ?: return emptyList()
-        val selves = btf.obj("self") ?: JsonObject(emptyMap())
-        val metadatas = btf.obj("metadata") ?: JsonObject(emptyMap())
-
-        return details.entries.mapNotNull { (gti, element) ->
-            val entity = element as? JsonObject ?: return@mapNotNull null
-            if (entity.str("titleType") != "episode")
+        btf: PrimeVideoState
+    ): List<PvEpisodeCard> =
+        btf.detail.episodes.mapNotNull { (gti, entity) ->
+            if (entity.titleType != "episode")
                 return@mapNotNull null
             entity.toEpisodeCard(
                 language = language,
                 gti = gti,
-                self = selves.obj(gti),
-                metadata = metadatas.obj(gti)
+                self = btf.self[gti],
+                metadata = btf.metadata[gti]
             )
         }
-    }
 
     /**
      * Extracts the episode cards of a `getDetailWidgets` episode list payload.
@@ -416,20 +407,19 @@ class PrimeVideoPlatform(
      */
     private fun extractWidgetEpisodes(
         language: String,
-        episodeList: JsonObject
+        episodeList: PrimeVideoWidgetEpisodeList
     ): List<PvEpisodeCard> =
-        episodeList.arr("episodes").orEmpty().mapNotNull { element ->
-            val item = element as? JsonObject ?: return@mapNotNull null
-            val detail = item.obj("detail") ?: return@mapNotNull null
-            if (detail.str("titleType") != "episode")
+        episodeList.episodes.mapNotNull { item ->
+            val detail = item.detail ?: return@mapNotNull null
+            if (detail.titleType != "episode")
                 return@mapNotNull null
-            val gti = detail.str("catalogId") ?: item.str("titleID")
+            val gti = detail.catalogId ?: item.titleID
                 ?: return@mapNotNull null
             detail.toEpisodeCard(
                 language = language,
                 gti = gti,
-                self = item.obj("self"),
-                metadata = item.obj("metadata")
+                self = item.self,
+                metadata = item.metadata
             )
         }
 
@@ -495,46 +485,32 @@ class PrimeVideoPlatform(
     /**
      * Fetches one page of episode cards through the `getDetailWidgets` endpoint.
      *
-     * This endpoint is queried through a dedicated JDK HTTP client instead of [SmartHttpClient]:
-     * its bot check rejects the Ktor/OkHttp negotiation with a redirect loop, while the JDK client
-     * fetches the JSON payload directly. The request therefore carries no cache or change
-     * detection; callers treat a fetched page as changed and rely on the episode comparison.
+     * The request goes through [widgetClient], whose Ktor client never follows redirects:
+     * the endpoint's bot check answers the shared client with a redirect loop, while the
+     * redirect-free client negotiates the JSON payload. The cache key carries the page index
+     * rather than the rotating token so the stale fallback can serve the last good page.
      *
      * @param language The page language of the country.
      * @param pageTitleId The GTI of the season page, sent as `titleID`.
+     * @param pageIndex The index of the widget page within the season pagination.
      * @param token The `NextPage` widget token of the previous page.
-     * @return The parsed widget payload.
-     * @throws IOException When the endpoint answers with a non-200 status.
+     * @return The [SmartResponse] carrying the widget payload.
+     * @see [SmartHttpClient]
      */
     private suspend fun fetchWidgets(
         language: String,
         pageTitleId: String,
+        pageIndex: Int,
         token: String
-    ): PrimeVideoWidgetsResponse {
+    ): SmartResponse<PrimeVideoWidgetsResponse> {
         val widgets = "[{\"widgetType\":\"EpisodeList\",\"widgetToken\":\"$token\"}]"
-        val url = "$BASE_URL/api/getDetailWidgets?titleID=$pageTitleId" +
-            "&widgets=${URLEncoder.encode(widgets, StandardCharsets.UTF_8)}"
-
-        val body = withContext(Dispatchers.IO) {
-            val request = HttpRequest.newBuilder(URI.create(url))
-                .timeout(JDuration.ofSeconds(30))
-                .header(HttpHeaders.Accept, "application/json")
-                .header(HttpHeaders.AcceptLanguage, language)
-                .header(HttpHeaders.UserAgent, USER_AGENT)
-                .header("x-requested-with", "WebAppSPA")
-                .GET()
-                .build()
-            val response = widgetHttpClient.send(
-                request, HttpResponse.BodyHandlers.ofString()
-            )
-            if (response.statusCode() != 200)
-                throw IOException(
-                    "Prime Video widget request answered ${response.statusCode()}"
-                )
-            response.body()
-        }
-
-        return Json.decodeFromJsonElement(Json.parseToJsonElement(body))
+        return widgetClient.get(
+            url = "$BASE_URL/api/getDetailWidgets?titleID=$pageTitleId" +
+                "&widgets=${URLEncoder.encode(widgets, StandardCharsets.UTF_8)}",
+            cacheKey = "prime_video:widgets:$language:$pageTitleId:$pageIndex",
+            ttl = ttl,
+            headers = pageHeaders(language)
+        )
     }
 
     /**
@@ -544,7 +520,7 @@ class PrimeVideoPlatform(
      * @return The request headers of the platform.
      */
     private fun pageHeaders(language: String): Map<String, String> = mapOf(
-        HttpHeaders.Accept to "application/json",
+        HttpHeaders.Accept to ContentType.Application.Json.toString(),
         HttpHeaders.AcceptLanguage to language,
         HttpHeaders.UserAgent to USER_AGENT,
         "x-requested-with" to "WebAppSPA"
@@ -575,11 +551,10 @@ class PrimeVideoPlatform(
      * @param actions The `actions` object carrying the pagination entries.
      * @return The next page token, or `null` when the list is exhausted.
      */
-    private fun nextPageToken(actions: JsonObject?): String? =
-        actions?.arr("pagination").orEmpty()
-            .filterIsInstance<JsonObject>()
-            .firstOrNull { it.str("tokenType") == "NextPage" }
-            ?.str("token")
+    private fun nextPageToken(actions: PrimeVideoEpisodeActions?): String? =
+        actions?.pagination
+            ?.firstOrNull { it.tokenType == "NextPage" }
+            ?.token
 
     /**
      * Parses a localized Prime Video release date into a UTC [ZonedDateTime].
@@ -920,13 +895,215 @@ private data class PvEpisodeCard(
 
 @Serializable
 internal data class PrimeVideoPageResponse(
-    val body: JsonObject = JsonObject(emptyMap())
+    val body: PrimeVideoPageBody = PrimeVideoPageBody()
+)
+
+@Serializable
+internal data class PrimeVideoPageBody(
+    val atf: PrimeVideoStateWrapper = PrimeVideoStateWrapper(),
+    val btf: PrimeVideoStateWrapper = PrimeVideoStateWrapper()
+)
+
+@Serializable
+internal data class PrimeVideoStateWrapper(
+    val state: PrimeVideoState? = null
+)
+
+@Serializable
+internal data class PrimeVideoState(
+    val pageTitleId: String? = null,
+    val detail: PrimeVideoDetailState = PrimeVideoDetailState(),
+    val seasons: Map<String, List<PrimeVideoSeason>> = emptyMap(),
+    val self: Map<String, PrimeVideoEpisodeSelf> = emptyMap(),
+    val metadata: Map<String, PrimeVideoEpisodeMetadata> = emptyMap(),
+    val episodeList: PrimeVideoEpisodeList = PrimeVideoEpisodeList()
+)
+
+@Serializable
+internal data class PrimeVideoDetailState(
+    val headerDetail: Map<String, PrimeVideoHeader> = emptyMap(),
+    @SerialName("detail")
+    val episodes: Map<String, PrimeVideoEpisodeEntity> = emptyMap()
+)
+
+@Serializable
+internal data class PrimeVideoHeader(
+    val title: String? = null,
+    val parentTitle: String? = null,
+    val synopsis: String? = null,
+    val entityType: String? = null,
+    val titleType: String? = null,
+    val seasonNumber: Int? = null,
+    val duration: Long? = null,
+    val releaseDate: String? = null,
+    val audioTracks: List<String> = emptyList(),
+    val subtitles: List<String> = emptyList(),
+    val images: PrimeVideoImages? = null
+)
+
+@Serializable
+internal data class PrimeVideoEpisodeEntity(
+    val catalogId: String? = null,
+    val title: String? = null,
+    val synopsis: String? = null,
+    val entityType: String? = null,
+    val titleType: String? = null,
+    val episodeNumber: Int? = null,
+    val duration: Long? = null,
+    val releaseDate: String? = null,
+    val audioTracks: List<String> = emptyList(),
+    val subtitles: List<String> = emptyList(),
+    val images: PrimeVideoImages? = null
+)
+
+@Serializable
+internal data class PrimeVideoImages(
+    val covershot: String? = null,
+    val heroshot: String? = null,
+    val packshot: String? = null,
+    val titleshot: String? = null,
+    val titleLogo: String? = null
+)
+
+@Serializable
+internal data class PrimeVideoEpisodeSelf(
+    val compactGTI: String? = null,
+    val gti: String? = null,
+    val link: String? = null,
+    val sequenceNumber: Int? = null,
+    val titleType: String? = null,
+    val isLaunched: Boolean? = null
+)
+
+@Serializable
+internal data class PrimeVideoEpisodeMetadata(
+    val traits: List<String> = emptyList(),
+    val upcomingSynopsis: String? = null
+)
+
+@Serializable
+internal data class PrimeVideoSeason(
+    val seasonId: String? = null,
+    val seasonLink: String? = null,
+    val sequenceNumber: Int? = null,
+    val isSelected: Boolean? = null
+)
+
+@Serializable
+internal data class PrimeVideoEpisodeList(
+    val actions: PrimeVideoEpisodeActions? = null
+)
+
+@Serializable
+internal data class PrimeVideoEpisodeActions(
+    val pagination: List<PrimeVideoPageAction> = emptyList()
+)
+
+@Serializable
+internal data class PrimeVideoPageAction(
+    val token: String? = null,
+    val tokenType: String? = null
 )
 
 @Serializable
 internal data class PrimeVideoWidgetsResponse(
-    val widgets: JsonObject = JsonObject(emptyMap())
+    val widgets: PrimeVideoWidgets? = null
 )
+
+@Serializable
+internal data class PrimeVideoWidgets(
+    val episodeList: PrimeVideoWidgetEpisodeList? = null
+)
+
+@Serializable
+internal data class PrimeVideoWidgetEpisodeList(
+    val episodes: List<PrimeVideoWidgetEpisode> = emptyList(),
+    val actions: PrimeVideoEpisodeActions? = null
+)
+
+@Serializable
+internal data class PrimeVideoWidgetEpisode(
+    val detail: PrimeVideoEpisodeEntity? = null,
+    val self: PrimeVideoEpisodeSelf? = null,
+    val metadata: PrimeVideoEpisodeMetadata? = null,
+    val titleID: String? = null
+)
+
+/**
+ * Converts a header entity into an episode card, used for movies harvested as a single film.
+ *
+ * @param language The page language of the country.
+ * @param gti The GTI published as the episode identifier fallback.
+ * @param compactGti The compact GTI published as the episode identifier.
+ * @param fallbackUrl The watch URL used when no link is available.
+ * @return The harvested [PvEpisodeCard].
+ */
+private fun PrimeVideoHeader.toEpisodeCard(
+    language: String,
+    gti: String,
+    compactGti: String?,
+    fallbackUrl: String
+): PvEpisodeCard =
+    PvEpisodeCard(
+        gti = gti,
+        compactGti = compactGti,
+        url = fallbackUrl,
+        title = title,
+        synopsis = synopsis,
+        episodeNumber = null,
+        durationSeconds = duration,
+        releaseDate = releaseDate,
+        audioTracks = audioTracks,
+        subtitles = subtitles,
+        imageUrl = images?.covershot?.takeIf(String::isNotBlank)
+            ?: images?.packshot?.takeIf(String::isNotBlank)
+            ?: images?.titleshot?.takeIf(String::isNotBlank),
+        isUpcoming = false,
+        isLaunched = true
+    )
+
+/**
+ * Converts an episode entity into an episode card.
+ *
+ * @param language The page language of the country.
+ * @param gti The GTI of the episode entity.
+ * @param self The `self` entry carrying the watch link and launch state.
+ * @param metadata The `metadata` entry carrying the release traits.
+ * @param fallbackUrl The watch URL used when neither link nor compact GTI is available.
+ * @return The harvested [PvEpisodeCard].
+ */
+private fun PrimeVideoEpisodeEntity.toEpisodeCard(
+    language: String,
+    gti: String,
+    self: PrimeVideoEpisodeSelf?,
+    metadata: PrimeVideoEpisodeMetadata?,
+    fallbackUrl: String? = null
+): PvEpisodeCard {
+    val compactGti = self?.compactGTI
+    val link = self?.link
+    val url = link?.let { "$BASE_URL${it.substringBefore('?')}?autoplay=1&t=0" }
+        ?: compactGti?.let { "$BASE_URL/-/$language/detail/$it?autoplay=1&t=0" }
+        ?: fallbackUrl
+
+    return PvEpisodeCard(
+        gti = gti,
+        compactGti = compactGti,
+        url = url,
+        title = title,
+        synopsis = synopsis,
+        episodeNumber = episodeNumber ?: self?.sequenceNumber,
+        durationSeconds = duration,
+        releaseDate = releaseDate,
+        audioTracks = audioTracks,
+        subtitles = subtitles,
+        imageUrl = images?.covershot?.takeIf(String::isNotBlank)
+            ?: images?.packshot?.takeIf(String::isNotBlank)
+            ?: images?.titleshot?.takeIf(String::isNotBlank),
+        isUpcoming = metadata?.traits?.isNotEmpty() == true &&
+            !metadata.upcomingSynopsis.isNullOrBlank(),
+        isLaunched = self?.isLaunched != false
+    )
+}
 
 /**
  * Normalizes a Prime Video track name for the language lookup.
@@ -942,57 +1119,3 @@ private fun normalizeTrackName(raw: String): String =
         .substringBefore("audio description")
         .substringBefore("descriptive audio")
         .trim()
-
-private fun JsonObject.obj(key: String): JsonObject? = this[key] as? JsonObject
-
-private fun JsonObject.arr(key: String): JsonArray? = this[key] as? JsonArray
-
-private fun JsonObject.str(key: String): String? =
-    (this[key] as? JsonPrimitive)?.contentOrNull
-
-private fun JsonObject.int(key: String): Int? =
-    (this[key] as? JsonPrimitive)?.intOrNull
-
-private fun JsonObject.long(key: String): Long? =
-    (this[key] as? JsonPrimitive)?.longOrNull
-
-private fun JsonObject.bool(key: String): Boolean? =
-    (this[key] as? JsonPrimitive)?.booleanOrNull
-
-private fun JsonObject.strings(key: String): List<String> =
-    arr(key).orEmpty().mapNotNull { (it as? JsonPrimitive)?.contentOrNull }
-
-private fun JsonObject.toEpisodeCard(
-    language: String,
-    gti: String,
-    self: JsonObject?,
-    metadata: JsonObject?,
-    fallbackUrl: String? = null
-): PvEpisodeCard {
-    val images = obj("images")
-    val compactGti = self?.str("compactGTI")
-    val link = self?.str("link")
-    val url = link?.let { "$BASE_URL${it.substringBefore('?')}?autoplay=1&t=0" }
-        ?: compactGti?.let { "$BASE_URL/-/$language/detail/$it?autoplay=1&t=0" }
-        ?: fallbackUrl
-    val traits = metadata?.arr("traits")
-    val upcomingSynopsis = metadata?.str("upcomingSynopsis")
-
-    return PvEpisodeCard(
-        gti = gti,
-        compactGti = compactGti,
-        url = url,
-        title = str("title"),
-        synopsis = str("synopsis"),
-        episodeNumber = int("episodeNumber") ?: self?.int("sequenceNumber"),
-        durationSeconds = long("duration"),
-        releaseDate = str("releaseDate"),
-        audioTracks = strings("audioTracks"),
-        subtitles = strings("subtitles"),
-        imageUrl = images?.str("covershot")?.takeIf(String::isNotBlank)
-            ?: images?.str("packshot")?.takeIf(String::isNotBlank)
-            ?: images?.str("titleshot")?.takeIf(String::isNotBlank),
-        isUpcoming = traits?.isNotEmpty() == true && !upcomingSynopsis.isNullOrBlank(),
-        isLaunched = self?.bool("isLaunched") != false
-    )
-}

@@ -6,6 +6,7 @@ import fr.shikkanime.models.*
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.mockk.junit5.MockKExtension
@@ -26,29 +27,39 @@ import kotlin.time.Duration
 class PrimeVideoPlatformTest {
 
     /**
-     * Builds a [SmartHttpClient] backed by a mock engine routing the Prime Video detail endpoint.
+     * Builds a [SmartHttpClient] backed by a mock engine routing the Prime Video endpoints.
      *
      * The detail endpoint answers with the page payload registered for the requested compact
-     * identifier. Widget pagination bypasses [SmartHttpClient] and is faked through
-     * [PrimeVideoPlatform.widgetFetcher] instead.
+     * identifier and the `getDetailWidgets` endpoint with the widget payloads registered per
+     * widget token.
      *
      * @param pages The page payloads indexed by compact detail identifier.
+     * @param widgets The widget payloads indexed by widget token.
+     * @param onRequest Callback observing every outgoing request before the answer is produced.
      * @return The [SmartHttpClient] under test.
      * @see [SmartHttpClient]
      */
     private fun smartHttpClient(
-        pages: Map<String, String> = emptyMap()
+        pages: Map<String, String> = emptyMap(),
+        widgets: Map<String, String> = emptyMap(),
+        onRequest: (HttpRequestData) -> Unit = {}
     ): SmartHttpClient =
         SmartHttpClient(
             client = HttpClient(
                 MockEngine { request ->
+                    onRequest(request)
                     val url = request.url.toString()
-                    val body = if ("/detail/" in url) {
-                        val compactId = url.substringAfter("/detail/")
-                            .substringBefore("?")
-                        pages[compactId] ?: EMPTY_PAGE
-                    } else {
-                        EMPTY_PAGE
+                    val body = when {
+                        "/api/getDetailWidgets" in url -> {
+                            val token = WIDGET_TOKEN_REGEX.find(url)?.groupValues?.get(1)
+                            widgets[token] ?: EMPTY_WIDGETS
+                        }
+                        "/detail/" in url -> {
+                            val compactId = url.substringAfter("/detail/")
+                                .substringBefore("?")
+                            pages[compactId] ?: EMPTY_PAGE
+                        }
+                        else -> EMPTY_PAGE
                     }
                     respond(
                         content = body,
@@ -391,22 +402,24 @@ class PrimeVideoPlatformTest {
         @DisplayName("should paginate the episode cards through getDetailWidgets")
         fun shouldPaginateTheEpisodeCardsThroughGetDetailWidgets() = runTest {
             // Given
+            val requestedUrls = mutableListOf<String>()
             val client = smartHttpClient(pages = mapOf(SHOW_ID to seriesPageWithPagination()))
             val platform = platform(client)
-            val widgetRequests = mutableListOf<String>()
-            platform.widgetFetcher = { _, pageTitleId, token ->
-                widgetRequests += "$pageTitleId:$token"
-                Json.decodeFromString(widgetsPage())
-            }
+            platform.widgetClient = smartHttpClient(
+                widgets = mapOf("NEXT_PAGE_TOKEN" to widgetsPage()),
+                onRequest = { requestedUrls += it.url.toString() }
+            )
 
             // When
             val episodes = platform.fetchLatestEpisodes().data
 
             // Then
             assertEquals(3, episodes.size)
-            assertEquals(
-                listOf("amzn1.dv.gti.season1:NEXT_PAGE_TOKEN"),
-                widgetRequests
+            assertTrue(requestedUrls.any { "/api/getDetailWidgets" in it })
+            assertTrue(
+                requestedUrls.any {
+                    "/api/getDetailWidgets" in it && "titleID=" in it
+                }
             )
         }
 
@@ -542,9 +555,12 @@ class PrimeVideoPlatformTest {
         const val SHOW_ID = "0SHOWCOMPACTID000000000000"
         const val SEASON_2_ID = "0SEASON2COMPACTID00000000000"
 
+        val WIDGET_TOKEN_REGEX = Regex("""widgetToken%22%3A%22([^%]+)""")
+
         fun compactId(key: String): String =
             "0${key.uppercase()}COMPACTID000000000000"
 
         const val EMPTY_PAGE = """{"body":{}}"""
+        const val EMPTY_WIDGETS = """{"widgets":{}}"""
     }
 }

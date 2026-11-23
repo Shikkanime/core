@@ -179,3 +179,32 @@ val identifier: List<Byte>?, // was ByteArray? — ArrayInDataClass
   paths:
     - admin/src/main/kotlin/usecases/impl
 ```
+
+### 2026-11-23 — PrimeVideoPlatform: JsonObject banni, client Ktor dédié, ContentType
+
+- **Where**: `jobs/src/main/kotlin/platforms/impl/PrimeVideoPlatform.kt` (review of the
+  Prime Video connector on `feat/prime-video-platform`).
+- **Finding**: three points — (1) `java.net.http.HttpRequest` was used for the widget
+  pagination instead of the Ktor client from the framework; (2) the payload was navigated
+  through `JsonObject`/`JsonElement`, which the project bans in favor of `@Serializable` DTOs;
+  (3) the `Accept` header carried the raw string `"application/json"` instead of a
+  `ContentType`.
+- **Fix**: the widget endpoint now goes through a dedicated `SmartHttpClient` wrapping a Ktor
+  `HttpClient(OkHttp)` built like `createHttpClient()` but with `followRedirects = false` —
+  the bot check's redirect loop is a Ktor `HttpRedirect` plugin artifact, and the redirect-free
+  client negotiates the JSON payload (verified live: 200 vs `SendCountExceedException`). The
+  whole harvest was rewritten on typed DTOs (`PrimeVideoPageResponse`, `PrimeVideoState`,
+  `PrimeVideoEpisodeEntity`, …) matching the other connectors, and the header uses
+  `ContentType.Application.Json.toString()`.
+
+```kotlin
+internal var widgetClient: SmartHttpClient = SmartHttpClient(
+    client = HttpClient(OkHttp) {
+        followRedirects = false
+        install(HttpTimeout) { requestTimeoutMillis = 30_000; connectTimeoutMillis = 10_000; socketTimeoutMillis = 30_000 }
+        install(ContentNegotiation) { json(defaultJson) }
+    }
+)
+
+HttpHeaders.Accept to ContentType.Application.Json.toString()
+```
