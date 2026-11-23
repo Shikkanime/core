@@ -208,3 +208,26 @@ internal var widgetClient: SmartHttpClient = SmartHttpClient(
 
 HttpHeaders.Accept to ContentType.Application.Json.toString()
 ```
+
+### 2026-11-23 — PrimeVideoPlatform: images CDN normalisées aux dimensions canoniques
+
+- **Where**: `jobs/src/main/kotlin/platforms/impl/PrimeVideoPlatform.kt` +
+  `PrimeVideoPlatformTest.kt` + `docs/STREAMING_PLATFORMS.md` (follow-up review on
+  `feat/prime-video-platform`).
+- **Finding**: harvested Prime Video image URLs were raw `pv-target-images` assets whose
+  dimensions vary by role (3840x2160 covershots, 1600x1200/2560x1920 4:3 packshots,
+  960px episode rasters), so stored `BANNER`/`THUMBNAIL` images never matched the
+  canonical `ImageType` dimensions used by the other platforms.
+- **Fix**: `cdnImage()` rewrites Amazon CDN URLs with chained `._<op>_` operations before
+  the file extension — `_UR<w>,<h>_` resizes to the exact box, `_CR<x>,<y>,<w>,<h>_`
+  crops a region. 16:9 sources get `_UR1920,1080_`; 4:3 sources are normalized to a 4:3
+  canvas first, then center-cropped to the target aspect (`_UR3120,2340_CR780,0,1560,2340_`
+  for `THUMBNAIL`, `_UR1920,1440_CR0,180,1920,1080_` for `BANNER`), so art is cropped
+  instead of stretched. Non-CDN or already-transformed URLs pass through unchanged, and
+  the pattern is documented in `docs/STREAMING_PLATFORMS.md` for future platforms.
+
+```kotlin
+private const val CDN_BANNER = "UR1920,1080"
+private const val CDN_BANNER_FROM_4X3 = "UR1920,1440_CR0,180,1920,1080"
+private const val CDN_THUMBNAIL_FROM_4X3 = "UR3120,2340_CR780,0,1560,2340"
+```

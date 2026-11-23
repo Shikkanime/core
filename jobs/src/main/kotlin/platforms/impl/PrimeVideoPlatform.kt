@@ -35,6 +35,15 @@ private const val BASE_URL = "https://www.primevideo.com"
 private const val CLIENT_VERSION = "1.0.132106.0"
 private const val MAX_WIDGET_PAGES = 40
 
+// Amazon image CDN operations chained as `._<op>_<op>_` before the file extension:
+// `_UR<w>,<h>_` resizes to the exact box and `_CR<x>,<y>,<w>,<h>_` crops a region.
+// Prime Video detail payloads only expose landscape rasters (covershot/heroshot,
+// 16:9) and 4:3 rasters (packshot/titleshot), so the canonical ImageType dimensions
+// are reached by cropping the 4:3 sources instead of stretching them.
+private const val CDN_BANNER = "UR1920,1080"
+private const val CDN_BANNER_FROM_4X3 = "UR1920,1440_CR0,180,1920,1080"
+private const val CDN_THUMBNAIL_FROM_4X3 = "UR3120,2340_CR780,0,1560,2340"
+
 // The Prime Video frontend rejects requests carrying the default HTTP client user agent with
 // redirect loops on its API endpoints; a desktop browser agent is required to negotiate the
 // JSON representations of the detail pages and widget payloads.
@@ -258,9 +267,11 @@ class PrimeVideoPlatform(
             title = header.title,
             parentTitle = header.parentTitle,
             synopsis = header.synopsis,
-            bannerImage = showImages?.covershot?.takeIf(String::isNotBlank),
-            thumbnailImage = (showImages?.packshot ?: showImages?.titleshot)
-                ?.takeIf(String::isNotBlank),
+            bannerImage = showImages?.covershot
+                ?.let { cdnImage(it, CDN_BANNER) },
+            thumbnailImage = listOfNotNull(showImages?.packshot, showImages?.titleshot)
+                .firstOrNull(String::isNotBlank)
+                ?.let { cdnImage(it, CDN_THUMBNAIL_FROM_4X3) },
             logoImage = showImages?.titleLogo?.takeIf(String::isNotBlank),
             isMovie = header.entityType == "Movie" || header.titleType == "movie"
         )
@@ -1055,9 +1066,7 @@ private fun PrimeVideoHeader.toEpisodeCard(
         releaseDate = releaseDate,
         audioTracks = audioTracks,
         subtitles = subtitles,
-        imageUrl = images?.covershot?.takeIf(String::isNotBlank)
-            ?: images?.packshot?.takeIf(String::isNotBlank)
-            ?: images?.titleshot?.takeIf(String::isNotBlank),
+        imageUrl = images.bannerImageUrl(),
         isUpcoming = false,
         isLaunched = true
     )
@@ -1096,13 +1105,51 @@ private fun PrimeVideoEpisodeEntity.toEpisodeCard(
         releaseDate = releaseDate,
         audioTracks = audioTracks,
         subtitles = subtitles,
-        imageUrl = images?.covershot?.takeIf(String::isNotBlank)
-            ?: images?.packshot?.takeIf(String::isNotBlank)
-            ?: images?.titleshot?.takeIf(String::isNotBlank),
+        imageUrl = images.bannerImageUrl(),
         isUpcoming = metadata?.traits?.isNotEmpty() == true &&
             !metadata.upcomingSynopsis.isNullOrBlank(),
         isLaunched = self?.isLaunched != false
     )
+}
+
+/**
+ * Selects the landscape image of an episode card and normalizes it to the banner dimensions.
+ *
+ * Covershots are 16:9 rasters resized directly; packshots and titleshots are 4:3 rasters
+ * cropped to 16:9 first so the result is not stretched.
+ *
+ * @return The normalized image URL, or `null` when the card carries no usable image.
+ */
+private fun PrimeVideoImages?.bannerImageUrl(): String? {
+    this ?: return null
+    covershot?.takeIf(String::isNotBlank)?.let { return cdnImage(it, CDN_BANNER) }
+    val fallback = packshot?.takeIf(String::isNotBlank)
+        ?: titleshot?.takeIf(String::isNotBlank)
+    return fallback?.let { cdnImage(it, CDN_BANNER_FROM_4X3) }
+}
+
+/**
+ * Rewrites a raw Amazon image URL into canonical dimensions through CDN operations.
+ *
+ * Prime Video detail payloads carry unresized `pv-target-images` assets whose aspect
+ * ratio varies by role. Amazon's image service applies chained `._<op>_` operations
+ * before the file extension, so the [operations] string is inserted there. URLs that
+ * are not served by the Amazon image CDN, or that already carry operations, are
+ * returned unchanged.
+ *
+ * @param url The raw image URL found in a Prime Video payload.
+ * @param operations The CDN operations to append, joined by `_` without surrounding
+ * underscores (e.g. `UR1920,1080`).
+ * @return The normalized image URL, or `null` when [url] is null or blank.
+ */
+private fun cdnImage(url: String?, operations: String): String? {
+    val trimmed = url?.takeIf(String::isNotBlank) ?: return null
+    if (!trimmed.contains("media-amazon.com/images/")) return trimmed
+    val extensionDot = trimmed.lastIndexOf('.')
+    if (extensionDot <= 0) return trimmed
+    val base = trimmed.substring(0, extensionDot)
+    if (base.contains("._")) return trimmed
+    return "$base._${operations}_.${trimmed.substring(extensionDot + 1)}"
 }
 
 /**

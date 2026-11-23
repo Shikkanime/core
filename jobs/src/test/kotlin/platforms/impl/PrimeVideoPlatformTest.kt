@@ -335,7 +335,8 @@ class PrimeVideoPlatformTest {
             )
             assertFalse(episode.uncensored)
             assertEquals(
-                "https://m.media-amazon.com/images/S/pv-target-images/episode1.png",
+                "https://m.media-amazon.com/images/S/pv-target-images/" +
+                    "episode1._UR1920,1080_.png",
                 episode.image
             )
             assertEquals(
@@ -362,8 +363,11 @@ class PrimeVideoPlatformTest {
             val anime = episodes.first().anime
             assertEquals(
                 listOf(
-                    ImageType.BANNER to "https://m.media-amazon.com/images/covershot.jpg",
-                    ImageType.THUMBNAIL to "https://m.media-amazon.com/images/packshot.jpg",
+                    ImageType.BANNER to
+                        "https://m.media-amazon.com/images/covershot._UR1920,1080_.jpg",
+                    ImageType.THUMBNAIL to
+                        "https://m.media-amazon.com/images/" +
+                            "packshot._UR3120,2340_CR780,0,1560,2340_.jpg",
                     ImageType.TITLE to "https://m.media-amazon.com/images/titlelogo.png"
                 ),
                 anime.images.map { it.type to it.url }
@@ -373,6 +377,82 @@ class PrimeVideoPlatformTest {
             assertEquals(Locale.FR_FR, localization.locale)
             assertEquals("Boruto - Naruto Next Generations", localization.title)
             assertEquals("La suite de Naruto.", localization.description)
+        }
+
+        @Test
+        @DisplayName("should normalize the image URLs to canonical CDN dimensions")
+        fun shouldNormalizeTheImageUrlsToCanonicalCdnDimensions() = runTest {
+            // Given
+            val header = """{"title":"Show","synopsis":"S.","entityType":"TV Show",""" +
+                """"titleType":"season","seasonNumber":1,""" +
+                """"images":{"packshot":"https://m.media-amazon.com/images/S/""" +
+                """pv-target-images/poster4x3.jpg","titleshot":"",""" +
+                """"titleLogo":"https://m.media-amazon.com/images/S/pv-target-images/logo.png"}}"""
+            val packshotEpisode = """{"title":"Episode 1","synopsis":"S.","titleType":"episode",""" +
+                """"episodeNumber":1,"duration":1430,"releaseDate":"28 mai 2018",""" +
+                """"audioTracks":["Français","日本語"],"subtitles":["Français [CC]"],""" +
+                """"images":{"packshot":"https://m.media-amazon.com/images/S/""" +
+                """pv-target-images/ep4x3.png","titleshot":"https://cdn.example.com/x.jpg"}}"""
+            val page = """{"body":{"atf":{"state":${atfState(seasons = "{}", header = header)}}""" +
+                ""","btf":{"state":${btfState(
+                    episodes = """"amzn1.dv.gti.packshotEpisode":$packshotEpisode""",
+                    selves = selves("packshotEpisode"),
+                    metadatas = metadatas("packshotEpisode")
+                )}}}}"""
+            val client = smartHttpClient(pages = mapOf(SHOW_ID to page))
+
+            // When
+            val episodes = harvest(client)
+
+            // Then
+            val anime = episodes.first().anime
+            assertEquals(
+                listOf(
+                    ImageType.THUMBNAIL to
+                        "https://m.media-amazon.com/images/S/pv-target-images/" +
+                            "poster4x3._UR3120,2340_CR780,0,1560,2340_.jpg",
+                    ImageType.TITLE to
+                        "https://m.media-amazon.com/images/S/pv-target-images/logo.png"
+                ),
+                anime.images.map { it.type to it.url }
+            )
+            assertEquals(
+                "https://m.media-amazon.com/images/S/pv-target-images/" +
+                    "ep4x3._UR1920,1440_CR0,180,1920,1080_.png",
+                episodes.single().image
+            )
+        }
+
+        @Test
+        @DisplayName("should leave non-Amazon and already transformed image URLs unchanged")
+        fun shouldLeaveForeignImageUrlsUnchanged() = runTest {
+            // Given
+            val header = """{"title":"Show","synopsis":"S.","entityType":"TV Show",""" +
+                """"titleType":"season","seasonNumber":1,""" +
+                """"images":{"covershot":"https://cdn.example.com/cover.jpg",""" +
+                """"packshot":"https://m.media-amazon.com/images/S/pv-target-images/""" +
+                """poster._UR2000,3000_CLs%7C2000,3000%7C_.jpg"}}"""
+            val page = """{"body":{"atf":{"state":${atfState(seasons = "{}", header = header)}}""" +
+                ""","btf":{"state":${btfState(
+                    episodes = episodeEntities("episode1"),
+                    selves = selves("episode1"),
+                    metadatas = metadatas("episode1")
+                )}}}}"""
+            val client = smartHttpClient(pages = mapOf(SHOW_ID to page))
+
+            // When
+            val episodes = harvest(client)
+
+            // Then
+            assertEquals(
+                listOf(
+                    ImageType.BANNER to "https://cdn.example.com/cover.jpg",
+                    ImageType.THUMBNAIL to
+                        "https://m.media-amazon.com/images/S/pv-target-images/" +
+                            "poster._UR2000,3000_CLs%7C2000,3000%7C_.jpg"
+                ),
+                episodes.first().anime.images.map { it.type to it.url }
+            )
         }
 
         @Test

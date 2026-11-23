@@ -101,6 +101,18 @@ There is no universal scraping recipe; pick the cheapest reliable source:
   catalog, carry the known identifiers as a default set in the connector (Prime Video does
   this with `DEFAULT_SHOW_IDS`, migrated from the production database).
 
+**Image normalization.** `ImageType` declares canonical dimensions (`THUMBNAIL` 1560x2340,
+`BANNER` 1920x1080, `TITLE` flexible height) that platform payloads rarely match directly.
+Prime Video only exposes unresized `pv-target-images` rasters (16:9 covershots, 4:3
+packshots), so `PrimeVideoPlatform.cdnImage` rewrites the URL with Amazon CDN operations
+chained as `._<op>_` before the extension: `_UR<w>,<h>_` resizes to the exact box and
+`_CR<x>,<y>,<w>,<h>_` crops a region. Normalizing a 4:3 source to a 2:3 thumbnail goes
+through an intermediate 4:3 canvas (`_UR3120,2340_CR780,0,1560,2340_`) so the crop
+coordinates stay valid for any source size and the art is cropped, not stretched. Apply
+the rewrite where the raw DTO is mapped to the domain model, keep non-CDN or
+already-transformed URLs untouched, and cover each role (banner, thumbnail, episode
+image, logo) with unit tests.
+
 Structure the harvest in three stages, like the existing connectors:
 
 1. Fetch raw payloads per country/language (`fetchPage`, `fetchWidgets`...).
