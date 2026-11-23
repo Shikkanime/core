@@ -6,5 +6,8 @@ part of 'image_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-ImageModel _$ImageModelFromJson(Map<String, dynamic> json) =>
-    ImageModel(json['type'] as String, json['url'] as String);
+ImageModel _$ImageModelFromJson(Map<String, dynamic> json) => ImageModel(
+  json['type'] as String,
+  json['url'] as String,
+  manual: json['manual'] as bool? ?? false,
+);

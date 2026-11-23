@@ -66,7 +66,12 @@ class _AnimeDetailViewState extends State<AnimeDetailView> {
                     onRetry: viewModel.load,
                   )
                 else if (viewModel.anime != null)
-                  AnimeHeader(anime: viewModel.anime!),
+                  AnimeHeader(
+                    anime: viewModel.anime!,
+                    isSavingImage: viewModel.isSavingImage,
+                    onUpdateImage: viewModel.updateImage,
+                    onResetImage: viewModel.resetImage,
+                  ),
                 const SizedBox(height: 24),
                 Row(
                   children: [

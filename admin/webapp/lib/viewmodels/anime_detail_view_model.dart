@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shikkanime_admin/core/network/api_result.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
+import 'package:shikkanime_admin/models/image/image_model.dart';
 import 'package:shikkanime_admin/models/paged_result.dart';
 import 'package:shikkanime_admin/models/episode/episode_summary_model.dart';
 import 'package:shikkanime_admin/repositories/anime_repository.dart';
@@ -29,6 +30,7 @@ class AnimeDetailViewModel extends ChangeNotifier {
   int _episodeRequestId = 0;
   bool _animeLoading = false;
   bool _episodesLoading = false;
+  bool _savingImage = false;
   String? _animeError;
   String? _episodesError;
   int _page = 1;
@@ -44,6 +46,9 @@ class AnimeDetailViewModel extends ChangeNotifier {
   bool get isAnimeLoading => _animeLoading;
 
   bool get isEpisodesLoading => _episodesLoading;
+
+  /// Whether an artwork override or release is in flight.
+  bool get isSavingImage => _savingImage;
 
   String? get animeError => _animeError;
 
@@ -125,5 +130,41 @@ class AnimeDetailViewModel extends ChangeNotifier {
     if (target == _page && !_episodesLoading) return;
 
     loadEpisodes(target);
+  }
+
+  /// Overrides the artwork of one type of the anime.
+  ///
+  /// The image is marked as manually managed, so platform harvests keep it. Returns `null` on
+  /// success, or the error message to display.
+  Future<String?> updateImage(ImageModel image, String url) => _mutateImage(
+    () => _animeRepository.updateImage(animeId, image.type, url),
+  );
+
+  /// Releases the manual management of one artwork of the anime.
+  ///
+  /// The current URL is kept until a platform harvest replaces it. Returns `null` on success,
+  /// or the error message to display.
+  Future<String?> resetImage(ImageModel image) =>
+      _mutateImage(() => _animeRepository.resetImage(animeId, image.type));
+
+  Future<String?> _mutateImage(
+    Future<ApiResult<ImageModel>> Function() call,
+  ) async {
+    _savingImage = true;
+    notifyListeners();
+
+    final result = await call();
+
+    _savingImage = false;
+
+    switch (result) {
+      case ApiSuccess<ImageModel>():
+        // Reload the aggregate so the artwork section reflects the stored row
+        await _loadAnime();
+        return null;
+      case ApiFailure<ImageModel>(:final error):
+        notifyListeners();
+        return error;
+    }
   }
 }

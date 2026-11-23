@@ -3,6 +3,7 @@ import 'package:shikkanime_admin/core/network/http_client.dart';
 import 'package:shikkanime_admin/core/network/schemas.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
 import 'package:shikkanime_admin/models/anime/anime_summary_model.dart';
+import 'package:shikkanime_admin/models/image/image_model.dart';
 import 'package:shikkanime_admin/models/paged_result.dart';
 
 /// Reads the stored anime catalog.
@@ -52,6 +53,51 @@ class AnimeRepository {
       ApiSuccess<Map<String, dynamic>>(:final data) =>
         ApiSuccess<AnimeDetailModel>(AnimeDetailModel.fromJson(data)),
       ApiFailure<Map<String, dynamic>> failure => ApiFailure<AnimeDetailModel>(
+        failure.error,
+        failure.statusCode,
+      ),
+    };
+  }
+
+  /// Overrides the artwork of one type of an anime and marks it as manually managed.
+  ///
+  /// A manual image is never replaced by a platform harvest until [resetImage] releases it.
+  Future<ApiResult<ImageModel>> updateImage(
+    String animeId,
+    String type,
+    String url,
+  ) async {
+    final response = await _httpClient.patch<Map<String, dynamic>>(
+      'v1/animes/$animeId/images/$type',
+      body: {'url': url},
+      protoSchema: imageSchema,
+    );
+
+    return switch (response) {
+      ApiSuccess<Map<String, dynamic>>(:final data) => ApiSuccess<ImageModel>(
+        ImageModel.fromJson(data),
+      ),
+      ApiFailure<Map<String, dynamic>> failure => ApiFailure<ImageModel>(
+        failure.error,
+        failure.statusCode,
+      ),
+    };
+  }
+
+  /// Releases the manual management of one artwork of an anime.
+  ///
+  /// The current URL is kept until a platform harvest replaces it.
+  Future<ApiResult<ImageModel>> resetImage(String animeId, String type) async {
+    final response = await _httpClient.post<Map<String, dynamic>>(
+      'v1/animes/$animeId/images/$type/reset',
+      protoSchema: imageSchema,
+    );
+
+    return switch (response) {
+      ApiSuccess<Map<String, dynamic>>(:final data) => ApiSuccess<ImageModel>(
+        ImageModel.fromJson(data),
+      ),
+      ApiFailure<Map<String, dynamic>> failure => ApiFailure<ImageModel>(
         failure.error,
         failure.statusCode,
       ),

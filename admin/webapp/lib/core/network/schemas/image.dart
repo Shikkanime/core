@@ -7,4 +7,5 @@ const imageTypeValues = ['THUMBNAIL', 'BANNER', 'TITLE'];
 const imageSchema = ProtoSchema({
   1: ProtoField('type', ProtoKind.enumeration, enumValues: imageTypeValues),
   2: ProtoField('url', ProtoKind.string),
+  3: ProtoField('manual', ProtoKind.boolean),
 });

@@ -495,6 +495,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{value, select, ANILIST{AniList} MYANIMELIST{MyAnimeList} ANIDB{AniDB} other{{value}}}'**
   String metadataPlatformName(String value);
+
+  /// No description provided for @editArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit artwork'**
+  String get editArtwork;
+
+  /// No description provided for @editImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {type} artwork'**
+  String editImageTitle(String type);
+
+  /// No description provided for @imageUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Image URL'**
+  String get imageUrl;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @manualArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get manualArtwork;
+
+  /// No description provided for @releaseArtworkOverride.
+  ///
+  /// In en, this message translates to:
+  /// **'Release override'**
+  String get releaseArtworkOverride;
+
+  /// No description provided for @artworkUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork updated'**
+  String get artworkUpdated;
+
+  /// No description provided for @artworkReleased.
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork released to platform harvests'**
+  String get artworkReleased;
 }
 
 class _AppLocalizationsDelegate

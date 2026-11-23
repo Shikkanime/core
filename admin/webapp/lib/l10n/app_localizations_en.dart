@@ -293,4 +293,33 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get editArtwork => 'Edit artwork';
+
+  @override
+  String editImageTitle(String type) {
+    return 'Edit $type artwork';
+  }
+
+  @override
+  String get imageUrl => 'Image URL';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get manualArtwork => 'Manual';
+
+  @override
+  String get releaseArtworkOverride => 'Release override';
+
+  @override
+  String get artworkUpdated => 'Artwork updated';
+
+  @override
+  String get artworkReleased => 'Artwork released to platform harvests';
 }

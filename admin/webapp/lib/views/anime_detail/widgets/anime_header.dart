@@ -4,13 +4,30 @@ import 'package:shikkanime_admin/core/widgets/detail_widgets.dart';
 import 'package:shikkanime_admin/core/widgets/metadata_link_chips.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
+import 'package:shikkanime_admin/models/image/image_model.dart';
+import 'package:shikkanime_admin/views/anime_detail/widgets/image_artwork_row.dart';
 import 'package:shikkanime_admin/views/anime_detail/widgets/localization_block.dart';
 
 /// Card of one anime: its identity, audit columns, platforms, translations and artwork.
 class AnimeHeader extends StatelessWidget {
-  const AnimeHeader({super.key, required this.anime});
+  const AnimeHeader({
+    super.key,
+    required this.anime,
+    required this.isSavingImage,
+    required this.onUpdateImage,
+    required this.onResetImage,
+  });
 
   final AnimeDetailModel anime;
+
+  /// Whether an artwork mutation is in flight; the edit actions stay disabled meanwhile.
+  final bool isSavingImage;
+
+  /// Overrides the artwork of one type; returns `null` on success or the error to display.
+  final Future<String?> Function(ImageModel image, String url) onUpdateImage;
+
+  /// Releases the manual management of one artwork; same result contract as [onUpdateImage].
+  final Future<String?> Function(ImageModel image) onResetImage;
 
   @override
   Widget build(BuildContext context) {
@@ -78,12 +95,11 @@ class AnimeHeader extends StatelessWidget {
               const EmptyDetailValue()
             else
               for (final image in anime.images)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: SelectableText(
-                    '${localizations.imageTypeName(image.type)} — ${image.url}',
-                    style: theme.textTheme.bodySmall,
-                  ),
+                ImageArtworkRow(
+                  image: image,
+                  enabled: !isSavingImage,
+                  onSubmit: (url) => onUpdateImage(image, url),
+                  onReset: () => onResetImage(image),
                 ),
           ],
         ),

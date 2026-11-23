@@ -149,5 +149,21 @@
         "type": "String"
       }
     }
-  }
+  },
+  "editArtwork": "Edit artwork",
+  "editImageTitle": "Edit {type} artwork",
+  "@editImageTitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "imageUrl": "Image URL",
+  "save": "Save",
+  "cancel": "Cancel",
+  "manualArtwork": "Manual",
+  "releaseArtworkOverride": "Release override",
+  "artworkUpdated": "Artwork updated",
+  "artworkReleased": "Artwork released to platform harvests"
 }

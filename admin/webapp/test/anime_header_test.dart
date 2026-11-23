@@ -23,7 +23,14 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: SingleChildScrollView(child: AnimeHeader(anime: anime)),
+          body: SingleChildScrollView(
+            child: AnimeHeader(
+              anime: anime,
+              isSavingImage: false,
+              onUpdateImage: (_, _) async => null,
+              onResetImage: (_) async => null,
+            ),
+          ),
         ),
       ),
     );

@@ -13,7 +13,8 @@ import 'package:shikkanime_admin/viewmodels/settings_view_model.dart';
 ///
 /// Builds the URI from [EnvConfig.apiBaseUrl], enforces [timeout], checks the status and decodes
 /// the body with the format selected in [SettingsViewModel]: JSON, Protobuf or CBOR. The decoded
-/// value keeps the map shape the models already parse, whatever the transport.
+/// value keeps the map shape the models already parse, whatever the transport. Write requests
+/// always send a JSON body; the selected format only drives the response decoding.
 class HttpClient {
   HttpClient(
     this._settings, {
@@ -70,17 +71,35 @@ class HttpClient {
     return decodeProtobuf(response.bodyBytes, protoSchema);
   }
 
-  Future<ApiResult<T>> get<T>(
+  Future<http.Response> _send(
+    String method,
+    Uri uri, {
+    Map<String, dynamic>? body,
+  }) {
+    final headers = <String, String>{
+      'Accept': _settings.format.acceptHeader,
+      if (body != null) 'Content-Type': 'application/json',
+    };
+    final encodedBody = body == null ? null : jsonEncode(body);
+
+    return switch (method) {
+      'PATCH' => _client.patch(uri, headers: headers, body: encodedBody),
+      'POST' => _client.post(uri, headers: headers, body: encodedBody),
+      _ => _client.get(uri, headers: headers),
+    }.timeout(timeout);
+  }
+
+  Future<ApiResult<T>> _request<T>(
+    String method,
     String endpoint, {
     Map<String, Object>? queryParameters,
+    Map<String, dynamic>? body,
     ProtoSchema? protoSchema,
   }) async {
     final uri = _buildUri(endpoint, queryParameters);
 
     try {
-      final response = await _client
-          .get(uri, headers: {'Accept': _settings.format.acceptHeader})
-          .timeout(timeout);
+      final response = await _send(method, uri, body: body);
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         return ApiFailure(response.reasonPhrase, response.statusCode);
@@ -91,4 +110,30 @@ class HttpClient {
       return ApiFailure(error.toString());
     }
   }
+
+  /// Sends a GET request and decodes the response.
+  Future<ApiResult<T>> get<T>(
+    String endpoint, {
+    Map<String, Object>? queryParameters,
+    ProtoSchema? protoSchema,
+  }) => _request<T>(
+    'GET',
+    endpoint,
+    queryParameters: queryParameters,
+    protoSchema: protoSchema,
+  );
+
+  /// Sends a PATCH request with a JSON body and decodes the response.
+  Future<ApiResult<T>> patch<T>(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    ProtoSchema? protoSchema,
+  }) => _request<T>('PATCH', endpoint, body: body, protoSchema: protoSchema);
+
+  /// Sends a POST request with an optional JSON body and decodes the response.
+  Future<ApiResult<T>> post<T>(
+    String endpoint, {
+    Map<String, dynamic>? body,
+    ProtoSchema? protoSchema,
+  }) => _request<T>('POST', endpoint, body: body, protoSchema: protoSchema);
 }
