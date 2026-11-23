@@ -502,18 +502,6 @@ abstract class AppLocalizations {
   /// **'Edit artwork'**
   String get editArtwork;
 
-  /// No description provided for @editImageTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit {type} artwork'**
-  String editImageTitle(String type);
-
-  /// No description provided for @imageUrl.
-  ///
-  /// In en, this message translates to:
-  /// **'Image URL'**
-  String get imageUrl;
-
   /// No description provided for @save.
   ///
   /// In en, this message translates to:

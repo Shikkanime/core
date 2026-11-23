@@ -76,17 +76,45 @@ void main() {
     await tester.tap(find.byIcon(Icons.edit_outlined));
     await tester.pumpAndSettle();
 
-    expect(find.text('Edit Thumbnail artwork'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), 'https://new');
-    await tester.tap(find.text('Save'));
+    await tester.tap(find.byIcon(Icons.check));
     await tester.pumpAndSettle();
 
     expect(submitted, 'https://new');
+    expect(find.byType(TextField), findsNothing);
     expect(find.text('Artwork updated'), findsOneWidget);
   });
 
-  testWidgets('does not submit when the dialog is cancelled', (tester) async {
+  testWidgets('submits the edited url on enter', (tester) async {
+    String? submitted;
+
+    await tester.pumpWidget(
+      wrap(
+        ImageArtworkRow(
+          image: const ImageModel(ImageType.TITLE, 'https://a'),
+          enabled: true,
+          onSubmit: (url) async {
+            submitted = url;
+            return null;
+          },
+          onReset: () async => null,
+        ),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.edit_outlined));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'https://new');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(submitted, 'https://new');
+  });
+
+  testWidgets('does not submit when the edit is cancelled', (tester) async {
     var submitted = false;
 
     await tester.pumpWidget(
@@ -105,10 +133,13 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.edit_outlined));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel'));
+    await tester.enterText(find.byType(TextField), 'https://new');
+    await tester.tap(find.byIcon(Icons.close));
     await tester.pumpAndSettle();
 
     expect(submitted, isFalse);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.text('https://a'), findsOneWidget);
   });
 
   testWidgets('forwards the release to onReset', (tester) async {

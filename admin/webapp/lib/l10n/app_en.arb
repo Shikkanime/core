@@ -151,15 +151,6 @@
     }
   },
   "editArtwork": "Edit artwork",
-  "editImageTitle": "Edit {type} artwork",
-  "@editImageTitle": {
-    "placeholders": {
-      "type": {
-        "type": "String"
-      }
-    }
-  },
-  "imageUrl": "Image URL",
   "save": "Save",
   "cancel": "Cancel",
   "manualArtwork": "Manual",

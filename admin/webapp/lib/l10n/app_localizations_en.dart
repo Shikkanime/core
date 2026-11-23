@@ -298,14 +298,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editArtwork => 'Edit artwork';
 
   @override
-  String editImageTitle(String type) {
-    return 'Edit $type artwork';
-  }
-
-  @override
-  String get imageUrl => 'Image URL';
-
-  @override
   String get save => 'Save';
 
   @override

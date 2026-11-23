@@ -35,6 +35,16 @@ timer. The state lives in the ViewModel; the widget reads it and forwards events
 - A refresh of an already displayed list keeps the rows and shows a thin progress line.
 - An empty or failed screen uses `EmptyStateView` / `ErrorStateView`, never ad-hoc text.
 
+## Editing a value
+
+- A user-editable value is modified **inline, in place**: the widget swaps the displayed text for
+  a field, Enter (or a check action) submits it and a close action or Escape abandons the change.
+  One click to edit, one to save — never a dialog for a single value.
+- A dialog is reserved for confirmations, destructive actions or a genuine multi-field form.
+- The widget owns the edit state (`_editing`, a `TextEditingController`); the ViewModel owns the
+  mutation. An unchanged value does not call the repository, and the field stays open when the
+  mutation returns an error so the user can fix it.
+
 ## Text and labels
 
 - Every user-visible string comes from `AppLocalizations`. A label that depends on a server enum
