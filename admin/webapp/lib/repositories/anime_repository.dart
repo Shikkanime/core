@@ -3,6 +3,7 @@ import 'package:shikkanime_admin/core/network/http_client.dart';
 import 'package:shikkanime_admin/core/network/schemas.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
 import 'package:shikkanime_admin/models/anime/anime_summary_model.dart';
+import 'package:shikkanime_admin/models/enums/image_type.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
 import 'package:shikkanime_admin/models/paged_result.dart';
 
@@ -64,11 +65,11 @@ class AnimeRepository {
   /// A manual image is never replaced by a platform harvest until [resetImage] releases it.
   Future<ApiResult<ImageModel>> updateImage(
     String animeId,
-    String type,
+    ImageType type,
     String url,
   ) async {
     final response = await _httpClient.patch<Map<String, dynamic>>(
-      'v1/animes/$animeId/images/$type',
+      'v1/animes/$animeId/images/${type.name}',
       body: {'url': url},
       protoSchema: imageModelProtoSchema,
     );
@@ -87,9 +88,12 @@ class AnimeRepository {
   /// Releases the manual management of one artwork of an anime.
   ///
   /// The current URL is kept until a platform harvest replaces it.
-  Future<ApiResult<ImageModel>> resetImage(String animeId, String type) async {
+  Future<ApiResult<ImageModel>> resetImage(
+    String animeId,
+    ImageType type,
+  ) async {
     final response = await _httpClient.post<Map<String, dynamic>>(
-      'v1/animes/$animeId/images/$type/reset',
+      'v1/animes/$animeId/images/${type.name}/reset',
       protoSchema: imageModelProtoSchema,
     );
 

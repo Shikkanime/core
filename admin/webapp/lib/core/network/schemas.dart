@@ -2,8 +2,9 @@
 ///
 /// `kotlinx.serialization` numbers a message field by its declaration order, starting at 1. Each
 /// `@ProtoMessage` model generates its `*.proto.dart` schema at build time; the field order of the
-/// Dart model must mirror the Kotlin DTO declaration order. Models carrying a Kotlin enum mark the
-/// field with `@ProtoEnum`, whose values list the enum constants in their Kotlin order.
+/// Dart model must mirror the Kotlin DTO declaration order. Kotlin enums are mirrored by Dart
+/// enums under `lib/models/enums/` whose constants keep the Kotlin names and declaration order;
+/// the generator excludes their `unknown` fallback from the wire values.
 library;
 
 import 'package:shikkanime_admin/core/network/protobuf_decoder.dart';

@@ -18,7 +18,6 @@ Builder protoSchemaBuilder(BuilderOptions options) =>
 
 class _ProtoSchemaGenerator extends Generator {
   static final _protoMessage = TypeChecker.typeNamed(ProtoMessage);
-  static final _protoEnum = TypeChecker.typeNamed(ProtoEnum);
 
   @override
   String? generate(LibraryReader library, BuildStep buildStep) {
@@ -72,12 +71,11 @@ class _ProtoSchemaGenerator extends Generator {
   ) {
     final type = field.type;
     final nullable = type.nullabilitySuffix == NullabilitySuffix.question;
-    final enumValues = _enumValuesOf(field);
 
     if (_isCoreType(type, 'List')) {
       final argument = (type as InterfaceType).typeArguments.singleOrNull;
+      final enumValues = _enumValuesOf(argument);
       if (enumValues != null) {
-        _requireString(argument, field);
         return _literal(
           field.displayName,
           'enumeration',
@@ -94,8 +92,8 @@ class _ProtoSchemaGenerator extends Generator {
       );
     }
 
+    final enumValues = _enumValuesOf(type);
     if (enumValues != null) {
-      _requireString(type, field);
       return _literal(
         field.displayName,
         'enumeration',
@@ -145,25 +143,20 @@ class _ProtoSchemaGenerator extends Generator {
     );
   }
 
-  /// Reads the enum constant names declared by a [ProtoEnum] annotation on [field].
-  List<String>? _enumValuesOf(FieldElement field) {
-    final object = _protoEnum.firstAnnotationOf(field);
-    if (object == null) return null;
+  /// Reads the wire values of a Dart enum type, or null when [type] is not an enum.
+  ///
+  /// The constants are read in declaration order, which mirrors the Kotlin enum declaration
+  /// order the Protobuf ordinals rely on. The client-side `unknown` fallback is excluded: it
+  /// is never a wire value.
+  List<String>? _enumValuesOf(DartType? type) {
+    if (type is! InterfaceType) return null;
+    final element = type.element;
+    if (element is! EnumElement) return null;
 
-    final values = object
-        .getField('values')
-        ?.toListValue()
-        ?.map((entry) => entry.toStringValue())
-        .whereType<String>()
+    return element.fields
+        .where((field) => field.isEnumConstant && field.name != 'unknown')
+        .map((field) => field.displayName)
         .toList();
-
-    if (values == null || values.isEmpty) {
-      throw StateError(
-        '@ProtoEnum on "${field.enclosingElement.displayName}.${field.name}" '
-        'declares no values',
-      );
-    }
-    return values;
   }
 
   /// Formats one `ProtoField(...)` expression.
@@ -214,16 +207,6 @@ class _ProtoSchemaGenerator extends Generator {
       path = '${path.substring(0, path.length - '.dart'.length)}.proto.dart';
     }
     return 'package:$package/$path';
-  }
-
-  /// Throws when [type] is not `dart:core` `String`.
-  void _requireString(DartType? type, FieldElement field) {
-    if (!_isCoreType(type, 'String')) {
-      throw StateError(
-        '@ProtoEnum on "${field.enclosingElement.displayName}.${field.name}" '
-        'requires a String field, got ${type?.getDisplayString() ?? 'unknown'}',
-      );
-    }
   }
 
   /// Lower camel case of the model class name, used as the schema constant prefix.

@@ -17,6 +17,9 @@ import 'package:shikkanime_admin/core/settings/response_format.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
 import 'package:shikkanime_admin/models/anime/anime_summary_model.dart';
+import 'package:shikkanime_admin/models/enums/content_locale.dart';
+import 'package:shikkanime_admin/models/enums/image_type.dart';
+import 'package:shikkanime_admin/models/enums/platform.dart';
 import 'package:shikkanime_admin/models/episode/episode_summary_model.dart';
 import 'package:shikkanime_admin/models/paged_result.dart';
 import 'package:shikkanime_admin/models/episode/episode_detail_model.dart';
@@ -91,8 +94,8 @@ void main() {
 
       expect(page.data.single.title, "L'Attaque des Titans");
       expect(page.data.single.platforms, [
-        'CRUNCHYROLL',
-        'ANIMATION_DIGITAL_NETWORK',
+        Platform.CRUNCHYROLL,
+        Platform.ANIMATION_DIGITAL_NETWORK,
       ]);
       expect(page.page, 1);
       expect(page.totalPages, 3);
@@ -114,7 +117,7 @@ void main() {
       expect(anime.createdAt, DateTime(2025, 1, 1, 10));
       expect(anime.localizations, hasLength(2));
       expect(anime.platforms, hasLength(2));
-      expect(anime.images.first.type, 'BANNER');
+      expect(anime.images.first.type, ImageType.BANNER);
     });
 
     test('decodes the episode page', () {
@@ -143,7 +146,7 @@ void main() {
       expect(episode.animeId, '00000001-1111-1111-1111-111111111111');
       expect(episode.localizations, hasLength(2));
       expect(episode.releases, hasLength(2));
-      expect(episode.releases.last.audioLocale, 'JA_JP');
+      expect(episode.releases.last.audioLocale, ContentLocale.JA_JP);
       expect(episode.releases.last.uncensored, isTrue);
     });
   });
@@ -194,7 +197,7 @@ void main() {
 
       expect(episode.animeId, '00000001-1111-1111-1111-111111111111');
       expect(episode.releases, hasLength(2));
-      expect(episode.releases.last.audioLocale, 'JA_JP');
+      expect(episode.releases.last.audioLocale, ContentLocale.JA_JP);
       expect(episode.releases.last.uncensored, isTrue);
     });
   });

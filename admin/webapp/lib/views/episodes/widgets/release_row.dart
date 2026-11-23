@@ -19,7 +19,7 @@ class ReleaseRow extends StatelessWidget {
     final localizations = AppLocalizations.of(context)!;
     final identity = localizations.episodeIdentity(
       episode.season,
-      localizations.episodeTypeName(episode.episodeType),
+      localizations.episodeTypeName(episode.episodeType.name),
       episode.number,
     );
     final metadata = [

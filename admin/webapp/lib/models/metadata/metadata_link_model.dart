@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/core/network/proto/annotations.dart';
-import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
+import 'package:shikkanime_admin/models/enums/metadata_platform.dart';
 
 part 'metadata_link_model.g.dart';
 
@@ -9,9 +9,8 @@ part 'metadata_link_model.g.dart';
 @ProtoMessage()
 @JsonSerializable(createToJson: false)
 class MetadataLinkModel {
-  /// Metadata platform owning the entry, as the Kotlin enum name.
-  @ProtoEnum(metadataPlatformValues)
-  final String platform;
+  @JsonKey(unknownEnumValue: MetadataPlatform.unknown)
+  final MetadataPlatform platform;
 
   /// Identifier of the entry on the platform.
   ///
@@ -46,9 +45,9 @@ class MetadataLinkModel {
     if (id == null) return null;
 
     return switch (platform) {
-      'ANILIST' => 'https://anilist.co/anime/$id',
-      'MYANIMELIST' => 'https://myanimelist.net/anime/$id',
-      'ANIDB' => 'https://anidb.net/anime/$id',
+      MetadataPlatform.ANILIST => 'https://anilist.co/anime/$id',
+      MetadataPlatform.MYANIMELIST => 'https://myanimelist.net/anime/$id',
+      MetadataPlatform.ANIDB => 'https://anidb.net/anime/$id',
       _ => null,
     };
   }
@@ -61,9 +60,9 @@ class MetadataLinkModel {
 
     return switch (platform) {
       // platformId is "{animeId}/{episodeNumber}" on MyAnimeList.
-      'MYANIMELIST' => _malEpisodeUrl(animeId),
+      MetadataPlatform.MYANIMELIST => _malEpisodeUrl(animeId),
       // platformId is the AniDB episode `eid`.
-      'ANIDB' =>
+      MetadataPlatform.ANIDB =>
         'https://anidb.net/perl-bin/animedb.pl'
             '?show=ep&aid=$animeId&eid=$platformId',
       _ => null,

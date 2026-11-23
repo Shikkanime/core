@@ -41,7 +41,9 @@ class EpisodeContent extends StatelessWidget {
                 ),
                 DetailInfoRow(
                   label: localizations.episodeType,
-                  value: localizations.episodeTypeName(episode.episodeType),
+                  value: localizations.episodeTypeName(
+                    episode.episodeType.name,
+                  ),
                 ),
                 DetailInfoRow(
                   label: localizations.number,
@@ -174,7 +176,7 @@ class EpisodeContent extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: SelectableText(
-                        '${localizations.imageTypeName(image.type)} — '
+                        '${localizations.imageTypeName(image.type.name)} — '
                         '${image.url}',
                         style: theme.textTheme.bodySmall,
                       ),

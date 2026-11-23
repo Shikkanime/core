@@ -5,5 +5,7 @@
 /// derived from a string itself live here.
 library;
 
-/// Language code of an audio locale, reduced to its language (`FR_FR` reads `FR`).
-String localeLabel(String value) => value.split('_').first;
+import 'package:shikkanime_admin/models/enums/content_locale.dart';
+
+/// Language code of a content locale, reduced to its language (`FR_FR` reads `FR`).
+String localeLabel(ContentLocale value) => value.name.split('_').first;

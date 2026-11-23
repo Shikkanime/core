@@ -25,7 +25,7 @@ class ReleaseBlock extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${localizations.platformName(release.platform)} · '
+                  '${localizations.platformName(release.platform.name)} · '
                   '${localeLabel(release.audioLocale)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,

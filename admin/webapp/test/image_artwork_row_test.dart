@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
+import 'package:shikkanime_admin/models/enums/image_type.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
 import 'package:shikkanime_admin/views/anime_detail/widgets/image_artwork_row.dart';
 
@@ -17,7 +18,11 @@ void main() {
       await tester.pumpWidget(
         wrap(
           ImageArtworkRow(
-            image: const ImageModel('THUMBNAIL', 'https://a', manual: true),
+            image: const ImageModel(
+              ImageType.THUMBNAIL,
+              'https://a',
+              manual: true,
+            ),
             enabled: true,
             onSubmit: (_) async => null,
             onReset: () async => null,
@@ -37,7 +42,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           ImageArtworkRow(
-            image: const ImageModel('BANNER', 'https://a'),
+            image: const ImageModel(ImageType.BANNER, 'https://a'),
             enabled: true,
             onSubmit: (_) async => null,
             onReset: () async => null,
@@ -57,7 +62,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         ImageArtworkRow(
-          image: const ImageModel('THUMBNAIL', 'https://a'),
+          image: const ImageModel(ImageType.THUMBNAIL, 'https://a'),
           enabled: true,
           onSubmit: (url) async {
             submitted = url;
@@ -87,7 +92,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         ImageArtworkRow(
-          image: const ImageModel('TITLE', 'https://a'),
+          image: const ImageModel(ImageType.TITLE, 'https://a'),
           enabled: true,
           onSubmit: (_) async {
             submitted = true;
@@ -112,7 +117,11 @@ void main() {
     await tester.pumpWidget(
       wrap(
         ImageArtworkRow(
-          image: const ImageModel('THUMBNAIL', 'https://a', manual: true),
+          image: const ImageModel(
+            ImageType.THUMBNAIL,
+            'https://a',
+            manual: true,
+          ),
           enabled: true,
           onSubmit: (_) async => null,
           onReset: () async {
@@ -136,7 +145,7 @@ void main() {
     await tester.pumpWidget(
       wrap(
         ImageArtworkRow(
-          image: const ImageModel('THUMBNAIL', 'https://a'),
+          image: const ImageModel(ImageType.THUMBNAIL, 'https://a'),
           enabled: false,
           onSubmit: (_) async => null,
           onReset: () async => null,

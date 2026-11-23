@@ -10,7 +10,11 @@ EpisodeSummaryModel _$EpisodeSummaryModelFromJson(Map<String, dynamic> json) =>
     EpisodeSummaryModel(
       json['id'] as String,
       (json['season'] as num).toInt(),
-      json['episodeType'] as String,
+      $enumDecode(
+        _$EpisodeTypeEnumMap,
+        json['episodeType'],
+        unknownValue: EpisodeType.unknown,
+      ),
       (json['number'] as num).toInt(),
       DateTime.parse(json['releaseDateTime'] as String),
       (json['duration'] as num).toInt(),
@@ -18,3 +22,12 @@ EpisodeSummaryModel _$EpisodeSummaryModelFromJson(Map<String, dynamic> json) =>
       (json['releaseCount'] as num).toInt(),
       (json['localizationCount'] as num).toInt(),
     );
+
+const _$EpisodeTypeEnumMap = {
+  EpisodeType.EPISODE: 'EPISODE',
+  EpisodeType.FILM: 'FILM',
+  EpisodeType.SPECIAL: 'SPECIAL',
+  EpisodeType.SUMMARY: 'SUMMARY',
+  EpisodeType.SPIN_OFF: 'SPIN_OFF',
+  EpisodeType.unknown: 'unknown',
+};

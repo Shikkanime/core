@@ -28,7 +28,7 @@ class ImageArtworkRow extends StatelessWidget {
       context: context,
       builder: (context) => ImageUrlDialog(
         title: localizations.editImageTitle(
-          localizations.imageTypeName(image.type),
+          localizations.imageTypeName(image.type.name),
         ),
         initialUrl: image.url,
       ),
@@ -77,7 +77,7 @@ class ImageArtworkRow extends StatelessWidget {
           ],
           Expanded(
             child: SelectableText(
-              '${localizations.imageTypeName(image.type)} — ${image.url}',
+              '${localizations.imageTypeName(image.type.name)} — ${image.url}',
               style: theme.textTheme.bodySmall,
             ),
           ),

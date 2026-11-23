@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/core/network/proto/annotations.dart';
-import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
+import 'package:shikkanime_admin/models/enums/episode_type.dart';
 import 'package:shikkanime_admin/models/episode/episode_localization_model.dart';
 import 'package:shikkanime_admin/models/episode/episode_release_model.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
@@ -18,8 +18,8 @@ class EpisodeDetailModel implements ShikkModel {
   final String? animeId;
   final int season;
 
-  @ProtoEnum(episodeTypeValues)
-  final String episodeType;
+  @JsonKey(unknownEnumValue: EpisodeType.unknown)
+  final EpisodeType episodeType;
   final int number;
   final DateTime releaseDateTime;
   final int duration;
@@ -57,7 +57,8 @@ class EpisodeDetailModel implements ShikkModel {
   /// Title displayed for the episode: the French one when it exists, the first one otherwise.
   String? get displayTitle {
     for (final localization in localizations) {
-      if (localization.locale.startsWith('FR') && localization.title != null) {
+      if (localization.locale.name.startsWith('FR') &&
+          localization.title != null) {
         return localization.title;
       }
     }

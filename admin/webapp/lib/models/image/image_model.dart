@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/core/network/proto/annotations.dart';
-import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
+import 'package:shikkanime_admin/models/enums/image_type.dart';
 
 part 'image_model.g.dart';
 
@@ -10,8 +10,8 @@ part 'image_model.g.dart';
 ///
 /// A [manual] image was set by an administrator and is never replaced by a platform harvest.
 class ImageModel {
-  @ProtoEnum(imageTypeValues)
-  final String type;
+  @JsonKey(unknownEnumValue: ImageType.unknown)
+  final ImageType type;
   final String url;
 
   @JsonKey(defaultValue: false)

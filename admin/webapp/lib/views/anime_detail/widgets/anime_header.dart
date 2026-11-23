@@ -63,7 +63,7 @@ class AnimeHeader extends StatelessWidget {
                     Chip(
                       visualDensity: VisualDensity.compact,
                       label: Text(
-                        '${localizations.platformName(platform.platform)} '
+                        '${localizations.platformName(platform.platform.name)} '
                         '#${platform.platformId}',
                       ),
                     ),

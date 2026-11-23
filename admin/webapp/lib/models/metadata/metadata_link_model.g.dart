@@ -8,7 +8,18 @@ part of 'metadata_link_model.dart';
 
 MetadataLinkModel _$MetadataLinkModelFromJson(Map<String, dynamic> json) =>
     MetadataLinkModel(
-      json['platform'] as String,
+      $enumDecode(
+        _$MetadataPlatformEnumMap,
+        json['platform'],
+        unknownValue: MetadataPlatform.unknown,
+      ),
       json['platformId'] as String,
       json['platformAnimeId'] as String?,
     );
+
+const _$MetadataPlatformEnumMap = {
+  MetadataPlatform.ANILIST: 'ANILIST',
+  MetadataPlatform.MYANIMELIST: 'MYANIMELIST',
+  MetadataPlatform.ANIDB: 'ANIDB',
+  MetadataPlatform.unknown: 'unknown',
+};

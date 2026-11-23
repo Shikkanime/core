@@ -109,6 +109,8 @@ whole catalog to answer one query and would only see the rows already fetched.
 
 ## Enum values
 
-The server serializes Kotlin enum names (`ANIMATION_DIGITAL_NETWORK`, `FR_FR`, `SPIN_OFF`). They are
-read as `String` and displayed through `lib/core/format/labels.dart`: an enum entry added on the
-server keeps rendering instead of failing a `byName` lookup.
+The server serializes Kotlin enum names (`ANIMATION_DIGITAL_NETWORK`, `FR_FR`, `SPIN_OFF`). Models
+type them with the Dart enums of `lib/models/enums/`, whose constants keep the Kotlin names, and
+display them through the ARB `select` helpers (`platformName`, `episodeTypeName`, …) fed by
+`value.name`: an enum entry added on the server decodes to the `unknown` fallback
+(`@JsonKey(unknownEnumValue: …)`) and keeps rendering instead of failing the parse.

@@ -19,7 +19,7 @@ class AnimeRow extends StatelessWidget {
     final localizations = AppLocalizations.of(context)!;
     final metadata = [
       ...anime.platforms.map(
-        (platform) => localizations.platformName(platform),
+        (platform) => localizations.platformName(platform.name),
       ),
       localizations.localizationCount(anime.localizationCount),
     ].join('  ·  ');

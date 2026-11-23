@@ -29,7 +29,7 @@ class MetadataLinkChips extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             avatar: const Icon(Icons.open_in_new, size: 16),
             label: Text(
-              '${localizations.metadataPlatformName(link.platform)} '
+              '${localizations.metadataPlatformName(link.platform.name)} '
               '#${link.platformId}',
             ),
             onPressed: link.url == null

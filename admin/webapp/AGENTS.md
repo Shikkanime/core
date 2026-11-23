@@ -83,9 +83,10 @@ singleton, no `setState` in a screen that has a ViewModel.
 
 - All API input is untrusted: parse it at the repository boundary, tolerate a `null` title or an
   unknown enum value instead of crashing the screen.
-- Enum values travel as Kotlin names (`ANIMATION_DIGITAL_NETWORK`, `FR_FR`). The admin displays them
-  through the label helpers (`lib/core/format/labels.dart`), never by parsing them into a closed
-  Dart enum: a new platform on the server must keep rendering.
+- Enum values travel as Kotlin names (`ANIMATION_DIGITAL_NETWORK`, `FR_FR`). Models type them with
+  the Dart enums of `lib/models/enums/` (constants keep the Kotlin names, declaration order mirrors
+  Kotlin for the Protobuf ordinals) and tolerate unknown values through the `unknown` fallback wired
+  by `@JsonKey(unknownEnumValue: …)`: a new platform on the server must keep rendering.
 - Never log a token, a password or a personal identifier.
 
 ## 6. Before submitting

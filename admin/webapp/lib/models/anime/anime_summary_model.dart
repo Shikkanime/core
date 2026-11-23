@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/core/network/proto/annotations.dart';
-import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
+import 'package:shikkanime_admin/models/enums/platform.dart';
 
 part 'anime_summary_model.g.dart';
 
@@ -11,8 +11,9 @@ class AnimeSummaryModel {
   final String id;
   final String title;
   final String normalizedTitle;
-  @ProtoEnum(platformValues)
-  final List<String> platforms;
+
+  @JsonKey(unknownEnumValue: Platform.unknown)
+  final List<Platform> platforms;
   final int localizationCount;
 
   const AnimeSummaryModel(

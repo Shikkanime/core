@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/core/network/proto/annotations.dart';
-import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
+import 'package:shikkanime_admin/models/enums/platform.dart';
 
 part 'anime_platform_model.g.dart';
 
@@ -8,8 +8,8 @@ part 'anime_platform_model.g.dart';
 @JsonSerializable(createToJson: false)
 /// Source link of an anime on a streaming platform.
 class AnimePlatformModel {
-  @ProtoEnum(platformValues)
-  final String platform;
+  @JsonKey(unknownEnumValue: Platform.unknown)
+  final Platform platform;
   final String platformId;
 
   const AnimePlatformModel(this.platform, this.platformId);

@@ -12,7 +12,11 @@ EpisodeDetailModel _$EpisodeDetailModelFromJson(
   json['id'] as String,
   json['animeId'] as String?,
   (json['season'] as num).toInt(),
-  json['episodeType'] as String,
+  $enumDecode(
+    _$EpisodeTypeEnumMap,
+    json['episodeType'],
+    unknownValue: EpisodeType.unknown,
+  ),
   (json['number'] as num).toInt(),
   DateTime.parse(json['releaseDateTime'] as String),
   (json['duration'] as num).toInt(),
@@ -36,3 +40,12 @@ EpisodeDetailModel _$EpisodeDetailModelFromJson(
           .toList() ??
       [],
 );
+
+const _$EpisodeTypeEnumMap = {
+  EpisodeType.EPISODE: 'EPISODE',
+  EpisodeType.FILM: 'FILM',
+  EpisodeType.SPECIAL: 'SPECIAL',
+  EpisodeType.SUMMARY: 'SUMMARY',
+  EpisodeType.SPIN_OFF: 'SPIN_OFF',
+  EpisodeType.unknown: 'unknown',
+};

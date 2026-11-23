@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shikkanime_admin/core/network/proto/annotations.dart';
-import 'package:shikkanime_admin/core/network/proto/enum_values.dart';
+import 'package:shikkanime_admin/models/enums/episode_type.dart';
 
 part 'latest_episode_model.g.dart';
 
@@ -17,8 +17,8 @@ class LatestEpisodeModel {
   final String animeTitle;
   final int season;
 
-  @ProtoEnum(episodeTypeValues)
-  final String episodeType;
+  @JsonKey(unknownEnumValue: EpisodeType.unknown)
+  final EpisodeType episodeType;
   final int number;
   final DateTime releaseDateTime;
   final String? title;

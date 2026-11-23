@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shikkanime_admin/models/anime/anime_detail_model.dart';
 import 'package:shikkanime_admin/models/anime/anime_summary_model.dart';
+import 'package:shikkanime_admin/models/enums/image_type.dart';
+import 'package:shikkanime_admin/models/enums/metadata_platform.dart';
 import 'package:shikkanime_admin/models/metadata/metadata_link_model.dart';
 import 'package:shikkanime_admin/models/paged_result.dart';
 
@@ -55,7 +57,7 @@ void main() {
     expect(anime.createdAt, DateTime(2025, 1, 1, 10));
     expect(anime.updatedAt, isNull);
     expect(anime.localizations.single.description, 'Gomu Gomu no Mi');
-    expect(anime.images.single.type, 'BANNER');
+    expect(anime.images.single.type, ImageType.BANNER);
     expect(anime.metadataLinks, isEmpty);
   });
 
@@ -79,29 +81,29 @@ void main() {
 
   test('builds episode page URLs for metadata links', () {
     MetadataLinkModel link(
-      String platform,
+      MetadataPlatform platform,
       String platformId,
       String? animeId,
     ) => MetadataLinkModel(platform, platformId, animeId);
 
     // MyAnimeList platformId is the composite "{animeId}/{episodeNumber}".
     expect(
-      link('MYANIMELIST', '7655/15', '7655').url,
+      link(MetadataPlatform.MYANIMELIST, '7655/15', '7655').url,
       'https://myanimelist.net/anime/7655/15',
     );
     // AniDB platformId is the episode eid, resolved with its parent anime aid.
     expect(
-      link('ANIDB', '118925', '7236').url,
+      link(MetadataPlatform.ANIDB, '118925', '7236').url,
       'https://anidb.net/perl-bin/animedb.pl?show=ep&aid=7236&eid=118925',
     );
     // AniList has no episode entries: the parent anime page is the fallback.
     expect(
-      link('ANILIST', '7655', '7655').url,
+      link(MetadataPlatform.ANILIST, '7655', '7655').url,
       'https://anilist.co/anime/7655',
     );
     // An unparseable MyAnimeList identifier falls back to the anime page too.
     expect(
-      link('MYANIMELIST', '7655', '7655').url,
+      link(MetadataPlatform.MYANIMELIST, '7655', '7655').url,
       'https://myanimelist.net/anime/7655',
     );
   });

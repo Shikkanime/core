@@ -80,9 +80,11 @@ Every model mirroring a Kotlin DTO carries `@ProtoMessage()`; `protoSchemaBuilde
 
 - Field numbers follow the `kotlinx.serialization` convention: declaration order, starting at 1.
   The Dart model must declare its fields in the same order as the Kotlin DTO.
-- A String field carrying a Kotlin enum is marked `@ProtoEnum(values)`; `values` lists the enum
-  constants in their Kotlin declaration order (Protobuf carries the ordinal). The lists live in
-  `lib/core/network/proto/enum_values.dart`.
+- A field carrying a Kotlin enum uses a Dart enum from `lib/models/enums/` whose constants keep
+  the Kotlin names and declaration order — Protobuf carries the ordinal, so the order is part of
+  the wire contract and must not change. Each enum ends with an `unknown` constant, wired through
+  `@JsonKey(unknownEnumValue: …)`, so a value added on the server degrades to `unknown` instead of
+  failing the parse; the generator excludes `unknown` from the Protobuf `enumValues`.
 - Nested models become `ProtoKind.message` automatically; the generated file imports their schema.
 - `lib/core/network/schemas.dart` exports every generated schema and holds **one**
   `pageSchema(ProtoSchema element)` builder, used by every paged endpoint:

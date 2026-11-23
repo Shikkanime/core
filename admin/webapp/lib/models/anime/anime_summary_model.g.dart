@@ -11,6 +11,23 @@ AnimeSummaryModel _$AnimeSummaryModelFromJson(Map<String, dynamic> json) =>
       json['id'] as String,
       json['title'] as String,
       json['normalizedTitle'] as String,
-      (json['platforms'] as List<dynamic>).map((e) => e as String).toList(),
+      (json['platforms'] as List<dynamic>)
+          .map(
+            (e) => $enumDecode(
+              _$PlatformEnumMap,
+              e,
+              unknownValue: Platform.unknown,
+            ),
+          )
+          .toList(),
       (json['localizationCount'] as num).toInt(),
     );
+
+const _$PlatformEnumMap = {
+  Platform.ANIMATION_DIGITAL_NETWORK: 'ANIMATION_DIGITAL_NETWORK',
+  Platform.CRUNCHYROLL: 'CRUNCHYROLL',
+  Platform.DISNEY_PLUS: 'DISNEY_PLUS',
+  Platform.NETFLIX: 'NETFLIX',
+  Platform.PRIME_VIDEO: 'PRIME_VIDEO',
+  Platform.unknown: 'unknown',
+};
