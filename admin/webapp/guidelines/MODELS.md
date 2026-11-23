@@ -84,7 +84,9 @@ Every model mirroring a Kotlin DTO carries `@ProtoMessage()`; `protoSchemaBuilde
   the Kotlin names and declaration order — Protobuf carries the ordinal, so the order is part of
   the wire contract and must not change. Each enum ends with an `unknown` constant, wired through
   `@JsonKey(unknownEnumValue: …)`, so a value added on the server degrades to `unknown` instead of
-  failing the parse; the generator excludes `unknown` from the Protobuf `enumValues`.
+  failing the parse; the generator excludes `unknown` from the Protobuf `enumValues`. When the
+  Dart declaration order cannot mirror Kotlin, `@ProtoEnumOrder([...])` on the enum lists the
+  wire values explicitly in their Kotlin order.
 - Nested models become `ProtoKind.message` automatically; the generated file imports their schema.
 - `lib/core/network/schemas.dart` exports every generated schema and holds **one**
   `pageSchema(ProtoSchema element)` builder, used by every paged endpoint:

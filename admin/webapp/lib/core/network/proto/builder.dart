@@ -18,6 +18,7 @@ Builder protoSchemaBuilder(BuilderOptions options) =>
 
 class _ProtoSchemaGenerator extends Generator {
   static final _protoMessage = TypeChecker.typeNamed(ProtoMessage);
+  static final _protoEnumOrder = TypeChecker.typeNamed(ProtoEnumOrder);
 
   @override
   String? generate(LibraryReader library, BuildStep buildStep) {
@@ -145,13 +146,30 @@ class _ProtoSchemaGenerator extends Generator {
 
   /// Reads the wire values of a Dart enum type, or null when [type] is not an enum.
   ///
-  /// The constants are read in declaration order, which mirrors the Kotlin enum declaration
+  /// A `@ProtoEnumOrder` annotation on the enum wins and lists the values explicitly; otherwise
+  /// the constants are read in declaration order, which mirrors the Kotlin enum declaration
   /// order the Protobuf ordinals rely on. The client-side `unknown` fallback is excluded: it
   /// is never a wire value.
   List<String>? _enumValuesOf(DartType? type) {
     if (type is! InterfaceType) return null;
     final element = type.element;
     if (element is! EnumElement) return null;
+
+    final override = _protoEnumOrder.firstAnnotationOf(element);
+    if (override != null) {
+      final values = override
+          .getField('values')
+          ?.toListValue()
+          ?.map((entry) => entry.toStringValue())
+          .whereType<String>()
+          .toList();
+      if (values == null || values.isEmpty) {
+        throw StateError(
+          '@ProtoEnumOrder on ${element.displayName} declares no values',
+        );
+      }
+      return values;
+    }
 
     return element.fields
         .where((field) => field.isEnumConstant && field.name != 'unknown')

@@ -8,3 +8,17 @@
 class ProtoMessage {
   const ProtoMessage();
 }
+
+/// Overrides the Protobuf wire order of a Dart enum mirroring a Kotlin enum.
+///
+/// By default the generator reads the enum constants in declaration order, which must mirror
+/// the Kotlin enum declaration order. Annotate the enum with this when the Dart declaration
+/// order cannot or should not match: [values] lists the wire values — the Kotlin constant
+/// names — in their Kotlin declaration order. The client-side `unknown` fallback is never
+/// listed.
+class ProtoEnumOrder {
+  const ProtoEnumOrder(this.values);
+
+  /// Wire values in their Kotlin declaration order.
+  final List<String> values;
+}
