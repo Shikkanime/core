@@ -37,13 +37,14 @@ timer. The state lives in the ViewModel; the widget reads it and forwards events
 
 ## Editing a value
 
-- A user-editable value is modified **inline, in place**: the widget swaps the displayed text for
-  a field, Enter (or a check action) submits it and a close action or Escape abandons the change.
-  One click to edit, one to save — never a dialog for a single value.
+- A user-editable value is **a field in place, at all times** — no edit button, no mode switch:
+  the user clicks the value and types. Enter or a focus loss submits it, Escape restores the
+  stored value. Zero click to edit.
+- An unchanged or emptied value never calls the repository, and the field keeps the submitted
+  text when the mutation returns an error so the user can fix it.
 - A dialog is reserved for confirmations, destructive actions or a genuine multi-field form.
-- The widget owns the edit state (`_editing`, a `TextEditingController`); the ViewModel owns the
-  mutation. An unchanged value does not call the repository, and the field stays open when the
-  mutation returns an error so the user can fix it.
+- The widget owns the edit state (`TextEditingController`, `FocusNode`); the ViewModel owns the
+  mutation.
 
 ## Text and labels
 

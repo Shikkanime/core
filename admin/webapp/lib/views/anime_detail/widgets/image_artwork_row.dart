@@ -1,13 +1,14 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
 import 'package:shikkanime_admin/models/image/image_model.dart';
 
-/// One artwork row of the anime detail: its type, its URL and its edit actions.
+/// One artwork row of the anime detail: its type and its URL as an always-editable field.
 ///
-/// The URL is edited inline: the edit action swaps the text for a field, Enter or the check
-/// action submits it to [onSubmit] and the close action abandons the change. A manual image
-/// also carries a badge and a release action forwarded to [onReset]. Both callbacks return
-/// `null` on success or the error message to display.
+/// The URL is a field in place: Enter or a focus loss submits it to [onSubmit], Escape restores
+/// the stored value. An unchanged or emptied value is never sent. A manual image also carries
+/// a badge and a release action forwarded to [onReset]. Both callbacks return `null` on success
+/// or the error message to display.
 class ImageArtworkRow extends StatefulWidget {
   const ImageArtworkRow({
     super.key,
@@ -28,7 +29,7 @@ class ImageArtworkRow extends StatefulWidget {
 
 class _ImageArtworkRowState extends State<ImageArtworkRow> {
   late final TextEditingController _controller;
-  bool _editing = false;
+  late final FocusNode _focusNode;
   bool _saving = false;
 
   ImageModel get image => widget.image;
@@ -37,42 +38,52 @@ class _ImageArtworkRowState extends State<ImageArtworkRow> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.image.url);
+    _focusNode = FocusNode()..addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(ImageArtworkRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.image.url != oldWidget.image.url && !_focusNode.hasFocus) {
+      _controller.text = widget.image.url;
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  void _startEdit() {
-    _controller.text = widget.image.url;
-    setState(() => _editing = true);
+  /// Submits the field when it loses focus, like Enter does.
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) _save();
   }
 
-  void _cancelEdit() {
-    setState(() => _editing = false);
+  /// Restores the stored URL and leaves the field.
+  void _revert() {
+    _controller.text = widget.image.url;
+    _focusNode.unfocus();
   }
 
   Future<void> _save() async {
     final url = _controller.text.trim();
 
-    if (url.isEmpty || _saving) return;
-
-    if (url == widget.image.url) {
-      _cancelEdit();
+    if (_saving || url.isEmpty) {
+      if (url.isEmpty) _revert();
       return;
     }
+
+    if (url == widget.image.url) return;
 
     setState(() => _saving = true);
     final error = await widget.onSubmit(url);
 
     if (!mounted) return;
 
-    setState(() {
-      _saving = false;
-      if (error == null) _editing = false;
-    });
+    setState(() => _saving = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -112,57 +123,38 @@ class _ImageArtworkRowState extends State<ImageArtworkRow> {
             '${localizations.imageTypeName(image.type.name)} — ',
             style: theme.textTheme.bodySmall,
           ),
-          Expanded(child: _buildValue(context, theme)),
-          if (_editing) ...[
-            IconButton(
-              onPressed: _saving ? null : _save,
-              tooltip: localizations.save,
-              icon: const Icon(Icons.check),
-              visualDensity: VisualDensity.compact,
-            ),
-            IconButton(
-              onPressed: _saving ? null : _cancelEdit,
-              tooltip: localizations.cancel,
-              icon: const Icon(Icons.close),
-              visualDensity: VisualDensity.compact,
-            ),
-          ] else ...[
-            IconButton(
-              onPressed: widget.enabled ? _startEdit : null,
-              tooltip: localizations.editArtwork,
-              icon: const Icon(Icons.edit_outlined),
-              visualDensity: VisualDensity.compact,
-            ),
-            if (image.manual)
-              IconButton(
-                onPressed: widget.enabled ? _release : null,
-                tooltip: localizations.releaseArtworkOverride,
-                icon: const Icon(Icons.undo),
-                visualDensity: VisualDensity.compact,
+          Expanded(
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(LogicalKeyboardKey.escape): _revert,
+              },
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                enabled: widget.enabled && !_saving,
+                keyboardType: TextInputType.url,
+                style: theme.textTheme.bodySmall,
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onSubmitted: (_) {
+                  _save();
+                  _focusNode.unfocus();
+                },
               ),
-          ],
+            ),
+          ),
+          if (image.manual)
+            IconButton(
+              onPressed: widget.enabled ? _release : null,
+              tooltip: localizations.releaseArtworkOverride,
+              icon: const Icon(Icons.undo),
+              visualDensity: VisualDensity.compact,
+            ),
         ],
       ),
-    );
-  }
-
-  Widget _buildValue(BuildContext context, ThemeData theme) {
-    if (!_editing) {
-      return SelectableText(image.url, style: theme.textTheme.bodySmall);
-    }
-
-    return TextField(
-      controller: _controller,
-      autofocus: true,
-      enabled: !_saving,
-      keyboardType: TextInputType.url,
-      style: theme.textTheme.bodySmall,
-      decoration: const InputDecoration(
-        isDense: true,
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
-      ),
-      onSubmitted: (_) => _save(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shikkanime_admin/l10n/app_localizations.dart';
@@ -12,134 +13,114 @@ void main() {
     home: Scaffold(body: child),
   );
 
+  ImageArtworkRow row({
+    ImageModel image = const ImageModel(ImageType.THUMBNAIL, 'https://a'),
+    bool enabled = true,
+    Future<String?> Function(String url)? onSubmit,
+    Future<String?> Function()? onReset,
+  }) => ImageArtworkRow(
+    image: image,
+    enabled: enabled,
+    onSubmit: onSubmit ?? (_) async => null,
+    onReset: onReset ?? () async => null,
+  );
+
+  testWidgets('shows the url as an always-editable field', (tester) async {
+    await tester.pumpWidget(wrap(row()));
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+
+    expect(field.controller!.text, 'https://a');
+    expect(field.enabled, isTrue);
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+  });
+
   testWidgets(
     'shows the manual badge and the release action on a manual image',
     (tester) async {
       await tester.pumpWidget(
         wrap(
-          ImageArtworkRow(
+          row(
             image: const ImageModel(
               ImageType.THUMBNAIL,
               'https://a',
               manual: true,
             ),
-            enabled: true,
-            onSubmit: (_) async => null,
-            onReset: () async => null,
           ),
         ),
       );
 
       expect(find.text('Manual'), findsOneWidget);
       expect(find.byIcon(Icons.undo), findsOneWidget);
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
     },
   );
 
-  testWidgets(
-    'hides the manual badge and the release action on an automatic image',
-    (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          ImageArtworkRow(
-            image: const ImageModel(ImageType.BANNER, 'https://a'),
-            enabled: true,
-            onSubmit: (_) async => null,
-            onReset: () async => null,
-          ),
-        ),
-      );
-
-      expect(find.text('Manual'), findsNothing);
-      expect(find.byIcon(Icons.undo), findsNothing);
-      expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-    },
-  );
-
-  testWidgets('forwards the edited url to onSubmit', (tester) async {
+  testWidgets('forwards the edited url to onSubmit on enter', (tester) async {
     String? submitted;
 
     await tester.pumpWidget(
       wrap(
-        ImageArtworkRow(
-          image: const ImageModel(ImageType.THUMBNAIL, 'https://a'),
-          enabled: true,
+        row(
           onSubmit: (url) async {
             submitted = url;
             return null;
           },
-          onReset: () async => null,
         ),
       ),
     );
-
-    await tester.tap(find.byIcon(Icons.edit_outlined));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(TextField), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField), 'https://new');
-    await tester.tap(find.byIcon(Icons.check));
-    await tester.pumpAndSettle();
-
-    expect(submitted, 'https://new');
-    expect(find.byType(TextField), findsNothing);
-    expect(find.text('Artwork updated'), findsOneWidget);
-  });
-
-  testWidgets('submits the edited url on enter', (tester) async {
-    String? submitted;
-
-    await tester.pumpWidget(
-      wrap(
-        ImageArtworkRow(
-          image: const ImageModel(ImageType.TITLE, 'https://a'),
-          enabled: true,
-          onSubmit: (url) async {
-            submitted = url;
-            return null;
-          },
-          onReset: () async => null,
-        ),
-      ),
-    );
-
-    await tester.tap(find.byIcon(Icons.edit_outlined));
-    await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'https://new');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
     expect(submitted, 'https://new');
+    expect(find.text('Artwork updated'), findsOneWidget);
   });
 
-  testWidgets('does not submit when the edit is cancelled', (tester) async {
+  testWidgets('does not submit an unchanged url', (tester) async {
     var submitted = false;
 
     await tester.pumpWidget(
       wrap(
-        ImageArtworkRow(
-          image: const ImageModel(ImageType.TITLE, 'https://a'),
-          enabled: true,
+        row(
           onSubmit: (_) async {
             submitted = true;
             return null;
           },
-          onReset: () async => null,
         ),
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.edit_outlined));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'https://new');
-    await tester.tap(find.byIcon(Icons.close));
+    await tester.enterText(find.byType(TextField), 'https://a');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
     expect(submitted, isFalse);
-    expect(find.byType(TextField), findsNothing);
-    expect(find.text('https://a'), findsOneWidget);
+  });
+
+  testWidgets('restores the stored url on escape', (tester) async {
+    var submitted = false;
+
+    await tester.pumpWidget(
+      wrap(
+        row(
+          onSubmit: (_) async {
+            submitted = true;
+            return null;
+          },
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField), 'https://new');
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    expect(submitted, isFalse);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller!.text,
+      'https://a',
+    );
   });
 
   testWidgets('forwards the release to onReset', (tester) async {
@@ -147,14 +128,12 @@ void main() {
 
     await tester.pumpWidget(
       wrap(
-        ImageArtworkRow(
+        row(
           image: const ImageModel(
             ImageType.THUMBNAIL,
             'https://a',
             manual: true,
           ),
-          enabled: true,
-          onSubmit: (_) async => null,
           onReset: () async {
             reset = true;
             return null;
@@ -170,24 +149,13 @@ void main() {
     expect(find.text('Artwork released to platform harvests'), findsOneWidget);
   });
 
-  testWidgets('disables the actions while a mutation is in flight', (
+  testWidgets('disables the field while a mutation is in flight', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      wrap(
-        ImageArtworkRow(
-          image: const ImageModel(ImageType.THUMBNAIL, 'https://a'),
-          enabled: false,
-          onSubmit: (_) async => null,
-          onReset: () async => null,
-        ),
-      ),
-    );
+    await tester.pumpWidget(wrap(row(enabled: false)));
 
-    final editButton = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, Icons.edit_outlined),
-    );
+    final field = tester.widget<TextField>(find.byType(TextField));
 
-    expect(editButton.onPressed, isNull);
+    expect(field.enabled, isFalse);
   });
 }

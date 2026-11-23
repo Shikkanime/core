@@ -496,12 +496,6 @@ abstract class AppLocalizations {
   /// **'{value, select, ANILIST{AniList} MYANIMELIST{MyAnimeList} ANIDB{AniDB} other{{value}}}'**
   String metadataPlatformName(String value);
 
-  /// No description provided for @editArtwork.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit artwork'**
-  String get editArtwork;
-
   /// No description provided for @save.
   ///
   /// In en, this message translates to:

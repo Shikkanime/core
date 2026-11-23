@@ -295,9 +295,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get editArtwork => 'Edit artwork';
-
-  @override
   String get save => 'Save';
 
   @override
