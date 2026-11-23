@@ -39,10 +39,47 @@ private const val MAX_WIDGET_PAGES = 40
 // `_UR<w>,<h>_` resizes to the exact box and `_CR<x>,<y>,<w>,<h>_` crops a region.
 // Prime Video detail payloads only expose landscape rasters (covershot/heroshot,
 // 16:9) and 4:3 rasters (packshot/titleshot), so the canonical ImageType dimensions
-// are reached by cropping the 4:3 sources instead of stretching them.
+// are reached by cropping the 4:3 sources instead of stretching them. Native 2:3
+// posters (CDN_THUMBNAIL) are only resized, never cropped.
 private const val CDN_BANNER = "UR1920,1080"
 private const val CDN_BANNER_FROM_4X3 = "UR1920,1440_CR0,180,1920,1080"
+private const val CDN_THUMBNAIL = "UR1560,2340"
 private const val CDN_THUMBNAIL_FROM_4X3 = "UR3120,2340_CR780,0,1560,2340"
+
+/**
+ * Prime Video portrait posters (`poster2x3` assets, 2000x3000) curated in the production
+ * database, indexed by compact show identifier.
+ *
+ * The detail page payload only exposes landscape (covershot/heroshot) and 4:3
+ * (packshot/titleshot) rasters for the main title; the dedicated 2:3 poster is served
+ * through authenticated browse APIs and variant carousels, so it cannot be harvested
+ * automatically. These URLs are migrated from the production `attachment` table and
+ * normalized to [ImageType.THUMBNAIL] dimensions through [cdnImage]. Shows absent from
+ * this map fall back to the center-cropped packshot.
+ */
+private val DEFAULT_THUMBNAILS = mapOf(
+    "0FHCA8284A4JP1BGB6EZM1UHXM" to
+        "https://images-eu.ssl-images-amazon.com/images/S/pv-target-images/" +
+            "14e3ba0d7a47b0d39c9734ba7d16ea233ed6b16936cb6d8c45a34cf8e02a1e6e.jpg",
+    "0G5HKRN0W1F71INMKBJE3UJDL" to
+        "https://m.media-amazon.com/images/S/pv-target-images/" +
+            "0903a8ee4fc60a17cc409aa83ec0b011852310a1c034864e05c459d532ea5f7b.jpg",
+    "0GMSR5WMNJ6EMYQRQ6Y2587WAF" to
+        "https://images-eu.ssl-images-amazon.com/images/S/pv-target-images/" +
+            "3e7d1cac716822d6c04c861587d13fb7e34257188ea0661515ffe737a11c21bd.jpg",
+    "0J35D20PPSSNACER7Z6BEAHQFW" to
+        "https://images-eu.ssl-images-amazon.com/images/S/pv-target-images/" +
+            "a63a0079db34affeb26672ff67b1847700a766b61acd54702f2d54109af16f7f.png",
+    "0LW570H4NYAE6XSCD8I7KZMVNH" to
+        "https://images-eu.ssl-images-amazon.com/images/S/pv-target-images/" +
+            "4f82235783e63fa70ae6e3dfed772e75e78e3911625d504d9effaab4f0c04ad9.png",
+    "0MRWXUDE3L303XFEJRNWB20S3O" to
+        "https://images-eu.ssl-images-amazon.com/images/S/pv-target-images/" +
+            "dc699c57fc921d616ba132ed6c082fbdbd9106e02516db611d2c9585c9624cbe.jpg",
+    "0SMLN9RBRDL719Y0K5J00JHJ3G" to
+        "https://m.media-amazon.com/images/S/pv-target-images/" +
+            "b2874eea83724714a98402fbf1048b2f27430a2c09ebea33841ef3637df7e51e.jpg"
+)
 
 // The Prime Video frontend rejects requests carrying the default HTTP client user agent with
 // redirect loops on its API endpoints; a desktop browser agent is required to negotiate the
@@ -123,7 +160,8 @@ class PrimeVideoPlatform(
     private val client: SmartHttpClient,
     private val ttl: Duration = 1.hours,
     override val countries: Set<Country> = setOf(Country.FR),
-    private val showIds: Set<String> = DEFAULT_SHOW_IDS
+    private val showIds: Set<String> = DEFAULT_SHOW_IDS,
+    private val thumbnails: Map<String, String> = DEFAULT_THUMBNAILS
 ) : StreamingPlatform {
     override val platform: Platform = Platform.PRIME_VIDEO
 
@@ -269,9 +307,11 @@ class PrimeVideoPlatform(
             synopsis = header.synopsis,
             bannerImage = showImages?.covershot
                 ?.let { cdnImage(it, CDN_BANNER) },
-            thumbnailImage = listOfNotNull(showImages?.packshot, showImages?.titleshot)
-                .firstOrNull(String::isNotBlank)
-                ?.let { cdnImage(it, CDN_THUMBNAIL_FROM_4X3) },
+            thumbnailImage = thumbnails[showId]
+                ?.let { cdnImage(it, CDN_THUMBNAIL) }
+                ?: listOfNotNull(showImages?.packshot, showImages?.titleshot)
+                    .firstOrNull(String::isNotBlank)
+                    ?.let { cdnImage(it, CDN_THUMBNAIL_FROM_4X3) },
             logoImage = showImages?.titleLogo?.takeIf(String::isNotBlank),
             isMovie = header.entityType == "Movie" || header.titleType == "movie"
         )
@@ -1144,7 +1184,7 @@ private fun PrimeVideoImages?.bannerImageUrl(): String? {
  */
 private fun cdnImage(url: String?, operations: String): String? {
     val trimmed = url?.takeIf(String::isNotBlank) ?: return null
-    if (!trimmed.contains("media-amazon.com/images/")) return trimmed
+    if (!trimmed.contains("amazon.com/images/")) return trimmed
     val extensionDot = trimmed.lastIndexOf('.')
     if (extensionDot <= 0) return trimmed
     val base = trimmed.substring(0, extensionDot)

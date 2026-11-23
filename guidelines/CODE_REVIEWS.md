@@ -231,3 +231,32 @@ private const val CDN_BANNER = "UR1920,1080"
 private const val CDN_BANNER_FROM_4X3 = "UR1920,1440_CR0,180,1920,1080"
 private const val CDN_THUMBNAIL_FROM_4X3 = "UR3120,2340_CR780,0,1560,2340"
 ```
+
+### 2026-11-23 — PrimeVideoPlatform: posters 2:3 dédiés non moissonnables, map curée
+
+- **Where**: `jobs/src/main/kotlin/platforms/impl/PrimeVideoPlatform.kt` +
+  `PrimeVideoPlatformTest.kt` + `docs/STREAMING_PLATFORMS.md` (follow-up review on
+  `feat/prime-video-platform`).
+- **Finding**: the center-cropped 4:3 packshot used for `THUMBNAIL` loses too much of the
+  key art — the title is often cut off, unlike the dedicated Prime Video portrait posters
+  (`poster2x3`, 2000x3000) displayed by the official apps and present in production.
+- **Investigation**: the `poster2x3` raster is absent from every public surface reachable
+  by the connector — detail page payloads only carry `covershot`/`heroshot` (16:9) and
+  `packshot`/`titleshot` (4:3), `getDetailWidgets` rejects non-`EpisodeList` widget types,
+  genre/search rails expose `cover` only, and `VariantCarousel` entities (which do carry
+  `poster2x3`) are rare and never describe the harvested title itself. The production
+  thumbnails were manually curated through the legacy `simulcast.image` configuration.
+- **Fix**: the seven curated `poster2x3` URLs found in the production `attachment` table
+  were migrated into `DEFAULT_THUMBNAILS` (indexed by compact show id, injectable through
+  the `thumbnails` constructor parameter) and are normalized with a pure resize
+  (`_UR1560,2340_`). Shows absent from the map keep the center-cropped packshot fallback
+  so every title still resolves to canonical dimensions. `cdnImage` now matches any
+  `amazon.com/images/` host (`m.media-amazon.com` and `images-eu.ssl-images-amazon.com`).
+
+```kotlin
+thumbnailImage = thumbnails[showId]
+    ?.let { cdnImage(it, CDN_THUMBNAIL) }
+    ?: listOfNotNull(showImages?.packshot, showImages?.titleshot)
+        .firstOrNull(String::isNotBlank)
+        ?.let { cdnImage(it, CDN_THUMBNAIL_FROM_4X3) }
+```

@@ -81,19 +81,22 @@ class PrimeVideoPlatformTest {
      * @param client The [SmartHttpClient] serving the Prime Video payloads.
      * @param countries The configured target countries of the platform.
      * @param showIds The tracked show identifiers of the platform.
+     * @param thumbnails The configured portrait posters indexed by show identifier.
      * @return The [PrimeVideoPlatform] under test.
      * @see [PrimeVideoPlatform]
      */
     private fun platform(
         client: SmartHttpClient,
         countries: Set<Country> = setOf(Country.FR),
-        showIds: Set<String> = setOf(SHOW_ID)
+        showIds: Set<String> = setOf(SHOW_ID),
+        thumbnails: Map<String, String> = emptyMap()
     ): PrimeVideoPlatform =
         PrimeVideoPlatform(
             client = client,
             ttl = Duration.ZERO,
             countries = countries,
-            showIds = showIds
+            showIds = showIds,
+            thumbnails = thumbnails
         )
 
     /**
@@ -102,15 +105,17 @@ class PrimeVideoPlatformTest {
      * @param client The [SmartHttpClient] serving the Prime Video payloads.
      * @param countries The configured target countries of the platform.
      * @param showIds The tracked show identifiers of the platform.
+     * @param thumbnails The configured portrait posters indexed by show identifier.
      * @return The harvested [PlatformEpisode] list.
      * @see [PrimeVideoPlatform.fetchLatestEpisodes]
      */
     private suspend fun harvest(
         client: SmartHttpClient,
         countries: Set<Country> = setOf(Country.FR),
-        showIds: Set<String> = setOf(SHOW_ID)
+        showIds: Set<String> = setOf(SHOW_ID),
+        thumbnails: Map<String, String> = emptyMap()
     ): List<PlatformEpisode> =
-        platform(client, countries, showIds).fetchLatestEpisodes().data
+        platform(client, countries, showIds, thumbnails).fetchLatestEpisodes().data
 
     /**
      * Builds the JSON payload of a series detail page with two inline episodes.
@@ -420,6 +425,28 @@ class PrimeVideoPlatformTest {
                 "https://m.media-amazon.com/images/S/pv-target-images/" +
                     "ep4x3._UR1920,1440_CR0,180,1920,1080_.png",
                 episodes.single().image
+            )
+        }
+
+        @Test
+        @DisplayName("should prefer the configured portrait poster over the packshot crop")
+        fun shouldPreferTheConfiguredPortraitPoster() = runTest {
+            // Given
+            val client = smartHttpClient(pages = mapOf(SHOW_ID to seriesPage()))
+            val thumbnails = mapOf(
+                SHOW_ID to "https://images-eu.ssl-images-amazon.com/images/S/" +
+                    "pv-target-images/poster2x3.png"
+            )
+
+            // When
+            val episodes = harvest(client, thumbnails = thumbnails)
+
+            // Then
+            assertEquals(
+                "https://images-eu.ssl-images-amazon.com/images/S/" +
+                    "pv-target-images/poster2x3._UR1560,2340_.png",
+                episodes.first().anime.images
+                    .single { it.type == ImageType.THUMBNAIL }.url
             )
         }
 

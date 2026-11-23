@@ -113,6 +113,14 @@ the rewrite where the raw DTO is mapped to the domain model, keep non-CDN or
 already-transformed URLs untouched, and cover each role (banner, thumbnail, episode
 image, logo) with unit tests.
 
+When a platform exposes dedicated portrait assets that cannot be harvested (Prime
+Video's `poster2x3` images only ship through authenticated browse APIs and variant
+carousels), carry the curated asset URLs in a default map indexed by show identifier
+(Prime Video does this with `DEFAULT_THUMBNAILS`, migrated from the production
+`attachment` table) and normalize them to `ImageType.THUMBNAIL` dimensions with a
+pure resize operation (`_UR1560,2340_`). Titles absent from the map fall back to the
+cropped raster so every show still resolves to canonical dimensions.
+
 Structure the harvest in three stages, like the existing connectors:
 
 1. Fetch raw payloads per country/language (`fetchPage`, `fetchWidgets`...).
