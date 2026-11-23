@@ -9,16 +9,31 @@ class ProtoMessage {
   const ProtoMessage();
 }
 
-/// Overrides the Protobuf wire order of a Dart enum mirroring a Kotlin enum.
+/// Assigns the Protobuf field number of a model field explicitly.
+///
+/// By default the generator numbers the fields by declaration order, starting at 1, mirroring
+/// `kotlinx.serialization`. When a model must declare its fields in a different order than the
+/// Kotlin DTO, annotate **every** field of the class with `@ProtoNumber(n)` using the Kotlin
+/// field numbers; the generated schema follows the annotations, not the declaration order.
+/// Models without any annotation keep the declaration-order numbering.
+class ProtoNumber {
+  const ProtoNumber(this.number);
+
+  /// Protobuf field number, matching the Kotlin DTO declaration order.
+  final int number;
+}
+
+/// Ranks a constant of a Dart enum mirroring a Kotlin enum on the Protobuf wire.
 ///
 /// By default the generator reads the enum constants in declaration order, which must mirror
-/// the Kotlin enum declaration order. Annotate the enum with this when the Dart declaration
-/// order cannot or should not match: [values] lists the wire values — the Kotlin constant
-/// names — in their Kotlin declaration order. The client-side `unknown` fallback is never
-/// listed.
-class ProtoEnumOrder {
-  const ProtoEnumOrder(this.values);
+/// the Kotlin enum declaration order. When the Dart declaration order cannot or should not
+/// match, annotate **every** wire constant with `@ProtoOrder(n)`; the generated values follow
+/// the annotations, not the declaration order. Only the relative order matters: any distinct
+/// increasing numbers produce the same wire contract. The client-side `unknown` fallback is
+/// never annotated nor listed.
+class ProtoOrder {
+  const ProtoOrder(this.order);
 
-  /// Wire values in their Kotlin declaration order.
-  final List<String> values;
+  /// Rank of the constant on the wire, lower values first.
+  final int order;
 }

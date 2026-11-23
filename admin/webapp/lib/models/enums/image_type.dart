@@ -4,7 +4,8 @@
 ///
 /// The constant names are the Kotlin enum names, which are also the wire values of the JSON,
 /// CBOR and Protobuf formats. The declaration order matches the Kotlin enum: the generated
-/// Protobuf schema derives its ordinals from it, so do not reorder the constants.
+/// Protobuf schema derives its ordinals from it, so do not reorder the constants — or rank
+/// every constant with `@ProtoOrder(n)` to declare them in any order.
 ///
 /// [unknown] is a client-side fallback for a value the server does not know yet; it is never
 /// sent on the wire and excluded from the Protobuf enum values.

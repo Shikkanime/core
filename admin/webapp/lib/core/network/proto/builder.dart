@@ -18,7 +18,8 @@ Builder protoSchemaBuilder(BuilderOptions options) =>
 
 class _ProtoSchemaGenerator extends Generator {
   static final _protoMessage = TypeChecker.typeNamed(ProtoMessage);
-  static final _protoEnumOrder = TypeChecker.typeNamed(ProtoEnumOrder);
+  static final _protoNumber = TypeChecker.typeNamed(ProtoNumber);
+  static final _protoOrder = TypeChecker.typeNamed(ProtoOrder);
 
   @override
   String? generate(LibraryReader library, BuildStep buildStep) {
@@ -48,20 +49,70 @@ class _ProtoSchemaGenerator extends Generator {
     final fields = model.fields
         .where((field) => !field.isStatic && !field.displayName.startsWith('_'))
         .toList();
+    final ordered = _fieldNumbers(model, fields);
     final buffer = StringBuffer()
       ..writeln(
         '/// Protobuf schema of ${model.displayName}, mirroring the Kotlin DTO field order.',
       )
       ..writeln('const ${_schemaName(model.displayName)} = ProtoSchema({');
 
-    for (var index = 0; index < fields.length; index++) {
+    for (final entry in ordered) {
       buffer.writeln(
-        '  ${index + 1}: ${_fieldLiteral(fields[index], selfUri, imports)},',
+        '  ${entry.value}: ${_fieldLiteral(entry.key, selfUri, imports)},',
       );
     }
 
     buffer.writeln('});');
     return buffer.toString().trimRight();
+  }
+
+  /// Maps each field of [model] to its Protobuf field number, sorted by number.
+  ///
+  /// `@ProtoNumber` annotations win when every field carries one; otherwise fields are numbered
+  /// by declaration order, starting at 1, mirroring `kotlinx.serialization`.
+  List<MapEntry<FieldElement, int>> _fieldNumbers(
+    ClassElement model,
+    List<FieldElement> fields,
+  ) {
+    final annotated = <FieldElement, int>{};
+    for (final field in fields) {
+      final object = _protoNumber.firstAnnotationOf(field);
+      if (object == null) continue;
+
+      final number = object.getField('number')?.toIntValue();
+      if (number == null) {
+        throw StateError(
+          '@ProtoNumber on "${model.displayName}.${field.name}" requires an int',
+        );
+      }
+      annotated[field] = number;
+    }
+
+    if (annotated.isNotEmpty && annotated.length != fields.length) {
+      throw StateError(
+        '@ProtoNumber must annotate every field of ${model.displayName} or none',
+      );
+    }
+
+    final numbers = annotated.isEmpty
+        ? {
+            for (var index = 0; index < fields.length; index++)
+              fields[index]: index + 1,
+          }
+        : annotated;
+
+    final seen = <int>{};
+    for (final number in numbers.values) {
+      if (!seen.add(number)) {
+        throw StateError(
+          'Duplicate Protobuf field number $number in ${model.displayName}',
+        );
+      }
+    }
+
+    final entries = numbers.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+    return entries;
   }
 
   /// Emits the `ProtoField` literal of one model field.
@@ -146,35 +197,56 @@ class _ProtoSchemaGenerator extends Generator {
 
   /// Reads the wire values of a Dart enum type, or null when [type] is not an enum.
   ///
-  /// A `@ProtoEnumOrder` annotation on the enum wins and lists the values explicitly; otherwise
-  /// the constants are read in declaration order, which mirrors the Kotlin enum declaration
-  /// order the Protobuf ordinals rely on. The client-side `unknown` fallback is excluded: it
-  /// is never a wire value.
+  /// `@ProtoOrder` annotations on the constants win when every wire constant carries one; the
+  /// values are then emitted sorted by rank. Otherwise the constants are read in declaration
+  /// order, which mirrors the Kotlin enum declaration order the Protobuf ordinals rely on. The
+  /// client-side `unknown` fallback is excluded: it is never a wire value.
   List<String>? _enumValuesOf(DartType? type) {
     if (type is! InterfaceType) return null;
     final element = type.element;
     if (element is! EnumElement) return null;
 
-    final override = _protoEnumOrder.firstAnnotationOf(element);
-    if (override != null) {
-      final values = override
-          .getField('values')
-          ?.toListValue()
-          ?.map((entry) => entry.toStringValue())
-          .whereType<String>()
-          .toList();
-      if (values == null || values.isEmpty) {
+    final constants = element.fields
+        .where((field) => field.isEnumConstant && field.name != 'unknown')
+        .toList();
+    if (constants.isEmpty) return null;
+
+    final ranks = <FieldElement, int>{};
+    for (final constant in constants) {
+      final object = _protoOrder.firstAnnotationOf(constant);
+      if (object == null) continue;
+
+      final order = object.getField('order')?.toIntValue();
+      if (order == null) {
         throw StateError(
-          '@ProtoEnumOrder on ${element.displayName} declares no values',
+          '@ProtoOrder on ${element.displayName}.${constant.name} requires an int',
         );
       }
-      return values;
+      ranks[constant] = order;
     }
 
-    return element.fields
-        .where((field) => field.isEnumConstant && field.name != 'unknown')
-        .map((field) => field.displayName)
-        .toList();
+    if (ranks.isNotEmpty && ranks.length != constants.length) {
+      throw StateError(
+        '@ProtoOrder must annotate every wire constant of ${element.displayName} or none',
+      );
+    }
+
+    if (ranks.isEmpty) {
+      return constants.map((field) => field.displayName).toList();
+    }
+
+    final seen = <int>{};
+    for (final order in ranks.values) {
+      if (!seen.add(order)) {
+        throw StateError(
+          'Duplicate @ProtoOrder rank $order in ${element.displayName}',
+        );
+      }
+    }
+
+    final sorted = ranks.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+    return sorted.map((entry) => entry.key.displayName).toList();
   }
 
   /// Formats one `ProtoField(...)` expression.
