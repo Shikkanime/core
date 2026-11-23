@@ -9,6 +9,8 @@ import fr.shikkanime.database.repositories.ImageRepository
 import fr.shikkanime.database.services.AnimeService
 import fr.shikkanime.models.Anime
 import fr.shikkanime.models.AnimeWithChildren
+import fr.shikkanime.models.Image
+import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Platform
 import org.koin.core.annotation.Single
 import kotlin.uuid.Uuid
@@ -68,4 +70,26 @@ internal class AnimeServiceImpl(
             images = anime.images.map { imageRepository.save(it.copy(entityId = saved.id)) }
         )
     }
+
+    override fun saveManualImage(animeId: Uuid, type: ImageType, url: String): Image? {
+        // The artwork needs a stored owner: no image is persisted for an unknown anime
+        if (!animeRepository.findModelsByIds(listOf(animeId)).containsKey(animeId))
+            return null
+
+        return imageRepository.save(
+            Image(
+                id = null,
+                createdAt = null,
+                updatedAt = null,
+                entityId = animeId,
+                type = type,
+                url = url,
+                manual = true
+            )
+        )
+    }
+
+    override fun clearManualImage(animeId: Uuid, type: ImageType): Image? =
+        // The image row is keyed by owner and type: clearing its flag hands it back to the harvests
+        imageRepository.clearManual(animeId, type)
 }

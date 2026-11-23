@@ -9,6 +9,7 @@ import fr.shikkanime.models.AnimeLocalization
 import fr.shikkanime.models.AnimePlatform
 import fr.shikkanime.models.AnimeWithChildren
 import fr.shikkanime.models.Image
+import fr.shikkanime.models.ImageType
 import fr.shikkanime.models.Platform
 import fr.shikkanime.models.canonicalTitle
 import kotlin.uuid.Uuid
@@ -113,4 +114,35 @@ interface AnimeService {
      */
     @Transactional
     fun save(anime: AnimeWithChildren): AnimeWithChildren
+
+    /**
+     * Overrides the artwork of an anime and marks it as manually managed.
+     *
+     * A manual image is never replaced by an automatic write, such as a platform harvest:
+     * the given URL stays until another manual write or an explicit release through
+     * [clearManualImage].
+     *
+     * @param animeId identifier of the anime owning the artwork.
+     * @param type type of the artwork to override.
+     * @param url URL of the replacement artwork.
+     * @return the stored image, or `null` when no anime carries this identifier.
+     * @see [Image]
+     * @see [ImageType]
+     */
+    @Transactional
+    fun saveManualImage(animeId: Uuid, type: ImageType, url: String): Image?
+
+    /**
+     * Releases the manual management of the artwork of an anime, keeping its current URL.
+     *
+     * The next automatic write owns the image again and may replace its URL.
+     *
+     * @param animeId identifier of the anime owning the artwork.
+     * @param type type of the artwork to release.
+     * @return the stored image, or `null` when the anime has no artwork of this type.
+     * @see [Image]
+     * @see [ImageType]
+     */
+    @Transactional
+    fun clearManualImage(animeId: Uuid, type: ImageType): Image?
 }

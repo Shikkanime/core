@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 
 @ExtendWith(MockKExtension::class)
@@ -287,6 +288,93 @@ class AnimeServiceTest {
 
             // Then
             assertEquals("One Piece", found?.localizations?.single()?.title)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'saveManualImage' method")
+    inner class SaveManualImageTests {
+        @Test
+        @DisplayName("should return null when the anime does not exist")
+        fun `should return null when the anime does not exist`() {
+            // Given
+            val unknown = Uuid.random()
+            every { animeRepository.findModelsByIds(listOf(unknown)) } returns emptyMap()
+
+            // When
+            val saved = animeService.saveManualImage(unknown, ImageType.THUMBNAIL, "https://a")
+
+            // Then
+            assertNull(saved)
+            verify(exactly = 0) { imageRepository.save(any()) }
+        }
+
+        @Test
+        @DisplayName("should persist the image flagged as manual under the anime identifier")
+        fun `should persist the image flagged as manual under the anime identifier`() {
+            // Given
+            val animeId = Uuid.random()
+            every { animeRepository.findModelsByIds(listOf(animeId)) } returns
+                mapOf(animeId to AnimeMockKBuilder {}.build())
+            val stored = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = animeId
+                type = ImageType.THUMBNAIL
+                url = "https://manual"
+                manual = true
+            }.build()
+            val slot = slot<Image>()
+            every { imageRepository.save(capture(slot)) } returns stored
+
+            // When
+            val saved = animeService.saveManualImage(animeId, ImageType.THUMBNAIL, "https://manual")
+
+            // Then
+            assertEquals(stored, saved)
+            assertEquals(animeId, slot.captured.entityId)
+            assertEquals(ImageType.THUMBNAIL, slot.captured.type)
+            assertEquals("https://manual", slot.captured.url)
+            assertTrue(slot.captured.manual)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'clearManualImage' method")
+    inner class ClearManualImageTests {
+        @Test
+        @DisplayName("should release the manual flag through the image repository")
+        fun `should release the manual flag through the image repository`() {
+            // Given
+            val animeId = Uuid.random()
+            val released = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = animeId
+                type = ImageType.BANNER
+                url = "https://a"
+                manual = false
+            }.build()
+            every { imageRepository.clearManual(animeId, ImageType.BANNER) } returns released
+
+            // When
+            val found = animeService.clearManualImage(animeId, ImageType.BANNER)
+
+            // Then
+            assertEquals(released, found)
+            verify(exactly = 1) { imageRepository.clearManual(animeId, ImageType.BANNER) }
+        }
+
+        @Test
+        @DisplayName("should return null when the anime has no image of this type")
+        fun `should return null when the anime has no image of this type`() {
+            // Given
+            val animeId = Uuid.random()
+            every { imageRepository.clearManual(animeId, ImageType.TITLE) } returns null
+
+            // When
+            val found = animeService.clearManualImage(animeId, ImageType.TITLE)
+
+            // Then
+            assertNull(found)
         }
     }
 }

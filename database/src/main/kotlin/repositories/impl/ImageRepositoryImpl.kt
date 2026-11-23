@@ -44,16 +44,35 @@ internal class ImageRepositoryImpl : ImageRepository() {
     override fun save(image: Image): Image =
         findByIdAndType(requireNotNull(image.entityId), image.type)
             .ifExists {
-                if (url != image.url) {
-                    url = image.url
-                    updatedAt = TimeUtils.now()
+                // An automatic write never replaces a manually managed image
+                if (!manual || image.manual) {
+                    if (url != image.url) {
+                        url = image.url
+                        updatedAt = TimeUtils.now()
+                    }
+                    if (manual != image.manual) {
+                        manual = image.manual
+                        updatedAt = TimeUtils.now()
+                    }
                 }
             }
             .newIfNotExists(image.id) {
                 entityId = requireNotNull(image.entityId)
                 type = image.type
                 url = image.url
+                manual = image.manual
             }
             .applyFlush()
             .toModel()
+
+    override fun clearManual(entityId: Uuid, type: ImageType): Image? =
+        findByIdAndType(entityId, type)
+            .ifExists {
+                if (manual) {
+                    manual = false
+                    updatedAt = TimeUtils.now()
+                }
+            }
+            ?.applyFlush()
+            ?.toModel()
 }

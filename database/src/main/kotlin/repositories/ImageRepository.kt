@@ -39,10 +39,27 @@ internal abstract class ImageRepository :
     /**
      * Upserts one image, overwriting the URL when the owner already has this image type.
      *
+     * The [Image.manual] flag carries the intent of the write: an automatic write never
+     * replaces the URL of a manually managed image, while a manual write always applies and
+     * marks the row.
+     *
      * @param image image to persist; its identifier is only used for the creation.
      * @return the image as stored in database.
      * @see [Image]
      * @see [ImageType]
      */
     abstract fun save(image: Image): Image
+
+    /**
+     * Releases the manual management of one image, keeping its current URL.
+     *
+     * The next automatic write owns the image again and may replace its URL.
+     *
+     * @param entityId identifier of the entity owning the image.
+     * @param type type of the image to release.
+     * @return the image as stored in database, or `null` when this image type is not set.
+     * @see [Image]
+     * @see [ImageType]
+     */
+    abstract fun clearManual(entityId: Uuid, type: ImageType): Image?
 }

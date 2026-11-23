@@ -14,6 +14,8 @@ internal object ImageTable : ShikkTable(IMAGE_TABLE_NAME) {
     val entityId = uuid(ENTITY_ID)
     val type = enumerationByName<ImageType>("type", 20)
     val url = varchar("url", 1000)
+    val manual = bool("manual")
+        .clientDefault { false }
 
     init {
         uniqueIndex("${ENTITY_ID}_type$UQ", entityId, type)
@@ -28,6 +30,7 @@ internal class ImageEntity(id: EntityID<Uuid>) :
     var entityId by ImageTable.entityId
     var type by ImageTable.type
     var url by ImageTable.url
+    var manual by ImageTable.manual
 
     override fun toModel(): Image =
         Image(
@@ -36,6 +39,7 @@ internal class ImageEntity(id: EntityID<Uuid>) :
             updatedAt = updatedAt,
             entityId = entityId,
             type = type,
-            url = url
+            url = url,
+            manual = manual
         )
 }

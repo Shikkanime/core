@@ -17,6 +17,7 @@ class ImageMockKBuilder(
     var entityId: Uuid? = null
     var type: ImageType? = null
     var url: String? = null
+    var manual: Boolean? = null
 
     init {
         configuration(this)
@@ -31,15 +32,17 @@ class ImageMockKBuilder(
         entityId?.let { every { mockK.entityId } returns it }
         type?.let { every { mockK.type } returns it }
         url?.let { every { mockK.url } returns it }
+        manual?.let { every { mockK.manual } returns it }
 
-        every { mockK.copy(any(), any(), any(), any(), any(), any()) } answers {
+        every { mockK.copy(any(), any(), any(), any(), any(), any(), any()) } answers {
             Image(
                 id = firstArg(),
                 createdAt = secondArg(),
                 updatedAt = thirdArg(),
                 entityId = arg(3),
                 type = arg(4),
-                url = arg(5)
+                url = arg(5),
+                manual = arg(6)
             )
         }
 

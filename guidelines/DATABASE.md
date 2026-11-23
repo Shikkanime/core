@@ -86,6 +86,17 @@ class AnimeRepository {
 
 - Use `services/` (e.g. `SiteQueryService`, `AdminQueryService`) for module-specific complex queries.
 
+## Manual overrides on the shared image table
+
+The `image` table is shared by every entity owning artwork, and its rows are upserted by automatic
+writes - platform harvests above all. A row carries a `manual` flag: when it is set, `ImageRepository.save`
+never replaces the URL on an automatic write (`Image.manual = false`), while a manual write
+(`Image.manual = true`) always applies and keeps the flag. This is how the administration pins an
+artwork: `AnimeService.saveManualImage` writes the row flagged, `AnimeService.clearManualImage`
+releases it so the next harvest owns it again. The flag lives on the `Image` model so the
+administration can display which artworks are overridden; it defaults to `false`, so every
+existing write path keeps its automatic behavior untouched.
+
 ## Anime identity
 An anime is identified by its **normalized title**: `anime.normalized_title`, **unique**. The stored value is
 exactly the output of `normalizeTitle` (the historical `getShortName` rules) on the winning localized title -

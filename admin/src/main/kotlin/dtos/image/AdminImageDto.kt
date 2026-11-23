@@ -6,11 +6,14 @@ import kotlinx.serialization.Serializable
 
 /**
  * Artwork of an anime or an episode, as the administration reads it.
+ *
+ * A [manual] image was set by an administrator and is never replaced by a platform harvest.
  */
 @Serializable
 data class AdminImageDto(
     val type: ImageType,
-    val url: String
+    val url: String,
+    val manual: Boolean
 )
 
 /**
@@ -23,5 +26,6 @@ data class AdminImageDto(
 fun Image.toAdminDto(): AdminImageDto =
     AdminImageDto(
         type = type,
-        url = url
+        url = url,
+        manual = manual
     )

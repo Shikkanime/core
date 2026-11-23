@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -125,6 +126,160 @@ class ImageRepositoryImplTest {
             // Then
             assertEquals(first.id, saved.id)
             assertEquals("https://b", saved.url)
+        }
+
+        @Test
+        @DisplayName("should keep the url of a manual image on an automatic write")
+        fun `should keep the url of a manual image on an automatic write`() {
+            // Given
+            val owner = Uuid.random()
+            val manualImage = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://manual"
+                manual = true
+            }.build()
+            transaction { imageRepository.save(manualImage) }
+            val harvested = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://harvested"
+            }.build()
+
+            // When
+            val saved = transaction { imageRepository.save(harvested) }
+
+            // Then
+            assertEquals("https://manual", saved.url)
+            assertTrue(saved.manual)
+        }
+
+        @Test
+        @DisplayName("should overwrite the url of a manual image on a manual write")
+        fun `should overwrite the url of a manual image on a manual write`() {
+            // Given
+            val owner = Uuid.random()
+            val manualImage = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://a"
+                manual = true
+            }.build()
+            transaction { imageRepository.save(manualImage) }
+            val replaced = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://b"
+                manual = true
+            }.build()
+
+            // When
+            val saved = transaction { imageRepository.save(replaced) }
+
+            // Then
+            assertEquals("https://b", saved.url)
+            assertTrue(saved.manual)
+        }
+
+        @Test
+        @DisplayName("should mark an automatic image as manual on a manual write")
+        fun `should mark an automatic image as manual on a manual write`() {
+            // Given
+            val owner = Uuid.random()
+            val image = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.BANNER
+                url = "https://a"
+            }.build()
+            transaction { imageRepository.save(image) }
+            val manualImage = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.BANNER
+                url = "https://a"
+                manual = true
+            }.build()
+
+            // When
+            val saved = transaction { imageRepository.save(manualImage) }
+
+            // Then
+            assertEquals("https://a", saved.url)
+            assertTrue(saved.manual)
+        }
+    }
+
+    @Nested
+    @DisplayName("tests for the 'clearManual' method")
+    inner class ClearManualTests {
+        @Test
+        @DisplayName("should return null when the image type is not set")
+        fun `should return null when the image type is not set`() {
+            // Given
+            val owner = Uuid.random()
+
+            // When
+            val found = transaction { imageRepository.clearManual(owner, ImageType.THUMBNAIL) }
+
+            // Then
+            assertNull(found)
+        }
+
+        @Test
+        @DisplayName("should release the manual flag and keep the url")
+        fun `should release the manual flag and keep the url`() {
+            // Given
+            val owner = Uuid.random()
+            val manualImage = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://manual"
+                manual = true
+            }.build()
+            transaction { imageRepository.save(manualImage) }
+
+            // When
+            val released = transaction { imageRepository.clearManual(owner, ImageType.THUMBNAIL) }
+
+            // Then
+            assertNotNull(released)
+            assertEquals("https://manual", released.url)
+            assertFalse(released.manual)
+        }
+
+        @Test
+        @DisplayName("should let an automatic write replace the url once released")
+        fun `should let an automatic write replace the url once released`() {
+            // Given
+            val owner = Uuid.random()
+            val manualImage = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://manual"
+                manual = true
+            }.build()
+            transaction { imageRepository.save(manualImage) }
+            transaction { imageRepository.clearManual(owner, ImageType.THUMBNAIL) }
+            val harvested = ImageMockKBuilder {
+                id = Uuid.random()
+                entityId = owner
+                type = ImageType.THUMBNAIL
+                url = "https://harvested"
+            }.build()
+
+            // When
+            val saved = transaction { imageRepository.save(harvested) }
+
+            // Then
+            assertEquals("https://harvested", saved.url)
+            assertFalse(saved.manual)
         }
     }
 
