@@ -136,8 +136,8 @@ class _ImageArtworkRowState extends State<ImageArtworkRow> {
                 style: theme.textTheme.bodySmall,
                 decoration: const InputDecoration(
                   isDense: true,
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                  border: UnderlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(vertical: 4),
                 ),
                 onSubmitted: (_) {
                   _save();
