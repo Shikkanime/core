@@ -113,11 +113,15 @@ class _ImageArtworkRowState extends State<ImageArtworkRow> {
       child: Row(
         children: [
           if (image.manual) ...[
-            Chip(
-              visualDensity: VisualDensity.compact,
-              label: Text(localizations.manualArtwork),
+            Tooltip(
+              message: localizations.manualArtwork,
+              child: Icon(
+                Icons.edit,
+                size: 14,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
           ],
           Text(
             '${localizations.imageTypeName(image.type.name)} — ',
@@ -136,22 +140,7 @@ class _ImageArtworkRowState extends State<ImageArtworkRow> {
                 style: theme.textTheme.bodySmall,
                 decoration: InputDecoration(
                   isDense: true,
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceContainerHighest,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    borderSide: BorderSide(
-                      color: theme.colorScheme.outlineVariant,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(4),
-                    borderSide: BorderSide(color: theme.colorScheme.primary),
-                  ),
+                  border: const OutlineInputBorder(),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 6,

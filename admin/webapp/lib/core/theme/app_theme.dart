@@ -42,7 +42,6 @@ abstract final class AppTheme {
     const bodyLargeFontSize = 16.0;
     const bodySmallFontSize = 11.0;
     const cardBorderRadius = 24.0;
-    const fieldBorderRadius = 16.0;
     const popupMenuBorderRadius = 16.0;
 
     // The palette is achromatic: the default variant tints the containers with the hue it derives
@@ -107,23 +106,6 @@ abstract final class AppTheme {
           backgroundColor: elevatedButtonBackgroundColor,
           foregroundColor: primaryColor,
           shadowColor: elevatedButtonShadowColor,
-        ),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: canvasColor,
-        hintStyle: TextStyle(color: greyColor),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(fieldBorderRadius),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(fieldBorderRadius),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(fieldBorderRadius),
-          borderSide: BorderSide(color: primaryColor),
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(

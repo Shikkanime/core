@@ -50,7 +50,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Manual'), findsOneWidget);
+      expect(find.byIcon(Icons.edit), findsOneWidget);
       expect(find.byIcon(Icons.undo), findsOneWidget);
     },
   );
